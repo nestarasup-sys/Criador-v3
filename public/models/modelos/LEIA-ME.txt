@@ -1,0 +1,35 @@
+COMO ADICIONAR UM MODELO MANUALMENTE
+
+1. Escolha a pasta do gênero:
+   - feminino
+   - masculino
+
+2. Crie uma subpasta sem espaços, por exemplo:
+   feminino\modelo-4
+   masculino\modelo-5
+
+3. Coloque dentro dela os PNGs do personagem completo.
+   O arquivo normal.png é obrigatório.
+
+4. Use os mesmos nomes das expressões já existentes, por exemplo:
+   normal.png
+   normal_blink.png
+   normal_talk.png
+   serio.png
+   serio_blink.png
+   serio_talk.png
+
+5. Feche e abra novamente o GACHA MAKER PREMIUM ou atualize a página.
+   O modelo será detectado automaticamente.
+
+NOME OPCIONAL
+
+Para escolher um nome diferente na interface, crie um arquivo modelo.json
+dentro da pasta:
+
+{
+  "name": "Nome do modelo"
+}
+
+Sem esse arquivo, o app mostrará Modelo 1, Modelo 2, Modelo 3 etc.,
+de acordo com a ordem das pastas.
