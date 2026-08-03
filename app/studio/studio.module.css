@@ -112,7 +112,7 @@
 .rightArea.rosterAreaCompact { grid-template-columns:210px 136px; }
 .rightArea.dockLeft { left: auto; right: 14px; top: 14px; }
 .inspectorDock { min-width: 0; pointer-events: auto; transition: transform .2s ease; }
-.rightArea.dockLeft .inspectorDock { transform: translateX(-220px); }
+.rightArea.dockLeft .inspectorDock { position: fixed; left: 14px; top: 14px; bottom: 14px; width: 210px; transform: none; }
 .inspector, .roster { min-height: 0; pointer-events: auto; border: 1px solid rgba(255,255,255,.76); border-radius: 17px; background: rgba(250,248,253,.94); box-shadow: 0 14px 35px rgba(20,13,30,.16); backdrop-filter: blur(14px); }
 .inspector { align-self: start; max-height: calc(100vh - 28px); overflow-y: auto; padding: 14px; scrollbar-width: thin; }
 .dockLeft .inspector { max-height: calc(100vh - 28px); }
@@ -128,8 +128,7 @@
 .rangeField b { color: var(--purple); }
 .rangeField input { width: 100%; accent-color: var(--purple); }
 .inspectorSection { margin: 15px 0; }
-.expressionHeading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-.expressionHeading > span { flex:0 0 auto; }
+.expressionHeading { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
 .expressionGrid { margin-top: 7px; display: grid; grid-template-columns: 1fr; gap: 4px; }
 .expressionGrid button, .stateSwitch button, .inlineButtons button { min-width: 0; padding: 9px 6px; border: 1px solid #e5e0eb; border-radius: 7px; background: white; color: #777080; font-size: 12.5px; font-weight: 750; cursor: pointer; }
 .stateSwitch { margin-top: 6px; display: grid; grid-template-columns: 1fr; gap: 4px; }
@@ -200,7 +199,7 @@
   .rightArea { top: 78px; grid-template-columns: min(180px,42vw) min(160px,36vw); }
   .rightArea.rosterAreaCompact { grid-template-columns:min(180px,42vw) 136px; }
   .rightArea.dockLeft { left:auto; right:14px; }
-  .rightArea.dockLeft .inspectorDock { transform:translateX(-196px); }
+  .rightArea.dockLeft .inspectorDock { left:8px; top:78px; bottom:14px; width:min(180px,42vw); transform:none; }
   .inspector { max-height: calc(100vh - 96px); }
   .expressionGrid { grid-template-columns: 1fr; }
 }
