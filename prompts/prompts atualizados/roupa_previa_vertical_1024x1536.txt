@@ -1,0 +1,54 @@
+A primeira imagem é o modelo-base obrigatório de pose, anatomia e proporções.
+
+A segunda imagem define somente o conceito da roupa que deve ser adaptada.
+
+As demais imagens são referências da estética visual de roupas e personagens do Gacha Life 2. Use-as para compreender a simplificação das formas, os contornos, as cores e o sombreamento. Não copie nenhum personagem completo.
+
+Crie uma PRÉVIA vertical do modelo da primeira imagem usando uma roupa baseada no conceito da segunda imagem, redesenhada na estética do Gacha Life 2.
+
+FORMATO E ENQUADRAMENTO:
+
+- Entregue uma única imagem vertical de 1024 × 1536 pixels.
+- Reenquadre o personagem completo no centro do canvas vertical.
+- Preserve exatamente a pose sentada e as proporções do modelo-base.
+- Deixe aproximadamente 10% de margem livre ao redor do personagem.
+- Nenhuma parte da cabeça, capa, roupa, mãos, pernas ou calçados pode ser cortada.
+- Se a roupa possuir capa, vestido ou acessórios largos, reduza proporcionalmente o personagem para que tudo caiba no canvas.
+- Não altere a anatomia para preencher o formato vertical.
+
+DIREÇÃO ARTÍSTICA OBRIGATÓRIA:
+
+- Estética anime/chibi de jogo de vestir inspirada no Gacha Life 2.
+- Formas simples, limpas e modulares.
+- Contornos bem definidos.
+- Cores predominantemente chapadas.
+- Sombreamento simples em uma ou duas tonalidades.
+- Poucas dobras no tecido.
+- Detalhes simplificados e fáceis de identificar.
+- Calçados e acessórios levemente exagerados, como em personagens gacha.
+
+NÃO UTILIZE:
+
+- Texturas realistas de tecido, couro, metal ou pelos.
+- Pelos individuais ou acabamento fotográfico.
+- Iluminação cinematográfica ou reflexos realistas.
+- Anatomia realista ou pintura digital semirrealista.
+- Excesso de detalhes pequenos.
+- Sombras externas, aura ou brilho ao redor do personagem.
+
+REGRAS DO MODELO:
+
+- Preserve a pose, as proporções e o tom de pele da primeira imagem.
+- Preserve a relação entre cabeça, pescoço, braços, mãos, pernas e pés.
+- Não redesenhe as partes do corpo que não forem cobertas pela roupa.
+- Mantenha a cabeça sem cabelo e o rosto completamente vazio.
+- Não adicione olhos, boca, nariz, sobrancelhas ou maquiagem.
+- Cubra completamente a roupa íntima original.
+- Adapte a roupa corretamente à pose sentada.
+- Respeite quais partes da roupa ficam na frente ou atrás dos braços e pernas.
+
+Esta etapa é somente uma PRÉVIA para conferir estilo e encaixe. Mostre o corpo-base completo já vestido.
+
+Use um fundo totalmente uniforme na cor exata #00C366, sem gradiente, textura, sombra ou variação de cor.
+
+Gere apenas uma imagem, sem versões alternativas, textos, molduras ou apresentações.

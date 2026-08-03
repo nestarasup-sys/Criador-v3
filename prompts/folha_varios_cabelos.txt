@@ -1,0 +1,41 @@
+A primeira imagem é o modelo-base usado somente como referência de escala, proporção e tamanho da cabeça.
+
+A segunda imagem é uma camada de cabelo pronta. Use-a somente como referência de estilo artístico, qualidade dos contornos, iluminação e nível de detalhes.
+
+Crie UMA ÚNICA FOLHA contendo 6 cabelos diferentes para o mesmo modelo.
+
+ORGANIZAÇÃO OBRIGATÓRIA:
+
+- Organize os cabelos em uma grade de 3 colunas e 2 linhas.
+- Deixe um espaço transparente amplo entre todos os cabelos.
+- Nenhum cabelo pode encostar em outro.
+- Deixe pelo menos 80 pixels transparentes entre cada item.
+- Centralize cada cabelo dentro de sua própria área da grade.
+- Todos devem possuir tamanho compatível com a cabeça do modelo-base.
+- Não desenhe molduras, divisórias, nomes, números ou textos.
+
+Crie estes seis estilos:
+
+1. Cabelo curto e bagunçado.
+2. Cabelo curto com franja lateral.
+3. Cabelo médio e ondulado.
+4. Cabelo espetado no estilo anime.
+5. Cabelo com divisão central.
+6. Cabelo moderno com laterais mais curtas.
+
+REGRAS OBRIGATÓRIAS:
+
+- Entregue exatamente uma imagem PNG de 1920 × 1080 pixels.
+- A imagem deve conter somente os seis cabelos.
+- Todo o fundo deve possuir transparência alfa total.
+- Não desenhe cabeça, rosto, pele, orelhas, pescoço ou corpo.
+- Não deixe espaços brancos no formato do rosto.
+- Não adicione sombras externas, brilho, aura ou cenário.
+- Cada cabelo deve ser uma peça visual completamente independente.
+- Não sobreponha os cabelos.
+- Mantenha o mesmo estilo anime/gacha 2D da segunda imagem.
+- Use contornos limpos e acabamento consistente.
+- Os cabelos podem ter formatos diferentes, mas devem manter escala semelhante.
+- Gere apenas uma imagem final, sem prévia adicional.
+
+Esta imagem será processada automaticamente por um aplicativo que detectará as áreas separadas e transformará cada cabelo em um item individual.

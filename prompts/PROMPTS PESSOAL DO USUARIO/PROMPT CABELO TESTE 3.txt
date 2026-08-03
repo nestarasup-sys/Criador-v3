@@ -1,0 +1,76 @@
+Você receberá duas imagens, nesta ordem:
+
+- PRIMEIRA IMAGEM — GUIA DE ÂNGULO E ENCAIXE: use esta imagem exclusivamente para determinar o ângulo da câmera, a perspectiva da cabeça, o formato e a inclinação do crânio, a posição, a escala, o enquadramento, o espaço interno do rosto e a organização das duas camadas. Não copie o penteado, a cor vermelha, o comprimento, as mechas, a franja, o fundo, a iluminação ou as silhuetas desta imagem.
+- SEGUNDA IMAGEM — REFERÊNCIA DO PENTEADO: use esta imagem exclusivamente para determinar qual cabelo criar: corte, franja, divisão, comprimento, volume, textura, mechas, pontas, cor e identidade visual. Não copie o ângulo da câmera, a direção da cabeça, a pose, a perspectiva, o enquadramento ou a posição desta imagem.
+
+PRIORIDADE OBRIGATÓRIA:
+
+- Para ângulo, perspectiva, formato da cabeça, encaixe, posição, escala e organização: a PRIMEIRA IMAGEM sempre vence.
+- Para desenho do penteado, franja, mechas, comprimento, volume, textura e cor: a SEGUNDA IMAGEM sempre vence.
+- Se as duas imagens entrarem em conflito, reconstrua o penteado da segunda imagem para funcionar no ângulo da primeira. Nunca mude o ângulo da primeira para imitar a segunda.
+
+TAREFA:
+
+Crie somente o cabelo da segunda imagem, mas reconstruído no mesmo ângulo, perspectiva e encaixe de cabeça mostrados na primeira imagem. O resultado deve parecer que o penteado da segunda imagem foi desenhado originalmente para a cabeça e para o ângulo da primeira imagem.
+
+Execute mentalmente o trabalho em duas etapas, mas entregue somente uma imagem final:
+
+ETAPA 1 — RECONSTRUÇÃO NO ÂNGULO CORRETO
+
+- Primeiro imagine o cabelo completo da segunda imagem aplicado à cabeça implícita da primeira imagem.
+- Adapte a distribuição das mechas, a franja, o topo, as laterais e o volume para o ângulo da primeira imagem.
+- Preserve a identidade do penteado da segunda imagem, mas redesenhe sua geometria para respeitar a perspectiva da primeira.
+- Não reproduza a vista, o contorno da cabeça ou a orientação presentes na segunda imagem.
+- O contorno interno do cabelo deve acompanhar o mesmo crânio, testa, laterais e abertura facial indicados pela primeira imagem.
+
+ETAPA 2 — SEPARAÇÃO EM CAMADAS
+
+Depois que o cabelo completo estiver corretamente reconstruído, separe exatamente esse mesmo cabelo em duas camadas complementares, sem alterar desenho, posição, escala, cor, ângulo ou perspectiva:
+
+1. CAMADA TRASEIRA: somente os pixels do cabelo que devem ser desenhados atrás da cabeça, do pescoço e do corpo.
+2. CAMADA FRONTAL: somente os pixels do cabelo que devem ser desenhados sobre o crânio, a testa, as laterais do rosto e a frente do corpo.
+
+SIGNIFICADO OBRIGATÓRIO DE “CAMADA TRASEIRA”:
+
+- A camada traseira NÃO é uma vista da pessoa por trás.
+- NÃO gire a cabeça, NÃO inverta a câmera e NÃO mostre a nuca como se o personagem estivesse de costas.
+- As camadas traseira e frontal são vistas exatamente pelo mesmo ângulo da primeira imagem.
+- “Traseira” significa apenas profundidade de composição: é a parte do mesmo cabelo que ficará atrás do personagem quando as imagens forem empilhadas.
+- A camada traseira isolada pode parecer incompleta, parcialmente escondida ou sem detalhes na região coberta pela cabeça. Isso é correto.
+- Imagine a montagem nesta ordem: CAMADA TRASEIRA embaixo, personagem no meio e CAMADA FRONTAL em cima.
+- Quando sobrepostas, as duas camadas devem formar um único penteado contínuo, sem mudança de perspectiva, frestas ou duplicação evidente de mechas.
+
+FORMATO EXATO DA IMAGEM FINAL:
+
+- Gere uma única imagem PNG transparente de exatamente 1536 × 1024 pixels.
+- Divida o canvas em dois painéis iguais de 768 × 1024 pixels, lado a lado.
+- No painel ESQUERDO, coloque exclusivamente a CAMADA TRASEIRA.
+- No painel DIREITO, coloque exclusivamente a CAMADA FRONTAL.
+- Use a primeira imagem como guia exato para a posição, o tamanho e o alinhamento das peças dentro dos painéis.
+- Mantenha as duas camadas na mesma altura, escala, perspectiva e eixo de cabeça.
+- Não transforme as peças em vistas frontal e posterior. Ambas pertencem à mesma vista e ao mesmo personagem.
+- Não inclua linha divisória, borda, texto, rótulo, seta ou marca entre os painéis.
+
+TRANSPARÊNCIA E CONTEÚDO:
+
+- A imagem final deve conter exclusivamente pixels do cabelo.
+- Não desenhe rosto, olhos, boca, sobrancelhas, pele, cabeça, pescoço, orelhas, corpo, roupa ou acessórios.
+- Não copie a silhueta humana vazia existente na primeira imagem.
+- Não deixe preenchimento opaco, sombra ou cor no espaço do rosto, pescoço ou corpo.
+- Não inclua fundo preto, cinza, branco, verde, colorido, quadriculado ou degradê.
+- Não inclua brilho externo, aura, sombra projetada, iluminação ambiental ou cenário.
+- Todo o espaço fora do cabelo deve possuir transparência alfa total.
+- Preserve somente os contornos e sombras que pertencem ao próprio desenho do cabelo.
+- Não copie a cor vermelha da primeira imagem. Use a cor determinada pela segunda imagem.
+- Não crie um novo penteado inspirado livremente: preserve a identidade visual da segunda imagem.
+- Gere apenas uma imagem final.
+
+VERIFICAÇÃO FINAL ANTES DE ENTREGAR:
+
+- O ângulo e o encaixe correspondem à PRIMEIRA IMAGEM?
+- O penteado, a franja, as mechas, o comprimento e a cor correspondem à SEGUNDA IMAGEM?
+- A camada esquerda é profundidade traseira do mesmo ângulo, e não uma vista por trás?
+- A camada direita é a continuação frontal exata da camada esquerda?
+- O resultado contém somente cabelo sobre transparência total?
+
+Entregue um único PNG transparente de 1536 × 1024: camada traseira no painel esquerdo e camada frontal no painel direito, ambas reconstruídas no ângulo da primeira imagem e com o penteado da segunda imagem.

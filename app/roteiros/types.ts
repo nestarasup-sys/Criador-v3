@@ -1,0 +1,136 @@
+export type PremiumCharacter = {
+  id: string;
+  name: string;
+  model: "feminino" | "masculino";
+  photoUrl?: string;
+  photoDataUrl?: string;
+  basePackId?: string;
+  expressionPackId?: string | null;
+  updatedAt: string;
+};
+
+export type NarrativeRelationship = {
+  id: string;
+  targetCharacterId: string;
+  description: string;
+};
+
+export type NarrativeProfile = {
+  characterId: string;
+  personality: string;
+  backstory: string;
+  fynRelationship: string;
+  speakingStyle: string;
+  relationships: NarrativeRelationship[];
+  additionalRules: string;
+  updatedAt: string;
+};
+
+export type RulePriority = "low" | "normal" | "high";
+
+export type GlobalRule = {
+  id: string;
+  title: string;
+  description: string;
+  enabled: boolean;
+  priority: RulePriority;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AiProvider = "none" | "lmstudio" | "ollama";
+
+export type RoteirosSettings = {
+  aiProvider: AiProvider;
+  aiBaseUrl: string;
+  aiModel: string;
+  temperature: number;
+  defaultBlockCount: number;
+  shortLinesByDefault: boolean;
+  historyLimit: number;
+};
+
+export type ReactionBlockType = "speech" | "thought" | "silent";
+export type TikTokTimeline = "unspecified" | "past" | "present" | "future";
+
+export type ReactionBlock = {
+  id: string;
+  characterId: string;
+  type: ReactionBlockType;
+  emotion: string;
+  text: string;
+  englishText: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Referência persistida para um vídeo copiado pelo servidor local. */
+export type TikTokVideoReference = {
+  name: string;
+  storedPath: string;
+  /** URL local usada pela prévia reproduzível do TikTok. */
+  url?: string;
+  contentType: string;
+  size: number;
+  updatedAt: string;
+};
+
+export type TikTokSection = {
+  id: string;
+  title: string;
+  description: string;
+  timeline: TikTokTimeline;
+  sceneGoal: string;
+  userInstruction: string;
+  specificRules: string;
+  shortLines: boolean;
+  /** Opcional para manter compatibilidade com roteiros antigos. */
+  video?: TikTokVideoReference;
+  reactionBlocks: ReactionBlock[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ScriptParticipant = {
+  characterId: string;
+  active: boolean;
+};
+
+export type ScriptProject = {
+  id: string;
+  title: string;
+  generalContext: string;
+  participants: ScriptParticipant[];
+  tiktoks: TikTokSection[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type RoteirosState = {
+  version: 1;
+  profiles: NarrativeProfile[];
+  scripts: ScriptProject[];
+  globalRules: GlobalRule[];
+  settings: RoteirosSettings;
+};
+
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
+
+export type GeneratedReaction = {
+  characterId: string;
+  type: ReactionBlockType;
+  emotion: string;
+  text: string;
+};
+
+export type AiCharacterContext = {
+  id: string;
+  name: string;
+  gender: "male" | "female" | "unspecified";
+  personality: string;
+  backstory: string;
+  fynRelationship: string;
+  speakingStyle: string;
+  additionalRules: string;
+  relationships: Array<{ targetCharacterId: string; targetCharacterName: string; description: string }>;
+};
