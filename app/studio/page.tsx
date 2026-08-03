@@ -56,7 +56,7 @@ export default function StudioPage() {
   const [viewMode, setViewMode] = useState(false);
   const [dockSide, setDockSide] = useState<"left" | "right">("right");
   const [characterPositionsLocked, setCharacterPositionsLocked] = useState(false);
-  const [rosterCollapsed, setRosterCollapsed] = useState(false);
+  const [backgroundCollapsed, setBackgroundCollapsed] = useState(false);
   const [rosterCompact, setRosterCompact] = useState(false);
   const [, setSaveStatus] = useState("Carregando…");
   const [pcStorageAvailable, setPcStorageAvailable] = useState(false);
@@ -312,7 +312,7 @@ export default function StudioPage() {
 
   function resetRosterUi() {
     setCharacterPositionsLocked(false);
-    setRosterCollapsed(false);
+    setBackgroundCollapsed(false);
     setRosterCompact(false);
   }
 
@@ -736,7 +736,7 @@ export default function StudioPage() {
         />
 
       <aside className={`${styles.rightArea} ${dockSide === "left" ? styles.dockLeft : ""} ${rosterCompact ? styles.rosterAreaCompact : ""}`}>
-          <StudioInspector
+          <div className={styles.inspectorDock}><StudioInspector
             studio={studio}
             selection={selection}
             selectedCharacter={selectedCharacter}
@@ -747,6 +747,8 @@ export default function StudioPage() {
             emotions={selectedCharacterSource ? emotionOptionsForCharacter(selectedCharacterSource, data.expressionPacks) : []}
             translatingBubbleId={translatingBubbleId}
             onToggleBackgroundFit={() => updateStudio((item) => ({ ...item, background: item.background ? { ...item.background, fit: item.background.fit === "cover" ? "contain" : "cover" } : null }))}
+            backgroundCollapsed={backgroundCollapsed}
+            onToggleBackgroundCollapsed={() => setBackgroundCollapsed((collapsed) => !collapsed)}
             onRemoveBackground={() => updateStudio((item) => ({ ...item, background: null }))}
             onUpdate={updateElement}
             onCopyBubble={() => selectedBubble && void copyBubbleText(selectedBubble.text)}
@@ -755,7 +757,7 @@ export default function StudioPage() {
             onLayer={changeLayer}
             onRemove={removeSelected}
             onDuplicate={duplicateSelected}
-          />
+          /></div>
           <StudioRoster
             rosterIds={studio.rosterIds}
             charactersById={charactersById}
@@ -767,8 +769,8 @@ export default function StudioPage() {
             onEditRoster={() => { setEditingStudioId(studio.id); setCreateName(studio.name); setCreateRoster(studio.rosterIds); resetRosterUi(); setCurrentId(null); setCreateOpen(true); }}
             positionsLocked={characterPositionsLocked}
             onTogglePositionsLock={() => setCharacterPositionsLocked((locked) => !locked)}
-            collapsed={rosterCollapsed}
-            onToggleCollapsed={() => setRosterCollapsed((collapsed) => !collapsed)}
+            backgroundCollapsed={backgroundCollapsed}
+            onToggleBackgroundCollapsed={() => setBackgroundCollapsed((collapsed) => !collapsed)}
             compact={rosterCompact}
             onToggleCompact={() => setRosterCompact((compact) => !compact)}
           />
