@@ -7,7 +7,7 @@ import { spawn } from "node:child_process";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const root = await mkdtemp(join(tmpdir(), "nymi-gacha-e2e-"));
-const env = { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: "6800", NYMI_UI_PORT: "6700" };
+const env = { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: "6800", NYMI_UI_PORT: "6700", NYMI_E2E: "1" };
 // Invoke Vinext's JS entry point directly for the build. This avoids the
 // `.cmd` shim and quoting problems caused by the project path containing
 // spaces on Windows.
@@ -31,6 +31,9 @@ let shuttingDown = false;
 async function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
+  // Let in-flight static responses finish before tearing down Vinext. This
+  // avoids benign ERR_STREAM_UNABLE_TO_PIPE messages during Chromium teardown.
+  await new Promise((resolve) => setTimeout(resolve, 1_000));
   for (const child of [ui, data]) {
     if (!child.killed) child.kill();
   }

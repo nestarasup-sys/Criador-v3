@@ -7,6 +7,7 @@ const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
 try {
   await page.goto(`${baseURL}/`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(page);
   assert.match(await page.title(), /Nymi Gacha/i);
   const navigation = page.getByRole("navigation", { name: "Áreas principais do Nymi Gacha" });
   await assertVisible(navigation.getByRole("link", { name: "Personagens" }));
@@ -16,6 +17,7 @@ try {
   // emit an unrelated duplicate-React warning during client-side <Link>
   // transitions, while the production build uses the same route contracts.
   await page.goto(`${baseURL}/studio`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(page);
   assert.match(await page.url(), /\/studio\/?$/);
   await assertVisible(page.getByRole("navigation", { name: "Áreas principais do Nymi Gacha" }).getByRole("link", { name: "Studio" }));
 
@@ -24,6 +26,7 @@ try {
   await page.close();
   const roteiroPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await roteiroPage.goto(`${baseURL}/roteiros`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(roteiroPage);
   await assertVisible(roteiroPage.getByRole("heading", { name: "Meus roteiros" }));
   await roteiroPage.getByRole("button", { name: /Criar roteiro/ }).first().click();
   await roteiroPage.getByLabel("Nome do roteiro").fill("E2E Fase 8");
@@ -40,6 +43,7 @@ try {
   // reopening the route for the persistence assertion.
   await roteiroPage.waitForTimeout(1_500);
   await roteiroPage.reload({ waitUntil: "domcontentloaded" });
+  await waitForImages(roteiroPage);
   await assertVisible(roteiroPage.getByText("E2E Fase 8", { exact: true }).first());
   await roteiroPage.waitForFunction(() => document.body.innerText.includes("TikTok 1"), undefined, { timeout: 20_000 });
 
@@ -52,6 +56,14 @@ try {
 
 async function assertVisible(locator) {
   await locator.waitFor({ state: "visible", timeout: 20_000 });
+}
+
+async function waitForImages(currentPage) {
+  await currentPage.waitForFunction(
+    () => Array.from(document.images).every((image) => image.complete),
+    undefined,
+    { timeout: 20_000 },
+  );
 }
 
 async function addTikTokAndWait(currentPage) {
@@ -81,7 +93,10 @@ async function monitorObjectUrls(currentPage, origin) {
     window.__nymiObjectUrlStats = () => ({ ...stats, active: active.size });
   });
   await currentPage.goto(`${origin}/`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(currentPage);
   await currentPage.goto(`${origin}/studio`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(currentPage);
   await currentPage.goto(`${origin}/roteiros`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(currentPage);
   return currentPage.evaluate(() => window.__nymiObjectUrlStats?.() ?? { created: 0, revoked: 0, active: 0 });
 }
