@@ -32,6 +32,8 @@ servidor web em `localhost:6700`.
 - `app/studio/character-renderer.ts` — composição final de personagem.
 - `app/studio/character-export.ts` — ZIP de expressões.
 - `app/roteiros/components/*` — home, fichas, configurações e editor.
+- `app/shared/NymiShell.tsx` — navegação principal, marca e indicador de
+  conexão compartilhados pelas três áreas.
 - `app/roteiros/storage.ts` — gateway do cliente para dados e arquivos.
 - `app/lib/local-data-client.ts` — endpoint loopback centralizado.
 

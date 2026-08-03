@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createGlobalRule, createId, createNarrativeProfile, createScriptProject, nowIso, PROTECTED_RULES } from "../defaults";
 import { profileCompletion } from "../ai-context";
 import { aiRequest, exportJson } from "../storage";
+import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
@@ -29,9 +30,8 @@ function Header({ tab, setTab, saveStatus, pcAvailable, saveNow }: { tab: HomeTa
         <div className={styles.brandBlock}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div>
         <div className={styles.moduleBadge}><small>MÓDULO</small><strong>ROTEIROS</strong></div>
         <div className={styles.saveCluster}>
-          <span className={`${styles.savePill} ${pcAvailable ? styles.online : styles.offline}`}><i />{statusText[saveStatus]}</span>
-          <Link className={styles.headerNavButton} href="/">Criador</Link>
-          <Link className={styles.headerNavButton} href="/studio">Studio</Link>
+          <NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} />
+          <NymiNavigation active="roteiros" compact />
           <button className={styles.ghostButton} onClick={saveNow}>Salvar agora</button>
         </div>
       </header>

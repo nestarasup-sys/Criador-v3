@@ -4,6 +4,7 @@ import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect,
 import Link from "next/link";
 import styles from "./studio.module.css";
 import { localDataFetch } from "../lib/local-data-client";
+import { NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import { expressionKey, renderStudioCharacter } from "./character-renderer";
 import { loadAppData, migrateBrowserStudiosToPc, mirrorStudios, openStudioPrintsFolder, recordStudioDeletion, saveStudioPrint, saveStudios, uploadStudioAsset } from "./storage";
 import {
@@ -768,10 +769,10 @@ export default function StudioPage() {
       <main className={styles.library}>
         <header className={styles.libraryHeader}>
           <div><span className={styles.eyebrow}>NYMI GACHA</span><h1>Seus Studios</h1><p>Monte cenas com os personagens que você já criou.</p></div>
-          <div className={styles.libraryActions}><Link href="/" className={styles.ghostButton}>← Personagens</Link><button className={styles.primaryButton} onClick={() => { setEditingStudioId(null); setCreateName(""); setCreateRoster([]); setCreateOpen(true); }}>＋ Criar novo Studio</button></div>
+          <div className={styles.libraryActions}><NymiNavigation active="studio" compact /><Link href="/" className={styles.ghostButton}>← Personagens</Link><button className={styles.primaryButton} onClick={() => { setEditingStudioId(null); setCreateName(""); setCreateRoster([]); setCreateOpen(true); }}>＋ Criar novo Studio</button></div>
         </header>
         <section className={`${styles.storageCard} ${pcStorageAvailable ? styles.storageReady : styles.storageOffline}`}>
-          <div><span>{pcStorageAvailable ? "●" : "○"}</span><div><strong>{pcStorageAvailable ? "Salvamento no PC" : "Somente neste navegador"}</strong><small>{migrationAvailable ? "Existem Studios antigos aguardando migração" : pcStorageAvailable ? "Studios, fundos e objetos ficam disponíveis entre navegadores" : "Abra pelo INICIAR-NYMI-GACHA.bat para sincronizar"}</small></div></div>
+          <div><NymiConnectionStatus connected={pcStorageAvailable} detail={migrationAvailable ? "Existem Studios antigos aguardando migração" : undefined} /><div><strong>{pcStorageAvailable ? "Salvamento no PC" : "Somente neste navegador"}</strong><small>{migrationAvailable ? "Existem Studios antigos aguardando migração" : pcStorageAvailable ? "Studios, fundos e objetos ficam disponíveis entre navegadores" : "Abra pelo INICIAR-NYMI-GACHA.bat para sincronizar"}</small></div></div>
           {migrationAvailable
             ? <button onClick={migrateBrowserStudios} disabled={isMigrating}>{isMigrating ? "Migrando…" : "Migrar Studios para o PC"}</button>
             : !pcStorageAvailable && <button onClick={() => saveNow("Sincronização concluída")}>Tentar novamente</button>}
@@ -840,7 +841,7 @@ export default function StudioPage() {
         <header className={styles.topbar}>
           <button className={styles.roundButton} title="Voltar aos Studios" onClick={leaveStudio}>←</button>
           <div className={styles.studioName}><span>STUDIO</span><input value={studio.name} onChange={(event) => updateStudio((item) => ({ ...item, name: event.target.value }), false)} /><small>{saveStatus}</small></div>
-          <div className={styles.history}><button title="Salvar agora no PC" onClick={() => saveNow()}>✓</button><button title="Desfazer" disabled={!undoStack.length} onClick={undo}>↶</button><button title="Refazer" disabled={!redoStack.length} onClick={redo}>↷</button></div>
+          <div className={styles.history}><NymiNavigation active="studio" compact /><button title="Salvar agora no PC" onClick={() => saveNow()}>✓</button><button title="Desfazer" disabled={!undoStack.length} onClick={undo}>↶</button><button title="Refazer" disabled={!redoStack.length} onClick={redo}>↷</button></div>
         </header>
 
         <aside className={styles.leftTools}>

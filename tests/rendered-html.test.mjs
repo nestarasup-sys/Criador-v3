@@ -404,7 +404,8 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 
   assert.match(page, /MEUS PERSONAGENS/);
   assert.match(page, /Novo Personagem/);
-  assert.match(page, /Dados do PC/);
+  assert.match(page, /NymiConnectionStatus/);
+  assert.match(page, /Migrar dados deste navegador/);
   assert.match(page, /Ajustes do item selecionado/);
   assert.match(page, /stage-adjust-panel/);
   assert.doesNotMatch(page, /<strong>\{item\.name\}<\/strong>/);
@@ -414,7 +415,7 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 });
 
 test("ships the independent Premium Roteiros workspace with PC persistence", async () => {
-  const [home, editor, types, contract, storage, service, server, mainPage] = await Promise.all([
+  const [home, editor, types, contract, storage, service, server, mainPage, shell] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/types.ts", import.meta.url), "utf8"),
@@ -423,9 +424,11 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
     readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(mainPage, /href="\/roteiros"/);
+  assert.match(mainPage, /NymiNavigation active="characters"/);
+  assert.match(shell, /href: "\/roteiros"/);
   assert.match(home, /Meus roteiros/);
   assert.match(home, /Fichas dos personagens/);
   assert.match(home, /IA e regras/);
@@ -538,4 +541,30 @@ test("anchors the six preview controls to the canvas container", async () => {
   assert.match(css, /\.canvas-with-tools\s*\{[^}]*position:\s*relative/);
   assert.match(css, /\.stage-tools\s*\{[^}]*top:\s*34px;\s*left:\s*12px/);
   assert.match(css, /\.canvas-frame\s*\{\s*width:\s*100%/);
+});
+
+test("provides the shared Nymi navigation shell on all primary areas", async () => {
+  const [shell, globalCss, characters, studio, roteirosHome, roteirosEditor] = await Promise.all([
+    readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(shell, /NymiNavigation/);
+  assert.match(shell, /href: "\/"/);
+  assert.match(shell, /href: "\/studio"/);
+  assert.match(shell, /href: "\/roteiros"/);
+  assert.match(shell, /aria-current/);
+  assert.match(shell, /role="status"/);
+  assert.match(shell, /Conectado ao PC/);
+  assert.match(globalCss, /:focus-visible/);
+  assert.match(globalCss, /prefers-reduced-motion/);
+  assert.match(globalCss, /@media\s*\(max-width:\s*1366px\)/);
+  assert.match(characters, /NymiNavigation active="characters"/);
+  assert.match(studio, /NymiNavigation active="studio"/);
+  assert.match(roteirosHome, /NymiNavigation active="roteiros"/);
+  assert.match(roteirosEditor, /NymiNavigation active="roteiros"/);
 });

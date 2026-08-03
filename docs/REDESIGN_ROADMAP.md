@@ -109,20 +109,28 @@ Aceite validado:
 - uploads excessivos e tipos não permitidos falham com 413/415.
 - todos os testes do baseline passam.
 
-## Fase 3 — Shell NYMI e design system
+## Fase 3 — Shell NYMI e design system — concluída
 
 Objetivo: introduzir identidade e navegação sem redesenhar os editores internamente.
 
-Tarefas:
+Entregas realizadas:
 
-1. Tokens CSS, tipografia, ícones e componentes base acessíveis.
-2. Shell global com Personagens, Studio e Roteiros.
-3. Indicadores compartilhados de conexão/salvamento/erro.
-4. Layout responsivo mínimo de 1366×768.
-5. Testes de navegação e snapshots visuais.
+1. Tokens CSS, tipografia, ícones e componentes base acessíveis em
+   `app/globals.css`.
+2. Shell global reutilizável em `app/shared/NymiShell.tsx`, com navegação para
+   Personagens, Studio e Roteiros e estado ativo acessível.
+3. Indicador compartilhado de conexão local, preservando as mensagens de
+   salvamento existentes em cada área.
+4. Layout responsivo mínimo de 1366×768, com redução controlada de espaçamento
+   e navegação compacta em telas menores.
+5. Foco visível por teclado, suporte a `prefers-reduced-motion` e teste de
+   contrato/snapshot do shell em `tests/rendered-html.test.mjs`.
 
-Aceite: as três áreas continuam acessíveis nas rotas antigas e todas as ações
-principais mantêm posição funcional suficiente para não quebrar usuários.
+Aceite validado: as três áreas continuam acessíveis nas rotas antigas, os
+links indicam a área ativa sem alterar suas ações internas, e os testes de
+shell, build, typecheck e lint permanecem verdes. A fase não redesenha os
+editores internamente; ela estabelece a base visual e de navegação para as
+fases 4–6.
 
 ## Fase 4 — Criador por fatias
 

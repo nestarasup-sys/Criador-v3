@@ -2,7 +2,7 @@
 
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCharacterBundle } from "./studio/character-export";
-import Link from "next/link";
+import { NymiConnectionStatus, NymiNavigation } from "./shared/NymiShell";
 import { localDataFetch } from "./lib/local-data-client";
 import { applyChromaPixels } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
@@ -3904,10 +3904,9 @@ export default function Home() {
           </div>
         </div>
         <div className="top-actions">
-          <span className={`status ${pcStorageAvailable ? "connected" : ""}`} title={notice}><i />{pcStorageAvailable ? "Dados do PC" : "Dados do navegador"}</span>
+          <NymiConnectionStatus connected={pcStorageAvailable} detail={notice} />
           <span className="notice-pill" title={notice}>{notice}</span>
-          <Link className="button roteiros-link" href="/roteiros">▤ Roteiros</Link>
-          <a className="button studio-link" href="/studio">✦ Studio</a>
+          <NymiNavigation active="characters" compact />
           <button className="button secondary" onClick={() => newCharacter()}>＋ Novo</button>
           <button className="button secondary" onClick={saveCharacter}>▣ Salvar</button>
           {(usesBuiltInBase || activeExpressionPack) && (
