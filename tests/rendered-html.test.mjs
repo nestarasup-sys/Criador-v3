@@ -127,8 +127,9 @@ test("discovers numbered model folders with shared hair and outfits by gender", 
 });
 
 test("shows each pack's supported Studio expressions and copies bubble text", async () => {
-  const [page, types, expressions, css] = await Promise.all([
+  const [page, inspector, types, expressions, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/expression-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
@@ -141,28 +142,22 @@ test("shows each pack's supported Studio expressions and copies bubble text", as
   assert.match(page, /emotionOptionsForCharacter/);
   assert.match(page, /navigator\.clipboard\.writeText/);
   assert.match(page, /Texto copiado/);
-  assert.match(page, />Copiar<\/button>/);
+  assert.match(inspector, />Copiar<\/button>/);
   assert.match(css, /grid-template-columns:\s*210px 220px/);
   assert.match(css, /\.textFieldHeading/);
 });
 
 test("creates speech and thought bubbles from the left Studio toolbar", async () => {
-  const [page, css] = await Promise.all([
-    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+  const [toolbar, inspector, css] = await Promise.all([
+    readFile(new URL("../app/studio/components/StudioToolbar.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
-  const toolbarStart = page.indexOf(`<aside className={styles.leftTools}>`);
-  const toolbarEnd = page.indexOf(`</aside>`, toolbarStart);
-  const toolbar = page.slice(toolbarStart, toolbarEnd);
-  const inspectorStart = page.indexOf("function CharacterInspector");
-  const inspectorEnd = page.indexOf("function ObjectInspector", inspectorStart);
-  const characterInspector = page.slice(inspectorStart, inspectorEnd);
-
   assert.ok(toolbar.indexOf("Narrador") < toolbar.indexOf("Fala"));
   assert.ok(toolbar.indexOf("Fala") < toolbar.indexOf("Pensamento"));
   assert.match(toolbar, /disabled=\{!selectedCharacter\}/);
   assert.match(toolbar, /Selecione um personagem primeiro/);
-  assert.doesNotMatch(characterInspector, /Balão de fala|onBubble|chatButtons/);
+  assert.doesNotMatch(inspector, /chatButtons/);
   assert.match(css, /\.bubbleTool/);
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
 });
@@ -341,11 +336,13 @@ test("shares characters and imported assets through the local PC service", async
 });
 
 test("saves Studios and their uploaded assets durably on the local PC", async () => {
-  const [page, storage, server, css] = await Promise.all([
+  const [page, toolbar, storage, server, css, printRenderer] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioToolbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/scene-print-renderer.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /Salvo no PC/);
@@ -363,13 +360,34 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(server, /url\.pathname === "\/prints\/open"/);
   assert.match(storage, /saveStudioPrint/);
   assert.match(storage, /openStudioPrintsFolder/);
-  assert.match(page, /canvas\.width = 1920/);
-  assert.match(page, /canvas\.height = 1080/);
-  assert.match(page, /imageSmoothingQuality = "high"/);
+  assert.match(page, /renderStudioSceneToCanvas/);
+  assert.match(printRenderer, /canvas\.width = 1920/);
+  assert.match(printRenderer, /canvas\.height = 1080/);
+  assert.match(printRenderer, /imageSmoothingQuality = "high"/);
   assert.match(page, /Print salvo em/);
-  assert.match(page, />Pasta<\/strong>/);
+  assert.match(toolbar, />Pasta<\/strong>/);
   assert.doesNotMatch(css, /translate3d/);
   assert.match(css, /\.dragging[^}]*will-change:\s*transform/);
+});
+
+test("keeps Studio scene operations, history and print rendering in shared modules", async () => {
+  const [page, ops, history, canvas, printRenderer] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/scene-ops.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/history.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioCanvas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/scene-print-renderer.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /renderStudioSceneToCanvas/);
+  assert.match(page, /pushStudioHistory/);
+  assert.match(ops, /updateSceneElement/);
+  assert.match(ops, /removeSceneElement/);
+  assert.match(ops, /duplicateSceneElement/);
+  assert.match(history, /undoStudioHistory/);
+  assert.match(history, /redoStudioHistory/);
+  assert.match(canvas, /onBeginDrag/);
+  assert.match(printRenderer, /canvas\.width = 1920/);
+  assert.match(printRenderer, /studioCanvasToPng/);
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {

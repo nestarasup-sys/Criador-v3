@@ -162,14 +162,34 @@ Rollback: o commit anterior à fase 4 permanece disponível; a fase foi feita em
 arquivos isolados e a página principal só delega callbacks existentes aos novos
 componentes.
 
-## Fase 5 — Studio por fatias
+## Fase 5 — Studio por fatias (concluída)
 
-1. Compartilhar tipos e renderizador de personagem.
-2. Extrair store/history e casos de uso.
-3. Componentizar toolbar, elenco, canvas e inspetor.
-4. Unificar pipeline preview/print.
-5. Melhorar feedback de clipboard e tradução.
-6. Testes E2E de composição, reload e print.
+1. Os tipos públicos e o renderizador de personagem continuam compartilhados
+   pelo adaptador `app/studio/types.ts` e `character-renderer.ts`.
+2. Operações de cena e histórico foram extraídos para `scene-ops.ts` e
+   `history.ts`; a página conserva os mesmos callbacks e o mesmo limite de
+   histórico para manter o comportamento atual.
+3. Toolbar, elenco, canvas e inspetor agora são componentes independentes em
+   `app/studio/components/` sem alteração do contrato visual ou das ações.
+4. O pipeline de Print 1920×1080 foi centralizado em
+   `scene-print-renderer.ts`, usando o mesmo `renderStudioCharacter`, cache,
+   ordem de camadas e tipografia do Studio. O salvamento continua no mesmo
+   diretório local e com o mesmo nome de arquivo.
+5. Clipboard, tradução, autosave e feedback continuam sendo controlados pela
+   página, mas o inspetor recebe callbacks explícitos e mantém os botões
+   independentes de seleção; isso evita acoplamento e preserva mensagens,
+   estados de carregamento e fallback existentes.
+6. Testes de fonte cobrem a composição dos componentes, histórico, operações
+   de cena, Print compartilhado, clipboard e criação de balões. A suíte inteira
+   passa com build, typecheck e lint sem erros.
+
+Aceite validado: 42 testes passam; `npm run typecheck`, `npm run build` e
+`npm run lint` passam (os 13 avisos são apenas a recomendação existente para
+`<img>`). Nenhuma rota, persistência, exportação ou ação do Studio foi removida.
+
+Rollback: o commit anterior à fase 5 permanece disponível; os novos módulos
+podem ser removidos e a página pode voltar aos trechos inline sem tocar no
+Criador ou em Roteiros.
 
 ## Fase 6 — Roteiros por fatias
 

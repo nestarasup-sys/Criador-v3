@@ -132,8 +132,9 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 
 1. Ajustes avançados ainda têm partes síncronas no componente do Criador; o
    chroma key principal já possui Worker e fallback.
-2. Arquivo React monolítico: qualquer estado pode re-renderizar uma árvore grande;
-   topbar, biblioteca, toolbar e cabeçalho do catálogo já foram isolados.
+2. A página do Studio já não concentra a árvore visual: toolbar, biblioteca,
+   canvas, elenco e inspetor vivem em componentes isolados; operações e
+   histórico vivem em módulos puros.
 3. URLs e blobs são hidratados em lote; catálogos grandes aumentam memória.
 4. Serialização completa de snapshots no autosave.
 5. CSS e DOM extensos nos editores centrais.
@@ -146,6 +147,26 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 - Usar Web Worker para chroma, recorte e ajustes pesados após testes de paridade.
 - Introduzir repositórios tipados e schemas versionados.
 - Persistir deltas/entidades em vez de snapshots completos numa fase posterior.
+
+### Studio após a fase 5
+
+```text
+app/studio/
+├── page.tsx                    orquestra estado, storage e casos de uso
+├── components/
+│   ├── StudioToolbar.tsx       navegação, ferramentas e inputs de arquivo
+│   ├── StudioCanvas.tsx        composição DOM e arraste da cena
+│   ├── StudioInspector.tsx     controles de seleção e callbacks
+│   └── StudioRoster.tsx        elenco lateral
+├── scene-ops.ts                operações puras de cena e camadas
+├── history.ts                  undo/redo com snapshots limitados
+└── scene-print-renderer.ts     composição Canvas 1920×1080 para Print
+```
+
+O `page.tsx` permanece como orquestrador para evitar mudar os contratos de
+persistência existentes, mas não duplica a renderização do Print. A prévia DOM
+e a exportação Canvas usam o mesmo renderizador de personagem, cache e regras de
+camadas; alterações futuras devem entrar primeiro nesses módulos compartilhados.
 
 ## 6. Manutenibilidade
 
@@ -167,7 +188,7 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 - `npm ci`: concluído.
 - `npm run lint`: zero erros, nove avisos de `<img>`.
 - `npm run typecheck`: passou.
-- `npm test`: build passou e 41 testes passaram após a fase 4.
+- `npm test`: build passou e 42 testes passaram após a fase 5.
 - `npm run test:unit` isolado falha em um teste que espera `dist/server/index.js`;
   isso é dependência de ordem do script, não falha do produto após o build.
 - `npm audit`: 1 baixo, 4 moderados e 13 altos.
