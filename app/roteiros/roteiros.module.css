@@ -1136,18 +1136,18 @@
 .editorLayout .generationPanel,
 .editorLayout .blocksSection,
 .editorLayout .contextZone {
-  font-size:120%;
+  font-size:104%;
 }
 .editorLayout input,
 .editorLayout select,
 .editorLayout textarea,
 .editorLayout button {
-  font-size:120%;
+  font-size:104%;
 }
 .editorLayout .generationPanel p,
 .editorLayout .blocksHeading small,
 .editorLayout .tiktokIndex small {
-  font-size:108%;
+  font-size:104%;
 }
 .blockActions button:hover:not(:disabled) {
   border-color:color-mix(in srgb,var(--block-accent) 45%,#ddd);
