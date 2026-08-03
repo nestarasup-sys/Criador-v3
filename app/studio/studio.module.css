@@ -526,6 +526,23 @@
   color: #963d60;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
 }
+.expressionStates button {
+  border-color:rgba(183,137,32,.62);
+  background:rgba(183,137,32,.82);
+  color:#fff;
+  text-shadow:0 1px 2px rgba(79,52,7,.35);
+}
+.expressionStates button:hover {
+  border-color:#b98a21;
+  background:rgba(183,137,32,.94);
+  color:#fff;
+}
+.expressionStates button.activeOption {
+  border-color:#8f6812;
+  background:rgba(142,99,10,.96);
+  color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(255,241,184,.65), 0 2px 6px rgba(145,98,10,.2);
+}
 .inspector .wideButton { background: #fff1f6; }
 .inspector .dangerButton {
   border-color: #f1c9d6;
