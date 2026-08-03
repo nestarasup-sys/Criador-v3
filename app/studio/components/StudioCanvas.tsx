@@ -20,7 +20,7 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, selec
   const narrators = [...studio.narrators].sort((a, b) => a.z - b.z);
   const isEmpty = !studio.background && !characters.length && !objects.length && !bubbles.length && !narrators.length;
   return <div ref={stageRef} className={styles.stage} onPointerDown={onStagePointerDown}>
-    {studio.background && <img className={`${styles.background} ${studio.background.fit === "contain" ? styles.contain : ""}`} src={studio.background.src} alt="Fundo da cena" />}
+    {studio.background && <img className={`${styles.background} ${studio.background.fit === "contain" ? styles.contain : ""}`} src={studio.background.src} alt="" aria-hidden="true" />}
     {isEmpty && <div className={styles.emptyStageMessage}>Sua cena começa aqui</div>}
     {objects.map((object) => <img key={object.id} src={object.src} alt={object.name} className={`${styles.sceneObject} ${selection?.kind === "object" && selection.id === object.id ? styles.selected : ""}`} style={{ left: `${object.x * 100}%`, top: `${object.y * 100}%`, zIndex: object.z, "--scene-scale": object.scale, "--scene-flip": object.flipX ? -1 : 1 } as CSSProperties} onPointerDown={(event) => onBeginDrag(event, "object", object.id, object.x, object.y)} />)}
     {characters.map((instance) => {

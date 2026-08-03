@@ -387,6 +387,8 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(history, /undoStudioHistory/);
   assert.match(history, /redoStudioHistory/);
   assert.match(canvas, /onBeginDrag/);
+  assert.match(canvas, /className=\{\x60\$\{styles\.background\}/);
+  assert.match(canvas, /alt="" aria-hidden="true"/);
   assert.match(printRenderer, /canvas\.width = 1920/);
   assert.match(printRenderer, /studioCanvasToPng/);
 });
