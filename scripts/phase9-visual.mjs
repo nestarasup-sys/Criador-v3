@@ -38,6 +38,7 @@ let closing = false;
 async function closeServer() {
   if (closing) return;
   closing = true;
+  await new Promise((resolve) => setTimeout(resolve, 150));
   if (server.exitCode === null) server.kill();
 }
 
