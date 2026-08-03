@@ -6,13 +6,18 @@ import Link from "next/link";
 import { localDataFetch } from "./lib/local-data-client";
 import { applyChromaPixels } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
+import { normalizeBasePackId } from "./domain/base-model.mjs";
+import type {
+  BasePackId,
+  Category,
+  FaceMode,
+  ItemTransform,
+  MaskStroke,
+  Model,
+  StoredLayerMasks,
+} from "./domain/character-primitives";
 
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
-
-type Model = "feminino" | "masculino";
-type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
-type FaceMode = "base" | "single" | "pack";
-type BasePackId = string;
 
 const PACK_EXPRESSION_KEYS = [
   "normal",
@@ -75,15 +80,7 @@ type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit";
 type PreviewPan = { x: number; y: number };
 type ExportFrame = { x: number; y: number; scale: number };
 
-type MaskPoint = { x: number; y: number };
-type MaskStroke = {
-  id: string;
-  mode: BrushMode;
-  size: number;
-  points: MaskPoint[];
-};
 type LayerMasks = Record<MaskTarget, MaskStroke[]>;
-type StoredLayerMasks = Partial<LayerMasks> & { hair?: MaskStroke[] };
 
 type BasePackDefinition = {
   id: BasePackId;
@@ -108,12 +105,6 @@ const DEFAULT_BASE_PACKS: BasePackCollection = {
   ],
 };
 
-function normalizeBasePackId(packId?: BasePackId): BasePackId {
-  if (!packId || packId === "padrao") return "modelo-1";
-  const legacy = packId.match(/^pack-(\d+)$/);
-  return legacy ? `modelo-${Number(legacy[1]) + 1}` : packId;
-}
-
 function getBasePack(packs: BasePackCollection, model: Model, packId?: BasePackId): BasePackDefinition {
   const normalizedId = normalizeBasePackId(packId);
   return packs[model].find((pack) => pack.id === normalizedId) ?? packs[model][0];
@@ -130,16 +121,6 @@ function basePackCacheKey(model: Model, packId: BasePackId) {
 function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId) {
   return `${outfitId ?? "nenhuma"}:${packId}`;
 }
-
-type ItemTransform = {
-  x: number;
-  y: number;
-  scale: number;
-  scaleX: number;
-  scaleY: number;
-  rotation: number;
-  flipX: boolean;
-};
 
 type ColorAdjustment = {
   hue: number;

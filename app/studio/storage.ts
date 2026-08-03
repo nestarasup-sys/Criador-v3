@@ -1,5 +1,6 @@
 import type { AppData, Character, Studio, StudioAsset } from "./types";
 import { localDataFetch } from "../lib/local-data-client";
+import { normalizeBasePackId } from "../domain/base-model.mjs";
 
 const STUDIO_KEY = "gacha-maker-studios";
 const STUDIO_DELETION_KEY = "gacha-maker-studio-deletions";
@@ -23,18 +24,10 @@ function readLocal<T>(key: string, fallback: T): T {
 }
 
 function normalizeCharacterModels(characters: Character[]) {
-  return characters.map((character) => {
-    const current = character.basePackId ?? "modelo-1";
-    const legacy = current.match(/^pack-(\d+)$/);
-    return {
-      ...character,
-      basePackId: current === "padrao"
-        ? "modelo-1"
-        : legacy
-          ? `modelo-${Number(legacy[1]) + 1}`
-          : current,
-    };
-  });
+  return characters.map((character) => ({
+    ...character,
+    basePackId: normalizeBasePackId(character.basePackId),
+  }));
 }
 
 function modifiedAt(studio: Studio) {

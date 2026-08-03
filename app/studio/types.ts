@@ -1,7 +1,22 @@
-export type Model = "feminino" | "masculino";
-export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
-export type FaceMode = "base" | "single" | "pack";
-export type BasePackId = string;
+import type {
+  BasePackId,
+  Category,
+  FaceMode,
+  ItemTransform,
+  MaskStroke,
+  Model,
+  StoredLayerMasks,
+} from "../domain/character-primitives";
+
+export type {
+  BasePackId,
+  Category,
+  FaceMode,
+  ItemTransform,
+  MaskStroke,
+  Model,
+  StoredLayerMasks,
+} from "../domain/character-primitives";
 
 export const STANDARD_EMOTIONS = [
   ["normal", "Normal"],
@@ -47,27 +62,6 @@ export const EXPRESSION_STATES = [
 export type Emotion = (typeof EMOTIONS)[number][0];
 export type ExpressionState = (typeof EXPRESSION_STATES)[number][0];
 export type ExpressionKey = Emotion | `${Emotion}_blink` | `${Emotion}_talk`;
-
-export type ItemTransform = {
-  x: number;
-  y: number;
-  scale: number;
-  scaleX: number;
-  scaleY: number;
-  rotation: number;
-  flipX: boolean;
-};
-
-export type MaskStroke = {
-  id: string;
-  mode: "erase" | "restore";
-  size: number;
-  points: Array<{ x: number; y: number }>;
-};
-
-export type StoredLayerMasks = Partial<Record<"body" | "hairFront" | "hairBack" | "outfit", MaskStroke[]>> & {
-  hair?: MaskStroke[];
-};
 
 export type Character = {
   id: string;

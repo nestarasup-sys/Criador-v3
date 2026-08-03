@@ -18,11 +18,11 @@ Estados usados:
 | Funcionalidade atual | Localização atual | Problemas encontrados | Solução proposta para a versão nova | Estado da reconstrução | Testes necessários | Compatibilidade |
 |---|---|---|---|---|---|---|
 | Criar/salvar personagens | `app/page.tsx`; `/characters` | UI, regra e persistência acopladas | Caso de uso e repositório tipado, mantendo rota adaptadora | Inventariada | CRUD, reinício e falha de serviço | Ler/escrever estado v2 |
-| Modelos e expressões | `app/page.tsx`; `public/models`; `/models` | Constantes duplicadas e aliases espalhados | Registro único e normalizador versionado | Inventariada | descoberta, aliases e pack incompleto | `pack-N` → `modelo-N` |
+| Modelos e expressões | `app/page.tsx`; `public/models`; `/models` | Constantes duplicadas e aliases espalhados | Registro único e normalizador versionado | Em andamento: normalizador e tipos primitivos compartilhados | descoberta, aliases e pack incompleto | `pack-N` → `modelo-N` |
 | Cabelos em camadas | `app/page.tsx` | Regras de par no componente | Entidade `HairGroup` e compositor puro | Inventariada | item, par, folha, z-order e máscara | IDs atuais preservados |
 | Roupas variantes | `app/page.tsx`; servidor | Migração e ordenação implícitas | `OutfitGroup` com índice/capa explícitos | Inventariada | 4/6 variantes, reorder, cor e export | campos legados normalizados |
 | Chroma/recorte | `chroma-processing.mjs`; `page.tsx` | Parte pura e parte duplicada na UI | Pipeline único, depois Worker com fallback | Inventariada | halo, verde legítimo, regiões e bordas | resultado visual equivalente |
-| Ajustes e máscaras | Criador; `studio/types.ts` | Tipos duplicados | Contrato compartilhado e comandos testáveis | Inventariada | round-trip, undo/redo e export | strokes antigos preservados |
+| Ajustes e máscaras | Criador; `studio/types.ts` | Tipos duplicados | Contrato compartilhado e comandos testáveis | Em andamento: transformações e strokes centralizados | round-trip, undo/redo e export | strokes antigos preservados |
 | PNG/ZIP | Criador; `character-export.ts` | Dois caminhos de composição | Renderizador canônico com adaptadores | Inventariada | golden images e estrutura ZIP | nomes aceitos pelo Video Maker |
 | CRUD de Studio | `studio/page.tsx`; `storage.ts` | Store local ao componente | Store por comandos e repositório local | Inventariada | CRUD, tombstone, mesclagem e reload | studios existentes abrem iguais |
 | Canvas do Studio | `studio/page.tsx` | Risco de divergência preview/export | Cena imutável e renderizador compartilhado | Inventariada | drag, layer e print golden | coordenadas atuais preservadas |

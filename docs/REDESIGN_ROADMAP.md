@@ -33,6 +33,16 @@ isolado dependente do artefato de build.
 
 Objetivo: reduzir duplicação sem alterar UI ou dados.
 
+Estado: **em andamento**.
+
+Primeiro slice concluído:
+
+- tipos primitivos de modelo, categoria, transformação e máscara compartilhados
+  entre Criador e Studio;
+- normalização legada de modelo centralizada;
+- teste unitário cobrindo valores vazios, `padrao`, `pack-N`, `modelo-N` e IDs livres;
+- typecheck, build e 34 testes aprovados sem alteração visual.
+
 Tarefas:
 
 1. Criar `src/domain` com tipos versionados de personagem, catálogo, Studio e Roteiros.
