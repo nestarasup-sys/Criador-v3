@@ -51,7 +51,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   return <div className={styles.emptyState}><span>✦</span><h2>Seu primeiro roteiro começa aqui</h2><p>Escolha os personagens do Premium e organize cada vídeo em TikToks e blocos de reação.</p><button className={styles.primaryButton} onClick={onCreate}>＋ Criar roteiro</button></div>;
 }
 
-function ScriptList({ state, characters, updateState }: { state: RoteirosState; characters: PremiumCharacter[]; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void }) {
+function ScriptList({ state, characters, updateState, saveSnapshot }: { state: RoteirosState; characters: PremiumCharacter[]; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void; saveSnapshot: (snapshot: RoteirosState) => Promise<boolean> }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"recent" | "old" | "name">("recent");
   const [creating, setCreating] = useState(false);
@@ -66,10 +66,12 @@ function ScriptList({ state, characters, updateState }: { state: RoteirosState; 
     return [...filtered].sort((a, b) => sort === "name" ? a.title.localeCompare(b.title, "pt-BR") : sort === "old" ? a.updatedAt.localeCompare(b.updatedAt) : b.updatedAt.localeCompare(a.updatedAt));
   }, [query, sort, state.scripts]);
 
-  const create = () => {
+  const create = async () => {
     const script = createScriptProject(title, selectedIds);
-    updateState((current) => ({ ...current, scripts: [...current.scripts, script] }));
-    window.location.href = `/roteiros/${script.id}`;
+    const nextState = { ...state, scripts: [...state.scripts, script] };
+    updateState(() => nextState);
+    if (await saveSnapshot(nextState)) window.location.href = `/roteiros/${script.id}`;
+    else window.alert("Não foi possível salvar o roteiro no PC. Verifique o servidor local e tente novamente.");
   };
 
   const duplicate = (id: string) => {
@@ -263,8 +265,8 @@ function SettingsPage({ state, updateState, pcAvailable, onReload }: { state: Ro
 }
 
 export default function RoteirosHome() {
-  const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow, reload } = useRoteirosData();
+  const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveSnapshot, saveNow, reload } = useRoteirosData();
   const [tab, setTab] = useState<HomeTab>("scripts");
   if (!ready || !state) return <div className={styles.loadingPage}><span>✦</span><strong>Abrindo Roteiros…</strong></div>;
-  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} /><RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} pcAvailable={pcAvailable} onReload={reload} />}</div>;
+  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} /><RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} saveSnapshot={saveSnapshot} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} pcAvailable={pcAvailable} onReload={reload} />}</div>;
 }

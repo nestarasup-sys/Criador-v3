@@ -72,21 +72,27 @@ export function useRoteirosData() {
     setState((current) => current ? recipe(current) : current);
   }, []);
 
-  const saveNow = useCallback(async () => {
-    if (!latestRef.current) return;
-    const snapshot = latestRef.current;
+  const saveSnapshot = useCallback(async (snapshot: RoteirosState) => {
     setSaveStatus("saving");
     try {
+      latestRef.current = snapshot;
       appendRecoveryJournal(snapshot, "pending");
       await saveRoteirosState(snapshot);
       markRecoverySaved(snapshot);
       setPcAvailable(true);
       setSaveStatus("saved");
+      return true;
     } catch {
       setPcAvailable(false);
       setSaveStatus("error");
+      return false;
     }
   }, []);
+
+  const saveNow = useCallback(async () => {
+    if (!latestRef.current) return false;
+    return saveSnapshot(latestRef.current);
+  }, [saveSnapshot]);
 
   const restoreRecovery = useCallback(() => {
     if (!recoveryCandidate) return;
@@ -99,5 +105,5 @@ export function useRoteirosData() {
     setRecoveryCandidate(null);
   }, []);
 
-  return { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow, reload };
+  return { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveSnapshot, saveNow, reload };
 }

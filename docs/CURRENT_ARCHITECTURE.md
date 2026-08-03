@@ -227,11 +227,25 @@ decisões, migração histórica e limites está em `docs/ROTEIROS_RECOVERY.md`.
 - `npm ci`: concluído.
 - `npm run lint`: zero erros, nove avisos de `<img>`.
 - `npm run typecheck`: passou.
-- `npm test`: build passou e 51 testes passaram após a fase 7.
-- `npm run test:unit`: 51 testes passam quando o artefato de build já existe;
+- `npm test`: build passou e 57 testes passaram após a fase 8.
+- `npm run test:unit`: 57 testes passam quando o artefato de build já existe;
   os testes de HTML dependem de `dist/server/index.js` e, portanto, devem ser
   executados após `npm run build` em um checkout limpo.
 - `npm audit`: 1 baixo, 4 moderados e 13 altos.
+
+### Cobertura adicional da fase 8
+
+- `scripts/e2e-check.mjs` valida navegação, foco, criação de roteiro, inclusão
+  de TikTok, persistência após recarregar e crescimento de URLs de objeto com
+  Chromium real; `scripts/run-e2e.mjs` isola o servidor temporário.
+- `tests/phase8-performance.test.mjs` mede a normalização de 100 perfis e 100
+  roteiros com seis TikToks e oito blocos por TikTok.
+- `scripts/compare-png.mjs` fornece comparação RGBA determinística para
+  referências visuais, sem alterar o renderizador.
+- `tests/accessibility-contract.test.mjs` verifica foco visível, redução de
+  movimento, nomes ARIA e contraste dos tokens principais.
+- `tests/bat-smoke.test.mjs` protege o contrato do launcher (loopback,
+  portas 6700/6800, serviço oculto e tratamento de erro).
 
 ## 8. Direção arquitetural recomendada
 

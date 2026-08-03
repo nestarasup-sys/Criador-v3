@@ -196,6 +196,9 @@ function readMetadata(request) {
 }
 
 function isPublicRoute(request, url) {
+  // CORS preflight must complete before session authentication; browsers do
+  // not send the session header until the preflight is accepted.
+  if (request.method === "OPTIONS") return true;
   if (url.pathname === "/health" || url.pathname === "/session") return true;
   if (request.method !== "GET") return false;
   return url.pathname.startsWith("/files/")

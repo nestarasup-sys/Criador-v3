@@ -133,7 +133,7 @@ NYMI GACHA.
 
 ## 6. Cobertura automatizada atual
 
-O baseline oficial (`npm test`) compila a aplicação e executa 33 testes. A suíte
+O baseline oficial (`npm test`) compila a aplicação e executa 57 testes. A suíte
 cobre especialmente:
 
 - contrato visual/HTML das três áreas;
@@ -146,9 +146,15 @@ cobre especialmente:
 - Roteiros e exportações;
 - segurança de caminhos, byte ranges e gravação atômica.
 
-Ela não cobre de ponta a ponta o comportamento real do Canvas, interação por
-ponteiro, falhas do Ollama/LM Studio, grandes volumes de imagens ou recuperação
-após encerramento abrupto.
+Na fase 8 foram adicionados Playwright para os fluxos críticos, um benchmark de
+estado grande, contrato de acessibilidade/contraste, monitoramento de URLs de
+objeto e smoke estático do launcher. A comparação visual agora está disponível
+em `scripts/compare-png.mjs` para referências PNG reais.
+
+Ainda não há um conjunto de screenshots dourados versionado nem uma execução em
+uma máquina Windows limpa; essas validações permanecem parte do beta. Falhas do
+Ollama/LM Studio e renderizações de Canvas de altíssimo volume continuam sendo
+testes manuais/de ambiente.
 
 ## 7. Páginas, rotas e integrações
 

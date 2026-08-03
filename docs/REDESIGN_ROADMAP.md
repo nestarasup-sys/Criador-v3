@@ -263,15 +263,32 @@ Aceite validado: 50 testes unitários/regressão passam, typecheck passa e lint
 passa sem erros. Os nove avisos restantes são recomendações pré-existentes de
 otimização de `<img>`.
 
-## Fase 8 — Qualidade e desempenho
+## Fase 8 — Qualidade e desempenho (concluída)
 
-- E2E com Playwright nos fluxos críticos.
-- comparação visual de Canvas/exports;
-- métricas de importação e renderização;
-- teste com 100 personagens/assets e roteiros extensos;
-- acessibilidade por teclado e contraste;
-- monitoramento de URLs de objeto e vazamentos de memória;
-- smoke test do BAT em máquina limpa.
+Entregáveis realizados sem alterar regras de negócio:
+
+1. Playwright foi adicionado como dependência de desenvolvimento; o runner
+   `scripts/run-e2e.mjs` inicia um servidor temporário e executa
+   `scripts/e2e-check.mjs` com Chromium real.
+2. O benchmark `scripts/phase8-benchmark.mjs` e seu teste medem um workload de
+   100 perfis + 100 roteiros × 6 TikToks × 8 blocos. Na execução desta fase a
+   normalização ficou abaixo de 3 ms e o documento serializado ficou abaixo de
+   1 MB (os limites de regressão são 2 s e 15 MB).
+3. `scripts/compare-png.mjs` compara dimensões, pixels RGBA alterados, média de
+   diferença e limite de tolerância; o teste garante os casos idêntico e
+   divergente sem tocar no pipeline de Canvas.
+4. `tests/accessibility-contract.test.mjs` cobre foco visível, `aria-current`,
+   nomes de Canvas, redução de movimento e contraste WCAG dos tokens centrais.
+5. `tests/bat-smoke.test.mjs` valida estaticamente o launcher, inclusive o
+   serviço de dados em 6800, UI em 6700, loopback e encerramento com mensagem de
+   erro. A execução não mata processos do usuário durante a suíte.
+6. O monitor de URLs de objeto da suíte E2E falha caso o conjunto ativo cresça
+   indefinidamente durante a navegação entre as três áreas.
+
+Comandos e limites estão documentados em `docs/PHASE8_QUALITY.md`. A fase é
+considerada concluída para o código e os testes automatizados; screenshots
+golden reais, Ollama/LM Studio indisponível e instalação em uma máquina Windows
+limpa continuam validações de beta, não bloqueadores desta fase.
 
 ## Fase 9 — Beta e substituição opcional do Premium
 

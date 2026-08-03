@@ -16,6 +16,10 @@
     "start": "vinext start --port 6700",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:unit": "node --test tests/*.test.mjs",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:phase8": "npm run build && npm run test:unit && npm run test:e2e",
+    "benchmark:phase8": "node scripts/phase8-benchmark.mjs",
+    "visual:compare": "node scripts/compare-png.mjs",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
@@ -29,6 +33,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
+    "@playwright/test": "^1.52.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
