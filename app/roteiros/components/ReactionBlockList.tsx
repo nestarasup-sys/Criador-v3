@@ -14,7 +14,6 @@ type ReactionBlockListProps = {
   onMoveBlock: (index: number, direction: -1 | 1) => void;
   onBlockAction: (index: number, action: "rewrite" | "regenerate") => void;
   onTranslate: (block: ReactionBlock) => void;
-  onAddBlock: () => void;
   onDuplicateBlock: (block: ReactionBlock, index: number) => void;
   onRemoveBlock: (id: string) => void;
 };
@@ -32,12 +31,11 @@ function BlockCharacterMark({ character, name }: { character?: PremiumCharacter;
   </span>;
 }
 
-export function ReactionBlockList({ script, section, characters, loading, aiEnabled, onUpdateBlock, onMoveBlock, onBlockAction, onTranslate, onAddBlock, onDuplicateBlock, onRemoveBlock }: ReactionBlockListProps) {
+export function ReactionBlockList({ script, section, characters, loading, aiEnabled, onUpdateBlock, onMoveBlock, onBlockAction, onTranslate, onDuplicateBlock, onRemoveBlock }: ReactionBlockListProps) {
   const participantIds = new Set(script.participants.map((item) => item.characterId));
   return <section className={styles.blocksSection}>
     <header className={styles.blocksHeader}>
       <div className={styles.blocksHeading}><span className={styles.blocksZoneIcon}>▣</span><b>3</b><div><strong>Sequência de reações</strong><small>Organize e edite as reações dos personagens neste TikTok.</small></div></div>
-      <button className={styles.secondaryButton} onClick={onAddBlock}>＋ Adicionar bloco</button>
     </header>
     <div className={styles.blockList}>{section.reactionBlocks.map((block, blockIndex) => <article className={styles.reactionBlock} data-tone={blockIndex % 4} key={block.id}>
       <div className={styles.blockIdentity}><BlockCharacterMark character={characters.find((character) => character.id === block.characterId)} name={blockCharacterName(characters, block.characterId)} /><span className={styles.blockNumber}>{String(blockIndex + 1).padStart(2, "0")}</span></div>

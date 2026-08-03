@@ -34,6 +34,11 @@ function readableExpression(key: string) {
   return key.replace(/_(?:blink|talk)$/i, "").replace(/_/g, " ");
 }
 
+function formatTikTokDuration(seconds: number | undefined) {
+  if (!Number.isFinite(seconds) || seconds === undefined) return "duração não disponível";
+  return `${seconds.toFixed(2).replace(".", ",")} segundos`;
+}
+
 function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"]) {
   const names = new Map(characters.map((character) => [character.id, character.name]));
   const expressionLines = script.participants.map((participant) => {
@@ -43,7 +48,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     return `${names.get(participant.characterId) || character?.name || "Personagem removido"}\nExpressões: ${expressions.join(", ")}`;
   });
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
-    const lines = [`TIKTOK ${String(index + 1).padStart(2, "0")}`, `Descrição: ${section.description}`];
+    const lines = [`TIKTOK ${String(index + 1).padStart(2, "0")} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => block.type === "speech" || block.type === "thought" || block.type === "silent");
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
@@ -173,8 +178,17 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     if (!file.type.startsWith("video/") && !/\.mp4$/i.test(file.name)) return setMessage("Selecione um vídeo MP4.");
     setVideoLoading(true); setMessage("");
     try {
+      const durationSeconds = await new Promise<number | undefined>((resolve) => {
+        const preview = document.createElement("video");
+        const objectUrl = URL.createObjectURL(file);
+        const cleanup = () => { URL.revokeObjectURL(objectUrl); preview.remove(); };
+        preview.preload = "metadata";
+        preview.onloadedmetadata = () => { const duration = Number(preview.duration); cleanup(); resolve(Number.isFinite(duration) && duration >= 0 ? duration : undefined); };
+        preview.onerror = () => { cleanup(); resolve(undefined); };
+        preview.src = objectUrl;
+      });
       const video = await uploadRoteiroVideo(script.id, section.id, file);
-      patch({ video });
+      patch({ video: durationSeconds === undefined ? video : { ...video, durationSeconds } });
       setMessage(`Vídeo salvo: ${file.name}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar o vídeo.");
@@ -234,7 +248,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
             <label className={styles.field}><span>Objetivo da cena</span><input value={section.sceneGoal} maxLength={800} onChange={(event) => patch({ sceneGoal: event.target.value })} placeholder="O que esta parte deve provocar?" /></label>
           </div>
           <div className={styles.videoUploadBox}>
-            {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
+            {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
           </div>
           <label className={styles.field}><span>Descrição detalhada do vídeo</span><textarea rows={7} value={section.description} maxLength={20000} onChange={(event) => patch({ description: event.target.value })} placeholder="Descreva literalmente o que acontece no vídeo, quem aparece e quais ações ocorrem…" /></label>
@@ -259,6 +273,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("fill-empty")}>{loading === "fill-empty" ? "Gerando…" : "Preencher vazios"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("replace-all")}>{loading === "replace-all" ? "Gerando…" : "Substituir todos"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void translateItems(section.reactionBlocks.filter((block): block is ReactionBlock & { type: "speech" | "thought" } => block.type !== "silent" && Boolean(block.text.trim())).map((block) => ({ id: block.id, text: block.text, type: block.type, characterName: characterName(block.characterId) })))}>{loading === "translate" ? "Traduzindo…" : "Gerar inglês para todos"}</button>
+          <button className={styles.addBlockAction} onClick={() => applyBlockCommand((current) => addReactionBlock(current, script.id, section.id).state)}>＋ Adicionar bloco</button>
           {loading && <button className={styles.cancelButton} onClick={cancelAi}>Cancelar geração</button>}
           {undoBlocks && <button className={styles.undoButton} onClick={() => { patch({ reactionBlocks: undoBlocks }); setUndoBlocks(null); }}>↶ Desfazer substituição</button>}
         </div>
@@ -275,7 +290,6 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
         onMoveBlock={moveBlock}
         onBlockAction={blockAction}
         onTranslate={(block) => void translateItems([{ id: block.id, text: block.text, type: block.type as "speech" | "thought", characterName: characterName(block.characterId) }])}
-        onAddBlock={() => applyBlockCommand((current) => addReactionBlock(current, script.id, section.id).state)}
         onDuplicateBlock={(block) => applyBlockCommand((current) => duplicateReactionBlock(current, script.id, section.id, block.id))}
         onRemoveBlock={(id) => applyBlockCommand((current) => removeReactionBlock(current, script.id, section.id, id))}
       />

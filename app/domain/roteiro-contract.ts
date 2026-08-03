@@ -32,7 +32,7 @@ export type ReactionBlock = {
 };
 export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;
-  size: number; updatedAt: string;
+  size: number; updatedAt: string; durationSeconds?: number;
 };
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;

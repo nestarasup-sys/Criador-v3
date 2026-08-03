@@ -134,6 +134,7 @@ function normalizeVideoReference(value) {
     contentType: typeof source.contentType === "string" ? source.contentType : "video/mp4",
     size: Number.isFinite(Number(source.size)) ? Math.max(0, Number(source.size)) : 0,
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
+    ...(Number.isFinite(Number(source.durationSeconds)) && Number(source.durationSeconds) >= 0 ? { durationSeconds: Number(source.durationSeconds) } : {}),
   };
 }
 

@@ -970,14 +970,26 @@
   gap:6px;
 }
 .generationPanel button {
-  min-height:31px;
+  min-height:38px;
+  padding:9px 13px;
   border-color:#d6caf7;
   background:#fff;
   box-shadow:0 2px 7px rgba(86,55,157,.045);
+  font-size:11px;
 }
 .generationPanel button:hover:not(:disabled) {
   border-color:#a991eb;
   background:#f8f5ff;
+}
+.generationPanel .addBlockAction {
+  border-color:#efc4ce;
+  background:#fff7f9;
+  color:#bd4560;
+}
+.generationPanel .addBlockAction:hover:not(:disabled) {
+  border-color:#db899c;
+  background:#ffeef2;
+  color:#a93652;
 }
 .blocksSection {
   overflow:hidden;
@@ -1040,7 +1052,7 @@
   padding:11px 11px 10px 13px;
   border-color:#eee8f1;
   border-radius:11px;
-  background:linear-gradient(105deg,var(--block-soft),#fff 35%);
+  background:color-mix(in srgb,var(--block-accent) 20%,#fff);
   box-shadow:0 3px 10px rgba(39,27,62,.025);
 }
 .reactionBlock::before {
@@ -1108,11 +1120,34 @@
   padding-top:2px;
 }
 .blockActions button {
-  min-height:29px;
-  padding:6px 9px;
+  min-height:35px;
+  padding:8px 11px;
+  font-size:10px;
   border-color:#e2dce8;
   background:#fff;
   transition:border-color .16s ease, color .16s ease, background .16s ease;
+}
+
+/* Aumenta a leitura somente dentro do editor, sem alterar as outras telas. */
+.editorLayout .field>span,
+.editorLayout .blockControls span,
+.editorLayout .tiktokIndex,
+.editorLayout .contextRail,
+.editorLayout .generationPanel,
+.editorLayout .blocksSection,
+.editorLayout .contextZone {
+  font-size:120%;
+}
+.editorLayout input,
+.editorLayout select,
+.editorLayout textarea,
+.editorLayout button {
+  font-size:120%;
+}
+.editorLayout .generationPanel p,
+.editorLayout .blocksHeading small,
+.editorLayout .tiktokIndex small {
+  font-size:108%;
 }
 .blockActions button:hover:not(:disabled) {
   border-color:color-mix(in srgb,var(--block-accent) 45%,#ddd);
