@@ -55,7 +55,7 @@ export default function StudioPage() {
   const [createRoster, setCreateRoster] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState(false);
   const [dockSide, setDockSide] = useState<"left" | "right">("right");
-  const [saveStatus, setSaveStatus] = useState("Carregando…");
+  const [, setSaveStatus] = useState("Carregando…");
   const [pcStorageAvailable, setPcStorageAvailable] = useState(false);
   const [migrationAvailable, setMigrationAvailable] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
@@ -702,15 +702,12 @@ export default function StudioPage() {
 
       {!viewMode && <>
         <StudioToolbar
-          name={studio.name}
-          saveStatus={saveStatus}
           canUndo={undoStack.length > 0}
           canRedo={redoStack.length > 0}
           isPrinting={isPrinting}
           selectedCharacterName={selectedCharacterSource?.name}
           backgroundInput={backgroundInput}
           objectInput={objectInput}
-          onNameChange={(name) => updateStudio((item) => ({ ...item, name }), false)}
           onLeave={() => { void leaveStudio(); }}
           onSave={() => { void saveNow(); }}
           onUndo={undo}
