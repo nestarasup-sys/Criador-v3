@@ -79,6 +79,9 @@ export default function StudioPage() {
   const renderedRef = useRef<Record<string, string>>({});
   const studioWarmupRef = useRef<string | null>(null);
 
+  /* The persisted Studio preferences are the source of truth when switching
+     documents; these controlled UI states intentionally hydrate from it. */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     loadAppData().then((loaded) => {
       setData(loaded);
@@ -248,7 +251,8 @@ export default function StudioPage() {
     setBackgroundCollapsed(preferences?.backgroundCollapsed === true);
     setRosterCompact(preferences?.rosterCompact === true);
     setDockSide(preferences?.inspectorDockSide === "left" ? "left" : "right");
-  }, [studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
+  }, [studio, studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   function updateStudioUi(patch: Partial<Studio["uiPreferences"]>) {
     updateStudio((item) => ({ ...item, uiPreferences: {
