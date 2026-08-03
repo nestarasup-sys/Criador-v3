@@ -840,6 +840,7 @@ body { background: #f8f6f7; }
   padding: 16px 18px;
 }
 .outfit-pose-mapping[data-count="6"] { grid-template-columns: repeat(3,minmax(170px,1fr)); }
+.outfit-pose-mapping[data-count="3"] { grid-template-columns: repeat(3,minmax(170px,1fr)); }
 .outfit-pose-mapping article {
   min-width: 0;
   overflow: hidden;

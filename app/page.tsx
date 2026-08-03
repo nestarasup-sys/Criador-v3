@@ -1976,7 +1976,7 @@ export default function Home() {
       return;
     }
 
-    // Uma folha de roupas representa uma única roupa: Padrão + três Variantes.
+    // Uma folha de roupas representa uma única roupa: Padrão + Variantes.
     // Encaminhamos para o fluxo de agrupamento para que os recortes nunca virem
     // quatro roupas independentes no catálogo.
     if (category === "roupas") {
@@ -2110,8 +2110,8 @@ export default function Home() {
 
   async function confirmOutfitVariantSheet() {
     if (!pendingOutfitPack) return;
-    if (![4, 6].includes(pendingOutfitPack.variants.length)) {
-      setNotice("A folha precisa terminar com quatro ou seis versões");
+    if (![3, 4, 6].includes(pendingOutfitPack.variants.length)) {
+      setNotice("A folha precisa terminar com três, quatro ou seis versões");
       return;
     }
 
@@ -4046,10 +4046,10 @@ export default function Home() {
                 </article>
               ))}
             </div>
-            <div className={`outfit-pack-note ${[4, 6].includes(pendingOutfitPack.variants.length) ? "" : "invalid"}`}><strong>Ordem detectada:</strong><span>{[4, 6].includes(pendingOutfitPack.variants.length) ? `a primeira imagem será Padrão e as outras ${pendingOutfitPack.variants.length - 1} serão Variantes.` : "ajuste o chroma ou remova uma detecção até restarem quatro ou seis versões."}</span></div>
+            <div className={`outfit-pack-note ${[3, 4, 6].includes(pendingOutfitPack.variants.length) ? "" : "invalid"}`}><strong>Ordem detectada:</strong><span>{[3, 4, 6].includes(pendingOutfitPack.variants.length) ? `da esquerda para a direita: a primeira imagem será Padrão e as outras ${pendingOutfitPack.variants.length - 1} serão Variantes.` : "ajuste o chroma ou remova uma detecção até restarem três, quatro ou seis versões."}</span></div>
             <footer>
               <button className="button secondary" onClick={closeOutfitVariantSheet} disabled={isProcessing}>Cancelar</button>
-              <button className="button primary" onClick={() => void confirmOutfitVariantSheet()} disabled={isProcessing || ![4, 6].includes(pendingOutfitPack.variants.length)}>{isProcessing ? "Salvando…" : "Salvar roupa com variantes"}</button>
+              <button className="button primary" onClick={() => void confirmOutfitVariantSheet()} disabled={isProcessing || ![3, 4, 6].includes(pendingOutfitPack.variants.length)}>{isProcessing ? "Salvando…" : "Salvar roupa com variantes"}</button>
             </footer>
           </section>
         </div>

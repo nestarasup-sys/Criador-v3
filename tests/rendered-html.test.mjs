@@ -568,7 +568,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /outfitCatalogMode === "standard"/);
   assert.match(page, />Padrão<\/button>/);
   assert.match(page, />Variantes<\/button>/);
-  assert.match(page, /!\[4, 6\]\.includes\(pendingOutfitPack\.variants\.length\)/);
+  assert.match(page, /!\[3, 4, 6\]\.includes\(pendingOutfitPack\.variants\.length\)/);
   assert.match(page, /variantIndex: index/);
   assert.match(page, /detectOutfitSheetRegions/);
   assert.match(page, /prepareOutfitCatalogImages/);

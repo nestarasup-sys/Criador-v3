@@ -51,7 +51,7 @@ export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFron
       ) : (
         <>
           {category !== "cabelosTras" && (
-            <button className="sheet-button" onClick={() => sheetInputRef.current?.click()} disabled={isProcessing} title={category === "roupas" ? "Importar uma roupa com quatro ou seis versões" : "Recortar vários itens de uma imagem"}>
+            <button className="sheet-button" onClick={() => sheetInputRef.current?.click()} disabled={isProcessing} title={category === "roupas" ? "Importar uma roupa com três, quatro ou seis versões" : "Recortar vários itens de uma imagem"}>
               {category === "roupas" ? "Folha de variantes" : "Folha"}
             </button>
           )}
