@@ -26,8 +26,10 @@ export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterN
   const bubbleTitle = selectedCharacterName ? `Criar balão para ${selectedCharacterName}` : "Criar balão livre; você poderá posicioná-lo depois";
   return <>
     <header className={styles.topbar}>
-      <button className={styles.roundButton} title="Voltar aos Studios" onClick={onLeave}>←</button>
-      <div className={styles.history}><button title="Salvar agora no PC" aria-label="Salvar agora no PC" onClick={onSave}>✓</button><button title="Desfazer" aria-label="Desfazer" disabled={!canUndo} onClick={onUndo}>↶</button><button title="Refazer" aria-label="Refazer" disabled={!canRedo} onClick={onRedo}>↷</button></div>
+      <div className={styles.toolbarGrid}>
+        <button className={styles.roundButton} title="Voltar aos Studios" onClick={onLeave}>←</button>
+        <div className={styles.history}><button title="Salvar agora no PC" aria-label="Salvar agora no PC" onClick={onSave}>✓</button><button title="Desfazer" aria-label="Desfazer" disabled={!canUndo} onClick={onUndo}>↶</button><button title="Refazer" aria-label="Refazer" disabled={!canRedo} onClick={onRedo}>↷</button></div>
+      </div>
     </header>
     <aside className={styles.leftTools}>
       <button onClick={() => backgroundInput.current?.click()}><span>▱</span><strong>Fundo</strong></button>
