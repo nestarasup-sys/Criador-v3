@@ -2,7 +2,7 @@
 
 ## Convenções
 
-- **PC disponível**: o serviço em `127.0.0.1:4318` respondeu.
+- **PC disponível**: o serviço em `127.0.0.1:6800` respondeu após autenticar a sessão efêmera.
 - **Espelho**: cópia emergencial no navegador, nunca apresentada como persistência principal.
 - Todos os fluxos de escrita terminam com confirmação real de persistência.
 

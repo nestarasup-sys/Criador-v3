@@ -71,24 +71,42 @@ Aceite:
 - `app/page.tsx` e Studio começam a importar a mesma fonte de tipos;
 - testes completos verdes.
 
-## Fase 2 — Segurança e estabilidade operacional
+## Fase 2 — Segurança e estabilidade operacional — concluída
 
-Objetivo: tornar a base segura antes de ampliar o redesign.
+Objetivo: tornar a base segura antes de ampliar o redesign. Concluído nesta
+rodada e registrado no commit da Etapa 2.
 
-Tarefas:
+Entregas realizadas:
 
-1. Atualizar em lote isolado Next/React RSC/Vite/Cloudflare para versões corrigidas compatíveis.
-2. Adicionar limites de upload, timeout e tipos MIME aceitos.
-3. Introduzir token efêmero de sessão entre UI e serviço local.
-4. Tornar caminhos de prints e Video Maker configuráveis, preservando defaults antigos.
-5. Normalizar respostas de erro e logs locais sem dados sensíveis.
-6. Corrigir `test:unit` para preparar ou desacoplar a fixture de build.
+- Next e React foram atualizados em lote isolado para `next@16.2.12`,
+  `eslint-config-next@16.2.12`, `react@19.2.8`, `react-dom@19.2.8` e
+  `react-server-dom-webpack@19.2.8`.
+- `postcss@8.5.25` e `sharp@0.35.3` foram fixados por `overrides` para
+  eliminar vulnerabilidades transitivas de produção.
+- Uploads receberam limites por finalidade, validação MIME, `Content-Length`
+  antecipado e timeout de servidor.
+- A UI agora obtém um token efêmero do endpoint `/session`; operações da API
+  local enviam `X-Gacha-Session` e recebem renovação automática em 401.
+- Prints e destinos do Video Maker continuam configuráveis por
+  `GACHA_PRINTS_ROOT` e `GACHA_VIDEO_MAKER_ASSETS_ROOT`, preservando os
+  defaults legados.
+- Erros agora retornam código, request ID e mensagem sanitizada; logs locais
+  registram somente método, rota, código e ID.
+- `test:unit` permanece desacoplado do build; `npm test` cobre build + suíte
+  completa.
 
-Aceite:
+Identidade e portas desta versão:
 
-- zero vulnerabilidade alta de produção;
-- origens/processos não autorizados não escrevem dados;
-- uploads excessivos falham sem derrubar o serviço;
+- Produto: **Nymi Gacha 2.0**.
+- Interface: `http://localhost:6700`.
+- Serviço local: `http://127.0.0.1:6800`.
+- Launcher: `INICIAR-NYMI-GACHA.bat`.
+
+Aceite validado:
+
+- `npm audit --omit=dev`: zero vulnerabilidades.
+- origens/processos sem token não escrevem dados.
+- uploads excessivos e tipos não permitidos falham com 413/415.
 - todos os testes do baseline passam.
 
 ## Fase 3 — Shell NYMI e design system

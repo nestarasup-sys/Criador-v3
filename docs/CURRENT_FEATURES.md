@@ -103,7 +103,7 @@ Legenda:
 
 ### Capacidades ativas
 
-- Servidor HTTP somente em `127.0.0.1:4318`.
+- Servidor HTTP somente em `127.0.0.1:6800`, com token efêmero por processo para operações da UI.
 - Estado principal versão 2 em `dados-locais-premium/state.json`.
 - Gravação JSON atômica e retenção de backups.
 - Armazenamento de catálogo, packs, fotos, assets do Studio e vídeos de Roteiros.
@@ -123,8 +123,8 @@ NYMI GACHA.
 
 ## 5. Inicialização e operação
 
-- Interface: `http://localhost:9099` via Vinext/Vite.
-- Serviço local: `http://127.0.0.1:4318` via Node.js.
+- Interface: `http://localhost:6700` via Vinext/Vite.
+- Serviço local: `http://127.0.0.1:6800` via Node.js.
 - O BAT encerra uma instância anterior reconhecida do serviço de dados, inicia
   uma nova instância oculta, abre o navegador e mantém o servidor da interface.
 - Runtime mínimo declarado: Node.js 22.13.

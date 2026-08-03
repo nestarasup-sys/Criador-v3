@@ -767,11 +767,11 @@ export default function StudioPage() {
     return (
       <main className={styles.library}>
         <header className={styles.libraryHeader}>
-          <div><span className={styles.eyebrow}>GACHA MAKER</span><h1>Seus Studios</h1><p>Monte cenas com os personagens que você já criou.</p></div>
+          <div><span className={styles.eyebrow}>NYMI GACHA</span><h1>Seus Studios</h1><p>Monte cenas com os personagens que você já criou.</p></div>
           <div className={styles.libraryActions}><Link href="/" className={styles.ghostButton}>← Personagens</Link><button className={styles.primaryButton} onClick={() => { setEditingStudioId(null); setCreateName(""); setCreateRoster([]); setCreateOpen(true); }}>＋ Criar novo Studio</button></div>
         </header>
         <section className={`${styles.storageCard} ${pcStorageAvailable ? styles.storageReady : styles.storageOffline}`}>
-          <div><span>{pcStorageAvailable ? "●" : "○"}</span><div><strong>{pcStorageAvailable ? "Salvamento no PC" : "Somente neste navegador"}</strong><small>{migrationAvailable ? "Existem Studios antigos aguardando migração" : pcStorageAvailable ? "Studios, fundos e objetos ficam disponíveis entre navegadores" : "Abra pelo INICIAR-GACHA-PREMIUM.bat para sincronizar"}</small></div></div>
+          <div><span>{pcStorageAvailable ? "●" : "○"}</span><div><strong>{pcStorageAvailable ? "Salvamento no PC" : "Somente neste navegador"}</strong><small>{migrationAvailable ? "Existem Studios antigos aguardando migração" : pcStorageAvailable ? "Studios, fundos e objetos ficam disponíveis entre navegadores" : "Abra pelo INICIAR-NYMI-GACHA.bat para sincronizar"}</small></div></div>
           {migrationAvailable
             ? <button onClick={migrateBrowserStudios} disabled={isMigrating}>{isMigrating ? "Migrando…" : "Migrar Studios para o PC"}</button>
             : !pcStorageAvailable && <button onClick={() => saveNow("Sincronização concluída")}>Tentar novamente</button>}

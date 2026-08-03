@@ -9,7 +9,7 @@ Browser (React 19 / Next 16 via Vinext)
 └── /roteiros[/id]       Fichas e editor de roteiros
           │ HTTP loopback
           ▼
-Node local-data-server.mjs — 127.0.0.1:4318
+Node local-data-server.mjs — 127.0.0.1:6800 + sessão efêmera
 ├── state.json (app v2)
 ├── roteiros/state.json (roteiros v1)
 ├── arquivos binários
@@ -20,7 +20,7 @@ Node local-data-server.mjs — 127.0.0.1:4318
 
 O frontend é compilado por Vinext/Vite com integração Cloudflare/Sites, mas a
 operação cotidiana é local: o BAT inicia um servidor Node para os dados e um
-servidor web em `localhost:9099`.
+servidor web em `localhost:6700`.
 
 ## 2. Componentes principais
 

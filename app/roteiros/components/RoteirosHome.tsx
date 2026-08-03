@@ -26,7 +26,7 @@ function Header({ tab, setTab, saveStatus, pcAvailable, saveNow }: { tab: HomeTa
     <>
       <header className={styles.topbar}>
         <Link className={styles.backButton} href="/" aria-label="Voltar ao criador">←</Link>
-        <div className={styles.brandBlock}><span>✦</span><div><strong>GACHA MAKER</strong><small>PREMIUM CHARACTER STUDIO</small></div></div>
+        <div className={styles.brandBlock}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div>
         <div className={styles.moduleBadge}><small>MÓDULO</small><strong>ROTEIROS</strong></div>
         <div className={styles.saveCluster}>
           <span className={`${styles.savePill} ${pcAvailable ? styles.online : styles.offline}`}><i />{statusText[saveStatus]}</span>
@@ -40,7 +40,7 @@ function Header({ tab, setTab, saveStatus, pcAvailable, saveNow }: { tab: HomeTa
         <button className={tab === "scripts" ? styles.active : ""} onClick={() => setTab("scripts")}><span>▤</span> Meus roteiros</button>
         <button className={tab === "profiles" ? styles.active : ""} onClick={() => setTab("profiles")}><span>♙</span> Fichas dos personagens</button>
         <button className={tab === "settings" ? styles.active : ""} onClick={() => setTab("settings")}><span>⚙</span> IA e regras</button>
-        <div className={styles.navHint}><span>✦</span><div><strong>GACHA MAKER PREMIUM</strong><small>Histórias organizadas e salvas no seu PC.</small></div></div>
+        <div className={styles.navHint}><span>✦</span><div><strong>Nymi Gacha</strong><small>Histórias organizadas e salvas no seu PC.</small></div></div>
       </nav>
     </>
   );

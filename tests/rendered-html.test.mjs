@@ -14,13 +14,13 @@ async function render() {
   );
 }
 
-test("renders the GACHA MAKER application shell", async () => {
+test("renders the Nymi Gacha application shell", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /<title>GACHA MAKER<\/title>/i);
-  assert.match(html, /GACHA MAKER/);
+  assert.match(html, /<title>Nymi Gacha<\/title>/i);
+  assert.match(html, /Nymi Gacha/);
   assert.match(html, /Estúdio de personagens/);
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
@@ -298,11 +298,12 @@ test("shares characters and imported assets through the local PC service", async
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/lib/local-data-client.ts", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
-    readFile(new URL("../INICIAR-GACHA-PREMIUM.bat", import.meta.url), "utf8"),
+    readFile(new URL("../INICIAR-NYMI-GACHA.bat", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /localDataFetch/);
-  assert.match(client, /LOCAL_DATA_URL = "http:\/\/127\.0\.0\.1:4318"/);
+  assert.match(client, /LOCAL_DATA_URL = "http:\/\/127\.0\.0\.1:6800"/);
+  assert.match(client, /X-Gacha-Session/);
   assert.match(page, /Migrar dados deste navegador/);
   assert.match(page, /saveCharactersToPc/);
   assert.match(page, /saveCatalogItemToPc/);
@@ -311,12 +312,15 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(server, /dados-locais/);
   assert.match(server, /state\.json/);
   assert.match(server, /ALLOWED_ORIGINS/);
-  assert.match(server, /GACHA_DATA_PORT \?\? "4318"/);
-  assert.match(server, /localhost:9099/);
+  assert.match(server, /NYMI_DATA_PORT \?\? process\.env\.GACHA_DATA_PORT \?\? "6800"/);
+  assert.match(server, /DEFAULT_UI_ORIGIN/);
+  assert.match(server, /SESSION_TOKEN/);
+  assert.match(server, /assertSession/);
   assert.match(launcher, /local-data-server\.mjs/);
   assert.match(launcher, /WindowStyle Hidden/);
   assert.match(launcher, /Get-NetTCPConnection/);
-  assert.match(launcher, /LocalPort 4318/);
+  assert.match(launcher, /LocalPort 6800/);
+  assert.match(launcher, /localhost:6700/);
 });
 
 test("saves Studios and their uploaded assets durably on the local PC", async () => {

@@ -1,15 +1,19 @@
 {
-  "name": "gacha-maker-premium",
-  "version": "0.1.0",
+  "name": "nymi-gacha",
+  "version": "2.0.0",
   "private": true,
+  "overrides": {
+    "postcss": "8.5.25",
+    "sharp": "0.35.3"
+  },
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "vinext dev --port 9099",
+    "dev": "vinext dev --port 6700",
     "data-server": "node local-data-server.mjs",
     "build": "vinext build",
-    "start": "vinext start",
+    "start": "vinext start --port 6700",
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:unit": "node --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit --incremental false",
@@ -19,9 +23,9 @@
   "dependencies": {
     "drizzle-orm": "0.45.2",
     "jszip": "^3.10.1",
-    "next": "16.2.6",
-    "react": "19.2.6",
-    "react-dom": "19.2.6"
+    "next": "^16.2.12",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
@@ -33,8 +37,8 @@
     "@vitejs/plugin-rsc": "0.5.26",
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
-    "react-server-dom-webpack": "19.2.6",
+    "eslint-config-next": "^16.2.12",
+    "react-server-dom-webpack": "^19.2.8",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vinext": "0.0.50",

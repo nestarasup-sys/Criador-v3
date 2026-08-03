@@ -67,3 +67,14 @@ Fixtures cobrem:
 - documento legado com migração de modelo e preservação de extensões;
 - documento moderno de Roteiros v1 sem perda;
 - documento inválido com diagnóstico e recuperação segura.
+
+## Segurança operacional da Etapa 2
+
+- a interface usa `http://localhost:6700` e o serviço de dados usa
+  `http://127.0.0.1:6800`;
+- cada processo do serviço cria um token aleatório em memória, entregue uma
+  única vez por `/session` e enviado pela UI em `X-Gacha-Session`;
+- mutações e leituras de estado exigem o token; somente health, sessão e
+  arquivos de mídia para `<img>`/`<video>` ficam públicos no loopback;
+- limites, MIME e códigos de erro são centralizados em
+  `services/security/local-security.mjs`.

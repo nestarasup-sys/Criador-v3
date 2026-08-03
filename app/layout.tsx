@@ -5,7 +5,7 @@ import "./globals.css";
 const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "GACHA MAKER",
+  title: "Nymi Gacha",
   description: "Estúdio local para criar e exportar personagens.",
 };
 

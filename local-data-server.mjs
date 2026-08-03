@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
@@ -10,9 +10,23 @@ import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
+import {
+  BODY_LIMITS,
+  IMAGE_MIME_TYPES,
+  SESSION_HEADER,
+  VIDEO_MIME_TYPES,
+  assertContentLength,
+  assertMimeType,
+  assertSession,
+  contentTypeOf,
+  createSessionToken,
+} from "./services/security/local-security.mjs";
 
 const HOST = "127.0.0.1";
-const PORT = Number.parseInt(process.env.GACHA_DATA_PORT ?? "4318", 10);
+const PORT = Number.parseInt(process.env.NYMI_DATA_PORT ?? process.env.GACHA_DATA_PORT ?? "6800", 10);
+const UI_PORT = Number.parseInt(process.env.NYMI_UI_PORT ?? "6700", 10);
+const DEFAULT_UI_ORIGIN = `http://localhost:${UI_PORT}`;
+const SESSION_TOKEN = createSessionToken();
 const ROOT = resolve(process.env.GACHA_DATA_ROOT ?? join(process.cwd(), "dados-locais-premium"));
 const FILES_ROOT = join(ROOT, "arquivos");
 const CATALOG_ROOT = join(FILES_ROOT, "catalogo");
@@ -37,20 +51,16 @@ const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
-  "http://localhost:9099",
-  "http://127.0.0.1:9099",
-  "http://localhost:9098",
-  "http://127.0.0.1:9098",
+  `http://localhost:${UI_PORT}`,
+  `http://127.0.0.1:${UI_PORT}`,
 ]);
 
-// The Premium UI may be opened on another local development port while a
-// second copy of the app is running. Keep the local data server restricted to
-// loopback origins, but do not make every new localhost port require a code
-// change (which previously made the folder buttons appear to do nothing).
 function isAllowedOrigin(origin) {
-  return !origin
-    || ALLOWED_ORIGINS.has(origin)
-    || /^https?:\/\/(?:localhost|127\.0\.0\.1):\d+$/.test(origin);
+  return !origin || ALLOWED_ORIGINS.has(origin);
+}
+
+function isUiOrigin(origin) {
+  return origin === DEFAULT_UI_ORIGIN || origin === `http://127.0.0.1:${UI_PORT}`;
 }
 
 let state = structuredClone(EMPTY_STATE);
@@ -140,9 +150,9 @@ function printTimestamp(date = new Date()) {
 function corsHeaders(request) {
   const origin = request.headers.origin;
   return {
-    "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : "http://localhost:9099",
+    "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : DEFAULT_UI_ORIGIN,
     "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type,X-Gacha-Meta",
+    "Access-Control-Allow-Headers": `Content-Type,${SESSION_HEADER},X-Gacha-Meta`,
     "Cache-Control": "no-store",
   };
 }
@@ -153,25 +163,68 @@ function sendJson(response, request, statusCode, value) {
 }
 
 async function requestBody(request, maximumBytes = 64 * 1024 * 1024) {
+  assertContentLength(request, maximumBytes);
   const chunks = [];
   let total = 0;
   for await (const chunk of request) {
     total += chunk.length;
-    if (total > maximumBytes) throw new Error("Arquivo grande demais");
+    if (total > maximumBytes) {
+      throw Object.assign(new Error("Arquivo grande demais para esta operação."), { status: 413, code: "PAYLOAD_TOO_LARGE" });
+    }
     chunks.push(chunk);
   }
   return Buffer.concat(chunks);
 }
 
 async function requestJson(request) {
-  const body = await requestBody(request, 16 * 1024 * 1024);
-  return JSON.parse(body.toString("utf8") || "null");
+  const body = await requestBody(request, BODY_LIMITS.json);
+  try {
+    return JSON.parse(body.toString("utf8") || "null");
+  } catch {
+    throw Object.assign(new Error("JSON inválido."), { status: 400, code: "INVALID_JSON" });
+  }
 }
 
 function readMetadata(request) {
   const encoded = request.headers["x-gacha-meta"];
   if (typeof encoded !== "string") throw new Error("Metadados ausentes");
-  return JSON.parse(decodeURIComponent(encoded));
+  try {
+    return JSON.parse(decodeURIComponent(encoded));
+  } catch {
+    throw Object.assign(new Error("Metadados inválidos."), { status: 400, code: "INVALID_METADATA" });
+  }
+}
+
+function isPublicRoute(request, url) {
+  if (url.pathname === "/health" || url.pathname === "/session") return true;
+  if (request.method !== "GET") return false;
+  return url.pathname.startsWith("/files/")
+    || url.pathname.startsWith("/roteiros/videos/")
+    || url.pathname.startsWith("/video-maker/characters/")
+    || url.pathname.startsWith("/video-maker/tiktoks/");
+}
+
+function publicErrorMessage(error) {
+  if (error?.code === "ENOENT") return "Arquivo não encontrado.";
+  if (error?.code === "SESSION_REQUIRED") return "A sessão local expirou. Recarregue o Nymi Gacha.";
+  const message = String(error?.message || "Erro local.")
+    .replace(/[A-Za-z]:\\[^\n]+/g, "arquivo local")
+    .replace(/https?:\/\/[^\s)]+/g, "serviço local")
+    .trim();
+  return message.slice(0, 240) || "Erro local.";
+}
+
+function sendRouteError(response, request, error) {
+  const requestId = randomBytes(8).toString("hex");
+  const status = Number.isInteger(error?.status)
+    ? error.status
+    : error?.code === "ENOENT" ? 404 : 400;
+  process.stderr.write(`[${requestId}] ${request.method} ${request.url} ${error?.code || "LOCAL_ERROR"}\n`);
+  sendJson(response, request, status, {
+    error: publicErrorMessage(error),
+    code: error?.code || "LOCAL_ERROR",
+    requestId,
+  });
 }
 
 async function ensureFolders() {
@@ -352,6 +405,13 @@ async function route(request, response) {
   }
 
   const url = new URL(request.url, `http://${HOST}:${PORT}`);
+  if (request.method === "GET" && url.pathname === "/session") {
+    if (!isUiOrigin(request.headers.origin)) {
+      throw Object.assign(new Error("A sessão só pode ser iniciada pelo Nymi Gacha."), { status: 403, code: "SESSION_ORIGIN_FORBIDDEN" });
+    }
+    sendJson(response, request, 200, { ok: true, token: SESSION_TOKEN, expires: "process" });
+    return;
+  }
   const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|export-videos$|export-text$|export-characters\/|open-folder$)/.test(url.pathname);
   if (!localRoteirosExportRoute && await roteirosService.handle(request, response, url, corsHeaders)) return;
   if (request.method === "GET" && url.pathname === "/health") {
@@ -369,7 +429,8 @@ async function route(request, response) {
   const characterPhotoMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})\/photo$/);
   if (characterPhotoMatch && request.method === "POST") {
     const characterId = safeId(characterPhotoMatch[1]);
-    const body = await requestBody(request, 8 * 1024 * 1024);
+    assertMimeType(contentTypeOf(request), new Set(["image/png"]), "A foto do personagem precisa ser PNG.");
+    const body = await requestBody(request, BODY_LIMITS.photo);
     const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
     if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
       throw new Error("A foto do personagem precisa ser um PNG válido");
@@ -421,7 +482,8 @@ async function route(request, response) {
   }
   if (request.method === "POST" && url.pathname === "/prints") {
     const metadata = readMetadata(request);
-    const body = await requestBody(request, 48 * 1024 * 1024);
+    assertMimeType(contentTypeOf(request, metadata), new Set(["image/png"]), "O print precisa ser PNG.");
+    const body = await requestBody(request, BODY_LIMITS.image);
     const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
     if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
       throw new Error("O print recebido não é um PNG válido");
@@ -465,11 +527,11 @@ async function route(request, response) {
     const scriptId = safeId(roteiroVideoMatch[1]);
     const tiktokId = safeId(roteiroVideoMatch[2]);
     const metadata = readMetadata(request);
-    const contentType = String(metadata.contentType || request.headers["content-type"] || "video/mp4");
-    if (!contentType.startsWith("video/")) throw new Error("O arquivo do TikTok precisa ser um vídeo");
+    const contentType = contentTypeOf(request, metadata) || "video/mp4";
+    assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo do TikTok precisa ser MP4, WebM ou MOV.");
     const fileName = String(metadata.name || "video.mp4");
-    if (!/\.mp4$/i.test(fileName) && !/mp4/i.test(contentType)) throw new Error("O formato principal aceito é MP4");
-    const body = await requestBody(request, 512 * 1024 * 1024);
+    if (!/\.(?:mp4|webm|mov)$/i.test(fileName)) throw new Error("O nome do vídeo precisa terminar em .mp4, .webm ou .mov.");
+    const body = await requestBody(request, BODY_LIMITS.video);
     if (!body.length) throw new Error("Vídeo vazio");
     const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
     const filePath = join(folder, `${tiktokId}.mp4`);
@@ -558,7 +620,8 @@ async function route(request, response) {
   if (roteiroCharacterMatch && request.method === "POST") {
     const characterId = safeId(roteiroCharacterMatch[1]);
     const metadata = readMetadata(request);
-    const body = await requestBody(request, 512 * 1024 * 1024);
+    assertMimeType(contentTypeOf(request, metadata), new Set(["application/zip", "application/x-zip-compressed"]), "O pacote do personagem precisa ser ZIP.");
+    const body = await requestBody(request, BODY_LIMITS.zip);
     if (!body.length) throw new Error("ZIP do personagem vazio");
     let folderName = safeExportFolderName(metadata.characterName || characterId, characterId);
     const requestedFolder = join(ROTEIROS_CHARACTER_EXPORT_ROOT, folderName);
@@ -612,7 +675,8 @@ async function route(request, response) {
   if (videoMakerFrameMatch && request.method === "POST") {
     const characterId = safeId(videoMakerFrameMatch[1]);
     const frameKey = safeId(videoMakerFrameMatch[2]);
-    const body = await requestBody(request, 48 * 1024 * 1024);
+    assertMimeType(contentTypeOf(request), new Set(["image/png"]), "A expressão enviada precisa ser PNG.");
+    const body = await requestBody(request, BODY_LIMITS.image);
     const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
     if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
       throw new Error("A expressão enviada não é um PNG válido");
@@ -647,10 +711,10 @@ async function route(request, response) {
   if (videoMakerTiktokMatch && request.method === "POST") {
     const tiktokId = safeId(videoMakerTiktokMatch[1]);
     const metadata = readMetadata(request);
-    const body = await requestBody(request, 512 * 1024 * 1024);
+    const body = await requestBody(request, BODY_LIMITS.video);
     if (!body.length) throw new Error("TikTok vazio");
-    const contentType = String(metadata.contentType || "video/mp4");
-    if (!contentType.startsWith("video/")) throw new Error("O arquivo do TikTok precisa ser um vídeo");
+    const contentType = contentTypeOf(request, metadata) || "video/mp4";
+    assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo do TikTok precisa ser MP4, WebM ou MOV.");
     const hash = createHash("sha256").update(body).digest("hex");
     const folder = join(VIDEO_MAKER_TIKTOKS_ROOT, tiktokId);
     if (!inside(VIDEO_MAKER_TIKTOKS_ROOT, folder)) throw new Error("Destino inválido");
@@ -761,7 +825,8 @@ async function route(request, response) {
 
   if (request.method === "POST" && url.pathname === "/video-maker/exports") {
     const metadata = readMetadata(request);
-    const body = await requestBody(request, 512 * 1024 * 1024);
+    assertMimeType(contentTypeOf(request, metadata), new Set(["video/webm", "video/mp4", "application/octet-stream"]), "A exportação precisa ser um vídeo WebM ou MP4.");
+    const body = await requestBody(request, BODY_LIMITS.export);
     if (!body.length) throw new Error("Exportação vazia");
     const projectName = safePrintName(metadata.projectName || "video-maker");
     const stamp = printTimestamp();
@@ -825,7 +890,9 @@ async function route(request, response) {
   if (studioAssetMatch && request.method === "POST") {
     const id = safeId(studioAssetMatch[1]);
     const metadata = readMetadata(request);
-    const body = await requestBody(request);
+    const contentType = contentTypeOf(request, metadata);
+    assertMimeType(contentType, IMAGE_MIME_TYPES, "O asset do Studio precisa ser PNG, JPEG ou WebP.");
+    const body = await requestBody(request, BODY_LIMITS.image);
     const filePath = join(STUDIO_ASSETS_ROOT, id);
     if (!inside(STUDIO_ASSETS_ROOT, filePath)) throw new Error("Destino inválido");
     await writeFile(filePath, body);
@@ -851,7 +918,8 @@ async function route(request, response) {
   if (catalogMatch && request.method === "POST") {
     const id = safeId(catalogMatch[1]);
     const metadata = { ...readMetadata(request), id };
-    const body = await requestBody(request);
+    assertMimeType(contentTypeOf(request, metadata), IMAGE_MIME_TYPES, "O item do catálogo precisa ser PNG, JPEG ou WebP.");
+    const body = await requestBody(request, BODY_LIMITS.image);
     const filePath = join(CATALOG_ROOT, `${id}.png`);
     if (!inside(CATALOG_ROOT, filePath)) throw new Error("Destino inválido");
     await writeFile(filePath, body);
@@ -875,7 +943,8 @@ async function route(request, response) {
     const packId = safeId(packMatch[1]);
     const key = safeId(packMatch[2]);
     const metadata = readMetadata(request);
-    const body = await requestBody(request);
+    assertMimeType(contentTypeOf(request, metadata), IMAGE_MIME_TYPES, "A expressão do pack precisa ser PNG, JPEG ou WebP.");
+    const body = await requestBody(request, BODY_LIMITS.image);
     const packFolder = join(PACKS_ROOT, packId);
     const filePath = join(packFolder, `${key}.png`);
     if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
@@ -965,15 +1034,28 @@ async function route(request, response) {
 
 await Promise.all([loadState(), roteirosService.init()]);
 
-createServer((request, response) => {
+const server = createServer({
+  requestTimeout: 120_000,
+  headersTimeout: 15_000,
+  keepAliveTimeout: 5_000,
+}, (request, response) => {
   const origin = request.headers.origin;
   if (origin && !isAllowedOrigin(origin)) {
     sendJson(response, request, 403, { error: "Origem não autorizada" });
     return;
   }
+  const url = new URL(request.url, `http://${HOST}:${PORT}`);
+  try {
+    if (!isPublicRoute(request, url)) assertSession(request, SESSION_TOKEN);
+  } catch (error) {
+    sendRouteError(response, request, error);
+    return;
+  }
   route(request, response).catch((error) => {
-    sendJson(response, request, error?.code === "ENOENT" ? 404 : 500, { error: error?.message ?? "Erro local" });
+    sendRouteError(response, request, error);
   });
-}).listen(PORT, HOST, () => {
-  process.stdout.write(`GACHA MAKER dados locais: http://${HOST}:${PORT}\n`);
+});
+
+server.listen(PORT, HOST, () => {
+  process.stdout.write(`Nymi Gacha dados locais: http://${HOST}:${PORT}\n`);
 });
