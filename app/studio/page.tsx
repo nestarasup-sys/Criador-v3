@@ -14,6 +14,7 @@ import { StudioToolbar } from "./components/StudioToolbar";
 import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./history";
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
 import { renderStudioSceneToCanvas, studioCanvasToPng } from "./scene-print-renderer";
+import { STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
 import {
   EMOTIONS,
   NEW_BASE_EMOTIONS,
@@ -278,6 +279,12 @@ export default function StudioPage() {
       const character = charactersById.get(instance.characterId);
       if (character) requested.set(renderCacheKey(character, instance.expressionEmotion, instance.expressionState), { character, emotion: instance.expressionEmotion, state: instance.expressionState });
     }
+    const activeKeys = new Set(requested.keys());
+    if (Object.keys(renderedRef.current).some((key) => !activeKeys.has(key))) {
+      const pruned = Object.fromEntries(Object.entries(renderedRef.current).filter(([key]) => activeKeys.has(key)));
+      renderedRef.current = pruned;
+      setRendered(pruned);
+    }
     requested.forEach((request, key) => {
       if (renderedRef.current[key]) return;
       tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks)
@@ -388,8 +395,8 @@ export default function StudioPage() {
       if (!animationFrame) {
         animationFrame = window.requestAnimationFrame(() => {
           animationFrame = 0;
-          element.style.setProperty("--drag-x", `${(nextX - x) * bounds.width}px`);
-          element.style.setProperty("--drag-y", `${(nextY - y) * bounds.height}px`);
+          element.style.setProperty("--drag-x", `${(nextX - x) * STUDIO_SCENE_WIDTH}px`);
+          element.style.setProperty("--drag-y", `${(nextY - y) * STUDIO_SCENE_HEIGHT}px`);
           if (nextX > .7) setDockSide("left");
           else if (nextX < .45) setDockSide("right");
         });
@@ -650,6 +657,9 @@ export default function StudioPage() {
   const selectedBubble = (selection?.kind === "bubble" ? studio.bubbles.find((item) => item.id === selection.id) : null) ?? null;
   const selectedNarrator = (selection?.kind === "narrator" ? studio.narrators.find((item) => item.id === selection.id) : null) ?? null;
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
+  const selectedCharacterPreview = selectedCharacter && selectedCharacterSource
+    ? rendered[renderCacheKey(selectedCharacterSource, selectedCharacter.expressionEmotion, selectedCharacter.expressionState)]
+    : undefined;
 
   return (
     <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
@@ -695,6 +705,7 @@ export default function StudioPage() {
             selection={selection}
             selectedCharacter={selectedCharacter}
             selectedCharacterSource={selectedCharacterSource ?? null}
+            selectedCharacterPreview={selectedCharacterPreview}
             selectedObject={selectedObject}
             selectedBubble={selectedBubble}
             selectedNarrator={selectedNarrator}

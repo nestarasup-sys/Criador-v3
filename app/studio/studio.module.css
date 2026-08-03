@@ -56,18 +56,19 @@
 .modalActions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; }
 
 .editor { position: fixed; inset: 0; overflow: hidden; background: #f3f0f8; user-select: none; }
-.stage { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
+.stageViewport { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; touch-action: none; }
+.stage { position: relative; flex: 0 0 auto; width: 1920px; height: 1080px; overflow: hidden; touch-action: none; transform: scale(var(--studio-preview-scale,0)); transform-origin: center; background: #f3f0f8; }
 .background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .background.contain { object-fit: contain; }
 .emptyStageMessage { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); color: rgba(79,62,104,.2); font-size: clamp(24px,4vw,52px); font-weight: 900; letter-spacing: -.04em; pointer-events: none; }
 .background ~ .emptyStageMessage { display: none; }
-.sceneCharacter { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: max-content; height: 72vh; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); contain: layout style; }
-.sceneCharacter img { display: block; width: auto; max-width: none; height: 100%; pointer-events: none; }
+.sceneCharacter { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: max-content; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); contain: layout style; }
+.sceneCharacter img { display: block; width: auto; max-width: none; height: 100%; image-rendering: auto; pointer-events: none; }
 .sceneCharacter span { display: grid; place-items: center; width: 120px; height: 180px; border-radius: 20px; color: white; background: rgba(52,39,72,.5); font-size: 12.5px; }
-.sceneObject { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: 18vw; height: auto; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); }
+.sceneObject { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; height: auto; image-rendering: auto; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); }
 .selected { outline: 2px dashed rgba(112,70,217,.85); outline-offset: 6px; }
 .dragging { cursor: grabbing !important; filter: none !important; transition: none !important; will-change: transform; }
-.bubble, .narrator { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; position: absolute; min-height: 60px; padding: 15px 18px; border: 3px solid #322746; border-radius: 22px; background: white; color: #272032; font-weight: 750; line-height: 1.22; white-space: pre-wrap; cursor: grab; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)); }
+.bubble, .narrator { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; position: absolute; min-height: 60px; padding: 15px 18px; border: 3px solid #322746; border-radius: 22px; background: white; color: #272032; font-family: Arial,sans-serif; font-weight: 700; line-height: 1.22; white-space: pre-wrap; cursor: grab; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)); }
 .bubble::after { content: ""; position: absolute; left: 23%; bottom: -25px; border: 13px solid transparent; border-top: 20px solid white; transform: rotate(11deg); filter: drop-shadow(0 3px 0 #322746); }
 .bubble.tailRight::after { left: auto; right: 23%; transform: rotate(-11deg); }
 .bubble.thought { border-radius: 42%; }
@@ -124,6 +125,12 @@
 .inlineButtons { margin-top: 7px; display: grid; grid-template-columns: 1fr; gap: 5px; }
 .inspector .wideButton { background: #f3f0f6; }
 .inspector .dangerButton { border-color: #f0d7de; background: #fff2f5; color: #c13d59; }
+.qualityNotice { margin: 0 0 13px; padding: 10px 11px; display: flex; flex-direction: column; gap: 3px; border: 1px solid; border-radius: 10px; }
+.qualityNotice span { font-size: 9px; font-weight: 900; letter-spacing: .11em; }
+.qualityNotice strong { font-size: 13px; }
+.qualityNotice small { font-size: 10px; line-height: 1.35; }
+.qualityNative { border-color: #bfe4d2; background: #f0fbf6; color: #277451; }
+.qualityWarning { border-color: #efd59a; background: #fff9e9; color: #89611b; }
 .textField textarea { min-height: 102px; resize: vertical; font-size: 17.1875px; }
 .textFieldHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .textFieldHeading button { padding: 4px 8px; border: 1px solid #d8cfee; border-radius: 7px; background: var(--purple-soft); color: var(--purple-dark); font: inherit; font-size: 12px; font-weight: 850; cursor: pointer; }

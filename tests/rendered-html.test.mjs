@@ -314,7 +314,8 @@ test("shares characters and imported assets through the local PC service", async
   ]);
 
   assert.match(storage, /localDataFetch/);
-  assert.match(client, /LOCAL_DATA_URL = "http:\/\/127\.0\.0\.1:6800"/);
+  assert.match(client, /resolveLocalDataUrl/);
+  assert.match(client, /uiPort \+ 100/);
   assert.match(client, /X-Gacha-Session/);
   assert.match(library, /Migrar dados deste navegador/);
   assert.match(storage, /saveCharactersToPc/);
@@ -362,9 +363,9 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(storage, /saveStudioPrint/);
   assert.match(storage, /openStudioPrintsFolder/);
   assert.match(page, /renderStudioSceneToCanvas/);
-  assert.match(printRenderer, /canvas\.width = 1920/);
-  assert.match(printRenderer, /canvas\.height = 1080/);
-  assert.match(printRenderer, /imageSmoothingQuality = "high"/);
+  assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
+  assert.match(printRenderer, /canvas\.height = STUDIO_SCENE_HEIGHT/);
+  assert.match(printRenderer, /configureHighQualityContext/);
   assert.match(page, /Print salvo em/);
   assert.match(toolbar, />Pasta<\/strong>/);
   assert.doesNotMatch(css, /translate3d/);
@@ -372,12 +373,16 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
 });
 
 test("keeps Studio scene operations, history and print rendering in shared modules", async () => {
-  const [page, ops, history, canvas, printRenderer] = await Promise.all([
+  const [page, ops, history, canvas, printRenderer, layout, characterRenderer, qualityNotice, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-ops.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/history.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/components/StudioCanvas.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-print-renderer.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/scene-layout.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioQualityNotice.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /renderStudioSceneToCanvas/);
   assert.match(page, /pushStudioHistory/);
@@ -389,7 +394,14 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(canvas, /onBeginDrag/);
   assert.match(canvas, /className=\{\x60\$\{styles\.background\}/);
   assert.match(canvas, /alt="" aria-hidden="true"/);
-  assert.match(printRenderer, /canvas\.width = 1920/);
+  assert.match(layout, /STUDIO_SCENE_WIDTH = 1920/);
+  assert.match(layout, /STUDIO_SCENE_HEIGHT = 1080/);
+  assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
+  assert.match(printRenderer, /fitMediaRect/);
+  assert.match(characterRenderer, /processChromaPixels/);
+  assert.match(characterRenderer, /cleanEdges|false, true/);
+  assert.match(qualityNotice, /QUALIDADE LIMITADA PELA FONTE/);
+  assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
   assert.match(printRenderer, /studioCanvasToPng/);
 });
 

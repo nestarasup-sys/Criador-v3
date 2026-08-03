@@ -6,45 +6,42 @@ import type {
   PcCatalogItem,
   PcExpressionPack,
 } from "./types";
+import { processChromaPixels } from "../creator/chroma-worker-client";
+import { loadStudioImage } from "./image-loader";
+import { configureHighQualityContext } from "./render-quality";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
 const PADDING = { x: 520, y: 360 };
-const imageCache = new Map<string, Promise<HTMLImageElement>>();
 const chromaCache = new Map<string, Promise<HTMLCanvasElement>>();
-
-function loadImage(src: string) {
-  if (!imageCache.has(src)) {
-    imageCache.set(src, new Promise((resolve, reject) => {
-      const image = new Image();
-      image.crossOrigin = "anonymous";
-      image.onload = () => resolve(image);
-      image.onerror = () => reject(new Error(`Não foi possível carregar ${src}`));
-      image.src = src;
-    }));
-  }
-  return imageCache.get(src)!;
-}
+const MAX_CHROMA_CACHE = 48;
 
 function transparentChroma(src: string) {
   if (!chromaCache.has(src)) {
-    chromaCache.set(src, (async () => {
-      const image = await loadImage(src);
+    const pending = (async () => {
+      const image = await loadStudioImage(src);
       const canvas = document.createElement("canvas");
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
       const context = canvas.getContext("2d", { willReadFrequently: true });
       if (!context) throw new Error("Canvas indisponível");
+      configureHighQualityContext(context);
       context.drawImage(image, 0, 0);
       const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-      for (let index = 0; index < pixels.data.length; index += 4) {
-        const distance = Math.hypot(pixels.data[index], pixels.data[index + 1] - 195, pixels.data[index + 2] - 102);
-        if (distance < 34) pixels.data[index + 3] = 0;
-        else if (distance < 92) pixels.data[index + 3] *= (distance - 34) / 58;
-      }
+      const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, false, true);
+      pixels.data.set(processed);
       context.putImageData(pixels, 0, 0);
       return canvas;
-    })());
+    })().catch((error) => {
+      chromaCache.delete(src);
+      throw error;
+    });
+    chromaCache.set(src, pending);
+    while (chromaCache.size > MAX_CHROMA_CACHE) {
+      const oldest = chromaCache.keys().next().value as string | undefined;
+      if (!oldest || oldest === src) break;
+      chromaCache.delete(oldest);
+    }
   }
   return chromaCache.get(src)!;
 }
@@ -120,8 +117,8 @@ function trimCanvas(source: HTMLCanvasElement) {
   let minY = source.height;
   let maxX = -1;
   let maxY = -1;
-  for (let y = 0; y < source.height; y += 2) {
-    for (let x = 0; x < source.width; x += 2) {
+  for (let y = 0; y < source.height; y += 1) {
+    for (let x = 0; x < source.width; x += 1) {
       if (data[(y * source.width + x) * 4 + 3] > 12) {
         minX = Math.min(minX, x);
         minY = Math.min(minY, y);
@@ -139,7 +136,11 @@ function trimCanvas(source: HTMLCanvasElement) {
   const output = document.createElement("canvas");
   output.width = maxX - minX + 1;
   output.height = maxY - minY + 1;
-  output.getContext("2d")?.drawImage(source, minX, minY, output.width, output.height, 0, 0, output.width, output.height);
+  const outputContext = output.getContext("2d");
+  if (outputContext) {
+    configureHighQualityContext(outputContext);
+    outputContext.drawImage(source, minX, minY, output.width, output.height, 0, 0, output.width, output.height);
+  }
   return output;
 }
 
@@ -158,11 +159,13 @@ export async function renderStudioCharacter(
   final.height = HEIGHT;
   const finalContext = final.getContext("2d");
   if (!finalContext) throw new Error("Canvas indisponível");
+  configureHighQualityContext(finalContext);
   const scene = document.createElement("canvas");
   scene.width = WIDTH + PADDING.x * 2;
   scene.height = HEIGHT + PADDING.y * 2;
   const context = scene.getContext("2d");
   if (!context) throw new Error("Canvas indisponível");
+  configureHighQualityContext(context);
 
   const masks = {
     body: character.layerMasks?.body ?? character.maskStrokes ?? [],
@@ -172,7 +175,7 @@ export async function renderStudioCharacter(
   };
 
   const drawItem = async (item: PcCatalogItem | { fileUrl: string; width: number; height: number; defaultX: number; defaultY: number }, transform: ItemTransform, mask: MaskStroke[] = []) => {
-    const image = await loadImage(item.fileUrl);
+    const image = await loadStudioImage(item.fileUrl);
     const width = item.width ?? image.naturalWidth;
     const height = item.height ?? image.naturalHeight;
     const centerX = item.defaultX ?? width / 2;
@@ -184,6 +187,7 @@ export async function renderStudioCharacter(
     }
     const target = layer?.getContext("2d") ?? context;
     if (!target) return;
+    configureHighQualityContext(target);
     target.save();
     target.translate(PADDING.x + centerX + transform.x, PADDING.y + centerY + transform.y);
     target.rotate(transform.rotation * Math.PI / 180);
@@ -214,6 +218,7 @@ export async function renderStudioCharacter(
   bodyLayer.width = scene.width;
   bodyLayer.height = scene.height;
   const bodyContext = bodyLayer.getContext("2d");
+  if (bodyContext) configureHighQualityContext(bodyContext);
   bodyContext?.drawImage(base, PADDING.x, PADDING.y, WIDTH, HEIGHT);
   if (bodyContext && masks.body.length) {
     bodyContext.globalCompositeOperation = "destination-in";

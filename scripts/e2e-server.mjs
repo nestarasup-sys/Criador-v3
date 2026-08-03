@@ -7,7 +7,9 @@ import { spawn } from "node:child_process";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 const root = await mkdtemp(join(tmpdir(), "nymi-gacha-e2e-"));
-const env = { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: "6800", NYMI_UI_PORT: "6700", NYMI_E2E: "1" };
+const dataPort = process.env.NYMI_E2E_DATA_PORT ?? "6810";
+const uiPort = process.env.NYMI_E2E_UI_PORT ?? "6710";
+const env = { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: dataPort, NYMI_UI_PORT: uiPort, NYMI_E2E_BASE_URL: `http://localhost:${uiPort}`, NYMI_E2E: "1" };
 // Invoke Vinext's JS entry point directly for the build. This avoids the
 // `.cmd` shim and quoting problems caused by the project path containing
 // spaces on Windows.
@@ -21,7 +23,7 @@ try {
   execFileSync(process.execPath, [vinextCli, "build"], { cwd: projectRoot, env: process.env, stdio: "inherit" });
 }
 const data = spawn(process.execPath, [join(projectRoot, "local-data-server.mjs")], { cwd: projectRoot, env, stdio: "inherit" });
-const ui = spawn(process.execPath, [join(projectRoot, "scripts", "production-server.mjs"), "6700"], {
+const ui = spawn(process.execPath, [join(projectRoot, "scripts", "production-server.mjs"), uiPort], {
   cwd: projectRoot,
   env,
   stdio: "inherit",

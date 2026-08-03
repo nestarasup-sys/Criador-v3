@@ -1,5 +1,12 @@
 /** Single source for the Nymi Gacha loopback data-service endpoint. */
-export const LOCAL_DATA_URL = "http://127.0.0.1:6800";
+function resolveLocalDataUrl() {
+  if (typeof window === "undefined") return "http://127.0.0.1:6800";
+  const uiPort = Number.parseInt(window.location.port, 10);
+  const dataPort = Number.isFinite(uiPort) && uiPort >= 6700 && uiPort < 6800 ? uiPort + 100 : 6800;
+  return `http://127.0.0.1:${dataPort}`;
+}
+
+export const LOCAL_DATA_URL = resolveLocalDataUrl();
 const SESSION_PATH = "/session";
 const SESSION_HEADER = "X-Gacha-Session";
 

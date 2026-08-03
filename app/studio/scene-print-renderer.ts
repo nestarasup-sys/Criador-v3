@@ -1,15 +1,12 @@
 import { expressionKey, renderStudioCharacter } from "./character-renderer";
 import { wrapCanvasText } from "./scene-ops";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack, SceneBubble, SceneNarrator, Studio } from "./types";
+import { loadStudioImage } from "./image-loader";
+import { characterRect, fitMediaRect, objectRect, STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
+import { configureHighQualityContext } from "./render-quality";
 
 export function loadStudioCanvasImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.crossOrigin = "anonymous";
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
+  return loadStudioImage(src);
 }
 
 export function studioCanvasToPng(canvas: HTMLCanvasElement) {
@@ -33,12 +30,11 @@ type StudioPrintOptions = {
 
 export async function renderStudioSceneToCanvas({ studio, charactersById, rendered, renderCacheKey, catalog, expressionPacks, renderCharacter = renderStudioCharacter, loadImage = loadStudioCanvasImage }: StudioPrintOptions) {
   const canvas = document.createElement("canvas");
-  canvas.width = 1920;
-  canvas.height = 1080;
+  canvas.width = STUDIO_SCENE_WIDTH;
+  canvas.height = STUDIO_SCENE_HEIGHT;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Não foi possível criar o canvas do Print");
-  context.imageSmoothingEnabled = true;
-  context.imageSmoothingQuality = "high";
+  configureHighQualityContext(context);
   const width = canvas.width;
   const height = canvas.height;
   context.fillStyle = "#f3f0f8";
@@ -46,12 +42,8 @@ export async function renderStudioSceneToCanvas({ studio, charactersById, render
 
   if (studio.background) {
     const image = await loadImage(studio.background.src);
-    const imageRatio = image.naturalWidth / image.naturalHeight;
-    const stageRatio = width / height;
-    const contain = studio.background.fit === "contain";
-    const drawWidth = (contain ? imageRatio > stageRatio : imageRatio < stageRatio) ? width : height * imageRatio;
-    const drawHeight = drawWidth / imageRatio;
-    context.drawImage(image, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+    const rect = fitMediaRect(image.naturalWidth, image.naturalHeight, width, height, studio.background.fit);
+    context.drawImage(image, rect.x, rect.y, rect.width, rect.height);
   }
 
   const elements = [
@@ -70,21 +62,19 @@ export async function renderStudioSceneToCanvas({ studio, charactersById, render
         : undefined;
       if (!src) continue;
       const image = await loadImage(src);
-      const drawHeight = height * .72 * element.item.scale;
-      const drawWidth = drawHeight * image.naturalWidth / image.naturalHeight;
+      const rect = characterRect(image.naturalWidth, image.naturalHeight, element.item.scale);
       context.save();
       context.translate(element.item.x * width, element.item.y * height);
       context.scale(element.item.flipX ? -1 : 1, 1);
-      context.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      context.drawImage(image, -rect.width / 2, -rect.height / 2, rect.width, rect.height);
       context.restore();
     } else if (element.kind === "object") {
       const image = await loadImage(element.item.src);
-      const drawWidth = width * .18 * element.item.scale;
-      const drawHeight = drawWidth * image.naturalHeight / image.naturalWidth;
+      const rect = objectRect(image.naturalWidth, image.naturalHeight, element.item.scale);
       context.save();
       context.translate(element.item.x * width, element.item.y * height);
       context.scale(element.item.flipX ? -1 : 1, 1);
-      context.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+      context.drawImage(image, -rect.width / 2, -rect.height / 2, rect.width, rect.height);
       context.restore();
     } else if (element.kind === "bubble") {
       drawBubble(context, element.item, width, height);

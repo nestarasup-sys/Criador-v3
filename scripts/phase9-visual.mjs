@@ -8,6 +8,9 @@ import { chromium } from "@playwright/test";
 import { comparePngs } from "./compare-png.mjs";
 
 const projectRoot = process.cwd();
+const uiPort = Number(process.env.NYMI_E2E_UI_PORT ?? "6710");
+const dataPort = Number(process.env.NYMI_E2E_DATA_PORT ?? "6810");
+const visualEnv = { ...process.env, NYMI_E2E_UI_PORT: String(uiPort), NYMI_E2E_DATA_PORT: String(dataPort), NYMI_E2E_BASE_URL: `http://localhost:${uiPort}` };
 const goldenRoot = join(projectRoot, "tests", "golden", "phase9");
 const update = process.argv.includes("--update");
 const routes = [
@@ -15,7 +18,7 @@ const routes = [
   ["studio", "/studio"],
   ["roteiros", "/roteiros"],
 ];
-const server = spawn(process.execPath, [join(projectRoot, "scripts", "e2e-server.mjs")], { cwd: projectRoot, stdio: "inherit" });
+const server = spawn(process.execPath, [join(projectRoot, "scripts", "e2e-server.mjs")], { cwd: projectRoot, env: visualEnv, stdio: "inherit" });
 
 function waitForPort(host, port, timeoutMs = 120_000) {
   const started = Date.now();
@@ -43,7 +46,7 @@ async function closeServer() {
 }
 
 try {
-  await waitForPort("localhost", 6700);
+  await waitForPort("localhost", uiPort);
   await mkdir(goldenRoot, { recursive: true });
   const candidateRoot = await mkdtemp(join(tmpdir(), "nymi-phase9-visual-"));
   const browser = await chromium.launch({ headless: true });
@@ -55,7 +58,7 @@ try {
       // Local-data polling and object-URL hydration can keep the network busy;
       // DOMContentLoaded is the deterministic readiness boundary for a visual
       // capture. The title/HTTP assertions below still reject error pages.
-      const response = await page.goto(`http://localhost:6700${route}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+      const response = await page.goto(`http://localhost:${uiPort}${route}`, { waitUntil: "domcontentloaded", timeout: 30_000 });
       assert.ok(response && response.status() < 400, `Rota ${route} retornou HTTP ${response?.status() ?? "desconhecido"}.`);
       assert.match(await page.title(), /Nymi Gacha/i, `Rota ${route} não carregou o título esperado.`);
       await page.waitForTimeout(800);

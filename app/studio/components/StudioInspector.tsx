@@ -1,5 +1,6 @@
 import styles from "../studio.module.css";
 import { EXPRESSION_STATES, type Character, type Emotion, type SceneBubble, type SceneCharacter, type SceneNarrator, type SceneObject, type Selection, type Studio } from "../types";
+import { StudioQualityNotice } from "./StudioQualityNotice";
 
 type InspectorProps<T> = { item: T; onUpdate: (patch: Partial<T>) => void; onLayer: (direction: -1 | 1) => void; onRemove: () => void; onDuplicate?: () => void };
 
@@ -11,12 +12,12 @@ function ScaleControl({ value, onChange, min = .25, max = 2.5 }: { value: number
   return <label className={styles.rangeField}><span>Scale <b>{Math.round(value * 100)}%</b></span><input type="range" min={min} max={max} step=".05" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
 }
 
-function CharacterInspector({ item, source, emotions, onUpdate, onLayer, onRemove }: InspectorProps<SceneCharacter> & { source: Character; emotions: ReadonlyArray<readonly [Emotion, string]> }) {
-  return <><div className={styles.inspectorTitle}><div><span>PERSONAGEM</span><h3>{source.name}</h3></div><button onClick={onRemove}>×</button></div><ScaleControl value={item.scale} onChange={(scale) => onUpdate({ scale })} /><div className={styles.inspectorSection}><span>Expressão</span><div className={styles.expressionGrid}>{emotions.map(([value, label]) => <button key={value} className={item.expressionEmotion === value ? styles.activeOption : ""} onClick={() => onUpdate({ expressionEmotion: value })}>{label}</button>)}</div><div className={styles.stateSwitch}>{EXPRESSION_STATES.map(([value, label]) => <button key={value} className={item.expressionState === value ? styles.activeOption : ""} onClick={() => onUpdate({ expressionState: value })}>{label}</button>)}</div></div><button className={styles.wideButton} onClick={() => onUpdate({ flipX: !item.flipX })}>↔ Espelhar personagem</button><LayerButtons onLayer={onLayer} /><button className={styles.dangerButton} onClick={onRemove}>Remover da cena</button></>;
+function CharacterInspector({ item, source, previewSrc, emotions, onUpdate, onLayer, onRemove }: InspectorProps<SceneCharacter> & { source: Character; previewSrc?: string; emotions: ReadonlyArray<readonly [Emotion, string]> }) {
+  return <><div className={styles.inspectorTitle}><div><span>PERSONAGEM</span><h3>{source.name}</h3></div><button onClick={onRemove}>×</button></div><StudioQualityNotice src={previewSrc} kind="character" scale={item.scale} /><ScaleControl value={item.scale} onChange={(scale) => onUpdate({ scale })} /><div className={styles.inspectorSection}><span>Expressão</span><div className={styles.expressionGrid}>{emotions.map(([value, label]) => <button key={value} className={item.expressionEmotion === value ? styles.activeOption : ""} onClick={() => onUpdate({ expressionEmotion: value })}>{label}</button>)}</div><div className={styles.stateSwitch}>{EXPRESSION_STATES.map(([value, label]) => <button key={value} className={item.expressionState === value ? styles.activeOption : ""} onClick={() => onUpdate({ expressionState: value })}>{label}</button>)}</div></div><button className={styles.wideButton} onClick={() => onUpdate({ flipX: !item.flipX })}>↔ Espelhar personagem</button><LayerButtons onLayer={onLayer} /><button className={styles.dangerButton} onClick={onRemove}>Remover da cena</button></>;
 }
 
 function ObjectInspector({ item, onUpdate, onLayer, onRemove, onDuplicate }: InspectorProps<SceneObject>) {
-  return <><div className={styles.inspectorTitle}><div><span>OBJETO</span><h3>{item.name}</h3></div><button onClick={onRemove}>×</button></div><ScaleControl value={item.scale} onChange={(scale) => onUpdate({ scale })} min={.1} max={4} /><button className={styles.wideButton} onClick={() => onUpdate({ flipX: !item.flipX })}>↔ Espelhar objeto</button><LayerButtons onLayer={onLayer} /><button className={styles.wideButton} onClick={onDuplicate}>Duplicar objeto</button><button className={styles.dangerButton} onClick={onRemove}>Remover objeto</button></>;
+  return <><div className={styles.inspectorTitle}><div><span>OBJETO</span><h3>{item.name}</h3></div><button onClick={onRemove}>×</button></div><StudioQualityNotice src={item.src} kind="object" scale={item.scale} /><ScaleControl value={item.scale} onChange={(scale) => onUpdate({ scale })} min={.1} max={4} /><button className={styles.wideButton} onClick={() => onUpdate({ flipX: !item.flipX })}>↔ Espelhar objeto</button><LayerButtons onLayer={onLayer} /><button className={styles.wideButton} onClick={onDuplicate}>Duplicar objeto</button><button className={styles.dangerButton} onClick={onRemove}>Remover objeto</button></>;
 }
 
 function BubbleInspector({ item, onUpdate, onCopy, onPaste, onGenerateEnglish, isTranslating, onLayer, onRemove, onDuplicate }: InspectorProps<SceneBubble> & { onCopy: () => void; onPaste: () => void; onGenerateEnglish: () => void; isTranslating: boolean }) {
@@ -32,6 +33,7 @@ type StudioInspectorProps = {
   selection: Selection;
   selectedCharacter: SceneCharacter | null;
   selectedCharacterSource: Character | null;
+  selectedCharacterPreview?: string;
   selectedObject: SceneObject | null;
   selectedBubble: SceneBubble | null;
   selectedNarrator: SceneNarrator | null;
@@ -48,11 +50,11 @@ type StudioInspectorProps = {
   onDuplicate: () => void;
 };
 
-export function StudioInspector({ studio, selection, selectedCharacter, selectedCharacterSource, selectedObject, selectedBubble, selectedNarrator, emotions, translatingBubbleId, onToggleBackgroundFit, onRemoveBackground, onUpdate, onCopyBubble, onPasteBubble, onGenerateEnglish, onLayer, onRemove, onDuplicate }: StudioInspectorProps) {
+export function StudioInspector({ studio, selection, selectedCharacter, selectedCharacterSource, selectedCharacterPreview, selectedObject, selectedBubble, selectedNarrator, emotions, translatingBubbleId, onToggleBackgroundFit, onRemoveBackground, onUpdate, onCopyBubble, onPasteBubble, onGenerateEnglish, onLayer, onRemove, onDuplicate }: StudioInspectorProps) {
   const update = <T extends object>(kind: NonNullable<Selection>["kind"], id: string, patch: Partial<T>) => onUpdate(kind, id, patch as Record<string, unknown>);
   return <section className={styles.inspector}>
-    {studio.background && !selection && <><h3>Fundo</h3><button onClick={onToggleBackgroundFit}>{studio.background.fit === "cover" ? "Mostrar inteiro" : "Preencher tela"}</button><button className={styles.dangerButton} onClick={onRemoveBackground}>Remover fundo</button></>}
-    {selectedCharacter && selectedCharacterSource && <CharacterInspector item={selectedCharacter} source={selectedCharacterSource} emotions={emotions} onUpdate={(patch) => update("character", selectedCharacter.id, patch)} onLayer={onLayer} onRemove={onRemove} />}
+    {studio.background && !selection && <><h3>Fundo</h3><StudioQualityNotice src={studio.background.src} kind="background" fit={studio.background.fit} /><button onClick={onToggleBackgroundFit}>{studio.background.fit === "cover" ? "Mostrar inteiro" : "Preencher tela"}</button><button className={styles.dangerButton} onClick={onRemoveBackground}>Remover fundo</button></>}
+    {selectedCharacter && selectedCharacterSource && <CharacterInspector item={selectedCharacter} source={selectedCharacterSource} previewSrc={selectedCharacterPreview} emotions={emotions} onUpdate={(patch) => update("character", selectedCharacter.id, patch)} onLayer={onLayer} onRemove={onRemove} />}
     {selectedObject && <ObjectInspector item={selectedObject} onUpdate={(patch) => update("object", selectedObject.id, patch)} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}
     {selectedBubble && <BubbleInspector item={selectedBubble} onUpdate={(patch) => update("bubble", selectedBubble.id, patch)} onCopy={onCopyBubble} onPaste={() => onPasteBubble((patch) => update("bubble", selectedBubble.id, patch))} onGenerateEnglish={onGenerateEnglish} isTranslating={translatingBubbleId === selectedBubble.id} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}
     {selectedNarrator && <NarratorInspector item={selectedNarrator} onUpdate={(patch) => update("narrator", selectedNarrator.id, patch)} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}
