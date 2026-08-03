@@ -2,11 +2,36 @@
 
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCharacterBundle } from "./studio/character-export";
-import { NymiConnectionStatus, NymiNavigation } from "./shared/NymiShell";
-import { localDataFetch } from "./lib/local-data-client";
 import { applyChromaPixels } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
+import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBounds } from "./creator/image-processing";
+import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
+import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
+import { processChromaPixels } from "./creator/chroma-worker-client";
+import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
+import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
+import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
+import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
+import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
+import {
+  deleteCatalogItem,
+  deleteExpressionPack,
+  hydratePcState,
+  loadCatalog,
+  loadExpressionPacks,
+  loadPcModels,
+  loadPcState,
+  normalizeOutfitCatalog,
+  saveCatalogItemToPc,
+  saveCharactersToPc,
+  saveExpressionPackToPc,
+  storeCatalogItem,
+  storeExpressionPack,
+  uploadCharacterPhotoToPc,
+  CHARACTER_KEY,
+} from "./creator/creator-storage";
+import type { BasePackCollection } from "./creator/base-packs";
 import type {
   BasePackId,
   Category,
@@ -17,10 +42,7 @@ import type {
   StoredLayerMasks,
 } from "./domain/character-primitives";
 import {
-  ALL_BASE_EXPRESSION_KEYS,
-  NEW_BASE_EXPRESSION_KEYS,
   PACK_EXPRESSION_KEYS,
-  STANDARD_BASE_EXPRESSION_KEYS,
 } from "./domain/expression-contract";
 import type { Emotion, ExpressionKey, ExpressionState } from "./domain/expression-contract";
 import type {
@@ -38,8 +60,6 @@ import type {
   ExpressionFrame,
   ExpressionPack,
   NormalizedContentGeometry,
-  PcCatalogItem,
-  PcExpressionPack,
 } from "./domain/catalog-contract";
 
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
@@ -47,42 +67,6 @@ import type {
 type BrushMode = "erase" | "restore";
 type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit";
 type LayerMasks = Record<MaskTarget, MaskStroke[]>;
-
-type BasePackDefinition = {
-  id: BasePackId;
-  name: string;
-  expressionKeys: readonly ExpressionKey[];
-  source: string;
-};
-
-type BasePackCollection = Record<Model, readonly BasePackDefinition[]>;
-
-const DEFAULT_BASE_PACKS: BasePackCollection = {
-  feminino: [
-    { id: "modelo-1", name: "Modelo 1", expressionKeys: STANDARD_BASE_EXPRESSION_KEYS, source: "/models/modelos/feminino/modelo-1" },
-    { id: "modelo-2", name: "Modelo 2", expressionKeys: NEW_BASE_EXPRESSION_KEYS, source: "/models/modelos/feminino/modelo-2" },
-    { id: "modelo-3", name: "Modelo 3", expressionKeys: NEW_BASE_EXPRESSION_KEYS, source: "/models/modelos/feminino/modelo-3" },
-  ],
-  masculino: [
-    { id: "modelo-1", name: "Modelo 1", expressionKeys: STANDARD_BASE_EXPRESSION_KEYS, source: "/models/modelos/masculino/modelo-1" },
-    { id: "modelo-2", name: "Modelo 2", expressionKeys: NEW_BASE_EXPRESSION_KEYS, source: "/models/modelos/masculino/modelo-2" },
-    { id: "modelo-3", name: "Modelo 3", expressionKeys: NEW_BASE_EXPRESSION_KEYS, source: "/models/modelos/masculino/modelo-3" },
-    { id: "modelo-4", name: "Modelo 4", expressionKeys: NEW_BASE_EXPRESSION_KEYS, source: "/models/modelos/masculino/modelo-4" },
-  ],
-};
-
-function getBasePack(packs: BasePackCollection, model: Model, packId?: BasePackId): BasePackDefinition {
-  const normalizedId = normalizeBasePackId(packId);
-  return packs[model].find((pack) => pack.id === normalizedId) ?? packs[model][0];
-}
-
-function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
-  return `${pack.source}/${key}.png`;
-}
-
-function basePackCacheKey(model: Model, packId: BasePackId) {
-  return `${model}:${packId}`;
-}
 
 function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId) {
   return `${outfitId ?? "nenhuma"}:${packId}`;
@@ -267,270 +251,6 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-const DB_NAME = "gacha-maker";
-const DB_VERSION = 2;
-const STORE_NAME = "catalog";
-const PACK_STORE_NAME = "expressionPacks";
-const CHARACTER_KEY = "gacha-maker-characters";
-
-type PcState = {
-  characters: Character[];
-  catalog: PcCatalogItem[];
-  expressionPacks: PcExpressionPack[];
-};
-type PcBasePackDefinition = Omit<BasePackDefinition, "expressionKeys"> & { expressionKeys: string[] };
-type PcBasePackCollection = Record<Model, PcBasePackDefinition[]>;
-
-async function pcRequest(path: string, init?: RequestInit) {
-  const response = await localDataFetch(path, init);
-  if (!response.ok) throw new Error(`Armazenamento local indisponível (${response.status})`);
-  return response;
-}
-
-async function loadPcState(): Promise<PcState> {
-  const response = await pcRequest("/state");
-  return response.json();
-}
-
-async function loadPcModels(): Promise<BasePackCollection> {
-  const response = await pcRequest("/models");
-  const discovered = await response.json() as PcBasePackCollection;
-  return Object.fromEntries((["feminino", "masculino"] as Model[]).map((gender) => {
-    const validModels = (discovered[gender] ?? []).map((pack) => ({
-      ...pack,
-      expressionKeys: pack.expressionKeys.filter((key): key is ExpressionKey =>
-        (ALL_BASE_EXPRESSION_KEYS as readonly string[]).includes(key),
-      ),
-    })).filter((pack) => pack.expressionKeys.includes("normal"));
-    return [gender, validModels.length > 0 ? validModels : DEFAULT_BASE_PACKS[gender]];
-  })) as unknown as BasePackCollection;
-}
-
-function legacyOutfitOrder(item: Pick<CatalogItem, "outfitVariantIndex" | "outfitPoseId" | "basePackId" | "outfitCover">) {
-  if (typeof item.outfitVariantIndex === "number") return item.outfitVariantIndex;
-  const legacyId = item.outfitPoseId ?? item.basePackId;
-  if (legacyId === "padrao" || legacyId === "modelo-1") return 0;
-  const legacyPack = legacyId?.match(/^(?:pack|modelo)-(\d+)$/);
-  if (legacyPack) return legacyId?.startsWith("pack-")
-    ? Number(legacyPack[1])
-    : Math.max(0, Number(legacyPack[1]) - 1);
-  return item.outfitCover ? 0 : Number.MAX_SAFE_INTEGER;
-}
-
-function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(items: T[]): T[] {
-  const grouped = new Map<string, T[]>();
-  items.forEach((item) => {
-    if (item.category === "roupas" && item.outfitGroupId) {
-      grouped.set(item.outfitGroupId, [...(grouped.get(item.outfitGroupId) ?? []), item]);
-    }
-  });
-  const variantIndexes = new Map<string, number>();
-  grouped.forEach((groupItems) => {
-    groupItems
-      .sort((left, right) => legacyOutfitOrder(left) - legacyOutfitOrder(right))
-      .forEach((item, index) => variantIndexes.set(item.id, index));
-  });
-  return items.map((item) => {
-    if (item.category !== "roupas") return item;
-    const normalized = {
-      ...item,
-      basePackId: undefined,
-      outfitPoseId: undefined,
-      outfitVariantIndex: item.outfitGroupId ? variantIndexes.get(item.id) ?? 0 : undefined,
-      outfitCover: item.outfitGroupId ? (variantIndexes.get(item.id) ?? 0) === 0 : undefined,
-    };
-    return normalized as T;
-  });
-}
-
-async function saveCharactersToPc(characters: Character[]) {
-  const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
-    void _photoUrl;
-    void _photoDataUrl;
-    return character;
-  });
-  await pcRequest("/characters", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(charactersWithoutPhotos),
-  });
-}
-
-async function uploadCharacterPhotoToPc(characterId: string, blob: Blob) {
-  const response = await pcRequest(`/characters/${encodeURIComponent(characterId)}/photo`, {
-    method: "POST",
-    headers: { "Content-Type": "image/png" },
-    body: blob,
-  });
-  const result = await response.json() as { photoUrl?: string };
-  if (!result.photoUrl) throw new Error("O servidor não retornou a foto salva");
-  return result.photoUrl;
-}
-
-async function saveCatalogItemToPc(item: CatalogItem) {
-  const { blob, url: _url, ...metadata } = item;
-  void _url;
-  await pcRequest(`/catalog/${encodeURIComponent(item.id)}`, {
-    method: "POST",
-    headers: { "Content-Type": "image/png", "X-Gacha-Meta": encodeURIComponent(JSON.stringify(metadata)) },
-    body: blob,
-  });
-}
-
-async function deleteCatalogItemFromPc(id: string) {
-  await pcRequest(`/catalog/${encodeURIComponent(id)}`, { method: "DELETE" });
-}
-
-async function saveExpressionPackToPc(pack: ExpressionPack) {
-  await Promise.all(pack.frames.map((frame) => pcRequest(
-    `/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(frame.key)}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "image/png",
-        "X-Gacha-Meta": encodeURIComponent(JSON.stringify({
-           name: pack.name,
-           model: pack.model,
-          basePackId: normalizeBasePackId(pack.basePackId),
-           createdAt: pack.createdAt,
-          width: frame.width,
-          height: frame.height,
-        })),
-      },
-      body: frame.blob,
-    },
-  )));
-}
-
-async function deleteExpressionPackFromPc(id: string) {
-  await pcRequest(`/packs/${encodeURIComponent(id)}`, { method: "DELETE" });
-}
-
-async function hydratePcState(pcState: PcState) {
-  const normalizedPcCatalog = normalizeOutfitCatalog(pcState.catalog);
-  const catalog = await Promise.all(normalizedPcCatalog.map(async (item) => {
-    const response = await fetch(item.fileUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error("Não foi possível carregar um item local");
-    const blob = await response.blob();
-    const { fileUrl: _fileUrl, ...metadata } = item;
-    void _fileUrl;
-    return { ...metadata, blob, url: URL.createObjectURL(blob) } as CatalogItem;
-  }));
-  const expressionPacks: ExpressionPack[] = await Promise.all(pcState.expressionPacks.map(async (pack) => ({
-    ...pack,
-    frames: await Promise.all(pack.frames.map(async (frame) => {
-      const response = await fetch(frame.fileUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error("Não foi possível carregar uma expressão local");
-      const blob = await response.blob();
-      const { fileUrl: _fileUrl, ...metadata } = frame;
-      void _fileUrl;
-      return { ...metadata, blob, url: URL.createObjectURL(blob) } as ExpressionFrame;
-    })),
-  })));
-  return {
-    characters: (pcState.characters ?? []).map((character) => ({
-      ...character,
-      basePackId: normalizeBasePackId(character.basePackId),
-    })),
-    catalog,
-    expressionPacks: expressionPacks.map((pack) => ({
-      ...pack,
-      basePackId: normalizeBasePackId(pack.basePackId),
-    })),
-  };
-}
-
-function openDatabase() {
-  return new Promise<IDBDatabase>((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id" });
-      }
-      if (!db.objectStoreNames.contains(PACK_STORE_NAME)) {
-        db.createObjectStore(PACK_STORE_NAME, { keyPath: "id" });
-      }
-    };
-    request.onsuccess = () => {
-      request.result.onversionchange = () => request.result.close();
-      resolve(request.result);
-    };
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function loadCatalog() {
-  const db = await openDatabase();
-  return new Promise<CatalogItem[]>((resolve, reject) => {
-    const request = db.transaction(STORE_NAME, "readonly").objectStore(STORE_NAME).getAll();
-    request.onsuccess = () => resolve(request.result as CatalogItem[]);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function storeCatalogItem(item: CatalogItem) {
-  const db = await openDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    transaction.objectStore(STORE_NAME).put({ ...item, url: undefined });
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  await saveCatalogItemToPc(item).catch(() => undefined);
-}
-
-async function deleteCatalogItem(id: string) {
-  const db = await openDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    transaction.objectStore(STORE_NAME).delete(id);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  await deleteCatalogItemFromPc(id).catch(() => undefined);
-}
-
-async function loadExpressionPacks() {
-  const db = await openDatabase();
-  return new Promise<ExpressionPack[]>((resolve, reject) => {
-    const request = db.transaction(PACK_STORE_NAME, "readonly").objectStore(PACK_STORE_NAME).getAll();
-    request.onsuccess = () => resolve(request.result as ExpressionPack[]);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function storeExpressionPack(pack: ExpressionPack) {
-  const db = await openDatabase();
-  const storedPack = {
-    ...pack,
-    frames: pack.frames.map((frame) => ({
-      key: frame.key,
-      blob: frame.blob,
-      width: frame.width,
-      height: frame.height,
-    })),
-  };
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(PACK_STORE_NAME, "readwrite");
-    transaction.objectStore(PACK_STORE_NAME).put(storedPack);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  await saveExpressionPackToPc(pack).catch(() => undefined);
-}
-
-async function deleteExpressionPack(id: string) {
-  const db = await openDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(PACK_STORE_NAME, "readwrite");
-    transaction.objectStore(PACK_STORE_NAME).delete(id);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  await deleteExpressionPackFromPc(id).catch(() => undefined);
-}
-
 function loadImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
@@ -551,7 +271,8 @@ async function removeChroma(source: Blob | string) {
     if (!context) throw new Error("Canvas indisponível");
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    applyChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, false, { cleanEdges: true });
+    const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, false, true);
+    pixels.data.set(processed);
 
     context.putImageData(pixels, 0, 0);
     return await new Promise<Blob>((resolve, reject) =>
@@ -582,53 +303,6 @@ function createChromaResult(
   applyChromaPixels(pixels.data, output.width, output.height, color, tolerance, softness, connectedOnly, { cleanEdges });
   context.putImageData(pixels, 0, 0);
   return output;
-}
-
-type ImageRegion = { x: number; y: number; width: number; height: number };
-type DetectedOutfitRegion = ImageRegion & { owner: number };
-type SceneBounds = { minX: number; minY: number; maxX: number; maxY: number };
-
-function contentBounds(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-  padding = 3,
-  search?: ImageRegion,
-): ImageRegion | null {
-  return findVisibleBounds(data, width, height, { alphaThreshold: 24, padding, search });
-}
-
-function cropCanvasToVisibleContent(source: HTMLCanvasElement, padding = 3) {
-  const context = source.getContext("2d", { willReadFrequently: true });
-  if (!context) throw new Error("Canvas do recorte indisponível");
-  const pixels = context.getImageData(0, 0, source.width, source.height);
-  const bounds = contentBounds(pixels.data, source.width, source.height, padding);
-  if (!bounds) return null;
-  const crop = document.createElement("canvas");
-  crop.width = bounds.width;
-  crop.height = bounds.height;
-  const cropContext = crop.getContext("2d");
-  if (!cropContext) throw new Error("Canvas do recorte indisponível");
-  cropContext.drawImage(source, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
-  return { canvas: crop, bounds };
-}
-
-/** Mantém a escala do desenho e padroniza apenas o tamanho do canvas do conjunto. */
-function normalizeCanvasSet(sources: HTMLCanvasElement[], align: "center" | "bottom" = "center") {
-  if (sources.length === 0) return [];
-  const width = Math.max(...sources.map((source) => source.width));
-  const height = Math.max(...sources.map((source) => source.height));
-  return sources.map((source) => {
-    const normalized = document.createElement("canvas");
-    normalized.width = width;
-    normalized.height = height;
-    const context = normalized.getContext("2d");
-    if (!context) throw new Error("Canvas normalizado indisponível");
-    const x = Math.round((width - source.width) / 2);
-    const y = align === "bottom" ? height - source.height : Math.round((height - source.height) / 2);
-    context.drawImage(source, x, y);
-    return normalized;
-  });
 }
 
 /**
@@ -676,95 +350,6 @@ function createCharacterPhotoDataUrl(source: HTMLCanvasElement) {
   photoContext.clearRect(0, 0, photo.width, photo.height);
   photoContext.drawImage(source, cropX, cropY, side, side, 0, 0, photo.width, photo.height);
   return photo.toDataURL("image/png");
-}
-
-function transformedItemBounds(
-  item: Pick<CatalogItem,
-    "width" | "height" | "defaultX" | "defaultY"
-    | "contentX" | "contentY" | "contentWidth" | "contentHeight">,
-  transform: ItemTransform,
-): SceneBounds {
-  const width = item.width ?? 1;
-  const height = item.height ?? 1;
-  const centerX = (item.defaultX ?? width / 2) + transform.x;
-  const centerY = (item.defaultY ?? height / 2) + transform.y;
-  const contentX = item.contentX ?? 0;
-  const contentY = item.contentY ?? 0;
-  const contentWidth = item.contentWidth ?? width;
-  const contentHeight = item.contentHeight ?? height;
-  const left = (contentX - width / 2) * transform.scale * (transform.scaleX ?? 1);
-  const right = (contentX + contentWidth - width / 2) * transform.scale * (transform.scaleX ?? 1);
-  const top = (contentY - height / 2) * transform.scale * (transform.scaleY ?? 1);
-  const bottom = (contentY + contentHeight - height / 2) * transform.scale * (transform.scaleY ?? 1);
-  const angle = transform.rotation * Math.PI / 180;
-  const corners = [[left, top], [right, top], [left, bottom], [right, bottom]]
-    .map(([x, y]) => ({
-      x: centerX + x * Math.cos(angle) - y * Math.sin(angle),
-      y: centerY + x * Math.sin(angle) + y * Math.cos(angle),
-    }));
-  return {
-    minX: Math.min(...corners.map((point) => point.x)),
-    minY: Math.min(...corners.map((point) => point.y)),
-    maxX: Math.max(...corners.map((point) => point.x)),
-    maxY: Math.max(...corners.map((point) => point.y)),
-  };
-}
-
-function mergeSceneBounds(bounds: SceneBounds[]): SceneBounds | null {
-  if (bounds.length === 0) return null;
-  return {
-    minX: Math.min(...bounds.map((entry) => entry.minX)),
-    minY: Math.min(...bounds.map((entry) => entry.minY)),
-    maxX: Math.max(...bounds.map((entry) => entry.maxX)),
-    maxY: Math.max(...bounds.map((entry) => entry.maxY)),
-  };
-}
-
-function occupiedBands(values: number[], minimumSize: number, minimumOccupancy = 3) {
-  const bands: Array<{ start: number; end: number }> = [];
-  let start = -1;
-  values.forEach((value, index) => {
-    if (value > minimumOccupancy && start === -1) start = index;
-    const isLast = index === values.length - 1;
-    if (start !== -1 && (value <= minimumOccupancy || isLast)) {
-      const end = value <= minimumOccupancy ? index - 1 : index;
-      if (end - start + 1 >= minimumSize) bands.push({ start, end });
-      start = -1;
-    }
-  });
-  return bands;
-}
-
-function detectSheetRegions(data: Uint8ClampedArray, width: number, height: number) {
-  const rowCounts = new Array<number>(height).fill(0);
-  for (let y = 0; y < height; y += 1) {
-    for (let x = 0; x < width; x += 1) {
-      if (data[(y * width + x) * 4 + 3] > 40) rowCounts[y] += 1;
-    }
-  }
-
-  const rows = occupiedBands(rowCounts, 28);
-  const regions: ImageRegion[] = [];
-  for (const row of rows) {
-    const columnCounts = new Array<number>(width).fill(0);
-    for (let y = row.start; y <= row.end; y += 1) {
-      for (let x = 0; x < width; x += 1) {
-        if (data[(y * width + x) * 4 + 3] > 40) columnCounts[x] += 1;
-      }
-    }
-    for (const column of occupiedBands(columnCounts, 28)) {
-      const padding = 5;
-      const x = Math.max(0, column.start - padding);
-      const y = Math.max(0, row.start - padding);
-      regions.push({
-        x,
-        y,
-        width: Math.min(width, column.end + padding + 1) - x,
-        height: Math.min(height, row.end + padding + 1) - y,
-      });
-    }
-  }
-  return regions;
 }
 
 function percentile(values: number[], ratio: number) {
@@ -1044,30 +629,6 @@ async function prepareOutfitCatalogImages(
   } finally {
     URL.revokeObjectURL(temporaryUrl);
   }
-}
-
-function canvasBlob(canvas: HTMLCanvasElement) {
-  return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Falha ao recortar imagem"))), "image/png"),
-  );
-}
-
-function canvasTouchesEdge(canvas: HTMLCanvasElement, margin = 3) {
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) return false;
-  const { width, height } = canvas;
-  const strips = [
-    context.getImageData(0, 0, width, margin),
-    context.getImageData(0, height - margin, width, margin),
-    context.getImageData(0, margin, margin, height - margin * 2),
-    context.getImageData(width - margin, margin, margin, height - margin * 2),
-  ];
-  return strips.some((strip) => {
-    for (let index = 3; index < strip.data.length; index += 4) {
-      if (strip.data[index] > 8) return true;
-    }
-    return false;
-  });
 }
 
 function paintMaskStroke(context: CanvasRenderingContext2D, stroke: MaskStroke, color: string) {
@@ -3895,77 +3456,37 @@ export default function Home() {
 
   return (
     <main className="app-shell">
-      <header className="topbar">
-        <div className="brand">
-          <div className="brand-mark"><span>✦</span></div>
-          <div>
-            <h1>Nymi Gacha</h1>
-            <p aria-label="Estúdio de personagens">Premium Character Studio</p>
-          </div>
-        </div>
-        <div className="top-actions">
-          <NymiConnectionStatus connected={pcStorageAvailable} detail={notice} />
-          <span className="notice-pill" title={notice}>{notice}</span>
-          <NymiNavigation active="characters" compact />
-          <button className="button secondary" onClick={() => newCharacter()}>＋ Novo</button>
-          <button className="button secondary" onClick={saveCharacter}>▣ Salvar</button>
-          {(usesBuiltInBase || activeExpressionPack) && (
-            <>
-              <button className="button secondary" onClick={exportExpressionZip} disabled={isExportingPack}>
-                {isExportingPack ? "Montando ZIP…" : "Exportar ZIP"}
-              </button>
-            </>
-          )}
-          <button className="button primary" onClick={exportPng}>⇩ Exportar PNG</button>
-        </div>
-      </header>
+      <CreatorTopbar
+        connected={pcStorageAvailable}
+        notice={notice}
+        usesBuiltInBase={usesBuiltInBase}
+        hasExpressionPack={Boolean(activeExpressionPack)}
+        exportingPack={isExportingPack}
+        onNew={() => newCharacter()}
+        onSave={saveCharacter}
+        onExportPack={exportExpressionZip}
+        onExportPng={exportPng}
+      />
 
       <section className="workspace">
-        <aside className="sidebar left-panel">
-          <div className="panel-heading">
-            <div><span>MEUS PERSONAGENS</span><small>{characters.length} salvos</small></div>
-            <button className="button secondary panel-photo-button" onClick={() => void generateCharacterPhoto()} disabled={isGeneratingPhoto} title={activeCharacter ? "Gerar a foto do personagem selecionado" : "Selecione um personagem salvo primeiro"}>
-              {isGeneratingPhoto ? "Gerando…" : "▣ Gerar foto"}
-            </button>
-          </div>
-          <details className="character-settings">
-            <summary>Editar personagem atual</summary>
-            <label className="field-label" htmlFor="character-name">Nome</label>
-            <input
-              id="character-name"
-              className="name-input"
-              value={characterName}
-              onChange={(event) => setCharacterName(event.target.value)}
-              maxLength={40}
-            />
-            <span className="field-label">Modelo</span>
-            <div className="model-switch" role="group" aria-label="Modelo do personagem">
-              <button className={model === "feminino" ? "active" : ""} onClick={() => changeModel("feminino")}>Feminino</button>
-              <button className={model === "masculino" ? "active" : ""} onClick={() => changeModel("masculino")}>Masculino</button>
-            </div>
-            {migrationAvailable && (
-              <button className="migration-button" onClick={migrateBrowserDataToPc} disabled={isMigrating}>
-                {isMigrating ? "Migrando…" : "Migrar dados deste navegador"}
-              </button>
-            )}
-          </details>
-
-          <div className="saved-list">
-            {characters.length === 0 ? (
-              <div className="empty-saved">Seus personagens salvos aparecerão aqui.</div>
-            ) : characters.map((character) => {
-              const photo = activeCharacter === character.id ? characterPhoto ?? character.photoUrl ?? character.photoDataUrl : character.photoUrl ?? character.photoDataUrl;
-              return <div className={`saved-card ${activeCharacter === character.id ? "selected" : ""}`} key={character.id}>
-                <button className="saved-main" onClick={() => openCharacter(character)}>
-                  <span className="saved-avatar">{photo ? <img src={photo} alt={`Foto de ${character.name}`} /> : character.model === "feminino" ? "F" : "M"}</span>
-                  <span><strong>{character.name}</strong><small>{character.model} · {getBasePack(basePacks, character.model, character.basePackId).name}</small></span>
-                </button>
-                <button className="icon-button danger" title="Excluir personagem" onClick={() => removeCharacter(character.id)}>×</button>
-              </div>;
-            })}
-          </div>
-          <button className="new-character-button" onClick={() => newCharacter()}>＋ Novo Personagem</button>
-        </aside>
+        <CreatorLibraryPanel
+          characters={characters}
+          activeCharacter={activeCharacter}
+          activePhoto={characterPhoto}
+          characterName={characterName}
+          model={model}
+          migrationAvailable={migrationAvailable}
+          migrating={isMigrating}
+          generatingPhoto={isGeneratingPhoto}
+          getPackName={(character) => getBasePack(basePacks, character.model, character.basePackId).name}
+          onGeneratePhoto={() => { void generateCharacterPhoto(); }}
+          onNameChange={setCharacterName}
+          onChangeModel={changeModel}
+          onMigrate={() => { void migrateBrowserDataToPc(); }}
+          onOpenCharacter={openCharacter}
+          onRemoveCharacter={removeCharacter}
+          onNewCharacter={() => newCharacter()}
+        />
 
         <section className="stage-section">
           <div className="stage-toolbar">
@@ -4068,48 +3589,23 @@ export default function Home() {
             </div>
           )}
           <div className="canvas-with-tools">
-            <div className="stage-tools">
-              <button
-                className={`fit-mode-button ${fitMode ? "active" : ""}`}
-                disabled={!hasActiveItem}
-                onClick={() => { setFitMode((current) => !current); setEraserMode(false); setPreviewPanMode(false); setExportFrameMode(false); setChromaMode(false); }}
-                title="Encaixar no canvas: ajustar o item selecionado diretamente"
-              >
-                <span aria-hidden="true">◰</span>{fitMode ? "Encaixando" : "Encaixar"}
-              </button>
-              <button
-                className={`eraser-mode-button ${eraserMode ? "active" : ""}`}
-                onClick={() => { setEraserMode((current) => !current); setFitMode(false); setPreviewPanMode(false); setExportFrameMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
-                title="Borracha por camada"
-              >
-                <span aria-hidden="true">◇</span>{eraserMode ? "Borracha ativa" : "Borracha"}
-              </button>
-              <button
-                className={`chroma-mode-button ${chromaMode ? "active" : ""}`}
-                disabled={!chromaEligibleItem || isProcessing}
-                onClick={() => { void toggleChromaTool(); }}
-                title={chromaEligibleItem ? "Remove manualmente o fundo da peça selecionada" : "Selecione uma roupa, cabelo ou rosto avulso"}
-              >
-                <span aria-hidden="true">◉</span>{chromaMode ? "Chroma ativo" : "Chroma Key"}
-              </button>
-              <button
-                className={`pan-mode-button ${previewPanMode ? "active" : ""}`}
-                onClick={() => { setPreviewPanMode((current) => !current); setFitMode(false); setEraserMode(false); setExportFrameMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
-                title="Mover preview: move somente a visualização deste personagem"
-              >
-                <span aria-hidden="true">✥</span>{previewPanMode ? "Movendo" : "Mover"}
-              </button>
-              <button
-                className={`export-frame-button ${exportFrameMode ? "active" : ""} ${exportTouchesEdge ? "warning" : ""}`}
-                onClick={() => { setExportFrameMode((current) => !current); setFitMode(false); setEraserMode(false); setPreviewPanMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
-                title="Enquadrar exportação: reposiciona o personagem no PNG e no ZIP finais"
-              >
-                <span aria-hidden="true">⌗</span>{exportFrameMode ? "Enquadrando" : "Enquadrar"}
-              </button>
-              <button className="pan-reset-button" onClick={() => { setPreviewPan({ ...DEFAULT_PREVIEW_PAN }); setExportFrame({ ...DEFAULT_EXPORT_FRAME }); setPreviewZoom(100); setPreviewPanMode(false); setExportFrameMode(false); }} title="Restaurar visualização e enquadramento">
-                <span aria-hidden="true">↻</span>Reiniciar
-              </button>
-            </div>
+            <CreatorCanvasToolbar
+              fitMode={fitMode}
+              hasActiveItem={hasActiveItem}
+              eraserMode={eraserMode}
+              chromaMode={chromaMode}
+              chromaEligibleItem={Boolean(chromaEligibleItem)}
+              isProcessing={isProcessing}
+              previewPanMode={previewPanMode}
+              exportFrameMode={exportFrameMode}
+              exportTouchesEdge={exportTouchesEdge}
+              onToggleFit={() => { setFitMode((current) => !current); setEraserMode(false); setPreviewPanMode(false); setExportFrameMode(false); setChromaMode(false); }}
+              onToggleEraser={() => { setEraserMode((current) => !current); setFitMode(false); setPreviewPanMode(false); setExportFrameMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
+              onToggleChroma={() => { void toggleChromaTool(); }}
+              onTogglePan={() => { setPreviewPanMode((current) => !current); setFitMode(false); setEraserMode(false); setExportFrameMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
+              onToggleExportFrame={() => { setExportFrameMode((current) => !current); setFitMode(false); setEraserMode(false); setPreviewPanMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
+              onReset={() => { setPreviewPan({ ...DEFAULT_PREVIEW_PAN }); setExportFrame({ ...DEFAULT_EXPORT_FRAME }); setPreviewZoom(100); setPreviewPanMode(false); setExportFrameMode(false); }}
+            />
             <div className={`canvas-frame ${fitMode && hasActiveItem ? "fitting" : ""} ${eraserMode ? "erasing" : ""} ${previewPanMode ? "panning" : ""} ${exportFrameMode ? "framing" : ""} ${chromaMode ? "chroma-keying" : ""} ${exportTouchesEdge ? "export-clipped" : ""}`}>
             <canvas
               ref={canvasRef}
@@ -4234,52 +3730,22 @@ export default function Home() {
         </section>
 
         <aside className="sidebar catalog-panel">
-          <div className="catalog-header">
-            <div>
-              <span>CATÁLOGO</span>
-              <h2>{CATEGORY_LABELS[category]}</h2>
-            </div>
-            <div className="import-actions">
-              {category === "rostos" && faceMode === "base" ? null : category === "rostos" && faceMode === "pack" ? (
-                <button className="add-button" onClick={() => expressionPackInputRef.current?.click()} disabled={isProcessing}>
-                  {isProcessing ? "Processando…" : "＋ Pack 3×3"}
-                </button>
-              ) : category === "cabelos" ? (
-                <>
-                  <button className="sheet-button" onClick={() => singleHairInputRef.current?.click()} disabled={isProcessing} title="Importar somente um cabelo frontal">
-                    ＋ Item
-                  </button>
-                  <button className="add-button" onClick={() => fileInputRef.current?.click()} disabled={isProcessing} title="Importar um par: traseiro à esquerda e frontal à direita">
-                    ＋ Par
-                  </button>
-                  <button className="sheet-button" onClick={() => hairPairSheetInputRef.current?.click()} disabled={isProcessing} title="Importar folha 3×2 com três pares">
-                    Folha · 3 pares
-                  </button>
-                </>
-              ) : (
-                <>
-                  {category !== "cabelosTras" && (
-                    <button className="sheet-button" onClick={() => sheetInputRef.current?.click()} disabled={isProcessing} title={category === "roupas" ? "Importar uma roupa com quatro ou seis versões" : "Recortar vários itens de uma imagem"}>
-                      {category === "roupas" ? "Folha de variantes" : "Folha"}
-                    </button>
-                  )}
-                  <button
-                    className="add-button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isProcessing || (category === "cabelosTras" && !selections.cabelos)}
-                    title={category === "cabelosTras" && !selections.cabelos ? "Selecione primeiro um cabelo frontal" : undefined}
-                  >
-                    {isProcessing ? "Processando…" : "＋ Item"}
-                  </button>
-                </>
-              )}
-            </div>
-            <input ref={fileInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={importItem} />
-            <input ref={sheetInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={importSheet} />
-            <input ref={singleHairInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={importFrontHairItem} />
-            <input ref={hairPairSheetInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={importHairPairSheet} />
-            <input ref={expressionPackInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={importExpressionPack} />
-          </div>
+          <CreatorCatalogHeader
+            category={category}
+            faceMode={faceMode}
+            isProcessing={isProcessing}
+            hasFrontHair={Boolean(selections.cabelos)}
+            fileInputRef={fileInputRef}
+            sheetInputRef={sheetInputRef}
+            singleHairInputRef={singleHairInputRef}
+            hairPairSheetInputRef={hairPairSheetInputRef}
+            expressionPackInputRef={expressionPackInputRef}
+            onImportItem={importItem}
+            onImportSheet={importSheet}
+            onImportFrontHair={importFrontHairItem}
+            onImportHairPairSheet={importHairPairSheet}
+            onImportExpressionPack={importExpressionPack}
+          />
 
           {category === "rostos" && (
             <div className="face-mode-switch" role="group" aria-label="Modo de rosto">

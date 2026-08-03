@@ -47,7 +47,11 @@ test("keeps the nine-expression pack contract in the editor", async () => {
 });
 
 test("ships the complete female and male expression bases and exports final frames", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const [page, basePacks, expressions] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/expression-contract.ts", import.meta.url), "utf8"),
+  ]);
   const keys = [
     "normal", "normal_blink", "normal_talk",
     "serio", "serio_blink", "serio_talk",
@@ -65,17 +69,21 @@ test("ships the complete female and male expression bases and exports final fram
     }
   }
 
-  assert.match(page, /DEFAULT_BASE_PACKS/);
-  assert.match(page, /ALL_BASE_EXPRESSION_KEYS/);
-  assert.match(page, /\/models\/modelos\/feminino\/modelo-1/);
+  assert.match(basePacks, /DEFAULT_BASE_PACKS/);
+  assert.match(expressions, /ALL_BASE_EXPRESSION_KEYS/);
+  assert.match(basePacks, /\/models\/modelos\/feminino\/modelo-1/);
   assert.match(page, /faceMode === "base"/);
   assert.match(page, /final-character-frames/);
   assert.match(page, /root\.file\(`\$\{key\}\.png`/);
 });
 
 test("discovers numbered model folders with shared hair and outfits by gender", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
+  const [page, basePacks, storage, server] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+  ]);
   const keys = [
     "normal", "normal_blink", "normal_talk",
     "serio", "serio_blink", "serio_talk",
@@ -103,13 +111,13 @@ test("discovers numbered model folders with shared hair and outfits by gender", 
     }
   }
 
-  assert.match(page, /const DEFAULT_BASE_PACKS/);
-  assert.match(page, /Modelo 1/);
-  assert.match(page, /Modelo 4/);
+  assert.match(basePacks, /DEFAULT_BASE_PACKS/);
+  assert.match(basePacks, /Modelo 1/);
+  assert.match(basePacks, /Modelo 4/);
   assert.match(page, /function changeBasePack/);
   assert.match(page, /a roupa e sua variante foram mantidas/);
   assert.match(page, /hairAdjustmentsByBasePack/);
-  assert.match(page, /loadPcModels/);
+  assert.match(storage, /loadPcModels/);
   assert.match(page, /outfitStateKey/);
   assert.match(page, /activeBaseExpressionKeys/);
   assert.match(page, /basePackId/);
@@ -189,23 +197,27 @@ test("imports Surpreso 2 for all five numbered models, including the misspelled 
 });
 
 test("keeps the precision fitting tools in the local editor", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");
-  const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const [page, toolbar, characterContract, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCanvasToolbar.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
   assert.match(page, /suggestedFit/);
   assert.match(page, /Encaixe automático/);
-  assert.match(page, /Encaixar no canvas/);
+  assert.match(toolbar, /Encaixar no canvas/);
   assert.match(page, /saveFitAsDefault/);
   assert.match(page, /scaleX/);
   assert.match(page, /scaleY/);
   assert.match(page, /fitOpacity/);
   assert.match(page, /onPointerMove=\{moveCanvasDrag\}/);
-  assert.match(page, /Mover preview/);
+  const creatorMarkup = `${page}\n${toolbar}`;
+  assert.match(creatorMarkup, /Mover preview/);
   assert.match(page, /previewPanMode/);
   assert.match(characterContract, /previewPan\?: PreviewPan/);
   assert.match(page, /translate\(\$\{previewPan\.x\}%/);
   assert.match(css, /\.canvas-frame\.panning/);
-  assert.match(page, /Enquadrar exportação/);
+  assert.match(toolbar, /Enquadrar exportação/);
   assert.match(page, /autoFrameCharacter/);
   assert.match(page, /SCENE_PADDING/);
   assert.match(page, /sceneCanvas/);
@@ -216,11 +228,13 @@ test("keeps the precision fitting tools in the local editor", async () => {
 });
 
 test("pairs front and back hair and renders the back layer behind the model", async () => {
-  const [page, css] = await Promise.all([
+  const [page, catalog, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCatalogHeader.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /cabelosTras: "Cabelo \(trás\)"/);
+  const creatorMarkup = `${page}\n${catalog}`;
+  assert.match(creatorMarkup, /cabelosTras: "Cabelo \(trás\)"/);
   assert.match(page, /linkedHairId/);
   assert.match(page, /entry\.linkedHairId === id/);
   assert.match(page, /cabelosTras: linkedBackHair\?\.id \?\? null/);
@@ -238,7 +252,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /async function prepareHairPairSheet/);
   assert.match(page, /async function importFrontHairItem/);
   assert.match(page, /async function importHairPairSheet/);
-  assert.match(page, /Folha · 3 pares/);
+  assert.match(catalog, /Folha · 3 pares/);
   assert.match(page, /Frente 1[\s\S]*Frente 2[\s\S]*Frente 3[\s\S]*Trás 1[\s\S]*Trás 2[\s\S]*Trás 3/);
   assert.match(page, /linkedHairId: frontId/);
   assert.match(page, /Math\.abs\(ratio - 1\.5\)/);
@@ -267,10 +281,12 @@ test("keeps angle and hairstyle references separate in the personal hair prompt"
 });
 
 test("keeps autosave, independent panels and the non-destructive body eraser", async () => {
-  const [page, css] = await Promise.all([
+  const [page, toolbar, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCanvasToolbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
+  const creatorMarkup = `${page}\n${toolbar}`;
 
   assert.match(page, /Salvando automaticamente/);
   assert.match(page, /persistEditorSnapshot/);
@@ -279,7 +295,7 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
   assert.match(page, /layerMasks/);
   assert.match(page, /createBodyMask/);
   assert.match(page, /destination-in/);
-  assert.match(page, /Borracha por camada/);
+  assert.match(creatorMarkup, /Borracha por camada/);
   assert.match(page, /MASK_TARGET_LABELS/);
   assert.match(page, /layerMasks\.hairFront/);
   assert.match(page, /layerMasks\.hairBack/);
@@ -294,20 +310,21 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
 });
 
 test("shares characters and imported assets through the local PC service", async () => {
-  const [page, client, server, launcher] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+  const [library, storage, client, server, launcher] = await Promise.all([
+    readFile(new URL("../app/creator/components/CreatorLibraryPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/lib/local-data-client.ts", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../INICIAR-NYMI-GACHA.bat", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /localDataFetch/);
+  assert.match(storage, /localDataFetch/);
   assert.match(client, /LOCAL_DATA_URL = "http:\/\/127\.0\.0\.1:6800"/);
   assert.match(client, /X-Gacha-Session/);
-  assert.match(page, /Migrar dados deste navegador/);
-  assert.match(page, /saveCharactersToPc/);
-  assert.match(page, /saveCatalogItemToPc/);
-  assert.match(page, /saveExpressionPackToPc/);
+  assert.match(library, /Migrar dados deste navegador/);
+  assert.match(storage, /saveCharactersToPc/);
+  assert.match(storage, /saveCatalogItemToPc/);
+  assert.match(storage, /saveExpressionPackToPc/);
   assert.match(server, /const HOST = "127\.0\.0\.1"/);
   assert.match(server, /dados-locais/);
   assert.match(server, /state\.json/);
@@ -397,15 +414,17 @@ test("tightens every sheet item to visible pixels before normalizing the set", a
 });
 
 test("uses the approved premium three-column editor hierarchy", async () => {
-  const [page, css] = await Promise.all([
+  const [page, css, topbar, library] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorTopbar.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorLibraryPanel.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /MEUS PERSONAGENS/);
-  assert.match(page, /Novo Personagem/);
-  assert.match(page, /NymiConnectionStatus/);
-  assert.match(page, /Migrar dados deste navegador/);
+  assert.match(library, /MEUS PERSONAGENS/);
+  assert.match(library, /Novo Personagem/);
+  assert.match(topbar, /NymiConnectionStatus/);
+  assert.match(library, /Migrar dados deste navegador/);
   assert.match(page, /Ajustes do item selecionado/);
   assert.match(page, /stage-adjust-panel/);
   assert.doesNotMatch(page, /<strong>\{item\.name\}<\/strong>/);
@@ -427,7 +446,7 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
     readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(mainPage, /NymiNavigation active="characters"/);
+  assert.match(mainPage, /CreatorTopbar/);
   assert.match(shell, /href: "\/roteiros"/);
   assert.match(home, /Meus roteiros/);
   assert.match(home, /Fichas dos personagens/);
@@ -480,8 +499,11 @@ test("keeps every script control interactive inside the colored editor hierarchy
 });
 
 test("imports one outfit as standard plus three or five additional variants shared across models", async () => {
-  const [page, catalogContract, css] = await Promise.all([
+  const [page, catalogHeader, workerClient, worker, catalogContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCatalogHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/chroma-worker-client.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/chroma.worker.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/catalog-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
@@ -490,7 +512,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(catalogContract, /outfitVariantIndex\?: number/);
   assert.match(page, /async function importOutfitVariantSheet/);
   assert.match(page, /async function confirmOutfitVariantSheet/);
-  assert.match(page, /Folha de variantes/);
+  assert.match(catalogHeader, /Folha de variantes/);
   assert.doesNotMatch(page, /Pack · poses/);
   assert.match(page, /outfitCatalogMode === "standard"/);
   assert.match(page, />Padrão<\/button>/);
@@ -500,7 +522,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /detectOutfitSheetRegions/);
   assert.match(page, /prepareOutfitCatalogImages/);
   assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, false, true\)/);
-  assert.match(page, /applyChromaPixels\(pixels\.data, canvas\.width, canvas\.height, \{ r: 0, g: 195, b: 102 \}, 34, 58, false, \{ cleanEdges: true \}\)/);
+  assert.match(workerClient, /processChromaPixels/);
+  assert.match(workerClient, /applyChromaPixels/);
+  assert.match(worker, /applyChromaPixels/);
   assert.match(page, /createChromaResult\(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, true\)/);
   assert.match(page, /async function toggleChromaTool/);
   assert.match(page, /Chroma detectado automaticamente · limpeza avançada ativa/);
@@ -533,21 +557,29 @@ test("keeps preview toolbars inside the central workspace at narrow widths", asy
 });
 
 test("anchors the six preview controls to the canvas container", async () => {
-  const [page, css] = await Promise.all([
+  const [page, toolbar, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCanvasToolbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /<div className="canvas-with-tools">[\s\S]*<div className="stage-tools">[\s\S]*<div className=\{`canvas-frame/);
+  assert.match(page, /<div className="canvas-with-tools">[\s\S]*<CreatorCanvasToolbar[\s\S]*<div className=\{`canvas-frame/);
+  assert.match(toolbar, /fit-mode-button/);
+  assert.match(toolbar, /eraser-mode-button/);
+  assert.match(toolbar, /chroma-mode-button/);
+  assert.match(toolbar, /pan-mode-button/);
+  assert.match(toolbar, /export-frame-button/);
+  assert.match(toolbar, /pan-reset-button/);
   assert.match(css, /\.canvas-with-tools\s*\{[^}]*position:\s*relative/);
   assert.match(css, /\.stage-tools\s*\{[^}]*top:\s*34px;\s*left:\s*12px/);
   assert.match(css, /\.canvas-frame\s*\{\s*width:\s*100%/);
 });
 
 test("provides the shared Nymi navigation shell on all primary areas", async () => {
-  const [shell, globalCss, characters, studio, roteirosHome, roteirosEditor] = await Promise.all([
+  const [shell, globalCss, characters, creatorTopbar, studio, roteirosHome, roteirosEditor] = await Promise.all([
     readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorTopbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
@@ -563,7 +595,8 @@ test("provides the shared Nymi navigation shell on all primary areas", async () 
   assert.match(globalCss, /:focus-visible/);
   assert.match(globalCss, /prefers-reduced-motion/);
   assert.match(globalCss, /@media\s*\(max-width:\s*1366px\)/);
-  assert.match(characters, /NymiNavigation active="characters"/);
+  assert.match(characters, /CreatorTopbar/);
+  assert.match(creatorTopbar, /NymiNavigation active="characters"/);
   assert.match(studio, /NymiNavigation active="studio"/);
   assert.match(roteirosHome, /NymiNavigation active="roteiros"/);
   assert.match(roteirosEditor, /NymiNavigation active="roteiros"/);

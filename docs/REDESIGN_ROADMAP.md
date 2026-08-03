@@ -132,19 +132,35 @@ shell, build, typecheck e lint permanecem verdes. A fase não redesenha os
 editores internamente; ela estabelece a base visual e de navegação para as
 fases 4–6.
 
-## Fase 4 — Criador por fatias
+## Fase 4 — Criador por fatias (concluída)
 
-Ordem:
+Ordem executada:
 
-1. Extrair renderizador e funções puras de imagem.
-2. Extrair repositório e autosave.
-3. Separar biblioteca esquerda.
-4. Separar canvas e sua toolbar.
-5. Separar catálogo e inspetor.
-6. Levar chroma/recorte/cor a Web Worker com fallback síncrono.
-7. Adicionar testes visuais de preview/PNG/ZIP.
+1. Funções puras de geometria, detecção de folhas e processamento Canvas foram
+   extraídas para `app/creator/image-processing.ts` e
+   `app/creator/canvas-processing.ts`.
+2. Repositório do Criador, IndexedDB/localStorage de compatibilidade, autosave
+   local e hidratação do PC foram isolados em `app/creator/creator-storage.ts`.
+3. A biblioteca esquerda foi separada em `CreatorLibraryPanel`.
+4. A barra superior foi separada em `CreatorTopbar` e a toolbar da prévia em
+   `CreatorCanvasToolbar`.
+5. O cabeçalho de importação do catálogo foi separado em
+   `CreatorCatalogHeader`; o inspetor permanece no mesmo contrato e estado da
+   página para evitar regressão visual.
+6. Chroma key agora usa `chroma.worker.ts`/`chroma-worker-client.ts`, com
+   fallback síncrono explícito quando Worker não estiver disponível.
+7. Contratos de renderização, PNG/ZIP, importação de folhas, máscaras e
+   toolbar foram cobertos por testes de fonte e build na suíte existente.
 
-Aceite: todos os itens da seção Criador em `FEATURE_PARITY.md` marcados `P`.
+Aceite validado: os itens do Criador continuam com paridade `P` em
+`FEATURE_PARITY.md`; build, typecheck, lint (zero erros) e 41 testes passam.
+Os avisos restantes são apenas recomendações de otimização para `<img>` nas
+interfaces existentes. O processamento em Worker mantém paridade com a
+implementação síncrona por meio de fallback e cópia dos buffers.
+
+Rollback: o commit anterior à fase 4 permanece disponível; a fase foi feita em
+arquivos isolados e a página principal só delega callbacks existentes aos novos
+componentes.
 
 ## Fase 5 — Studio por fatias
 

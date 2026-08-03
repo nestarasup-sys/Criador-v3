@@ -28,6 +28,17 @@ servidor web em `localhost:6700`.
 
 - `app/page.tsx` — Criador completo, domínio e pipeline de imagem (221 KB).
 - `app/globals.css` — estilo global do Criador (60 KB).
+- `app/creator/base-packs.ts` — catálogo de modelos base e normalização de
+  fontes de expressão.
+- `app/creator/creator-storage.ts` — repositório do Criador, autosave,
+  hidratação do serviço local e compatibilidade com IndexedDB/localStorage.
+- `app/creator/image-processing.ts` e `canvas-processing.ts` — geometria,
+  recorte, detecção de folhas e normalização de Canvas sem dependência de UI.
+- `app/creator/chroma.worker.ts` e `chroma-worker-client.ts` — chroma key em
+  Worker com fallback síncrono.
+- `app/creator/components/*` — `CreatorTopbar`, `CreatorLibraryPanel`,
+  `CreatorCanvasToolbar` e `CreatorCatalogHeader`, extraídos da página sem
+  alterar os contratos dos callbacks existentes.
 - `app/studio/page.tsx` e `studio.module.css` — Studio e renderização interativa.
 - `app/studio/character-renderer.ts` — composição final de personagem.
 - `app/studio/character-export.ts` — ZIP de expressões.
@@ -119,8 +130,10 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 
 ### Gargalos
 
-1. Processamento Canvas/ImageData síncrono no componente do Criador.
-2. Arquivo React monolítico: qualquer estado pode re-renderizar uma árvore grande.
+1. Ajustes avançados ainda têm partes síncronas no componente do Criador; o
+   chroma key principal já possui Worker e fallback.
+2. Arquivo React monolítico: qualquer estado pode re-renderizar uma árvore grande;
+   topbar, biblioteca, toolbar e cabeçalho do catálogo já foram isolados.
 3. URLs e blobs são hidratados em lote; catálogos grandes aumentam memória.
 4. Serialização completa de snapshots no autosave.
 5. CSS e DOM extensos nos editores centrais.
@@ -154,7 +167,7 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 - `npm ci`: concluído.
 - `npm run lint`: zero erros, nove avisos de `<img>`.
 - `npm run typecheck`: passou.
-- `npm test`: build passou e 33 testes passaram.
+- `npm test`: build passou e 41 testes passaram após a fase 4.
 - `npm run test:unit` isolado falha em um teste que espera `dist/server/index.js`;
   isso é dependência de ordem do script, não falha do produto após o build.
 - `npm audit`: 1 baixo, 4 moderados e 13 altos.
