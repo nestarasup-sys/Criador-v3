@@ -67,6 +67,7 @@
 .sceneCharacter { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: max-content; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); contain: layout style; }
 .sceneCharacter img { display: block; width: auto; max-width: none; height: 100%; image-rendering: auto; pointer-events: none; }
 .sceneCharacter span { display: grid; place-items: center; width: 120px; height: 180px; border-radius: 20px; color: white; background: rgba(52,39,72,.5); font-size: 12.5px; }
+.sceneCharacter.characterLocked { cursor: not-allowed; }
 .sceneObject { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; height: auto; image-rendering: auto; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); }
 .selected { outline: 2px dashed rgba(112,70,217,.85); outline-offset: 6px; }
 .dragging { cursor: grabbing !important; filter: none !important; transition: none !important; will-change: transform; }
@@ -108,6 +109,7 @@
 .leftTools .openPrintsButton { background: #f8f5ff; }
 .leftTools .viewButton { border-color: #bba8ee; background: var(--purple-soft); }
 .rightArea { position: absolute; z-index: 60; top: 14px; right: 14px; bottom: 14px; display: grid; grid-template-columns: 210px 220px; gap: 10px; pointer-events: none; transition: left .2s ease,right .2s ease; }
+.rightArea.rosterAreaCompact { grid-template-columns:210px 70px; }
 .rightArea.dockLeft { left: 138px; right: auto; top: 78px; }
 .inspector, .roster { min-height: 0; pointer-events: auto; border: 1px solid rgba(255,255,255,.76); border-radius: 17px; background: rgba(250,248,253,.94); box-shadow: 0 14px 35px rgba(20,13,30,.16); backdrop-filter: blur(14px); }
 .inspector { align-self: start; max-height: calc(100vh - 28px); overflow-y: auto; padding: 14px; scrollbar-width: thin; }
@@ -143,9 +145,12 @@
 .inspectorEmpty strong { margin-top: 10px; color: #4f4759; }
 .inspectorEmpty p { margin: 5px 0; font-size: 15.625px; line-height: 1.45; }
 .roster { padding: 11px; display: flex; flex-direction: column; overflow: hidden; }
-.rosterHeading { height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px 8px; }
+.rosterHeading { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px 8px; gap:5px; }
 .rosterHeading span { color: #7e7689; font-size: 12.5px; letter-spacing: .16em; font-weight: 900; }
-.rosterHeading button { width: 27px; height: 27px; border: 0; border-radius: 8px; background: var(--purple-soft); color: var(--purple); cursor: pointer; }
+.rosterActions { display:flex; align-items:center; gap:3px; }
+.rosterHeading button { width:27px; height:27px; border: 0; border-radius: 8px; background: var(--purple-soft); color: var(--purple); cursor: pointer; }
+.rosterHeading button:hover { background:#e3dafd; transform:translateY(-1px); }
+.rosterHeading button.rosterControlActive { background:#fff0c7; color:#a16b05; box-shadow:inset 0 0 0 1px #e3b24c; }
 .rosterList { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .rosterCard { position: relative; min-height: 96px; padding: 8px; display: grid; grid-template-columns: 60px 1fr 16px; align-items: center; gap: 8px; border: 1px solid #e4dfea; border-radius: 11px; background: #f7f5f9; color: #494151; cursor: pointer; overflow: hidden; }
 .rosterCard:hover, .rosterCard.activeRoster { border-color: #a58ce9; background: #f1ecff; }
@@ -154,6 +159,12 @@
 .rosterCard strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 15.625px; }
 .rosterCard i { color: #a7a0af; font-style: normal; }
 .rosterCard i.onStage { color: #55bd8d; }
+.rosterCompact .rosterCard { min-height:78px; grid-template-columns:1fr; justify-items:center; padding:6px; }
+.rosterCompact .rosterCard img { width:52px; height:64px; }
+.rosterCompact .rosterCard > span { width:48px; height:58px; }
+.rosterCompact .rosterCard strong,
+.rosterCompact .rosterCard i { display:none; }
+.rosterCompact .rosterHeading > span { overflow:hidden; width:0; opacity:0; }
 .exitView { position: fixed; z-index: 100; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 11px 17px; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; background: rgba(31,24,43,.68); color: white; font-size: 14.0625px; opacity: .28; cursor: pointer; transition: opacity .2s; }
 .exitView:hover { opacity: 1; }
 .viewMode .selected { filter: none; outline: none; }
@@ -175,6 +186,7 @@
   .leftTools { width: 82px; top: 122px; }
   .leftTools > button { min-height: 60px; }
   .rightArea { top: 78px; grid-template-columns: min(180px,42vw) min(160px,36vw); }
+  .rightArea.rosterAreaCompact { grid-template-columns:min(180px,42vw) 64px; }
   .rightArea.dockLeft { left: 106px; }
   .inspector { max-height: calc(100vh - 96px); }
   .expressionGrid { grid-template-columns: 1fr; }

@@ -55,6 +55,9 @@ export default function StudioPage() {
   const [createRoster, setCreateRoster] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState(false);
   const [dockSide, setDockSide] = useState<"left" | "right">("right");
+  const [characterPositionsLocked, setCharacterPositionsLocked] = useState(false);
+  const [rosterCollapsed, setRosterCollapsed] = useState(false);
+  const [rosterCompact, setRosterCompact] = useState(false);
   const [, setSaveStatus] = useState("Carregando…");
   const [pcStorageAvailable, setPcStorageAvailable] = useState(false);
   const [migrationAvailable, setMigrationAvailable] = useState(false);
@@ -307,6 +310,12 @@ export default function StudioPage() {
     return () => { cancelled = true; };
   }, [characterRenderSignature, currentId, charactersById, data.catalog, data.expressionPacks, renderCacheKey]);
 
+  function resetRosterUi() {
+    setCharacterPositionsLocked(false);
+    setRosterCollapsed(false);
+    setRosterCompact(false);
+  }
+
   function createStudio() {
     if (!createName.trim()) { setNotice("Digite um nome para o Studio"); return; }
     if (!createRoster.length) { setNotice("Escolha pelo menos um personagem"); return; }
@@ -324,6 +333,7 @@ export default function StudioPage() {
           updatedAt: new Date().toISOString(),
         };
       }));
+      resetRosterUi();
       setCurrentId(editingStudioId);
       setEditingStudioId(null);
       setCreateOpen(false);
@@ -337,6 +347,7 @@ export default function StudioPage() {
       background: null, characters: [], objects: [], bubbles: [], narrators: [], createdAt: now, updatedAt: now,
     };
     setStudios((current) => [created, ...current]);
+    resetRosterUi();
     setCurrentId(created.id);
     setCreateOpen(false);
     setCreateName("");
@@ -344,7 +355,7 @@ export default function StudioPage() {
   }
 
   function closeCreateModal() {
-    if (editingStudioId) setCurrentId(editingStudioId);
+    if (editingStudioId) { resetRosterUi(); setCurrentId(editingStudioId); }
     setEditingStudioId(null);
     setCreateOpen(false);
     setCreateName("");
@@ -385,6 +396,7 @@ export default function StudioPage() {
     event.preventDefault();
     event.stopPropagation();
     setSelection({ kind, id } as Selection);
+    if (kind === "character" && characterPositionsLocked) return;
     setDockSide((current) => x > .7 ? "left" : x < .45 ? "right" : current);
     const bounds = stageRef.current?.getBoundingClientRect();
     if (!bounds) return;
@@ -570,6 +582,7 @@ export default function StudioPage() {
     mirrorStudios(studiosRef.current);
     await saveNow("Studio salvo");
     await localDataFetch("/studio/ai/unload", { method: "POST" }).catch(() => undefined);
+    resetRosterUi();
     setCurrentId(null);
     setSelection(null);
     setDockSide("right");
@@ -647,11 +660,11 @@ export default function StudioPage() {
             <button className={styles.emptyStudio} onClick={() => { setEditingStudioId(null); setCreateOpen(true); }}><span>＋</span><strong>Crie seu primeiro Studio</strong><small>Escolha um nome e os personagens da cena.</small></button>
           ) : studios.map((item) => (
             <article className={styles.studioCard} key={item.id}>
-              <button className={styles.studioPreview} onClick={() => setCurrentId(item.id)}>
+              <button className={styles.studioPreview} onClick={() => { resetRosterUi(); setCurrentId(item.id); }}>
                 {item.background ? <img src={item.background.src} alt="" /> : <span>STUDIO</span>}
                 <i>{item.rosterIds.length} personagens</i>
               </button>
-              <div className={styles.studioCardBody}><div><strong>{item.name}</strong><small>Editado {formatStudioDate(item.updatedAt)}</small></div><button title="Abrir" onClick={() => setCurrentId(item.id)}>Abrir</button></div>
+              <div className={styles.studioCardBody}><div><strong>{item.name}</strong><small>Editado {formatStudioDate(item.updatedAt)}</small></div><button title="Abrir" onClick={() => { resetRosterUi(); setCurrentId(item.id); }}>Abrir</button></div>
               <div className={styles.cardActions}>
                 <button onClick={() => duplicateStudio(item)}>Duplicar</button>
                 <button onClick={() => { const name = window.prompt("Novo nome", item.name); if (name?.trim()) setStudios((current) => current.map((entry) => entry.id === item.id ? { ...entry, name: name.trim(), updatedAt: new Date().toISOString() } : entry)); }}>Renomear</button>
@@ -698,6 +711,7 @@ export default function StudioPage() {
         renderCacheKey={renderCacheKey}
         onStagePointerDown={() => { setSelection(null); setDockSide("right"); }}
         onBeginDrag={beginDrag}
+        characterPositionsLocked={characterPositionsLocked}
       />
 
       {!viewMode && <>
@@ -721,7 +735,7 @@ export default function StudioPage() {
           onObjectChange={addObject}
         />
 
-        <aside className={`${styles.rightArea} ${dockSide === "left" ? styles.dockLeft : ""}`}>
+      <aside className={`${styles.rightArea} ${dockSide === "left" ? styles.dockLeft : ""} ${rosterCompact ? styles.rosterAreaCompact : ""}`}>
           <StudioInspector
             studio={studio}
             selection={selection}
@@ -750,7 +764,13 @@ export default function StudioPage() {
             selection={selection}
             onSelectCharacter={addOrSelectCharacter}
             findInstance={(characterId) => studio.characters.find((item) => item.characterId === characterId)}
-            onEditRoster={() => { setEditingStudioId(studio.id); setCreateName(studio.name); setCreateRoster(studio.rosterIds); setCurrentId(null); setCreateOpen(true); }}
+            onEditRoster={() => { setEditingStudioId(studio.id); setCreateName(studio.name); setCreateRoster(studio.rosterIds); resetRosterUi(); setCurrentId(null); setCreateOpen(true); }}
+            positionsLocked={characterPositionsLocked}
+            onTogglePositionsLock={() => setCharacterPositionsLocked((locked) => !locked)}
+            collapsed={rosterCollapsed}
+            onToggleCollapsed={() => setRosterCollapsed((collapsed) => !collapsed)}
+            compact={rosterCompact}
+            onToggleCompact={() => setRosterCompact((compact) => !compact)}
           />
         </aside>
       </>}
