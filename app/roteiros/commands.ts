@@ -1,0 +1,79 @@
+import { createId, createReactionBlock, createTikTokSection, nowIso } from "./defaults";
+import type { ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "./types";
+
+export type ScriptRecipe = (script: ScriptProject) => ScriptProject;
+
+export function updateScript(state: RoteirosState, scriptId: string, recipe: ScriptRecipe): RoteirosState {
+  return {
+    ...state,
+    scripts: state.scripts.map((script) => script.id === scriptId ? { ...recipe(script), updatedAt: nowIso() } : script),
+  };
+}
+
+export function patchTikTok(state: RoteirosState, scriptId: string, sectionId: string, patch: Partial<TikTokSection>): RoteirosState {
+  return updateScript(state, scriptId, (script) => ({
+    ...script,
+    tiktoks: script.tiktoks.map((section) => section.id === sectionId ? { ...section, ...patch, updatedAt: nowIso() } : section),
+  }));
+}
+
+export function addTikTok(state: RoteirosState, scriptId: string, blockCount: number, shortLines: boolean) {
+  const section = createTikTokSection(blockCount, shortLines);
+  return { state: updateScript(state, scriptId, (script) => ({ ...script, tiktoks: [...script.tiktoks, section] })), section };
+}
+
+export function moveTikTok(state: RoteirosState, scriptId: string, sectionId: string, direction: -1 | 1) {
+  return updateScript(state, scriptId, (script) => {
+    const index = script.tiktoks.findIndex((section) => section.id === sectionId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= script.tiktoks.length) return script;
+    const tiktoks = [...script.tiktoks];
+    [tiktoks[index], tiktoks[target]] = [tiktoks[target], tiktoks[index]];
+    return { ...script, tiktoks };
+  });
+}
+
+export function removeTikTok(state: RoteirosState, scriptId: string, sectionId: string) {
+  return updateScript(state, scriptId, (script) => ({ ...script, tiktoks: script.tiktoks.filter((section) => section.id !== sectionId) }));
+}
+
+export function patchReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, blockId: string, patch: Partial<ReactionBlock>) {
+  const timestamp = nowIso();
+  return patchReactionBlocks(state, scriptId, sectionId, findBlocks(state, scriptId, sectionId).map((block) => block.id === blockId ? { ...block, ...patch, updatedAt: timestamp } : block));
+}
+
+export function patchReactionBlocks(state: RoteirosState, scriptId: string, sectionId: string, reactionBlocks: ReactionBlock[]) {
+  return patchTikTok(state, scriptId, sectionId, { reactionBlocks });
+}
+
+export function addReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, type: ReactionBlock["type"] = "speech") {
+  const block = createReactionBlock(type);
+  return { state: patchTikTok(state, scriptId, sectionId, { reactionBlocks: findBlocks(state, scriptId, sectionId).concat(block) }), block };
+}
+
+export function moveReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, blockId: string, direction: -1 | 1) {
+  const blocks = findBlocks(state, scriptId, sectionId);
+  const index = blocks.findIndex((block) => block.id === blockId);
+  const target = index + direction;
+  if (index < 0 || target < 0 || target >= blocks.length) return state;
+  const next = [...blocks];
+  [next[index], next[target]] = [next[target], next[index]];
+  return patchReactionBlocks(state, scriptId, sectionId, next);
+}
+
+export function duplicateReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, blockId: string) {
+  const blocks = findBlocks(state, scriptId, sectionId);
+  const index = blocks.findIndex((block) => block.id === blockId);
+  if (index < 0) return state;
+  const timestamp = nowIso();
+  const copy = { ...structuredClone(blocks[index]), id: createId(), createdAt: timestamp, updatedAt: timestamp };
+  return patchReactionBlocks(state, scriptId, sectionId, [...blocks.slice(0, index + 1), copy, ...blocks.slice(index + 1)]);
+}
+
+export function removeReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, blockId: string) {
+  return patchReactionBlocks(state, scriptId, sectionId, findBlocks(state, scriptId, sectionId).filter((block) => block.id !== blockId));
+}
+
+function findBlocks(state: RoteirosState, scriptId: string, sectionId: string) {
+  return state.scripts.find((script) => script.id === scriptId)?.tiktoks.find((section) => section.id === sectionId)?.reactionBlocks ?? [];
+}

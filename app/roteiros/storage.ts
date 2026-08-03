@@ -143,12 +143,34 @@ export function saveRoteirosState(state: RoteirosState) {
   return operation;
 }
 
-export async function aiRequest<T>(path: string, body?: unknown, method = "POST"): Promise<T> {
-  return request(`/roteiros/ai/${path}`, {
-    method,
-    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  }) as Promise<T>;
+export type AiRequestOptions = { signal?: AbortSignal; timeoutMs?: number };
+
+export async function aiRequest<T>(path: string, body?: unknown, method = "POST", options: AiRequestOptions = {}): Promise<T> {
+  const controller = new AbortController();
+  const timeoutMs = Math.max(5_000, options.timeoutMs ?? 150_000);
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  const forwardAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener("abort", forwardAbort, { once: true });
+  try {
+    return await request(`/roteiros/ai/${path}`, {
+      method,
+      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller.signal,
+    }) as T;
+  } catch (error) {
+    if (options.signal?.aborted) {
+      const cancelled = new Error("Geração cancelada.");
+      cancelled.name = "AbortError";
+      throw cancelled;
+    }
+    if (controller.signal.aborted) throw new Error("A IA demorou demais para responder.");
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+    options.signal?.removeEventListener("abort", forwardAbort);
+  }
 }
 
 export function exportJson(fileName: string, value: unknown) {

@@ -191,14 +191,53 @@ Rollback: o commit anterior à fase 5 permanece disponível; os novos módulos
 podem ser removidos e a página pode voltar aos trechos inline sem tocar no
 Criador ou em Roteiros.
 
-## Fase 6 — Roteiros por fatias
+## Fase 6 — Roteiros por fatias (concluída)
 
-1. Compartilhar schemas cliente/servidor.
-2. Extrair store e comandos do editor.
-3. Componentizar TikTok e blocos com renderização estável.
-4. Adicionar cancelamento e timeout uniforme da IA.
-5. Testar upload/Range/remove e todas as exportações.
-6. Validar JSON exportado contra fixtures do fluxo externo.
+Objetivo: reduzir o acoplamento do editor de Roteiros e tornar os fluxos de
+vídeo, IA e exportação verificáveis sem mudar os contratos públicos da tela.
+
+Entregas realizadas:
+
+1. O schema runtime em `app/domain/document-schemas.mjs` agora normaliza e
+   valida perfis, roteiros, TikToks, vídeos, blocos e envelopes de exportação.
+   O mesmo normalizador continua sendo usado pelo cliente e por
+   `services/roteiros/service.mjs`, preservando campos futuros desconhecidos.
+2. Operações de roteiro e blocos foram centralizadas em `app/roteiros/commands.ts`:
+   atualização, inclusão, ordenação, exclusão, duplicação e patch de blocos.
+   A página conserva os callbacks públicos e delega mutações a esses comandos.
+3. A lista de blocos foi extraída para
+   `app/roteiros/components/ReactionBlockList.tsx`. Os controles de personagem,
+   tipo, emoção, texto, tradução, regeneração, ordenação, duplicação e exclusão
+   continuam interativos e mantêm o fallback visual de fotos inválidas.
+4. O envelope versionado de exportação foi formalizado em
+   `app/roteiros/export-contract.ts` (`GACHA_PREMIUM_ROTEIROS_V1`, versão 1).
+   O botão JSON do editor usa esse contrato sem alterar o formato do roteiro
+   interno nem as exportações locais existentes.
+5. Upload, prévia e remoção de vídeo continuam ligados ao TikTok correto; o
+   servidor mantém leitura `Range`, limites de upload, exportação de vídeos,
+   texto e personagens e abertura de pastas sem ampliar os caminhos aceitos.
+6. A IA recebeu timeout uniforme de 150 s no serviço e timeout/cancelamento por
+   `AbortController` no cliente. O usuário pode cancelar geração, melhoria,
+   regeneração ou tradução; desmontar o TikTok também cancela a requisição.
+   O limite de duas gerações simultâneas foi preservado.
+7. O fixture `tests/fixtures/roteiro-export-v1.json` e os testes de schema
+   validam o envelope contra um documento representativo do fluxo externo.
+   Testes de fonte cobrem componentes, comandos, upload/Range/remove,
+   exportações e cancelamento sem exigir um servidor externo de IA.
+
+Aceite validado:
+
+- 45 testes unitários/regressão passam;
+- `npm run typecheck` passa;
+- `npm run lint` passa sem erros (os avisos são apenas recomendações de
+  otimização de `<img>` já presentes nas telas locais);
+- `npm run build` passa;
+- o Gacha Premium original não foi acessado para escrita.
+
+Limites conscientemente preservados para as próximas fases: o TikTok ainda é
+orquestrado pelo `RoteiroEditor.tsx` e a suíte de interação real do navegador
+continua planejada para a fase 8 (Playwright). A fase 6 não altera a persistência
+canônica nem inicia a migração para SQLite.
 
 ## Fase 7 — Persistência única e recuperação
 

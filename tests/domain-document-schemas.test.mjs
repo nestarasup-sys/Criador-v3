@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import {
   normalizeAppState,
   normalizeRoteirosState,
   parseAppState,
   parseRoteirosState,
+  validateRoteiroExportDocument,
 } from "../app/domain/document-schemas.mjs";
 
 const transform = { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
@@ -69,4 +71,23 @@ test("schemas relatam documentos inválidos sem impedir normalização recuperá
   const scripts = parseRoteirosState({ version: 2, scripts: [{ title: "sem id" }] });
   assert.equal(scripts.success, false);
   assert.ok(scripts.issues.some((issue) => issue.includes("scripts[0].id")));
+});
+
+test("contrato de exportação de roteiro valida script e rejeita envelope incompatível", () => {
+  const script = {
+    id: "script-1",
+    title: "Exportação",
+    participants: [],
+    tiktoks: [{ id: "tiktok-1", reactionBlocks: [] }],
+  };
+  assert.deepEqual(validateRoteiroExportDocument({ app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, script }), []);
+  assert.ok(validateRoteiroExportDocument({ app: "OUTRO_APP", version: 1, script }).includes("app inválido"));
+  assert.ok(validateRoteiroExportDocument({ app: "GACHA_PREMIUM_ROTEIROS_V1", version: 2, script }).includes("version deve ser 1"));
+  assert.ok(validateRoteiroExportDocument({ app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, script: { title: "sem id" } }).some((issue) => issue.includes("scripts[0].id")));
+});
+
+test("fixture do fluxo externo permanece compatível com o contrato de exportação", async () => {
+  const fixture = JSON.parse(await readFile(new URL("./fixtures/roteiro-export-v1.json", import.meta.url), "utf8"));
+  assert.deepEqual(validateRoteiroExportDocument(fixture), []);
+  assert.equal(fixture.script.tiktoks[0].reactionBlocks[0].type, "speech");
 });

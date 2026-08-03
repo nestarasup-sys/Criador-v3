@@ -42,7 +42,11 @@ servidor web em `localhost:6700`.
 - `app/studio/page.tsx` e `studio.module.css` — Studio e renderização interativa.
 - `app/studio/character-renderer.ts` — composição final de personagem.
 - `app/studio/character-export.ts` — ZIP de expressões.
-- `app/roteiros/components/*` — home, fichas, configurações e editor.
+- `app/roteiros/components/*` — home, fichas, configurações, editor e
+  `ReactionBlockList` (lista de blocos isolada).
+- `app/roteiros/commands.ts` — operações puras de roteiro, TikTok e blocos;
+  mantém a página como orquestradora sem duplicar regras de mutação.
+- `app/roteiros/export-contract.ts` — envelope versionado do JSON exportado.
 - `app/shared/NymiShell.tsx` — navegação principal, marca e indicador de
   conexão compartilhados pelas três áreas.
 - `app/roteiros/storage.ts` — gateway do cliente para dados e arquivos.
@@ -92,7 +96,9 @@ settings
 ```
 
 Cada roteiro contém participantes e TikToks; cada TikTok pode referenciar um
-vídeo persistido e blocos de fala, pensamento ou reação silenciosa.
+vídeo persistido e blocos de fala, pensamento ou reação silenciosa. O schema
+runtime normaliza esses documentos tanto no cliente quanto no serviço local e
+valida o envelope `GACHA_PREMIUM_ROTEIROS_V1` usado no botão JSON.
 
 ### Arquivos
 
@@ -121,7 +127,7 @@ de TikTok suportam requisições `Range` na leitura.
 | Corpo de upload sem limite global claro | Alto | Média | Imagens/vídeos malformados ou enormes podem consumir RAM/disco. |
 | Dependências vulneráveis | Alto | Alta | `npm audit`: 18 achados (13 altos); há correções sem major para parte dos diretos. |
 | Servidor de desenvolvimento em uso normal | Médio | Alta | Aumenta superfície e torna inicialização menos previsível. |
-| IA recebe prompt local sem fila/cancelamento uniforme | Médio | Média | Pode reter modelo/recursos e deixar UI esperando. |
+| IA recebe prompt local sem fila/cancelamento uniforme | Médio | Média | O cliente agora cancela com AbortController e o serviço mantém timeout de 150 s; cancelamento cooperativo no provedor ainda depende do encerramento da requisição HTTP. |
 
 Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a política
 é preservar o baseline antes de mudanças estruturais.
@@ -167,6 +173,25 @@ O `page.tsx` permanece como orquestrador para evitar mudar os contratos de
 persistência existentes, mas não duplica a renderização do Print. A prévia DOM
 e a exportação Canvas usam o mesmo renderizador de personagem, cache e regras de
 camadas; alterações futuras devem entrar primeiro nesses módulos compartilhados.
+
+### Roteiros após a fase 6
+
+```text
+app/roteiros/
+├── components/
+│   ├── RoteirosHome.tsx
+│   ├── RoteiroEditor.tsx          orquestra estado e ações de IA
+│   └── ReactionBlockList.tsx      campos e ações de cada bloco
+├── commands.ts                    mutações puras e ordenação
+├── export-contract.ts             envelope JSON versionado
+├── storage.ts                     gateway PC, upload/Range e cancelamento
+└── useRoteirosData.ts             autosave com fila e espelho de recovery
+```
+
+O serviço aplica o mesmo normalizador de `app/domain/document-schemas.mjs`,
+mantém backups atômicos e limita a duas chamadas de IA simultâneas. Uploads de
+vídeo permanecem fora do JSON, com URL loopback e leitura parcial (`Range`), e
+as exportações locais continuam direcionadas aos destinos semânticos existentes.
 
 ## 6. Manutenibilidade
 

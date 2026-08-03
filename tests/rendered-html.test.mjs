@@ -452,9 +452,10 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 });
 
 test("ships the independent Premium Roteiros workspace with PC persistence", async () => {
-  const [home, editor, types, contract, storage, service, server, mainPage, shell] = await Promise.all([
+  const [home, editor, blocks, types, contract, storage, service, server, mainPage, shell] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/roteiro-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/storage.ts", import.meta.url), "utf8"),
@@ -477,8 +478,8 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(editor, /Preencher vazios/);
   assert.match(editor, /Substituir todos/);
   assert.match(editor, /Gerar inglês para todos/);
-  assert.match(editor, /Regenerar/);
-  assert.match(editor, /Refazer frase/);
+  assert.match(blocks, /Regenerar/);
+  assert.match(blocks, /Refazer frase/);
   assert.match(types, /RoteirosState/);
   assert.match(contract, /type RoteirosState/);
   assert.match(contract, /type NarrativeProfile/);
@@ -493,23 +494,24 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
 });
 
 test("keeps every script control interactive inside the colored editor hierarchy", async () => {
-  const [editor, css] = await Promise.all([
+  const [editor, blocks, css] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(editor, /contextZone/);
   assert.match(editor, /generationHeading/);
-  assert.match(editor, /blocksHeading/);
-  assert.match(editor, /<select value=\{block\.type\}/);
-  assert.match(editor, /<option value="speech">Fala<\/option>/);
-  assert.match(editor, /<option value="thought">Pensamento<\/option>/);
-  assert.match(editor, /<option value="silent">Reação<\/option>/);
-  assert.match(editor, /moveBlock\(blockIndex, -1\)/);
-  assert.match(editor, /blockAction\(blockIndex, "regenerate"\)/);
-  assert.match(editor, /blockAction\(blockIndex, "rewrite"\)/);
-  assert.match(editor, /Duplicar/);
-  assert.match(editor, /deleteButton/);
+  assert.match(blocks, /blocksHeading/);
+  assert.match(blocks, /<select value=\{block\.type\}/);
+  assert.match(blocks, /<option value="speech">Fala<\/option>/);
+  assert.match(blocks, /<option value="thought">Pensamento<\/option>/);
+  assert.match(blocks, /<option value="silent">Reação<\/option>/);
+  assert.match(blocks, /onMoveBlock\(blockIndex, -1\)/);
+  assert.match(blocks, /onBlockAction\(blockIndex, "regenerate"\)/);
+  assert.match(blocks, /onBlockAction\(blockIndex, "rewrite"\)/);
+  assert.match(blocks, /Duplicar/);
+  assert.match(blocks, /deleteButton/);
   assert.match(css, /\.contextZone/);
   assert.match(css, /\.generationPanel/);
   assert.match(css, /\.blocksSection/);
@@ -618,4 +620,44 @@ test("provides the shared Nymi navigation shell on all primary areas", async () 
   assert.match(studio, /NymiNavigation active="studio"/);
   assert.match(roteirosHome, /NymiNavigation active="roteiros"/);
   assert.match(roteirosEditor, /NymiNavigation active="roteiros"/);
+});
+
+test("mantém o slice de Roteiros componentizado, cancelável e compatível com exportação", async () => {
+  const [editor, blocks, commands, contract, storage, service, server, schemas, css] = await Promise.all([
+    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/commands.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/export-contract.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/document-schemas.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(editor, /<ReactionBlockList/);
+  assert.match(editor, /patchReactionBlock/);
+  assert.match(editor, /moveReactionBlock/);
+  assert.match(editor, /duplicateReactionBlock/);
+  assert.match(editor, /Cancelar geração/);
+  assert.match(editor, /new AbortController/);
+  assert.match(editor, /createRoteiroExportDocument/);
+  assert.match(blocks, /aiEnabled/);
+  assert.match(blocks, /onMoveBlock/);
+  assert.match(blocks, /onDuplicateBlock/);
+  for (const command of ["updateScript", "patchTikTok", "addTikTok", "moveTikTok", "removeTikTok", "patchReactionBlock", "addReactionBlock", "moveReactionBlock", "duplicateReactionBlock", "removeReactionBlock"]) {
+    assert.match(commands, new RegExp(`export function ${command}`));
+  }
+  assert.match(contract, /GACHA_PREMIUM_ROTEIROS_V1/);
+  assert.match(editor, /JSON.*createRoteiroExportDocument|createRoteiroExportDocument.*JSON/);
+  assert.match(storage, /uploadRoteiroVideo/);
+  assert.match(storage, /removeRoteiroVideo/);
+  assert.match(storage, /signal\?: AbortSignal/);
+  assert.match(service, /AI_TIMEOUT_MS = 150_000/);
+  assert.match(server, /export-videos/);
+  assert.match(server, /export-text/);
+  assert.match(server, /export-characters/);
+  assert.match(server, /Accept-Ranges/);
+  assert.match(server, /DELETE/);
+  assert.match(schemas, /validateRoteiroExportDocument/);
+  assert.match(css, /\.cancelButton/);
 });

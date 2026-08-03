@@ -4,6 +4,7 @@ import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { emptyRoteirosState, normalizeRoteirosState as normalizeState } from "../../app/domain/document-schemas.mjs";
 
 const EMPTY_STATE = emptyRoteirosState();
+const AI_TIMEOUT_MS = 150_000;
 
 const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.
@@ -73,7 +74,7 @@ function extractJson(text) {
   }
 }
 
-async function fetchWithTimeout(url, init = {}, timeoutMs = 150_000) {
+async function fetchWithTimeout(url, init = {}, timeoutMs = AI_TIMEOUT_MS) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {

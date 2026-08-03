@@ -1,13 +1,16 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { buildAiCharacters } from "../ai-context";
-import { createId, createReactionBlock, createTikTokSection, nowIso } from "../defaults";
+import { nowIso } from "../defaults";
+import { addReactionBlock, addTikTok as addTikTokCommand, duplicateReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchReactionBlock, patchTikTok as patchTikTokCommand, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
+import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, expressionKeysForCharacter } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
+import { ReactionBlockList } from "./ReactionBlockList";
 import type { GeneratedReaction, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
@@ -20,15 +23,6 @@ function CharacterMark({ character }: { character: PremiumCharacter }) {
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
   const imageFailed = Boolean(photo && failedPhoto === photo);
   return <span className={`${styles.characterMark} ${character.model === "feminino" ? styles.feminine : styles.masculine}`}>{photo && !imageFailed ? <img src={photo} alt={`Foto de ${character.name}`} onError={() => setFailedPhoto(photo)} /> : character.name.trim().slice(0, 1).toUpperCase() || "?"}</span>;
-}
-
-function BlockCharacterMark({ character, name }: { character?: PremiumCharacter; name: string }) {
-  const photo = character?.photoUrl ?? character?.photoDataUrl;
-  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
-  const imageFailed = Boolean(photo && failedPhoto === photo);
-  return <span className={`${styles.blockAvatar} ${character?.model === "feminino" ? styles.blockAvatarFeminine : styles.blockAvatarMasculine}`}>
-    {photo && !imageFailed ? <img src={photo} alt={`Foto de ${name}`} onError={() => setFailedPhoto(photo)} /> : name.trim().slice(0, 1).toUpperCase() || "?"}
-  </span>;
 }
 
 function blockIsEmpty(block: ReactionBlock) {
@@ -64,7 +58,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
 
 function RoteiroHeader({ script, saveStatus, pcAvailable, saveNow, addTikTok }: { script: ScriptProject; saveStatus: keyof typeof statusText; pcAvailable: boolean; saveNow: () => void; addTikTok: () => void }) {
   const blockCount = script.tiktoks.reduce((total, section) => total + section.reactionBlocks.length, 0);
-  return <header className={styles.editorTopbar}><Link href="/roteiros" className={styles.backButton}>←</Link><div className={styles.editorBrand}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div><div className={styles.editorTitle}><span>ROTEIRO</span><strong>{script.title}</strong></div><div className={styles.editorStats}><span>{script.participants.length} personagens</span><span>{script.tiktoks.length} TikToks</span><span>{blockCount} blocos</span></div><div className={styles.editorTopActions}><NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} /><NymiNavigation active="roteiros" compact /><button className={styles.ghostButton} onClick={saveNow}>Salvar</button><button className={styles.secondaryButton} onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), script })}>{"{ }"} JSON</button><button className={styles.primaryButton} onClick={addTikTok}>＋ TikTok</button></div></header>;
+  return <header className={styles.editorTopbar}><Link href="/roteiros" className={styles.backButton}>←</Link><div className={styles.editorBrand}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div><div className={styles.editorTitle}><span>ROTEIRO</span><strong>{script.title}</strong></div><div className={styles.editorStats}><span>{script.participants.length} personagens</span><span>{script.tiktoks.length} TikToks</span><span>{blockCount} blocos</span></div><div className={styles.editorTopActions}><NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} /><NymiNavigation active="roteiros" compact /><button className={styles.ghostButton} onClick={saveNow}>Salvar</button><button className={styles.secondaryButton} onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, createRoteiroExportDocument(script))}>{"{ }"} JSON</button><button className={styles.primaryButton} onClick={addTikTok}>＋ TikTok</button></div></header>;
 }
 
 type TikTokCardProps = {
@@ -86,19 +80,38 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const [undoBlocks, setUndoBlocks] = useState<ReactionBlock[] | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const participantIds = new Set(script.participants.map((item) => item.characterId));
+  const aiControllerRef = useRef<AbortController | null>(null);
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
   const previousSections = script.tiktoks.slice(0, sectionIndex);
   const aiCharacters = buildAiCharacters(script, characters, state.profiles);
 
+  useEffect(() => () => {
+    aiControllerRef.current?.abort();
+  }, []);
 
-  const updateBlock = (id: string, value: Partial<ReactionBlock>) => patch({ reactionBlocks: section.reactionBlocks.map((block) => block.id === id ? { ...block, ...value, updatedAt: nowIso() } : block) });
+  const requestAi = async <T,>(path: string, payload: unknown) => {
+    aiControllerRef.current?.abort();
+    const controller = new AbortController();
+    aiControllerRef.current = controller;
+    try {
+      return await aiRequest<T>(path, payload, "POST", { signal: controller.signal });
+    } finally {
+      if (aiControllerRef.current === controller) aiControllerRef.current = null;
+    }
+  };
+
+  const cancelAi = () => aiControllerRef.current?.abort();
+
+
+  const applyBlockCommand = (recipe: (current: RoteirosState) => RoteirosState) => {
+    const next = recipe(state);
+    const nextSection = next.scripts.find((item) => item.id === script.id)?.tiktoks.find((item) => item.id === section.id);
+    if (nextSection) patch({ reactionBlocks: nextSection.reactionBlocks });
+  };
+  const updateBlock = (id: string, value: Partial<ReactionBlock>) => applyBlockCommand((current) => patchReactionBlock(current, script.id, section.id, id, value));
   const moveBlock = (index: number, direction: -1 | 1) => {
-    const target = index + direction;
-    if (target < 0 || target >= section.reactionBlocks.length) return;
-    const next = [...section.reactionBlocks];
-    [next[index], next[target]] = [next[target], next[index]];
-    patch({ reactionBlocks: next });
+    const block = section.reactionBlocks[index];
+    if (block) applyBlockCommand((current) => moveReactionBlock(current, script.id, section.id, block.id, direction));
   };
 
   const aiPayload = { settings: state.settings, globalRules: state.globalRules, characters: aiCharacters, generalContext: script.generalContext, previousSections, section };
@@ -110,7 +123,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     setLoading(mode); setMessage("");
     try {
       if (mode === "replace-all") setUndoBlocks(structuredClone(section.reactionBlocks));
-      const result = await aiRequest<{ reactions: GeneratedReaction[]; model: string }>("generate", { ...aiPayload, targetIndices: targets, mode });
+      const result = await requestAi<{ reactions: GeneratedReaction[]; model: string }>("generate", { ...aiPayload, targetIndices: targets, mode });
       const next = [...section.reactionBlocks];
       targets.forEach((targetIndex, resultIndex) => { const generated = result.reactions[resultIndex]; next[targetIndex] = { ...next[targetIndex], ...generated, englishText: "", updatedAt: nowIso() }; });
       patch({ reactionBlocks: next }); setMessage(`${targets.length} bloco(s) gerado(s) com ${result.model}.`);
@@ -121,7 +134,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const improve = async () => {
     setLoading("improve"); setMessage("");
     try {
-      const result = await aiRequest<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneGoal, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
+      const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneGoal, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
       setImprovedContext(result.improvedContext);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível melhorar o contexto."); }
     finally { setLoading(""); }
@@ -130,7 +143,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const blockAction = async (blockIndex: number, action: "rewrite" | "regenerate") => {
     setLoading(`${action}-${blockIndex}`); setMessage("");
     try {
-      const result = await aiRequest<{ reaction: GeneratedReaction }>("block", { ...aiPayload, blockIndex, action });
+      const result = await requestAi<{ reaction: GeneratedReaction }>("block", { ...aiPayload, blockIndex, action });
       updateBlock(section.reactionBlocks[blockIndex].id, { ...result.reaction, englishText: "" });
     } catch (error) { setMessage(error instanceof Error ? error.message : "A ação falhou."); }
     finally { setLoading(""); }
@@ -140,7 +153,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     if (!items.length) return setMessage("Não há falas ou pensamentos preenchidos para traduzir.");
     setLoading("translate"); setMessage("");
     try {
-      const result = await aiRequest<{ translations: Array<{ id: string; translatedText: string }> }>("translate", { settings: state.settings, sceneDescription: section.description, items });
+      const result = await requestAi<{ translations: Array<{ id: string; translatedText: string }> }>("translate", { settings: state.settings, sceneDescription: section.description, items });
       const translations = new Map(result.translations.map((item) => [item.id, item.translatedText]));
       patch({ reactionBlocks: section.reactionBlocks.map((block) => translations.has(block.id) ? { ...block, englishText: translations.get(block.id) || "", updatedAt: nowIso() } : block) });
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível traduzir."); }
@@ -245,45 +258,26 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("fill-empty")}>{loading === "fill-empty" ? "Gerando…" : "Preencher vazios"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("replace-all")}>{loading === "replace-all" ? "Gerando…" : "Substituir todos"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void translateItems(section.reactionBlocks.filter((block): block is ReactionBlock & { type: "speech" | "thought" } => block.type !== "silent" && Boolean(block.text.trim())).map((block) => ({ id: block.id, text: block.text, type: block.type, characterName: characterName(block.characterId) })))}>{loading === "translate" ? "Traduzindo…" : "Gerar inglês para todos"}</button>
+          {loading && <button className={styles.cancelButton} onClick={cancelAi}>Cancelar geração</button>}
           {undoBlocks && <button className={styles.undoButton} onClick={() => { patch({ reactionBlocks: undoBlocks }); setUndoBlocks(null); }}>↶ Desfazer substituição</button>}
         </div>
       </section>
       {message && <div className={styles.inlineMessage}>{message}<button onClick={() => setMessage("")}>×</button></div>}
 
-      <section className={styles.blocksSection}>
-        <header className={styles.blocksHeader}>
-          <div className={styles.blocksHeading}>
-            <span className={styles.blocksZoneIcon}>▣</span>
-            <b>3</b>
-            <div><strong>Sequência de reações</strong><small>Organize e edite as reações dos personagens neste TikTok.</small></div>
-          </div>
-          <button className={styles.secondaryButton} onClick={() => patch({ reactionBlocks: [...section.reactionBlocks, createReactionBlock()] })}>＋ Adicionar bloco</button>
-        </header>
-        <div className={styles.blockList}>{section.reactionBlocks.map((block, blockIndex) => <article className={styles.reactionBlock} data-tone={blockIndex % 4} key={block.id}>
-          <div className={styles.blockIdentity}>
-            <BlockCharacterMark character={characters.find((character) => character.id === block.characterId)} name={characterName(block.characterId)} />
-            <span className={styles.blockNumber}>{String(blockIndex + 1).padStart(2, "0")}</span>
-          </div>
-          <div className={styles.blockMain}>
-            <div className={styles.blockControls}>
-              <label><span>Personagem</span><select value={block.characterId} onChange={(event) => updateBlock(block.id, { characterId: event.target.value })}><option value="">Escolher…</option>{characters.filter((character) => participantIds.has(character.id)).map((character) => <option key={character.id} value={character.id}>{character.name}{script.participants.find((item) => item.characterId === character.id)?.active ? "" : " (inativo)"}</option>)}</select></label>
-              <label><span>Tipo</span><select value={block.type} onChange={(event) => updateBlock(block.id, { type: event.target.value as ReactionBlock["type"], text: event.target.value === "silent" ? "" : block.text, englishText: event.target.value === "silent" ? "" : block.englishText })}><option value="speech">Fala</option><option value="thought">Pensamento</option><option value="silent">Reação</option></select></label>
-              <label className={styles.emotionField}><span>Expressão ou emoção</span><input value={block.emotion} maxLength={500} onChange={(event) => updateBlock(block.id, { emotion: event.target.value })} placeholder="Ex: sério, desviando o olhar" /></label>
-            </div>
-            <label className={styles.field}><span>{block.type === "silent" ? "Descrição da reação" : block.type === "thought" ? "Pensamento em português" : "Fala em português"}</span><textarea rows={3} value={block.type === "silent" ? block.emotion : block.text} onChange={(event) => updateBlock(block.id, block.type === "silent" ? { emotion: event.target.value } : { text: event.target.value })} placeholder={block.type === "silent" ? "Descreva o gesto ou reação silenciosa…" : "Escreva o conteúdo do bloco…"} /></label>
-            {block.type !== "silent" && <label className={styles.field}><span>Versão em inglês</span><textarea rows={2} value={block.englishText} onChange={(event) => updateBlock(block.id, { englishText: event.target.value })} placeholder="A tradução aparecerá aqui…" /></label>}
-            <div className={styles.blockActions}>
-              <button disabled={blockIndex === 0} onClick={() => moveBlock(blockIndex, -1)}>↑ Subir</button>
-              <button disabled={blockIndex === section.reactionBlocks.length - 1} onClick={() => moveBlock(blockIndex, 1)}>↓ Descer</button>
-              <button disabled={Boolean(loading) || !block.characterId || state.settings.aiProvider === "none"} onClick={() => void blockAction(blockIndex, "regenerate")}>✦ {loading === `regenerate-${blockIndex}` ? "Gerando…" : "Regenerar"}</button>
-              <button disabled={Boolean(loading) || !block.characterId || state.settings.aiProvider === "none" || block.type !== "silent" && !block.text.trim()} onClick={() => void blockAction(blockIndex, "rewrite")}>✎ Refazer frase</button>
-              {block.type !== "silent" && <button disabled={Boolean(loading) || !block.text.trim() || state.settings.aiProvider === "none"} onClick={() => void translateItems([{ id: block.id, text: block.text, type: block.type as "speech" | "thought", characterName: characterName(block.characterId) }])}>◎ Traduzir</button>}
-              <button onClick={() => patch({ reactionBlocks: [...section.reactionBlocks.slice(0, blockIndex + 1), { ...structuredClone(block), id: createId(), createdAt: nowIso(), updatedAt: nowIso() }, ...section.reactionBlocks.slice(blockIndex + 1)] })}>▣ Duplicar</button>
-              <button className={styles.deleteButton} onClick={() => patch({ reactionBlocks: section.reactionBlocks.filter((item) => item.id !== block.id) })}>▱ Excluir</button>
-            </div>
-          </div>
-        </article>)}</div>
-      </section>
+      <ReactionBlockList
+        script={script}
+        section={section}
+        characters={characters}
+        loading={loading}
+        aiEnabled={state.settings.aiProvider !== "none"}
+        onUpdateBlock={updateBlock}
+        onMoveBlock={moveBlock}
+        onBlockAction={blockAction}
+        onTranslate={(block) => void translateItems([{ id: block.id, text: block.text, type: block.type as "speech" | "thought", characterName: characterName(block.characterId) }])}
+        onAddBlock={() => applyBlockCommand((current) => addReactionBlock(current, script.id, section.id).state)}
+        onDuplicateBlock={(block) => applyBlockCommand((current) => duplicateReactionBlock(current, script.id, section.id, block.id))}
+        onRemoveBlock={(id) => applyBlockCommand((current) => removeReactionBlock(current, script.id, section.id, id))}
+      />
     </div>}
   </article>;
 }
@@ -304,15 +298,18 @@ export default function RoteiroEditor() {
   if (!ready || !state) return <div className={styles.loadingPage}><span>✦</span><strong>Abrindo roteiro…</strong></div>;
   if (!script) return <div className={styles.notFound}><span>⌁</span><h1>Roteiro não encontrado</h1><p>Ele pode ter sido excluído ou ainda não foi salvo neste computador.</p><Link className={styles.primaryButton} href="/roteiros">Voltar aos roteiros</Link></div>;
 
-  const updateScript = (recipe: (current: ScriptProject) => ScriptProject) => updateState((current) => ({ ...current, scripts: current.scripts.map((item) => item.id === script.id ? { ...recipe(item), updatedAt: nowIso() } : item) }));
+  const updateScript = (recipe: (current: ScriptProject) => ScriptProject) => updateState((current) => updateScriptCommand(current, script.id, recipe));
   const patchScript = (patch: Partial<ScriptProject>) => updateScript((current) => ({ ...current, ...patch }));
   const addTikTok = () => {
-    const section = createTikTokSection(state.settings.defaultBlockCount, state.settings.shortLinesByDefault);
-    updateScript((current) => ({ ...current, tiktoks: [...current.tiktoks, section] }));
-    setActiveSectionId(section.id);
+    const result = addTikTokCommand(state, script.id, state.settings.defaultBlockCount, state.settings.shortLinesByDefault);
+    updateState(() => result.state);
+    setActiveSectionId(result.section.id);
   };
-  const patchSection = (id: string, patch: Partial<TikTokSection>) => updateScript((current) => ({ ...current, tiktoks: current.tiktoks.map((item) => item.id === id ? { ...item, ...patch, updatedAt: nowIso() } : item) }));
-  const moveSection = (index: number, direction: -1 | 1) => updateScript((current) => { const target = index + direction; if (target < 0 || target >= current.tiktoks.length) return current; const next = [...current.tiktoks]; [next[index], next[target]] = [next[target], next[index]]; return { ...current, tiktoks: next }; });
+  const patchSection = (id: string, patch: Partial<TikTokSection>) => updateState((current) => patchTikTokCommand(current, script.id, id, patch));
+  const moveSection = (index: number, direction: -1 | 1) => {
+    const section = script.tiktoks[index];
+    if (section) updateState((current) => moveTikTokCommand(current, script.id, section.id, direction));
+  };
   const exportVideos = async () => {
     setExportLoading("videos"); setExportMessage("");
     try {
@@ -398,7 +395,7 @@ export default function RoteiroEditor() {
       </aside>
 
       <main className={styles.editorContent}>
-        {activeSection ? <div className={styles.tiktokStack}><TikTokCard key={activeSection.id} script={script} section={activeSection} sectionIndex={activeIndex} characters={characters} state={state} patch={(patch) => patchSection(activeSection.id, patch)} moveSection={(direction) => moveSection(activeIndex, direction)} deleteSection={() => { if (window.confirm(`Excluir o TikTok ${activeIndex + 1}?`)) updateScript((current) => ({ ...current, tiktoks: current.tiktoks.filter((item) => item.id !== activeSection.id) })); }} /></div> : <div className={styles.emptyState}><span>▤</span><h2>Nenhum TikTok ainda</h2><p>Adicione o primeiro vídeo e descreva o que os personagens assistirão.</p><button className={styles.primaryButton} onClick={addTikTok}>＋ Adicionar primeiro TikTok</button></div>}
+        {activeSection ? <div className={styles.tiktokStack}><TikTokCard key={activeSection.id} script={script} section={activeSection} sectionIndex={activeIndex} characters={characters} state={state} patch={(patch) => patchSection(activeSection.id, patch)} moveSection={(direction) => moveSection(activeIndex, direction)} deleteSection={() => { if (window.confirm(`Excluir o TikTok ${activeIndex + 1}?`)) updateState((current) => removeTikTokCommand(current, script.id, activeSection.id)); }} /></div> : <div className={styles.emptyState}><span>▤</span><h2>Nenhum TikTok ainda</h2><p>Adicione o primeiro vídeo e descreva o que os personagens assistirão.</p><button className={styles.primaryButton} onClick={addTikTok}>＋ Adicionar primeiro TikTok</button></div>}
       </main>
 
       <aside className={styles.contextRail}>

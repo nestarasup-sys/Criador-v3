@@ -10,5 +10,6 @@ export function emptyRoteirosState(): RoteirosState;
 export function normalizeRoteirosState(value: unknown): RoteirosState;
 export function validateAppState(value: unknown): string[];
 export function validateRoteirosState(value: unknown): string[];
+export function validateRoteiroExportDocument(value: unknown): string[];
 export function parseAppState(value: unknown): ParseResult<PersistedAppState>;
 export function parseRoteirosState(value: unknown): ParseResult<RoteirosState>;
