@@ -9,7 +9,6 @@ type StudioToolbarProps = {
   canUndo: boolean;
   canRedo: boolean;
   isPrinting: boolean;
-  selectedCharacter: boolean;
   selectedCharacterName?: string;
   backgroundInput: RefObject<HTMLInputElement | null>;
   objectInput: RefObject<HTMLInputElement | null>;
@@ -27,8 +26,8 @@ type StudioToolbarProps = {
   onObjectChange: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
-export function StudioToolbar({ name, saveStatus, canUndo, canRedo, isPrinting, selectedCharacter, selectedCharacterName, backgroundInput, objectInput, onNameChange, onLeave, onSave, onUndo, onRedo, onAddNarrator, onAddBubble, onPrint, onOpenPrints, onView, onBackgroundChange, onObjectChange }: StudioToolbarProps) {
-  const bubbleTitle = selectedCharacterName ? `Criar balão para ${selectedCharacterName}` : "Selecione um personagem primeiro";
+export function StudioToolbar({ name, saveStatus, canUndo, canRedo, isPrinting, selectedCharacterName, backgroundInput, objectInput, onNameChange, onLeave, onSave, onUndo, onRedo, onAddNarrator, onAddBubble, onPrint, onOpenPrints, onView, onBackgroundChange, onObjectChange }: StudioToolbarProps) {
+  const bubbleTitle = selectedCharacterName ? `Criar balão para ${selectedCharacterName}` : "Criar balão livre; você poderá posicioná-lo depois";
   return <>
     <header className={styles.topbar}>
       <button className={styles.roundButton} title="Voltar aos Studios" onClick={onLeave}>←</button>
@@ -39,8 +38,8 @@ export function StudioToolbar({ name, saveStatus, canUndo, canRedo, isPrinting, 
       <button onClick={() => backgroundInput.current?.click()}><span>▧</span><strong>Fundo</strong></button>
       <button onClick={() => objectInput.current?.click()}><span>◇</span><strong>Objetos</strong></button>
       <button onClick={onAddNarrator}><span>≡</span><strong>Narrador</strong></button>
-      <button className={styles.bubbleTool} disabled={!selectedCharacter} onClick={() => onAddBubble("fala")} title={bubbleTitle}><span>▢</span><strong>Fala</strong></button>
-      <button className={styles.bubbleTool} disabled={!selectedCharacter} onClick={() => onAddBubble("pensamento")} title={bubbleTitle}><span>◌</span><strong>Pensamento</strong></button>
+      <button className={styles.bubbleTool} onClick={() => onAddBubble("fala")} title={bubbleTitle}><span>▢</span><strong>Fala</strong></button>
+      <button className={styles.bubbleTool} onClick={() => onAddBubble("pensamento")} title={bubbleTitle}><span>◌</span><strong>Pensamento</strong></button>
       <div className={styles.toolSpacer} />
       <button className={styles.printButton} onClick={onPrint} disabled={isPrinting}><span>▣</span><strong>{isPrinting ? "Salvando…" : "Print"}</strong></button>
       <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA NYMI"><span>▤</span><strong>Pasta</strong></button>

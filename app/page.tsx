@@ -3783,10 +3783,6 @@ export default function Home() {
                 <button role="tab" aria-selected={outfitCatalogMode === "standard"} className={outfitCatalogMode === "standard" ? "active" : ""} onClick={() => setOutfitCatalogMode("standard")}>Padrão</button>
                 <button role="tab" aria-selected={outfitCatalogMode === "variants"} className={outfitCatalogMode === "variants" ? "active" : ""} onClick={() => setOutfitCatalogMode("variants")}>Variantes</button>
               </div>
-              <div className="outfit-pack-help">
-                <strong>{outfitCatalogMode === "standard" ? "Uma roupa por conjunto" : activeOutfitGroupId ? selectedOutfit?.outfitGroupName ?? modelOutfits.find((item) => item.outfitGroupId === activeOutfitGroupId)?.outfitGroupName ?? "Roupa selecionada" : "Nenhuma roupa selecionada"}</strong>
-                <span>{outfitCatalogMode === "standard" ? "A primeira imagem da folha é a versão padrão." : "A versão Padrão aparece primeiro, seguida por todas as Variantes do conjunto."}</span>
-              </div>
             </>
           )}
 

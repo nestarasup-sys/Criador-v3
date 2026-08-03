@@ -50,13 +50,15 @@
 .characterPicker { min-height: 120px; overflow: auto; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
 .characterPicker > button { min-width: 0; padding: 8px; display: grid; grid-template-columns: 38px 1fr 24px; align-items: center; gap: 9px; border: 1px solid #e6e2ea; border-radius: 11px; background: #faf9fc; color: #4a4353; cursor: pointer; }
 .characterPicker > button > span { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: #ede9f3; font-weight: 850; }
+.characterPicker > button > span.characterPickerAvatar { overflow: hidden; }
+.characterPickerAvatar img { width: 100%; height: 100%; display: block; object-fit: contain; object-position: center; image-rendering: auto; }
 .characterPicker > button strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 13.75px; }
 .characterPicker > button i { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: var(--purple); background: white; font-style: normal; }
 .characterPicker > button.pickedCharacter { border-color: #a993ed; background: #f3efff; }
 .modalActions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; }
 
-.editor { position: fixed; inset: 0; overflow: hidden; background: #f3f0f8; user-select: none; }
-.stageViewport { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; touch-action: none; }
+.editor { position: fixed; inset: 0; width: 100vw; height: 100dvh; min-height: 100vh; overflow: hidden; background: #f3f0f8; user-select: none; }
+.stageViewport { position: absolute; inset: 0; width: 100%; height: 100%; display: grid; place-items: center; overflow: hidden; touch-action: none; }
 .stage { position: relative; flex: 0 0 auto; width: 1920px; height: 1080px; overflow: hidden; touch-action: none; transform: scale(var(--studio-preview-scale,0)); transform-origin: center; background: #f3f0f8; }
 .background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 .background.contain { object-fit: contain; }
@@ -125,12 +127,6 @@
 .inlineButtons { margin-top: 7px; display: grid; grid-template-columns: 1fr; gap: 5px; }
 .inspector .wideButton { background: #f3f0f6; }
 .inspector .dangerButton { border-color: #f0d7de; background: #fff2f5; color: #c13d59; }
-.qualityNotice { margin: 0 0 13px; padding: 10px 11px; display: flex; flex-direction: column; gap: 3px; border: 1px solid; border-radius: 10px; }
-.qualityNotice span { font-size: 9px; font-weight: 900; letter-spacing: .11em; }
-.qualityNotice strong { font-size: 13px; }
-.qualityNotice small { font-size: 10px; line-height: 1.35; }
-.qualityNative { border-color: #bfe4d2; background: #f0fbf6; color: #277451; }
-.qualityWarning { border-color: #efd59a; background: #fff9e9; color: #89611b; }
 .textField textarea { min-height: 102px; resize: vertical; font-size: 17.1875px; }
 .textFieldHeading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .textFieldHeading button { padding: 4px 8px; border: 1px solid #d8cfee; border-radius: 7px; background: var(--purple-soft); color: var(--purple-dark); font: inherit; font-size: 12px; font-weight: 850; cursor: pointer; }

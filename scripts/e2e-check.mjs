@@ -35,7 +35,7 @@ try {
   const qualityCharacter = page.getByRole("button", { name: "Selecionar Qualidade E2E" });
   await assertVisible(qualityCharacter);
   await qualityCharacter.click();
-  await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).waitFor({ state: "visible", timeout: 30_000 });
+  assert.equal(await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).count(), 0, "Avisos técnicos de qualidade não devem poluir o Studio");
 
   // Keep the editor workflow in a fresh context. This avoids development-mode
   // HMR module state leaking between the three independent route checks.

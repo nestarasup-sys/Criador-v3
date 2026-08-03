@@ -155,8 +155,8 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   ]);
   assert.ok(toolbar.indexOf("Narrador") < toolbar.indexOf("Fala"));
   assert.ok(toolbar.indexOf("Fala") < toolbar.indexOf("Pensamento"));
-  assert.match(toolbar, /disabled=\{!selectedCharacter\}/);
-  assert.match(toolbar, /Selecione um personagem primeiro/);
+  assert.doesNotMatch(toolbar, /disabled=\{!selectedCharacter\}/);
+  assert.match(toolbar, /Criar balão livre/);
   assert.doesNotMatch(inspector, /chatButtons/);
   assert.match(css, /\.bubbleTool/);
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
@@ -373,7 +373,7 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
 });
 
 test("keeps Studio scene operations, history and print rendering in shared modules", async () => {
-  const [page, ops, history, canvas, printRenderer, layout, characterRenderer, qualityNotice, css] = await Promise.all([
+  const [page, ops, history, canvas, printRenderer, layout, characterRenderer, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-ops.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/history.ts", import.meta.url), "utf8"),
@@ -381,7 +381,6 @@ test("keeps Studio scene operations, history and print rendering in shared modul
     readFile(new URL("../app/studio/scene-print-renderer.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-layout.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
-    readFile(new URL("../app/studio/components/StudioQualityNotice.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /renderStudioSceneToCanvas/);
@@ -400,7 +399,6 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(printRenderer, /fitMediaRect/);
   assert.match(characterRenderer, /processChromaPixels/);
   assert.match(characterRenderer, /cleanEdges|false, true/);
-  assert.match(qualityNotice, /QUALIDADE LIMITADA PELA FONTE/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
   assert.match(printRenderer, /studioCanvasToPng/);
 });

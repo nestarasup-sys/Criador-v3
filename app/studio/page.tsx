@@ -146,9 +146,17 @@ export default function StudioPage() {
 
   useEffect(() => {
     if (!viewMode) return;
-    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setViewMode(false); };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") void exitViewMode(); };
     window.addEventListener("keydown", escape);
     return () => window.removeEventListener("keydown", escape);
+  }, [viewMode]);
+
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      if (!document.fullscreenElement && viewMode) setViewMode(false);
+    };
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
   }, [viewMode]);
 
   useEffect(() => {
@@ -470,10 +478,11 @@ export default function StudioPage() {
   }
 
   function addBubble(type: SceneBubble["bubbleType"]) {
-    if (!studio || selection?.kind !== "character") return;
-    const character = studio.characters.find((item) => item.id === selection.id);
-    if (!character) return;
-    const bubble: SceneBubble = { id: crypto.randomUUID(), characterInstanceId: character.id, bubbleType: type, text: "Escreva aqui…", language: "pt", x: Math.min(.85, character.x + .12), y: Math.max(.1, character.y - .27), scale: 1, width: 300, fontSize: 24, tailSide: "left", z: nextZ(studio) };
+    if (!studio) return;
+    const character = selection?.kind === "character" ? studio.characters.find((item) => item.id === selection.id) : undefined;
+    const x = character ? Math.min(.85, character.x + .12) : .5;
+    const y = character ? Math.max(.1, character.y - .27) : .25;
+    const bubble: SceneBubble = { id: crypto.randomUUID(), characterInstanceId: character?.id ?? "", bubbleType: type, text: "Escreva aqui…", language: "pt", x, y, scale: 1, width: 300, fontSize: 24, tailSide: "left", z: nextZ(studio) };
     updateStudio((item) => ({ ...item, bubbles: [...item.bubbles, bubble] }));
     setSelection({ kind: "bubble", id: bubble.id });
     setDockSide(bubble.x > .7 ? "left" : "right");
@@ -535,7 +544,7 @@ export default function StudioPage() {
           language: "en",
           translationOf: source.id,
           text: translatedText,
-          y: Math.min(.96, source.y + estimatedBubbleOffset(source)),
+          y: Math.min(.96, source.y + estimatedBubbleOffset(source) + .025),
           z: nextZ(item),
         };
         return { ...item, bubbles: [...item.bubbles, translation] };
@@ -557,12 +566,32 @@ export default function StudioPage() {
   }
 
   async function leaveStudio() {
+    await exitViewMode();
     mirrorStudios(studiosRef.current);
     await saveNow("Studio salvo");
     await localDataFetch("/studio/ai/unload", { method: "POST" }).catch(() => undefined);
     setCurrentId(null);
     setSelection(null);
     setDockSide("right");
+  }
+
+  async function enterViewMode() {
+    setSelection(null);
+    setViewMode(true);
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.();
+    } catch {
+      // Alguns navegadores bloqueiam fullscreen fora de uma ação direta; o modo View continua disponível.
+    }
+  }
+
+  async function exitViewMode() {
+    setViewMode(false);
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen?.();
+    } catch {
+      // O estado visual já foi encerrado mesmo se a API de fullscreen falhar.
+    }
   }
 
   async function printScene() {
@@ -640,7 +669,8 @@ export default function StudioPage() {
               <div className={styles.characterPicker}>
                 {data.characters.length === 0 ? <p>Crie e salve personagens na página principal primeiro.</p> : data.characters.map((character) => {
                   const active = createRoster.includes(character.id);
-                  return <button className={active ? styles.pickedCharacter : ""} key={character.id} onClick={() => setCreateRoster((current) => active ? current.filter((id) => id !== character.id) : [...current, character.id])}><span>{character.model === "feminino" ? "F" : "M"}</span><strong>{character.name}</strong><i>{active ? "✓" : "+"}</i></button>;
+                  const photo = character.photoUrl ?? character.photoDataUrl;
+                  return <button className={active ? styles.pickedCharacter : ""} key={character.id} onClick={() => setCreateRoster((current) => active ? current.filter((id) => id !== character.id) : [...current, character.id])}><span className={styles.characterPickerAvatar}>{photo ? <img src={photo} alt="" /> : character.model === "feminino" ? "F" : "M"}</span><strong>{character.name}</strong><i>{active ? "✓" : "+"}</i></button>;
                 })}
               </div>
               <div className={styles.modalActions}><button className={styles.ghostButton} onClick={closeCreateModal}>Cancelar</button><button className={styles.primaryButton} onClick={createStudio}>{editingStudioId ? "Salvar elenco" : "Criar e abrir"}</button></div>
@@ -657,10 +687,6 @@ export default function StudioPage() {
   const selectedBubble = (selection?.kind === "bubble" ? studio.bubbles.find((item) => item.id === selection.id) : null) ?? null;
   const selectedNarrator = (selection?.kind === "narrator" ? studio.narrators.find((item) => item.id === selection.id) : null) ?? null;
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
-  const selectedCharacterPreview = selectedCharacter && selectedCharacterSource
-    ? rendered[renderCacheKey(selectedCharacterSource, selectedCharacter.expressionEmotion, selectedCharacter.expressionState)]
-    : undefined;
-
   return (
     <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
       <StudioCanvas
@@ -681,7 +707,6 @@ export default function StudioPage() {
           canUndo={undoStack.length > 0}
           canRedo={redoStack.length > 0}
           isPrinting={isPrinting}
-          selectedCharacter={Boolean(selectedCharacter)}
           selectedCharacterName={selectedCharacterSource?.name}
           backgroundInput={backgroundInput}
           objectInput={objectInput}
@@ -694,7 +719,7 @@ export default function StudioPage() {
           onAddBubble={addBubble}
           onPrint={() => { void printScene(); }}
           onOpenPrints={() => { void openPrintsFolder(); }}
-          onView={() => { setSelection(null); setViewMode(true); }}
+          onView={() => { void enterViewMode(); }}
           onBackgroundChange={chooseBackground}
           onObjectChange={addObject}
         />
@@ -705,7 +730,6 @@ export default function StudioPage() {
             selection={selection}
             selectedCharacter={selectedCharacter}
             selectedCharacterSource={selectedCharacterSource ?? null}
-            selectedCharacterPreview={selectedCharacterPreview}
             selectedObject={selectedObject}
             selectedBubble={selectedBubble}
             selectedNarrator={selectedNarrator}
@@ -734,7 +758,7 @@ export default function StudioPage() {
         </aside>
       </>}
 
-      {viewMode && <button className={styles.exitView} onClick={() => setViewMode(false)}>Sair do View · Esc</button>}
+      {viewMode && <button className={styles.exitView} onClick={() => { void exitViewMode(); }}>Sair do View · Esc</button>}
       {notice && <div className={styles.toast}>{notice}</div>}
     </main>
   );
