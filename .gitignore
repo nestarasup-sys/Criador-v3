@@ -45,3 +45,8 @@ next-env.d.ts
 /backups/
 /NÃO MEXA NESSA PASTA CODEX/
 *.tsbuildinfo
+
+# Assets are kept in the local project/ZIP backup, not in the code repository.
+/public/models/
+/tests/golden/
+/Gacha-Nymi.ico
