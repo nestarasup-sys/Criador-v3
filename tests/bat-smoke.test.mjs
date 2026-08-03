@@ -13,6 +13,10 @@ test("mantém o contrato de inicialização local do BAT", async () => {
   assert.match(launcher, /WindowStyle Hidden/i);
   assert.match(launcher, /Get-NetTCPConnection/i);
   assert.match(launcher, /if errorlevel 1/i);
+  assert.match(launcher, /dist\\server\\index\.js/i);
+  assert.match(launcher, /npm run build/i);
+  assert.match(launcher, /npm run start/i);
+  assert.doesNotMatch(launcher, /npm run dev/i);
   assert.doesNotMatch(launcher, /gacha maker - premium/i);
 });
 
