@@ -421,8 +421,10 @@ export default function StudioPage() {
     event.preventDefault();
     event.stopPropagation();
     setSelection({ kind, id } as Selection);
-    if (kind === "character" && characterPositionsLocked) return;
+    // O lado do inspetor deve reagir ao clique mesmo quando o personagem
+    // está bloqueado; o bloqueio impede apenas o arraste.
     setDockSide((current) => x > .7 ? "left" : x < .45 ? "right" : current);
+    if (kind === "character" && characterPositionsLocked) return;
     const bounds = stageRef.current?.getBoundingClientRect();
     if (!bounds) return;
     pushHistory();
