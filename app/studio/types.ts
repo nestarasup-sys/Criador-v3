@@ -29,5 +29,6 @@ export type {
   SceneObject,
   Selection,
   Studio,
+  StudioUiPreferences,
   StudioAsset,
 } from "../domain/studio-contract";

@@ -58,6 +58,7 @@ function normalizeExpressionPack(value) {
 
 function normalizeStudio(value) {
   const source = record(value);
+  const uiPreferences = record(source.uiPreferences);
   return {
     ...source,
     rosterIds: list(source.rosterIds),
@@ -65,6 +66,12 @@ function normalizeStudio(value) {
     objects: list(source.objects),
     bubbles: list(source.bubbles),
     narrators: list(source.narrators),
+    ...(source.uiPreferences !== undefined ? { uiPreferences: {
+      characterPositionsLocked: uiPreferences.characterPositionsLocked === true,
+      backgroundCollapsed: uiPreferences.backgroundCollapsed === true,
+      rosterCompact: uiPreferences.rosterCompact === true,
+      inspectorDockSide: uiPreferences.inspectorDockSide === "left" ? "left" : "right",
+    } } : {}),
   };
 }
 

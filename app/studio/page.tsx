@@ -241,6 +241,25 @@ export default function StudioPage() {
       : item));
   }, [currentId, pushHistory]);
 
+  useEffect(() => {
+    if (!studio) return;
+    const preferences = studio.uiPreferences;
+    setCharacterPositionsLocked(preferences?.characterPositionsLocked === true);
+    setBackgroundCollapsed(preferences?.backgroundCollapsed === true);
+    setRosterCompact(preferences?.rosterCompact === true);
+    setDockSide(preferences?.inspectorDockSide === "left" ? "left" : "right");
+  }, [studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
+
+  function updateStudioUi(patch: Partial<Studio["uiPreferences"]>) {
+    updateStudio((item) => ({ ...item, uiPreferences: {
+      characterPositionsLocked: item.uiPreferences?.characterPositionsLocked === true,
+      backgroundCollapsed: item.uiPreferences?.backgroundCollapsed === true,
+      rosterCompact: item.uiPreferences?.rosterCompact === true,
+      inspectorDockSide: item.uiPreferences?.inspectorDockSide === "left" ? "left" : "right",
+      ...patch,
+    } }), false);
+  }
+
   function undo() {
     const result = undoStudioHistory(undoStack, redoStack, studiosRef.current);
     if (!result) return;
@@ -344,7 +363,9 @@ export default function StudioPage() {
     const now = new Date().toISOString();
     const created: Studio = {
       id: crypto.randomUUID(), name: createName.trim(), rosterIds: createRoster,
-      background: null, characters: [], objects: [], bubbles: [], narrators: [], createdAt: now, updatedAt: now,
+      background: null, characters: [], objects: [], bubbles: [], narrators: [],
+      uiPreferences: { characterPositionsLocked: false, backgroundCollapsed: false, rosterCompact: false, inspectorDockSide: "right" },
+      createdAt: now, updatedAt: now,
     };
     setStudios((current) => [created, ...current]);
     resetRosterUi();
@@ -660,11 +681,11 @@ export default function StudioPage() {
             <button className={styles.emptyStudio} onClick={() => { setEditingStudioId(null); setCreateOpen(true); }}><span>＋</span><strong>Crie seu primeiro Studio</strong><small>Escolha um nome e os personagens da cena.</small></button>
           ) : studios.map((item) => (
             <article className={styles.studioCard} key={item.id}>
-              <button className={styles.studioPreview} onClick={() => { resetRosterUi(); setCurrentId(item.id); }}>
+              <button className={styles.studioPreview} onClick={() => { setCurrentId(item.id); }}>
                 {item.background ? <img src={item.background.src} alt="" /> : <span>STUDIO</span>}
                 <i>{item.rosterIds.length} personagens</i>
               </button>
-              <div className={styles.studioCardBody}><div><strong>{item.name}</strong><small>Editado {formatStudioDate(item.updatedAt)}</small></div><button title="Abrir" onClick={() => { resetRosterUi(); setCurrentId(item.id); }}>Abrir</button></div>
+              <div className={styles.studioCardBody}><div><strong>{item.name}</strong><small>Editado {formatStudioDate(item.updatedAt)}</small></div><button title="Abrir" onClick={() => { setCurrentId(item.id); }}>Abrir</button></div>
               <div className={styles.cardActions}>
                 <button onClick={() => duplicateStudio(item)}>Duplicar</button>
                 <button onClick={() => { const name = window.prompt("Novo nome", item.name); if (name?.trim()) setStudios((current) => current.map((entry) => entry.id === item.id ? { ...entry, name: name.trim(), updatedAt: new Date().toISOString() } : entry)); }}>Renomear</button>
@@ -748,7 +769,7 @@ export default function StudioPage() {
             translatingBubbleId={translatingBubbleId}
             onToggleBackgroundFit={() => updateStudio((item) => ({ ...item, background: item.background ? { ...item.background, fit: item.background.fit === "cover" ? "contain" : "cover" } : null }))}
             backgroundCollapsed={backgroundCollapsed}
-            onToggleBackgroundCollapsed={() => setBackgroundCollapsed((collapsed) => !collapsed)}
+            onToggleBackgroundCollapsed={() => { const next = !backgroundCollapsed; setBackgroundCollapsed(next); updateStudioUi({ backgroundCollapsed: next }); }}
             onRemoveBackground={() => updateStudio((item) => ({ ...item, background: null }))}
             onUpdate={updateElement}
             onCopyBubble={() => selectedBubble && void copyBubbleText(selectedBubble.text)}
@@ -768,11 +789,11 @@ export default function StudioPage() {
             findInstance={(characterId) => studio.characters.find((item) => item.characterId === characterId)}
             onEditRoster={() => { setEditingStudioId(studio.id); setCreateName(studio.name); setCreateRoster(studio.rosterIds); resetRosterUi(); setCurrentId(null); setCreateOpen(true); }}
             positionsLocked={characterPositionsLocked}
-            onTogglePositionsLock={() => setCharacterPositionsLocked((locked) => !locked)}
+            onTogglePositionsLock={() => { const next = !characterPositionsLocked; setCharacterPositionsLocked(next); updateStudioUi({ characterPositionsLocked: next }); }}
             backgroundCollapsed={backgroundCollapsed}
-            onToggleBackgroundCollapsed={() => setBackgroundCollapsed((collapsed) => !collapsed)}
+            onToggleBackgroundCollapsed={() => { const next = !backgroundCollapsed; setBackgroundCollapsed(next); updateStudioUi({ backgroundCollapsed: next }); }}
             compact={rosterCompact}
-            onToggleCompact={() => setRosterCompact((compact) => !compact)}
+            onToggleCompact={() => { const next = !rosterCompact; setRosterCompact(next); updateStudioUi({ rosterCompact: next }); }}
           />
         </aside>
       </>}

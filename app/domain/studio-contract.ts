@@ -64,6 +64,13 @@ export type SceneNarrator = {
   z: number;
 };
 
+export type StudioUiPreferences = {
+  characterPositionsLocked: boolean;
+  backgroundCollapsed: boolean;
+  rosterCompact: boolean;
+  inspectorDockSide: "left" | "right";
+};
+
 export type Studio = {
   id: string;
   name: string;
@@ -73,6 +80,7 @@ export type Studio = {
   objects: SceneObject[];
   bubbles: SceneBubble[];
   narrators: SceneNarrator[];
+  uiPreferences?: StudioUiPreferences;
   createdAt: string;
   updatedAt: string;
 };

@@ -23,7 +23,7 @@ test("estado v2 moderno faz round-trip sem perda de dados", () => {
     }],
     catalog: [{ id: "outfit-1", name: "Roupa", model: "feminino", category: "roupas", fileUrl: "/file.png", outfitGroupId: "group-1", outfitVariantIndex: 0 }],
     expressionPacks: [{ id: "face-1", name: "Face", model: "feminino", basePackId: "modelo-2", frames: [], createdAt: "2026-08-02T00:00:00.000Z" }],
-    studios: [{ id: "studio-1", name: "Cena", rosterIds: ["char-1"], background: null, characters: [], objects: [], bubbles: [], narrators: [], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
+    studios: [{ id: "studio-1", name: "Cena", rosterIds: ["char-1"], background: null, characters: [], objects: [], bubbles: [], narrators: [], uiPreferences: { characterPositionsLocked: true, backgroundCollapsed: true, rosterCompact: false, inspectorDockSide: "left" }, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
     studioAssets: [],
   };
   const serialized = JSON.parse(JSON.stringify(document));
