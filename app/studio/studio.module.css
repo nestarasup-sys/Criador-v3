@@ -112,7 +112,8 @@
 .rightArea.rosterAreaCompact { grid-template-columns:210px 136px; }
 .rightArea.dockLeft { left: auto; right: 14px; top: 14px; }
 .inspectorDock { min-width: 0; pointer-events: auto; transition: transform .2s ease; }
-.rightArea.dockLeft .inspectorDock { position: fixed; left: 14px; top: 14px; bottom: 14px; width: 210px; transform: none; }
+.rightArea.dockLeft .inspectorDock { position: relative; width: auto; transform: none; }
+.rightArea.dockLeft .inspectorDock > .inspector { position: fixed; left: 138px; top: 14px; bottom: 14px; width: 210px; max-height: calc(100vh - 28px); }
 .inspector, .roster { min-height: 0; pointer-events: auto; border: 1px solid rgba(255,255,255,.76); border-radius: 17px; background: rgba(250,248,253,.94); box-shadow: 0 14px 35px rgba(20,13,30,.16); backdrop-filter: blur(14px); }
 .inspector { align-self: start; max-height: calc(100vh - 28px); overflow-y: auto; padding: 14px; scrollbar-width: thin; }
 .dockLeft .inspector { max-height: calc(100vh - 28px); }
@@ -199,7 +200,8 @@
   .rightArea { top: 78px; grid-template-columns: min(180px,42vw) min(160px,36vw); }
   .rightArea.rosterAreaCompact { grid-template-columns:min(180px,42vw) 136px; }
   .rightArea.dockLeft { left:auto; right:14px; }
-  .rightArea.dockLeft .inspectorDock { left:8px; top:78px; bottom:14px; width:min(180px,42vw); transform:none; }
+  .rightArea.dockLeft .inspectorDock { position:relative; width:auto; transform:none; }
+  .rightArea.dockLeft .inspectorDock > .inspector { left:106px; top:78px; bottom:14px; width:min(180px,42vw); max-height:calc(100vh - 96px); }
   .inspector { max-height: calc(100vh - 96px); }
   .expressionGrid { grid-template-columns: 1fr; }
 }
