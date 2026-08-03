@@ -125,11 +125,15 @@ foi salvo apenas no espelho e oferecer nova tentativa.
 
 ## 11. Recuperar dados
 
-1. O app detecta falha do serviço ou diferença entre PC e espelho.
-2. Mostra origem e data das cópias disponíveis.
-3. Usuário escolhe migrar/restaurar; nenhuma mesclagem silenciosa destrutiva.
-4. Antes da escrita, cria backup.
-5. Recarrega e valida o documento salvo.
+1. O app detecta falha do serviço ou uma entrada `pending` mais nova no journal
+   de recuperação do navegador.
+2. Mostra a origem e a data da cópia encontrada, sem mesclagem silenciosa.
+3. O usuário escolhe **Usar recuperação** ou **Descartar**; ao restaurar um
+   backup do PC, uma cópia de segurança é criada antes da escrita.
+4. Na aba **IA e regras**, o usuário pode listar, criar e restaurar backups do
+   PC, com confirmação explícita.
+5. O serviço recarrega e valida o documento; JSON corrompido é colocado em
+   quarentena antes de recuperar o último backup válido.
 
-Este último fluxo é a meta do redesenho; o baseline já possui espelhos, backups e
-mesclagem, mas ainda não apresenta toda a decisão de forma clara na interface.
+O fluxo de recuperação da Fase 7 está implementado e detalhado em
+`docs/ROTEIROS_RECOVERY.md`.

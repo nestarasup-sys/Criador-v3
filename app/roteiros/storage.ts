@@ -3,6 +3,8 @@ import type { PremiumCharacter, RoteirosState, ScriptProject, TikTokVideoReferen
 import type { Character, PcCatalogItem, PcExpressionPack } from "../studio/types";
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
 import { normalizeRoteirosState as normalizeState } from "../domain/document-schemas.mjs";
+import { appendRecoveryJournal, discardPendingRecovery, findRecoveryCandidate, latestRecoveryState, markRecoverySaved, readRecoveryJournal } from "./recovery.mjs";
+import type { RecoveryJournalEntry } from "./recovery-types";
 
 const MIRROR_KEY = "gacha-premium-roteiros-emergency-v1";
 let saveQueue: Promise<void> = Promise.resolve();
@@ -19,6 +21,9 @@ export function mirrorRoteirosState(state: RoteirosState) {
   localStorage.setItem(MIRROR_KEY, JSON.stringify(state));
 }
 
+export { appendRecoveryJournal, discardPendingRecovery, markRecoverySaved, readRecoveryJournal };
+export type { RecoveryJournalEntry } from "./recovery-types";
+
 async function request(path: string, init?: RequestInit) {
   const response = await localDataFetch(path, { cache: "no-store", ...init });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
@@ -27,14 +32,31 @@ async function request(path: string, init?: RequestInit) {
 }
 
 export async function loadRoteirosState() {
+  const journal = readRecoveryJournal();
   try {
     const result = await request("/roteiros/state");
     const state = normalizeState(result);
-    mirrorRoteirosState(state);
-    return { state, pcAvailable: true };
+    const recoveryCandidate = findRecoveryCandidate(journal, state) as RecoveryJournalEntry | null;
+    return { state, pcAvailable: true, recoveryCandidate };
   } catch {
-    return { state: readMirror(), pcAvailable: false };
+    const journalState = latestRecoveryState(journal);
+    return { state: journalState || readMirror(), pcAvailable: false, recoveryCandidate: null };
   }
+}
+
+export async function listRoteiroBackups() {
+  const result = await request("/roteiros/backups");
+  return result as { folder: string; backups: Array<{ fileName: string; createdAt: string; bytes: number }> };
+}
+
+export async function createRoteiroBackup() {
+  const result = await request("/roteiros/backups/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+  return result as { fileName: string; createdAt: string; bytes: number };
+}
+
+export async function restoreRoteiroBackup(fileName: string) {
+  const result = await request("/roteiros/backups/restore", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fileName }) });
+  return result as { fileName: string; restoredAt: string; safetyBackup?: string };
 }
 
 export async function loadPremiumCharacters(): Promise<PremiumCharacter[]> {

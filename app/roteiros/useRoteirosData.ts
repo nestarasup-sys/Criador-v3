@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loadPremiumCharacters, loadRoteirosState, mirrorRoteirosState, saveRoteirosState } from "./storage";
+import { appendRecoveryJournal, discardPendingRecovery, loadPremiumCharacters, loadRoteirosState, markRecoverySaved, saveRoteirosState } from "./storage";
+import type { RecoveryJournalEntry } from "./recovery-types";
 import type { PremiumCharacter, RoteirosState, SaveStatus } from "./types";
 
 export function useRoteirosData() {
@@ -10,8 +11,21 @@ export function useRoteirosData() {
   const [characters, setCharacters] = useState<PremiumCharacter[]>([]);
   const [pcAvailable, setPcAvailable] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [recoveryCandidate, setRecoveryCandidate] = useState<RecoveryJournalEntry | null>(null);
   const latestRef = useRef<RoteirosState | null>(null);
   const loadedRef = useRef(false);
+
+  const reload = useCallback(async () => {
+    const [loaded, loadedCharacters] = await Promise.all([loadRoteirosState(), loadPremiumCharacters().catch(() => [])]);
+    latestRef.current = loaded.state;
+    setState(loaded.state);
+    setCharacters(loadedCharacters);
+    setPcAvailable(loaded.pcAvailable);
+    setRecoveryCandidate(loaded.recoveryCandidate ?? null);
+    setSaveStatus(loaded.pcAvailable ? "saved" : "error");
+    loadedRef.current = true;
+    setReady(true);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -21,21 +35,22 @@ export function useRoteirosData() {
       setState(loaded.state);
       setCharacters(loadedCharacters);
       setPcAvailable(loaded.pcAvailable);
+      setRecoveryCandidate(loaded.recoveryCandidate ?? null);
       setSaveStatus(loaded.pcAvailable ? "saved" : "error");
       loadedRef.current = true;
       setReady(true);
-    });
+    }).catch(() => { if (active) { setReady(true); setSaveStatus("error"); } });
     return () => { active = false; };
   }, []);
 
   useEffect(() => {
     if (!state || !loadedRef.current) return;
     latestRef.current = state;
-    mirrorRoteirosState(state);
     setSaveStatus("saving");
     const timer = window.setTimeout(() => {
+      appendRecoveryJournal(state, "pending");
       saveRoteirosState(state)
-        .then(() => { setPcAvailable(true); setSaveStatus("saved"); })
+        .then(() => { markRecoverySaved(state); setPcAvailable(true); setSaveStatus("saved"); })
         .catch(() => { setPcAvailable(false); setSaveStatus("error"); });
     }, 650);
     return () => window.clearTimeout(timer);
@@ -43,7 +58,11 @@ export function useRoteirosData() {
 
   useEffect(() => {
     const flush = () => {
-      if (document.visibilityState === "hidden" && latestRef.current) void saveRoteirosState(latestRef.current).catch(() => undefined);
+      if (document.visibilityState === "hidden" && latestRef.current) {
+        const snapshot = latestRef.current;
+        appendRecoveryJournal(snapshot, "pending");
+        void saveRoteirosState(snapshot).then(() => markRecoverySaved(snapshot)).catch(() => undefined);
+      }
     };
     document.addEventListener("visibilitychange", flush);
     return () => document.removeEventListener("visibilitychange", flush);
@@ -55,9 +74,12 @@ export function useRoteirosData() {
 
   const saveNow = useCallback(async () => {
     if (!latestRef.current) return;
+    const snapshot = latestRef.current;
     setSaveStatus("saving");
     try {
-      await saveRoteirosState(latestRef.current);
+      appendRecoveryJournal(snapshot, "pending");
+      await saveRoteirosState(snapshot);
+      markRecoverySaved(snapshot);
       setPcAvailable(true);
       setSaveStatus("saved");
     } catch {
@@ -66,5 +88,16 @@ export function useRoteirosData() {
     }
   }, []);
 
-  return { ready, state, characters, pcAvailable, saveStatus, updateState, saveNow };
+  const restoreRecovery = useCallback(() => {
+    if (!recoveryCandidate) return;
+    setState(structuredClone(recoveryCandidate.state));
+    setRecoveryCandidate(null);
+  }, [recoveryCandidate]);
+
+  const dismissRecovery = useCallback(() => {
+    discardPendingRecovery();
+    setRecoveryCandidate(null);
+  }, []);
+
+  return { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow, reload };
 }

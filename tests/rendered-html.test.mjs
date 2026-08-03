@@ -452,17 +452,21 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 });
 
 test("ships the independent Premium Roteiros workspace with PC persistence", async () => {
-  const [home, editor, blocks, types, contract, storage, service, server, mainPage, shell] = await Promise.all([
+  const [home, editor, blocks, types, contract, storage, recovery, recoveryTypes, recoveryBanner, service, server, mainPage, shell, css] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/roteiro-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/recovery.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/recovery-types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/RecoveryBanner.tsx", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(mainPage, /CreatorTopbar/);
@@ -484,9 +488,21 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(contract, /type RoteirosState/);
   assert.match(contract, /type NarrativeProfile/);
   assert.match(storage, /\/roteiros\/state/);
+  assert.match(storage, /\/roteiros\/backups/);
+  assert.match(storage, /recoveryCandidate/);
+  assert.match(recovery, /gacha-premium-roteiros-recovery-v1/);
+  assert.match(recovery, /findRecoveryCandidate/);
+  assert.match(recoveryTypes, /RecoveryJournalEntry/);
+  assert.match(recoveryBanner, /Usar recuperação/);
+  assert.match(home, /Backups e recuperação/);
+  assert.match(home, /Criar backup agora/);
+  assert.match(editor, /RecoveryBanner/);
+  assert.match(css, /\.recoveryBanner/);
   assert.match(storage, /gacha-premium-roteiros-emergency-v1/);
   assert.match(service, /estado\.json/);
   assert.match(service, /backups/);
+  assert.match(service, /roteiros\/backups\/restore/);
+  assert.match(service, /estado\.corrompido-/);
   assert.match(service, /lmstudio/);
   assert.match(service, /ollama/);
   assert.match(server, /createRoteirosService/);

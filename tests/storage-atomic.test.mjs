@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile, mkdtemp, rm } from "node:fs/promises";
+import { readFile, mkdtemp, mkdir, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -27,6 +27,18 @@ test("permite gravações consecutivas sem criar arquivos temporários órfãos"
     assert.ok(Number.isInteger(value.index));
     const leftovers = (await import("node:fs/promises")).readdir(root);
     assert.deepEqual(await leftovers, ["state.json"]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("limpa o temporário quando o destino não pode ser substituído", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-premium-atomic-failure-"));
+  const target = join(root, "estado.json");
+  try {
+    await mkdir(target);
+    await assert.rejects(() => writeJsonAtomic(target, { version: 1 }));
+    assert.deepEqual((await readdir(root)).sort(), ["estado.json"]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

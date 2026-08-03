@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createGlobalRule, createId, createNarrativeProfile, createScriptProject, nowIso, PROTECTED_RULES } from "../defaults";
 import { profileCompletion } from "../ai-context";
-import { aiRequest, exportJson } from "../storage";
+import { aiRequest, createRoteiroBackup, exportJson, listRoteiroBackups, restoreRoteiroBackup } from "../storage";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
+import RecoveryBanner from "./RecoveryBanner";
 import styles from "../roteiros.module.css";
 
 type HomeTab = "scripts" | "profiles" | "settings";
@@ -196,7 +197,54 @@ function ProfilesPage({ state, characters, updateState }: { state: RoteirosState
   </main>;
 }
 
-function SettingsPage({ state, updateState }: { state: RoteirosState; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void }) {
+type RoteiroBackup = { fileName: string; createdAt: string; bytes: number };
+
+function BackupManager({ pcAvailable, onReload }: { pcAvailable: boolean; onReload: () => Promise<void> }) {
+  const [backups, setBackups] = useState<RoteiroBackup[]>([]);
+  const [folder, setFolder] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const refresh = useCallback(async () => {
+    if (!pcAvailable) return;
+    try {
+      const result = await listRoteiroBackups();
+      setBackups(result.backups); setFolder(result.folder); setMessage("");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível listar os backups."); }
+  }, [pcAvailable]);
+  useEffect(() => {
+    if (!pcAvailable) return;
+    let active = true;
+    listRoteiroBackups().then((result) => {
+      if (!active) return;
+      setBackups(result.backups); setFolder(result.folder); setMessage("");
+    }).catch((error) => { if (active) setMessage(error instanceof Error ? error.message : "Não foi possível listar os backups."); });
+    return () => { active = false; };
+  }, [pcAvailable]);
+  const create = async () => {
+    setBusy(true); setMessage("");
+    try { await createRoteiroBackup(); await refresh(); setMessage("Backup manual criado no PC."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível criar o backup."); }
+    finally { setBusy(false); }
+  };
+  const restore = async (backup: RoteiroBackup) => {
+    if (!window.confirm(`Restaurar “${backup.fileName}”? O estado atual será preservado em um backup de segurança.`)) return;
+    setBusy(true); setMessage("");
+    try { await restoreRoteiroBackup(backup.fileName); await onReload(); await refresh(); setMessage("Backup restaurado. O Roteiros foi recarregado."); }
+    catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível restaurar o backup."); }
+    finally { setBusy(false); }
+  };
+  return <section className={styles.backupCard}>
+    <div className={styles.sectionTitle}><span>◫</span><div><h2>Backups e recuperação</h2><p>O estado principal fica no PC. Use esta lista para criar um ponto de restauração ou voltar a uma versão anterior.</p></div></div>
+    {!pcAvailable ? <p className={styles.aiStatus}>O serviço local não está conectado; backups do PC ficarão disponíveis quando o servidor for iniciado.</p> : <>
+      <div className={styles.backupToolbar}><button className={styles.primaryButton} disabled={busy} onClick={() => void create()}>＋ Criar backup agora</button><button className={styles.secondaryButton} disabled={busy} onClick={() => void refresh()}>Atualizar lista</button></div>
+      {folder && <p className={styles.backupFolder}>Pasta: <code>{folder}</code></p>}
+      <div className={styles.backupList}>{backups.map((backup) => <article key={backup.fileName}><div><strong>{backup.fileName}</strong><small>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(backup.createdAt))} · {Math.max(1, Math.round(backup.bytes / 1024))} KB</small></div><button className={styles.secondaryButton} disabled={busy} onClick={() => void restore(backup)}>Restaurar</button></article>)}{backups.length === 0 && <p className={styles.subtleEmpty}>Nenhum backup automático ou manual foi criado ainda.</p>}</div>
+    </>}
+    {message && <p className={styles.aiStatus}>{message}</p>}
+  </section>;
+}
+
+function SettingsPage({ state, updateState, pcAvailable, onReload }: { state: RoteirosState; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void; pcAvailable: boolean; onReload: () => Promise<void> }) {
   const [models, setModels] = useState<string[]>([]);
   const [aiStatus, setAiStatus] = useState("");
   const [loading, setLoading] = useState(false);
@@ -209,13 +257,14 @@ function SettingsPage({ state, updateState }: { state: RoteirosState; updateStat
     <div className={styles.settingsGrid}><section className={styles.settingsCard}><div className={styles.sectionTitle}><span>◉</span><div><h2>Provedor local</h2><p>O editor manual continua funcionando quando a IA está desligada.</p></div></div><div className={styles.providerButtons}>{(["none", "lmstudio", "ollama"] as const).map((provider) => <button className={state.settings.aiProvider === provider ? styles.active : ""} key={provider} onClick={() => patchSettings({ aiProvider: provider, aiBaseUrl: provider === "ollama" ? "http://127.0.0.1:11434" : "http://127.0.0.1:1234/v1" })}>{provider === "none" ? "Desativada" : provider === "lmstudio" ? "LM Studio" : "Ollama"}</button>)}</div>{state.settings.aiProvider !== "none" && <><label className={styles.field}><span>Endereço local</span><input value={state.settings.aiBaseUrl} onChange={(event) => patchSettings({ aiBaseUrl: event.target.value })} /></label><label className={styles.field}><span>Modelo</span><input list="roteiros-models" value={state.settings.aiModel} onChange={(event) => patchSettings({ aiModel: event.target.value })} placeholder="Selecione ou digite o modelo" /><datalist id="roteiros-models">{models.map((model) => <option key={model} value={model} />)}</datalist></label><div className={styles.inlineActions}><button className={styles.secondaryButton} disabled={loading} onClick={() => void loadModels()}>Atualizar modelos</button><button className={styles.primaryButton} disabled={loading || !state.settings.aiModel.trim()} onClick={() => void test()}>Testar conexão</button></div>{aiStatus && <p className={styles.aiStatus}>{aiStatus}</p>}</>}</section>
       <section className={styles.settingsCard}><div className={styles.sectionTitle}><span>⌁</span><div><h2>Preferências de geração</h2><p>Valores padrão que podem ser ajustados em cada TikTok.</p></div></div><label className={styles.rangeField}><span>Criatividade <strong>{state.settings.temperature.toFixed(2)}</strong></span><input type="range" min="0" max="1.5" step="0.05" value={state.settings.temperature} onChange={(event) => patchSettings({ temperature: Number(event.target.value) })} /></label><label className={styles.field}><span>Blocos novos por TikTok</span><input type="number" min="1" max="24" value={state.settings.defaultBlockCount} onChange={(event) => patchSettings({ defaultBlockCount: Math.min(24, Math.max(1, Number(event.target.value))) })} /></label><label className={styles.field}><span>TikToks anteriores usados como contexto</span><input type="number" min="1" max="10" value={state.settings.historyLimit} onChange={(event) => patchSettings({ historyLimit: Math.min(10, Math.max(1, Number(event.target.value))) })} /></label><label className={styles.checkField}><input type="checkbox" checked={state.settings.shortLinesByDefault} onChange={(event) => patchSettings({ shortLinesByDefault: event.target.checked })} /><span>Usar falas curtas por padrão</span></label></section>
     </div>
+    <BackupManager pcAvailable={pcAvailable} onReload={onReload} />
     <section className={styles.rulesSection}><div className={styles.rulesHeader}><div><span className={styles.eyebrow}>REGRAS PERSONALIZADAS</span><h2>Regras gerais dos roteiros</h2><p>Use esta área para cânone, FYN, universo, comportamento da sala e qualquer regra futura.</p></div><button className={styles.primaryButton} onClick={() => updateState((current) => ({ ...current, globalRules: [...current.globalRules, createGlobalRule()] }))}>＋ Adicionar regra</button></div><details className={styles.protectedRules}><summary>Ver {PROTECTED_RULES.length} regras estruturais protegidas</summary><ol>{PROTECTED_RULES.map((rule) => <li key={rule}>{rule}</li>)}</ol></details><div className={styles.rulesList}>{state.globalRules.map((rule) => <article key={rule.id} className={!rule.enabled ? styles.disabledRule : ""}><input className={styles.ruleTitle} value={rule.title} maxLength={100} onChange={(event) => updateRule(rule.id, { title: event.target.value })} /><select value={rule.priority} onChange={(event) => updateRule(rule.id, { priority: event.target.value as GlobalRule["priority"] })}><option value="low">Baixa</option><option value="normal">Normal</option><option value="high">Alta</option></select><label className={styles.ruleToggle}><input type="checkbox" checked={rule.enabled} onChange={(event) => updateRule(rule.id, { enabled: event.target.checked })} /> Ativa</label><textarea rows={4} value={rule.description} maxLength={10000} onChange={(event) => updateRule(rule.id, { description: event.target.value })} placeholder="Escreva a regra completa…" /><button className={styles.deleteButton} onClick={() => { if (window.confirm(`Excluir a regra “${rule.title}”?`)) updateState((current) => ({ ...current, globalRules: current.globalRules.filter((item) => item.id !== rule.id) })); }}>Excluir</button></article>)}{state.globalRules.length === 0 && <div className={styles.subtleEmpty}>Nenhuma regra personalizada. As regras estruturais protegidas continuam ativas.</div>}</div></section>
   </main>;
 }
 
 export default function RoteirosHome() {
-  const { ready, state, characters, pcAvailable, saveStatus, updateState, saveNow } = useRoteirosData();
+  const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow, reload } = useRoteirosData();
   const [tab, setTab] = useState<HomeTab>("scripts");
   if (!ready || !state) return <div className={styles.loadingPage}><span>✦</span><strong>Abrindo Roteiros…</strong></div>;
-  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} />}</div>;
+  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} /><RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} pcAvailable={pcAvailable} onReload={reload} />}</div>;
 }

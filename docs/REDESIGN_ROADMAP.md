@@ -239,13 +239,29 @@ orquestrado pelo `RoteiroEditor.tsx` e a suíte de interação real do navegador
 continua planejada para a fase 8 (Playwright). A fase 6 não altera a persistência
 canônica nem inicia a migração para SQLite.
 
-## Fase 7 — Persistência única e recuperação
+## Fase 7 — Persistência única e recuperação (concluída)
 
-1. Definir o PC como fonte canônica.
-2. Manter navegador apenas como recovery journal versionado.
-3. Criar tela de backups/restauração e conflitos.
-4. Testar corrupção, disco cheio, encerramento abrupto e gravações concorrentes.
-5. Documentar migração desde IndexedDB/`localStorage` antigos.
+1. O PC é a fonte canônica em `dados-locais-premium/roteiros/estado.json`.
+   `writeJsonAtomic` e a fila do serviço impedem JSON parcial e gravações
+   concorrentes.
+2. O navegador mantém somente o journal versionado
+   `gacha-premium-roteiros-recovery-v1`, limitado a 24 entradas. O mirror
+   `gacha-premium-roteiros-emergency-v1` foi preservado apenas como fallback de
+   leitura para compatibilidade.
+3. A aba **IA e regras** agora lista backups, cria backup manual e restaura uma
+   versão com confirmação. Restaurações criam automaticamente um backup de
+   segurança do estado atual.
+4. O serviço recupera o último backup válido quando `estado.json` está
+   corrompido, movendo o arquivo original para uma quarentena com timestamp.
+   Nomes e caminhos de backup são validados.
+5. Testes cobrem journal, quota/storage corrompido, backup/restore, recuperação
+   após JSON inválido, gravações concorrentes e ausência de temporários órfãos.
+6. A estratégia histórica de migração está documentada em
+   `docs/ROTEIROS_RECOVERY.md`; não há importação automática do RAMIFICADO V2.
+
+Aceite validado: 50 testes unitários/regressão passam, typecheck passa e lint
+passa sem erros. Os nove avisos restantes são recomendações pré-existentes de
+otimização de `<img>`.
 
 ## Fase 8 — Qualidade e desempenho
 

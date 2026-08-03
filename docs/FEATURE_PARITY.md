@@ -33,7 +33,7 @@ Estados usados:
 | Vídeos de TikTok | `roteiros/storage.ts`; servidor | Validação/tamanho limitados | Serviço de mídia com política explícita | Inventariada | upload, Range, replace, remove | caminhos existentes resolvidos |
 | IA de Roteiros | `services/roteiros/service.mjs` | Cliente, prompt e parsing juntos | Casos de uso e schema de resposta | Inventariada | modelos, timeout, JSON inválido e fallback | configurações atuais mantidas |
 | Exportações de Roteiros | UI/storage/servidor | Destinos Windows hardcoded | Preferências com defaults legados | Inventariada | arquivos, nomes, replace e abrir pasta | destinos atuais seguem padrão |
-| Persistência/backup | servidor e browser stores | Três fontes e conflito pouco visível | PC canônico e journal de recuperação | Schemas compartilhados concluídos; unificação pendente | corrupção, concorrência e disco cheio | migração não destrutiva |
+| Persistência/backup | servidor e browser stores | Compatibilidade histórica e conflito pouco visível | PC canônico, journal versionado e restauração explícita | Fase 7 concluída; journal e backups cobertos por testes | falhas físicas de disco e migração manual | migração não destrutiva |
 | Video Maker parcial | `/video-maker/*` no servidor | Não há UI/fluxo validado | Congelar até decisão específica | Legado, fora da paridade | ausência de regressão | endpoints não removidos agora |
 
 ## Criador de Personagens

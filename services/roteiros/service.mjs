@@ -1,7 +1,7 @@
-import { copyFile, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
-import { emptyRoteirosState, normalizeRoteirosState as normalizeState } from "../../app/domain/document-schemas.mjs";
+import { emptyRoteirosState, normalizeRoteirosState as normalizeState, validateRoteirosState } from "../../app/domain/document-schemas.mjs";
 
 const EMPTY_STATE = emptyRoteirosState();
 const AI_TIMEOUT_MS = 150_000;
@@ -434,12 +434,97 @@ export function createRoteirosService(rootFolder) {
   let lastBackupAt = 0;
   let studioAiLoaded = null;
 
+  function backupName(prefix = "roteiros") {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    return `${prefix}-${timestamp}-${Math.random().toString(36).slice(2, 8)}.json`;
+  }
+
+  async function pruneBackups() {
+    const entries = [];
+    for (const name of (await readdir(backupsRoot)).filter((item) => item.endsWith(".json"))) {
+      const filePath = join(backupsRoot, name);
+      if (!inside(backupsRoot, filePath)) continue;
+      try { entries.push({ name, modified: (await stat(filePath)).mtimeMs }); } catch { /* file disappeared */ }
+    }
+    entries.sort((left, right) => left.modified - right.modified);
+    for (const entry of entries.slice(0, -20)) await rm(join(backupsRoot, entry.name), { force: true });
+  }
+
+  async function createBackup(prefix = "roteiros") {
+    await mkdir(backupsRoot, { recursive: true });
+    try { await stat(statePath); } catch (error) {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    }
+    const fileName = backupName(prefix);
+    const backupPath = join(backupsRoot, fileName);
+    if (!inside(backupsRoot, backupPath)) throw new Error("Destino de backup inválido.");
+    await copyFile(statePath, backupPath);
+    await pruneBackups();
+    const details = await stat(backupPath);
+    return { fileName, createdAt: details.mtime.toISOString(), bytes: details.size };
+  }
+
+  async function listBackups() {
+    await mkdir(backupsRoot, { recursive: true });
+    const backups = [];
+    for (const fileName of (await readdir(backupsRoot)).filter((name) => name.endsWith(".json"))) {
+      const filePath = join(backupsRoot, fileName);
+      if (!inside(backupsRoot, filePath)) continue;
+      try {
+        const details = await stat(filePath);
+        backups.push({ fileName, createdAt: details.mtime.toISOString(), bytes: details.size });
+      } catch { /* ignore files removed while listing */ }
+    }
+    backups.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    return { folder: "dados-locais-premium/roteiros/backups", backups };
+  }
+
+  async function findLatestValidBackup() {
+    const candidates = await listBackups();
+    for (const item of candidates.backups) {
+      try {
+        const parsed = JSON.parse(await readFile(join(backupsRoot, item.fileName), "utf8"));
+        if (validateRoteirosState(parsed).length === 0) return normalizeState(parsed);
+      } catch { /* try the next newest backup */ }
+    }
+    return null;
+  }
+
+  async function restoreBackup(fileName) {
+    const safeName = String(fileName || "");
+    if (!/^[a-zA-Z0-9_-]{1,160}\.json$/.test(safeName)) throw new Error("Nome de backup inválido.");
+    const backupPath = join(backupsRoot, safeName);
+    if (!inside(backupsRoot, backupPath)) throw new Error("Backup fora da pasta permitida.");
+    const parsed = JSON.parse(await readFile(backupPath, "utf8"));
+    const issues = validateRoteirosState(parsed);
+    if (issues.length) throw new Error(`Backup inválido: ${issues[0]}`);
+    const normalized = normalizeState(parsed);
+    let result;
+    writeQueue = writeQueue.catch(() => undefined).then(async () => {
+      const safetyBackup = await createBackup("roteiros-antes-restauracao");
+      state = normalized;
+      await writeJsonAtomic(statePath, state);
+      lastBackupAt = Date.now();
+      result = { fileName: safeName, restoredAt: new Date().toISOString(), safetyBackup: safetyBackup?.fileName };
+    });
+    await writeQueue;
+    return result;
+  }
+
   async function init() {
     await Promise.all([mkdir(root, { recursive: true }), mkdir(backupsRoot, { recursive: true })]);
     try {
       state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
     } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
+      if (error?.code === "ENOENT") {
+        await writeJsonAtomic(statePath, state);
+        return;
+      }
+      const recovered = await findLatestValidBackup();
+      const corruptedPath = join(root, `estado.corrompido-${Date.now()}.json`);
+      try { await rename(statePath, corruptedPath); } catch { /* preserve original if quarantine is unavailable */ }
+      state = recovered || structuredClone(EMPTY_STATE);
       await writeJsonAtomic(statePath, state);
     }
   }
@@ -448,19 +533,8 @@ export function createRoteirosService(rootFolder) {
     const normalized = normalizeState(nextState);
     writeQueue = writeQueue.catch(() => undefined).then(async () => {
       if (Date.now() - lastBackupAt > 5 * 60 * 1000) {
-        try {
-          await stat(statePath);
-          const backupPath = join(backupsRoot, `roteiros-${new Date().toISOString().replace(/[:.]/g, "-")}.json`);
-          if (inside(backupsRoot, backupPath)) await copyFile(statePath, backupPath);
-          lastBackupAt = Date.now();
-          const backups = (await readdir(backupsRoot)).filter((name) => name.endsWith(".json")).sort();
-          for (const oldName of backups.slice(0, -20)) {
-            const oldPath = join(backupsRoot, oldName);
-            if (inside(backupsRoot, oldPath)) await rm(oldPath, { force: true });
-          }
-        } catch (error) {
-          if (error?.code !== "ENOENT") throw error;
-        }
+        const created = await createBackup();
+        if (created) lastBackupAt = Date.now();
       }
       state = normalized;
       await writeJsonAtomic(statePath, state);
@@ -521,6 +595,21 @@ export function createRoteirosService(rootFolder) {
       }
       if (request.method === "GET" && url.pathname === "/roteiros/state") {
         sendJson(response, headers, 200, state);
+        return true;
+      }
+      if (request.method === "GET" && url.pathname === "/roteiros/backups") {
+        sendJson(response, headers, 200, await listBackups());
+        return true;
+      }
+      if (request.method === "POST" && url.pathname === "/roteiros/backups/create") {
+        const backup = await createBackup("roteiros-manual");
+        if (!backup) throw new Error("Ainda não há um estado salvo para criar backup.");
+        sendJson(response, headers, 200, backup);
+        return true;
+      }
+      if (request.method === "POST" && url.pathname === "/roteiros/backups/restore") {
+        const body = await readJson(request);
+        sendJson(response, headers, 200, await restoreBackup(body?.fileName));
         return true;
       }
       if (request.method === "POST" && url.pathname === "/roteiros/state") {

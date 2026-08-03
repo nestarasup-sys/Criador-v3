@@ -193,6 +193,20 @@ mantém backups atômicos e limita a duas chamadas de IA simultâneas. Uploads d
 vídeo permanecem fora do JSON, com URL loopback e leitura parcial (`Range`), e
 as exportações locais continuam direcionadas aos destinos semânticos existentes.
 
+### Roteiros após a fase 7
+
+`dados-locais-premium/roteiros/estado.json` é a única fonte canônica. O cliente
+mantém apenas `gacha-premium-roteiros-recovery-v1` como journal de recuperação
+temporário; o mirror `gacha-premium-roteiros-emergency-v1` não recebe novas
+gravações. A interface oferece a recuperação de um snapshot pendente e um
+gerenciador de backups no PC.
+
+O serviço expõe `GET /roteiros/backups`, `POST /roteiros/backups/create` e
+`POST /roteiros/backups/restore`. Ele conserva no máximo 20 backups, cria um
+backup de segurança antes de restauração e coloca um `estado.json` corrompido
+em quarentena antes de recuperar o backup válido mais recente. A lista de
+decisões, migração histórica e limites está em `docs/ROTEIROS_RECOVERY.md`.
+
 ## 6. Manutenibilidade
 
 | Problema | Impacto | Risco para corrigir | Prioridade |
@@ -200,7 +214,7 @@ as exportações locais continuam direcionadas aos destinos semânticos existent
 | `app/page.tsx` monolítico | Alto | Médio | P0 |
 | Tipos duplicados Criador/Studio | Alto | Médio | P0 |
 | Cliente e servidor sem schema compartilhado | Alto | Médio | P0 |
-| Três fontes de persistência | Alto | Alto | P1 |
+| Compatibilidade histórica entre stores | Médio | Médio | P1 |
 | Rotas manuais em um servidor de 46 KB | Médio/alto | Médio | P1 |
 | Caminhos locais fixos | Alto | Baixo | P1 |
 | Testes HTML acoplados a strings | Médio | Médio | P1 |
@@ -213,9 +227,10 @@ as exportações locais continuam direcionadas aos destinos semânticos existent
 - `npm ci`: concluído.
 - `npm run lint`: zero erros, nove avisos de `<img>`.
 - `npm run typecheck`: passou.
-- `npm test`: build passou e 42 testes passaram após a fase 5.
-- `npm run test:unit` isolado falha em um teste que espera `dist/server/index.js`;
-  isso é dependência de ordem do script, não falha do produto após o build.
+- `npm test`: build passou e 51 testes passaram após a fase 7.
+- `npm run test:unit`: 51 testes passam quando o artefato de build já existe;
+  os testes de HTML dependem de `dist/server/index.js` e, portanto, devem ser
+  executados após `npm run build` em um checkout limpo.
 - `npm audit`: 1 baixo, 4 moderados e 13 altos.
 
 ## 8. Direção arquitetural recomendada

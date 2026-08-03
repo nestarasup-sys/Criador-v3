@@ -11,6 +11,7 @@ import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, expor
 import { buildCharacterBundle, expressionKeysForCharacter } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
+import RecoveryBanner from "./RecoveryBanner";
 import type { GeneratedReaction, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
@@ -284,7 +285,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
 
 export default function RoteiroEditor() {
   const params = useParams<{ id: string }>();
-  const { ready, state, characters, pcAvailable, saveStatus, updateState, saveNow } = useRoteirosData();
+  const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow } = useRoteirosData();
   const [castOpen, setCastOpen] = useState(false);
   const [improvedGeneral, setImprovedGeneral] = useState("");
   const [generalLoading, setGeneralLoading] = useState(false);
@@ -372,6 +373,7 @@ export default function RoteiroEditor() {
   const providerLabel = state.settings.aiProvider === "ollama" ? "Ollama" : state.settings.aiProvider === "lmstudio" ? "LM Studio" : "IA desativada";
 
   return <div className={styles.editorShell}>
+    <RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />
     <RoteiroHeader script={script} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} addTikTok={addTikTok} />
     <div className={styles.editorLayout}>
       <aside className={styles.tiktokIndex}>

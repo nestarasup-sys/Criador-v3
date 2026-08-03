@@ -42,8 +42,9 @@ Legenda:
 - Há tipos do Criador duplicados em `app/studio/types.ts`.
 - Processamento de folhas e chroma acontece na thread da interface; imagens grandes
   podem causar travamentos perceptíveis.
-- A persistência possui fonte principal no PC e fontes de compatibilidade em
-  IndexedDB/`localStorage`, sem um contrato único versionado.
+- A persistência do Roteiros possui fonte principal no PC e um journal de
+  recuperação temporário no navegador; IndexedDB/`localStorage` do Criador
+  permanecem somente como migração de compatibilidade.
 
 ## 2. Studio (`/studio`)
 
@@ -58,7 +59,7 @@ Legenda:
 | Texto | Pronto | Copiar, colar e gerar versão em inglês por IA local. |
 | Narrador | Pronto | Bloco visual independente na cena. |
 | Histórico | Pronto | Undo/redo da composição. |
-| Autosave | Pronto | Espelho no navegador e fila serial de gravação no serviço local. |
+| Autosave | Pronto | Journal temporário no navegador e fila serial de gravação no serviço local. |
 | Print | Pronto | Gera PNG e salva em pasta configurada no PC; permite abrir a pasta. |
 | Fullscreen | Pronto | Modo de visualização da cena. |
 | IA local | Parcial | Tradução via Ollama/LM Studio, warmup/unload; depende de serviço externo instalado e ativo. |
@@ -67,8 +68,8 @@ Legenda:
 
 - `app/studio/page.tsx` ainda concentra o editor e seus inspetores em cerca de 56 KB.
 - Undo/redo é local ao componente e não tem contrato reutilizável.
-- O espelho em `localStorage` é útil para recuperação, mas o usuário pode não saber
-  qual cópia venceu uma mesclagem.
+- O journal de recuperação em `localStorage` é temporário e agora informa
+  claramente quando existe uma cópia pendente diferente do PC.
 - A exportação e o preview precisam permanecer visualmente equivalentes em toda
   refatoração.
 
@@ -87,7 +88,7 @@ Legenda:
 | IA de contexto | Pronto | Melhora descrição com aceite/cancelamento. |
 | Configuração da IA | Pronto | Desativada, Ollama ou LM Studio; listar modelos, testar e ajustar geração. |
 | Regras globais | Pronto | Regras livres, prioridade, ativação e regras estruturais protegidas. |
-| Autosave | Pronto | Debounce, fila serial, arquivo local atômico, backups e espelho emergencial no navegador. |
+| Autosave | Pronto | Debounce, fila serial, arquivo local atômico, backups no PC e journal versionado de recuperação. |
 | Exportações locais | Pronto | Vídeos, personagens compostos e texto do roteiro para pastas do Video Maker original. |
 | Abrir pastas | Pronto | Comando local restrito a destinos conhecidos. |
 
