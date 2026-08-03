@@ -124,7 +124,7 @@ Entregas realizadas:
 4. Layout responsivo mínimo de 1366×768, com redução controlada de espaçamento
    e navegação compacta em telas menores.
 5. Foco visível por teclado, suporte a `prefers-reduced-motion` e teste de
-   contrato/snapshot do shell em `tests/rendered-html.test.mjs`.
+   contrato/renderização do shell em `tests/rendered-html.test.mjs`.
 
 Aceite validado: as três áreas continuam acessíveis nas rotas antigas, os
 links indicam a área ativa sem alterar suas ações internas, e os testes de
