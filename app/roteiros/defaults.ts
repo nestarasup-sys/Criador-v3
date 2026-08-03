@@ -8,6 +8,7 @@ import type {
   ScriptProject,
   TikTokSection,
 } from "./types";
+import { createDefaultRoteirosSettings } from "../domain/roteiro-defaults.mjs";
 
 export const PROTECTED_RULES = [
   "Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.",
@@ -31,15 +32,7 @@ export function createId() {
 }
 
 export function defaultSettings(): RoteirosSettings {
-  return {
-    aiProvider: "none",
-    aiBaseUrl: "http://127.0.0.1:1234/v1",
-    aiModel: "",
-    temperature: 0.45,
-    defaultBlockCount: 6,
-    shortLinesByDefault: false,
-    historyLimit: 5,
-  };
+  return createDefaultRoteirosSettings();
 }
 
 export function emptyRoteirosState(): RoteirosState {

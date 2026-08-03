@@ -9,6 +9,7 @@ import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
+import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
 
 const HOST = "127.0.0.1";
 const PORT = Number.parseInt(process.env.GACHA_DATA_PORT ?? "4318", 10);
@@ -31,7 +32,7 @@ const ROTEIROS_CHARACTER_EXPORT_ROOT = join(VIDEO_MAKER_ASSETS_ROOT, "characters
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA MAKER PREMIUM");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const STATE_PATH = join(ROOT, "state.json");
-const EMPTY_STATE = { version: 2, characters: [], catalog: [], expressionPacks: [], studios: [], studioAssets: [] };
+const EMPTY_STATE = emptyAppState();
 const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
@@ -231,7 +232,7 @@ async function loadState() {
   await ensureFolders();
   try {
     const parsed = JSON.parse(await readFile(STATE_PATH, "utf8"));
-    state = migrateStateMetadata({
+    state = normalizeAppState(migrateStateMetadata({
       ...structuredClone(EMPTY_STATE),
       ...parsed,
       version: EMPTY_STATE.version,
@@ -240,7 +241,7 @@ async function loadState() {
       expressionPacks: Array.isArray(parsed.expressionPacks) ? parsed.expressionPacks : [],
       studios: Array.isArray(parsed.studios) ? parsed.studios : [],
       studioAssets: Array.isArray(parsed.studioAssets) ? parsed.studioAssets : [],
-    });
+    }));
     await writeJsonAtomic(STATE_PATH, state);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;

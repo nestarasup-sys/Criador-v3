@@ -1,4 +1,5 @@
 export type BasePackId = string;
+export { CATEGORIES, FACE_MODES, MODELS, isCategory, isModel } from "./character-values.mjs";
 export type Model = "feminino" | "masculino";
 export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
 export type FaceMode = "base" | "single" | "pack";

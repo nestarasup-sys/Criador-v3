@@ -16,70 +16,36 @@ import type {
   Model,
   StoredLayerMasks,
 } from "./domain/character-primitives";
+import {
+  ALL_BASE_EXPRESSION_KEYS,
+  NEW_BASE_EXPRESSION_KEYS,
+  PACK_EXPRESSION_KEYS,
+  STANDARD_BASE_EXPRESSION_KEYS,
+} from "./domain/expression-contract";
+import type { Emotion, ExpressionKey, ExpressionState } from "./domain/expression-contract";
+import type {
+  Character,
+  CharacterSnapshot,
+  ColorAdjustment,
+  ColorAdjustments,
+  ExportFrame,
+  OutfitColorAdjustmentsByGroup,
+  PreviewPan,
+  ProtectionMasks,
+} from "./domain/character-contract";
+import type {
+  CatalogItem,
+  ExpressionFrame,
+  ExpressionPack,
+  NormalizedContentGeometry,
+  PcCatalogItem,
+  PcExpressionPack,
+} from "./domain/catalog-contract";
 
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
 
-const PACK_EXPRESSION_KEYS = [
-  "normal",
-  "normal_blink",
-  "normal_talk",
-  "serio",
-  "serio_blink",
-  "serio_talk",
-  "raiva",
-  "raiva_blink",
-  "raiva_talk",
-] as const;
-
-const STANDARD_BASE_EXPRESSION_KEYS = [
-  ...PACK_EXPRESSION_KEYS,
-  "assustado",
-  "assustado_blink",
-  "assustado_talk",
-  "corado",
-  "corado_blink",
-  "corado_talk",
-  "envergonhado",
-  "envergonhado_blink",
-  "envergonhado_talk",
-  "sorriso_canto",
-  "sorriso_canto_blink",
-  "sorriso_canto_talk",
-  "surpreso",
-  "surpreso_blink",
-  "surpreso_talk",
-] as const;
-
-const NEW_BASE_EXPRESSION_KEYS = [
-  ...PACK_EXPRESSION_KEYS,
-  "assustado", "assustado_blink", "assustado_talk",
-  "assustado_2", "assustado_2_blink", "assustado_2_talk",
-  "corado", "corado_blink", "corado_talk",
-  "corado_2", "corado_2_blink", "corado_2_talk",
-  "corado_3", "corado_3_blink", "corado_3_talk",
-  "corado_4", "corado_4_blink", "corado_4_talk",
-  "sorriso_canto", "sorriso_canto_blink", "sorriso_canto_talk",
-  "surpreso", "surpreso_blink", "surpreso_talk",
-  "surpreso_2", "surpreso_2_blink", "surpreso_2_talk",
-] as const;
-
-const ALL_BASE_EXPRESSION_KEYS = [
-  ...STANDARD_BASE_EXPRESSION_KEYS,
-  "assustado_2", "assustado_2_blink", "assustado_2_talk",
-  "corado_2", "corado_2_blink", "corado_2_talk",
-  "corado_3", "corado_3_blink", "corado_3_talk",
-  "corado_4", "corado_4_blink", "corado_4_talk",
-  "surpreso_2", "surpreso_2_blink", "surpreso_2_talk",
-] as const;
-
-type ExpressionKey = (typeof ALL_BASE_EXPRESSION_KEYS)[number];
-type Emotion = "normal" | "serio" | "raiva" | "assustado" | "assustado_2" | "corado" | "corado_2" | "corado_3" | "corado_4" | "envergonhado" | "sorriso_canto" | "surpreso" | "surpreso_2";
-type ExpressionState = "default" | "blink" | "talk";
 type BrushMode = "erase" | "restore";
 type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit";
-type PreviewPan = { x: number; y: number };
-type ExportFrame = { x: number; y: number; scale: number };
-
 type LayerMasks = Record<MaskTarget, MaskStroke[]>;
 
 type BasePackDefinition = {
@@ -122,53 +88,8 @@ function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId)
   return `${outfitId ?? "nenhuma"}:${packId}`;
 }
 
-type ColorAdjustment = {
-  hue: number;
-  saturation: number;
-  brightness: number;
-  enabled: boolean;
-};
-
-type ColorAdjustments = Record<Category, ColorAdjustment>;
-type OutfitColorAdjustmentsByGroup = Record<string, ColorAdjustment>;
-type ProtectionMasks = Partial<Record<Category, string>>;
 type ColorEditorTool = "brush" | "bucket" | "eyedropper" | "erase";
 type OutfitCatalogMode = "standard" | "variants";
-
-type NormalizedContentGeometry = {
-  /** Limites reais do desenho dentro do canvas transparente normalizado. */
-  contentX?: number;
-  contentY?: number;
-  contentWidth?: number;
-  contentHeight?: number;
-  /** Maior silhueta do conjunto; mantém a mesma escala entre as variantes. */
-  fitReferenceWidth?: number;
-  fitReferenceHeight?: number;
-};
-
-type CatalogItem = NormalizedContentGeometry & {
-  id: string;
-  name: string;
-  model: Model;
-  category: Category;
-  blob: Blob;
-  url?: string;
-  width?: number;
-  height?: number;
-  defaultX?: number;
-  defaultY?: number;
-  fit?: ItemTransform;
-  linkedHairId?: string;
-  /** Variantes da mesma roupa compartilham este identificador. */
-  outfitGroupId?: string;
-  outfitGroupName?: string;
-  outfitVariantIndex?: number;
-  /** Metadados antigos mantidos apenas para migração dos conjuntos já salvos. */
-  outfitPoseId?: BasePackId;
-  outfitCover?: boolean;
-  /** Roupas e cabelos são compartilhados por gênero; rostos avulsos podem pertencer a um modelo. */
-  basePackId?: BasePackId;
-};
 
 type PreparedOutfitPose = NormalizedContentGeometry & {
   blob: Blob;
@@ -189,58 +110,6 @@ type PendingOutfitPack = {
   chromaBoost: number;
 };
 
-type ExpressionFrame = {
-  key: ExpressionKey;
-  blob: Blob;
-  url?: string;
-  width: number;
-  height: number;
-};
-
-type ExpressionPack = {
-  id: string;
-  name: string;
-  model: Model;
-  basePackId?: BasePackId;
-  frames: ExpressionFrame[];
-  createdAt: string;
-};
-
-type Character = {
-  id: string;
-  name: string;
-  model: Model;
-  /** URL local da foto gerada; o PNG fica fora do JSON do personagem. */
-  photoUrl?: string;
-  /** Miniatura visual gerada automaticamente ou pelo botão "Gerar foto". */
-  photoDataUrl?: string;
-  basePackId?: BasePackId;
-  selections: Record<Category, string | null>;
-  adjustments: Record<Category, ItemTransform>;
-  colorAdjustments?: Partial<ColorAdjustments>;
-  /** Cor compartilhada pela versão padrão e por todas as variantes da mesma roupa. */
-  outfitColorAdjustmentsByGroup?: OutfitColorAdjustmentsByGroup;
-  protectionMasks?: ProtectionMasks;
-  faceMode?: FaceMode;
-  expressionPackId?: string | null;
-  expressionEmotion?: Emotion;
-  expressionState?: ExpressionState;
-  layerMasks?: StoredLayerMasks;
-  /** Compatibilidade com personagens salvos antes das máscaras por camada. */
-  maskStrokes?: MaskStroke[];
-  previewPan?: PreviewPan;
-  exportFrame?: ExportFrame;
-  hairAdjustmentsByBasePack?: Partial<Record<BasePackId, {
-    cabelos: ItemTransform;
-    cabelosTras: ItemTransform;
-  }>>;
-  outfitAdjustmentsByBasePack?: Record<string, ItemTransform>;
-  outfitLayerMasksByBasePack?: Record<string, MaskStroke[]>;
-  outfitProtectionMasksByBasePack?: Record<string, string>;
-  updatedAt: string;
-};
-
-type CharacterSnapshot = Omit<Character, "id" | "updatedAt">;
 
 const EMPTY_SELECTIONS: Record<Category, string | null> = {
   cabelos: null,
@@ -404,9 +273,6 @@ const STORE_NAME = "catalog";
 const PACK_STORE_NAME = "expressionPacks";
 const CHARACTER_KEY = "gacha-maker-characters";
 
-type PcCatalogItem = Omit<CatalogItem, "blob" | "url"> & { fileUrl: string };
-type PcExpressionFrame = Omit<ExpressionFrame, "blob" | "url"> & { fileUrl: string };
-type PcExpressionPack = Omit<ExpressionPack, "frames"> & { frames: PcExpressionFrame[] };
 type PcState = {
   characters: Character[];
   catalog: PcCatalogItem[];

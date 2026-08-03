@@ -1,22 +1,9 @@
 import { copyFile, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
+import { emptyRoteirosState, normalizeRoteirosState as normalizeState } from "../../app/domain/document-schemas.mjs";
 
-const EMPTY_STATE = {
-  version: 1,
-  profiles: [],
-  scripts: [],
-  globalRules: [],
-  settings: {
-    aiProvider: "none",
-    aiBaseUrl: "http://127.0.0.1:1234/v1",
-    aiModel: "",
-    temperature: 0.45,
-    defaultBlockCount: 6,
-    shortLinesByDefault: false,
-    historyLimit: 5,
-  },
-};
+const EMPTY_STATE = emptyRoteirosState();
 
 const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.
@@ -35,18 +22,6 @@ const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 function inside(parent, target) {
   const parentPath = resolve(parent) + sep;
   return resolve(target).startsWith(parentPath);
-}
-
-function normalizeState(value) {
-  const source = value && typeof value === "object" ? value : {};
-  return {
-    ...structuredClone(EMPTY_STATE),
-    version: 1,
-    profiles: Array.isArray(source.profiles) ? source.profiles : [],
-    scripts: Array.isArray(source.scripts) ? source.scripts : [],
-    globalRules: Array.isArray(source.globalRules) ? source.globalRules : [],
-    settings: { ...EMPTY_STATE.settings, ...(source.settings && typeof source.settings === "object" ? source.settings : {}) },
-  };
 }
 
 async function readBody(request, maximumBytes = 16 * 1024 * 1024) {

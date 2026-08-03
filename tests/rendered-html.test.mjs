@@ -26,13 +26,17 @@ test("renders the GACHA MAKER application shell", async () => {
 });
 
 test("keeps the nine-expression pack contract in the editor", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const [page, expressions] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/expression-contract.ts", import.meta.url), "utf8"),
+  ]);
+  const contract = `${page}\n${expressions}`;
   for (const key of [
     "normal", "normal_blink", "normal_talk",
     "serio", "serio_blink", "serio_talk",
     "raiva", "raiva_blink", "raiva_talk",
   ]) {
-    assert.match(page, new RegExp(`"${key}"`));
+    assert.match(contract, new RegExp(`"${key}"`));
   }
   assert.match(page, /prepareExpressionPack/);
   assert.match(page, /Pack 3×3/);
@@ -115,16 +119,17 @@ test("discovers numbered model folders with shared hair and outfits by gender", 
 });
 
 test("shows each pack's supported Studio expressions and copies bubble text", async () => {
-  const [page, types, css] = await Promise.all([
+  const [page, types, expressions, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/expression-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(types, /NEW_BASE_EMOTIONS/);
-  assert.match(types, /assustado_2/);
-  assert.match(types, /corado_4/);
-  assert.match(types, /surpreso_2/);
+  assert.match(expressions, /assustado_2/);
+  assert.match(expressions, /corado_4/);
+  assert.match(expressions, /surpreso_2/);
   assert.match(page, /emotionOptionsForCharacter/);
   assert.match(page, /navigator\.clipboard\.writeText/);
   assert.match(page, /Texto copiado/);
@@ -162,9 +167,10 @@ test("corrects the inverted Corado 3 blink and talk source names", async () => {
 });
 
 test("imports Surpreso 2 for all five numbered models, including the misspelled Talk sheet", async () => {
-  const [page, types, importer] = await Promise.all([
+  const [page, types, expressions, importer] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/expression-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../scripts/import-five-base-packs.py", import.meta.url), "utf8"),
   ]);
   const variants = ["surpreso_2", "surpreso_2_blink", "surpreso_2_talk"];
@@ -174,8 +180,9 @@ test("imports Surpreso 2 for all five numbered models, including the misspelled 
       for (const variant of variants) await access(new URL(`../public/models/modelos/${model}/${pack}/${variant}.png`, import.meta.url));
     }
   }
-  assert.match(page, /"surpreso_2"/);
-  assert.match(types, /\["surpreso_2", "Surpreso 2"\]/);
+  assert.match(`${page}\n${expressions}`, /"surpreso_2"/);
+  assert.match(types, /NEW_BASE_EMOTIONS/);
+  assert.match(expressions, /\["surpreso_2", "Surpreso 2"\]/);
   assert.match(importer, /"supreso 2": "surpreso_2"/);
   assert.match(importer, /len\(entries\) != 36/);
   assert.match(importer, /--only-new/);
@@ -183,6 +190,7 @@ test("imports Surpreso 2 for all five numbered models, including the misspelled 
 
 test("keeps the precision fitting tools in the local editor", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(page, /suggestedFit/);
   assert.match(page, /Encaixe automático/);
@@ -194,7 +202,7 @@ test("keeps the precision fitting tools in the local editor", async () => {
   assert.match(page, /onPointerMove=\{moveCanvasDrag\}/);
   assert.match(page, /Mover preview/);
   assert.match(page, /previewPanMode/);
-  assert.match(page, /previewPan\?: PreviewPan/);
+  assert.match(characterContract, /previewPan\?: PreviewPan/);
   assert.match(page, /translate\(\$\{previewPan\.x\}%/);
   assert.match(css, /\.canvas-frame\.panning/);
   assert.match(page, /Enquadrar exportação/);
@@ -203,7 +211,7 @@ test("keeps the precision fitting tools in the local editor", async () => {
   assert.match(page, /sceneCanvas/);
   assert.match(page, /finalContext\.scale\(exportFrame\.scale/);
   assert.match(page, /canvasTouchesEdge/);
-  assert.match(page, /exportFrame\?: ExportFrame/);
+  assert.match(characterContract, /exportFrame\?: ExportFrame/);
   assert.match(css, /\.export-frame-toolbar/);
 });
 
@@ -344,12 +352,13 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {
-  const [page, css] = await Promise.all([
+  const [page, characterContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /type ColorAdjustment/);
+  assert.match(characterContract, /type ColorAdjustment/);
   assert.match(page, /colorAdjustments/);
   assert.match(page, /hue-rotate/);
   assert.match(page, /syncHairColor/);
@@ -401,10 +410,11 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 });
 
 test("ships the independent Premium Roteiros workspace with PC persistence", async () => {
-  const [home, editor, types, storage, service, server, mainPage] = await Promise.all([
+  const [home, editor, types, contract, storage, service, server, mainPage] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/types.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/roteiro-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
@@ -425,8 +435,9 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(editor, /Gerar inglês para todos/);
   assert.match(editor, /Regenerar/);
   assert.match(editor, /Refazer frase/);
-  assert.match(types, /type RoteirosState/);
-  assert.match(types, /type NarrativeProfile/);
+  assert.match(types, /RoteirosState/);
+  assert.match(contract, /type RoteirosState/);
+  assert.match(contract, /type NarrativeProfile/);
   assert.match(storage, /\/roteiros\/state/);
   assert.match(storage, /gacha-premium-roteiros-emergency-v1/);
   assert.match(service, /estado\.json/);
@@ -462,13 +473,14 @@ test("keeps every script control interactive inside the colored editor hierarchy
 });
 
 test("imports one outfit as standard plus three or five additional variants shared across models", async () => {
-  const [page, css] = await Promise.all([
+  const [page, catalogContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/catalog-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /outfitGroupId\?: string/);
-  assert.match(page, /outfitVariantIndex\?: number/);
+  assert.match(catalogContract, /outfitGroupId\?: string/);
+  assert.match(catalogContract, /outfitVariantIndex\?: number/);
   assert.match(page, /async function importOutfitVariantSheet/);
   assert.match(page, /async function confirmOutfitVariantSheet/);
   assert.match(page, /Folha de variantes/);

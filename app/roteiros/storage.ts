@@ -2,22 +2,10 @@ import { emptyRoteirosState } from "./defaults";
 import type { PremiumCharacter, RoteirosState, ScriptProject, TikTokVideoReference } from "./types";
 import type { Character, PcCatalogItem, PcExpressionPack } from "../studio/types";
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
+import { normalizeRoteirosState as normalizeState } from "../domain/document-schemas.mjs";
 
 const MIRROR_KEY = "gacha-premium-roteiros-emergency-v1";
 let saveQueue: Promise<void> = Promise.resolve();
-
-function normalizeState(value: unknown): RoteirosState {
-  const fallback = emptyRoteirosState();
-  if (!value || typeof value !== "object") return fallback;
-  const source = value as Partial<RoteirosState>;
-  return {
-    version: 1,
-    profiles: Array.isArray(source.profiles) ? source.profiles : [],
-    scripts: Array.isArray(source.scripts) ? source.scripts : [],
-    globalRules: Array.isArray(source.globalRules) ? source.globalRules : [],
-    settings: { ...fallback.settings, ...(source.settings ?? {}) },
-  };
-}
 
 function readMirror() {
   try {

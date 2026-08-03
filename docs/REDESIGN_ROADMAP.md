@@ -33,7 +33,7 @@ isolado dependente do artefato de build.
 
 Objetivo: reduzir duplicação sem alterar UI ou dados.
 
-Estado: **em andamento**.
+Estado: **concluída**.
 
 Primeiro slice concluído:
 
@@ -43,9 +43,21 @@ Primeiro slice concluído:
 - teste unitário cobrindo valores vazios, `padrao`, `pack-N`, `modelo-N` e IDs livres;
 - typecheck, build e 34 testes aprovados sem alteração visual.
 
-Tarefas:
+Conclusão da fase:
 
-1. Criar `src/domain` com tipos versionados de personagem, catálogo, Studio e Roteiros.
+- contratos canônicos criados em `app/domain` (local compartilhável pelo bundle
+  browser e pelo serviço Node), em vez de `src/domain`;
+- documentos principais v2 e Roteiros v1 formalizados;
+- IDs nominais e convenção de validação definidos;
+- schemas runtime integrados ao servidor e ao storage de Roteiros;
+- adaptadores preservam as APIs públicas antigas durante a migração;
+- gênero, categorias, modos de rosto, expressões e versões centralizados;
+- round-trip moderno/legado e preservação de campos futuros cobertos;
+- build, typecheck, lint sem erros e 38 testes aprovados.
+
+Tarefas concluídas:
+
+1. Criar `app/domain` com tipos versionados de personagem, catálogo, Studio e Roteiros.
 2. Criar IDs nominalmente tipados e normalizadores legados.
 3. Adicionar schemas runtime sem substituir o carregamento atual de uma vez.
 4. Criar adaptadores entre contratos novos e os tipos atuais.

@@ -1,0 +1,4 @@
+export const APP_STATE_VERSION: 2;
+export const ROTEIROS_STATE_VERSION: 1;
+export const CHARACTER_CONTRACT_VERSION: 1;
+export const STUDIO_CONTRACT_VERSION: 1;

@@ -162,19 +162,17 @@ Nenhuma atualização de dependência foi aplicada nesta auditoria, pois a polí
 Manter React/TypeScript e reconstruir por fatias dentro deste repositório:
 
 ```text
-src/
-├── domain/        tipos, schemas, IDs e regras puras
-├── application/   casos de uso e portas
-├── infrastructure/
-│   ├── local-api/
-│   ├── storage/
-│   └── ai/
-├── features/
-│   ├── characters/
-│   ├── studio/
-│   └── scripts/
-└── shared/        UI, canvas, history, errors
+app/
+├── domain/        contratos, schemas, IDs, versões e adaptadores (atual)
+├── features/      casos de uso por Personagens, Studio e Roteiros (futuro)
+└── shared/        UI, canvas, history e erros compartilhados (futuro)
+services/
+├── storage/       persistência e segurança de arquivos
+└── roteiros/      gateway local de IA e documento de Roteiros
 ```
 
-As rotas atuais permanecem como adaptadores até cada fatia provar paridade. Não
+Durante a transição, `app/domain` é a fonte canônica já consumida pelo frontend
+e pelo serviço Node; uma futura mudança física para `src/domain` só será feita
+se trouxer benefício real e não quebrar a resolução atual. As rotas permanecem
+como adaptadores até cada fatia provar paridade. Não
 se recomenda uma reescrita total nem uma troca simultânea do storage.
