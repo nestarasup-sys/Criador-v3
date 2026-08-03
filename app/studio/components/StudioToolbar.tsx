@@ -43,7 +43,7 @@ export function StudioToolbar({ name, saveStatus, canUndo, canRedo, isPrinting, 
       <button className={styles.bubbleTool} disabled={!selectedCharacter} onClick={() => onAddBubble("pensamento")} title={bubbleTitle}><span>◌</span><strong>Pensamento</strong></button>
       <div className={styles.toolSpacer} />
       <button className={styles.printButton} onClick={onPrint} disabled={isPrinting}><span>▣</span><strong>{isPrinting ? "Salvando…" : "Print"}</strong></button>
-      <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA MAKER PREMIUM"><span>▤</span><strong>Pasta</strong></button>
+      <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA NYMI"><span>▤</span><strong>Pasta</strong></button>
       <button className={styles.viewButton} onClick={onView}><span>◉</span><strong>View</strong></button>
       <input ref={backgroundInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={onBackgroundChange} />
       <input ref={objectInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={onObjectChange} />

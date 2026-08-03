@@ -355,9 +355,10 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(server, /\/studios/);
   assert.match(server, /referencedAssets/);
   assert.match(server, /STUDIO_ASSETS_ROOT/);
-  assert.match(server, /C:\\\\PRINTS GACHA MAKER PREMIUM/);
+  assert.match(server, /C:\\\\PRINTS GACHA NYMI/);
   assert.match(server, /url\.pathname === "\/prints"/);
   assert.match(server, /url\.pathname === "\/prints\/open"/);
+  assert.match(server, /await mkdir\(PRINTS_ROOT, \{ recursive: true \}\)/);
   assert.match(storage, /saveStudioPrint/);
   assert.match(storage, /openStudioPrintsFolder/);
   assert.match(page, /renderStudioSceneToCanvas/);

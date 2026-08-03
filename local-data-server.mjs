@@ -43,7 +43,7 @@ const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
 const VIDEO_MAKER_ASSETS_ROOT = resolve(process.env.GACHA_VIDEO_MAKER_ASSETS_ROOT ?? "C:\\Users\\luiz\\Documents\\GACHA STUDIO APP\\PRIMEIRO-STUDIO\\assets");
 const ROTEIROS_VIDEO_EXPORT_ROOT = join(VIDEO_MAKER_ASSETS_ROOT, "tiktoks", "GACHA MAKER ROTEIROS PRO");
 const ROTEIROS_CHARACTER_EXPORT_ROOT = join(VIDEO_MAKER_ASSETS_ROOT, "characters", "GACHA MAKER PERSONAGENS");
-const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA MAKER PREMIUM");
+const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
@@ -494,6 +494,7 @@ async function route(request, response) {
     const fileName = `${safePrintName(metadata.studioName)}_${printTimestamp()}.png`;
     const filePath = join(PRINTS_ROOT, fileName);
     if (!inside(PRINTS_ROOT, filePath)) throw new Error("Destino do print inválido");
+    await mkdir(PRINTS_ROOT, { recursive: true });
     await writeFile(filePath, body);
     sendJson(response, request, 200, { ok: true, fileName, filePath, bytes: body.length });
     return;

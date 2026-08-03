@@ -2,6 +2,7 @@
 setlocal
 cd /d "%~dp0"
 title NYMI GACHA 2.0
+set "GACHA_PRINTS_ROOT=C:\PRINTS GACHA NYMI"
 if not exist "%~dp0dist\server\index.js" (
   echo Build de producao nao encontrado. Preparando o Nymi Gacha...
   call npm run build
