@@ -20,8 +20,11 @@ npm run lint
 npm test
 ```
 
-`test:phase8` executa build, a suíte unitária e E2E. O Chromium é instalado
-separadamente pelo Playwright e fica fora do repositório. `lint` mantém os avisos
+`test:phase8` executa build, a suíte unitária e E2E. O E2E inicia o build de
+produção pelo wrapper `scripts/production-server.mjs`; isso evita o scanner de
+dependências do modo dev e corrige separadores de caminho no Windows. O
+Chromium é instalado separadamente pelo Playwright e fica fora do repositório.
+`lint` mantém os avisos
 pré-existentes de uso de `<img>`, mas não aceita novos erros.
 
 ## Cobertura
@@ -51,8 +54,9 @@ na máquina de desenvolvimento.
 
 `compare-png.mjs` compara imagens PNG com `sharp`, exigindo dimensões iguais e
 calculando pixels alterados, proporção e diferença média. O limite é informado
-como fração (`0.02` = 2%); o script não gera nem substitui imagens. As imagens
-golden oficiais ainda devem ser escolhidas durante o beta.
+como fração (`0.02` = 2%); o script não gera nem substitui imagens. A Fase 9
+versionou os goldens oficiais em `tests/golden/phase9` e adicionou a captura
+determinística em `scripts/phase9-visual.mjs`.
 
 ### Acessibilidade e launcher
 
@@ -64,11 +68,12 @@ serviço oculto, navegador e caminho fora do Premium.
 ## Limitações e próximos testes de beta
 
 - executar E2E em uma máquina Windows limpa com Node 22.13+;
-- adicionar screenshots golden de Criador, Studio e editor de Roteiros;
 - exercitar upload de 100 assets e um roteiro longo com vídeos reais;
 - testar Ollama/LM Studio desligado, lento e indisponível;
 - medir memória/CPU durante importação de folhas grandes;
 - revisar as vulnerabilidades de dependências antes de uma distribuição pública.
 
 Esses itens não foram mascarados por mocks na implementação e permanecem
-explicitamente como pendências de beta.
+explicitamente como pendências de beta. A execução automatizada local já usa o
+build de produção; o wrapper `scripts/production-server.mjs` corrige a
+normalização de caminhos estáticos do Vinext no Windows.

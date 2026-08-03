@@ -227,11 +227,14 @@ decisões, migração histórica e limites está em `docs/ROTEIROS_RECOVERY.md`.
 - `npm ci`: concluído.
 - `npm run lint`: zero erros, nove avisos de `<img>`.
 - `npm run typecheck`: passou.
-- `npm test`: build passou e 57 testes passaram após a fase 8.
-- `npm run test:unit`: 57 testes passam quando o artefato de build já existe;
+- `npm test`: build passou e 60 testes passaram após a fase 9.
+- `npm run test:unit`: 60 testes passam quando o artefato de build já existe;
   os testes de HTML dependem de `dist/server/index.js` e, portanto, devem ser
   executados após `npm run build` em um checkout limpo.
-- `npm audit`: 1 baixo, 4 moderados e 13 altos.
+- `npm audit --omit=dev --audit-level=high`: zero vulnerabilidades de produção.
+  A auditoria completa ainda lista vulnerabilidades de ferramentas de
+  desenvolvimento/transitivas; elas não entram no runtime distribuído e não
+  foram corrigidas com `--force`.
 
 ### Cobertura adicional da fase 8
 
@@ -246,6 +249,12 @@ decisões, migração histórica e limites está em `docs/ROTEIROS_RECOVERY.md`.
   movimento, nomes ARIA e contraste dos tokens principais.
 - `tests/bat-smoke.test.mjs` protege o contrato do launcher (loopback,
   portas 6700/6800, serviço oculto e tratamento de erro).
+- `tests/phase9-beta.test.mjs` valida cópia/rollback, IA local e carga de
+  roteiros com vídeos.
+- `scripts/phase9-visual.mjs` captura e compara os goldens do Criador, Studio e
+  Roteiros. O E2E usa `scripts/production-server.mjs`, necessário no Windows
+  para normalizar os separadores de caminho no cache de arquivos estáticos do
+  Vinext 0.0.x.
 
 ## 8. Direção arquitetural recomendada
 

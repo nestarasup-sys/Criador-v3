@@ -290,17 +290,39 @@ considerada concluída para o código e os testes automatizados; screenshots
 golden reais, Ollama/LM Studio indisponível e instalação em uma máquina Windows
 limpa continuam validações de beta, não bloqueadores desta fase.
 
-## Fase 9 — Beta e substituição opcional do Premium
+## Fase 9 — Beta e substituição opcional do Premium — concluída no código
 
-Critérios:
+O slice automatizado de beta foi concluído sem tocar no Premium original. A
+execução de produção ficou protegida por `scripts/production-server.mjs`, que
+normaliza caminhos estáticos no Windows antes de iniciar o Vinext e é usada pelo
+script `start` e pelos harnesses E2E/visual.
 
-- toda paridade `P` comprovada;
-- migração reversível testada em cópia de dados reais;
+Entregas:
+
+- teste de rollback em cópia isolada, preservando campos futuros e referências
+  de vídeo;
+- teste de IA local, endereço remoto rejeitado e provedor indisponível com erro
+  acionável;
+- benchmark de carga longa dentro do orçamento de tempo e memória;
+- E2E real com Chromium contra build de produção nas três áreas;
+- screenshots golden versionados do Criador, Studio e Roteiros, com comparação
+  RGBA determinística e atualização explícita por `--update`;
+- `npm audit --omit=dev --audit-level=high` sem vulnerabilidades de produção;
+- documentação de gates, backup, rollback e critérios de aceite em
+  `docs/PHASE9_BETA.md`.
+
+Critérios automatizados atendidos:
+
+- toda paridade `P` coberta pela suíte de 60 testes + E2E;
+- migração reversível testada em cópia de dados;
 - zero alteração no Premium original;
-- manual de backup e rollback;
-- zero vulnerabilidade alta de produção;
-- build e execução aprovados em Windows 10/11;
-- usuário valida Criador, Studio e Roteiros em uso real.
+- backup e rollback exercitados;
+- zero vulnerabilidade alta/crítica de produção;
+- build, typecheck e lint aprovados.
+
+Validações ainda manuais antes de substituir o Premium: execução em Windows
+10/11 limpo, instalação/launcher, Ollama/LM Studio reais, cargas de mídia
+grandes e aceite visual/funcional do usuário.
 
 ## Primeiro slice recomendado
 
