@@ -39,6 +39,11 @@ function formatTikTokDuration(seconds: number | undefined) {
   return `${seconds.toFixed(2).replace(".", ",")} segundos`;
 }
 
+function formatSceneEnd(seconds: number | undefined) {
+  if (!Number.isFinite(seconds) || seconds === undefined) return "fim não definido";
+  return `segundo ${seconds.toFixed(2).replace(".", ",")}`;
+}
+
 function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"]) {
   const names = new Map(characters.map((character) => [character.id, character.name]));
   const expressionLines = script.participants.map((participant) => {
@@ -48,7 +53,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     return `${names.get(participant.characterId) || character?.name || "Personagem removido"}\nExpressões: ${expressions.join(", ")}`;
   });
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
-    const lines = [`TIKTOK ${String(index + 1).padStart(2, "0")} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Descrição: ${section.description}`];
+    const lines = [`TIKTOK ${String(index + 1).padStart(2, "0")} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => block.type === "speech" || block.type === "thought" || block.type === "silent");
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
@@ -140,7 +145,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const improve = async () => {
     setLoading("improve"); setMessage("");
     try {
-      const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneGoal, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
+      const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneEndSeconds === undefined ? section.sceneGoal : `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, sceneEndSeconds: section.sceneEndSeconds, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
       setImprovedContext(result.improvedContext);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível melhorar o contexto."); }
     finally { setLoading(""); }
@@ -189,7 +194,6 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
       });
       const video = await uploadRoteiroVideo(script.id, section.id, file);
       patch({ video: durationSeconds === undefined ? video : { ...video, durationSeconds } });
-      setMessage(`Vídeo salvo: ${file.name}`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar o vídeo.");
     } finally {
@@ -245,20 +249,22 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
         <div className={styles.contextZoneBody}>
           <div className={styles.twoColumns}>
             <label className={styles.field}><span>Título opcional</span><input value={section.title} maxLength={120} onChange={(event) => patch({ title: event.target.value })} placeholder="Ex: O passado da FYN" /></label>
-            <label className={styles.field}><span>Objetivo da cena</span><input value={section.sceneGoal} maxLength={800} onChange={(event) => patch({ sceneGoal: event.target.value })} placeholder="O que esta parte deve provocar?" /></label>
+            <label className={styles.field}><span>Cena da descrição termina (segundos)</span><input type="number" min="0" max="86400" step="0.01" value={section.sceneEndSeconds ?? ""} onChange={(event) => { const value = event.target.value; patch({ sceneEndSeconds: value === "" ? undefined : Math.max(0, Number(value)) }); }} placeholder="Ex.: 5 ou 5.5" /></label>
           </div>
           <div className={styles.videoUploadBox}>
             {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
           </div>
-          <label className={styles.field}><span>Descrição detalhada do vídeo</span><textarea rows={7} value={section.description} maxLength={20000} onChange={(event) => patch({ description: event.target.value })} placeholder="Descreva literalmente o que acontece no vídeo, quem aparece e quais ações ocorrem…" /></label>
+          <div className={styles.descriptionLayout}>
+            <label className={`${styles.field} ${styles.descriptionField}`}><span>Descrição detalhada do vídeo</span><textarea rows={9} value={section.description} maxLength={20000} onChange={(event) => patch({ description: event.target.value })} placeholder="Descreva literalmente o que acontece no vídeo, quem aparece e quais ações ocorrem…" /></label>
+            <div className={styles.descriptionSide}>
+              <label className={styles.field}><span>Linha do tempo</span><select value={section.timeline} onChange={(event) => patch({ timeline: event.target.value as TikTokSection["timeline"] })}><option value="unspecified">Indefinido</option><option value="past">Passado</option><option value="present">Presente</option><option value="future">Futuro</option></select></label>
+              <label className={styles.field}><span>Instrução adicional para IA</span><input value={section.userInstruction} maxLength={3000} onChange={(event) => patch({ userInstruction: event.target.value })} placeholder="Ex: dê mais foco ao ciúme…" /></label>
+              <label className={styles.checkField}><input type="checkbox" checked={section.shortLines} onChange={(event) => patch({ shortLines: event.target.checked })} /><span>Falas mais curtas</span></label>
+            </div>
+          </div>
           <div className={styles.contextActions}><button className={styles.aiButton} disabled={Boolean(loading) || !section.description.trim() || state.settings.aiProvider === "none"} onClick={() => void improve()}>✦ {loading === "improve" ? "Melhorando…" : "Melhorar contexto"}</button><span>A IA não substituirá o texto sem sua confirmação.</span></div>
           {improvedContext && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedContext("")}>×</button></div><p>{improvedContext}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedContext("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patch({ description: improvedContext }); setImprovedContext(""); }}>Aceitar sugestão</button></footer></div>}
-          <div className={styles.threeColumns}>
-            <label className={styles.field}><span>Linha do tempo</span><select value={section.timeline} onChange={(event) => patch({ timeline: event.target.value as TikTokSection["timeline"] })}><option value="unspecified">Indefinido</option><option value="past">Passado</option><option value="present">Presente</option><option value="future">Futuro</option></select></label>
-            <label className={styles.field}><span>Instrução adicional para IA</span><input value={section.userInstruction} maxLength={3000} onChange={(event) => patch({ userInstruction: event.target.value })} placeholder="Ex: dê mais foco ao ciúme…" /></label>
-            <label className={styles.checkField}><input type="checkbox" checked={section.shortLines} onChange={(event) => patch({ shortLines: event.target.checked })} /><span>Falas mais curtas</span></label>
-          </div>
           <label className={styles.field}><span>Regras específicas deste TikTok</span><textarea rows={3} value={section.specificRules} maxLength={6000} onChange={(event) => patch({ specificRules: event.target.value })} placeholder="Regras que valem somente para este vídeo…" /></label>
         </div>
       </section>
@@ -423,13 +429,11 @@ export default function RoteiroEditor() {
         {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
-          <p>Os arquivos serão organizados no PC sem alterar o roteiro.</p>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           {exportMessage && <small>{exportMessage}</small>}
         </section>
-        <section className={styles.railInfo}><span>GERAÇÃO ASSISTIDA</span><p>A IA utiliza fichas, relações, contexto geral, regras e TikToks anteriores. Os comandos específicos permanecem dentro do TikTok selecionado.</p></section>
         <section className={styles.railRules}><span>REGRAS ATIVAS</span><strong>{state.globalRules.filter((rule) => rule.enabled).length + 10}</strong><small>regras estruturais e personalizadas</small><Link href="/roteiros">Abrir IA e regras</Link></section>
       </aside>
     </div>

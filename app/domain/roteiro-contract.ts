@@ -36,7 +36,7 @@ export type TikTokVideoReference = {
 };
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
-  sceneGoal: string; userInstruction: string; specificRules: string; shortLines: boolean;
+  sceneGoal: string; sceneEndSeconds?: number; userInstruction: string; specificRules: string; shortLines: boolean;
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
   createdAt: string; updatedAt: string;
 };

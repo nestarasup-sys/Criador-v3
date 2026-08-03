@@ -152,6 +152,7 @@ function normalizeRoteiroSection(value) {
     userInstruction: typeof source.userInstruction === "string" ? source.userInstruction : "",
     specificRules: typeof source.specificRules === "string" ? source.specificRules : "",
     shortLines: Boolean(source.shortLines),
+    ...(Number.isFinite(Number(source.sceneEndSeconds)) && Number(source.sceneEndSeconds) >= 0 ? { sceneEndSeconds: Number(source.sceneEndSeconds) } : {}),
     ...(video ? { video } : {}),
     reactionBlocks: list(source.reactionBlocks).map(normalizeReactionBlock),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",

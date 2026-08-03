@@ -894,6 +894,25 @@
 }
 .contextZoneIcon { background:linear-gradient(135deg,#8a65e4,#6845c4); }
 .contextZoneBody { padding:14px 16px 16px; }
+.descriptionLayout {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(260px,.7fr);
+  gap:12px;
+  align-items:stretch;
+}
+.descriptionField { min-width:0; }
+.descriptionField textarea { height:100%; min-height:194px; }
+.descriptionSide {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-width:0;
+  padding:10px;
+  border:1px solid #e8e0f5;
+  border-radius:11px;
+  background:#fcfaff;
+}
+.descriptionSide .checkField { margin-top:auto; }
 .contextZoneBody .field>span,
 .blockMain .field>span,
 .blockControls span {
@@ -1173,6 +1192,8 @@
   .blocksSection>.blocksHeader { flex-direction:column; }
   .blocksHeader .secondaryButton { width:100%; }
   .reactionBlock { grid-template-columns:1fr; }
+  .descriptionLayout { grid-template-columns:1fr; }
+  .descriptionField textarea { min-height:150px; }
   .blockIdentity { padding-top:0; }
   .blockMain { grid-template-columns:1fr; }
   .blockControls, .blockActions { grid-column:auto; }
