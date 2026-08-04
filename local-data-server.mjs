@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
-import { extname, join, resolve } from "node:path";
+import { extname, join, resolve, sep } from "node:path";
 import JSZip from "jszip";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
