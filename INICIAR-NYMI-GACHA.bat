@@ -3,6 +3,8 @@ setlocal
 cd /d "%~dp0"
 title NYMI GACHA 2.0
 set "GACHA_PRINTS_ROOT=C:\PRINTS GACHA NYMI"
+rem O supervisor inicia local-data-server.mjs e substitui o antigo npm run start.
+rem Contratos: LocalPort 6800, localhost:6700 e WindowStyle Hidden para processos auxiliares.
 if not exist "%~dp0dist\server\index.js" (
   echo Build de producao nao encontrado. Preparando o Nymi Gacha...
   call npm run build

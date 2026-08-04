@@ -627,17 +627,12 @@ async function route(request, response) {
     assertMimeType(contentTypeOf(request, metadata), new Set(["application/zip", "application/x-zip-compressed"]), "O pacote do personagem precisa ser ZIP.");
     const body = await requestBody(request, BODY_LIMITS.zip);
     if (!body.length) throw new Error("ZIP do personagem vazio");
-    let folderName = safeExportFolderName(metadata.characterName || characterId, characterId);
-    const requestedFolder = join(ROTEIROS_CHARACTER_EXPORT_ROOT, folderName);
-    try {
-      await stat(requestedFolder);
-      const existingManifest = await readOptionalJson(join(requestedFolder, "manifest.json"));
-      if (!existingManifest || (existingManifest?.character?.id && existingManifest.character.id !== characterId) || existingManifest?.character?.name !== String(metadata.characterName || "").trim()) folderName = `${folderName}-${characterId.slice(0, 8)}`;
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
-    }
-    const folder = join(ROTEIROS_CHARACTER_EXPORT_ROOT, folderName);
+    const scriptFolderName = safeExportFolderName(metadata.scriptTitle || "Roteiro", "Roteiro");
+    const characterFolderName = safeExportFolderName(metadata.characterName || characterId, characterId);
+    const scriptFolder = join(ROTEIROS_CHARACTER_EXPORT_ROOT, scriptFolderName);
+    const folder = join(scriptFolder, characterFolderName);
     if (!inside(ROTEIROS_CHARACTER_EXPORT_ROOT, folder)) throw new Error("Destino do personagem inválido");
+    await rm(folder, { recursive: true, force: true });
     await mkdir(folder, { recursive: true });
     const zip = await JSZip.loadAsync(body);
     let files = 0;

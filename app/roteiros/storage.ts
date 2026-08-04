@@ -129,10 +129,10 @@ export async function exportRoteiroText(script: ScriptProject, content: string) 
   return result as { path: string; fileName: string };
 }
 
-export async function exportRoteiroCharacter(characterId: string, characterName: string, bundle: Blob) {
+export async function exportRoteiroCharacter(scriptTitle: string, characterId: string, characterName: string, bundle: Blob) {
   const response = await localDataFetch(`/roteiros/export-characters/${encodeURIComponent(characterId)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/zip", ...localMeta({ characterName }) },
+    headers: { "Content-Type": "application/zip", ...localMeta({ scriptTitle, characterName }) },
     body: bundle,
   });
   const result = await response.json().catch(() => ({}));

@@ -56,7 +56,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const expressionKeys = character ? expressionKeysForCharacter(character, expressionPacks, modelPacks) : ["normal"];
     const expressions = [...new Set(expressionKeys.filter((key) => !/(?:_blink|_talk)$/i.test(key)).map(readableExpression))];
     const name = names.get(participant.characterId) || character?.name || "Personagem removido";
-    const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
+    const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(script.title, "roteiro")}/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
     return `${name} - Pasta exata: ${folder}\nExpressões: ${expressions.join(", ")}`;
   });
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
@@ -361,7 +361,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
