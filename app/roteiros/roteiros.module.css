@@ -1243,17 +1243,6 @@
 .backupList article>div { min-width:0; display:grid; gap:3px; }
 .backupList strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#443852; font-size:12px; }
 .backupList small { color:#8b7e91; font-size:11px; }
-.jsonPreview {
-  width:100%;
-  min-height:320px;
-  resize:vertical;
-  padding:12px;
-  border:1px solid #e3d9ec;
-  border-radius:12px;
-  background:#fbf9fd;
-  color:#34283f;
-  font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;
-}
 @media (max-width:700px) {
   .recoveryBanner { align-items:flex-start; flex-wrap:wrap; margin:10px 12px 0; }
   .recoveryActions { width:100%; padding-left:48px; }

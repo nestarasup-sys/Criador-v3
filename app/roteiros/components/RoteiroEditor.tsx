@@ -7,7 +7,7 @@ import { buildAiCharacters } from "../ai-context";
 import { nowIso } from "../defaults";
 import { addReactionBlock, addTikTok as addTikTokCommand, duplicateReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchReactionBlock, patchTikTok as patchTikTokCommand, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
 import { createRoteiroExportDocument } from "../export-contract";
-import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, generateVideoMakerJson, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
+import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, expressionKeysForCharacter } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
@@ -313,7 +313,6 @@ export default function RoteiroEditor() {
   const [activeSectionId, setActiveSectionId] = useState("");
   const [exportLoading, setExportLoading] = useState("");
   const [exportMessage, setExportMessage] = useState("");
-  const [generatedVideoMakerJson, setGeneratedVideoMakerJson] = useState<Record<string, unknown> | null>(null);
   const script = state?.scripts.find((item) => item.id === params.id);
   const characterMap = useMemo(() => new Map(characters.map((character) => [character.id, character])), [characters]);
 
@@ -368,17 +367,6 @@ export default function RoteiroEditor() {
       const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks));
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
-    finally { setExportLoading(""); }
-  };
-  const exportVideoMakerJson = async () => {
-    setExportLoading("videomaker-json"); setExportMessage("");
-    try {
-      const assets = await loadPremiumStudioData();
-      const readableScript = buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks);
-      const result = await generateVideoMakerJson({ script, characters, readableScript, settings: { ...state.settings, aiProvider: "ollama", aiBaseUrl: "http://127.0.0.1:11434", aiModel: "gemma4:e4b" } });
-      setGeneratedVideoMakerJson(result.proposal);
-      setExportMessage(`JSON gerado pelo ${result.model} e salvo em Downloads: ${result.fileName}.`);
-    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao gerar o JSON do Video Maker."); }
     finally { setExportLoading(""); }
   };
   const openExportFolder = async (target: "characters" | "script") => {
@@ -444,12 +432,10 @@ export default function RoteiroEditor() {
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
-          <div className={styles.exportAction}><button className={styles.aiButton} disabled={Boolean(exportLoading) || !script.tiktoks.length} onClick={() => void exportVideoMakerJson()}>✦ {exportLoading === "videomaker-json" ? "Gerando JSON…" : "Exportar JSON"}</button></div>
           {exportMessage && <small>{exportMessage}</small>}
         </section>
         <section className={styles.railRules}><span>REGRAS ATIVAS</span><strong>{state.globalRules.filter((rule) => rule.enabled).length + 10}</strong><small>regras estruturais e personalizadas</small><Link href="/roteiros">Abrir IA e regras</Link></section>
       </aside>
     </div>
-    {generatedVideoMakerJson && <div className={styles.modalBackdrop} role="dialog" aria-modal="true" onMouseDown={(event) => { if (event.target === event.currentTarget) setGeneratedVideoMakerJson(null); }}><section className={styles.modal}><div className={styles.modalHeader}><div><span className={styles.eyebrow}>VIDEO MAKER</span><h2>JSON gerado</h2></div><button onClick={() => setGeneratedVideoMakerJson(null)}>×</button></div><p className={styles.subtleEmpty}>O arquivo já foi salvo em Downloads. Confira ou copie o conteúdo abaixo.</p><textarea className={styles.jsonPreview} value={JSON.stringify(generatedVideoMakerJson, null, 2)} readOnly rows={18} /><div className={styles.modalFooter}><button className={styles.secondaryButton} onClick={() => void navigator.clipboard.writeText(JSON.stringify(generatedVideoMakerJson, null, 2))}>Copiar JSON</button><button className={styles.primaryButton} onClick={() => setGeneratedVideoMakerJson(null)}>Concluir</button></div></section></div>}
   </div>;
 }
