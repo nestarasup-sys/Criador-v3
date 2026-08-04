@@ -44,16 +44,25 @@ function formatSceneEnd(seconds: number | undefined) {
   return `segundo ${seconds.toFixed(2).replace(".", ",")}`;
 }
 
+function exportPathSegment(value: string, fallback: string) {
+  const normalized = String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
+  return normalized || fallback;
+}
+
 function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"]) {
   const names = new Map(characters.map((character) => [character.id, character.name]));
   const expressionLines = script.participants.map((participant) => {
     const character = fullCharacters.find((item) => item.id === participant.characterId);
     const expressionKeys = character ? expressionKeysForCharacter(character, expressionPacks, modelPacks) : ["normal"];
     const expressions = [...new Set(expressionKeys.filter((key) => !/(?:_blink|_talk)$/i.test(key)).map(readableExpression))];
-    return `${names.get(participant.characterId) || character?.name || "Personagem removido"}\nExpressões: ${expressions.join(", ")}`;
+    const name = names.get(participant.characterId) || character?.name || "Personagem removido";
+    const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
+    return `${name} - Pasta exata: ${folder}\nExpressões: ${expressions.join(", ")}`;
   });
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
-    const lines = [`TIKTOK ${String(index + 1).padStart(2, "0")} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Descrição: ${section.description}`];
+    const number = String(index + 1).padStart(2, "0");
+    const folder = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${exportPathSegment(script.title, "roteiro")}`;
+    const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => block.type === "speech" || block.type === "thought" || block.type === "silent");
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
