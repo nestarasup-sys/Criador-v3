@@ -251,7 +251,7 @@ export default function StudioPage() {
     setBackgroundCollapsed(preferences?.backgroundCollapsed === true);
     setRosterCompact(preferences?.rosterCompact === true);
     setDockSide(preferences?.inspectorDockSide === "left" ? "left" : "right");
-  }, [studio, studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
+  }, [studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   function updateStudioUi(patch: Partial<Studio["uiPreferences"]>) {
