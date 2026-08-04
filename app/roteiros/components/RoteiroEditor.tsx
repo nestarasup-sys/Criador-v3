@@ -45,7 +45,7 @@ function formatSceneEnd(seconds: number | undefined) {
 }
 
 function exportPathSegment(value: string, fallback: string) {
-  const normalized = String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
+  const normalized = String(value || fallback).replace(/[<>:"/\\|?*]+/g, "-").replace(/[. ]+$/g, "").trim().slice(0, 120);
   return normalized || fallback;
 }
 
