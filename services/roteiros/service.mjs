@@ -451,6 +451,37 @@ function validateVideoMakerJson(value, source) {
   return issues;
 }
 
+function normalizeVideoMakerJson(value, source) {
+  const result = structuredClone(value && typeof value === "object" ? value : {});
+  result.project = {
+    resolution: [1920, 1080],
+    fps: 30,
+    preserve_others: true,
+    variant_mode: "hold",
+    blink_fallback: "generic_then_log",
+    ...(result.project && typeof result.project === "object" ? result.project : {}),
+  };
+  if (!Array.isArray(result.project.resolution) || result.project.resolution.length !== 2) result.project.resolution = [1920, 1080];
+  if (!Number.isFinite(Number(result.project.fps)) || Number(result.project.fps) <= 0) result.project.fps = 30;
+  const sections = Array.isArray(source.script?.tiktoks) ? source.script.tiktoks : [];
+  let videoIndex = 0;
+  result.timeline = (Array.isArray(result.timeline) ? result.timeline : []).map((event) => {
+    const normalized = { ...(event && typeof event === "object" ? event : {}) };
+    const isVideo = normalized.type === "video";
+    const sourceSection = sections[videoIndex];
+    if (isVideo) {
+      const duration = Number(sourceSection?.video?.durationSeconds);
+      if (!normalized.path || typeof normalized.path !== "string") normalized.path = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${safeDownloadName(source.script?.title)}/${String(videoIndex + 1).padStart(2, "0")}.mp4`;
+      if (!Number.isFinite(Number(normalized.duration)) || Number(normalized.duration) <= 0 || normalized.duration === "auto") normalized.duration = Number.isFinite(duration) && duration > 0 ? duration : 3;
+      videoIndex += 1;
+    } else if (!Number.isFinite(Number(normalized.duration)) || Number(normalized.duration) <= 0) {
+      normalized.duration = 1.5;
+    }
+    return normalized;
+  });
+  return result;
+}
+
 async function exportVideoMakerJson(body, downloadsFolder) {
   const source = body.source || {};
   const script = source.script || {};
@@ -496,7 +527,7 @@ EXPORTAÇÃO LEGÍVEL (referência adicional):
 ${readable}`;
   const settings = { ...(body.settings || {}), aiProvider: "ollama", aiBaseUrl: "http://127.0.0.1:11434", aiModel: "gemma4:e4b" };
   const result = await callAi(settings, prompt, schema, "Você é um conversor rigoroso de roteiros para o formato JSON do Video Maker. Nunca responda com markdown ou comentários.");
-  const proposal = result.data;
+  const proposal = normalizeVideoMakerJson(result.data, source);
   const issues = validateVideoMakerJson(proposal, { characters });
   if (issues.length) throw new Error(`JSON gerado inválido: ${issues.slice(0, 3).join(" ")}`);
   const fileName = `${safeDownloadName(title)}-videomaker.json`;
