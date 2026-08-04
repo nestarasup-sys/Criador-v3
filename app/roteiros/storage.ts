@@ -129,6 +129,15 @@ export async function exportRoteiroText(script: ScriptProject, content: string) 
   return result as { path: string; fileName: string };
 }
 
+export async function generateVideoMakerJson(input: { script: ScriptProject; characters: unknown[]; readableScript: string; settings: unknown }) {
+  const result = await request("/roteiros/ai/export-videomaker-json", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source: input, settings: input.settings }),
+  });
+  return result as { proposal: Record<string, unknown>; fileName: string; filePath: string; model: string; issues: string[] };
+}
+
 export async function exportRoteiroCharacter(characterId: string, characterName: string, bundle: Blob) {
   const response = await localDataFetch(`/roteiros/export-characters/${encodeURIComponent(characterId)}`, {
     method: "POST",

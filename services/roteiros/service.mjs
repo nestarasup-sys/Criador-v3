@@ -1,5 +1,6 @@
 import { copyFile, mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
+import { homedir } from "node:os";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { emptyRoteirosState, normalizeRoteirosState as normalizeState, validateRoteirosState } from "../../app/domain/document-schemas.mjs";
 
@@ -424,6 +425,88 @@ async function translate(body) {
   return { translations, model: result.model };
 }
 
+function safeDownloadName(value, fallback = "roteiro-videomaker") {
+  const name = String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 100);
+  return name || fallback;
+}
+
+function validateVideoMakerJson(value, source) {
+  const issues = [];
+  if (!value || typeof value !== "object" || Array.isArray(value)) return ["A resposta não é um objeto JSON."];
+  if (!value.project || typeof value.project !== "object") issues.push("project ausente.");
+  if (!Array.isArray(value.timeline)) issues.push("timeline precisa ser uma lista.");
+  if (!value.characters || typeof value.characters !== "object" || Array.isArray(value.characters)) issues.push("characters precisa ser um mapa.");
+  const known = new Set((source.characters || []).flatMap((character) => [String(character.id), String(character.name)]));
+  for (const [index, event] of (Array.isArray(value.timeline) ? value.timeline : []).entries()) {
+    if (!event || typeof event !== "object") { issues.push(`timeline[${index}] inválido.`); continue; }
+    const duration = Number(event.duration);
+    if (!Number.isFinite(duration) || duration <= 0) issues.push(`timeline[${index}] precisa de duration positivo.`);
+    if (["dialogue", "thought", "state", "expression", "set_expression", "visibility"].includes(event.type) && event.character && !known.has(String(event.character))) issues.push(`Personagem desconhecido em timeline[${index}]: ${event.character}.`);
+    if (event.type === "video" && (!event.path || typeof event.path !== "string")) issues.push(`timeline[${index}] de vídeo sem path.`);
+    for (const [commentIndex, comment] of (Array.isArray(event.comments) ? event.comments : []).entries()) {
+      if (!Number.isFinite(Number(comment.at)) || Number(comment.at) < 0) issues.push(`Comentário ${index}.${commentIndex} precisa de at relativo válido.`);
+    }
+  }
+  if (value.project && (!Array.isArray(value.project.resolution) || value.project.resolution.length !== 2)) issues.push("project.resolution deve ser [1920,1080].");
+  return issues;
+}
+
+async function exportVideoMakerJson(body, downloadsFolder) {
+  const source = body.source || {};
+  const script = source.script || {};
+  const characters = Array.isArray(source.characters) ? source.characters : [];
+  const readable = String(source.readableScript || "");
+  const title = String(script.title || "roteiro");
+  const characterManifest = characters.map((character) => ({ id: character.id, name: character.name, model: character.model, assetDir: `assets/characters/GACHA MAKER PERSONAGENS/${safeDownloadName(character.name, character.id)}` }));
+  const videoManifest = (Array.isArray(script.tiktoks) ? script.tiktoks : []).map((section, index) => ({ id: section.id, number: String(index + 1).padStart(2, "0"), path: `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${safeDownloadName(title)}/${String(index + 1).padStart(2, "0")}.mp4`, durationSeconds: section.video?.durationSeconds, description: section.description }));
+  const schema = {
+    type: "object",
+    properties: {
+      project: { type: "object", additionalProperties: true },
+      initial_state: { type: "object", additionalProperties: true },
+      characters: { type: "object", additionalProperties: true },
+      timeline: { type: "array", items: { type: "object", additionalProperties: true } },
+    },
+    required: ["project", "characters", "timeline"],
+    additionalProperties: true,
+  };
+  const prompt = `Transforme o roteiro abaixo em um projeto JSON compatível com o Video Maker Python original. Retorne somente JSON válido.
+
+REGRAS OBRIGATÓRIAS:
+- Use project.resolution [1920,1080] e project.fps 30, salvo indicação explícita diferente.
+- A timeline é SEQUENCIAL: não invente start_time absoluto; cada evento deve ter duration positiva.
+- Crie um evento video para cada TikTok na mesma ordem. Use exatamente os paths fornecidos no MANIFESTO DE VÍDEOS. duration deve usar a duração informada; se ausente, use 3.0.
+- Comentários de um vídeo ficam dentro de comments e usam at relativo ao início daquele vídeo.
+- Para blocos speech use type dialogue, character, expression, pt, en (se houver), duration. Para thought use type thought e nunca use talk. Para reação silenciosa use reaction ou group_reaction, sem texto.
+- Alterações de expressão sem balão usam state. Preserve a expressão informada pelo roteiro; não crie expressões novas sem necessidade.
+- Em characters, use um mapa com os nomes dos personagens e asset_dir exatamente como no MANIFESTO DE PERSONAGENS. Não invente personagens.
+- Inclua configurações de blink/talk, preserve_others true e variant_mode hold.
+- Não transforme descrição em falas e não invente fatos.
+
+MANIFESTO DE PERSONAGENS:
+${JSON.stringify(characterManifest, null, 2)}
+
+MANIFESTO DE VÍDEOS:
+${JSON.stringify(videoManifest, null, 2)}
+
+ROTEIRO E DADOS ORIGINAIS:
+${JSON.stringify(source, null, 2)}
+
+EXPORTAÇÃO LEGÍVEL (referência adicional):
+${readable}`;
+  const settings = { ...(body.settings || {}), aiProvider: "ollama", aiBaseUrl: "http://127.0.0.1:11434", aiModel: "gemma4:e4b" };
+  const result = await callAi(settings, prompt, schema, "Você é um conversor rigoroso de roteiros para o formato JSON do Video Maker. Nunca responda com markdown ou comentários.");
+  const proposal = result.data;
+  const issues = validateVideoMakerJson(proposal, { characters });
+  if (issues.length) throw new Error(`JSON gerado inválido: ${issues.slice(0, 3).join(" ")}`);
+  const fileName = `${safeDownloadName(title)}-videomaker.json`;
+  const folder = resolve(downloadsFolder || join(homedir(), "Downloads"));
+  await mkdir(folder, { recursive: true });
+  const filePath = join(folder, fileName);
+  await writeFile(filePath, `${JSON.stringify(proposal, null, 2)}\n`, "utf8");
+  return { proposal, fileName, filePath, model: result.model, issues: [] };
+}
+
 export function createRoteirosService(rootFolder) {
   const root = resolve(rootFolder);
   const statePath = join(root, "estado.json");
@@ -629,6 +712,7 @@ export function createRoteirosService(rootFolder) {
           else if (url.pathname === "/roteiros/ai/generate") result = await generateReactions(body);
           else if (url.pathname === "/roteiros/ai/block") result = await blockAction(body);
           else if (url.pathname === "/roteiros/ai/translate") result = await translate(body);
+          else if (url.pathname === "/roteiros/ai/export-videomaker-json") result = await exportVideoMakerJson(body, join(homedir(), "Downloads"));
           else throw Object.assign(new Error("Ação de IA não encontrada."), { status: 404 });
           sendJson(response, headers, 200, result);
           return true;
