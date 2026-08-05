@@ -564,6 +564,14 @@
   color: #805b6b;
 }
 .inspector > button:hover { border-color: #e99fba; background: #fff3f7; }
+.inspector .inspectorPrintButton {
+  border-color: #d95e88;
+  background: linear-gradient(145deg, #e878a4, #cb4e7d);
+  color: #fff;
+  box-shadow: 0 7px 15px rgba(203,78,125,.22);
+}
+.inspector .inspectorPrintButton:hover { border-color: #c64a76; background: linear-gradient(145deg, #ef87ae, #d95786); }
+.inspector .inspectorPrintButton:disabled { opacity: .65; cursor: wait; }
 .inspectorTitle span,
 .inspectorSection > span {
   color: #bd718d;

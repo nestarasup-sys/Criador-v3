@@ -869,6 +869,8 @@ export default function StudioPage() {
             onLayer={changeLayer}
             onRemove={removeSelected}
             onDuplicate={duplicateSelected}
+            onPrint={() => { void printScene(); }}
+            isPrinting={isPrinting}
           /></div>
           <StudioRoster
             rosterIds={studio.rosterIds}

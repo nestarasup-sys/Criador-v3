@@ -143,6 +143,8 @@ test("shows each pack's supported Studio expressions and copies bubble text", as
   assert.match(page, /navigator\.clipboard\.writeText/);
   assert.match(page, /Texto copiado/);
   assert.match(inspector, />Copiar<\/button>/);
+  assert.match(inspector, /inspectorPrintButton/);
+  assert.match(inspector, /onPrint/);
   assert.match(css, /grid-template-columns:\s*210px 220px/);
   assert.match(css, /\.textFieldHeading/);
 });
