@@ -145,6 +145,8 @@ test("shows each pack's supported Studio expressions and copies bubble text", as
   assert.match(inspector, />Copiar<\/button>/);
   assert.match(inspector, /inspectorPrintButton/);
   assert.match(inspector, /onPrint/);
+  assert.match(inspector, /onNudgeOutfit/);
+  assert.match(inspector, /Ajustar/);
   assert.match(css, /grid-template-columns:\s*210px 220px/);
   assert.match(css, /\.textFieldHeading/);
 });
@@ -406,7 +408,10 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(printRenderer, /studioCanvasToPng/);
   assert.match(page, /cycleSelectedPose/);
   assert.match(page, /characterForSceneOutfit/);
+  assert.match(page, /outfitVariantOffsets/);
+  assert.match(page, /nudgeSelectedOutfit/);
   assert.match(outfitVariants, /cycleSceneOutfitPose/);
+  assert.match(outfitVariants, /outfitOffsetForVariant/);
   assert.match(outfitVariants, /outfitGroupId/);
   assert.match(canvas, /renderCacheKey\(character, instance\.expressionEmotion, instance\.expressionState, instance\)/);
 });

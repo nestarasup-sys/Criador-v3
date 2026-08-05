@@ -1,4 +1,5 @@
 import type { Character, PcCatalogItem, SceneCharacter } from "./types";
+import type { SceneOutfitOffset } from "../domain/studio-contract";
 
 export type SceneOutfitPose = {
   groupId: string | null;
@@ -46,12 +47,38 @@ export function cycleSceneOutfitPose(character: Character, instance: SceneCharac
   };
 }
 
+export function outfitOffsetForVariant(instance: SceneCharacter | undefined, variantId: string | undefined): SceneOutfitOffset {
+  if (!instance || !variantId) return { x: 0, y: 0 };
+  const offset = instance.outfitVariantOffsets?.[variantId];
+  return {
+    x: Number.isFinite(offset?.x) ? offset!.x : 0,
+    y: Number.isFinite(offset?.y) ? offset!.y : 0,
+  };
+}
+
 export function characterForSceneOutfit(character: Character, instance: SceneCharacter | undefined, catalog: PcCatalogItem[]) {
   const pose = sceneOutfitPose(character, instance, catalog);
-  if (!pose.variant || pose.variant.id === character.selections.roupas) return character;
-  return { ...character, selections: { ...character.selections, roupas: pose.variant.id } };
+  if (!pose.variant) return character;
+  const offset = outfitOffsetForVariant(instance, pose.variant.id);
+  const hasOffset = offset.x !== 0 || offset.y !== 0;
+  if (pose.variant.id === character.selections.roupas && !hasOffset) return character;
+  const baseTransform = character.adjustments.roupas ?? { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
+  return {
+    ...character,
+    selections: { ...character.selections, roupas: pose.variant.id },
+    adjustments: {
+      ...character.adjustments,
+      roupas: {
+        ...baseTransform,
+        x: (baseTransform.x ?? 0) + offset.x,
+        y: (baseTransform.y ?? 0) + offset.y,
+      },
+    },
+  };
 }
 
 export function sceneOutfitCacheKey(character: Character, instance: SceneCharacter | undefined, catalog: PcCatalogItem[]) {
-  return sceneOutfitPose(character, instance, catalog).variant?.id ?? character.selections.roupas ?? "none";
+  const variantId = sceneOutfitPose(character, instance, catalog).variant?.id ?? character.selections.roupas ?? "none";
+  const offset = outfitOffsetForVariant(instance, variantId);
+  return `${variantId}:${offset.x}:${offset.y}`;
 }

@@ -24,6 +24,8 @@ export type StudioBackground = {
   scale?: number;
 };
 
+export type SceneOutfitOffset = { x: number; y: number };
+
 export type SceneCharacter = {
   id: string;
   characterId: string;
@@ -36,6 +38,8 @@ export type SceneCharacter = {
   /** Grupo/variante da roupa escolhida apenas nesta instância do Studio. */
   outfitGroupId?: string;
   outfitVariantIndex?: number;
+  /** Correções de posição da roupa, isoladas por variante e por Studio. */
+  outfitVariantOffsets?: Record<string, SceneOutfitOffset>;
   z: number;
 };
 

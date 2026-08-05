@@ -12,7 +12,7 @@ import { StudioInspector } from "./components/StudioInspector";
 import { StudioRoster } from "./components/StudioRoster";
 import { StudioToolbar } from "./components/StudioToolbar";
 import { StudioBackgroundLibrary } from "./components/StudioBackgroundLibrary";
-import { characterForSceneOutfit, cycleSceneOutfitPose, sceneOutfitCacheKey, sceneOutfitPose } from "./outfit-variants";
+import { characterForSceneOutfit, cycleSceneOutfitPose, outfitOffsetForVariant, sceneOutfitCacheKey, sceneOutfitPose } from "./outfit-variants";
 import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./history";
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
 import { renderStudioSceneToCanvas, studioCanvasToPng } from "./scene-print-renderer";
@@ -303,7 +303,7 @@ export default function StudioPage() {
   });
 
   const characterRenderSignature = studio
-    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}`).join(",")}`
+    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}:${JSON.stringify(item.outfitVariantOffsets ?? {})}`).join(",")}`
     : "";
 
   const renderCacheKey = useCallback((character: Character, emotion: string, state: string, instance?: SceneCharacter) =>
@@ -448,6 +448,28 @@ export default function StudioPage() {
       outfitVariantIndex: result.instance.outfitVariantIndex,
     }));
     setNotice(`${result.variant.outfitGroupName ?? result.variant.name}: Pose ${result.index + 1}/${result.variants.length}`);
+  }
+
+  function nudgeSelectedOutfit(dx: number, dy: number) {
+    if (!studio || selection?.kind !== "character") return;
+    const instance = studio.characters.find((item) => item.id === selection.id);
+    const character = instance ? charactersById.get(instance.characterId) : undefined;
+    if (!instance || !character) return;
+    const pose = sceneOutfitPose(character, instance, data.catalog);
+    const variantId = pose.variant?.id;
+    if (!variantId) {
+      setNotice("Este personagem não possui uma roupa selecionada");
+      return;
+    }
+    const current = outfitOffsetForVariant(instance, variantId);
+    const nextOffsets = {
+      ...(instance.outfitVariantOffsets ?? {}),
+      [variantId]: {
+        x: Math.max(-1000, Math.min(1000, current.x + dx)),
+        y: Math.max(-1000, Math.min(1000, current.y + dy)),
+      },
+    };
+    updateStudio((item) => updateSceneElement(item, "character", instance.id, { outfitVariantOffsets: nextOffsets }));
   }
 
   function beginDrag(event: ReactPointerEvent, kind: NonNullable<Selection>["kind"], id: string, x: number, y: number) {
@@ -836,9 +858,10 @@ export default function StudioPage() {
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
   const selectedPose = selectedCharacter && selectedCharacterSource
     ? sceneOutfitPose(selectedCharacterSource, selectedCharacter, data.catalog)
-    : { variants: [], index: 0 };
+    : { groupId: null, variants: [], variant: null, index: 0 };
   const poseLabel = selectedPose.variants.length > 1 ? `Pose ${selectedPose.index + 1}/${selectedPose.variants.length}` : "Pose";
   const poseDisabled = selectedPose.variants.length < 2;
+  const outfitAdjustDisabled = !selectedPose.variant;
   return (
     <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
       <StudioCanvas
@@ -903,6 +926,8 @@ export default function StudioPage() {
             onPose={cycleSelectedPose}
             poseLabel={poseLabel}
             poseDisabled={poseDisabled}
+            onNudgeOutfit={nudgeSelectedOutfit}
+            outfitAdjustDisabled={outfitAdjustDisabled}
           /></div>
           <StudioRoster
             rosterIds={studio.rosterIds}

@@ -72,11 +72,22 @@ function normalizeStudio(value) {
   } : null;
   const characters = list(source.characters).map((character) => {
     const item = record(character);
-    const { outfitGroupId: rawGroupId, outfitVariantIndex: rawVariantIndex, ...rest } = item;
+    const { outfitGroupId: rawGroupId, outfitVariantIndex: rawVariantIndex, outfitVariantOffsets: rawOffsets, ...rest } = item;
+    const outfitVariantOffsets = Object.fromEntries(
+      Object.entries(record(rawOffsets)).flatMap(([id, value]) => {
+        const offset = record(value);
+        const x = Number(offset.x);
+        const y = Number(offset.y);
+        return id && Number.isFinite(x) && Number.isFinite(y)
+          ? [[id, { x: Math.max(-1000, Math.min(1000, x)), y: Math.max(-1000, Math.min(1000, y)) }]]
+          : [];
+      }),
+    );
     return {
       ...rest,
       ...(typeof rawGroupId === "string" && rawGroupId ? { outfitGroupId: rawGroupId } : {}),
       ...(Number.isInteger(rawVariantIndex) && rawVariantIndex >= 0 ? { outfitVariantIndex: rawVariantIndex } : {}),
+      ...(Object.keys(outfitVariantOffsets).length ? { outfitVariantOffsets } : {}),
     };
   });
   return {

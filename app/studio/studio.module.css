@@ -575,6 +575,16 @@
 .inspector .inspectorPoseButton { border-color:#c94e7c; background:linear-gradient(145deg,#e878a4,#cb4e7d); box-shadow:0 7px 15px rgba(203,78,125,.22); }
 .inspector .inspectorPoseButton:hover { border-color:#c64a76; background:linear-gradient(145deg,#ef87ae,#d95786); }
 .inspector .inspectorPoseButton:disabled { opacity:.5; cursor:not-allowed; }
+.outfitAdjustToggle { width:100%; margin-top:8px; padding:9px 12px; border:1px solid #d9a7bb; border-radius:12px; background:#fff8fb; color:#8f4c69; font-size:12px; font-weight:850; cursor:pointer; }
+.outfitAdjustToggle:hover { background:#ffeaf2; border-color:#d4779c; }
+.outfitNudge { margin-top:7px; padding:9px; border:1px solid #ead2dc; border-radius:12px; background:rgba(255,248,251,.86); text-align:center; }
+.outfitNudge > span { display:block; margin-bottom:6px; color:#8f4c69; font-size:10px; font-weight:850; text-transform:uppercase; letter-spacing:.08em; }
+.outfitNudgeGrid { display:grid; grid-template-columns:repeat(3, 34px); justify-content:center; gap:4px; }
+.outfitNudgeGrid button { width:34px; height:28px; padding:0; border:1px solid #d9a7bb; border-radius:8px; background:white; color:#8f4c69; font-size:16px; font-weight:900; cursor:pointer; }
+.outfitNudgeGrid button:first-child { grid-column:2; }
+.outfitNudgeGrid button:last-child { grid-column:2; }
+.outfitNudgeGrid button:hover:not(:disabled) { background:#ffeaf2; border-color:#d4779c; }
+.outfitNudgeGrid button:disabled { opacity:.45; cursor:not-allowed; }
 .inspector .inspectorPrintButton:hover { border-color: #c64a76; background: linear-gradient(145deg, #ef87ae, #d95786); }
 .inspector .inspectorPrintButton:disabled { opacity: .65; cursor: wait; }
 .inspectorTitle span,

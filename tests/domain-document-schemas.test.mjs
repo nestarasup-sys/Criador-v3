@@ -61,11 +61,12 @@ test("normaliza transformação de fundo nova e preserva a classificação dos a
 
 test("preserva pose da roupa por instância do Studio e descarta índice inválido", () => {
   const normalized = normalizeAppState({ studios: [{ id: "studio-pose", characters: [
-    { id: "scene-1", characterId: "char-1", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-1", outfitVariantIndex: 4 },
+    { id: "scene-1", characterId: "char-1", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-1", outfitVariantIndex: 4, outfitVariantOffsets: { "outfit-1": { x: 12, y: -8 }, invalid: { x: "no", y: 4 } } },
     { id: "scene-2", characterId: "char-2", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-2", outfitVariantIndex: -1 },
   ], objects: [], bubbles: [], narrators: [] }] });
   assert.equal(normalized.studios[0].characters[0].outfitGroupId, "outfit-1");
   assert.equal(normalized.studios[0].characters[0].outfitVariantIndex, 4);
+  assert.deepEqual(normalized.studios[0].characters[0].outfitVariantOffsets, { "outfit-1": { x: 12, y: -8 } });
   assert.equal("outfitVariantIndex" in normalized.studios[0].characters[1], false);
 });
 
