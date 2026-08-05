@@ -2628,6 +2628,31 @@ export default function Home() {
     setNotice("Encaixe salvo como padrão deste item");
   }
 
+  function applyStandardOutfitAdjustment() {
+    if (category !== "roupas" || !selectedOutfit?.outfitGroupId) return;
+    const groupItems = modelOutfits
+      .filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
+      .sort((left, right) => (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0));
+    if (groupItems.length < 2) return;
+
+    const standardItem = groupItems.find((item) => (item.outfitVariantIndex ?? 0) === 0) ?? groupItems[0];
+    const standardKey = outfitStateKey(standardItem.id, basePackId);
+    const standardTransform = standardItem.id === selectedOutfit.id
+      ? normalizeTransform(adjustments.roupas)
+      : normalizeTransform(
+          outfitAdjustmentsByBasePack[standardKey]
+            ?? standardItem.fit
+            ?? suggestedFit(standardItem, model),
+        );
+    const nextAdjustments = { ...outfitAdjustmentsByBasePack };
+    for (const item of groupItems) {
+      nextAdjustments[outfitStateKey(item.id, basePackId)] = { ...standardTransform };
+    }
+    setOutfitAdjustmentsByBasePack(nextAdjustments);
+    setAdjustments((current) => ({ ...current, roupas: { ...standardTransform } }));
+    setNotice(`Ajustes da padrão aplicados às ${groupItems.length} versões da roupa`);
+  }
+
   function canvasPoint(event: ReactPointerEvent<HTMLCanvasElement>) {
     const bounds = event.currentTarget.getBoundingClientRect();
     const finalX = ((event.clientX - bounds.left) / bounds.width) * 1920;
@@ -3834,7 +3859,10 @@ export default function Home() {
               <label className="color-range"><span>Brilho</span><input type="range" min="25" max="175" value={activeColor.brightness} onChange={(event) => updateColorAdjustment({ brightness: Number(event.target.value) })} /><strong>{activeColor.brightness}%</strong></label>
               <div className="color-options">
                 {(category === "cabelos" || category === "cabelosTras") && <label><input type="checkbox" checked={syncHairColor} onChange={(event) => setSyncHairColor(event.target.checked)} /> Aplicar ao par</label>}
-                {category === "roupas" && <button className="protect-color-button" onClick={openColorProtectionEditor}>{protectionMasks.roupas ? "Editar áreas protegidas" : "Proteger pele e detalhes"}</button>}
+                {category === "roupas" && <>
+                  <button className="protect-color-button" onClick={openColorProtectionEditor}>{protectionMasks.roupas ? "Editar áreas protegidas" : "Proteger pele e detalhes"}</button>
+                  {selectedOutfit?.outfitGroupId && activeOutfitVariantCount > 1 && <button className="protect-color-button" onClick={applyStandardOutfitAdjustment}>Ajustar para padrão</button>}
+                </>}
               </div>
             </section>
           )}
