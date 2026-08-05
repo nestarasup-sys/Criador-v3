@@ -147,6 +147,7 @@ test("shows each pack's supported Studio expressions and copies bubble text", as
   assert.match(inspector, /onPrint/);
   assert.match(inspector, /onNudgeOutfit/);
   assert.match(inspector, /Ajustar/);
+  assert.ok(inspector.indexOf("outfitAdjustToggle") < inspector.indexOf("Espelhar personagem"));
   assert.match(css, /grid-template-columns:\s*210px 220px/);
   assert.match(css, /\.textFieldHeading/);
 });
