@@ -59,6 +59,16 @@ test("normaliza transformação de fundo nova e preserva a classificação dos a
   assert.deepEqual(legacy.studios[0].background, { assetId: "", src: "/old.png", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 });
 });
 
+test("preserva pose da roupa por instância do Studio e descarta índice inválido", () => {
+  const normalized = normalizeAppState({ studios: [{ id: "studio-pose", characters: [
+    { id: "scene-1", characterId: "char-1", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-1", outfitVariantIndex: 4 },
+    { id: "scene-2", characterId: "char-2", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-2", outfitVariantIndex: -1 },
+  ], objects: [], bubbles: [], narrators: [] }] });
+  assert.equal(normalized.studios[0].characters[0].outfitGroupId, "outfit-1");
+  assert.equal(normalized.studios[0].characters[0].outfitVariantIndex, 4);
+  assert.equal("outfitVariantIndex" in normalized.studios[0].characters[1], false);
+});
+
 test("estado de Roteiros v1 moderno faz round-trip e mantém campos futuros", () => {
   const document = {
     version: 1,

@@ -5,7 +5,7 @@ type StudioRosterProps = {
   rosterIds: string[];
   charactersById: Map<string, Character>;
   rendered: Record<string, string>;
-  renderCacheKey: (character: Character, emotion: string, state: string) => string;
+  renderCacheKey: (character: Character, emotion: string, state: string, instance?: SceneCharacter) => string;
   selection: Selection;
   onSelectCharacter: (characterId: string) => void;
   onEditRoster: () => void;
@@ -26,7 +26,7 @@ export function StudioRoster({ rosterIds, charactersById, rendered, renderCacheK
       if (!character) return null;
       const instance = findInstance(id);
       const active = selection?.kind === "character" && selection.id === instance?.id;
-      const rosterSource = rendered[renderCacheKey(character, character.expressionEmotion ?? "normal", character.expressionState ?? "default")] ?? character.photoUrl ?? character.photoDataUrl;
+      const rosterSource = rendered[renderCacheKey(character, instance?.expressionEmotion ?? character.expressionEmotion ?? "normal", instance?.expressionState ?? character.expressionState ?? "default", instance)] ?? character.photoUrl ?? character.photoDataUrl;
       return <button key={id} className={`${styles.rosterCard} ${active ? styles.activeRoster : ""}`} onClick={() => onSelectCharacter(id)}>{rosterSource ? <img src={rosterSource} alt="" /> : <span>{character.model === "feminino" ? "F" : "M"}</span>}<strong>{character.name}</strong><i className={instance ? styles.onStage : ""}>{instance ? "●" : "+"}</i></button>;
     })}</div>
   </section>;

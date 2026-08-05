@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject, type CSSProperties } from "react";
 import styles from "../studio.module.css";
-import type { Character, Selection, Studio } from "../types";
+import type { Character, SceneCharacter, Selection, Studio } from "../types";
 import { STUDIO_CHARACTER_HEIGHT, STUDIO_OBJECT_WIDTH, STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "../scene-layout.mjs";
 
 type StudioCanvasProps = {
@@ -9,7 +9,7 @@ type StudioCanvasProps = {
   charactersById: Map<string, Character>;
   rendered: Record<string, string>;
   selection: Selection;
-  renderCacheKey: (character: Character, emotion: string, state: string) => string;
+  renderCacheKey: (character: Character, emotion: string, state: string, instance?: SceneCharacter) => string;
   onStagePointerDown: () => void;
   onBeginDrag: (event: ReactPointerEvent, kind: NonNullable<Selection>["kind"], id: string, x: number, y: number) => void;
   characterPositionsLocked: boolean;

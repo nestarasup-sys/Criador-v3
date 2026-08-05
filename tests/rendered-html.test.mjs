@@ -375,7 +375,7 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
 });
 
 test("keeps Studio scene operations, history and print rendering in shared modules", async () => {
-  const [page, ops, history, canvas, printRenderer, layout, characterRenderer, css] = await Promise.all([
+  const [page, ops, history, canvas, printRenderer, layout, characterRenderer, css, outfitVariants] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-ops.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/history.ts", import.meta.url), "utf8"),
@@ -384,6 +384,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
     readFile(new URL("../app/studio/scene-layout.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/outfit-variants.ts", import.meta.url), "utf8"),
   ]);
   assert.match(page, /renderStudioSceneToCanvas/);
   assert.match(page, /pushStudioHistory/);
@@ -403,6 +404,10 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(characterRenderer, /cleanEdges|false, true/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
   assert.match(printRenderer, /studioCanvasToPng/);
+  assert.match(page, /cycleSelectedPose/);
+  assert.match(page, /characterForSceneOutfit/);
+  assert.match(outfitVariants, /cycleSceneOutfitPose/);
+  assert.match(outfitVariants, /outfitGroupId/);
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {

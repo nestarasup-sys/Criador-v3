@@ -33,6 +33,9 @@ export type SceneCharacter = {
   flipX: boolean;
   expressionEmotion: Emotion;
   expressionState: ExpressionState;
+  /** Grupo/variante da roupa escolhida apenas nesta instância do Studio. */
+  outfitGroupId?: string;
+  outfitVariantIndex?: number;
   z: number;
 };
 

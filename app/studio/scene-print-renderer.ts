@@ -4,6 +4,7 @@ import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack, SceneBu
 import { loadStudioImage } from "./image-loader";
 import { backgroundRect, characterRect, objectRect, STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
 import { configureHighQualityContext } from "./render-quality";
+import { characterForSceneOutfit } from "./outfit-variants";
 
 export function loadStudioCanvasImage(src: string) {
   return loadStudioImage(src);
@@ -21,7 +22,7 @@ type StudioPrintOptions = {
   studio: Studio;
   charactersById: Map<string, Character>;
   rendered: Record<string, string>;
-  renderCacheKey: (character: Character, emotion: string, state: string) => string;
+  renderCacheKey: (character: Character, emotion: string, state: string, instance?: import("./types").SceneCharacter) => string;
   catalog: PcCatalogItem[];
   expressionPacks: PcExpressionPack[];
   renderCharacter?: PrintCharacterRenderer;
@@ -56,9 +57,10 @@ export async function renderStudioSceneToCanvas({ studio, charactersById, render
   for (const element of elements) {
     if (element.kind === "character") {
       const character = charactersById.get(element.item.characterId);
-      const cacheKey = character ? renderCacheKey(character, element.item.expressionEmotion, element.item.expressionState) : "";
+      const sceneCharacter = character ? characterForSceneOutfit(character, element.item, catalog) : null;
+      const cacheKey = character ? renderCacheKey(character, element.item.expressionEmotion, element.item.expressionState, element.item) : "";
       const src = character
-        ? rendered[cacheKey] ?? await renderCharacter(character, expressionKey(element.item.expressionEmotion, element.item.expressionState), catalog, expressionPacks)
+        ? rendered[cacheKey] ?? await renderCharacter(sceneCharacter ?? character, expressionKey(element.item.expressionEmotion, element.item.expressionState), catalog, expressionPacks)
         : undefined;
       if (!src) continue;
       const image = await loadImage(src);

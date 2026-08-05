@@ -70,11 +70,20 @@ function normalizeStudio(value) {
     offsetY: Number.isFinite(Number(backgroundSource.offsetY)) ? Math.max(-10000, Math.min(10000, Number(backgroundSource.offsetY))) : 0,
     scale: Number.isFinite(Number(backgroundSource.scale)) ? Math.max(.1, Math.min(8, Number(backgroundSource.scale))) : 1,
   } : null;
+  const characters = list(source.characters).map((character) => {
+    const item = record(character);
+    const { outfitGroupId: rawGroupId, outfitVariantIndex: rawVariantIndex, ...rest } = item;
+    return {
+      ...rest,
+      ...(typeof rawGroupId === "string" && rawGroupId ? { outfitGroupId: rawGroupId } : {}),
+      ...(Number.isInteger(rawVariantIndex) && rawVariantIndex >= 0 ? { outfitVariantIndex: rawVariantIndex } : {}),
+    };
+  });
   return {
     ...source,
     background,
     rosterIds: list(source.rosterIds),
-    characters: list(source.characters),
+    characters,
     objects: list(source.objects),
     bubbles: list(source.bubbles),
     narrators: list(source.narrators),

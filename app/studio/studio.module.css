@@ -570,6 +570,11 @@
   color: #fff;
   box-shadow: 0 7px 15px rgba(203,78,125,.22);
 }
+.inspectorActionRow { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:9px; }
+.inspectorActionRow button { width:100%; min-width:0; padding:12px 6px; border:1px solid #d95e88; border-radius:13px; color:#fff; font-size:12px; font-weight:850; cursor:pointer; }
+.inspector .inspectorPoseButton { border-color:#c94e7c; background:linear-gradient(145deg,#e878a4,#cb4e7d); box-shadow:0 7px 15px rgba(203,78,125,.22); }
+.inspector .inspectorPoseButton:hover { border-color:#c64a76; background:linear-gradient(145deg,#ef87ae,#d95786); }
+.inspector .inspectorPoseButton:disabled { opacity:.5; cursor:not-allowed; }
 .inspector .inspectorPrintButton:hover { border-color: #c64a76; background: linear-gradient(145deg, #ef87ae, #d95786); }
 .inspector .inspectorPrintButton:disabled { opacity: .65; cursor: wait; }
 .inspectorTitle span,

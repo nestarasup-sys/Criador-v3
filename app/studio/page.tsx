@@ -12,6 +12,7 @@ import { StudioInspector } from "./components/StudioInspector";
 import { StudioRoster } from "./components/StudioRoster";
 import { StudioToolbar } from "./components/StudioToolbar";
 import { StudioBackgroundLibrary } from "./components/StudioBackgroundLibrary";
+import { characterForSceneOutfit, cycleSceneOutfitPose, sceneOutfitCacheKey, sceneOutfitPose } from "./outfit-variants";
 import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./history";
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
 import { renderStudioSceneToCanvas, studioCanvasToPng } from "./scene-print-renderer";
@@ -302,11 +303,11 @@ export default function StudioPage() {
   });
 
   const characterRenderSignature = studio
-    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}`).join(",")}`
+    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}`).join(",")}`
     : "";
 
-  const renderCacheKey = useCallback((character: Character, emotion: string, state: string) =>
-    `${character.id}:${character.updatedAt}:${emotion}:${state}`, []);
+  const renderCacheKey = useCallback((character: Character, emotion: string, state: string, instance?: SceneCharacter) =>
+    `${character.id}:${character.updatedAt}:${emotion}:${state}:${sceneOutfitCacheKey(character, instance, data.catalog)}`, [data.catalog]);
 
   useEffect(() => {
     const activeStudio = studiosRef.current.find((item) => item.id === currentId);
@@ -316,11 +317,14 @@ export default function StudioPage() {
     const requested = new Map<string, { character: Character; emotion: string; state: string }>();
     for (const id of activeStudio.rosterIds) {
       const character = charactersById.get(id);
-      if (character) requested.set(renderCacheKey(character, character.expressionEmotion ?? "normal", character.expressionState ?? "default"), { character, emotion: character.expressionEmotion ?? "normal", state: character.expressionState ?? "default" });
+      const instance = activeStudio.characters.find((item) => item.characterId === id);
+      const emotion = instance?.expressionEmotion ?? character?.expressionEmotion ?? "normal";
+      const state = instance?.expressionState ?? character?.expressionState ?? "default";
+      if (character) requested.set(renderCacheKey(character, emotion, state, instance), { character: characterForSceneOutfit(character, instance, data.catalog), emotion, state });
     }
     for (const instance of activeStudio.characters) {
       const character = charactersById.get(instance.characterId);
-      if (character) requested.set(renderCacheKey(character, instance.expressionEmotion, instance.expressionState), { character, emotion: instance.expressionEmotion, state: instance.expressionState });
+      if (character) requested.set(renderCacheKey(character, instance.expressionEmotion, instance.expressionState, instance), { character: characterForSceneOutfit(character, instance, data.catalog), emotion: instance.expressionEmotion, state: instance.expressionState });
     }
     const activeKeys = new Set(requested.keys());
     if (Object.keys(renderedRef.current).some((key) => !activeKeys.has(key))) {
@@ -416,14 +420,34 @@ export default function StudioPage() {
     }
     const character = charactersById.get(characterId);
     if (!character) return;
+    const selectedOutfit = data.catalog.find((item) => item.id === character.selections.roupas && item.category === "roupas");
     const instance: SceneCharacter = {
       id: crypto.randomUUID(), characterId, x: .5, y: .58, scale: .82, flipX: false,
       expressionEmotion: character.expressionEmotion ?? "normal",
-      expressionState: character.expressionState ?? "default", z: nextZ(studio),
+      expressionState: character.expressionState ?? "default",
+      ...(selectedOutfit?.outfitGroupId ? { outfitGroupId: selectedOutfit.outfitGroupId, outfitVariantIndex: selectedOutfit.outfitVariantIndex ?? 0 } : {}),
+      z: nextZ(studio),
     };
     updateStudio((item) => ({ ...item, characters: [...item.characters, instance] }));
     setSelection({ kind: "character", id: instance.id });
     setDockSide("right");
+  }
+
+  function cycleSelectedPose() {
+    if (!studio || selection?.kind !== "character") return;
+    const instance = studio.characters.find((item) => item.id === selection.id);
+    const character = instance ? charactersById.get(instance.characterId) : undefined;
+    if (!instance || !character) return;
+    const result = cycleSceneOutfitPose(character, instance, data.catalog);
+    if (!result) {
+      setNotice("A roupa atual não possui variantes de pose");
+      return;
+    }
+    updateStudio((item) => updateSceneElement(item, "character", instance.id, {
+      outfitGroupId: result.instance.outfitGroupId,
+      outfitVariantIndex: result.instance.outfitVariantIndex,
+    }));
+    setNotice(`${result.variant.outfitGroupName ?? result.variant.name}: Pose ${result.index + 1}/${result.variants.length}`);
   }
 
   function beginDrag(event: ReactPointerEvent, kind: NonNullable<Selection>["kind"], id: string, x: number, y: number) {
@@ -810,6 +834,11 @@ export default function StudioPage() {
   const selectedBubble = (selection?.kind === "bubble" ? studio.bubbles.find((item) => item.id === selection.id) : null) ?? null;
   const selectedNarrator = (selection?.kind === "narrator" ? studio.narrators.find((item) => item.id === selection.id) : null) ?? null;
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
+  const selectedPose = selectedCharacter && selectedCharacterSource
+    ? sceneOutfitPose(selectedCharacterSource, selectedCharacter, data.catalog)
+    : { variants: [], index: 0 };
+  const poseLabel = selectedPose.variants.length > 1 ? `Pose ${selectedPose.index + 1}/${selectedPose.variants.length}` : "Pose";
+  const poseDisabled = selectedPose.variants.length < 2;
   return (
     <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
       <StudioCanvas
@@ -871,6 +900,9 @@ export default function StudioPage() {
             onDuplicate={duplicateSelected}
             onPrint={() => { void printScene(); }}
             isPrinting={isPrinting}
+            onPose={cycleSelectedPose}
+            poseLabel={poseLabel}
+            poseDisabled={poseDisabled}
           /></div>
           <StudioRoster
             rosterIds={studio.rosterIds}
