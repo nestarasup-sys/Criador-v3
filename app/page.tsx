@@ -2221,6 +2221,7 @@ export default function Home() {
 
   async function removeActiveExpressionPack() {
     if (!activeExpressionPack) return;
+    if (!window.confirm(`Excluir o pack de expressões “${activeExpressionPack.name}”?`)) return;
     await deleteExpressionPack(activeExpressionPack.id);
     activeExpressionPack.frames.forEach((frame) => {
       if (frame.url) URL.revokeObjectURL(frame.url);
@@ -2951,6 +2952,10 @@ export default function Home() {
   }
 
   async function removeItem(item: CatalogItem) {
+    const extraMessage = item.category === "cabelos"
+      ? " O vínculo com o cabelo traseiro também será removido."
+      : "";
+    if (!window.confirm(`Excluir “${item.name}” do catálogo?${extraMessage}`)) return;
     await deleteCatalogItem(item.id);
     const unlinkedBackHairs = item.category === "cabelos"
       ? catalog
@@ -3085,6 +3090,8 @@ export default function Home() {
 
   async function removeCharacter(id: string) {
     const character = characters.find((entry) => entry.id === id);
+    if (!character) return;
+    if (!window.confirm(`Excluir o personagem “${character.name}”? Essa ação não pode ser desfeita.`)) return;
     if (character?.expressionPackId) {
       await deleteExpressionPack(character.expressionPackId);
       setExpressionPacks((current) => current.filter((pack) => pack.id !== character.expressionPackId));
