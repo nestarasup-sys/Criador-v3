@@ -107,3 +107,21 @@ test("serializa gravações concorrentes e mantém um estado JSON válido", asyn
     assert.equal((await readdir(root)).filter((name) => name.includes(".tmp-")).length, 0);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("gera blocos de abertura com instrução de pré-vídeo", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-opening-"));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/generate", {
+      opening: true,
+      settings: { aiProvider: "none" },
+      characters: [{ id: "char-1", name: "Nymi" }],
+      section: { description: "Eles conversam antes de apertar o play.", reactionBlocks: [{ id: "block-1", characterId: "char-1", type: "speech", text: "", emotion: "" }] },
+      targetIndices: [0], mode: "fill-empty",
+    });
+    // Com IA desligada a rota deve recusar de forma acionável, sem tratar a abertura como vídeo.
+    assert.equal(response.status, 400);
+    assert.match(response.value.error, /IA|LM Studio|Ollama|provedor|desativada/i);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

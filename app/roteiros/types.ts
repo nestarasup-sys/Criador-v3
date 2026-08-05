@@ -4,6 +4,7 @@ export type {
   AiProvider,
   GeneratedReaction,
   GlobalRule,
+  OpeningSection,
   NarrativeProfile,
   NarrativeRelationship,
   PremiumCharacter,

@@ -1,5 +1,6 @@
 import type {
   GlobalRule,
+  OpeningSection,
   NarrativeProfile,
   ReactionBlock,
   ReactionBlockType,
@@ -78,6 +79,13 @@ export function createTikTokSection(blockCount = 6, shortLines = false): TikTokS
     createdAt: timestamp,
     updatedAt: timestamp,
   };
+}
+
+export function createOpeningSection(blockCount = 6, shortLines = false): OpeningSection {
+  const section = createTikTokSection(blockCount, shortLines);
+  const opening = { ...section };
+  delete opening.video;
+  return opening;
 }
 
 export function createScriptProject(title: string, characterIds: string[]): ScriptProject {

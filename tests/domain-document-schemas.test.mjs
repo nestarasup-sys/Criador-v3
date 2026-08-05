@@ -61,6 +61,20 @@ test("estado de Roteiros v1 moderno faz round-trip e mantém campos futuros", ()
   assert.equal(parseRoteirosState(document).success, true);
 });
 
+test("abertura opcional é preservada sem vídeo e continua compatível com roteiros antigos", () => {
+  const document = {
+    version: 1, profiles: [], globalRules: [], settings: {}, scripts: [{
+      id: "script-opening", title: "Abertura", generalContext: "", participants: [],
+      opening: { id: "opening-1", title: "", description: "Eles se reúnem antes do vídeo.", timeline: "present", sceneGoal: "", userInstruction: "", specificRules: "", shortLines: false, video: { name: "nao-deve-ser-preservado" }, reactionBlocks: [{ id: "block-1", characterId: "char-1", type: "speech", emotion: "", text: "Vamos começar.", englishText: "", createdAt: "", updatedAt: "" }], createdAt: "", updatedAt: "" },
+      tiktoks: [], createdAt: "", updatedAt: "",
+    }],
+  };
+  const normalized = normalizeRoteirosState(document);
+  assert.equal(normalized.scripts[0].opening.description, "Eles se reúnem antes do vídeo.");
+  assert.equal("video" in normalized.scripts[0].opening, false);
+  assert.equal(parseRoteirosState(normalized).success, true);
+});
+
 test("schemas relatam documentos inválidos sem impedir normalização recuperável", () => {
   const app = parseAppState({ version: 99, characters: "erro", studios: [{ name: "sem id" }] });
   assert.equal(app.success, false);

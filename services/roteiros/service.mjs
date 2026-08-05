@@ -369,12 +369,15 @@ async function improveContext(body) {
 }
 
 async function generateReactions(body) {
-  const section = body.section || {};
+  const opening = body.opening === true;
+  const section = opening
+    ? { ...(body.section || {}), description: `ABERTURA ANTES DOS VÍDEOS (não reaja a um vídeo ainda não iniciado):\n${body.section?.description || ""}` }
+    : (body.section || {});
   const targetIndices = Array.isArray(body.targetIndices) ? body.targetIndices : [];
   const characterIds = (body.characters || []).map((character) => character.id).filter(Boolean);
   if (!characterIds.length) throw new Error("Selecione pelo menos um personagem ativo.");
   if (!targetIndices.length) throw new Error("Não há blocos para gerar.");
-  if (!String(section.description || "").trim()) throw new Error("Escreva a descrição do TikTok antes de gerar.");
+  if (!String(section.description || "").trim()) throw new Error(opening ? "Descreva a abertura antes de gerar." : "Escreva a descrição do TikTok antes de gerar.");
   const targets = targetIndices.map((index) => ({ index, block: section.reactionBlocks?.[index] || {} }));
   const existing = body.mode === "replace-all" ? [] : (section.reactionBlocks || []).filter((block) => block.characterId && (block.text || block.emotion));
   const prompt = `Crie EXATAMENTE ${targetIndices.length} blocos novos de uma sala de reação. A sequência deve parecer uma conversa contínua.\n\nMODO:\n${body.mode === "replace-all" ? "Substituir todos os blocos." : "Preencher somente os blocos vazios."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${body.generalContext || "Não informado."}\n\nREGRAS PERSONALIZADAS GLOBAIS:\n${rulesText(body.globalRules)}\n\nHISTÓRICO RECENTE:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO LITERAL DO VÍDEO:\n${section.description}\n\nOBJETIVO:\n${section.sceneGoal || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nREGRAS ESPECÍFICAS DESTE TIKTOK:\n${section.specificRules || "Nenhuma."}\n\nINSTRUÇÃO ADICIONAL:\n${section.userInstruction || "Nenhuma."}\n\nREAÇÕES EXISTENTES:\n${JSON.stringify(existing)}\n\nBLOCOS ALVO (preserve personagem/tipo quando já escolhidos):\n${JSON.stringify(targets)}\n\n${PROTECTED_RULES}\n\nDIVERSIDADE DRAMÁTICA:\nDistribua funções diferentes entre os blocos: dúvida, defesa, suspeita, culpa, ciúme, ironia, medo, proteção, tensão, negação, contraste, silêncio ou percepção.\n${section.shortLines ? "Use falas e pensamentos curtos, preferencialmente com até 12 palavras." : ""}\nRetorne somente JSON: {"reactions":[{"characterId":"id","type":"speech|thought|silent","emotion":"...","text":"..."}]}.`;
@@ -396,7 +399,10 @@ async function generateReactions(body) {
 }
 
 async function blockAction(body) {
-  const section = body.section || {};
+  const opening = body.opening === true;
+  const section = opening
+    ? { ...(body.section || {}), description: `ABERTURA ANTES DOS VÍDEOS (não reaja a um vídeo ainda não iniciado):\n${body.section?.description || ""}` }
+    : (body.section || {});
   const block = section.reactionBlocks?.[body.blockIndex];
   if (!block?.characterId) throw new Error("Escolha o personagem deste bloco.");
   const characterIds = (body.characters || []).map((character) => character.id).filter(Boolean);

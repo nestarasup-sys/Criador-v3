@@ -167,6 +167,14 @@ function normalizeRoteiroSection(value) {
   };
 }
 
+function normalizeRoteiroOpening(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const normalized = normalizeRoteiroSection(value);
+  const opening = { ...normalized };
+  delete opening.video;
+  return opening;
+}
+
 function normalizeRoteiroScript(value) {
   const source = record(value);
   return {
@@ -178,6 +186,7 @@ function normalizeRoteiroScript(value) {
       const item = record(participant);
       return { ...item, characterId: typeof item.characterId === "string" ? item.characterId : "", active: item.active !== false };
     }),
+    ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
@@ -228,6 +237,10 @@ export function validateRoteirosState(value) {
     const item = record(script);
     validateIdentity(item, `scripts[${index}]`, issues);
     list(item.participants).forEach((participant, participantIndex) => { if (typeof record(participant).characterId !== "string") issues.push(`scripts[${index}].participants[${participantIndex}].characterId inválido`); });
+    if (item.opening !== undefined) {
+      validateIdentity(record(item.opening), `scripts[${index}].opening`, issues);
+      list(record(item.opening).reactionBlocks).forEach((block, blockIndex) => validateIdentity(record(block), `scripts[${index}].opening.reactionBlocks[${blockIndex}]`, issues));
+    }
     list(item.tiktoks).forEach((section, sectionIndex) => {
       validateIdentity(record(section), `scripts[${index}].tiktoks[${sectionIndex}]`, issues);
       list(record(section).reactionBlocks).forEach((block, blockIndex) => validateIdentity(record(block), `scripts[${index}].tiktoks[${sectionIndex}].reactionBlocks[${blockIndex}]`, issues));

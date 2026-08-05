@@ -40,10 +40,12 @@ export type TikTokSection = {
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
   createdAt: string; updatedAt: string;
 };
+/** Cena opcional antes do primeiro TikTok; usa os mesmos blocos narrativos, mas nunca possui vídeo. */
+export type OpeningSection = Omit<TikTokSection, "video">;
 export type ScriptParticipant = { characterId: string; active: boolean };
 export type ScriptProject = {
   id: string; title: string; generalContext: string; participants: ScriptParticipant[];
-  tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
+  opening?: OpeningSection; tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
 };
 export type RoteirosState = {
   version: RoteirosStateVersion;

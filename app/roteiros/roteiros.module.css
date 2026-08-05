@@ -687,6 +687,38 @@
   font-weight:850;
   cursor:pointer;
 }
+.openingIndexCard {
+  overflow:hidden;
+  border:1px solid #e5c77b;
+  border-radius:13px;
+  background:linear-gradient(145deg,#fffdf6,#fff8e7);
+  margin-bottom:12px;
+}
+.openingIndexCard .indexSelect>b {
+  background:#fff0bd;
+  color:#a87511;
+}
+.openingIndexCard .indexSelect i {
+  border-color:#ecd28c;
+  background:#fff9e8;
+  color:#a87511;
+}
+.openingIndexCard>div { display:flex; gap:5px; padding:0 10px 10px; }
+.openingIndexCard>div button {
+  flex:1;
+  border:1px solid #ecd28c;
+  border-radius:7px;
+  padding:5px;
+  background:#fff;
+  color:#9b721f;
+  font-size:9px;
+  cursor:pointer;
+}
+.openingCard .tiktokHeader {
+  background:linear-gradient(135deg,#fffdf5,#fff8e8);
+  border-bottom-color:#ecd28c;
+}
+.openingCard .tiktokHeader>div>span { color:#a87511; }
 .indexCastHeader { padding-top:18px; border-top:1px solid var(--line); }
 .indexCast { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .indexCast article {
