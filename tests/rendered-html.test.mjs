@@ -603,6 +603,10 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /Ajustar para padrão/);
   assert.match(page, /standardItem\.id === selectedOutfit\.id/);
   assert.match(page, /nextAdjustments\[outfitStateKey\(item\.id, basePackId\)\] = \{ \.\.\.standardTransform \};/);
+  assert.match(page, /const standardMask = standardItem\.id === selectedOutfit\.id/);
+  assert.match(page, /nextMasks\[outfitStateKey\(item\.id, basePackId\)\] = cloneMaskStrokes\(standardMask\);/);
+  assert.match(page, /setOutfitLayerMasksByBasePack\(nextMasks\)/);
+  assert.match(page, /setMaskRedo\(\(current\) => \(\{ \.\.\.current, outfit: \[\] \}\)\)/);
   assert.match(page, /O corpo, a cabeça, as mãos e a pele de cada recorte serão preservados/);
   assert.match(css, /\.outfit-mode-switch/);
   assert.match(css, /\.outfit-pose-mapping/);

@@ -171,6 +171,13 @@ function emptyLayerMasks(): LayerMasks {
   return { body: [], hairFront: [], hairBack: [], outfit: [] };
 }
 
+function cloneMaskStrokes(strokes: MaskStroke[]) {
+  return strokes.map((stroke) => ({
+    ...stroke,
+    points: stroke.points.map((point) => ({ ...point })),
+  }));
+}
+
 function normalizeLayerMasks(layerMasks?: StoredLayerMasks, legacyBodyMask?: MaskStroke[]): LayerMasks {
   const legacyHairMask = layerMasks?.hair ?? [];
   return {
@@ -2644,13 +2651,21 @@ export default function Home() {
             ?? standardItem.fit
             ?? suggestedFit(standardItem, model),
         );
+    const standardMask = standardItem.id === selectedOutfit.id
+      ? layerMasks.outfit
+      : outfitLayerMasksByBasePack[standardKey] ?? [];
     const nextAdjustments = { ...outfitAdjustmentsByBasePack };
+    const nextMasks = { ...outfitLayerMasksByBasePack };
     for (const item of groupItems) {
       nextAdjustments[outfitStateKey(item.id, basePackId)] = { ...standardTransform };
+      nextMasks[outfitStateKey(item.id, basePackId)] = cloneMaskStrokes(standardMask);
     }
     setOutfitAdjustmentsByBasePack(nextAdjustments);
+    setOutfitLayerMasksByBasePack(nextMasks);
     setAdjustments((current) => ({ ...current, roupas: { ...standardTransform } }));
-    setNotice(`Ajustes da padrão aplicados às ${groupItems.length} versões da roupa`);
+    setLayerMasks((current) => ({ ...current, outfit: cloneMaskStrokes(standardMask) }));
+    setMaskRedo((current) => ({ ...current, outfit: [] }));
+    setNotice(`Ajustes e borracha da padrão aplicados às ${groupItems.length} versões da roupa`);
   }
 
   function canvasPoint(event: ReactPointerEvent<HTMLCanvasElement>) {
