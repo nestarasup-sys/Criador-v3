@@ -408,6 +408,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(page, /characterForSceneOutfit/);
   assert.match(outfitVariants, /cycleSceneOutfitPose/);
   assert.match(outfitVariants, /outfitGroupId/);
+  assert.match(canvas, /renderCacheKey\(character, instance\.expressionEmotion, instance\.expressionState, instance\)/);
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {
