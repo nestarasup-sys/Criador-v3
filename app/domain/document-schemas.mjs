@@ -59,8 +59,20 @@ function normalizeExpressionPack(value) {
 function normalizeStudio(value) {
   const source = record(value);
   const uiPreferences = record(source.uiPreferences);
+  const backgroundSource = record(source.background);
+  const hasBackground = source.background && typeof source.background === "object" && !Array.isArray(source.background);
+  const background = hasBackground ? {
+    ...backgroundSource,
+    assetId: typeof backgroundSource.assetId === "string" ? backgroundSource.assetId : "",
+    src: typeof backgroundSource.src === "string" ? backgroundSource.src : "",
+    fit: backgroundSource.fit === "contain" ? "contain" : "cover",
+    offsetX: Number.isFinite(Number(backgroundSource.offsetX)) ? Math.max(-10000, Math.min(10000, Number(backgroundSource.offsetX))) : 0,
+    offsetY: Number.isFinite(Number(backgroundSource.offsetY)) ? Math.max(-10000, Math.min(10000, Number(backgroundSource.offsetY))) : 0,
+    scale: Number.isFinite(Number(backgroundSource.scale)) ? Math.max(.1, Math.min(8, Number(backgroundSource.scale))) : 1,
+  } : null;
   return {
     ...source,
+    background,
     rosterIds: list(source.rosterIds),
     characters: list(source.characters),
     objects: list(source.objects),
@@ -88,7 +100,10 @@ export function normalizeAppState(value) {
     catalog: list(source.catalog).map(normalizeCatalogItem),
     expressionPacks: list(source.expressionPacks).map(normalizeExpressionPack),
     studios: list(source.studios).map(normalizeStudio),
-    studioAssets: list(source.studioAssets).map((asset) => ({ ...record(asset) })),
+    studioAssets: list(source.studioAssets).map((asset) => {
+      const item = record(asset);
+      return { ...item, ...(item.kind === "background" || item.kind === "object" ? { kind: item.kind } : {}) };
+    }),
   };
 }
 

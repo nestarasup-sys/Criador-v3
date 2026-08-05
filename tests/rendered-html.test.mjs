@@ -396,7 +396,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(layout, /STUDIO_SCENE_WIDTH = 1920/);
   assert.match(layout, /STUDIO_SCENE_HEIGHT = 1080/);
   assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
-  assert.match(printRenderer, /fitMediaRect/);
+  assert.match(printRenderer, /backgroundRect/);
   assert.match(characterRenderer, /processChromaPixels/);
   assert.match(characterRenderer, /cleanEdges|false, true/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);

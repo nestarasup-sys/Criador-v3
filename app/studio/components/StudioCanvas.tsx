@@ -13,9 +13,11 @@ type StudioCanvasProps = {
   onStagePointerDown: () => void;
   onBeginDrag: (event: ReactPointerEvent, kind: NonNullable<Selection>["kind"], id: string, x: number, y: number) => void;
   characterPositionsLocked: boolean;
+  backgroundEditing: boolean;
+  onBeginBackgroundDrag: (event: ReactPointerEvent) => void;
 };
 
-export function StudioCanvas({ stageRef, studio, charactersById, rendered, selection, renderCacheKey, onStagePointerDown, onBeginDrag, characterPositionsLocked }: StudioCanvasProps) {
+export function StudioCanvas({ stageRef, studio, charactersById, rendered, selection, renderCacheKey, onStagePointerDown, onBeginDrag, characterPositionsLocked, backgroundEditing, onBeginBackgroundDrag }: StudioCanvasProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(0);
   const objects = [...studio.objects].sort((a, b) => a.z - b.z);
@@ -38,7 +40,7 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, selec
 
   return <div ref={viewportRef} className={styles.stageViewport} onPointerDown={onStagePointerDown}>
     <div ref={stageRef} className={styles.stage} data-logical-size={`${STUDIO_SCENE_WIDTH}x${STUDIO_SCENE_HEIGHT}`} style={{ "--studio-preview-scale": previewScale } as CSSProperties}>
-    {studio.background && <img className={`${styles.background} ${studio.background.fit === "contain" ? styles.contain : ""}`} src={studio.background.src} alt="" aria-hidden="true" />}
+    {studio.background && <img className={`${styles.background} ${studio.background.fit === "contain" ? styles.contain : ""} ${backgroundEditing ? styles.backgroundEditing : ""}`} style={{ "--background-offset-x": `${studio.background.offsetX ?? 0}px`, "--background-offset-y": `${studio.background.offsetY ?? 0}px`, "--background-scale": studio.background.scale ?? 1 } as CSSProperties} src={studio.background.src} alt="" aria-hidden="true" onPointerDown={backgroundEditing ? onBeginBackgroundDrag : undefined} />}
     {isEmpty && <div className={styles.emptyStageMessage}>Sua cena começa aqui</div>}
     {objects.map((object) => <img key={object.id} src={object.src} alt={object.name} className={`${styles.sceneObject} ${selection?.kind === "object" && selection.id === object.id ? styles.selected : ""}`} style={{ left: `${object.x * 100}%`, top: `${object.y * 100}%`, width: STUDIO_OBJECT_WIDTH, zIndex: object.z, "--scene-scale": object.scale, "--scene-flip": object.flipX ? -1 : 1 } as CSSProperties} onPointerDown={(event) => onBeginDrag(event, "object", object.id, object.x, object.y)} />)}
     {characters.map((instance) => {

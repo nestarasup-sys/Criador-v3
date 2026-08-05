@@ -71,12 +71,12 @@ export function recordStudioDeletion(id: string) {
   localStorage.setItem(STUDIO_DELETION_KEY, JSON.stringify([...deletions, { id, deletedAt: new Date().toISOString() }]));
 }
 
-async function uploadAssetPayload(id: string, body: Blob, name: string, contentType: string) {
+async function uploadAssetPayload(id: string, body: Blob, name: string, contentType: string, kind?: StudioAsset["kind"]) {
   const response = await pcRequest(`/studio-assets/${encodeURIComponent(id)}`, {
     method: "POST",
     headers: {
       "Content-Type": contentType || body.type || "application/octet-stream",
-      "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name, contentType: contentType || body.type })),
+      "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name, contentType: contentType || body.type, ...(kind ? { kind } : {}) })),
     },
     body,
   });
@@ -181,14 +181,19 @@ function fileToDataUrl(file: File) {
   });
 }
 
-export async function uploadStudioAsset(file: File): Promise<StudioAsset> {
+export async function uploadStudioAsset(file: File, kind: StudioAsset["kind"] = "object"): Promise<StudioAsset> {
   const id = crypto.randomUUID();
   try {
-    const fileUrl = await uploadAssetPayload(id, file, file.name, file.type);
-    return { id, name: file.name, contentType: file.type, fileUrl };
+    const fileUrl = await uploadAssetPayload(id, file, file.name, file.type, kind);
+    return { id, name: file.name, contentType: file.type, fileUrl, kind };
   } catch {
-    return { id, name: file.name, contentType: file.type, fileUrl: await fileToDataUrl(file), localOnly: true };
+    return { id, name: file.name, contentType: file.type, fileUrl: await fileToDataUrl(file), kind, localOnly: true };
   }
+}
+
+export async function deleteStudioAsset(assetId: string) {
+  const response = await pcRequest(`/studio-assets/${encodeURIComponent(assetId)}`, { method: "DELETE" });
+  return response.json() as Promise<{ ok: true }>;
 }
 
 export async function saveStudioPrint(blob: Blob, studioName: string) {

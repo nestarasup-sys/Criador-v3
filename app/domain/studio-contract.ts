@@ -8,7 +8,20 @@ export type StudioAsset = {
   name: string;
   contentType: string;
   fileUrl: string;
+  /** Classificação opcional para distinguir fundos de objetos; assets antigos não possuem este campo. */
+  kind?: "background" | "object";
   localOnly?: boolean;
+};
+
+export type StudioBackground = {
+  assetId: string;
+  src: string;
+  fit: "cover" | "contain";
+  /** Deslocamento em pixels no palco lógico 1920×1080. */
+  offsetX?: number;
+  offsetY?: number;
+  /** Escala adicional aplicada depois do ajuste cover/contain. */
+  scale?: number;
 };
 
 export type SceneCharacter = {
@@ -75,7 +88,7 @@ export type Studio = {
   id: string;
   name: string;
   rosterIds: string[];
-  background: null | { assetId: string; src: string; fit: "cover" | "contain" };
+  background: null | StudioBackground;
   characters: SceneCharacter[];
   objects: SceneObject[];
   bubbles: SceneBubble[];

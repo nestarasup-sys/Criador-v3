@@ -14,6 +14,15 @@ export function fitMediaRect(sourceWidth, sourceHeight, targetWidth, targetHeigh
   return { x: (targetWidth - width) / 2, y: (targetHeight - height) / 2, width, height, scale };
 }
 
+/** Retorna o mesmo retângulo transformado usado pela prévia e pelo Print. */
+export function backgroundRect(sourceWidth, sourceHeight, targetWidth, targetHeight, fit = "cover", scale = 1, offsetX = 0, offsetY = 0) {
+  const base = fitMediaRect(sourceWidth, sourceHeight, targetWidth, targetHeight, fit);
+  const safeScale = Math.max(.1, Math.min(8, Number(scale) || 1));
+  const width = base.width * safeScale;
+  const height = base.height * safeScale;
+  return { x: (targetWidth - width) / 2 + (Number(offsetX) || 0), y: (targetHeight - height) / 2 + (Number(offsetY) || 0), width, height, scale: base.scale * safeScale };
+}
+
 export function characterRect(sourceWidth, sourceHeight, scale = 1) {
   const height = STUDIO_CHARACTER_HEIGHT * scale;
   return { width: height * Math.max(1, sourceWidth) / Math.max(1, sourceHeight), height };

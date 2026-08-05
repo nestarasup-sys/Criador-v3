@@ -7,7 +7,6 @@ type StudioToolbarProps = {
   canRedo: boolean;
   isPrinting: boolean;
   selectedCharacterName?: string;
-  backgroundInput: RefObject<HTMLInputElement | null>;
   objectInput: RefObject<HTMLInputElement | null>;
   onLeave: () => void;
   onSave: () => void;
@@ -18,11 +17,11 @@ type StudioToolbarProps = {
   onPrint: () => void;
   onOpenPrints: () => void;
   onView: () => void;
-  onBackgroundChange: (event: ChangeEvent<HTMLInputElement>) => void;
   onObjectChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onOpenBackgroundLibrary: () => void;
 };
 
-export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterName, backgroundInput, objectInput, onLeave, onSave, onUndo, onRedo, onAddNarrator, onAddBubble, onPrint, onOpenPrints, onView, onBackgroundChange, onObjectChange }: StudioToolbarProps) {
+export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterName, objectInput, onLeave, onSave, onUndo, onRedo, onAddNarrator, onAddBubble, onPrint, onOpenPrints, onView, onObjectChange, onOpenBackgroundLibrary }: StudioToolbarProps) {
   const bubbleTitle = selectedCharacterName ? `Criar balão para ${selectedCharacterName}` : "Criar balão livre; você poderá posicioná-lo depois";
   return <>
     <header className={styles.topbar}>
@@ -32,7 +31,7 @@ export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterN
       </div>
     </header>
     <aside className={styles.leftTools}>
-      <button onClick={() => backgroundInput.current?.click()}><span>▱</span><strong>Fundo</strong></button>
+      <button onClick={onOpenBackgroundLibrary}><span>▱</span><strong>Fundo</strong></button>
       <button onClick={() => objectInput.current?.click()}><span>✦</span><strong>Objetos</strong></button>
       <button onClick={onAddNarrator}><span>☷</span><strong>Narrador</strong></button>
       <button className={styles.bubbleTool} onClick={() => onAddBubble("fala")} title={bubbleTitle}><span>♡</span><strong>Fala</strong></button>
@@ -41,7 +40,6 @@ export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterN
       <button className={styles.printButton} onClick={onPrint} disabled={isPrinting}><span>✧</span><strong>{isPrinting ? "Salvando…" : "Print"}</strong></button>
       <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA NYMI"><span>⌂</span><strong>Pasta</strong></button>
       <button className={styles.viewButton} onClick={onView}><span>⛶</span><strong>View</strong></button>
-      <input ref={backgroundInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={onBackgroundChange} />
       <input ref={objectInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={onObjectChange} />
     </aside>
   </>;

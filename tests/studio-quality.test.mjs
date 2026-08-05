@@ -6,6 +6,7 @@ import {
   STUDIO_SCENE_HEIGHT,
   STUDIO_SCENE_WIDTH,
   analyzeSourceQuality,
+  backgroundRect,
   characterRect,
   fitMediaRect,
   objectRect,
@@ -28,6 +29,14 @@ test("calcula cover e contain sem deformar o fundo", () => {
   assert.equal(contain.width, 1080);
   assert.equal(contain.height, 1080);
   assert.equal(contain.x, 420);
+});
+
+test("aplica escala e deslocamento do fundo de forma determinística", () => {
+  const transformed = backgroundRect(1000, 1000, 1920, 1080, "contain", 1.5, 120, -40);
+  assert.equal(transformed.width, 1620);
+  assert.equal(transformed.height, 1620);
+  assert.equal(transformed.x, 270);
+  assert.equal(transformed.y, -310);
 });
 
 test("preserva proporções de personagem e objeto e avisa somente ao ampliar", () => {

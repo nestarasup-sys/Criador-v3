@@ -48,6 +48,17 @@ test("estado legado recebe defaults, migra modelos e preserva extensões", () =>
   assert.deepEqual(normalized.expressionPacks[0].frames, []);
 });
 
+test("normaliza transformação de fundo nova e preserva a classificação dos assets", () => {
+  const normalized = normalizeAppState({
+    studios: [{ id: "studio-bg", background: { assetId: "bg-1", src: "/bg.png", fit: "cover", offsetX: "35", offsetY: -18, scale: 1.4 }, characters: [], objects: [], bubbles: [], narrators: [] }],
+    studioAssets: [{ id: "bg-1", name: "Cenário", contentType: "image/png", fileUrl: "/bg.png", kind: "background" }],
+  });
+  assert.deepEqual(normalized.studios[0].background, { assetId: "bg-1", src: "/bg.png", fit: "cover", offsetX: 35, offsetY: -18, scale: 1.4 });
+  assert.equal(normalized.studioAssets[0].kind, "background");
+  const legacy = normalizeAppState({ studios: [{ id: "legacy-bg", background: { src: "/old.png" }, characters: [], objects: [], bubbles: [], narrators: [] }] });
+  assert.deepEqual(legacy.studios[0].background, { assetId: "", src: "/old.png", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 });
+});
+
 test("estado de Roteiros v1 moderno faz round-trip e mantém campos futuros", () => {
   const document = {
     version: 1,

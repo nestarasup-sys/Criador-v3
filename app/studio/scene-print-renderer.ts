@@ -2,7 +2,7 @@ import { expressionKey, renderStudioCharacter } from "./character-renderer";
 import { wrapCanvasText } from "./scene-ops";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack, SceneBubble, SceneNarrator, Studio } from "./types";
 import { loadStudioImage } from "./image-loader";
-import { characterRect, fitMediaRect, objectRect, STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
+import { backgroundRect, characterRect, objectRect, STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
 import { configureHighQualityContext } from "./render-quality";
 
 export function loadStudioCanvasImage(src: string) {
@@ -42,7 +42,7 @@ export async function renderStudioSceneToCanvas({ studio, charactersById, render
 
   if (studio.background) {
     const image = await loadImage(studio.background.src);
-    const rect = fitMediaRect(image.naturalWidth, image.naturalHeight, width, height, studio.background.fit);
+    const rect = backgroundRect(image.naturalWidth, image.naturalHeight, width, height, studio.background.fit, studio.background.scale, studio.background.offsetX, studio.background.offsetY);
     context.drawImage(image, rect.x, rect.y, rect.width, rect.height);
   }
 

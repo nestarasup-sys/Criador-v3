@@ -6,11 +6,12 @@ import styles from "./studio.module.css";
 import { localDataFetch } from "../lib/local-data-client";
 import { NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import { expressionKey, renderStudioCharacter } from "./character-renderer";
-import { loadAppData, migrateBrowserStudiosToPc, mirrorStudios, openStudioPrintsFolder, recordStudioDeletion, saveStudioPrint, saveStudios, uploadStudioAsset } from "./storage";
+import { deleteStudioAsset, loadAppData, migrateBrowserStudiosToPc, mirrorStudios, openStudioPrintsFolder, recordStudioDeletion, saveStudioPrint, saveStudios, uploadStudioAsset } from "./storage";
 import { StudioCanvas } from "./components/StudioCanvas";
 import { StudioInspector } from "./components/StudioInspector";
 import { StudioRoster } from "./components/StudioRoster";
 import { StudioToolbar } from "./components/StudioToolbar";
+import { StudioBackgroundLibrary } from "./components/StudioBackgroundLibrary";
 import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./history";
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
 import { renderStudioSceneToCanvas, studioCanvasToPng } from "./scene-print-renderer";
@@ -29,6 +30,8 @@ import {
   type SceneObject,
   type Selection,
   type Studio,
+  type StudioAsset,
+  type StudioBackground,
 } from "./types";
 
 const EMPTY_DATA: AppData = { characters: [], catalog: [], expressionPacks: [], studios: [], studioAssets: [] };
@@ -57,6 +60,8 @@ export default function StudioPage() {
   const [dockSide, setDockSide] = useState<"left" | "right">("right");
   const [characterPositionsLocked, setCharacterPositionsLocked] = useState(false);
   const [backgroundCollapsed, setBackgroundCollapsed] = useState(false);
+  const [backgroundLibraryOpen, setBackgroundLibraryOpen] = useState(false);
+  const [backgroundBusy, setBackgroundBusy] = useState(false);
   const [rosterCompact, setRosterCompact] = useState(false);
   const [, setSaveStatus] = useState("Carregando…");
   const [pcStorageAvailable, setPcStorageAvailable] = useState(false);
@@ -69,7 +74,6 @@ export default function StudioPage() {
   const [undoStack, setUndoStack] = useState<Studio[][]>([]);
   const [redoStack, setRedoStack] = useState<Studio[][]>([]);
   const stageRef = useRef<HTMLDivElement>(null);
-  const backgroundInput = useRef<HTMLInputElement>(null);
   const objectInput = useRef<HTMLInputElement>(null);
   const loadedRef = useRef(false);
   const skipNextAutoSaveRef = useRef(true);
@@ -230,6 +234,11 @@ export default function StudioPage() {
 
   const studio = studios.find((item) => item.id === currentId) ?? null;
   const charactersById = useMemo(() => new Map(data.characters.map((character) => [character.id, character])), [data.characters]);
+  const backgroundAssets = useMemo(() => {
+    const backgroundIds = new Set(studios.map((item) => item.background?.assetId).filter(Boolean));
+    const objectIds = new Set(studios.flatMap((item) => item.objects.map((object) => object.assetId)));
+    return data.studioAssets.filter((asset) => asset.contentType.startsWith("image/") && (asset.kind === "background" || backgroundIds.has(asset.id) || (!asset.kind && !objectIds.has(asset.id))));
+  }, [data.studioAssets, studios]);
 
   const pushHistory = useCallback(() => {
     setUndoStack((current) => pushStudioHistory(current, studiosRef.current));
@@ -483,15 +492,88 @@ export default function StudioPage() {
     setSelection({ kind: result.kind, id: result.id } as Selection);
   }
 
-  async function chooseBackground(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    setNotice("Enviando fundo…");
-    const asset = await uploadStudioAsset(file);
-    setData((current) => ({ ...current, studioAssets: [...current.studioAssets, asset] }));
-    updateStudio((item) => ({ ...item, background: { assetId: asset.id, src: asset.fileUrl, fit: "cover" } }));
-    setNotice("Fundo adicionado");
+  async function chooseBackground(file: File) {
+    if (!studio) return;
+    try {
+      setBackgroundBusy(true);
+      setNotice("Enviando fundo…");
+      const asset = await uploadStudioAsset(file, "background");
+      setData((current) => ({ ...current, studioAssets: [...current.studioAssets, asset] }));
+      updateStudio((item) => ({ ...item, background: { assetId: asset.id, src: asset.fileUrl, fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } }));
+      setNotice("Fundo adicionado à biblioteca");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível adicionar o fundo");
+    } finally {
+      setBackgroundBusy(false);
+    }
+  }
+
+  function selectBackground(asset: StudioAsset) {
+    if (!studio) return;
+    updateStudio((item) => ({ ...item, background: { assetId: asset.id, src: asset.fileUrl, fit: "cover", offsetX: 0, offsetY: 0, scale: 1 } }));
+    setNotice(`Fundo aplicado: ${asset.name}`);
+  }
+
+  function updateBackground(patch: Partial<StudioBackground>, history = true) {
+    updateStudio((item) => item.background ? { ...item, background: { ...item.background, ...patch } } : item, history);
+  }
+
+  function centerBackground() {
+    updateBackground({ offsetX: 0, offsetY: 0 });
+    setNotice("Fundo centralizado");
+  }
+
+  function resetBackground() {
+    updateBackground({ fit: "cover", offsetX: 0, offsetY: 0, scale: 1 });
+    setNotice("Tamanho e posição originais restaurados");
+  }
+
+  function beginBackgroundDrag(event: ReactPointerEvent) {
+    if (!studio?.background || !backgroundLibraryOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const bounds = stageRef.current?.getBoundingClientRect();
+    const element = event.currentTarget as HTMLImageElement;
+    if (!bounds || !element) return;
+    pushHistory();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const initialX = studio.background.offsetX ?? 0;
+    const initialY = studio.background.offsetY ?? 0;
+    const previewScale = bounds.width / STUDIO_SCENE_WIDTH;
+    let nextX = initialX;
+    let nextY = initialY;
+    let animationFrame = 0;
+    const move = (pointer: PointerEvent) => {
+      nextX = Math.max(-STUDIO_SCENE_WIDTH, Math.min(STUDIO_SCENE_WIDTH, initialX + (pointer.clientX - startX) / Math.max(.01, previewScale)));
+      nextY = Math.max(-STUDIO_SCENE_HEIGHT, Math.min(STUDIO_SCENE_HEIGHT, initialY + (pointer.clientY - startY) / Math.max(.01, previewScale)));
+      if (!animationFrame) animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = 0;
+        element.style.setProperty("--background-drag-x", `${nextX - initialX}px`);
+        element.style.setProperty("--background-drag-y", `${nextY - initialY}px`);
+      });
+    };
+    const stop = () => {
+      if (animationFrame) window.cancelAnimationFrame(animationFrame);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", stop);
+      updateBackground({ offsetX: nextX, offsetY: nextY }, false);
+      element.style.removeProperty("--background-drag-x");
+      element.style.removeProperty("--background-drag-y");
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", stop);
+  }
+
+  async function removeBackgroundAsset(asset: StudioAsset) {
+    const references = studios.filter((item) => item.background?.assetId === asset.id);
+    if (references.length && !window.confirm(`Este fundo está usado em ${references.length} Studio(s). Remover também desses Studios?`)) return;
+    // A remoção da biblioteca é deliberadamente destrutiva: o histórico de cena
+    // não deve restaurar referências para um arquivo que já foi apagado.
+    setStudios((current) => current.map((item) => item.background?.assetId === asset.id ? { ...item, background: null, updatedAt: new Date().toISOString() } : item));
+    setData((current) => ({ ...current, studioAssets: current.studioAssets.filter((item) => item.id !== asset.id) }));
+    try { await deleteStudioAsset(asset.id); } catch { /* A cópia local continua removida; o servidor fará a limpeza no próximo salvamento. */ }
+    setNotice(`Fundo removido: ${asset.name}`);
   }
 
   async function addObject(event: ChangeEvent<HTMLInputElement>) {
@@ -499,7 +581,7 @@ export default function StudioPage() {
     event.target.value = "";
     if (!file || !studio) return;
     setNotice("Enviando objeto…");
-    const asset = await uploadStudioAsset(file);
+    const asset = await uploadStudioAsset(file, "object");
     const object: SceneObject = { id: crypto.randomUUID(), name: file.name, assetId: asset.id, src: asset.fileUrl, x: .5, y: .55, scale: 1, flipX: false, z: nextZ(studio) };
     setData((current) => ({ ...current, studioAssets: [...current.studioAssets, asset] }));
     updateStudio((item) => ({ ...item, objects: [...item.objects, object] }));
@@ -610,6 +692,7 @@ export default function StudioPage() {
     await saveNow("Studio salvo");
     await localDataFetch("/studio/ai/unload", { method: "POST" }).catch(() => undefined);
     resetRosterUi();
+    setBackgroundLibraryOpen(false);
     setCurrentId(null);
     setSelection(null);
     setDockSide("right");
@@ -739,6 +822,8 @@ export default function StudioPage() {
         onStagePointerDown={() => { setSelection(null); setDockSide("right"); }}
         onBeginDrag={beginDrag}
         characterPositionsLocked={characterPositionsLocked}
+        backgroundEditing={backgroundLibraryOpen}
+        onBeginBackgroundDrag={beginBackgroundDrag}
       />
 
       {!viewMode && <>
@@ -747,7 +832,6 @@ export default function StudioPage() {
           canRedo={redoStack.length > 0}
           isPrinting={isPrinting}
           selectedCharacterName={selectedCharacterSource?.name}
-          backgroundInput={backgroundInput}
           objectInput={objectInput}
           onLeave={() => { void leaveStudio(); }}
           onSave={() => { void saveNow(); }}
@@ -758,11 +842,12 @@ export default function StudioPage() {
           onPrint={() => { void printScene(); }}
           onOpenPrints={() => { void openPrintsFolder(); }}
           onView={() => { void enterViewMode(); }}
-          onBackgroundChange={chooseBackground}
           onObjectChange={addObject}
+          onOpenBackgroundLibrary={() => setBackgroundLibraryOpen((current) => !current)}
         />
 
       <aside className={`${styles.rightArea} ${dockSide === "left" ? styles.dockLeft : ""} ${rosterCompact ? styles.rosterAreaCompact : ""}`}>
+          {backgroundLibraryOpen && <StudioBackgroundLibrary assets={backgroundAssets} background={studio.background} busy={backgroundBusy} onClose={() => setBackgroundLibraryOpen(false)} onSelect={selectBackground} onAdd={(file) => { void chooseBackground(file); }} onRemove={(asset) => { void removeBackgroundAsset(asset); }} onUpdate={updateBackground} onBeginAdjust={pushHistory} onCenter={centerBackground} onReset={resetBackground} />}
           <div className={styles.inspectorDock}><StudioInspector
             studio={studio}
             selection={selection}

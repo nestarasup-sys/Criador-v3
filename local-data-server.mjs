@@ -897,7 +897,7 @@ async function route(request, response) {
     await writeFile(filePath, body);
     state.studioAssets = [
       ...state.studioAssets.filter((asset) => asset.id !== id),
-      { id, name: metadata.name ?? "Imagem", contentType: metadata.contentType ?? "application/octet-stream" },
+      { id, name: metadata.name ?? "Imagem", contentType: metadata.contentType ?? "application/octet-stream", ...(metadata.kind === "background" || metadata.kind === "object" ? { kind: metadata.kind } : {}) },
     ];
     await queueStateWrite();
     sendJson(response, request, 200, { ok: true, fileUrl: `http://${HOST}:${PORT}/files/studio/${id}` });
