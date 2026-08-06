@@ -128,25 +128,33 @@ export async function deleteExpressionPackFromPc(id: string) {
 
 export async function hydratePcState(pcState: PcState) {
   const normalizedPcCatalog = normalizeOutfitCatalog(pcState.catalog);
-  const catalog = await Promise.all(normalizedPcCatalog.map(async (item) => {
-    const response = await fetch(item.fileUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error("Não foi possível carregar um item local");
-    const blob = await response.blob();
-    const { fileUrl: _fileUrl, ...metadata } = item;
-    void _fileUrl;
-    return { ...metadata, blob, url: URL.createObjectURL(blob) } as CatalogItem;
-  }));
-  const expressionPacks: ExpressionPack[] = await Promise.all((pcState.expressionPacks ?? []).map(async (pack) => ({
-    ...pack,
-    frames: await Promise.all(pack.frames.map(async (frame) => {
-      const response = await fetch(frame.fileUrl, { cache: "no-store" });
-      if (!response.ok) throw new Error("Não foi possível carregar uma expressão local");
+  const catalog = (await Promise.all(normalizedPcCatalog.map(async (item) => {
+    try {
+      const response = await fetch(item.fileUrl, { cache: "no-store" });
+      if (!response.ok) return null;
       const blob = await response.blob();
-      const { fileUrl: _fileUrl, ...metadata } = frame;
+      const { fileUrl: _fileUrl, ...metadata } = item;
       void _fileUrl;
-      return { ...metadata, blob, url: URL.createObjectURL(blob) } as ExpressionFrame;
-    })),
-  })));
+      return { ...metadata, blob, url: URL.createObjectURL(blob) } as CatalogItem;
+    } catch {
+      return null;
+    }
+  }))).filter((item): item is CatalogItem => item !== null);
+  const expressionPacks: ExpressionPack[] = (await Promise.all((pcState.expressionPacks ?? []).map(async (pack) => {
+    const frames = (await Promise.all((pack.frames ?? []).map(async (frame) => {
+      try {
+        const response = await fetch(frame.fileUrl, { cache: "no-store" });
+        if (!response.ok) return null;
+        const blob = await response.blob();
+        const { fileUrl: _fileUrl, ...metadata } = frame;
+        void _fileUrl;
+        return { ...metadata, blob, url: URL.createObjectURL(blob) } as ExpressionFrame;
+      } catch {
+        return null;
+      }
+    }))).filter((frame): frame is ExpressionFrame => frame !== null);
+    return frames.length > 0 ? { ...pack, frames } : null;
+  }))).filter((pack): pack is ExpressionPack => pack !== null);
   return {
     characters: (pcState.characters ?? []).map((character) => ({ ...character, basePackId: normalizeBasePackId(character.basePackId) })),
     catalog,

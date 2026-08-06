@@ -298,11 +298,55 @@ async function loadState() {
       studios: Array.isArray(parsed.studios) ? parsed.studios : [],
       studioAssets: Array.isArray(parsed.studioAssets) ? parsed.studioAssets : [],
     }));
+    await reconcileMissingLocalAssets();
     await writeJsonAtomic(STATE_PATH, state);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
     await writeJsonAtomic(STATE_PATH, state);
   }
+}
+
+async function localFileExists(filePath) {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+/**
+ * Remove only metadata entries whose backing files were deleted outside the app.
+ * Existing files are never touched. This keeps /state usable after a manual
+ * catalog cleanup and prevents one missing PNG from aborting the whole load.
+ */
+async function reconcileMissingLocalAssets() {
+  let changed = false;
+  const catalog = [];
+  for (const item of state.catalog ?? []) {
+    const id = String(item?.id ?? "");
+    const filePath = join(CATALOG_ROOT, `${id}.png`);
+    if (id && inside(CATALOG_ROOT, filePath) && await localFileExists(filePath)) catalog.push(item);
+    else changed = true;
+  }
+
+  const expressionPacks = [];
+  for (const pack of state.expressionPacks ?? []) {
+    const packId = String(pack?.id ?? "");
+    const frames = [];
+    for (const frame of pack.frames ?? []) {
+      const key = String(frame?.key ?? "");
+      const filePath = join(PACKS_ROOT, packId, `${key}.png`);
+      if (packId && key && inside(PACKS_ROOT, filePath) && await localFileExists(filePath)) frames.push(frame);
+      else changed = true;
+    }
+    if (frames.length > 0) expressionPacks.push({ ...pack, frames });
+    else if (packId) changed = true;
+  }
+
+  if (changed) state = { ...state, catalog, expressionPacks };
+  return changed;
 }
 
 function queueStateWrite() {
@@ -422,6 +466,7 @@ async function route(request, response) {
     return;
   }
   if (request.method === "GET" && url.pathname === "/state") {
+    if (await reconcileMissingLocalAssets()) await queueStateWrite();
     sendJson(response, request, 200, await publicState());
     return;
   }
