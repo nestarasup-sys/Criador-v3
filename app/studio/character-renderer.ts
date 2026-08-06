@@ -1,5 +1,6 @@
 import type {
   Character,
+  Category,
   ExpressionKey,
   ItemTransform,
   MaskStroke,
@@ -9,6 +10,8 @@ import type {
 import { processChromaPixels } from "../creator/chroma-worker-client";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
+import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
+import { normalizeBasePackId } from "../domain/base-model.mjs";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -28,7 +31,7 @@ function transparentChroma(src: string) {
       configureHighQualityContext(context);
       context.drawImage(image, 0, 0);
       const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-      const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, false, true);
+      const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, true, true);
       pixels.data.set(processed);
       context.putImageData(pixels, 0, 0);
       return canvas;
@@ -174,13 +177,29 @@ export async function renderStudioCharacter(
     outfit: character.layerMasks?.outfit ?? [],
   };
 
-  const drawItem = async (item: PcCatalogItem | { fileUrl: string; width: number; height: number; defaultX: number; defaultY: number }, transform: ItemTransform, mask: MaskStroke[] = []) => {
+  const drawItem = async (
+    item: PcCatalogItem | { fileUrl: string; width: number; height: number; defaultX: number; defaultY: number; outfitGroupId?: string },
+    transform: ItemTransform,
+    mask: MaskStroke[] = [],
+    layerCategory?: Category,
+  ) => {
     const image = await loadStudioImage(item.fileUrl);
     const width = item.width ?? image.naturalWidth;
     const height = item.height ?? image.naturalHeight;
     const centerX = item.defaultX ?? width / 2;
     const centerY = item.defaultY ?? height / 2;
     const layer = mask.length ? document.createElement("canvas") : null;
+    const itemColorGroupKey = layerCategory === "roupas" ? item.outfitGroupId : undefined;
+    const color = normalizeColorAdjustment(layerCategory === "roupas" && itemColorGroupKey
+      ? character.outfitColorAdjustmentsByGroup?.[itemColorGroupKey] ?? character.colorAdjustments?.roupas
+      : layerCategory ? character.colorAdjustments?.[layerCategory] : undefined);
+    const protectionMask = layerCategory ? character.protectionMasks?.[layerCategory] : undefined;
+    let renderImage: CanvasImageSource = image;
+    if (colorAdjustmentIsActive(color)) {
+      const adjusted = createColorAdjustedCanvas(image, width, height, color);
+      await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadStudioImage);
+      renderImage = adjusted;
+    }
     if (layer) {
       layer.width = scene.width;
       layer.height = scene.height;
@@ -192,7 +211,7 @@ export async function renderStudioCharacter(
     target.translate(PADDING.x + centerX + transform.x, PADDING.y + centerY + transform.y);
     target.rotate(transform.rotation * Math.PI / 180);
     target.scale(transform.scale * transform.scaleX * (transform.flipX ? -1 : 1), transform.scale * transform.scaleY);
-    target.drawImage(image, -width / 2, -height / 2, width, height);
+    target.drawImage(renderImage, -width / 2, -height / 2, width, height);
     target.restore();
     if (layer) {
       target.globalCompositeOperation = "destination-in";
@@ -203,9 +222,11 @@ export async function renderStudioCharacter(
   };
 
   const backHair = catalog.find((item) => item.id === character.selections.cabelosTras);
-  if (backHair) await drawItem(backHair, normalizedTransform(character.adjustments.cabelosTras), masks.hairBack);
+  const activePackId = normalizeBasePackId(character.basePackId);
+  const packAdjustments = character.hairAdjustmentsByBasePack?.[activePackId];
+  if (backHair) await drawItem(backHair, normalizedTransform(packAdjustments?.cabelosTras ?? character.adjustments.cabelosTras), masks.hairBack, "cabelosTras");
 
-  const normalizedPack = character.basePackId === "padrao" ? "modelo-1" : character.basePackId ?? "modelo-1";
+  const normalizedPack = activePackId;
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
   const baseSource = faceMode === "base" ? expressionSource(character, key) : `/models/${character.model}.png`;
   let base: HTMLCanvasElement;
@@ -227,7 +248,7 @@ export async function renderStudioCharacter(
   context.drawImage(bodyLayer, 0, 0);
 
   const outfit = catalog.find((item) => item.id === character.selections.roupas);
-  if (outfit) await drawItem(outfit, normalizedTransform(character.adjustments.roupas), masks.outfit);
+  if (outfit) await drawItem(outfit, normalizedTransform(character.adjustments.roupas), masks.outfit, "roupas");
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {
@@ -236,12 +257,12 @@ export async function renderStudioCharacter(
       if (frame) await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos));
     } else {
       const face = catalog.find((item) => item.id === character.selections.rostos);
-      if (face) await drawItem(face, normalizedTransform(character.adjustments.rostos));
+      if (face) await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos");
     }
   }
 
   const frontHair = catalog.find((item) => item.id === character.selections.cabelos);
-  if (frontHair) await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos), masks.hairFront);
+  if (frontHair) await drawItem(frontHair, normalizedTransform(packAdjustments?.cabelos ?? character.adjustments.cabelos), masks.hairFront, "cabelos");
 
   const frame = character.exportFrame ?? { x: 0, y: 0, scale: 1 };
   finalContext.save();

@@ -13,6 +13,7 @@ import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar"
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
+import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
@@ -112,12 +113,7 @@ const DEFAULT_TRANSFORM: ItemTransform = {
   flipX: false,
 };
 
-const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
-  hue: 0,
-  saturation: 100,
-  brightness: 100,
-  enabled: true,
-};
+const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = { ...SHARED_DEFAULT_COLOR_ADJUSTMENT };
 
 const DEFAULT_PREVIEW_PAN: PreviewPan = { x: 0, y: 0 };
 const DEFAULT_EXPORT_FRAME: ExportFrame = { x: 0, y: 0, scale: 1 };
@@ -148,7 +144,7 @@ function emptyColorAdjustments(): ColorAdjustments {
 function normalizeColorAdjustments(adjustments?: Partial<ColorAdjustments>): ColorAdjustments {
   const defaults = emptyColorAdjustments();
   for (const category of Object.keys(defaults) as Category[]) {
-    defaults[category] = { ...DEFAULT_COLOR_ADJUSTMENT, ...adjustments?.[category] };
+    defaults[category] = normalizeColorAdjustment(adjustments?.[category]);
   }
   return defaults;
 }
@@ -278,7 +274,9 @@ async function removeChroma(source: Blob | string) {
     if (!context) throw new Error("Canvas indisponível");
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, false, true);
+    // Keep the matte connected to the real background. This prevents a green
+    // iris, eye highlight or clothing detail from being treated as background.
+    const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, true, true);
     pixels.data.set(processed);
 
     context.putImageData(pixels, 0, 0);
@@ -410,7 +408,7 @@ function autoChromaImport(source: HTMLCanvasElement, boost = 0) {
   // do fundo, inclusive ilhas fechadas entre braços, mãos, pernas ou partes da
   // roupa. O modo manual continua oferecendo "Somente fundo conectado" para
   // casos em que o usuário precisa preservar uma área verde da arte.
-  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, false, true);
+  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, true, true);
 }
 
 function contentBoundsInside(
@@ -1240,7 +1238,9 @@ export default function Home() {
       return character;
     });
     localStorage.setItem(CHARACTER_KEY, JSON.stringify(charactersWithoutPhotos));
-    if (pcSyncReadyRef.current) saveCharactersToPc(characters).catch(() => undefined);
+    const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
+    if (pcSyncReadyRef.current) saveCharactersToPc(characters).then(notifyStudio).catch(() => undefined);
+    else notifyStudio();
   }, [characters]);
 
   useEffect(() => {
@@ -1324,8 +1324,8 @@ export default function Home() {
   const hasRealCustomization = Object.values(selections).some(Boolean)
     || Boolean(activePackId)
     || Object.values(layerMasks).some((strokes) => strokes.length > 0)
-    || Object.values(colorAdjustments).some((adjustment) => adjustment.hue !== 0 || adjustment.saturation !== 100 || adjustment.brightness !== 100)
-    || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => adjustment.hue !== 0 || adjustment.saturation !== 100 || adjustment.brightness !== 100)
+    || Object.values(colorAdjustments).some((adjustment) => colorAdjustmentIsActive(adjustment))
+    || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => colorAdjustmentIsActive(adjustment))
     || Object.keys(protectionMasks).length > 0
     || Object.keys(outfitProtectionMasksByBasePack).length > 0;
 
@@ -1404,33 +1404,13 @@ export default function Home() {
       const centerY = item.defaultY ?? height / 2;
       let renderSource: CanvasImageSource = image;
       const itemColorGroupKey = layerCategory === "roupas" ? outfitColorGroupKey(item) : null;
-      const color = layerCategory === "roupas" && itemColorGroupKey
+      const color = normalizeColorAdjustment(layerCategory === "roupas" && itemColorGroupKey
         ? outfitColorAdjustmentsByGroup[itemColorGroupKey] ?? colorAdjustments.roupas
-        : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT;
+        : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT);
       const protectionMask = layerCategory ? protectionMasks[layerCategory] : undefined;
-      const hasColorChange = color.enabled && (color.hue !== 0 || color.saturation !== 100 || color.brightness !== 100);
-      if (hasColorChange) {
-        const adjusted = document.createElement("canvas");
-        adjusted.width = width;
-        adjusted.height = height;
-        const adjustedContext = adjusted.getContext("2d");
-        if (!adjustedContext) throw new Error("Canvas de cor indisponível");
-        adjustedContext.filter = `hue-rotate(${color.hue}deg) saturate(${color.saturation}%) brightness(${color.brightness}%)`;
-        adjustedContext.drawImage(image, 0, 0, width, height);
-        adjustedContext.filter = "none";
-        if (protectionMask) {
-          const maskImage = await loadImage(protectionMask);
-          const protectedOriginal = document.createElement("canvas");
-          protectedOriginal.width = width;
-          protectedOriginal.height = height;
-          const protectedContext = protectedOriginal.getContext("2d");
-          if (!protectedContext) throw new Error("Máscara de proteção indisponível");
-          protectedContext.drawImage(image, 0, 0, width, height);
-          protectedContext.globalCompositeOperation = "destination-in";
-          protectedContext.drawImage(maskImage, 0, 0, width, height);
-          protectedContext.globalCompositeOperation = "source-over";
-          adjustedContext.drawImage(protectedOriginal, 0, 0);
-        }
+      if (colorAdjustmentIsActive(color)) {
+        const adjusted = createColorAdjustedCanvas(image, width, height, color);
+        await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadImage);
         renderSource = adjusted;
       }
       const layerCanvas = mask.length > 0 ? document.createElement("canvas") : null;
@@ -3199,9 +3179,9 @@ export default function Home() {
   const activeOutfitVariantCount = activeOutfitColorGroupKey
     ? modelOutfits.filter((item) => outfitColorGroupKey(item) === activeOutfitColorGroupKey).length
     : 0;
-  const activeColor = category === "roupas" && activeOutfitColorGroupKey
+  const activeColor = normalizeColorAdjustment(category === "roupas" && activeOutfitColorGroupKey
     ? outfitColorAdjustmentsByGroup[activeOutfitColorGroupKey] ?? colorAdjustments.roupas
-    : colorAdjustments[category];
+    : colorAdjustments[category]);
   const colorEligible = Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas");
 
   function updateColorAdjustment(patch: Partial<ColorAdjustment>) {
@@ -3427,9 +3407,10 @@ export default function Home() {
   function clearColorProtection() {
     const mask = protectionMaskCanvasRef.current;
     mask?.getContext("2d")?.clearRect(0, 0, mask.width, mask.height);
-    if (category === "roupas" && selectedOutfit?.outfitGroupId) {
-      const groupItemIds = new Set(modelOutfits
-        .filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
+    if (category === "roupas" && selectedOutfit) {
+      const groupItemIds = new Set((selectedOutfit.outfitGroupId
+        ? modelOutfits.filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
+        : [selectedOutfit])
         .map((item) => outfitStateKey(item.id, basePackId)));
       setOutfitProtectionMasksByBasePack((current) => Object.fromEntries(
         Object.entries(current).filter(([key]) => !groupItemIds.has(key)),
@@ -3449,11 +3430,16 @@ export default function Home() {
       return next;
     });
     if (category === "roupas" && selectedOutfit) {
-      const activeKey = outfitStateKey(selectedOutfit.id, basePackId);
+      const groupItems = selectedOutfit.outfitGroupId
+        ? modelOutfits.filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
+        : [selectedOutfit];
       setOutfitProtectionMasksByBasePack((current) => {
         const next = { ...current };
-        if (savedMask) next[activeKey] = savedMask;
-        else delete next[activeKey];
+        for (const item of groupItems) {
+          const key = outfitStateKey(item.id, basePackId);
+          if (savedMask) next[key] = savedMask;
+          else delete next[key];
+        }
         return next;
       });
     }
@@ -3876,9 +3862,14 @@ export default function Home() {
                   <button key={hue} style={{ background: color }} aria-label={`Matiz ${hue}`} onClick={() => updateColorAdjustment({ hue: Number(hue) })} />
                 ))}
               </div>
+              <div className="color-custom-row">
+                <label><span>Cor direta</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, tintStrength: Math.max(35, activeColor.tintStrength) })} /></label>
+                <button type="button" onClick={() => updateColorAdjustment({ tint: "#ffffff", tintStrength: 0 })}>Desligar cor direta</button>
+              </div>
               <label className="color-range"><span>Matiz</span><input type="range" min="0" max="360" value={activeColor.hue} onChange={(event) => updateColorAdjustment({ hue: Number(event.target.value) })} /><strong>{activeColor.hue}°</strong></label>
-              <label className="color-range"><span>Saturação</span><input type="range" min="0" max="200" value={activeColor.saturation} onChange={(event) => updateColorAdjustment({ saturation: Number(event.target.value) })} /><strong>{activeColor.saturation}%</strong></label>
-              <label className="color-range"><span>Brilho</span><input type="range" min="25" max="175" value={activeColor.brightness} onChange={(event) => updateColorAdjustment({ brightness: Number(event.target.value) })} /><strong>{activeColor.brightness}%</strong></label>
+              <label className="color-range"><span>Saturação</span><input type="range" min="0" max="250" value={activeColor.saturation} onChange={(event) => updateColorAdjustment({ saturation: Number(event.target.value) })} /><strong>{activeColor.saturation}%</strong></label>
+              <label className="color-range"><span>Brilho</span><input type="range" min="0" max="250" value={activeColor.brightness} onChange={(event) => updateColorAdjustment({ brightness: Number(event.target.value) })} /><strong>{activeColor.brightness}%</strong></label>
+              <label className="color-range"><span>Intensidade</span><input type="range" min="0" max="100" value={activeColor.tintStrength} onChange={(event) => updateColorAdjustment({ tintStrength: Number(event.target.value) })} /><strong>{activeColor.tintStrength}%</strong></label>
               <div className="color-options">
                 {(category === "cabelos" || category === "cabelosTras") && <label><input type="checkbox" checked={syncHairColor} onChange={(event) => setSyncHairColor(event.target.checked)} /> Aplicar ao par</label>}
                 {category === "roupas" && <>

@@ -404,7 +404,9 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
   assert.match(printRenderer, /backgroundRect/);
   assert.match(characterRenderer, /processChromaPixels/);
-  assert.match(characterRenderer, /cleanEdges|false, true/);
+  assert.match(characterRenderer, /processChromaPixels\([^;]+, true, true\)/);
+  assert.match(characterRenderer, /colorAdjustmentIsActive/);
+  assert.match(characterRenderer, /applyProtectedOriginal/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
   assert.match(printRenderer, /studioCanvasToPng/);
   assert.match(page, /cycleSelectedPose/);
@@ -426,7 +428,9 @@ test("ships premium color controls and non-destructive protection masks", async 
 
   assert.match(characterContract, /type ColorAdjustment/);
   assert.match(page, /colorAdjustments/);
-  assert.match(page, /hue-rotate/);
+  assert.match(page, /createColorAdjustedCanvas/);
+  assert.match(page, /tintStrength/);
+  assert.match(page, /Cor direta/);
   assert.match(page, /syncHairColor/);
   assert.match(page, /Aplicar ao par/);
   assert.match(page, /protectionMasks/);
@@ -584,7 +588,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /variantIndex: index/);
   assert.match(page, /detectOutfitSheetRegions/);
   assert.match(page, /prepareOutfitCatalogImages/);
-  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, false, true\)/);
+  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, true, true\)/);
   assert.match(workerClient, /processChromaPixels/);
   assert.match(workerClient, /applyChromaPixels/);
   assert.match(worker, /applyChromaPixels/);

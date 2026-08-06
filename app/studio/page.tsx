@@ -84,6 +84,22 @@ export default function StudioPage() {
   const renderedRef = useRef<Record<string, string>>({});
   const studioWarmupRef = useRef<string | null>(null);
 
+  const refreshCharacterData = useCallback(async (announce = false) => {
+    try {
+      const loaded = await loadAppData();
+      setData((current) => ({
+        ...current,
+        characters: loaded.characters,
+        catalog: loaded.catalog,
+        expressionPacks: loaded.expressionPacks,
+        studioAssets: loaded.studioAssets,
+      }));
+      if (announce) setNotice("Personagens atualizados no Studio");
+    } catch {
+      if (announce) setNotice("Não foi possível atualizar os personagens agora");
+    }
+  }, []);
+
   /* The persisted Studio preferences are the source of truth when switching
      documents; these controlled UI states intentionally hydrate from it. */
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -102,6 +118,24 @@ export default function StudioPage() {
         : "Somente neste navegador");
     });
   }, []);
+
+  useEffect(() => {
+    const onCharactersUpdated = () => { void refreshCharacterData(true); };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === "gacha-maker-characters") onCharactersUpdated();
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void refreshCharacterData(false);
+    };
+    window.addEventListener("nymi:characters-updated", onCharactersUpdated);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("nymi:characters-updated", onCharactersUpdated);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [refreshCharacterData]);
 
   useEffect(() => () => {
     // Unload the local translation model when the Studio page is left entirely.

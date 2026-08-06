@@ -15,6 +15,10 @@ export type ColorAdjustment = {
   saturation: number;
   brightness: number;
   enabled: boolean;
+  /** Optional direct tint for colors that hue-rotate cannot reach cleanly. */
+  tint: string;
+  /** Blend amount of the direct tint, from 0 (off) to 100 (full). */
+  tintStrength: number;
 };
 
 export type ColorAdjustments = Record<Category, ColorAdjustment>;

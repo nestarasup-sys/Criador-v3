@@ -12,6 +12,17 @@ function variantIndex(item: PcCatalogItem | undefined) {
   return Number.isInteger(item?.outfitVariantIndex) ? Math.max(0, item!.outfitVariantIndex!) : 0;
 }
 
+function characterPackKey(character: Character) {
+  const value = character.basePackId ?? "modelo-1";
+  if (value === "padrao") return "modelo-1";
+  const legacy = value.match(/^pack-(\d+)$/);
+  return legacy ? `modelo-${Number(legacy[1]) + 1}` : value;
+}
+
+function outfitStateKey(itemId: string, packId: string) {
+  return `${itemId}:${packId}`;
+}
+
 export function outfitVariantsForCharacter(character: Character, instance: SceneCharacter | undefined, catalog: PcCatalogItem[]) {
   const selected = catalog.find((item) => item.id === character.selections.roupas && item.category === "roupas");
   const groupId = selected?.outfitGroupId ?? null;
@@ -60,19 +71,40 @@ export function characterForSceneOutfit(character: Character, instance: SceneCha
   const pose = sceneOutfitPose(character, instance, catalog);
   if (!pose.variant) return character;
   const offset = outfitOffsetForVariant(instance, pose.variant.id);
-  const hasOffset = offset.x !== 0 || offset.y !== 0;
-  if (pose.variant.id === character.selections.roupas && !hasOffset) return character;
+  const packId = characterPackKey(character);
+  const exactKey = outfitStateKey(pose.variant.id, packId);
+  const savedTransform = character.outfitAdjustmentsByBasePack?.[exactKey]
+    ?? character.outfitAdjustmentsByBasePack?.[packId];
+  const savedMask = character.outfitLayerMasksByBasePack?.[exactKey]
+    ?? character.outfitLayerMasksByBasePack?.[packId];
+  const savedProtection = character.outfitProtectionMasksByBasePack?.[exactKey]
+    ?? character.outfitProtectionMasksByBasePack?.[packId];
   const baseTransform = character.adjustments.roupas ?? { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
+  const resolvedTransform = savedTransform ?? baseTransform;
+  const currentVariant = pose.variant.id === character.selections.roupas;
+  const hasOffset = offset.x !== 0 || offset.y !== 0;
+  const hasVariantState = Boolean(savedTransform || savedMask || savedProtection);
+  if (currentVariant && !hasOffset && !hasVariantState) return character;
   return {
     ...character,
     selections: { ...character.selections, roupas: pose.variant.id },
     adjustments: {
       ...character.adjustments,
       roupas: {
-        ...baseTransform,
-        x: (baseTransform.x ?? 0) + offset.x,
-        y: (baseTransform.y ?? 0) + offset.y,
+        ...resolvedTransform,
+        x: (resolvedTransform.x ?? 0) + offset.x,
+        y: (resolvedTransform.y ?? 0) + offset.y,
       },
+    },
+    layerMasks: {
+      ...(character.layerMasks ?? {}),
+      outfit: savedMask ?? (currentVariant ? character.layerMasks?.outfit ?? [] : []),
+    },
+    protectionMasks: {
+      ...(character.protectionMasks ?? {}),
+      ...(savedProtection || (currentVariant && character.protectionMasks?.roupas)
+        ? { roupas: savedProtection ?? character.protectionMasks?.roupas }
+        : {}),
     },
   };
 }

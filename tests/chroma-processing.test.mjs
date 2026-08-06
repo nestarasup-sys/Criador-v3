@@ -27,3 +27,21 @@ test("remove fundo e descontamina o halo sem apagar verde legítimo da roupa", (
   assert.ok(cleanedHalo[1] <= 115);
   assert.deepEqual(pixel(data, width, 4, 2), [118, 136, 99, 255]);
 });
+
+test("modo conectado preserva verde interno e remove o fundo ao redor", () => {
+  const width = 9;
+  const height = 9;
+  const data = new Uint8ClampedArray(width * height * 4);
+  for (let index = 0; index < data.length; index += 4) data.set([0, 195, 102, 255], index);
+  const setPixel = (x, y, rgba) => data.set(rgba, (y * width + x) * 4);
+  // Contorno fechado de um olho: o verde interno não está conectado ao fundo.
+  for (let y = 3; y <= 5; y += 1) {
+    for (let x = 3; x <= 5; x += 1) setPixel(x, y, [18, 20, 24, 255]);
+  }
+  setPixel(4, 4, [0, 170, 92, 255]);
+  applyChromaPixels(data, width, height, { r: 0, g: 195, b: 102 }, 34, 58, true, true);
+
+  assert.equal(pixel(data, width, 0, 0)[3], 0);
+  assert.equal(pixel(data, width, 4, 4)[3], 255);
+  assert.deepEqual(pixel(data, width, 4, 4).slice(0, 3), [0, 170, 92]);
+});
