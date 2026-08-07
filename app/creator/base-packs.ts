@@ -8,6 +8,10 @@ export type BasePackDefinition = {
   name: string;
   expressionKeys: readonly ExpressionKey[];
   source: string;
+  type?: "full-body" | "head-only";
+  anchor?: "neck-base";
+  anchorX?: number;
+  anchorY?: number;
 };
 
 export type BasePackCollection = Record<Model, readonly BasePackDefinition[]>;

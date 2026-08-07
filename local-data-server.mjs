@@ -270,7 +270,8 @@ async function discoverModels() {
         .map((name) => name.slice(0, -4))
         .sort((left, right) => left.localeCompare(right, "pt-BR", { numeric: true }));
       if (!expressionKeys.includes("normal")) continue;
-      const config = await readOptionalJson(join(folder, "modelo.json"));
+      const config = await readOptionalJson(join(folder, "model.json"))
+        ?? await readOptionalJson(join(folder, "modelo.json"));
       result[gender].push({
         id: entry.name,
         name: typeof config?.name === "string" && config.name.trim()
@@ -278,6 +279,12 @@ async function discoverModels() {
           : `Modelo ${index + 1}`,
         expressionKeys,
         source: `/models/modelos/${gender}/${entry.name}`,
+        ...(config?.type === "head-only" ? {
+          type: "head-only",
+          ...(config?.anchor === "neck-base" ? { anchor: "neck-base" } : {}),
+          ...(Number.isFinite(config?.anchorX) ? { anchorX: Number(config.anchorX) } : {}),
+          ...(Number.isFinite(config?.anchorY) ? { anchorY: Number(config.anchorY) } : {}),
+        } : {}),
       });
     }
   }

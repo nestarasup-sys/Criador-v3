@@ -240,7 +240,11 @@ export async function renderStudioCharacter(
   bodyLayer.height = scene.height;
   const bodyContext = bodyLayer.getContext("2d");
   if (bodyContext) configureHighQualityContext(bodyContext);
-  bodyContext?.drawImage(base, PADDING.x, PADDING.y, WIDTH, HEIGHT);
+  if (bodyContext) {
+    // Legacy Studio rendering remains unchanged; Creator applies model
+    // metadata before the character is saved.
+    bodyContext.drawImage(base, PADDING.x, PADDING.y, WIDTH, HEIGHT);
+  }
   if (bodyContext && masks.body.length) {
     bodyContext.globalCompositeOperation = "destination-in";
     bodyContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);

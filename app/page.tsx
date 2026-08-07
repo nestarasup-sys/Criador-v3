@@ -1480,7 +1480,26 @@ export default function Home() {
       bodyLayer.height = sceneCanvas.height;
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
-      bodyContext.drawImage(baseImage, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
+      const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
+      if (headOnly) {
+        // The anchor is expressed in the model's original 1920×1080 canvas.
+        // Keep the native canvas and translate only when a future model uses
+        // a different source size; this avoids bottom-centering a head-only PNG.
+        const sourceWidth = baseImage.naturalWidth || canvas.width;
+        const sourceHeight = baseImage.naturalHeight || canvas.height;
+        const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
+        const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
+        const targetAnchorX = activeBasePack.anchorX ?? canvas.width / 2;
+        const targetAnchorY = activeBasePack.anchorY ?? canvas.height;
+        bodyContext.drawImage(baseImage,
+          SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
+          SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
+          sourceWidth,
+          sourceHeight,
+        );
+      } else {
+        bodyContext.drawImage(baseImage, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
+      }
       if (layerMasks.body.length > 0) {
         bodyContext.globalCompositeOperation = "destination-in";
         bodyContext.drawImage(createBodyMask(layerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
