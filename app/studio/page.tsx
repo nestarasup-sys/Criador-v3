@@ -82,6 +82,9 @@ export default function StudioPage() {
   const browserStudiosRef = useRef<Studio[]>([]);
   const pcStudiosRef = useRef<Studio[]>([]);
   const renderedRef = useRef<Record<string, string>>({});
+  // Keep the previous frame visible while a newly selected expression is
+  // rendered, avoiding a transient "Carregando" flash in the canvas.
+  const renderedFallbackRef = useRef<Record<string, string>>({});
   const studioWarmupRef = useRef<string | null>(null);
 
   const refreshCharacterData = useCallback(async (announce = false) => {
@@ -372,6 +375,9 @@ export default function StudioPage() {
         .then((src) => {
           if (cancelled) return;
           renderedRef.current[key] = src;
+          renderedFallbackRef.current[request.character.id] = src;
+          const instance = activeStudio.characters.find((item) => item.characterId === request.character.id);
+          if (instance) renderedFallbackRef.current[instance.id] = src;
           setRendered((current) => ({ ...current, [key]: src }));
         })
         .catch(() => { if (!cancelled) setNotice(`Não foi possível renderizar ${request.character.name}`); }));
@@ -903,6 +909,7 @@ export default function StudioPage() {
         studio={studio}
         charactersById={charactersById}
         rendered={rendered}
+        renderedFallback={renderedFallbackRef.current}
         selection={selection}
         renderCacheKey={renderCacheKey}
         onStagePointerDown={() => { setSelection(null); setDockSide("right"); }}
@@ -967,6 +974,7 @@ export default function StudioPage() {
             rosterIds={studio.rosterIds}
             charactersById={charactersById}
             rendered={rendered}
+            renderedFallback={renderedFallbackRef.current}
             renderCacheKey={renderCacheKey}
             selection={selection}
             onSelectCharacter={addOrSelectCharacter}
