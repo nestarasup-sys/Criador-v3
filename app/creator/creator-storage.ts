@@ -126,9 +126,28 @@ export async function deleteExpressionPackFromPc(id: string) {
   await pcRequest(`/packs/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+/**
+ * Hydrates local assets without opening hundreds of image requests at once.
+ * A small fixed concurrency keeps startup responsive and avoids a large
+ * transient memory spike when a catalog contains many sheets/variants.
+ */
+async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, worker: (item: T) => Promise<R>) {
+  const results = new Array<R>(items.length);
+  let cursor = 0;
+  const workerCount = Math.min(Math.max(1, limit), items.length);
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (true) {
+      const index = cursor++;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index]);
+    }
+  }));
+  return results;
+}
+
 export async function hydratePcState(pcState: PcState) {
   const normalizedPcCatalog = normalizeOutfitCatalog(pcState.catalog);
-  const catalog = (await Promise.all(normalizedPcCatalog.map(async (item) => {
+  const catalog = (await mapWithConcurrency(normalizedPcCatalog, 6, async (item) => {
     try {
       const response = await fetch(item.fileUrl, { cache: "no-store" });
       if (!response.ok) return null;
@@ -139,9 +158,9 @@ export async function hydratePcState(pcState: PcState) {
     } catch {
       return null;
     }
-  }))).filter((item): item is CatalogItem => item !== null);
-  const expressionPacks: ExpressionPack[] = (await Promise.all((pcState.expressionPacks ?? []).map(async (pack) => {
-    const frames = (await Promise.all((pack.frames ?? []).map(async (frame) => {
+  })).filter((item): item is CatalogItem => item !== null);
+  const expressionPacks: ExpressionPack[] = (await mapWithConcurrency(pcState.expressionPacks ?? [], 4, async (pack) => {
+    const frames = (await mapWithConcurrency(pack.frames ?? [], 6, async (frame) => {
       try {
         const response = await fetch(frame.fileUrl, { cache: "no-store" });
         if (!response.ok) return null;
@@ -152,9 +171,9 @@ export async function hydratePcState(pcState: PcState) {
       } catch {
         return null;
       }
-    }))).filter((frame): frame is ExpressionFrame => frame !== null);
+    })).filter((frame): frame is ExpressionFrame => frame !== null);
     return frames.length > 0 ? { ...pack, frames } : null;
-  }))).filter((pack): pack is ExpressionPack => pack !== null);
+  })).filter((pack): pack is ExpressionPack => pack !== null);
   return {
     characters: (pcState.characters ?? []).map((character) => ({ ...character, basePackId: normalizeBasePackId(character.basePackId) })),
     catalog,

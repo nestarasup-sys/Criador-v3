@@ -254,13 +254,38 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
+const PAGE_IMAGE_CACHE_LIMIT = 128;
+const pageImageCache = new Map<string, Promise<HTMLImageElement>>();
+
 function loadImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
+  const cached = pageImageCache.get(src);
+  if (cached) {
+    pageImageCache.delete(src);
+    pageImageCache.set(src, cached);
+    return cached;
+  }
+  const pending = new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
+    image.decoding = "async";
+    image.onload = () => {
+      // decode() prevents the first canvas draw from paying the decode cost.
+      // Some browsers do not implement it, so loading remains the fallback.
+      const decoded = typeof image.decode === "function" ? image.decode() : Promise.resolve();
+      void decoded.catch(() => undefined).finally(() => resolve(image));
+    };
+    image.onerror = () => {
+      pageImageCache.delete(src);
+      reject(new Error(`Não foi possível carregar ${src}`));
+    };
     image.src = src;
   });
+  pageImageCache.set(src, pending);
+  while (pageImageCache.size > PAGE_IMAGE_CACHE_LIMIT) {
+    const oldest = pageImageCache.keys().next().value as string | undefined;
+    if (!oldest) break;
+    pageImageCache.delete(oldest);
+  }
+  return pending;
 }
 
 async function removeChroma(source: Blob | string) {
