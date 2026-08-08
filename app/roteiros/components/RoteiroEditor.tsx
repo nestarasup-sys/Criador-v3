@@ -8,7 +8,7 @@ import { nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
-import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter } from "../../studio/character-export";
+import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
@@ -49,7 +49,7 @@ function exportPathSegment(value: string, fallback: string) {
   return normalized || fallback;
 }
 
-function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"]) {
+function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"], catalog: Awaited<ReturnType<typeof loadPremiumStudioData>>["catalog"]) {
   const names = new Map(characters.map((character) => [character.id, character.name]));
   const expressionLines = script.participants.map((participant) => {
     const character = fullCharacters.find((item) => item.id === participant.characterId);
@@ -57,7 +57,13 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const expressions = [...new Set(expressionKeys.filter((key) => !/(?:_blink|_talk)$/i.test(key)).map(readableExpression))];
     const name = names.get(participant.characterId) || character?.name || "Personagem removido";
     const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(script.title, "roteiro")}/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
-    return `${name} - Pasta exata: ${folder}\nExpressões: ${expressions.join(", ")}`;
+    const variants = character ? outfitVariantsForExport(character, catalog) : [];
+    const variantLines = variants.map((variant) => `${variant.label} - Pasta exata: ${folder}/${variant.label}`);
+    return [
+      `${name} - Pasta exata: ${folder}`,
+      ...(variantLines.length ? ["Variantes:", ...variantLines] : []),
+      `Expressões: ${expressions.join(", ")}`,
+    ].join("\n");
   });
   const openingLines = script.opening ? (() => {
     const section = script.opening;
@@ -422,7 +428,7 @@ export default function RoteiroEditor() {
     setExportLoading("script"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks));
+      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks, assets.catalog));
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
     finally { setExportLoading(""); }
