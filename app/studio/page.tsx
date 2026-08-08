@@ -17,6 +17,7 @@ import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./histo
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
 import { renderStudioSceneToCanvas, studioCanvasToPng } from "./scene-print-renderer";
 import { STUDIO_SCENE_HEIGHT, STUDIO_SCENE_WIDTH } from "./scene-layout.mjs";
+import { normalizeBasePackId } from "../domain/base-model.mjs";
 import {
   EMOTIONS,
   NEW_BASE_EMOTIONS,
@@ -36,7 +37,8 @@ import {
 } from "./types";
 
 const EMPTY_DATA: AppData = { characters: [], catalog: [], expressionPacks: [], studios: [], studioAssets: [] };
-function emotionOptionsForCharacter(character: Character, expressionPacks: PcExpressionPack[]): ReadonlyArray<readonly [Emotion, string]> {
+type StudioModelPacks = Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>;
+function emotionOptionsForCharacter(character: Character, expressionPacks: PcExpressionPack[], modelPacks: StudioModelPacks): ReadonlyArray<readonly [Emotion, string]> {
   if (character.faceMode === "pack" && character.expressionPackId) {
     const pack = expressionPacks.find((item) => item.id === character.expressionPackId);
     if (pack) {
@@ -44,12 +46,19 @@ function emotionOptionsForCharacter(character: Character, expressionPacks: PcExp
       return EMOTIONS.filter(([value]) => available.has(value));
     }
   }
+  const modelPack = modelPacks[character.model]?.find((pack) => pack.id === normalizeBasePackId(character.basePackId));
+  if (modelPack?.expressionKeys?.length) {
+    const available = new Set(modelPack.expressionKeys
+      .filter((key) => !key.endsWith("_blink") && !key.endsWith("_talk")));
+    return EMOTIONS.filter(([value]) => available.has(value));
+  }
   const normalizedPack = character.basePackId === "padrao" ? "modelo-1" : character.basePackId ?? "modelo-1";
   return normalizedPack !== "modelo-1" ? NEW_BASE_EMOTIONS : STANDARD_EMOTIONS;
 }
 
 export default function StudioPage() {
   const [data, setData] = useState<AppData>(EMPTY_DATA);
+  const [modelPacks, setModelPacks] = useState<StudioModelPacks>({});
   const [studios, setStudios] = useState<Studio[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
@@ -109,6 +118,7 @@ export default function StudioPage() {
   useEffect(() => {
     loadAppData().then((loaded) => {
       setData(loaded);
+      setModelPacks(loaded.modelPacks);
       setStudios(loaded.studios);
       studiosRef.current = loaded.studios;
       browserStudiosRef.current = loaded.browserStudios;
@@ -949,7 +959,7 @@ export default function StudioPage() {
             selectedObject={selectedObject}
             selectedBubble={selectedBubble}
             selectedNarrator={selectedNarrator}
-            emotions={selectedCharacterSource ? emotionOptionsForCharacter(selectedCharacterSource, data.expressionPacks) : []}
+            emotions={selectedCharacterSource ? emotionOptionsForCharacter(selectedCharacterSource, data.expressionPacks, modelPacks) : []}
             translatingBubbleId={translatingBubbleId}
             onToggleBackgroundFit={() => updateStudio((item) => ({ ...item, background: item.background ? { ...item.background, fit: item.background.fit === "cover" ? "contain" : "cover" } : null }))}
             backgroundCollapsed={backgroundCollapsed}

@@ -9,6 +9,7 @@ let studioSaveQueue: Promise<void> = Promise.resolve();
 type StudioDeletion = { id: string; deletedAt: string };
 
 export type LoadedAppData = AppData & {
+  modelPacks: Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>;
   pcStorageAvailable: boolean;
   migrationAvailable: boolean;
   browserStudios: Studio[];
@@ -126,8 +127,14 @@ export async function loadAppData(): Promise<LoadedAppData> {
   const browserStudios = readLocal<Studio[]>(STUDIO_KEY, []);
   const browserDeletions = readLocal<StudioDeletion[]>(STUDIO_DELETION_KEY, []);
   try {
-    const response = await pcRequest("/state", { cache: "no-store" });
+    const [response, modelsResponse] = await Promise.all([
+      pcRequest("/state", { cache: "no-store" }),
+      pcRequest("/models", { cache: "no-store" }).catch(() => null),
+    ]);
     const data = await response.json() as Partial<AppData>;
+    const modelPacks = modelsResponse
+      ? await modelsResponse.json() as Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>
+      : {};
     const pcStudios = data.studios ?? [];
     const migrationAvailable = hasBrowserChanges(pcStudios, browserStudios, browserDeletions);
     const studios = migrationAvailable ? mergeStudios(pcStudios, browserStudios, browserDeletions) : pcStudios;
@@ -136,6 +143,7 @@ export async function loadAppData(): Promise<LoadedAppData> {
       characters: data.characters?.length ? normalizeCharacterModels(data.characters) : localCharacters,
       catalog: data.catalog ?? [],
       expressionPacks: data.expressionPacks ?? [],
+      modelPacks,
       studios,
       studioAssets: data.studioAssets ?? [],
       pcStorageAvailable: true,
@@ -149,6 +157,7 @@ export async function loadAppData(): Promise<LoadedAppData> {
       studios: browserStudios,
       catalog: [],
       expressionPacks: [],
+      modelPacks: {},
       studioAssets: [],
       pcStorageAvailable: false,
       migrationAvailable: browserStudios.length > 0,
