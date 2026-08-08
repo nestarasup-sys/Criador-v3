@@ -12,7 +12,7 @@ import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCh
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
-import type { GeneratedReaction, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "../types";
+import type { GeneratedReaction, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
 
@@ -348,6 +348,13 @@ export default function RoteiroEditor() {
 
   const updateScript = (recipe: (current: ScriptProject) => ScriptProject) => updateState((current) => updateScriptCommand(current, script.id, recipe));
   const patchScript = (patch: Partial<ScriptProject>) => updateScript((current) => ({ ...current, ...patch }));
+  const exportTarget: RoteiroExportTarget = script.exportTarget === "v2" ? "v2" : "v1";
+  const exportTargetLabel = exportTarget === "v2" ? "Versão 2 · GACHO EDITOR V2" : "Versão 1 · PRIMEIRO-STUDIO";
+  const setExportTarget = (target: RoteiroExportTarget) => {
+    if (target === exportTarget) return;
+    patchScript({ exportTarget: target });
+    setExportMessage(`Destino alterado para ${target === "v2" ? "a Versão 2" : "a Versão 1"}.`);
+  };
   const addTikTok = () => {
     const result = addTikTokCommand(state, script.id, state.settings.defaultBlockCount, state.settings.shortLinesByDefault);
     updateState(() => result.state);
@@ -377,7 +384,7 @@ export default function RoteiroEditor() {
   const exportVideos = async () => {
     setExportLoading("videos"); setExportMessage("");
     try {
-      const result = await exportRoteiroVideos(script);
+      const result = await exportRoteiroVideos(script, exportTarget);
       setExportMessage(`Vídeos exportados: ${result.exported}. Descrições salvas. ${result.missing.length ? `Sem arquivo: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar vídeos."); }
     finally { setExportLoading(""); }
@@ -395,7 +402,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
@@ -416,7 +423,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
@@ -428,7 +435,7 @@ export default function RoteiroEditor() {
     setExportLoading("script"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks, assets.catalog));
+      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
     finally { setExportLoading(""); }
@@ -437,7 +444,7 @@ export default function RoteiroEditor() {
     const loadingKey = target === "characters" ? "folder-characters" : "folder-script";
     setExportLoading(loadingKey); setExportMessage("");
     try {
-      await openRoteiroExportFolder(target, script.title);
+      await openRoteiroExportFolder(target, script.title, exportTarget);
       setExportMessage("Pasta aberta no Explorador de Arquivos.");
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível abrir a pasta."); }
     finally { setExportLoading(""); }
@@ -494,6 +501,12 @@ export default function RoteiroEditor() {
         {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
+          <div className={styles.exportTargetSelector} role="group" aria-label="Destino da exportação">
+            <strong>Destino</strong>
+            <button type="button" className={exportTarget === "v1" ? styles.exportTargetActive : ""} onClick={() => setExportTarget("v1")} disabled={Boolean(exportLoading)}>Versão 1 · PRIMEIRO-STUDIO</button>
+            <button type="button" className={exportTarget === "v2" ? styles.exportTargetActive : ""} onClick={() => setExportTarget("v2")} disabled={Boolean(exportLoading)}>Versão 2 · GACHO EDITOR V2</button>
+          </div>
+          <small className={styles.exportDestinationHint}>Os quatro botões abaixo usam: {exportTargetLabel}. A estrutura de pastas e os nomes dos arquivos permanecem iguais.</small>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacterVariants()}>{exportLoading === "character-variants" ? "Exportando poses…" : "Exportar variantes"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>

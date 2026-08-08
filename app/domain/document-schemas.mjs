@@ -212,6 +212,7 @@ function normalizeRoteiroOpening(value) {
 
 function normalizeRoteiroScript(value) {
   const source = record(value);
+  const exportTarget = source.exportTarget === "v2" ? "v2" : source.exportTarget === "v1" ? "v1" : undefined;
   return {
     ...source,
     id: typeof source.id === "string" ? source.id : "",
@@ -223,6 +224,7 @@ function normalizeRoteiroScript(value) {
     }),
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
+    ...(exportTarget ? { exportTarget } : {}),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
   };

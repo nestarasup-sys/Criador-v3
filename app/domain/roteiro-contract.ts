@@ -43,9 +43,12 @@ export type TikTokSection = {
 /** Cena opcional antes do primeiro TikTok; usa os mesmos blocos narrativos, mas nunca possui vídeo. */
 export type OpeningSection = Omit<TikTokSection, "video">;
 export type ScriptParticipant = { characterId: string; active: boolean };
+export type RoteiroExportTarget = "v1" | "v2";
 export type ScriptProject = {
   id: string; title: string; generalContext: string; participants: ScriptParticipant[];
   opening?: OpeningSection; tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
+  /** Destino local dos quatro exports do roteiro; ausente em dados antigos = v1. */
+  exportTarget?: RoteiroExportTarget;
 };
 export type RoteirosState = {
   version: RoteirosStateVersion;

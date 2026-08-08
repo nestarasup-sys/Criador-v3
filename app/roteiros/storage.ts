@@ -1,5 +1,5 @@
 import { emptyRoteirosState } from "./defaults";
-import type { PremiumCharacter, RoteirosState, ScriptProject, TikTokVideoReference } from "./types";
+import type { PremiumCharacter, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokVideoReference } from "./types";
 import type { Character, PcCatalogItem, PcExpressionPack } from "../studio/types";
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
 import { normalizeRoteirosState as normalizeState } from "../domain/document-schemas.mjs";
@@ -107,32 +107,32 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
 }
 
-export async function exportRoteiroVideos(script: ScriptProject) {
+export async function exportRoteiroVideos(script: ScriptProject, target: RoteiroExportTarget = "v1") {
   const response = await localDataFetch("/roteiros/export-videos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, video: section.video })) }),
+    body: JSON.stringify({ target, scriptId: script.id, scriptTitle: script.title, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, video: section.video })) }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar os vídeos."));
   return result as { folder: string; exported: number; missing: string[]; descriptionFile: string };
 }
 
-export async function exportRoteiroText(script: ScriptProject, content: string) {
+export async function exportRoteiroText(script: ScriptProject, content: string, target: RoteiroExportTarget = "v1") {
   const response = await localDataFetch("/roteiros/export-text", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, content }),
+    body: JSON.stringify({ target, scriptId: script.id, scriptTitle: script.title, content }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar o roteiro."));
   return result as { path: string; fileName: string };
 }
 
-export async function exportRoteiroCharacter(scriptTitle: string, characterId: string, characterName: string, bundle: Blob) {
+export async function exportRoteiroCharacter(scriptTitle: string, characterId: string, characterName: string, bundle: Blob, target: RoteiroExportTarget = "v1") {
   const response = await localDataFetch(`/roteiros/export-characters/${encodeURIComponent(characterId)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/zip", ...localMeta({ scriptTitle, characterName }) },
+    headers: { "Content-Type": "application/zip", ...localMeta({ scriptTitle, characterName, exportTarget: target }) },
     body: bundle,
   });
   const result = await response.json().catch(() => ({}));
@@ -140,11 +140,11 @@ export async function exportRoteiroCharacter(scriptTitle: string, characterId: s
   return result as { folder: string; files: number };
 }
 
-export async function openRoteiroExportFolder(target: "characters" | "script", scriptTitle: string) {
+export async function openRoteiroExportFolder(folderTarget: "characters" | "script", scriptTitle: string, target: RoteiroExportTarget = "v1") {
   const response = await localDataFetch("/roteiros/open-folder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ target, scriptTitle }),
+    body: JSON.stringify({ target: folderTarget, exportTarget: target, scriptTitle }),
   });
   const result = await response.json().catch(() => ({})) as { error?: string; folder?: string };
   if (!response.ok || !result.folder) throw new Error(result.error || "Não foi possível abrir a pasta no PC.");

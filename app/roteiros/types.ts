@@ -12,6 +12,7 @@ export type {
   ReactionBlockType,
   RoteirosSettings,
   RoteirosState,
+  RoteiroExportTarget,
   RulePriority,
   SaveStatus,
   ScriptParticipant,

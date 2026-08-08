@@ -715,6 +715,14 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /export-videos/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
+  assert.match(editor, /Versão 1 · PRIMEIRO-STUDIO/);
+  assert.match(editor, /Versão 2 · GACHO EDITOR V2/);
+  assert.match(editor, /exportTarget/);
+  assert.match(storage, /exportRoteiroVideos\(script: ScriptProject, target/);
+  assert.match(storage, /exportRoteiroText\(script: ScriptProject, content: string, target/);
+  assert.match(server, /GACHA_EDITOR_V2_ASSETS_ROOT/);
+  assert.match(server, /GACHO EDITOR V2\\\\data\\\\assets/);
+  assert.match(server, /exportTargetConfig/);
   assert.match(server, /Accept-Ranges/);
   assert.match(server, /DELETE/);
   assert.match(schemas, /validateRoteiroExportDocument/);
