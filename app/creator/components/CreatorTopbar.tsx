@@ -6,13 +6,15 @@ type CreatorTopbarProps = {
   usesBuiltInBase: boolean;
   hasExpressionPack: boolean;
   exportingPack: boolean;
+  exportingVariants: boolean;
   onNew: () => void;
   onSave: () => void;
   onExportPack: () => void;
+  onExportVariants: () => void;
   onExportPng: () => void;
 };
 
-export function CreatorTopbar({ connected, notice, usesBuiltInBase, hasExpressionPack, exportingPack, onNew, onSave, onExportPack, onExportPng }: CreatorTopbarProps) {
+export function CreatorTopbar({ connected, notice, usesBuiltInBase, hasExpressionPack, exportingPack, exportingVariants, onNew, onSave, onExportPack, onExportVariants, onExportPng }: CreatorTopbarProps) {
   return <header className="topbar">
     <div className="brand">
       <div className="brand-mark"><span>✦</span></div>
@@ -26,6 +28,9 @@ export function CreatorTopbar({ connected, notice, usesBuiltInBase, hasExpressio
       <button className="button secondary" onClick={onSave}>▣ Salvar</button>
       {(usesBuiltInBase || hasExpressionPack) && <button className="button secondary" onClick={onExportPack} disabled={exportingPack}>
         {exportingPack ? "Montando ZIP…" : "Exportar ZIP"}
+      </button>}
+      {(usesBuiltInBase || hasExpressionPack) && <button className="button secondary" onClick={onExportVariants} disabled={exportingPack || exportingVariants}>
+        {exportingVariants ? "Montando poses…" : "Exportar variantes"}
       </button>}
       <button className="button primary" onClick={onExportPng}>⇩ Exportar PNG</button>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createCharacterBundle } from "./studio/character-export";
+import { createCharacterBundle, createCharacterVariantsBundle, outfitVariantsForExport } from "./studio/character-export";
 import { applyChromaPixels } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
 import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBounds } from "./creator/image-processing";
@@ -1176,6 +1176,7 @@ export default function Home() {
   const [expressionState, setExpressionState] = useState<ExpressionState>("default");
   const [animationMode, setAnimationMode] = useState<"blink" | "talk" | null>(null);
   const [isExportingPack, setIsExportingPack] = useState(false);
+  const [isExportingVariants, setIsExportingVariants] = useState(false);
   const [eraserMode, setEraserMode] = useState(false);
   const [maskTarget, setMaskTarget] = useState<MaskTarget>("body");
   const [brushMode, setBrushMode] = useState<BrushMode>("erase");
@@ -1394,7 +1395,19 @@ export default function Home() {
     expressionKey: ExpressionKey = activeExpressionKey,
     includeExpression = true,
     editingPreview = false,
+    variantOutfitId?: string,
   ) => {
+    const variantStateKey = variantOutfitId ? outfitStateKey(variantOutfitId, basePackId) : null;
+    const renderSelections = variantOutfitId ? { ...selections, roupas: variantOutfitId } : selections;
+    const renderAdjustments = variantStateKey && outfitAdjustmentsByBasePack[variantStateKey]
+      ? { ...adjustments, roupas: outfitAdjustmentsByBasePack[variantStateKey] }
+      : adjustments;
+    const renderLayerMasks = variantStateKey && outfitLayerMasksByBasePack[variantStateKey]
+      ? { ...layerMasks, outfit: outfitLayerMasksByBasePack[variantStateKey] }
+      : layerMasks;
+    const renderProtectionMasks = variantStateKey && outfitProtectionMasksByBasePack[variantStateKey]
+      ? { ...protectionMasks, roupas: outfitProtectionMasksByBasePack[variantStateKey] }
+      : protectionMasks;
     const canvas = document.createElement("canvas");
     canvas.width = 1920;
     canvas.height = 1080;
@@ -1432,7 +1445,7 @@ export default function Home() {
       const color = normalizeColorAdjustment(layerCategory === "roupas" && itemColorGroupKey
         ? outfitColorAdjustmentsByGroup[itemColorGroupKey] ?? colorAdjustments.roupas
         : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT);
-      const protectionMask = layerCategory ? protectionMasks[layerCategory] : undefined;
+      const protectionMask = layerCategory ? renderProtectionMasks[layerCategory] : undefined;
       if (colorAdjustmentIsActive(color)) {
         const adjusted = createColorAdjustedCanvas(image, width, height, color);
         await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadImage);
@@ -1494,9 +1507,13 @@ export default function Home() {
       baseImage = processedBaseExpressions.current[cacheKey][resolvedExpressionKey];
     }
 
-    const backHair = catalog.find((entry) => entry.id === selections.cabelosTras);
+    const backHair = catalog.find((entry) => entry.id === renderSelections.cabelosTras);
     if (backHair) {
-      await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras");
+      if (variantStateKey) {
+        await drawLayer(backHair, renderAdjustments.cabelosTras, category === "cabelosTras", renderLayerMasks.hairBack, "cabelosTras");
+      } else {
+        await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras");
+      }
     }
 
     if (baseImage) {
@@ -1525,16 +1542,22 @@ export default function Home() {
       } else {
         bodyContext.drawImage(baseImage, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
       }
-      if (layerMasks.body.length > 0) {
+      if (renderLayerMasks.body.length > 0) {
         bodyContext.globalCompositeOperation = "destination-in";
-        bodyContext.drawImage(createBodyMask(layerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
+        bodyContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         bodyContext.globalCompositeOperation = "source-over";
       }
       context.drawImage(bodyLayer, 0, 0);
     }
 
-    const outfit = catalog.find((item) => item.id === selections.roupas);
-    if (outfit) await drawLayer(outfit, adjustments.roupas, category === "roupas", layerMasks.outfit, "roupas");
+    const outfit = catalog.find((item) => item.id === renderSelections.roupas);
+    if (outfit) {
+      if (variantStateKey) {
+        await drawLayer(outfit, renderAdjustments.roupas, category === "roupas", renderLayerMasks.outfit, "roupas");
+      } else {
+        await drawLayer(outfit, adjustments.roupas, category === "roupas", layerMasks.outfit, "roupas");
+      }
+    }
 
     if (includeExpression && faceMode !== "base") {
       if (faceMode === "pack" && activeExpressionPack) {
@@ -1542,19 +1565,25 @@ export default function Home() {
         if (frame) {
           await drawLayer(
             { ...frame, defaultX: 970, defaultY: 285 },
-            adjustments.rostos,
+            renderAdjustments.rostos,
             category === "rostos",
           );
         }
       } else {
-        const face = catalog.find((entry) => entry.id === selections.rostos);
-        if (face) await drawLayer(face, adjustments.rostos, category === "rostos", [], "rostos");
+        const face = catalog.find((entry) => entry.id === renderSelections.rostos);
+        if (face) await drawLayer(face, renderAdjustments.rostos, category === "rostos", [], "rostos");
       }
     }
 
-    const hair = catalog.find((entry) => entry.id === selections.cabelos);
-    if (hair) await drawLayer(hair, adjustments.cabelos, category === "cabelos", layerMasks.hairFront, "cabelos");
-    const activeMask = layerMasks[maskTarget];
+    const hair = catalog.find((entry) => entry.id === renderSelections.cabelos);
+    if (hair) {
+      if (variantStateKey) {
+        await drawLayer(hair, renderAdjustments.cabelos, category === "cabelos", renderLayerMasks.hairFront, "cabelos");
+      } else {
+        await drawLayer(hair, adjustments.cabelos, category === "cabelos", layerMasks.hairFront, "cabelos");
+      }
+    }
+    const activeMask = renderLayerMasks[maskTarget];
     if (editingPreview && eraserMode && showEraseMask && activeMask.length > 0) {
       context.drawImage(createMaskOverlay(activeMask, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
     }
@@ -1565,7 +1594,7 @@ export default function Home() {
     finalContext.drawImage(sceneCanvas, -SCENE_PADDING.x, -SCENE_PADDING.y);
     finalContext.restore();
     return canvas;
-  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitColorAdjustmentsByGroup, protectionMasks, selections, showEraseMask]);
+  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -3170,6 +3199,47 @@ export default function Home() {
     }
   }
 
+  async function exportExpressionVariantsZip() {
+    persistEditorSnapshot("Salvo automaticamente");
+    const usesBuiltInBase = faceMode === "base";
+    if (!usesBuiltInBase && !activeExpressionPack) {
+      setNotice("Importe um pack de rosto antes de exportar as variantes");
+      return;
+    }
+    const variants = outfitVariantsForExport({ id: activeCharacter ?? "preview", name: characterName, model, selections } as Character, catalog);
+    if (variants.length < 2) {
+      setNotice("A roupa atual não possui variantes para exportar");
+      return;
+    }
+    setIsExportingVariants(true);
+    setAnimationMode(null);
+    setNotice(`Montando ${variants.length} poses e suas expressões…`);
+    try {
+      const expressions = usesBuiltInBase ? activeBaseExpressionKeys : activeExpressionPack?.frames.map((frame) => frame.key) ?? PACK_EXPRESSION_KEYS;
+      const blob = await createCharacterVariantsBundle({
+        folderName: characterName,
+        character: { id: activeCharacter ?? undefined, name: characterName, model, basePackId, basePackName: activeBasePack.name, faceMode },
+        variants,
+        createVariantBundle: (variant) => ({
+          folderName: variant.label,
+          character: { id: activeCharacter ?? undefined, name: characterName, model, basePackId, basePackName: activeBasePack.name, faceMode },
+          usesBuiltInBase,
+          expressions,
+          renderPreview: async () => canvasBlob(await composeCharacter(expressions[0], true, false, variant.id)),
+          renderComplete: async (key) => canvasBlob(await composeCharacter(key as ExpressionKey, true, false, variant.id)),
+          renderWithoutFace: async () => canvasBlob(await composeCharacter("normal", false, false, variant.id)),
+          faceFrame: async (key) => activeExpressionPack?.frames.find((entry) => entry.key === key)?.blob ?? null,
+        }),
+      });
+      downloadBlob(blob, `${safeFileName(characterName)}-variantes.zip`);
+      setNotice(`ZIP exportado com ${variants.length} poses`);
+    } catch {
+      setNotice("Não foi possível montar o ZIP de variantes");
+    } finally {
+      setIsExportingVariants(false);
+    }
+  }
+
   const selectedOutfit = catalog.find((item) => item.id === selections.roupas && item.category === "roupas");
   const modelOutfits = catalog.filter((item) => item.model === model && item.category === "roupas");
   const activeOutfitGroupId = selectedOutfit?.outfitGroupId ?? outfitGroupViewId;
@@ -3539,9 +3609,11 @@ export default function Home() {
         usesBuiltInBase={usesBuiltInBase}
         hasExpressionPack={Boolean(activeExpressionPack)}
         exportingPack={isExportingPack}
+        exportingVariants={isExportingVariants}
         onNew={() => newCharacter()}
         onSave={saveCharacter}
         onExportPack={exportExpressionZip}
+        onExportVariants={exportExpressionVariantsZip}
         onExportPng={exportPng}
       />
 

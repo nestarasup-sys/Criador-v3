@@ -75,6 +75,16 @@ function safeFolderName(value: string) {
   return cleaned || "personagem";
 }
 
+/** Mantém o formato legível das subpastas de variantes (POSE 1, POSE 2...). */
+function safePoseFolderName(value: string, fallbackIndex: number) {
+  const cleaned = String(value || "")
+    .trim()
+    .replace(/[<>:"/\\|?*]/g, "-")
+    .replace(/\s+/g, " ")
+    .slice(0, 40);
+  return cleaned || `POSE ${fallbackIndex + 1}`;
+}
+
 export type CharacterBundleOptions = {
   folderName: string;
   character: { id?: string; name: string; model: string; basePackId?: string; basePackName?: string; faceMode?: string };
@@ -86,11 +96,7 @@ export type CharacterBundleOptions = {
   faceFrame?: (key: string) => Promise<Blob | null>;
 };
 
-/** Núcleo compartilhado do ZIP: o Criador e os Roteiros passam apenas seus renderizadores. */
-export async function createCharacterBundle(options: CharacterBundleOptions) {
-  const zip = new JSZip();
-  const root = zip.folder(safeFolderName(options.folderName));
-  if (!root) throw new Error("Falha ao criar pasta do personagem");
+async function writeCharacterBundle(root: JSZip, options: CharacterBundleOptions) {
   const expressions = options.expressions;
   root.file("preview.png", await options.renderPreview());
   if (options.usesBuiltInBase) {
@@ -117,6 +123,61 @@ export async function createCharacterBundle(options: CharacterBundleOptions) {
     output: options.usesBuiltInBase ? "final-character-frames" : "faces-and-complete-frames",
     generatedAt: new Date().toISOString(),
   }, null, 2));
+}
+
+/** Núcleo compartilhado do ZIP: o Criador e os Roteiros passam apenas seus renderizadores. */
+export async function createCharacterBundle(options: CharacterBundleOptions) {
+  const zip = new JSZip();
+  const root = zip.folder(safeFolderName(options.folderName));
+  if (!root) throw new Error("Falha ao criar pasta do personagem");
+  await writeCharacterBundle(root, options);
+  return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+}
+
+export type CharacterVariant = {
+  id: string;
+  index: number;
+  label: string;
+};
+
+type OutfitVariantLike = Pick<PcCatalogItem, "id" | "category" | "outfitGroupId" | "outfitVariantIndex" | "outfitCover">;
+
+/** Retorna as variantes da roupa atual em ordem estável para os diretórios POSE 1, POSE 2… */
+export function outfitVariantsForExport(character: Character, catalog: readonly OutfitVariantLike[]): CharacterVariant[] {
+  const selected = catalog.find((item) => item.id === character.selections.roupas && item.category === "roupas");
+  if (!selected?.outfitGroupId) return selected ? [{ id: selected.id, index: 0, label: "POSE 1" }] : [];
+  const variants = catalog
+    .filter((item) => item.category === "roupas" && item.outfitGroupId === selected.outfitGroupId && item.id)
+    .sort((left, right) => (left.outfitVariantIndex ?? (left.outfitCover ? 0 : Number.MAX_SAFE_INTEGER))
+      - (right.outfitVariantIndex ?? (right.outfitCover ? 0 : Number.MAX_SAFE_INTEGER)));
+  return variants.map((item, index) => ({ id: item.id, index, label: `POSE ${index + 1}` }));
+}
+
+export type CharacterVariantsBundleOptions = {
+  folderName: string;
+  character: CharacterBundleOptions["character"];
+  variants: readonly CharacterVariant[];
+  createVariantBundle: (variant: CharacterVariant) => CharacterBundleOptions;
+};
+
+/** Cria um ZIP com a mesma estrutura do exportador normal dentro de cada POSE. */
+export async function createCharacterVariantsBundle(options: CharacterVariantsBundleOptions) {
+  if (!options.variants.length) throw new Error("Este personagem não possui roupa para exportar");
+  const zip = new JSZip();
+  const root = zip.folder(safeFolderName(options.folderName));
+  if (!root) throw new Error("Falha ao criar pasta do personagem");
+  for (const variant of options.variants) {
+    const poseRoot = root.folder(safePoseFolderName(variant.label, variant.index));
+    if (!poseRoot) throw new Error(`Falha ao criar a pasta ${variant.label}`);
+    await writeCharacterBundle(poseRoot, options.createVariantBundle(variant));
+  }
+  root.file("variants-manifest.json", JSON.stringify({
+    format: "gacha-maker-expression-variants-pack",
+    version: 1,
+    character: options.character,
+    variants: options.variants,
+    generatedAt: new Date().toISOString(),
+  }, null, 2));
   return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
 }
 
@@ -136,6 +197,57 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
     faceFrame: async (key) => {
       const frame = pack?.frames.find((item) => item.key === key);
       return frame ? frameBlob(frame) : null;
+    },
+  });
+}
+
+/** Monta todas as variantes de roupa para exportação pelo Roteiros. */
+export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {}) {
+  const variants = outfitVariantsForExport(character, catalog);
+  const expressions = expressionKeysForCharacter(character, packs, modelPacks);
+  const pack = packs.find((item) => item.id === character.expressionPackId);
+  return createCharacterVariantsBundle({
+    folderName: character.name,
+    character: { ...character, id: character.id },
+    variants,
+    createVariantBundle: (variant) => {
+      const packId = normalizedPackId(character.basePackId);
+      const variantKey = `${variant.id}:${packId}`;
+      const variantCharacter = {
+        ...character,
+        selections: { ...character.selections, roupas: variant.id },
+        adjustments: {
+          ...character.adjustments,
+          roupas: character.outfitAdjustmentsByBasePack?.[variantKey]
+            ?? character.outfitAdjustmentsByBasePack?.[packId]
+            ?? character.adjustments.roupas,
+        },
+        layerMasks: {
+          ...(character.layerMasks ?? {}),
+          outfit: character.outfitLayerMasksByBasePack?.[variantKey]
+            ?? character.outfitLayerMasksByBasePack?.[packId]
+            ?? (variant.id === character.selections.roupas ? character.layerMasks?.outfit ?? [] : []),
+        },
+        protectionMasks: {
+          ...(character.protectionMasks ?? {}),
+          roupas: character.outfitProtectionMasksByBasePack?.[variantKey]
+            ?? character.outfitProtectionMasksByBasePack?.[packId]
+            ?? (variant.id === character.selections.roupas ? character.protectionMasks?.roupas : undefined),
+        },
+      };
+      return {
+        folderName: variant.label,
+        character: { ...variantCharacter, id: character.id },
+        usesBuiltInBase: character.faceMode === "base",
+        expressions,
+        renderPreview: async () => dataUrlBlob(await renderStudioCharacter(variantCharacter, expressions[0], catalog, packs)),
+        renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(variantCharacter, key as ExpressionKey, catalog, packs)),
+        renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs)),
+        faceFrame: async (key) => {
+          const frame = pack?.frames.find((item) => item.key === key);
+          return frame ? frameBlob(frame) : null;
+        },
+      };
     },
   });
 }

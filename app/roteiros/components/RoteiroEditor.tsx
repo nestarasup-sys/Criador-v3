@@ -8,7 +8,7 @@ import { nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
-import { buildCharacterBundle, expressionKeysForCharacter } from "../../studio/character-export";
+import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
@@ -397,6 +397,27 @@ export default function RoteiroEditor() {
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
     finally { setExportLoading(""); }
   };
+  const exportCharacterVariants = async () => {
+    setExportLoading("character-variants"); setExportMessage("");
+    try {
+      const assets = await loadPremiumStudioData();
+      const selected = script.participants.map((participant) => participant.characterId);
+      const results: string[] = [];
+      const failures: string[] = [];
+      for (const characterId of selected) {
+        const character = assets.characters.find((item) => item.id === characterId);
+        const fallback = characterMap.get(characterId);
+        if (!character) { failures.push(fallback?.name || characterId); continue; }
+        try {
+          const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
+          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
+          results.push(character.name);
+        } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
+      }
+      setExportMessage(`Variantes exportadas: ${results.length}/${selected.length}.${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
+    finally { setExportLoading(""); }
+  };
   const exportScriptText = async () => {
     setExportLoading("script"); setExportMessage("");
     try {
@@ -468,7 +489,7 @@ export default function RoteiroEditor() {
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
-          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
+          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacterVariants()}>{exportLoading === "character-variants" ? "Exportando poses…" : "Exportar variantes"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           {exportMessage && <small>{exportMessage}</small>}
         </section>
