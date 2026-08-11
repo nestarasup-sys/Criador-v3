@@ -18,7 +18,7 @@ export function CreatorTopbar({ connected, notice, usesBuiltInBase, hasExpressio
   return <header className="topbar">
     <div className="brand">
       <div className="brand-mark"><span>✦</span></div>
-      <div><h1>Nymi Gacha</h1><p aria-label="Estúdio de personagens">Premium Character Studio</p></div>
+      <div><h1>Nymi Gacha</h1><p aria-label="Estúdio de personagens">Character Studio</p></div>
     </div>
     <div className="top-actions">
       <NymiConnectionStatus connected={connected} detail={notice} />
