@@ -37,6 +37,11 @@ const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
 const VIDEO_MAKER_TIKTOKS_ROOT = join(VIDEO_MAKER_ROOT, "tiktoks");
 const VIDEO_MAKER_PROJECTS_ROOT = join(VIDEO_MAKER_ROOT, "projects");
 const VIDEO_MAKER_EXPORTS_ROOT = join(VIDEO_MAKER_ROOT, "exports");
+const EDITOR_VIDEO_ROOT = join(ROOT, "editor-video");
+const EDITOR_VIDEO_CHARACTERS_ROOT = join(EDITOR_VIDEO_ROOT, "characters");
+const EDITOR_VIDEO_PROJECTS_ROOT = join(EDITOR_VIDEO_ROOT, "projects");
+const EDITOR_VIDEO_MEDIA_ROOT = join(EDITOR_VIDEO_ROOT, "media");
+const EDITOR_VIDEO_CATALOG_PATH = join(EDITOR_VIDEO_ROOT, "catalog.json");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
@@ -256,6 +261,9 @@ async function ensureFolders() {
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
+    mkdir(EDITOR_VIDEO_CHARACTERS_ROOT, { recursive: true }),
+    mkdir(EDITOR_VIDEO_PROJECTS_ROOT, { recursive: true }),
+    mkdir(EDITOR_VIDEO_MEDIA_ROOT, { recursive: true }),
     ...Object.values(EXPORT_TARGETS).flatMap((target) => [
       mkdir(roteiroVideoExportRoot(target.id), { recursive: true }),
       mkdir(roteiroCharacterExportRoot(target.id), { recursive: true }),
@@ -788,6 +796,142 @@ async function route(request, response) {
     return;
   }
 
+  // Biblioteca isolada do novo Editor de vídeo. O ZIP é validado e extraído
+  // somente dentro de data/editor-video; ele nunca sobrescreve o catálogo do
+  // Criador, Studio ou Roteiros.
+  if (request.method === "POST" && url.pathname === "/editor-video/characters/import") {
+    assertMimeType(contentTypeOf(request), new Set(["application/zip", "application/octet-stream"]), "Envie um arquivo ZIP de personagem.");
+    const body = await requestBody(request, BODY_LIMITS.zip);
+    const zip = await JSZip.loadAsync(body);
+    const entries = Object.entries(zip.files).filter(([, entry]) => !entry.dir);
+    if (!entries.length) throw new Error("ZIP sem arquivos exportáveis");
+    if (entries.length > 2000) throw new Error("ZIP excede o limite seguro de 2000 arquivos");
+    const safeEntries = entries.map(([name, entry]) => {
+      const normalized = String(name).replaceAll("\\", "/").replace(/^\/+/, "");
+      const parts = normalized.split("/").filter(Boolean);
+      if (!parts.length || parts.some((part) => part === "." || part === ".." || part.includes("\0"))) throw new Error("ZIP contém caminho inválido");
+      return { name: parts.join("/"), entry };
+    });
+    const manifestEntry = safeEntries.find(({ name }) => /(?:^|\/)manifest\.json$/i.test(name));
+    let manifest = null;
+    if (manifestEntry) {
+      try { manifest = JSON.parse(await manifestEntry.entry.async("string")); }
+      catch { throw new Error("manifest.json inválido"); }
+    }
+    const hasNormalFrame = safeEntries.some(({ name }) => /(?:^|\/)normal(?:[ _-]|\.(?:png|jpe?g|webp)$)/i.test(name));
+    const hasVariantsManifest = safeEntries.some(({ name }) => /(?:^|\/)variants-manifest\.json$/i.test(name));
+    if (!manifest && !hasVariantsManifest && !hasNormalFrame) throw new Error("ZIP não parece ser um pacote de personagem do Nymi Gacha.");
+    const estimatedUncompressed = safeEntries.reduce((total, { entry }) => total + (Number(entry?._data?.uncompressedSize) || 0), 0);
+    if (estimatedUncompressed > 768 * 1024 * 1024) throw new Error("ZIP descompactado excede o limite seguro.");
+    const metadata = request.headers["x-gacha-meta"] ? readMetadata(request) : {};
+    const requestedId = String(metadata.characterId || manifest?.character?.id || manifest?.character?.name || `character-${Date.now()}`);
+    const folderId = requestedId.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 120) || `character-${Date.now()}`;
+    safeId(folderId);
+    const folder = join(EDITOR_VIDEO_CHARACTERS_ROOT, folderId);
+    if (!inside(EDITOR_VIDEO_CHARACTERS_ROOT, folder)) throw new Error("Destino do personagem inválido");
+    const manifestPrefix = manifestEntry ? manifestEntry.name.slice(0, manifestEntry.name.lastIndexOf("/") + 1) : "";
+    const written = [];
+    await mkdir(folder, { recursive: true });
+    for (const { name, entry } of safeEntries) {
+      if (!name.startsWith(manifestPrefix)) continue;
+      const relative = name.slice(manifestPrefix.length);
+      if (!relative || relative.toLowerCase() === "manifest.json") continue;
+      const destination = join(folder, ...relative.split("/"));
+      if (!inside(folder, destination)) throw new Error("Arquivo ZIP fora da pasta permitida");
+      await mkdir(resolve(destination, ".."), { recursive: true });
+      await writeFile(destination, await entry.async("nodebuffer"));
+      written.push(relative);
+    }
+    if (!written.length) throw new Error("ZIP não contém assets reconhecíveis");
+    const catalogEntry = { id: folderId, name: String(manifest?.character?.name || metadata.characterName || folderId), importedAt: new Date().toISOString(), manifest, files: written.sort() };
+    await writeJsonAtomic(join(folder, "catalog.json"), catalogEntry);
+    const catalog = (await readdir(EDITOR_VIDEO_CHARACTERS_ROOT, { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name))
+      .map((entry) => entry.name);
+    await writeJsonAtomic(EDITOR_VIDEO_CATALOG_PATH, { version: 1, characters: catalog.sort() });
+    sendJson(response, request, 200, { ok: true, character: catalogEntry, folder, files: written.length });
+    return;
+  }
+
+  if (request.method === "GET" && url.pathname === "/editor-video/characters") {
+    const entries = (await readdir(EDITOR_VIDEO_CHARACTERS_ROOT, { withFileTypes: true }))
+      .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name));
+    const characters = [];
+    for (const entry of entries) {
+      const catalog = await readOptionalJson(join(EDITOR_VIDEO_CHARACTERS_ROOT, entry.name, "catalog.json"));
+      if (catalog) characters.push({ ...catalog, characterId: entry.name });
+    }
+    sendJson(response, request, 200, { version: 1, characters });
+    return;
+  }
+
+  const editorMediaMatch = url.pathname.match(/^\/editor-video\/media\/([a-zA-Z0-9_-]{1,120})$/);
+  if (editorMediaMatch && request.method === "POST") {
+    const mediaId = safeId(editorMediaMatch[1]);
+    const metadata = readMetadata(request);
+    const body = await requestBody(request, BODY_LIMITS.video);
+    if (!body.length) throw new Error("Vídeo vazio");
+    const contentType = contentTypeOf(request, metadata) || "video/mp4";
+    assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo precisa ser MP4, WebM ou MOV.");
+    const folder = join(EDITOR_VIDEO_MEDIA_ROOT, mediaId);
+    if (!inside(EDITOR_VIDEO_MEDIA_ROOT, folder)) throw new Error("Destino de mídia inválido");
+    await mkdir(folder, { recursive: true });
+    const extension = contentType === "video/webm" ? "webm" : contentType === "video/quicktime" ? "mov" : "mp4";
+    const hash = createHash("sha256").update(body).digest("hex");
+    await writeFile(join(folder, `video.${extension}`), body);
+    const manifest = { id: mediaId, name: String(metadata.name || mediaId), contentType, extension, hash, bytes: body.length, path: `editor-video/media/${mediaId}/video.${extension}`, createdAt: new Date().toISOString() };
+    await writeJsonAtomic(join(folder, "manifest.json"), manifest);
+    sendJson(response, request, 200, { ok: true, media: manifest });
+    return;
+  }
+  if (editorMediaMatch && request.method === "GET") {
+    const mediaId = safeId(editorMediaMatch[1]);
+    const manifest = await readOptionalJson(join(EDITOR_VIDEO_MEDIA_ROOT, mediaId, "manifest.json"));
+    if (!manifest) throw Object.assign(new Error("Mídia não encontrada"), { code: "ENOENT" });
+    sendJson(response, request, 200, { media: manifest });
+    return;
+  }
+
+  const editorProjectMatch = url.pathname.match(/^\/editor-video\/projects(?:\/([a-zA-Z0-9_-]{1,120}))?$/);
+  if (editorProjectMatch && request.method === "POST") {
+    const projectId = safeId(editorProjectMatch[1] || `project-${Date.now()}`);
+    const project = await requestJson(request);
+    if (!project || typeof project !== "object" || project.schemaVersion !== 1) throw new Error("Projeto do Editor de vídeo inválido");
+    const folder = join(EDITOR_VIDEO_PROJECTS_ROOT, projectId);
+    if (!inside(EDITOR_VIDEO_PROJECTS_ROOT, folder)) throw new Error("Destino do projeto inválido");
+    await mkdir(folder, { recursive: true });
+    const currentPath = join(folder, "project.json");
+    try { await stat(currentPath); await copyFile(currentPath, join(folder, `project.backup-${printTimestamp()}.json`)); }
+    catch (error) { if (error?.code !== "ENOENT") throw error; }
+    await writeJsonAtomic(currentPath, project);
+    sendJson(response, request, 200, { ok: true, projectId, project });
+    return;
+  }
+  if (editorProjectMatch && request.method === "GET") {
+    if (editorProjectMatch[1]) {
+      const projectId = safeId(editorProjectMatch[1]);
+      const project = await readOptionalJson(join(EDITOR_VIDEO_PROJECTS_ROOT, projectId, "project.json"));
+      if (!project) throw Object.assign(new Error("Projeto do Editor não encontrado"), { code: "ENOENT" });
+      sendJson(response, request, 200, { projectId, project });
+      return;
+    }
+    const entries = (await readdir(EDITOR_VIDEO_PROJECTS_ROOT, { withFileTypes: true })).filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name));
+    const projects = [];
+    for (const entry of entries) {
+      const project = await readOptionalJson(join(EDITOR_VIDEO_PROJECTS_ROOT, entry.name, "project.json"));
+      if (project) projects.push({ projectId: entry.name, project });
+    }
+    sendJson(response, request, 200, { projects });
+    return;
+  }
+  if (editorProjectMatch && request.method === "DELETE" && editorProjectMatch[1]) {
+    const projectId = safeId(editorProjectMatch[1]);
+    const folder = join(EDITOR_VIDEO_PROJECTS_ROOT, projectId);
+    if (inside(EDITOR_VIDEO_PROJECTS_ROOT, folder)) await rm(folder, { recursive: true, force: true });
+    sendJson(response, request, 200, { ok: true });
+    return;
+  }
+
   const videoMakerTiktokMatch = url.pathname.match(/^\/video-maker\/tiktoks\/([a-zA-Z0-9_-]+)$/);
   if (videoMakerTiktokMatch && request.method === "POST") {
     const tiktokId = safeId(videoMakerTiktokMatch[1]);
@@ -879,7 +1023,8 @@ async function route(request, response) {
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/video-maker/ai") {
+  if (request.method === "POST" && (url.pathname === "/video-maker/ai" || url.pathname === "/editor-video/ai")) {
+    const editorAi = url.pathname === "/editor-video/ai";
     const body = await requestJson(request);
     const provider = body?.provider === "lmstudio" ? "lmstudio" : "ollama";
     const baseUrl = String(body?.baseUrl || (provider === "ollama" ? "http://127.0.0.1:11434" : "http://127.0.0.1:1234/v1")).replace(/\/$/, "");
@@ -899,7 +1044,7 @@ async function route(request, response) {
     if (!content) throw new Error("A IA não retornou uma proposta");
     const cleaned = String(content).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
     const proposal = JSON.parse(cleaned);
-    if (proposal?.format !== "gacha-premium.video-project") throw new Error("A IA devolveu um JSON que não é um projeto do Video Maker");
+    if (editorAi ? proposal?.schemaVersion !== 1 : proposal?.format !== "gacha-premium.video-project") throw new Error(editorAi ? "A IA devolveu um JSON que não é um projeto do Editor" : "A IA devolveu um JSON que não é um projeto do Video Maker");
     sendJson(response, request, 200, { ok: true, proposal, model });
     return;
   }
@@ -1100,6 +1245,24 @@ async function route(request, response) {
     const characterId = safeId(videoMakerFileMatch[1]);
     const frameKey = safeId(videoMakerFileMatch[2]);
     await serveFile(response, request, join(VIDEO_MAKER_CHARACTERS_ROOT, characterId, `${frameKey}.png`));
+    return;
+  }
+  const editorVideoFileMatch = url.pathname.match(/^\/files\/editor-video\/characters\/([a-zA-Z0-9_-]+)\/(.+)$/);
+  if (editorVideoFileMatch && request.method === "GET") {
+    const characterId = safeId(editorVideoFileMatch[1]);
+    const relative = editorVideoFileMatch[2].split("/").filter(Boolean);
+    if (relative.some((part) => part === "." || part === ".." || part.includes("\\") || part.includes("\0"))) throw new Error("Asset do Editor inválido");
+    const filePath = join(EDITOR_VIDEO_CHARACTERS_ROOT, characterId, ...relative);
+    if (!inside(EDITOR_VIDEO_CHARACTERS_ROOT, filePath)) throw new Error("Origem do asset inválida");
+    await serveFile(response, request, filePath);
+    return;
+  }
+  const editorMediaFileMatch = url.pathname.match(/^\/files\/editor-video\/media\/([a-zA-Z0-9_-]+)$/);
+  if (editorMediaFileMatch && request.method === "GET") {
+    const mediaId = safeId(editorMediaFileMatch[1]);
+    const manifest = await readOptionalJson(join(EDITOR_VIDEO_MEDIA_ROOT, mediaId, "manifest.json"));
+    if (!manifest) throw Object.assign(new Error("Mídia não encontrada"), { code: "ENOENT" });
+    await serveFile(response, request, join(EDITOR_VIDEO_MEDIA_ROOT, mediaId, `video.${manifest.extension}`));
     return;
   }
   const videoMakerTiktokFileMatch = url.pathname.match(/^\/files\/video-maker\/tiktoks\/([a-zA-Z0-9_-]+)$/);
