@@ -2,10 +2,12 @@
 
 Módulo dedicado do Nymi Gacha para a futura criação, edição e pré-visualização
 de vídeos. A implementação ficará isolada das áreas `studio` e `roteiros`.
+Nesta fase, ela também permanecerá isolada do `Criador de Personagens`.
 
 ## Regras iniciais
 
-- Não duplicar nem alterar a lógica existente do Studio ou de Roteiros.
+- Não duplicar nem alterar a lógica existente do Studio, de Roteiros ou do Criador de Personagens.
+- Não ler nem modificar diretamente o estado, os assets ou as telas do Criador de Personagens.
 - Compartilhar somente contratos e serviços explicitamente definidos.
 - Manter o estado e os assets do editor separados até a integração ser aprovada.
 - Adicionar cada funcionalidade com testes de regressão e possibilidade de rollback.
