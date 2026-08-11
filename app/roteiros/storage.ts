@@ -1,5 +1,5 @@
 import { emptyRoteirosState } from "./defaults";
-import type { PremiumCharacter, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokVideoReference } from "./types";
+import type { PremiumCharacter, RoteirosState, RoteiroBackgroundReference, RoteiroExportTarget, ScriptProject, TikTokVideoReference } from "./types";
 import type { Character, PcCatalogItem, PcExpressionPack } from "../studio/types";
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
 import { normalizeRoteirosState as normalizeState } from "../domain/document-schemas.mjs";
@@ -105,6 +105,22 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   const response = await localDataFetch(`/roteiros/videos/${encodeURIComponent(scriptId)}/${encodeURIComponent(tiktokId)}`, { method: "DELETE" });
   const result = await response.json().catch(() => ({})) as { error?: string };
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
+}
+
+export async function uploadRoteiroBackground(scriptId: string, file: File) {
+  const response = await localDataFetch(`/roteiros/backgrounds/${encodeURIComponent(scriptId)}`, {
+    method: "POST", headers: { "Content-Type": file.type || "image/png", ...localMeta({ name: file.name, contentType: file.type || "image/png" }) }, body: file,
+  });
+  const result = await response.json().catch(() => ({})) as { error?: string; background?: RoteiroBackgroundReference };
+  if (!response.ok || !result.background) throw new Error(result.error || "Não foi possível salvar o fundo no PC.");
+  return result.background;
+}
+
+export async function exportRoteiroBackground(script: ScriptProject, target: RoteiroExportTarget = "v1") {
+  const response = await localDataFetch("/roteiros/export-background", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ target, scriptId: script.id, scriptTitle: script.title }) });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar o fundo."));
+  return result as { folder: string; path: string; relativePath: string; fileName: string; exportTarget: RoteiroExportTarget };
 }
 
 export async function exportRoteiroVideos(script: ScriptProject, target: RoteiroExportTarget = "v1") {

@@ -17,6 +17,7 @@ export type {
   SaveStatus,
   ScriptParticipant,
   ScriptProject,
+  RoteiroBackgroundReference,
   TikTokSection,
   TikTokTimeline,
   TikTokVideoReference,

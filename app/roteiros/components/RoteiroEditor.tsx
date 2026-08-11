@@ -7,7 +7,7 @@ import { buildAiCharacters } from "../ai-context";
 import { nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
 import { createRoteiroExportDocument } from "../export-contract";
-import { aiRequest, exportJson, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroVideo } from "../storage";
+import { aiRequest, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
@@ -91,7 +91,8 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     });
     return [...lines, ""];
   });
-  return ["PERSONAGENS E EXPRESSÕES", "========================", "", ...expressionLines.flatMap((line) => [line, ""]), "ROTEIRO", "=======", "", ...openingLines, ...tiktokLines].join("\n");
+  const backgroundLines = script.background ? ["FUNDO", "=====", `Caminho exato: ${script.background.exportedPath || `assets/backgrounds/${exportPathSegment(script.title, "roteiro")}/01${script.background.name.match(/\.(png|jpe?g|webp)$/i)?.[0] || ".png"}`}`, `Nome do arquivo: ${script.background.exportedPath?.split("/").pop() || script.background.name}`, ""] : [];
+  return ["PERSONAGENS E EXPRESSÕES", "========================", "", ...expressionLines.flatMap((line) => [line, ""]), ...backgroundLines, "ROTEIRO", "=======", "", ...openingLines, ...tiktokLines].join("\n");
 }
 
 function RoteiroHeader({ script, saveStatus, pcAvailable, saveNow, addTikTok }: { script: ScriptProject; saveStatus: keyof typeof statusText; pcAvailable: boolean; saveNow: () => void; addTikTok: () => void }) {
@@ -352,7 +353,7 @@ export default function RoteiroEditor() {
   const exportTargetLabel = exportTarget === "v2" ? "Versão 2 · GACHO EDITOR V2" : "Versão 1 · PRIMEIRO-STUDIO";
   const setExportTarget = (target: RoteiroExportTarget) => {
     if (target === exportTarget) return;
-    patchScript({ exportTarget: target });
+    patchScript({ exportTarget: target, ...(script.background ? { background: { ...script.background, exportedPath: undefined } } : {}) });
     setExportMessage(`Destino alterado para ${target === "v2" ? "a Versão 2" : "a Versão 1"}.`);
   };
   const addTikTok = () => {
@@ -440,6 +441,25 @@ export default function RoteiroEditor() {
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
     finally { setExportLoading(""); }
   };
+  const addBackground = async (file: File) => {
+    setExportLoading("background"); setExportMessage("");
+    try {
+      const background = await uploadRoteiroBackground(script.id, file);
+      patchScript({ background });
+      setExportMessage(`Fundo salvo: ${file.name}.`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao salvar o fundo."); }
+    finally { setExportLoading(""); }
+  };
+  const exportBackground = async () => {
+    if (!script.background) { setExportMessage("Adicione um fundo antes de exportar."); return; }
+    setExportLoading("background-export"); setExportMessage("");
+    try {
+      const result = await exportRoteiroBackground(script, exportTarget);
+      patchScript({ background: { ...script.background, exportedPath: result.relativePath } });
+      setExportMessage(`Fundo exportado: ${result.fileName}.`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o fundo."); }
+    finally { setExportLoading(""); }
+  };
   const openExportFolder = async (target: "characters" | "script") => {
     const loadingKey = target === "characters" ? "folder-characters" : "folder-script";
     setExportLoading(loadingKey); setExportMessage("");
@@ -501,6 +521,9 @@ export default function RoteiroEditor() {
         {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
+          <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
+          {script.background && <small>Fundo atual: {script.background.name}</small>}
+          <button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button>
           <div className={styles.exportTargetSelector} role="group" aria-label="Destino da exportação">
             <strong>Destino</strong>
             <button type="button" className={exportTarget === "v1" ? styles.exportTargetActive : ""} onClick={() => setExportTarget("v1")} disabled={Boolean(exportLoading)}>Versão 1 · PRIMEIRO-STUDIO</button>

@@ -180,6 +180,21 @@ function normalizeVideoReference(value) {
   };
 }
 
+function normalizeBackgroundReference(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+  const source = record(value);
+  return {
+    ...source,
+    name: typeof source.name === "string" ? source.name : "fundo.png",
+    storedPath: typeof source.storedPath === "string" ? source.storedPath : "",
+    ...(typeof source.url === "string" ? { url: source.url } : {}),
+    contentType: typeof source.contentType === "string" ? source.contentType : "image/png",
+    size: Number.isFinite(Number(source.size)) ? Math.max(0, Number(source.size)) : 0,
+    updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
+    ...(typeof source.exportedPath === "string" ? { exportedPath: source.exportedPath } : {}),
+  };
+}
+
 function normalizeRoteiroSection(value) {
   const source = record(value);
   const timeline = ["unspecified", "past", "present", "future"].includes(source.timeline) ? source.timeline : "unspecified";
@@ -223,6 +238,7 @@ function normalizeRoteiroScript(value) {
       return { ...item, characterId: typeof item.characterId === "string" ? item.characterId : "", active: item.active !== false };
     }),
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
+    ...(source.background && normalizeBackgroundReference(source.background) ? { background: normalizeBackgroundReference(source.background) } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
     ...(exportTarget ? { exportTarget } : {}),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",

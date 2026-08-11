@@ -34,6 +34,10 @@ export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;
   size: number; updatedAt: string; durationSeconds?: number;
 };
+export type RoteiroBackgroundReference = {
+  name: string; storedPath: string; url?: string; contentType: string; size: number;
+  updatedAt: string; exportedPath?: string;
+};
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
   sceneGoal: string; sceneEndSeconds?: number; userInstruction: string; specificRules: string; shortLines: boolean;
@@ -47,6 +51,7 @@ export type RoteiroExportTarget = "v1" | "v2";
 export type ScriptProject = {
   id: string; title: string; generalContext: string; participants: ScriptParticipant[];
   opening?: OpeningSection; tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
+  background?: RoteiroBackgroundReference;
   /** Destino local dos quatro exports do roteiro; ausente em dados antigos = v1. */
   exportTarget?: RoteiroExportTarget;
 };

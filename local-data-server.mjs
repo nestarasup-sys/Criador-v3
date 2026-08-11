@@ -45,6 +45,7 @@ const EDITOR_VIDEO_EXPORTS_ROOT = join(EDITOR_VIDEO_ROOT, "exports");
 const EDITOR_VIDEO_CATALOG_PATH = join(EDITOR_VIDEO_ROOT, "catalog.json");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
+const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
 const EXPORT_TARGETS = Object.freeze({
   v1: Object.freeze({
@@ -227,6 +228,7 @@ function isPublicRoute(request, url) {
   if (request.method !== "GET") return false;
   return url.pathname.startsWith("/files/")
     || url.pathname.startsWith("/roteiros/videos/")
+    || url.pathname.startsWith("/roteiros/backgrounds/")
     || url.pathname.startsWith("/video-maker/characters/")
     || url.pathname.startsWith("/video-maker/tiktoks/");
 }
@@ -496,7 +498,7 @@ async function route(request, response) {
     sendJson(response, request, 200, { ok: true, token: SESSION_TOKEN, expires: "process" });
     return;
   }
-  const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|export-videos$|export-text$|export-characters\/|open-folder$)/.test(url.pathname);
+  const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|backgrounds\/|export-videos$|export-background$|export-text$|export-characters\/|open-folder$)/.test(url.pathname);
   if (!localRoteirosExportRoute && await roteirosService.handle(request, response, url, corsHeaders)) return;
   if (request.method === "GET" && url.pathname === "/health") {
     sendJson(response, request, 200, { ok: true, folder: ROOT });
@@ -612,6 +614,35 @@ async function route(request, response) {
     return;
   }
 
+  const roteiroBackgroundMatch = url.pathname.match(/^\/roteiros\/backgrounds\/([a-zA-Z0-9_-]+)$/);
+  if (roteiroBackgroundMatch && request.method === "POST") {
+    const scriptId = safeId(roteiroBackgroundMatch[1]);
+    const metadata = readMetadata(request);
+    const contentType = contentTypeOf(request, metadata);
+    assertMimeType(contentType, IMAGE_MIME_TYPES, "O fundo precisa ser PNG, JPEG ou WebP.");
+    const fileName = String(metadata.name || "background.png");
+    const extension = extname(fileName).toLowerCase();
+    const body = await requestBody(request, BODY_LIMITS.image);
+    if (!body.length) throw new Error("Imagem de fundo vazia");
+    const folder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
+    const filePath = join(folder, `background${extension === ".jpg" || extension === ".jpeg" || extension === ".webp" ? extension : ".png"}`);
+    if (!inside(ROTEIROS_BACKGROUNDS_ROOT, filePath)) throw new Error("Destino do fundo inválido");
+    await mkdir(folder, { recursive: true });
+    await writeFile(filePath, body);
+    sendJson(response, request, 200, { ok: true, background: { name: fileName, storedPath: `roteiros/backgrounds/${scriptId}/${filePath.split(sep).pop()}`, url: `http://${HOST}:${PORT}/roteiros/backgrounds/${scriptId}`, contentType, size: body.length, updatedAt: new Date().toISOString() } });
+    return;
+  }
+
+  if (roteiroBackgroundMatch && request.method === "GET") {
+    const scriptId = safeId(roteiroBackgroundMatch[1]);
+    const folder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
+    const files = await readdir(folder);
+    const fileName = files.find((file) => /\.(png|jpg|jpeg|webp)$/i.test(file));
+    if (!fileName) throw Object.assign(new Error("Fundo não encontrado"), { code: "ENOENT" });
+    await serveFile(response, request, join(folder, fileName));
+    return;
+  }
+
   const roteiroVideoMatch = url.pathname.match(/^\/roteiros\/videos\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
   if (roteiroVideoMatch && request.method === "POST") {
     const scriptId = safeId(roteiroVideoMatch[1]);
@@ -694,6 +725,29 @@ async function route(request, response) {
     const descriptionFile = join(folder, "descricoes.txt");
     await writeFile(descriptionFile, descriptionLines.join("\n"), "utf8");
     sendJson(response, request, 200, { ok: true, folder, exported, missing, descriptionFile, exportTarget });
+    return;
+  }
+
+  if (request.method === "POST" && url.pathname === "/roteiros/export-background") {
+    const body = await requestJson(request);
+    const exportTarget = exportTargetConfig(body?.target).id;
+    const exportRoot = join(exportTargetConfig(exportTarget).assetsRoot, "backgrounds");
+    const scriptFolderName = safeExportFolderName(body?.scriptTitle, "Roteiro");
+    const folder = join(exportRoot, scriptFolderName);
+    if (!inside(exportRoot, folder)) throw new Error("Destino do fundo inválido");
+    const scriptId = safeId(body?.scriptId);
+    const sourceFolder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
+    const sourceFiles = await readdir(sourceFolder);
+    const sourceName = sourceFiles.find((file) => /\.(png|jpg|jpeg|webp)$/i.test(file));
+    if (!sourceName) throw Object.assign(new Error("Este roteiro não possui fundo salvo."), { status: 404 });
+    const extension = extname(sourceName).toLowerCase() || ".png";
+    await mkdir(folder, { recursive: true });
+    let number = 1;
+    let destination;
+    do { destination = join(folder, `${String(number).padStart(2, "0")}${extension}`); number += 1; } while (await stat(destination).then(() => true).catch(() => false));
+    await copyFile(join(sourceFolder, sourceName), destination);
+    const relativePath = `assets/backgrounds/${scriptFolderName}/${destination.split(sep).pop()}`;
+    sendJson(response, request, 200, { ok: true, folder, path: destination, relativePath, fileName: destination.split(sep).pop(), exportTarget });
     return;
   }
 
