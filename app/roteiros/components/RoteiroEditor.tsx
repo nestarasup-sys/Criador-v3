@@ -460,8 +460,8 @@ export default function RoteiroEditor() {
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o fundo."); }
     finally { setExportLoading(""); }
   };
-  const openExportFolder = async (target: "characters" | "script") => {
-    const loadingKey = target === "characters" ? "folder-characters" : "folder-script";
+  const openExportFolder = async (target: "characters" | "script" | "background") => {
+    const loadingKey = target === "characters" ? "folder-characters" : target === "background" ? "folder-background" : "folder-script";
     setExportLoading(loadingKey); setExportMessage("");
     try {
       await openRoteiroExportFolder(target, script.title, exportTarget);
@@ -523,7 +523,7 @@ export default function RoteiroEditor() {
           <span>EXPORTAR PARA O VIDEO MAKER</span>
           <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
           {script.background && <small>Fundo atual: {script.background.name}</small>}
-          <button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button>
+          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportTargetSelector} role="group" aria-label="Destino da exportação">
             <strong>Destino</strong>
             <button type="button" className={exportTarget === "v1" ? styles.exportTargetActive : ""} onClick={() => setExportTarget("v1")} disabled={Boolean(exportLoading)}>Versão 1 · PRIMEIRO-STUDIO</button>

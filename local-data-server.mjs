@@ -598,11 +598,14 @@ async function route(request, response) {
     const exportTarget = exportTargetConfig(body?.exportTarget).id;
     const characterRoot = roteiroCharacterExportRoot(exportTarget);
     const videoRoot = roteiroVideoExportRoot(exportTarget);
+    const backgroundRoot = join(exportTargetConfig(exportTarget).assetsRoot, "backgrounds");
     const folder = target === "characters"
       ? characterRoot
-      : join(videoRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
-    const allowedRoot = target === "characters" ? characterRoot : videoRoot;
-    if (target !== "characters" && target !== "script") throw new Error("Tipo de pasta inválido");
+      : target === "background"
+        ? join(backgroundRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"))
+        : join(videoRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
+    const allowedRoot = target === "characters" ? characterRoot : target === "background" ? backgroundRoot : videoRoot;
+    if (target !== "characters" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
     if (target !== "characters" && !inside(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
     await mkdir(folder, { recursive: true });
     // /root forces Explorer to open the requested directory instead of merely
@@ -742,9 +745,8 @@ async function route(request, response) {
     if (!sourceName) throw Object.assign(new Error("Este roteiro não possui fundo salvo."), { status: 404 });
     const extension = extname(sourceName).toLowerCase() || ".png";
     await mkdir(folder, { recursive: true });
-    let number = 1;
-    let destination;
-    do { destination = join(folder, `${String(number).padStart(2, "0")}${extension}`); number += 1; } while (await stat(destination).then(() => true).catch(() => false));
+    for (const oldExtension of [".png", ".jpg", ".jpeg", ".webp"]) await rm(join(folder, `01${oldExtension}`), { force: true });
+    const destination = join(folder, `01${extension}`);
     await copyFile(join(sourceFolder, sourceName), destination);
     const relativePath = `assets/backgrounds/${scriptFolderName}/${destination.split(sep).pop()}`;
     sendJson(response, request, 200, { ok: true, folder, path: destination, relativePath, fileName: destination.split(sep).pop(), exportTarget });
