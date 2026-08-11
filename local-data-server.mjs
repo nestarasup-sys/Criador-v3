@@ -41,6 +41,7 @@ const EDITOR_VIDEO_ROOT = join(ROOT, "editor-video");
 const EDITOR_VIDEO_CHARACTERS_ROOT = join(EDITOR_VIDEO_ROOT, "characters");
 const EDITOR_VIDEO_PROJECTS_ROOT = join(EDITOR_VIDEO_ROOT, "projects");
 const EDITOR_VIDEO_MEDIA_ROOT = join(EDITOR_VIDEO_ROOT, "media");
+const EDITOR_VIDEO_EXPORTS_ROOT = join(EDITOR_VIDEO_ROOT, "exports");
 const EDITOR_VIDEO_CATALOG_PATH = join(EDITOR_VIDEO_ROOT, "catalog.json");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
@@ -264,6 +265,7 @@ async function ensureFolders() {
     mkdir(EDITOR_VIDEO_CHARACTERS_ROOT, { recursive: true }),
     mkdir(EDITOR_VIDEO_PROJECTS_ROOT, { recursive: true }),
     mkdir(EDITOR_VIDEO_MEDIA_ROOT, { recursive: true }),
+    mkdir(EDITOR_VIDEO_EXPORTS_ROOT, { recursive: true }),
     ...Object.values(EXPORT_TARGETS).flatMap((target) => [
       mkdir(roteiroVideoExportRoot(target.id), { recursive: true }),
       mkdir(roteiroCharacterExportRoot(target.id), { recursive: true }),
@@ -1046,6 +1048,78 @@ async function route(request, response) {
     const proposal = JSON.parse(cleaned);
     if (editorAi ? proposal?.schemaVersion !== 1 : proposal?.format !== "gacha-premium.video-project") throw new Error(editorAi ? "A IA devolveu um JSON que não é um projeto do Editor" : "A IA devolveu um JSON que não é um projeto do Video Maker");
     sendJson(response, request, 200, { ok: true, proposal, model });
+    return;
+  }
+
+  // Exportação isolada do Editor: recebe WebM capturado do canvas e converte
+  // para MP4 sem tocar nas saídas do Video Maker legado.
+  if (request.method === "POST" && url.pathname === "/editor-video/exports") {
+    const metadata = readMetadata(request);
+    assertMimeType(contentTypeOf(request, metadata), new Set(["video/webm", "video/mp4", "application/octet-stream"]), "A exportação precisa ser um vídeo WebM ou MP4.");
+    const body = await requestBody(request, BODY_LIMITS.export);
+    if (!body.length) throw new Error("Exportação vazia");
+    const profile = metadata.profile === "quick" ? "quick" : "final";
+    const projectName = safePrintName(metadata.projectName || "editor-video");
+    const stamp = printTimestamp();
+    const folder = join(EDITOR_VIDEO_EXPORTS_ROOT, profile);
+    if (!inside(EDITOR_VIDEO_EXPORTS_ROOT, folder)) throw new Error("Destino da exportação inválido");
+    await mkdir(folder, { recursive: true });
+    const inputExtension = contentTypeOf(request, metadata) === "video/mp4" ? "mp4" : "webm";
+    const inputPath = join(folder, `${projectName}_${stamp}.${inputExtension}`);
+    const outputPath = join(folder, `${projectName}_${stamp}.mp4`);
+    const audioPath = join(folder, `${projectName}_${stamp}.wav`);
+    await writeFile(inputPath, body);
+    let hasAudio = false;
+    const timeline = Array.isArray(metadata.timeline) ? metadata.timeline : [];
+    const audioInputs = [];
+    const audioFilters = [];
+    for (const [index, event] of timeline.entries()) {
+      const duration = Math.max(0.05, Number(event?.duration) || 0);
+      let source = null;
+      if (event?.type === "video") {
+        const mediaPath = String(event?.media?.path || "");
+        const match = mediaPath.match(/editor-video[\\/]media[\\/]([a-zA-Z0-9_-]+)/i);
+        if (match) {
+          const mediaFolder = join(EDITOR_VIDEO_MEDIA_ROOT, safeId(match[1]));
+          try {
+            const files = await readdir(mediaFolder);
+            const fileName = files.find((file) => /\.(mp4|webm|mov)$/i.test(file));
+            if (fileName) { source = join(mediaFolder, fileName); await stat(source); }
+          } catch { source = null; }
+        }
+      }
+      if (source) {
+        audioInputs.push(source);
+        const inputIndex = audioInputs.length - 1;
+        audioFilters.push(`[${inputIndex}:a]atrim=0:${duration.toFixed(3)},asetpts=PTS-STARTPTS[a${index}]`);
+        hasAudio = true;
+      } else audioFilters.push(`anullsrc=r=48000:cl=stereo:d=${duration.toFixed(3)}[a${index}]`);
+    }
+    if (hasAudio && audioFilters.length) {
+      const concatInputs = timeline.map((_, index) => `[a${index}]`).join("");
+      const audioArgs = ["-y"];
+      for (const source of audioInputs) audioArgs.push("-i", source);
+      audioArgs.push("-filter_complex", `${audioFilters.join(";")};${concatInputs}concat=n=${timeline.length}:v=0:a=1[outa]`, "-map", "[outa]", "-c:a", "pcm_s16le", audioPath);
+      await new Promise((resolvePromise, reject) => {
+        const ffmpeg = spawn("ffmpeg", audioArgs, { windowsHide: true });
+        let stderr = ""; ffmpeg.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+        ffmpeg.on("error", reject); ffmpeg.on("close", (code) => code === 0 ? resolvePromise() : reject(new Error(stderr.slice(-800) || "FFmpeg não criou o áudio")));
+      });
+    }
+    await new Promise((resolvePromise, reject) => {
+      const args = ["-y", "-i", inputPath];
+      if (hasAudio) args.push("-i", audioPath);
+      args.push("-map", "0:v:0"); if (hasAudio) args.push("-map", "1:a:0");
+      args.push("-c:v", "libx264", "-pix_fmt", "yuv420p", ...(hasAudio ? ["-c:a", "aac", "-shortest"] : []), "-movflags", "+faststart", outputPath);
+      const ffmpeg = spawn("ffmpeg", args, { windowsHide: true });
+      let stderr = "";
+      ffmpeg.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
+      ffmpeg.on("error", reject);
+      ffmpeg.on("close", (code) => code === 0 ? resolvePromise() : reject(new Error(stderr.slice(-800) || "FFmpeg não criou o MP4")));
+    });
+    await rm(inputPath, { force: true });
+    if (hasAudio) await rm(audioPath, { force: true });
+    sendJson(response, request, 200, { ok: true, profile, hasAudio, filePath: outputPath, fileName: `${projectName}_${stamp}.mp4` });
     return;
   }
 

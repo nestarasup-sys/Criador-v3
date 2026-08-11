@@ -9,4 +9,7 @@ test("servidor possui rotas isoladas e valida pacotes de personagem", async () =
   assert.match(source, /ZIP não parece ser um pacote de personagem/);
   assert.match(source, /EDITOR_VIDEO_CHARACTERS_ROOT/);
   assert.match(source, /EDITOR_VIDEO_PROJECTS_ROOT/);
+  assert.match(source, /editorMediaMatch/);
+  assert.match(source, /\/editor-video\/exports/);
+  assert.match(source, /EDITOR_VIDEO_EXPORTS_ROOT/);
 });

@@ -19,5 +19,8 @@ Nesta fase, ela também permanecerá isolada do `Criador de Personagens`.
 - `storage/`: projetos, mídias, backups e importação/exportação.
 - `types.ts`: contratos públicos do módulo.
 
-O módulo ainda não possui comportamento implementado; esta pasta é o ponto de
-partida isolado para a próxima etapa.
+O módulo possui uma primeira fatia vertical implementada em `/editor-video`:
+catálogo local, importação segura de personagens ZIP, mídia persistente, timeline,
+runtime, Canvas, prévia de vídeos, edição básica, assistente local e exportação
+MP4 isolada. O estado detalhado e as limitações restantes estão em
+`STATUS_EXECUCAO.md`.
