@@ -37,7 +37,6 @@ const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
 const VIDEO_MAKER_TIKTOKS_ROOT = join(VIDEO_MAKER_ROOT, "tiktoks");
 const VIDEO_MAKER_PROJECTS_ROOT = join(VIDEO_MAKER_ROOT, "projects");
 const VIDEO_MAKER_EXPORTS_ROOT = join(VIDEO_MAKER_ROOT, "exports");
-const VIDEO_NYMI_ASSETS_ROOT = resolve(process.cwd(), "public", "video-nymi-assets");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
@@ -259,7 +258,6 @@ async function ensureFolders() {
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
-    mkdir(VIDEO_NYMI_ASSETS_ROOT, { recursive: true }),
     ...Object.values(EXPORT_TARGETS).flatMap((target) => [
       mkdir(roteiroVideoExportRoot(target.id), { recursive: true }),
       mkdir(roteiroCharacterExportRoot(target.id), { recursive: true }),
@@ -846,41 +844,6 @@ async function route(request, response) {
     return;
   }
 
-  if (request.method === "POST" && url.pathname === "/video-nymi/characters/import") {
-    const metadata = readMetadata(request);
-    assertMimeType(contentTypeOf(request, metadata), new Set(["application/zip", "application/x-zip-compressed"]), "O personagem precisa ser um arquivo ZIP.");
-    const body = await requestBody(request, BODY_LIMITS.zip);
-    if (!body.length) throw new Error("ZIP do personagem vazio");
-    const zip = await JSZip.loadAsync(body);
-    const entries = Object.entries(zip.files).filter(([, entry]) => !entry.dir);
-    if (!entries.length) throw new Error("ZIP sem arquivos exportáveis");
-    const firstAssetEntry = entries.find(([zipName]) => /\.(png|jpe?g|webp)$/i.test(String(zipName))) || entries[0];
-    const firstSegments = String(firstAssetEntry[0]).split(/[\\/]/).filter((segment) => segment && segment !== "__MACOSX");
-    const folderName = safeExportFolderName(firstSegments[0] || metadata.characterName || "Personagem", "Personagem");
-    const characterFolder = join(VIDEO_NYMI_ASSETS_ROOT, folderName);
-    if (!inside(VIDEO_NYMI_ASSETS_ROOT, characterFolder)) throw new Error("Pasta do personagem inválida");
-    await rm(characterFolder, { recursive: true, force: true });
-    await mkdir(characterFolder, { recursive: true });
-    const assets = [];
-    for (const [zipName, entry] of entries) {
-      const segments = String(zipName).split(/[\\/]/).filter(Boolean);
-      if (!segments.length) continue;
-      const fileName = segments[segments.length - 1];
-      if (!/\.(png|jpe?g|webp)$/i.test(fileName)) continue;
-      const safeFileName = safeExportFolderName(fileName, "asset.png");
-      const target = join(characterFolder, safeFileName);
-      if (!inside(characterFolder, target)) throw new Error("Arquivo ZIP fora da pasta permitida");
-      await writeFile(target, await entry.async("nodebuffer"));
-      const expression = safeFileName.replace(/\.(png|jpe?g|webp)$/i, "");
-      assets.push({ id: `${folderName}-${expression}`.replace(/[^a-zA-Z0-9_-]+/g, "-"), name: expression, expression, type: "image", src: `/video-nymi-assets/${encodeURIComponent(folderName)}/${encodeURIComponent(safeFileName)}` });
-    }
-    if (!assets.length) throw new Error("O ZIP não contém imagens de expressões.");
-    const manifest = { format: "nymi-video.character", version: 1, characterName: folderName, expressions: assets.map((asset) => asset.expression), assets };
-    await writeJsonAtomic(join(characterFolder, "manifest.json"), manifest);
-    sendJson(response, request, 200, { ok: true, characterName: folderName, folder: characterFolder, assets, manifest });
-    return;
-  }
-
   const videoMakerTiktokMatch = url.pathname.match(/^\/video-maker\/tiktoks\/([a-zA-Z0-9_-]+)$/);
   if (videoMakerTiktokMatch && request.method === "POST") {
     const tiktokId = safeId(videoMakerTiktokMatch[1]);
@@ -1233,3 +1196,5 @@ const server = createServer({
 server.listen(PORT, HOST, () => {
   process.stdout.write(`Nymi Gacha dados locais: http://${HOST}:${PORT}\n`);
 });
+
+

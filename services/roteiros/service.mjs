@@ -99,6 +99,16 @@ function providerConfig(settings) {
   };
 }
 
+function generationOptions(config) {
+  const isGemma12bQat = config.provider === "ollama" && config.model.toLowerCase() === "gemma4:12b-it-qat";
+  return {
+    temperature: config.temperature,
+    num_predict: isGemma12bQat ? 3200 : 5000,
+    num_ctx: isGemma12bQat ? 8192 : 16384,
+    ...(isGemma12bQat ? { num_batch: 128, num_thread: 6 } : {}),
+  };
+}
+
 async function listModels(settings) {
   const provider = settings?.aiProvider;
   if (provider !== "lmstudio" && provider !== "ollama") throw new Error("Selecione LM Studio ou Ollama nas configurações.");
@@ -113,6 +123,38 @@ async function listModels(settings) {
   return (data.data || []).map((item) => item.id).filter(Boolean);
 }
 
+async function testSelectedModel(settings) {
+  const config = providerConfig(settings);
+  if (config.provider === "ollama") {
+    const base = config.baseUrl.replace(/\/api(?:\/.*)?$/, "");
+    const response = await fetchWithTimeout(`${base}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: config.model,
+        stream: false,
+        think: false,
+        options: { temperature: 0, num_predict: 8, num_ctx: 512 },
+        messages: [{ role: "user", content: "Responda somente: OK" }],
+      }),
+    }, 30_000);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.error) throw new Error(data.error || `O Ollama respondeu com erro ${response.status}.`);
+    if (!data.message?.content) throw new Error("O modelo não retornou resposta.");
+    return { ok: true, model: data.model || config.model, provider: config.provider, response: String(data.message.content).trim() };
+  }
+  const response = await fetchWithTimeout(`${config.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: config.model, stream: false, temperature: 0, max_tokens: 8, messages: [{ role: "user", content: "Responda somente: OK" }] }),
+  }, 30_000);
+  const data = await response.json().catch(() => ({}));
+  const detail = typeof data.error === "string" ? data.error : data.error?.message;
+  if (!response.ok || detail) throw new Error(detail || `O LM Studio respondeu com erro ${response.status}.`);
+  if (!data.choices?.[0]?.message?.content) throw new Error("O modelo não retornou resposta.");
+  return { ok: true, model: data.model || config.model, provider: config.provider, response: String(data.choices[0].message.content).trim() };
+}
+
 async function callAi(settings, prompt, schema, system = "Você escreve roteiros de reação para personagens fictícios. Responda somente com JSON válido.") {
   const config = providerConfig(settings);
   if (config.provider === "ollama") {
@@ -124,7 +166,7 @@ async function callAi(settings, prompt, schema, system = "Você escreve roteiros
         model: config.model,
         stream: false,
         format: schema,
-        options: { temperature: config.temperature, num_predict: 5000, num_ctx: 16384 },
+        options: generationOptions(config),
         messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
       }),
     });
@@ -630,7 +672,7 @@ export function createRoteirosService(rootFolder) {
           const body = await readJson(request);
           let result;
           if (url.pathname === "/roteiros/ai/models") result = { models: await listModels(body.settings) };
-          else if (url.pathname === "/roteiros/ai/test") result = { ok: true, models: await listModels(body.settings) };
+          else if (url.pathname === "/roteiros/ai/test") result = await testSelectedModel(body.settings);
           else if (url.pathname === "/roteiros/ai/improve-context") result = await improveContext(body);
           else if (url.pathname === "/roteiros/ai/generate") result = await generateReactions(body);
           else if (url.pathname === "/roteiros/ai/block") result = await blockAction(body);

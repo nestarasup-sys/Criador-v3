@@ -1,0 +1,56 @@
+RELATÓRIO DE IMPORTAÇÃO
+
+Modelo: modelo-7
+Gênero: feminino
+Origem: ChatGPT Image 7_08_2026, 16_19_04.png
+Dimensão dos recortes: 1920x1080px
+Fundo detectado/escolhido: #fefefe
+Tolerância: 8
+Método de detecção: rostos-adaptativo
+Confiança automática: 99%
+
+Validação:
+- 21 arquivos PNG gerados
+- nomes únicos e mapeados
+- recortes para revisar: nenhum
+
+Recorte automático do conteúdo: sim
+Recorte quadrado: sim
+Margem extra: 0px
+Normalização dos 21: sim
+Primeiro por trio: não
+Outliers excluídos da referência: sim
+Modo: xy
+Força do trio: 100%
+Correção global: 75%
+Limite por eixo: 7%
+Mediana anatômica: 192x271 px
+Referência automática: assustado.png
+anchorX: 960
+anchorY: 346
+
+QUALIDADE POR ARQUIVO
+normal.png: score 89% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+sorriso_canto.png: score 92% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+serio.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+raiva.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+assustado.png: score 100% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+corado.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+surpreso.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+normal_blink.png: score 92% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+sorriso_canto_blink.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+serio_blink.png: score 97% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+raiva_blink.png: score 97% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+assustado_blink.png: score 97% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+corado_blink.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+surpreso_blink.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+normal_talk.png: score 92% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+sorriso_canto_talk.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+serio_talk.png: score 100% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+raiva_talk.png: score 100% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+assustado_talk.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+corado_talk.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+surpreso_talk.png: score 96% | outlier não | crítico não | revisado não | manual escala 100.0% X 100.0% Y 100.0% dx 0px dy 0px
+
+A ferramenta usou apenas a imagem selecionada. Os arquivos finais usam canvas 1920x1080 sem ampliar o rosto pela dimensão do canvas; a escala base padrão é 110% para o rosto ficar um pouco maior no app.
+A seleção de pasta usa o navegador. Por segurança, não é possível forçar exatamente C:UsersluizDownloadsMODELOS, mas a caixa abre em Downloads e pode lembrar a última pasta escolhida.

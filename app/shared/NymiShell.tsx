@@ -1,12 +1,11 @@
 import Link from "next/link";
 
-export type NymiArea = "characters" | "studio" | "roteiros" | "video";
+export type NymiArea = "characters" | "studio" | "roteiros";
 
 const links: Array<{ area: NymiArea; label: string; href: string; icon: string }> = [
   { area: "characters", label: "Personagens", href: "/", icon: "♙" },
   { area: "studio", label: "Studio", href: "/studio", icon: "✦" },
   { area: "roteiros", label: "Roteiros", href: "/roteiros", icon: "▤" },
-  { area: "video", label: "Video Nymi", href: "/VIDEO-NYMI", icon: "▶" },
 ]; 
 
 export function NymiBrand({ compact = false }: { compact?: boolean }) {

@@ -35,6 +35,11 @@ async function startModelStub() {
       response.end(JSON.stringify({ models: [{ name: "gemma4:e4b" }] }));
       return;
     }
+    if (request.url === "/api/chat") {
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: "OK" } }));
+      return;
+    }
     response.writeHead(404);
     response.end();
   });
@@ -113,7 +118,8 @@ test("IA local aceita somente loopback e falhas do provedor viram erro acionáve
     await service.init();
     const ok = await call(service, "POST", "/roteiros/ai/test", { settings: { aiProvider: "ollama", aiBaseUrl: stub.baseUrl, aiModel: "gemma4:e4b" } });
     assert.equal(ok.status, 200);
-    assert.deepEqual(ok.value.models, ["gemma4:e4b"]);
+    assert.equal(ok.value.model, "gemma4:e4b");
+    assert.equal(ok.value.provider, "ollama");
 
     const offline = await call(service, "POST", "/roteiros/ai/test", { settings: { aiProvider: "ollama", aiBaseUrl: "http://127.0.0.1:9", aiModel: "gemma4:e4b" } });
     assert.equal(offline.status, 400);

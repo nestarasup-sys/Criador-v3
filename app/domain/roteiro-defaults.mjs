@@ -1,3 +1,5 @@
+export const RECOMMENDED_ROTEIROS_MODEL = "gemma4:12b-it-qat";
+
 export const DEFAULT_ROTEIROS_SETTINGS = Object.freeze({
   aiProvider: "none",
   aiBaseUrl: "http://127.0.0.1:1234/v1",
