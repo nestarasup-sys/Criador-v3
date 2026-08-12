@@ -1,0 +1,185 @@
+{
+  "format": "nymi-video.character",
+  "version": 1,
+  "characterName": "Duque---Alexander",
+  "expressions": [
+    "preview",
+    "assustado",
+    "assustado_blink",
+    "assustado_talk",
+    "corado",
+    "corado_blink",
+    "corado_talk",
+    "normal",
+    "normal_blink",
+    "normal_talk",
+    "raiva",
+    "raiva_blink",
+    "raiva_talk",
+    "serio",
+    "serio_blink",
+    "serio_talk",
+    "sorriso_canto",
+    "sorriso_canto_blink",
+    "sorriso_canto_talk",
+    "surpreso",
+    "surpreso_blink",
+    "surpreso_talk"
+  ],
+  "assets": [
+    {
+      "id": "Duque---Alexander-preview",
+      "name": "preview",
+      "expression": "preview",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/preview.png"
+    },
+    {
+      "id": "Duque---Alexander-assustado",
+      "name": "assustado",
+      "expression": "assustado",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/assustado.png"
+    },
+    {
+      "id": "Duque---Alexander-assustado_blink",
+      "name": "assustado_blink",
+      "expression": "assustado_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/assustado_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-assustado_talk",
+      "name": "assustado_talk",
+      "expression": "assustado_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/assustado_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-corado",
+      "name": "corado",
+      "expression": "corado",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/corado.png"
+    },
+    {
+      "id": "Duque---Alexander-corado_blink",
+      "name": "corado_blink",
+      "expression": "corado_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/corado_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-corado_talk",
+      "name": "corado_talk",
+      "expression": "corado_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/corado_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-normal",
+      "name": "normal",
+      "expression": "normal",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/normal.png"
+    },
+    {
+      "id": "Duque---Alexander-normal_blink",
+      "name": "normal_blink",
+      "expression": "normal_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/normal_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-normal_talk",
+      "name": "normal_talk",
+      "expression": "normal_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/normal_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-raiva",
+      "name": "raiva",
+      "expression": "raiva",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/raiva.png"
+    },
+    {
+      "id": "Duque---Alexander-raiva_blink",
+      "name": "raiva_blink",
+      "expression": "raiva_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/raiva_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-raiva_talk",
+      "name": "raiva_talk",
+      "expression": "raiva_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/raiva_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-serio",
+      "name": "serio",
+      "expression": "serio",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/serio.png"
+    },
+    {
+      "id": "Duque---Alexander-serio_blink",
+      "name": "serio_blink",
+      "expression": "serio_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/serio_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-serio_talk",
+      "name": "serio_talk",
+      "expression": "serio_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/serio_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-sorriso_canto",
+      "name": "sorriso_canto",
+      "expression": "sorriso_canto",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/sorriso_canto.png"
+    },
+    {
+      "id": "Duque---Alexander-sorriso_canto_blink",
+      "name": "sorriso_canto_blink",
+      "expression": "sorriso_canto_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/sorriso_canto_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-sorriso_canto_talk",
+      "name": "sorriso_canto_talk",
+      "expression": "sorriso_canto_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/sorriso_canto_talk.png"
+    },
+    {
+      "id": "Duque---Alexander-surpreso",
+      "name": "surpreso",
+      "expression": "surpreso",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/surpreso.png"
+    },
+    {
+      "id": "Duque---Alexander-surpreso_blink",
+      "name": "surpreso_blink",
+      "expression": "surpreso_blink",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/surpreso_blink.png"
+    },
+    {
+      "id": "Duque---Alexander-surpreso_talk",
+      "name": "surpreso_talk",
+      "expression": "surpreso_talk",
+      "type": "image",
+      "src": "/video-nymi-assets/Duque---Alexander/surpreso_talk.png"
+    }
+  ]
+}
