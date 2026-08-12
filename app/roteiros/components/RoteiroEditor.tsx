@@ -129,12 +129,12 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     aiControllerRef.current?.abort();
   }, []);
 
-  const requestAi = async <T,>(path: string, payload: unknown) => {
+  const requestAi = async <T,>(path: string, payload: unknown, timeoutMs = 150_000) => {
     aiControllerRef.current?.abort();
     const controller = new AbortController();
     aiControllerRef.current = controller;
     try {
-      return await aiRequest<T>(path, payload, "POST", { signal: controller.signal });
+      return await aiRequest<T>(path, payload, "POST", { signal: controller.signal, timeoutMs });
     } finally {
       if (aiControllerRef.current === controller) aiControllerRef.current = null;
     }

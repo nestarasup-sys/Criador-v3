@@ -99,16 +99,6 @@ function providerConfig(settings) {
   };
 }
 
-function generationOptions(config) {
-  const isGemma12bQat = config.provider === "ollama" && config.model.toLowerCase() === "gemma4:12b-it-qat";
-  return {
-    temperature: config.temperature,
-    num_predict: isGemma12bQat ? 3200 : 5000,
-    num_ctx: isGemma12bQat ? 8192 : 16384,
-    ...(isGemma12bQat ? { num_batch: 128, num_thread: 6 } : {}),
-  };
-}
-
 async function listModels(settings) {
   const provider = settings?.aiProvider;
   if (provider !== "lmstudio" && provider !== "ollama") throw new Error("Selecione LM Studio ou Ollama nas configurações.");
@@ -166,7 +156,7 @@ async function callAi(settings, prompt, schema, system = "Você escreve roteiros
         model: config.model,
         stream: false,
         format: schema,
-        options: generationOptions(config),
+        options: { temperature: config.temperature, num_predict: 5000, num_ctx: 16384 },
         messages: [{ role: "system", content: system }, { role: "user", content: prompt }],
       }),
     });
