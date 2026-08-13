@@ -189,11 +189,21 @@ export async function renderStudioCharacter(
     const centerX = item.defaultX ?? width / 2;
     const centerY = item.defaultY ?? height / 2;
     const layer = mask.length ? document.createElement("canvas") : null;
-    const itemColorGroupKey = layerCategory === "roupas" ? item.outfitGroupId : undefined;
-    const color = normalizeColorAdjustment(layerCategory === "roupas" && itemColorGroupKey
-      ? character.outfitColorAdjustmentsByGroup?.[itemColorGroupKey] ?? character.colorAdjustments?.roupas
+    // O Criador usa o grupo como chave quando a roupa pertence a um conjunto;
+    // roupas avulsas usam o próprio id. O Studio precisava respeitar os dois.
+    const itemColorGroupKey = layerCategory === "roupas"
+      ? ("outfitGroupId" in item ? item.outfitGroupId : undefined) ?? ("id" in item ? item.id : undefined)
+      : undefined;
+    const color = normalizeColorAdjustment(layerCategory === "roupas"
+      ? (itemColorGroupKey ? character.outfitColorAdjustmentsByGroup?.[itemColorGroupKey] : undefined)
+        ?? character.colorAdjustments?.roupas
       : layerCategory ? character.colorAdjustments?.[layerCategory] : undefined);
-    const protectionMask = layerCategory ? character.protectionMasks?.[layerCategory] : undefined;
+    const variantProtectionKey = layerCategory === "roupas"
+      ? `${"id" in item ? item.id : ""}:${normalizeBasePackId(character.basePackId)}`
+      : "";
+    const protectionMask = layerCategory === "roupas"
+      ? character.outfitProtectionMasksByBasePack?.[variantProtectionKey] ?? character.protectionMasks?.roupas
+      : layerCategory ? character.protectionMasks?.[layerCategory] : undefined;
     let renderImage: CanvasImageSource = image;
     if (colorAdjustmentIsActive(color)) {
       const adjusted = createColorAdjustedCanvas(image, width, height, color);

@@ -58,6 +58,24 @@
 .modalActions { margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px; }
 
 .editor { position: fixed; inset: 0; width: 100vw; height: 100dvh; min-height: 100vh; overflow: hidden; background: #f3f0f8; user-select: none; }
+.studioGlyph { display: inline-block; width: 1.35em; height: 1.35em; flex: 0 0 auto; vertical-align: middle; }
+.roundButton .studioGlyph { width: 25px; height: 25px; }
+.history .studioGlyph { width: 21px; height: 21px; }
+.leftTools > button > span > .studioGlyph { width: 31px; height: 31px; }
+.leftTools > button.bubbleTool > span > .studioGlyph { width: 25px; height: 25px; }
+.inspectorTitle > button .studioGlyph,
+.closePanelButton .studioGlyph,
+.backgroundTileRemove .studioGlyph { width: 17px; height: 17px; }
+.inspectorActionRow .studioGlyph,
+.wideButton .studioGlyph,
+.backgroundZoomButtons .studioGlyph,
+.backgroundTransformActions .studioGlyph,
+.addBackgroundButton .studioGlyph,
+.primaryButton .studioGlyph,
+.ghostButton .studioGlyph { width: 18px; height: 18px; margin-right: 5px; }
+.rosterActions .studioGlyph { width: 16px; height: 16px; }
+.emptyStudio > .studioGlyph,
+.backgroundLibraryEmpty > .studioGlyph { width: 40px; height: 40px; }
 .stageViewport { position: absolute; inset: 0; width: 100%; height: 100%; display: grid; place-items: start center; overflow: hidden; touch-action: none; }
 .stage { position: relative; flex: 0 0 auto; width: 1920px; height: 1080px; overflow: hidden; touch-action: none; transform: scale(var(--studio-preview-scale,0)); transform-origin: top center; background: #f3f0f8; }
 .background { position: absolute; left:50%; top:50%; width:100%; height:100%; object-fit: cover; pointer-events: none; transform: translate(calc(-50% + var(--background-offset-x,0px) + var(--background-drag-x,0px)),calc(-50% + var(--background-offset-y,0px) + var(--background-drag-y,0px))) scale(var(--background-scale,1)); transform-origin:center; }

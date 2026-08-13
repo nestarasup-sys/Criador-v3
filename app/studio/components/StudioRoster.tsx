@@ -1,5 +1,6 @@
 import styles from "../studio.module.css";
 import type { Character, SceneCharacter, Selection } from "../types";
+import { StudioGlyph } from "./StudioGlyph";
 
 type StudioRosterProps = {
   rosterIds: string[];
@@ -21,7 +22,7 @@ type StudioRosterProps = {
 
 export function StudioRoster({ rosterIds, charactersById, rendered, renderedFallback, renderCacheKey, selection, onSelectCharacter, onEditRoster, findInstance, positionsLocked, onTogglePositionsLock, backgroundCollapsed, onToggleBackgroundCollapsed, compact, onToggleCompact }: StudioRosterProps) {
   return <section className={`${styles.roster} ${compact ? styles.rosterCompact : ""}`}>
-    <div className={styles.rosterHeading}><span>ELENCO</span><div className={styles.rosterActions}><button title={positionsLocked ? "Desbloquear posições dos personagens" : "Bloquear posições dos personagens"} aria-label={positionsLocked ? "Desbloquear posições" : "Bloquear posições"} className={positionsLocked ? styles.rosterControlActive : ""} onClick={onTogglePositionsLock}>{positionsLocked ? "🔒" : "🔓"}</button><button title={compact ? "Voltar ao tamanho normal" : "Recolher nomes e compactar elenco"} aria-label={compact ? "Voltar ao tamanho normal" : "Compactar elenco"} onClick={onToggleCompact}>{compact ? "↔" : "⇔"}</button><button title={backgroundCollapsed ? "Expandir painel Fundo" : "Recolher painel Fundo"} aria-label={backgroundCollapsed ? "Expandir painel Fundo" : "Recolher painel Fundo"} onClick={onToggleBackgroundCollapsed}>{backgroundCollapsed ? "▸" : "▾"}</button><button title="Editar participantes" aria-label="Editar participantes" onClick={onEditRoster}>＋</button></div></div>
+    <div className={styles.rosterHeading}><span>ELENCO</span><div className={styles.rosterActions}><button title={positionsLocked ? "Desbloquear posições dos personagens" : "Bloquear posições dos personagens"} aria-label={positionsLocked ? "Desbloquear posições" : "Bloquear posições"} className={positionsLocked ? styles.rosterControlActive : ""} onClick={onTogglePositionsLock}><StudioGlyph name="lock" /></button><button title={compact ? "Voltar ao tamanho normal" : "Recolher nomes e compactar elenco"} aria-label={compact ? "Voltar ao tamanho normal" : "Compactar elenco"} onClick={onToggleCompact}><StudioGlyph name="compact" /></button><button title={backgroundCollapsed ? "Expandir painel Fundo" : "Recolher painel Fundo"} aria-label={backgroundCollapsed ? "Expandir painel Fundo" : "Recolher painel Fundo"} onClick={onToggleBackgroundCollapsed}><StudioGlyph name="expand" /></button><button title="Editar participantes" aria-label="Editar participantes" onClick={onEditRoster}><StudioGlyph name="add" /></button></div></div>
     <div className={styles.rosterList}>{rosterIds.map((id) => {
       const character = charactersById.get(id);
       if (!character) return null;

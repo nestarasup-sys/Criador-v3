@@ -1,6 +1,7 @@
 import type { ChangeEvent, RefObject } from "react";
 import styles from "../studio.module.css";
 import type { SceneBubble } from "../types";
+import { StudioGlyph } from "./StudioGlyph";
 
 type StudioToolbarProps = {
   canUndo: boolean;
@@ -26,20 +27,20 @@ export function StudioToolbar({ canUndo, canRedo, isPrinting, selectedCharacterN
   return <>
     <header className={styles.topbar}>
       <div className={styles.toolbarGrid}>
-        <button className={styles.roundButton} title="Voltar aos Studios" onClick={onLeave}>←</button>
-        <div className={styles.history}><button title="Salvar agora no PC" aria-label="Salvar agora no PC" onClick={onSave}>✓</button><button title="Desfazer" aria-label="Desfazer" disabled={!canUndo} onClick={onUndo}>↶</button><button title="Refazer" aria-label="Refazer" disabled={!canRedo} onClick={onRedo}>↷</button></div>
+        <button className={styles.roundButton} title="Voltar aos Studios" onClick={onLeave}><StudioGlyph name="back" /></button>
+        <div className={styles.history}><button title="Salvar agora no PC" aria-label="Salvar agora no PC" onClick={onSave}><StudioGlyph name="save" /></button><button title="Desfazer" aria-label="Desfazer" disabled={!canUndo} onClick={onUndo}><StudioGlyph name="undo" /></button><button title="Refazer" aria-label="Refazer" disabled={!canRedo} onClick={onRedo}><StudioGlyph name="redo" /></button></div>
       </div>
     </header>
     <aside className={styles.leftTools}>
-      <button onClick={onOpenBackgroundLibrary}><span>▱</span><strong>Fundo</strong></button>
-      <button onClick={() => objectInput.current?.click()}><span>✦</span><strong>Objetos</strong></button>
-      <button onClick={onAddNarrator}><span>☷</span><strong>Narrador</strong></button>
-      <button className={styles.bubbleTool} onClick={() => onAddBubble("fala")} title={bubbleTitle}><span>♡</span><strong>Fala</strong></button>
-      <button className={styles.bubbleTool} onClick={() => onAddBubble("pensamento")} title={bubbleTitle}><span>☁</span><strong>Pensamento</strong></button>
+      <button onClick={onOpenBackgroundLibrary}><span><StudioGlyph name="background" /></span><strong>Fundo</strong></button>
+      <button onClick={() => objectInput.current?.click()}><span><StudioGlyph name="objects" /></span><strong>Objetos</strong></button>
+      <button onClick={onAddNarrator}><span><StudioGlyph name="narrator" /></span><strong>Narrador</strong></button>
+      <button className={styles.bubbleTool} onClick={() => onAddBubble("fala")} title={bubbleTitle}><span><StudioGlyph name="speech" /></span><strong>Fala</strong></button>
+      <button className={styles.bubbleTool} onClick={() => onAddBubble("pensamento")} title={bubbleTitle}><span><StudioGlyph name="thought" /></span><strong>Pensamento</strong></button>
       <div className={styles.toolSpacer} />
-      <button className={styles.printButton} onClick={onPrint} disabled={isPrinting}><span>✧</span><strong>{isPrinting ? "Salvando…" : "Print"}</strong></button>
-      <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA NYMI"><span>⌂</span><strong>Pasta</strong></button>
-      <button className={styles.viewButton} onClick={onView}><span>⛶</span><strong>View</strong></button>
+      <button className={styles.printButton} onClick={onPrint} disabled={isPrinting}><span><StudioGlyph name="print" /></span><strong>{isPrinting ? "Salvando…" : "Print"}</strong></button>
+      <button className={styles.openPrintsButton} onClick={onOpenPrints} title="Abrir C:\\PRINTS GACHA NYMI"><span><StudioGlyph name="folder" /></span><strong>Pasta</strong></button>
+      <button className={styles.viewButton} onClick={onView}><span><StudioGlyph name="view" /></span><strong>View</strong></button>
       <input ref={objectInput} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={onObjectChange} />
     </aside>
   </>;

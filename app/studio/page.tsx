@@ -12,6 +12,7 @@ import { StudioInspector } from "./components/StudioInspector";
 import { StudioRoster } from "./components/StudioRoster";
 import { StudioToolbar } from "./components/StudioToolbar";
 import { StudioBackgroundLibrary } from "./components/StudioBackgroundLibrary";
+import { StudioGlyph } from "./components/StudioGlyph";
 import { characterForSceneOutfit, cycleSceneOutfitPose, outfitOffsetForVariant, sceneOutfitCacheKey, sceneOutfitPose } from "./outfit-variants";
 import { redoStudioHistory, pushStudioHistory, undoStudioHistory } from "./history";
 import { cloneStudioValue, duplicateSceneElement, estimatedBubbleOffset, formatStudioDate, nextZ, removeSceneElement, sceneElementZ, updateSceneElement } from "./scene-ops";
@@ -350,11 +351,11 @@ export default function StudioPage() {
   });
 
   const characterRenderSignature = studio
-    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}:${JSON.stringify(item.outfitVariantOffsets ?? {})}`).join(",")}`
+    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}:${JSON.stringify(item.outfitVariantOffsets ?? {})}`).join(",")}|${[...charactersById.values()].map((item) => `${item.id}:${item.updatedAt}:${JSON.stringify(item.colorAdjustments ?? {})}:${JSON.stringify(item.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(item.protectionMasks ?? {})}:${JSON.stringify(item.outfitProtectionMasksByBasePack ?? {})}`).join(",")}`
     : "";
 
   const renderCacheKey = useCallback((character: Character, emotion: string, state: string, instance?: SceneCharacter) =>
-    `${character.id}:${character.updatedAt}:${emotion}:${state}:${sceneOutfitCacheKey(character, instance, data.catalog)}`, [data.catalog]);
+    `${character.id}:${character.updatedAt}:${emotion}:${state}:${JSON.stringify(character.colorAdjustments ?? {})}:${JSON.stringify(character.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(character.protectionMasks ?? {})}:${JSON.stringify(character.outfitProtectionMasksByBasePack ?? {})}:${sceneOutfitCacheKey(character, instance, data.catalog)}`, [data.catalog]);
 
   useEffect(() => {
     const activeStudio = studiosRef.current.find((item) => item.id === currentId);
@@ -853,7 +854,7 @@ export default function StudioPage() {
       <main className={styles.library}>
         <header className={styles.libraryHeader}>
           <div><span className={styles.eyebrow}>NYMI GACHA</span><h1>Seus Studios</h1><p>Monte cenas com os personagens que você já criou.</p></div>
-          <div className={styles.libraryActions}><NymiNavigation active="studio" compact /><Link href="/" className={styles.ghostButton}>← Personagens</Link><button className={styles.primaryButton} onClick={() => { setEditingStudioId(null); setCreateName(""); setCreateRoster([]); setCreateOpen(true); }}>＋ Criar novo Studio</button></div>
+          <div className={styles.libraryActions}><NymiNavigation active="studio" compact /><Link href="/" className={styles.ghostButton}><StudioGlyph name="back" /> Personagens</Link><button className={styles.primaryButton} onClick={() => { setEditingStudioId(null); setCreateName(""); setCreateRoster([]); setCreateOpen(true); }}><StudioGlyph name="add" /> Criar novo Studio</button></div>
         </header>
         <section className={`${styles.storageCard} ${pcStorageAvailable ? styles.storageReady : styles.storageOffline}`}>
           <div><NymiConnectionStatus connected={pcStorageAvailable} detail={migrationAvailable ? "Existem Studios antigos aguardando migração" : undefined} /><div><strong>{pcStorageAvailable ? "Salvamento no PC" : "Somente neste navegador"}</strong><small>{migrationAvailable ? "Existem Studios antigos aguardando migração" : pcStorageAvailable ? "Studios, fundos e objetos ficam disponíveis entre navegadores" : "Abra pelo INICIAR-NYMI-GACHA.bat para sincronizar"}</small></div></div>
@@ -863,7 +864,7 @@ export default function StudioPage() {
         </section>
         <section className={styles.studioGrid}>
           {studios.length === 0 ? (
-            <button className={styles.emptyStudio} onClick={() => { setEditingStudioId(null); setCreateOpen(true); }}><span>＋</span><strong>Crie seu primeiro Studio</strong><small>Escolha um nome e os personagens da cena.</small></button>
+            <button className={styles.emptyStudio} onClick={() => { setEditingStudioId(null); setCreateOpen(true); }}><StudioGlyph name="add" /><strong>Crie seu primeiro Studio</strong><small>Escolha um nome e os personagens da cena.</small></button>
           ) : studios.map((item) => (
             <article className={styles.studioCard} key={item.id}>
               <button className={styles.studioPreview} onClick={() => { setCurrentId(item.id); }}>
@@ -882,7 +883,7 @@ export default function StudioPage() {
         {createOpen && (
           <div className={styles.modalBackdrop} onMouseDown={closeCreateModal}>
             <section className={styles.modal} onMouseDown={(event) => event.stopPropagation()}>
-              <div className={styles.modalHeading}><div><span className={styles.eyebrow}>{editingStudioId ? "EDITAR ESPAÇO" : "NOVO ESPAÇO"}</span><h2>{editingStudioId ? "Editar Studio" : "Criar Studio"}</h2></div><button onClick={closeCreateModal}>×</button></div>
+              <div className={styles.modalHeading}><div><span className={styles.eyebrow}>{editingStudioId ? "EDITAR ESPAÇO" : "NOVO ESPAÇO"}</span><h2>{editingStudioId ? "Editar Studio" : "Criar Studio"}</h2></div><button onClick={closeCreateModal}><StudioGlyph name="close" /></button></div>
               <label className={styles.field}>Nome do Studio<input autoFocus value={createName} onChange={(event) => setCreateName(event.target.value)} placeholder="Ex.: Cena no parque" /></label>
               <div className={styles.characterPickerHeading}><strong>Escolha os personagens</strong><span>{createRoster.length} selecionados</span></div>
               <div className={styles.characterPicker}>

@@ -12,7 +12,7 @@ import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCh
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
-import type { GeneratedReaction, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokSection } from "../types";
+import type { GeneratedReaction, NarrativeProfile, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
 
@@ -49,7 +49,7 @@ function exportPathSegment(value: string, fallback: string) {
   return normalized || fallback;
 }
 
-function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"], catalog: Awaited<ReturnType<typeof loadPremiumStudioData>>["catalog"]) {
+function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], profiles: NarrativeProfile[], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"], catalog: Awaited<ReturnType<typeof loadPremiumStudioData>>["catalog"]) {
   const names = new Map(characters.map((character) => [character.id, character.name]));
   const expressionLines = script.participants.map((participant) => {
     const character = fullCharacters.find((item) => item.id === participant.characterId);
@@ -59,10 +59,24 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(script.title, "roteiro")}/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
     const variants = character ? outfitVariantsForExport(character, catalog) : [];
     const variantLines = variants.map((variant) => `${variant.label} - Pasta exata: ${folder}/${variant.label}`);
+    const profile = profiles.find((item) => item.characterId === participant.characterId);
+    const relationships = (profile?.relationships ?? []).map((relationship) => {
+      const targetName = names.get(relationship.targetCharacterId) || "Personagem removido";
+      return `- ${targetName}: ${relationship.description || "Não informado."}`;
+    });
     return [
-      `${name} - Pasta exata: ${folder}`,
+      `${name}`,
+      `Gênero: ${character?.model === "masculino" ? "masculino" : character?.model === "feminino" ? "feminino" : "não informado"}`,
+      `Pasta exata: ${folder}`,
       ...(variantLines.length ? ["Variantes:", ...variantLines] : []),
       `Expressões: ${expressions.join(", ")}`,
+      "Ficha narrativa:",
+      `Personalidade: ${profile?.personality || "Não informado."}`,
+      `História: ${profile?.backstory || "Não informado."}`,
+      `Relação principal: ${profile?.fynRelationship || "Não informado."}`,
+      `Estilo de fala: ${profile?.speakingStyle || "Não informado."}`,
+      `Regras adicionais: ${profile?.additionalRules || "Não informado."}`,
+      ...(relationships.length ? ["Relações:", ...relationships] : ["Relações: Nenhuma cadastrada."]),
     ].join("\n");
   });
   const openingLines = script.opening ? (() => {
@@ -436,7 +450,7 @@ export default function RoteiroEditor() {
     setExportLoading("script"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
+      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, state.profiles, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
     finally { setExportLoading(""); }

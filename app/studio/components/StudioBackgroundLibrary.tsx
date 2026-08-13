@@ -1,6 +1,7 @@
 import { useRef, type ChangeEvent } from "react";
 import styles from "../studio.module.css";
 import type { StudioAsset, StudioBackground } from "../types";
+import { StudioGlyph } from "./StudioGlyph";
 
 type StudioBackgroundLibraryProps = {
   assets: StudioAsset[];
@@ -29,9 +30,9 @@ export function StudioBackgroundLibrary({ assets, background, busy, onClose, onS
   return <section className={styles.backgroundLibrary} aria-label="Biblioteca de fundos">
     <header className={styles.backgroundLibraryHeader}>
       <div><span>BIBLIOTECA</span><h3>Fundos</h3><small>{assets.length} imagem(ns) disponíveis</small></div>
-      <button type="button" className={styles.closePanelButton} onClick={onClose} aria-label="Fechar biblioteca de fundos">×</button>
+      <button type="button" className={styles.closePanelButton} onClick={onClose} aria-label="Fechar biblioteca de fundos"><StudioGlyph name="close" /></button>
     </header>
-    <button type="button" className={styles.addBackgroundButton} disabled={busy} onClick={() => inputRef.current?.click()}>＋ Adicionar fundo</button>
+    <button type="button" className={styles.addBackgroundButton} disabled={busy} onClick={() => inputRef.current?.click()}><StudioGlyph name="add" /> Adicionar fundo</button>
     <input ref={inputRef} hidden type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFile} />
     <div className={styles.backgroundGrid}>
       {assets.length ? assets.map((asset) => {
@@ -41,17 +42,17 @@ export function StudioBackgroundLibrary({ assets, background, busy, onClose, onS
             <img src={asset.fileUrl} alt={asset.name} />
             <span>{active ? "✓ Aplicado" : asset.name}</span>
           </button>
-          <button type="button" className={styles.backgroundTileRemove} disabled={busy} onClick={() => onRemove(asset)} aria-label={`Remover fundo ${asset.name}`} title="Remover fundo">×</button>
+          <button type="button" className={styles.backgroundTileRemove} disabled={busy} onClick={() => onRemove(asset)} aria-label={`Remover fundo ${asset.name}`} title="Remover fundo"><StudioGlyph name="close" /></button>
         </article>;
-      }) : <div className={styles.backgroundLibraryEmpty}><span>▱</span><strong>Nenhum fundo salvo</strong><small>Adicione uma imagem para começar.</small></div>}
+      }) : <div className={styles.backgroundLibraryEmpty}><StudioGlyph name="background" /><strong>Nenhum fundo salvo</strong><small>Adicione uma imagem para começar.</small></div>}
     </div>
     {background && <div className={styles.backgroundControls}>
       <div className={styles.backgroundControlsHeading}><div><span>FUNDO ATUAL</span><strong>Transformação</strong></div><span className={styles.backgroundAppliedMark}>✓</span></div>
       <label className={styles.rangeField}><span>Escala <b>{Math.round(scale * 100)}%</b></span><input type="range" min=".1" max="4" step=".05" value={scale} onPointerDown={onBeginAdjust} onChange={(event) => onUpdate({ scale: Number(event.target.value) }, false)} /></label>
-      <div className={styles.backgroundZoomButtons}><button type="button" onClick={() => onUpdate({ scale: Math.max(.1, Math.min(4, scale - .1)) })}>− Zoom</button><button type="button" onClick={() => onUpdate({ scale: Math.max(.1, Math.min(4, scale + .1)) })}>＋ Zoom</button></div>
+      <div className={styles.backgroundZoomButtons}><button type="button" onClick={() => onUpdate({ scale: Math.max(.1, Math.min(4, scale - .1)) })}><StudioGlyph name="zoomOut" /> Zoom</button><button type="button" onClick={() => onUpdate({ scale: Math.max(.1, Math.min(4, scale + .1)) })}><StudioGlyph name="zoomIn" /> Zoom</button></div>
       <label className={styles.rangeField}><span>Horizontal <b>{Math.round(offsetX)}px</b></span><input type="range" min="-960" max="960" step="1" value={offsetX} onPointerDown={onBeginAdjust} onChange={(event) => onUpdate({ offsetX: Number(event.target.value) }, false)} /></label>
       <label className={styles.rangeField}><span>Vertical <b>{Math.round(offsetY)}px</b></span><input type="range" min="-540" max="540" step="1" value={offsetY} onPointerDown={onBeginAdjust} onChange={(event) => onUpdate({ offsetY: Number(event.target.value) }, false)} /></label>
-      <div className={styles.backgroundTransformActions}><button type="button" onClick={onCenter}>⌖ Centralizar</button><button type="button" onClick={onReset}>↺ Restaurar original</button></div>
+      <div className={styles.backgroundTransformActions}><button type="button" onClick={onCenter}><StudioGlyph name="center" /> Centralizar</button><button type="button" onClick={onReset}><StudioGlyph name="reset" /> Restaurar original</button></div>
       <button type="button" className={styles.backgroundFitButton} onClick={() => onUpdate({ fit: background.fit === "cover" ? "contain" : "cover" })}>{background.fit === "cover" ? "Mostrar inteiro" : "Preencher tela"}</button>
       <small className={styles.backgroundDragHint}>Com a biblioteca aberta, arraste o fundo diretamente no canvas.</small>
     </div>}
