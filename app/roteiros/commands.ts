@@ -48,7 +48,7 @@ export function patchOpeningReactionBlock(state: RoteirosState, scriptId: string
   return patchOpening(state, scriptId, { reactionBlocks: findOpening(state, scriptId).map((block) => block.id === blockId ? { ...block, ...patch, updatedAt: timestamp } : block) });
 }
 
-export function addOpeningReactionBlock(state: RoteirosState, scriptId: string, type: ReactionBlock["type"] = "speech") {
+export function addOpeningReactionBlock(state: RoteirosState, scriptId: string, type: ReactionBlock["type"] = "auto") {
   const block = createReactionBlock(type);
   return { state: patchOpening(state, scriptId, { reactionBlocks: findOpening(state, scriptId).concat(block) }), block };
 }
@@ -100,7 +100,7 @@ export function patchReactionBlocks(state: RoteirosState, scriptId: string, sect
   return patchTikTok(state, scriptId, sectionId, { reactionBlocks });
 }
 
-export function addReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, type: ReactionBlock["type"] = "speech") {
+export function addReactionBlock(state: RoteirosState, scriptId: string, sectionId: string, type: ReactionBlock["type"] = "auto") {
   const block = createReactionBlock(type);
   return { state: patchTikTok(state, scriptId, sectionId, { reactionBlocks: findBlocks(state, scriptId, sectionId).concat(block) }), block };
 }

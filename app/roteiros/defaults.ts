@@ -58,7 +58,7 @@ export function createGlobalRule(): GlobalRule {
   return { id: createId(), title: "Nova regra", description: "", enabled: true, priority: "normal", createdAt: timestamp, updatedAt: timestamp };
 }
 
-export function createReactionBlock(type: ReactionBlockType = "speech"): ReactionBlock {
+export function createReactionBlock(type: ReactionBlockType = "auto"): ReactionBlock {
   const timestamp = nowIso();
   return { id: createId(), characterId: "", type, emotion: "", text: "", englishText: "", createdAt: timestamp, updatedAt: timestamp };
 }

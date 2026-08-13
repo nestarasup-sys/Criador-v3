@@ -17,7 +17,7 @@ import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
 
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência" } as const;
-const typeLabel = { speech: "Fala", thought: "Pensamento", silent: "Reação" } as const;
+const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento", silent: "Reação" } as const;
 
 function CharacterMark({ character }: { character: PremiumCharacter }) {
   const photo = character.photoUrl ?? character.photoDataUrl;
@@ -67,12 +67,12 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
   });
   const openingLines = script.opening ? (() => {
     const section = script.opening;
-    const blocks = section.reactionBlocks.filter((block) => block.type === "speech" || block.type === "thought" || block.type === "silent");
+    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought", "silent"].includes(block.type));
     const lines = ["ABERTURA", "========", `Descrição: ${section.description}`];
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
       const name = names.get(block.characterId) || "Personagem removido";
-      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "reação";
+      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : block.type === "auto" ? "automático" : "reação";
       lines.push(`${blockIndex + 1} - ${name} (${type}): ${block.type === "silent" ? block.emotion : block.text}`);
     });
     return [...lines, ""];
@@ -81,11 +81,11 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const number = String(index + 1).padStart(2, "0");
     const folder = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${exportPathSegment(script.title, "roteiro")}`;
     const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Descrição: ${section.description}`];
-    const blocks = section.reactionBlocks.filter((block) => block.type === "speech" || block.type === "thought" || block.type === "silent");
+    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought", "silent"].includes(block.type));
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
       const name = names.get(block.characterId) || "Personagem removido";
-      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "reação";
+      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : block.type === "auto" ? "automático" : "reação";
       const text = block.type === "silent" ? block.emotion : block.text;
       lines.push(`${blockIndex + 1} - ${name} (${type}): ${text}`);
     });

@@ -412,6 +412,7 @@ async function generateReactions(body) {
   if (!String(section.description || "").trim()) throw new Error(opening ? "Descreva a abertura antes de gerar." : "Escreva a descrição do TikTok antes de gerar.");
   const targets = targetIndices.map((index) => ({ index, block: section.reactionBlocks?.[index] || {} }));
   const existing = body.mode === "replace-all" ? [] : (section.reactionBlocks || []).filter((block) => block.characterId && (block.text || block.emotion));
+  section.userInstruction = `TIPO DOS BLOCOS:\n- Para type auto, escolha entre speech, thought e silent conforme a reação.\n- Para speech, thought ou silent, preserve o tipo escolhido pelo usuário.\n\n${section.userInstruction || ""}`;
   const prompt = `Crie EXATAMENTE ${targetIndices.length} blocos novos de uma sala de reação. A sequência deve parecer uma conversa contínua.\n\nMODO:\n${body.mode === "replace-all" ? "Substituir todos os blocos." : "Preencher somente os blocos vazios."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${body.generalContext || "Não informado."}\n\nREGRAS PERSONALIZADAS GLOBAIS:\n${rulesText(body.globalRules)}\n\nHISTÓRICO RECENTE:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO LITERAL DO VÍDEO:\n${section.description}\n\nOBJETIVO:\n${section.sceneGoal || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nREGRAS ESPECÍFICAS DESTE TIKTOK:\n${section.specificRules || "Nenhuma."}\n\nINSTRUÇÃO ADICIONAL:\n${section.userInstruction || "Nenhuma."}\n\nREAÇÕES EXISTENTES:\n${JSON.stringify(existing)}\n\nBLOCOS ALVO (preserve personagem/tipo quando já escolhidos):\n${JSON.stringify(targets)}\n\n${PROTECTED_RULES}\n\nDIVERSIDADE DRAMÁTICA:\nDistribua funções diferentes entre os blocos: dúvida, defesa, suspeita, culpa, ciúme, ironia, medo, proteção, tensão, negação, contraste, silêncio ou percepção.\n${section.shortLines ? "Use falas e pensamentos curtos, preferencialmente com até 12 palavras." : ""}\nRetorne somente JSON: {"reactions":[{"characterId":"id","type":"speech|thought|silent","emotion":"...","text":"..."}]}.`;
   const result = await callAi(body.settings, prompt, reactionSchema(characterIds, targetIndices.length));
   const reactions = Array.isArray(result.data?.reactions) ? result.data.reactions : [];
@@ -419,7 +420,7 @@ async function generateReactions(body) {
   const normalized = reactions.map((reaction, index) => {
     const target = targets[index].block;
     const characterId = target.characterId && characterIds.includes(target.characterId) ? target.characterId : reaction.characterId;
-    const type = target.type || reaction.type;
+    const type = target.type === "auto" || !target.type ? reaction.type : target.type;
     return {
       characterId: characterIds.includes(characterId) ? characterId : characterIds[0],
       type: ["speech", "thought", "silent"].includes(type) ? type : "speech",
@@ -444,7 +445,8 @@ async function blockAction(body) {
   const result = await callAi(body.settings, prompt, reactionSchema(characterIds, 1));
   const reaction = result.data?.reactions?.[0];
   if (!reaction) throw new Error("A IA não retornou o bloco.");
-  return { reaction: { characterId: block.characterId, type: block.type, emotion: String(reaction.emotion || ""), text: block.type === "silent" ? "" : String(reaction.text || "") }, model: result.model };
+  const type = block.type === "auto" ? reaction.type : block.type;
+  return { reaction: { characterId: block.characterId, type, emotion: String(reaction.emotion || ""), text: type === "silent" ? "" : String(reaction.text || "") }, model: result.model };
 }
 
 async function translate(body) {

@@ -151,7 +151,7 @@ function normalizeRoteiroProfile(value) {
 
 function normalizeReactionBlock(value) {
   const source = record(value);
-  const type = ["speech", "thought", "silent"].includes(source.type) ? source.type : "speech";
+  const type = ["auto", "speech", "thought", "silent"].includes(source.type) ? source.type : "auto";
   return {
     ...source,
     id: typeof source.id === "string" ? source.id : "",

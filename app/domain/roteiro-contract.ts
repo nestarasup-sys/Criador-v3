@@ -24,7 +24,7 @@ export type RoteirosSettings = {
   aiProvider: AiProvider; aiBaseUrl: string; aiModel: string; temperature: number;
   defaultBlockCount: number; shortLinesByDefault: boolean; historyLimit: number;
 };
-export type ReactionBlockType = "speech" | "thought" | "silent";
+export type ReactionBlockType = "auto" | "speech" | "thought" | "silent";
 export type TikTokTimeline = "unspecified" | "past" | "present" | "future";
 export type ReactionBlock = {
   id: string; characterId: string; type: ReactionBlockType; emotion: string;
