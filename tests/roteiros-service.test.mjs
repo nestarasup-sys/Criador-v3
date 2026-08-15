@@ -73,6 +73,22 @@ async function startDelayedModelStub(delayMs, responsePayload = { reactions: [{ 
   return { server, baseUrl: `http://127.0.0.1:${port}`, get concurrent() { return concurrent; }, get maxConcurrent() { return maxConcurrent; }, get aborted() { return aborted; } };
 }
 
+async function startPromptModelStub(responsePayload = { improvedContext: "A pessoa abre a porta azul com cuidado. Em seguida, olha para dentro do cômodo e permanece atenta ao que encontra. A descrição não informa o que acontece depois." }) {
+  let lastRequest;
+  const server = createServer((request, response) => {
+    const chunks = [];
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => {
+      lastRequest = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: JSON.stringify(responsePayload) } }));
+    });
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  return { server, baseUrl: `http://127.0.0.1:${port}`, get prompt() { return lastRequest?.messages?.at(-1)?.content || ""; } };
+}
+
 test("persists the independent Roteiros state in its own PC folder", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-test-"));
   try {
@@ -234,4 +250,58 @@ test("rejeita índices de blocos fora da seção solicitada", async () => {
     assert.equal(response.status, 400);
     assert.match(response.value.error, /blocos-alvo inválidos/i);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("isola a melhoria da descrição do vídeo de qualquer outro TikTok e exige uma reescrita substancial", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-description-scope-"));
+  const stub = await startPromptModelStub();
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/improve-context", {
+      settings: { aiProvider: "ollama", aiBaseUrl: stub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+      contextScope: "video-description",
+      description: "Duque abre a porta azul e olha para dentro.",
+      generalContext: "CONTEXTO GERAL PROIBIDO",
+      sceneGoal: "OBJETIVO PROIBIDO",
+      userInstruction: "INSTRUÇÃO PROIBIDA",
+      previousDescriptions: ["TIKTOK 1 — O personagem dorme no sofá."],
+    });
+    assert.equal(response.status, 200);
+    assert.match(stub.prompt, /FONTE ÚNICA/);
+    assert.match(stub.prompt, /Duque abre a porta azul/);
+    assert.match(stub.prompt, /reescrita substancial/i);
+    assert.doesNotMatch(stub.prompt, /TIKTOK 1|CONTEXTO GERAL PROIBIDO|OBJETIVO PROIBIDO|INSTRUÇÃO PROIBIDA/);
+
+    const generalStub = await startPromptModelStub({ improvedContext: "A história acompanha uma amizade sob tensão. A relação muda conforme os personagens enfrentam conflitos e precisam tomar decisões difíceis. O contexto não define outros acontecimentos." });
+    try {
+      const generalResponse = await call(service, "POST", "/roteiros/ai/improve-context", {
+        settings: { aiProvider: "ollama", aiBaseUrl: generalStub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+        contextScope: "general-context",
+        description: "A história acompanha uma amizade sob tensão.",
+        previousDescriptions: ["TIKTOK 1 — Não deve aparecer no contexto geral."],
+      });
+      assert.equal(generalResponse.status, 200);
+      assert.match(generalStub.prompt, /contexto geral/i);
+      assert.doesNotMatch(generalStub.prompt, /TIKTOK 1 — Não deve aparecer/);
+    } finally {
+      await new Promise((resolve) => generalStub.server.close(resolve));
+    }
+
+    const superficialStub = await startPromptModelStub({ improvedContext: "Duque abre a porta azul e olha para dentro." });
+    try {
+      const superficial = await call(service, "POST", "/roteiros/ai/improve-context", {
+        settings: { aiProvider: "ollama", aiBaseUrl: superficialStub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+        contextScope: "video-description",
+        description: "Duque abre a porta azul e olha para dentro.",
+      });
+      assert.equal(superficial.status, 400);
+      assert.match(superficial.value.error, /mesma descrição|superficial/i);
+    } finally {
+      await new Promise((resolve) => superficialStub.server.close(resolve));
+    }
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
 });

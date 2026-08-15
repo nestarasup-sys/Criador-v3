@@ -700,6 +700,10 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /Cancelar geração/);
   assert.match(editor, /new AbortController/);
   assert.match(editor, /createRoteiroExportDocument/);
+  assert.match(editor, /contextScope: "video-description"/);
+  assert.match(editor, /contextScope: "general-context"/);
+  assert.match(editor, /Melhorar descrição do vídeo/);
+  assert.match(editor, /Melhorar contexto geral/);
   assert.match(blocks, /aiEnabled/);
   assert.match(blocks, /onMoveBlock/);
   assert.match(blocks, /onDuplicateBlock/);
@@ -712,6 +716,8 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(storage, /removeRoteiroVideo/);
   assert.match(storage, /signal\?: AbortSignal/);
   assert.match(service, /AI_TIMEOUT_MS = 45_000/);
+  assert.match(service, /FONTE ÚNICA/);
+  assert.match(service, /validateMeaningfulContextRewrite/);
   assert.match(server, /export-videos/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);

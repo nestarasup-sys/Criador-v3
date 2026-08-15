@@ -207,9 +207,9 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const improve = async () => {
     beginAiLoading("improve"); setMessage("");
     try {
-      const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneEndSeconds === undefined ? section.sceneGoal : `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, sceneEndSeconds: section.sceneEndSeconds, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
+      const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, contextScope: "video-description", description: section.description });
       setImprovedContext(result.improvedContext);
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível melhorar o contexto."); }
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível melhorar a descrição do vídeo."); }
     finally { setLoading(""); }
   };
 
@@ -322,8 +322,8 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
               <label className={styles.checkField}><input type="checkbox" checked={section.shortLines} onChange={(event) => patch({ shortLines: event.target.checked })} /><span>Falas mais curtas</span></label>
             </div>
           </div>
-          {!opening && <div className={styles.contextActions}><button className={styles.aiButton} disabled={Boolean(loading) || !section.description.trim() || state.settings.aiProvider === "none"} onClick={() => void improve()}>✦ {loading === "improve" ? "Melhorando…" : "Melhorar contexto"}</button><span>A IA não substituirá o texto sem sua confirmação.</span></div>}
-          {improvedContext && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedContext("")}>×</button></div><p>{improvedContext}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedContext("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patch({ description: improvedContext }); setImprovedContext(""); }}>Aceitar sugestão</button></footer></div>}
+          {!opening && <div className={styles.contextActions}><button className={styles.aiButton} disabled={Boolean(loading) || !section.description.trim() || state.settings.aiProvider === "none"} onClick={() => void improve()}>✦ {loading === "improve" ? "Melhorando descrição…" : "Melhorar descrição do vídeo"}</button><span>A IA usa somente esta descrição e cria uma reescrita mais completa; nada é aplicado sem sua confirmação.</span></div>}
+          {improvedContext && <div className={styles.suggestionBox}><div><span>SUGESTÃO PARA A DESCRIÇÃO DO VÍDEO</span><button onClick={() => setImprovedContext("")}>×</button></div><p>{improvedContext}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedContext("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patch({ description: improvedContext }); setImprovedContext(""); }}>Aceitar sugestão</button></footer></div>}
           <label className={styles.field}><span>{opening ? "Regras da abertura" : "Regras específicas deste TikTok"}</span><textarea rows={3} value={section.specificRules} maxLength={6000} onChange={(event) => patch({ specificRules: event.target.value })} placeholder={opening ? "Regras que valem antes dos vídeos…" : "Regras que valem somente para este vídeo…"} /></label>
         </div>
       </section>
@@ -549,7 +549,7 @@ export default function RoteiroEditor() {
     if (!script.generalContext.trim()) return;
     setGeneralLoading(true); setGeneralMessage("");
     try {
-      const result = await aiRequest<{ improvedContext: string }>("improve-context", { settings: state.settings, description: script.generalContext, generalContext: "", sceneGoal: "Organizar o contexto geral do roteiro", timeline: "unspecified", userInstruction: "Melhore a clareza sem inventar fatos.", previousDescriptions: [] });
+      const result = await aiRequest<{ improvedContext: string }>("improve-context", { settings: state.settings, contextScope: "general-context", description: script.generalContext });
       setImprovedGeneral(result.improvedContext);
     } catch (error) { setGeneralMessage(error instanceof Error ? error.message : "Não foi possível melhorar o contexto geral."); }
     finally { setGeneralLoading(false); }
@@ -597,9 +597,9 @@ export default function RoteiroEditor() {
         <label className={styles.field}><span>Nome do roteiro</span><input value={script.title} maxLength={100} onChange={(event) => patchScript({ title: event.target.value })} /></label>
         <label className={styles.field}><span>Contexto geral</span><textarea rows={8} value={script.generalContext} maxLength={24000} onChange={(event) => patchScript({ generalContext: event.target.value })} placeholder="Explique a situação maior do roteiro…" /></label>
         <ScriptAiContextPanel script={script} characters={characters} state={state} onPatchScript={patchScript} />
-        <div className={styles.railActions}><button className={styles.secondaryButton} disabled={!script.generalContext.trim()} onClick={() => void navigator.clipboard.writeText(script.generalContext).then(() => setGeneralMessage("Contexto geral copiado."))}>Copiar contexto</button><button className={styles.aiButton} disabled={generalLoading || !script.generalContext.trim() || state.settings.aiProvider === "none"} onClick={() => void improveGeneralContext()}>✦ {generalLoading ? "Melhorando…" : "Melhorar contexto"}</button></div>
+        <div className={styles.railActions}><button className={styles.secondaryButton} disabled={!script.generalContext.trim()} onClick={() => void navigator.clipboard.writeText(script.generalContext).then(() => setGeneralMessage("Contexto geral copiado."))}>Copiar contexto</button><button className={styles.aiButton} disabled={generalLoading || !script.generalContext.trim() || state.settings.aiProvider === "none"} onClick={() => void improveGeneralContext()}>✦ {generalLoading ? "Melhorando contexto geral…" : "Melhorar contexto geral"}</button></div>
         {generalMessage && <div className={styles.inlineMessage}>{generalMessage}<button onClick={() => setGeneralMessage("")}>×</button></div>}
-        {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
+        {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DO CONTEXTO GERAL</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
           <div className={styles.contextTransferBox}>
