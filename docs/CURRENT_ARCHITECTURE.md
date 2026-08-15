@@ -96,7 +96,7 @@ settings
 ```
 
 Cada roteiro contém participantes e TikToks; cada TikTok pode referenciar um
-vídeo persistido e blocos de fala, pensamento ou reação silenciosa. O schema
+vídeo persistido e blocos de fala ou pensamento. O schema
 runtime normaliza esses documentos tanto no cliente quanto no serviço local e
 valida o envelope `GACHA_PREMIUM_ROTEIROS_V1` usado no botão JSON.
 

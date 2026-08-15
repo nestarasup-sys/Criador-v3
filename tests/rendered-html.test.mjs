@@ -553,7 +553,7 @@ test("keeps every script control interactive inside the colored editor hierarchy
   assert.match(blocks, /<select value=\{block\.type\}/);
   assert.match(blocks, /<option value="speech">Fala<\/option>/);
   assert.match(blocks, /<option value="thought">Pensamento<\/option>/);
-  assert.match(blocks, /<option value="silent">Reação<\/option>/);
+  assert.doesNotMatch(blocks, /<option value="silent">Reação<\/option>/);
   assert.match(blocks, /onMoveBlock\(blockIndex, -1\)/);
   assert.match(blocks, /onBlockAction\(blockIndex, "regenerate"\)/);
   assert.match(blocks, /onBlockAction\(blockIndex, "rewrite"\)/);

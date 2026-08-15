@@ -165,14 +165,17 @@ function normalizeGlobalRule(value) {
 
 function normalizeReactionBlock(value) {
   const source = record(value);
-  const type = ["auto", "speech", "thought", "silent"].includes(source.type) ? source.type : "auto";
+  const legacySilent = source.type === "silent";
+  const type = legacySilent ? "thought" : (["auto", "speech", "thought"].includes(source.type) ? source.type : "auto");
+  const sourceEmotion = typeof source.emotion === "string" ? source.emotion : "";
+  const sourceText = typeof source.text === "string" ? source.text : "";
   return {
     ...source,
     id: typeof source.id === "string" ? source.id : "",
     characterId: typeof source.characterId === "string" ? source.characterId : "",
     type,
-    emotion: typeof source.emotion === "string" ? source.emotion : "",
-    text: typeof source.text === "string" ? source.text : "",
+    emotion: legacySilent && !sourceText.trim() ? "" : sourceEmotion,
+    text: legacySilent && !sourceText.trim() ? sourceEmotion : sourceText,
     englishText: typeof source.englishText === "string" ? source.englishText : "",
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",

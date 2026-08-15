@@ -20,7 +20,7 @@ import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
 
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência" } as const;
-const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento", silent: "Reação" } as const;
+const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 
 function CharacterMark({ character }: { character: PremiumCharacter }) {
   const photo = character.photoUrl ?? character.photoDataUrl;
@@ -30,7 +30,7 @@ function CharacterMark({ character }: { character: PremiumCharacter }) {
 }
 
 function blockIsEmpty(block: ReactionBlock) {
-  return block.type === "silent" ? !block.emotion.trim() : !block.text.trim();
+  return !block.text.trim();
 }
 
 function readableExpression(key: string) {
@@ -84,13 +84,13 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
   });
   const openingLines = script.opening ? (() => {
     const section = script.opening;
-    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought", "silent"].includes(block.type));
+    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought"].includes(block.type));
     const lines = ["ABERTURA", "========", `Descrição: ${section.description}`];
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
       const name = names.get(block.characterId) || "Personagem removido";
-      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : block.type === "auto" ? "automático" : "reação";
-      lines.push(`${blockIndex + 1} - ${name} (${type}): ${block.type === "silent" ? block.emotion : block.text}`);
+      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "automático";
+      lines.push(`${blockIndex + 1} - ${name} (${type}): ${block.text}`);
     });
     return [...lines, ""];
   })() : [];
@@ -98,12 +98,12 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const number = String(index + 1).padStart(2, "0");
     const folder = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${exportPathSegment(script.title, "roteiro")}`;
     const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Descrição: ${section.description}`];
-    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought", "silent"].includes(block.type));
+    const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought"].includes(block.type));
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
       const name = names.get(block.characterId) || "Personagem removido";
-      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : block.type === "auto" ? "automático" : "reação";
-      const text = block.type === "silent" ? block.emotion : block.text;
+      const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "automático";
+      const text = block.text;
       lines.push(`${blockIndex + 1} - ${name} (${type}): ${text}`);
     });
     return [...lines, ""];
@@ -337,7 +337,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
         <div>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("fill-empty")}>{loading === "fill-empty" ? "Gerando…" : "Preencher vazios"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("replace-all")}>{loading === "replace-all" ? "Gerando…" : "Substituir todos"}</button>
-          <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void translateItems(section.reactionBlocks.filter((block): block is ReactionBlock & { type: "speech" | "thought" } => block.type !== "silent" && Boolean(block.text.trim())).map((block) => ({ id: block.id, text: block.text, type: block.type, characterName: characterName(block.characterId) })))}>{loading === "translate" ? "Traduzindo…" : "Gerar inglês para todos"}</button>
+          <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void translateItems(section.reactionBlocks.filter((block): block is ReactionBlock & { type: "speech" | "thought" } => (block.type === "speech" || block.type === "thought") && Boolean(block.text.trim())).map((block) => ({ id: block.id, text: block.text, type: block.type, characterName: characterName(block.characterId) })))}>{loading === "translate" ? "Traduzindo…" : "Gerar inglês para todos"}</button>
           <button className={styles.addBlockAction} onClick={() => applyBlockCommand((current) => opening ? addOpeningReactionBlock(current, script.id).state : addReactionBlock(current, script.id, section.id).state)}>＋ Adicionar bloco</button>
           {loading && <><span className={styles.aiProgress}>IA em execução · {aiElapsedSeconds}s · fila única</span><button className={styles.cancelButton} onClick={cancelAi}>Cancelar geração</button></>}
           {undoBlocks && <button className={styles.undoButton} onClick={() => { patch({ reactionBlocks: undoBlocks }); setUndoBlocks(null); }}>↶ Desfazer substituição</button>}

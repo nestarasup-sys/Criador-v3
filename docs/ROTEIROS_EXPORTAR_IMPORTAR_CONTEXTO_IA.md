@@ -254,12 +254,12 @@ Campos:
 
 - blockId: ID existente ou null para bloco novo.
 - characterId: personagem participante.
-- type: speech, thought ou silent.
+- type: speech ou thought.
 - emotion: emoção, gesto ou tensão.
 - text: texto em português.
 - englishText: vazio por padrão; pode ser traduzido depois.
 
-Para silent, text deve ser vazio e a reação deve ficar em emotion.
+Todo bloco precisa ter texto em português; não são aceitas reações silenciosas.
 
 ## 8. Importação segura
 
@@ -273,7 +273,7 @@ Validar obrigatoriamente:
 - sectionId existente.
 - characterId pertencente ao elenco.
 - type válido.
-- bloco silent sem texto.
+- bloco sem texto.
 - JSON válido.
 
 Se o arquivo for de outro roteiro, bloquear a importação para evitar mistura de projetos.

@@ -83,7 +83,7 @@ Legenda:
 | Contexto geral | Pronto | Contexto persistido por roteiro. |
 | TikToks | Pronto | Criar, ordenar, excluir, nomear, descrever, definir objetivo, linha temporal e regras. |
 | Vídeo por TikTok | Pronto | Upload, substituição, preview reproduzível e remoção. |
-| Blocos de reação | Pronto | Fala, pensamento ou reação silenciosa; personagem, emoção, PT e EN; ordenar, duplicar e excluir. |
+| Blocos de reação | Pronto | Fala ou pensamento; personagem, emoção, PT e EN; ordenar, duplicar e excluir. Dados antigos silenciosos são migrados para pensamento. |
 | IA de blocos | Pronto | Preencher vazios, substituir todos, regenerar um bloco, refazer frase e traduzir. |
 | IA de contexto | Pronto | Melhora descrição com aceite/cancelamento. |
 | Configuração da IA | Pronto | Desativada, Ollama ou LM Studio; listar modelos, testar e ajustar geração. |

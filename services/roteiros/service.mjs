@@ -16,7 +16,7 @@ const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.
 - Uma versão do personagem mostrada no vídeo é diferente do personagem presente na sala.
 - Fala é ouvida. Pensamento é privado e ninguém pode responder diretamente a ele.
-- Reação silenciosa não possui fala: deixe text vazio e descreva gesto, expressão ou tensão em emotion.
+- Cada bloco deve ser uma fala ou um pensamento com texto preenchido; não use reações silenciosas.
 - Preserve dúvidas e ambiguidades. Suspeita, ciúme ou medo não transformam hipótese em fato.
 - Interprete literalmente quem pratica e quem sofre cada ação. Nunca inverta agressor e vítima.
 - Respeite a linha do tempo. Não trate futuro como fato consumado nem passado como previsão.
@@ -389,7 +389,7 @@ function reactionSchema(characterIds, count) {
           type: "object",
           properties: {
             characterId: { type: "string", enum: characterIds },
-            type: { type: "string", enum: ["speech", "thought", "silent"] },
+            type: { type: "string", enum: ["speech", "thought"] },
             // Ollama's grammar parser does not accept maxLength; size limits
             // are enforced immediately after parsing the provider response.
             emotion: { type: "string" },
@@ -464,13 +464,21 @@ function normalizedReaction(reaction, target, characterIds, index) {
   const characterId = requestedCharacterId && characterIds.includes(requestedCharacterId) ? requestedCharacterId : reaction?.characterId;
   const requestedType = target?.type;
   const type = requestedType === "auto" || !requestedType ? reaction?.type : requestedType;
-  const normalizedType = ["speech", "thought", "silent"].includes(type) ? type : "speech";
+  const normalizedType = ["speech", "thought"].includes(type) ? type : "speech";
   const emotion = promptText(reaction?.emotion, AI_MAX_GENERATED_EMOTION);
-  const text = normalizedType === "silent" ? "" : promptText(reaction?.text, AI_MAX_GENERATED_TEXT);
+  const text = promptText(reaction?.text, AI_MAX_GENERATED_TEXT);
   if (!characterIds.includes(characterId)) throw new Error(`A IA retornou um personagem inválido no bloco ${index + 1}.`);
-  if (normalizedType === "silent" && !emotion) throw new Error(`A IA retornou uma reação silenciosa sem emoção no bloco ${index + 1}.`);
-  if (normalizedType !== "silent" && !text) throw new Error(`A IA retornou uma fala/pensamento vazio no bloco ${index + 1}.`);
+  if (!text) throw new Error(`A IA retornou uma fala/pensamento vazio no bloco ${index + 1}.`);
   return { characterId, type: normalizedType, emotion, text };
+}
+
+function withoutSilentReactionOption(prompt) {
+  return String(prompt)
+    .replaceAll("speech, thought e silent", "speech e thought")
+    .replaceAll("speech ou thought ou silent", "speech ou thought")
+    .replaceAll("speech|thought|silent", "speech|thought")
+    .replaceAll("silêncio ou percepção", "percepção")
+    .replaceAll("Se for silent, deixe text vazio.", "O bloco deve ser speech ou thought e sempre deve conter text.");
 }
 
 function comparableWords(value) {
@@ -525,9 +533,9 @@ async function generateReactions(body, signal) {
   if (!String(section.description || "").trim()) throw new Error(opening ? "Descreva a abertura antes de gerar." : "Escreva a descrição do TikTok antes de gerar.");
   const targets = targetIndices.map((index) => ({ index, block: compactBlocks([section.reactionBlocks?.[index] || {}])[0] || {} }));
   const existing = body.mode === "replace-all" ? [] : (section.reactionBlocks || []).filter((block) => block.characterId && (block.text || block.emotion));
-  section.userInstruction = `TIPO DOS BLOCOS:\n- Para type auto, escolha entre speech, thought e silent conforme a reação.\n- Para speech, thought ou silent, preserve o tipo escolhido pelo usuário.\n\n${section.userInstruction || ""}`;
+  section.userInstruction = `TIPO DOS BLOCOS:\n- Para type auto, escolha entre speech e thought conforme a reação.\n- Para speech ou thought, preserve o tipo escolhido pelo usuário.\n\n${section.userInstruction || ""}`;
   const prompt = `Crie EXATAMENTE ${targetIndices.length} blocos novos de uma sala de reação. A sequência deve parecer uma conversa contínua.\n\nMODO:\n${body.mode === "replace-all" ? "Substituir todos os blocos." : "Preencher somente os blocos vazios."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS PERSONALIZADAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO RECENTE:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO LITERAL DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nREGRAS ESPECÍFICAS DESTE TIKTOK:\n${promptText(section.specificRules, 700) || "Nenhuma."}\n\nINSTRUÇÃO ADICIONAL:\n${promptText(section.userInstruction, 700) || "Nenhuma."}\n\nREAÇÕES EXISTENTES:\n${JSON.stringify(compactBlocks(existing))}\n\nBLOCOS ALVO (preserve personagem/tipo quando já escolhidos):\n${JSON.stringify(targets)}\n\n${PROTECTED_RULES}\n\nDIVERSIDADE DRAMÁTICA:\nDistribua funções diferentes entre os blocos: dúvida, defesa, suspeita, culpa, ciúme, ironia, medo, proteção, tensão, negação, contraste, silêncio ou percepção.\n${section.shortLines ? "Use falas e pensamentos curtos, preferencialmente com até 12 palavras." : ""}\nRetorne somente JSON: {"reactions":[{"characterId":"id","type":"speech|thought|silent","emotion":"...","text":"..."}]}.`;
-  const result = await callAi(body.settings, prompt, reactionSchema(characterIds, targetIndices.length), undefined, signal, { numPredict: Math.min(900, 300 + targetIndices.length * 140) });
+  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, targetIndices.length), undefined, signal, { numPredict: Math.min(900, 300 + targetIndices.length * 140) });
   const reactions = Array.isArray(result.data?.reactions) ? result.data.reactions : [];
   if (reactions.length !== targetIndices.length) throw new Error("A IA retornou uma quantidade diferente de blocos.");
   const normalized = reactions.map((reaction, index) => normalizedReaction(reaction, targets[index].block, characterIds, index));
@@ -545,7 +553,7 @@ async function blockAction(body, signal) {
   const previous = (section.reactionBlocks || []).slice(0, body.blockIndex).reverse().find((item) => item.characterId && (item.text || item.emotion));
   const next = (section.reactionBlocks || []).slice(body.blockIndex + 1).find((item) => item.characterId && (item.text || item.emotion));
   const prompt = `${body.action === "rewrite" ? "Reescreva somente a frase do bloco alvo, preservando personagem, tipo, fatos, intenção e sentido." : "Crie uma alternativa para o bloco alvo sem quebrar a conversa."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nBLOCO ANTERIOR:\n${JSON.stringify(compactBlocks(previous ? [previous] : []))}\n\nBLOCO ALVO:\n${JSON.stringify(compactBlocks([block]))}\n\nBLOCO SEGUINTE:\n${JSON.stringify(compactBlocks(next ? [next] : []))}\n\n${PROTECTED_RULES}\n\nREGRAS FINAIS:\n- Use characterId ${block.characterId}.\n- Use type ${block.type}.\n- Se for silent, deixe text vazio.\n- Retorne exatamente uma reação.\nRetorne somente JSON no formato solicitado.`;
-  const result = await callAi(body.settings, prompt, reactionSchema(characterIds, 1), undefined, signal, { numPredict: 420 });
+  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, 1), undefined, signal, { numPredict: 420 });
   const reaction = result.data?.reactions?.[0];
   if (!reaction) throw new Error("A IA não retornou o bloco.");
   return { reaction: normalizedReaction(reaction, block, characterIds, 0), model: result.model };

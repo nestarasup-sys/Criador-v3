@@ -118,7 +118,7 @@ export type AiContextImportReport = {
 };
 
 const instructions: AiContextInstructions = {
-  purpose: "Gerar falas, pensamentos e reações para vários TikToks mantendo continuidade narrativa.",
+  purpose: "Gerar falas e pensamentos para vários TikToks mantendo continuidade narrativa.",
   language: "pt-BR",
   startAfterOpening: true,
   reactionsStartRule: "Em cada TikTok, as reações começam aproximadamente quando a descrição da cena termina.",
@@ -132,14 +132,14 @@ const instructions: AiContextInstructions = {
     "Retorne somente JSON válido no contrato indicado.",
     "Preserve scriptId, sectionId e characterId.",
     "Retorne os blocos na ordem em que devem acontecer.",
-    "Use speech, thought ou silent; em silent, text deve ser vazio.",
+    "Use somente speech ou thought; ambos devem conter texto.",
     "Não altere vídeos, descrições, regras, fichas ou a ordem dos TikToks.",
     "Use as fichas e regras somente como contexto, sem repetir a ficha artificialmente.",
   ],
 };
 
 function blockIsEmpty(block: ReactionBlock) {
-  return block.type === "silent" ? !block.emotion.trim() : !block.text.trim();
+  return !block.text.trim();
 }
 
 function sectionToContext(section: TikTokSection | OpeningSection, kind: "opening" | "tiktok", order: number): AiContextSection {
@@ -332,17 +332,19 @@ function resultBlock(value: unknown, path: string, errors: string[]): AiContextR
   const emotion = stringValue(source.emotion);
   const text = stringValue(source.text);
   if (!characterId) errors.push(`${path}.characterId é obrigatório`);
-  if (type !== "speech" && type !== "thought" && type !== "silent") errors.push(`${path}.type deve ser speech, thought ou silent`);
-  if (type === "silent" && text.trim()) errors.push(`${path}.text deve ficar vazio quando type é silent`);
-  if (type !== "silent" && !text.trim()) errors.push(`${path}.text não pode ficar vazio para fala ou pensamento`);
+  const legacySilent = type === "silent";
+  const normalizedType = legacySilent ? "thought" : type;
+  const normalizedText = legacySilent && !text.trim() ? emotion : text;
+  if (normalizedType !== "speech" && normalizedType !== "thought") errors.push(`${path}.type deve ser speech ou thought`);
+  if (!normalizedText.trim()) errors.push(`${path}.text não pode ficar vazio para fala ou pensamento`);
   if (!emotion.trim()) errors.push(`${path}.emotion não pode ficar vazio`);
   if (errors.some((error) => error.startsWith(`${path}.`))) return null;
   return {
     ...(typeof source.blockId === "string" && source.blockId ? { blockId: source.blockId } : {}),
     characterId,
-    type: type as Exclude<ReactionBlockType, "auto">,
+    type: normalizedType as Exclude<ReactionBlockType, "auto">,
     emotion,
-    text: type === "silent" ? "" : text,
+    text: normalizedText,
     ...(typeof source.englishText === "string" ? { englishText: source.englishText } : {}),
   };
 }
@@ -392,7 +394,7 @@ function patchBlock(block: ReactionBlock, generated: AiContextResultBlock): Reac
     characterId: generated.characterId,
     type: generated.type,
     emotion: generated.emotion,
-    text: generated.type === "silent" ? "" : generated.text,
+    text: generated.text,
     englishText: generated.englishText ?? block.englishText,
     updatedAt: nowIso(),
   };

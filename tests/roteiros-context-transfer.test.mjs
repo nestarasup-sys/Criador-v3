@@ -62,7 +62,7 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.match(text, /DADOS ESTRUTURADOS COMPLETOS/);
 });
 
-test("valida e aplica resposta externa com mais blocos que os espaços existentes, preservando bloco manual", async () => {
+test("valida e aplica resposta externa convertendo legado silencioso em pensamento", async () => {
   const transfer = await loadTransferModule();
   const script = scriptFixture();
   const result = {
@@ -87,7 +87,8 @@ test("valida e aplica resposta externa com mais blocos que os espaços existente
   assert.equal(applied.script.tiktoks[0].reactionBlocks.length, 3);
   assert.equal(applied.script.tiktoks[0].reactionBlocks[0].text, "Isso aconteceu mesmo?");
   assert.equal(applied.script.tiktoks[0].reactionBlocks[1].text, "Já escrevi manualmente.");
-  assert.equal(applied.script.tiktoks[1].reactionBlocks[0].type, "silent");
+  assert.equal(applied.script.tiktoks[1].reactionBlocks[0].type, "thought");
+  assert.equal(applied.script.tiktoks[1].reactionBlocks[0].text, "aperta os punhos");
 });
 
 test("rejeita resposta destinada a outro roteiro ou personagem desconhecido", async () => {
