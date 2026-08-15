@@ -594,23 +594,32 @@ export default function RoteiroEditor() {
 
       <aside className={styles.contextRail}>
         <div className={styles.contextRailHeader}><div><span>CONTEXTO &amp; IA</span><small><i />{providerLabel}{state.settings.aiModel ? ` · ${state.settings.aiModel}` : ""}</small></div></div>
-        <label className={styles.field}><span>Nome do roteiro</span><input value={script.title} maxLength={100} onChange={(event) => patchScript({ title: event.target.value })} /></label>
-        <label className={styles.field}><span>Contexto geral</span><textarea rows={8} value={script.generalContext} maxLength={24000} onChange={(event) => patchScript({ generalContext: event.target.value })} placeholder="Explique a situação maior do roteiro…" /></label>
+        <section className={styles.railSection}>
+          <div className={styles.railSectionHeader}><div><span>ROTEIRO</span><small>Identificação do projeto atual</small></div></div>
+          <label className={styles.field}><span>Nome do roteiro</span><input value={script.title} maxLength={100} onChange={(event) => patchScript({ title: event.target.value })} /></label>
+        </section>
+        <section className={`${styles.railSection} ${styles.generalContextSection}`}>
+          <div className={styles.railSectionHeader}><div><span>CONTEXTO GERAL</span><small>Base narrativa deste roteiro</small></div></div>
+          <label className={styles.field}><span>Contexto geral</span><textarea rows={8} value={script.generalContext} maxLength={24000} onChange={(event) => patchScript({ generalContext: event.target.value })} placeholder="Explique a situação maior do roteiro…" /></label>
+          <div className={styles.railActions}><button className={styles.secondaryButton} disabled={!script.generalContext.trim()} onClick={() => void navigator.clipboard.writeText(script.generalContext).then(() => setGeneralMessage("Contexto geral copiado."))}>Copiar contexto</button><button className={styles.aiButton} disabled={generalLoading || !script.generalContext.trim() || state.settings.aiProvider === "none"} onClick={() => void improveGeneralContext()}>✦ {generalLoading ? "Melhorando contexto geral…" : "Melhorar contexto geral"}</button></div>
+          {generalMessage && <div className={styles.inlineMessage}>{generalMessage}<button onClick={() => setGeneralMessage("")}>×</button></div>}
+          {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DO CONTEXTO GERAL</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
+        </section>
         <ScriptAiContextPanel script={script} characters={characters} state={state} onPatchScript={patchScript} />
-        <div className={styles.railActions}><button className={styles.secondaryButton} disabled={!script.generalContext.trim()} onClick={() => void navigator.clipboard.writeText(script.generalContext).then(() => setGeneralMessage("Contexto geral copiado."))}>Copiar contexto</button><button className={styles.aiButton} disabled={generalLoading || !script.generalContext.trim() || state.settings.aiProvider === "none"} onClick={() => void improveGeneralContext()}>✦ {generalLoading ? "Melhorando contexto geral…" : "Melhorar contexto geral"}</button></div>
-        {generalMessage && <div className={styles.inlineMessage}>{generalMessage}<button onClick={() => setGeneralMessage("")}>×</button></div>}
-        {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DO CONTEXTO GERAL</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
-        <section className={styles.exportTools}>
-          <span>EXPORTAR PARA O VIDEO MAKER</span>
+        <section className={`${styles.exportTools} ${styles.railSection}`}>
+          <div className={styles.railSectionHeader}><div><span>BASE PARA IA EXTERNA</span><small>Arquivo para gerar ou importar blocos</small></div></div>
           <div className={styles.contextTransferBox}>
-            <strong>CONTEXTO PARA IA EXTERNA</strong>
+            <strong>ARQUIVO DA BASE</strong>
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
-            <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar contexto</button>
+            <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
             <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importAiContext(file); }} />
-            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar respostas da IA</button>
+            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar base pronta</button>
             <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>
             {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void confirmAiContextImport()}>{exportLoading === "context-apply" ? "Criando backup…" : "Confirmar e aplicar"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
           </div>
+        </section>
+        <section className={`${styles.exportTools} ${styles.railSection}`}>
+          <div className={styles.railSectionHeader}><div><span>ARQUIVOS DO PROJETO</span><small>Fundos, vídeos, personagens e roteiro</small></div></div>
           <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
           {script.background && <small>Fundo atual: {script.background.name}</small>}
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>

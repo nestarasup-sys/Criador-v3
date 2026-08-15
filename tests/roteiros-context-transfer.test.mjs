@@ -101,10 +101,12 @@ test("rejeita resposta destinada a outro roteiro ou personagem desconhecido", as
   assert.ok(wrongCharacter.errors.some((error) => error.includes("não pertence")));
 });
 
-test("o editor possui os dois controles do fluxo externo", async () => {
+test("o editor possui os controles separados da base externa", async () => {
   const source = await readFile(resolve("app/roteiros/components/RoteiroEditor.tsx"), "utf8");
-  assert.match(source, /Exportar contexto/);
-  assert.match(source, /Importar respostas da IA/);
+  assert.match(source, /Exportar base/);
+  assert.match(source, /Importar base pronta/);
+  assert.doesNotMatch(source, /⇩ Exportar contexto/);
+  assert.doesNotMatch(source, /⇧ Importar respostas da IA/);
   assert.match(source, /exportTextFile/);
   assert.match(source, /createRoteiroBackup/);
 });

@@ -792,6 +792,19 @@
   border-radius:50%;
   background:#2ebc82;
 }
+.railSection {
+  margin:0 0 14px;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:#fff;
+}
+.railSectionHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:12px; }
+.railSectionHeader>div { display:flex; flex-direction:column; gap:4px; }
+.railSectionHeader span { color:var(--purple); font-size:9px; font-weight:900; letter-spacing:.13em; }
+.railSectionHeader small { color:var(--muted); font-size:9px; line-height:1.35; }
+.railSection .field { margin-bottom:0; }
+.railSection.exportTools { gap:7px; }
 .contextRail>.field { margin-bottom:15px; }
 .contextRail textarea { line-height:1.5; }
 .aiContextPanel {
