@@ -1,4 +1,8 @@
-import type { AiCharacterContext, NarrativeProfile, PremiumCharacter, ScriptProject } from "./types";
+import type { AiCharacterContext, NarrativeProfile, PremiumCharacter, RoteirosState, ScriptProject, ScriptAiContext } from "./types";
+
+export function getScriptAiContext(script: ScriptProject, state: Pick<RoteirosState, "profiles" | "globalRules">): ScriptAiContext {
+  return script.aiContext ?? { profiles: state.profiles, rules: state.globalRules };
+}
 
 export function profileCompletion(profile?: NarrativeProfile) {
   if (!profile) return 0;

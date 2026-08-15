@@ -19,6 +19,8 @@ export type GlobalRule = {
   id: string; title: string; description: string; enabled: boolean; priority: RulePriority;
   createdAt: string; updatedAt: string;
 };
+/** Snapshot editável do contexto narrativo pertencente a um único roteiro. */
+export type ScriptAiContext = { profiles: NarrativeProfile[]; rules: GlobalRule[] };
 export type AiProvider = "none" | "lmstudio" | "ollama";
 export type RoteirosSettings = {
   aiProvider: AiProvider; aiBaseUrl: string; aiModel: string; temperature: number;
@@ -51,6 +53,8 @@ export type RoteiroExportTarget = "v1" | "v2";
 export type ScriptProject = {
   id: string; title: string; generalContext: string; participants: ScriptParticipant[];
   opening?: OpeningSection; tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
+  /** Ausente somente em arquivos antigos; a normalização cria o snapshot automaticamente. */
+  aiContext?: ScriptAiContext;
   background?: RoteiroBackgroundReference;
   /** Destino local dos quatro exports do roteiro; ausente em dados antigos = v1. */
   exportTarget?: RoteiroExportTarget;

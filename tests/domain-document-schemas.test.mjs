@@ -75,12 +75,32 @@ test("estado de Roteiros v1 moderno faz round-trip e mantém campos futuros", ()
     version: 1,
     futureRootField: "keep",
     profiles: [{ characterId: "char-1", personality: "Calma", backstory: "", fynRelationship: "", speakingStyle: "", relationships: [], additionalRules: "", updatedAt: "2026-08-02T00:00:00.000Z" }],
-    scripts: [{ id: "script-1", title: "Teste", generalContext: "", participants: [{ characterId: "char-1", active: true }], tiktoks: [{ id: "tiktok-1", title: "", description: "", timeline: "present", sceneGoal: "", userInstruction: "", specificRules: "", shortLines: false, reactionBlocks: [], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
+    scripts: [{ id: "script-1", title: "Teste", generalContext: "", participants: [{ characterId: "char-1", active: true }], aiContext: { profiles: [{ characterId: "char-1", personality: "Local", backstory: "", fynRelationship: "", speakingStyle: "", relationships: [], additionalRules: "", updatedAt: "2026-08-02T00:00:00.000Z" }], rules: [] }, tiktoks: [{ id: "tiktok-1", title: "", description: "", timeline: "present", sceneGoal: "", userInstruction: "", specificRules: "", shortLines: false, reactionBlocks: [], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
     globalRules: [],
     settings: { aiProvider: "none", aiBaseUrl: "http://127.0.0.1:1234/v1", aiModel: "", temperature: 0.45, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 5 },
   };
   assert.deepEqual(normalizeRoteirosState(JSON.parse(JSON.stringify(document))), document);
   assert.equal(parseRoteirosState(document).success, true);
+});
+
+test("migra roteiros antigos criando snapshots locais sem compartilhar fichas ou regras", () => {
+  const normalized = normalizeRoteirosState({
+    profiles: [
+      { characterId: "char-1", personality: "A", relationships: [] },
+      { characterId: "char-2", personality: "B", relationships: [] },
+    ],
+    globalRules: [{ id: "rule-1", title: "Regra base", description: "Não inventar", enabled: true, priority: "high" }],
+    scripts: [
+      { id: "script-a", participants: [{ characterId: "char-1" }], tiktoks: [] },
+      { id: "script-b", participants: [{ characterId: "char-2" }], tiktoks: [] },
+    ],
+  });
+  assert.equal(normalized.scripts[0].aiContext.profiles[0].personality, "A");
+  assert.equal(normalized.scripts[1].aiContext.profiles[0].personality, "B");
+  normalized.scripts[0].aiContext.profiles[0].personality = "Alterada localmente";
+  normalized.scripts[0].aiContext.rules[0].title = "Regra local";
+  assert.equal(normalized.scripts[1].aiContext.profiles[0].personality, "B");
+  assert.equal(normalized.globalRules[0].title, "Regra base");
 });
 
 test("abertura opcional é preservada sem vídeo e continua compatível com roteiros antigos", () => {

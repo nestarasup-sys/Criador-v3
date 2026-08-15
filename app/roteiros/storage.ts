@@ -185,7 +185,7 @@ export type AiRequestOptions = { signal?: AbortSignal; timeoutMs?: number };
 
 export async function aiRequest<T>(path: string, body?: unknown, method = "POST", options: AiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
-  const timeoutMs = Math.max(5_000, options.timeoutMs ?? 150_000);
+  const timeoutMs = Math.max(5_000, options.timeoutMs ?? 45_000);
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   const forwardAbort = () => controller.abort();
   if (options.signal?.aborted) controller.abort();
@@ -213,6 +213,18 @@ export async function aiRequest<T>(path: string, body?: unknown, method = "POST"
 
 export function exportJson(fileName: string, value: unknown) {
   const blob = new Blob([JSON.stringify(value, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function exportTextFile(fileName: string, value: string) {
+  const blob = new Blob([value], { type: "text/markdown;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;

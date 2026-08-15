@@ -711,7 +711,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(storage, /uploadRoteiroVideo/);
   assert.match(storage, /removeRoteiroVideo/);
   assert.match(storage, /signal\?: AbortSignal/);
-  assert.match(service, /AI_TIMEOUT_MS = 150_000/);
+  assert.match(service, /AI_TIMEOUT_MS = 45_000/);
   assert.match(server, /export-videos/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);

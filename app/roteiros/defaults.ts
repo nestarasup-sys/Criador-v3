@@ -6,6 +6,7 @@ import type {
   ReactionBlockType,
   RoteirosSettings,
   RoteirosState,
+  ScriptAiContext,
   ScriptProject,
   TikTokSection,
 } from "./types";
@@ -56,6 +57,17 @@ export function createNarrativeProfile(characterId: string): NarrativeProfile {
 export function createGlobalRule(): GlobalRule {
   const timestamp = nowIso();
   return { id: createId(), title: "Nova regra", description: "", enabled: true, priority: "normal", createdAt: timestamp, updatedAt: timestamp };
+}
+
+export function createScriptAiContext(characterIds: string[], profiles: NarrativeProfile[], rules: GlobalRule[]): ScriptAiContext {
+  const selectedIds = new Set(characterIds);
+  const snapshot = profiles.filter((profile) => selectedIds.has(profile.characterId));
+  const knownIds = new Set(snapshot.map((profile) => profile.characterId));
+  const missingProfiles = characterIds.filter((characterId) => !knownIds.has(characterId)).map(createNarrativeProfile);
+  return {
+    profiles: structuredClone([...snapshot, ...missingProfiles]),
+    rules: structuredClone(rules),
+  };
 }
 
 export function createReactionBlock(type: ReactionBlockType = "auto"): ReactionBlock {

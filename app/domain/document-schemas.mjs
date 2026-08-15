@@ -149,6 +149,20 @@ function normalizeRoteiroProfile(value) {
   };
 }
 
+function normalizeGlobalRule(value) {
+  const source = record(value);
+  return {
+    ...source,
+    id: typeof source.id === "string" ? source.id : "",
+    title: typeof source.title === "string" ? source.title : "Nova regra",
+    description: typeof source.description === "string" ? source.description : "",
+    enabled: source.enabled !== false,
+    priority: ["low", "normal", "high"].includes(source.priority) ? source.priority : "normal",
+    createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
+    updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
+  };
+}
+
 function normalizeReactionBlock(value) {
   const source = record(value);
   const type = ["auto", "speech", "thought", "silent"].includes(source.type) ? source.type : "auto";
@@ -225,18 +239,32 @@ function normalizeRoteiroOpening(value) {
   return opening;
 }
 
-function normalizeRoteiroScript(value) {
+function normalizeRoteiroAiContext(value, fallback, participantIds) {
+  const source = record(value);
+  const participantIdSet = new Set(participantIds);
+  const hasProfiles = Array.isArray(source.profiles);
+  const hasRules = Array.isArray(source.rules);
+  const fallbackProfiles = fallback.profiles.filter((profile) => participantIdSet.has(profile.characterId));
+  return {
+    profiles: (hasProfiles ? list(source.profiles) : fallbackProfiles).map(normalizeRoteiroProfile),
+    rules: (hasRules ? list(source.rules) : fallback.rules).map(normalizeGlobalRule),
+  };
+}
+
+function normalizeRoteiroScript(value, fallbackAiContext = { profiles: [], rules: [] }) {
   const source = record(value);
   const exportTarget = source.exportTarget === "v2" ? "v2" : source.exportTarget === "v1" ? "v1" : undefined;
+  const participants = list(source.participants).map((participant) => {
+    const item = record(participant);
+    return { ...item, characterId: typeof item.characterId === "string" ? item.characterId : "", active: item.active !== false };
+  });
   return {
     ...source,
     id: typeof source.id === "string" ? source.id : "",
     title: typeof source.title === "string" ? source.title : "Roteiro sem título",
     generalContext: typeof source.generalContext === "string" ? source.generalContext : "",
-    participants: list(source.participants).map((participant) => {
-      const item = record(participant);
-      return { ...item, characterId: typeof item.characterId === "string" ? item.characterId : "", active: item.active !== false };
-    }),
+    participants,
+    aiContext: normalizeRoteiroAiContext(source.aiContext, fallbackAiContext, participants.map((participant) => participant.characterId)),
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     ...(source.background && normalizeBackgroundReference(source.background) ? { background: normalizeBackgroundReference(source.background) } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
@@ -248,12 +276,15 @@ function normalizeRoteiroScript(value) {
 
 export function normalizeRoteirosState(value) {
   const source = record(value);
+  const profiles = list(source.profiles).map(normalizeRoteiroProfile);
+  const globalRules = list(source.globalRules).map(normalizeGlobalRule);
+  const fallbackAiContext = { profiles, rules: globalRules };
   return {
     ...source,
     version: ROTEIROS_STATE_VERSION,
-    profiles: list(source.profiles).map(normalizeRoteiroProfile),
-    scripts: list(source.scripts).map(normalizeRoteiroScript),
-    globalRules: list(source.globalRules).map((rule) => ({ ...record(rule), id: typeof record(rule).id === "string" ? record(rule).id : "", title: typeof record(rule).title === "string" ? record(rule).title : "Nova regra", description: typeof record(rule).description === "string" ? record(rule).description : "", enabled: record(rule).enabled !== false, priority: ["low", "normal", "high"].includes(record(rule).priority) ? record(rule).priority : "normal" })),
+    profiles,
+    scripts: list(source.scripts).map((script) => normalizeRoteiroScript(script, fallbackAiContext)),
+    globalRules,
     settings: { ...createDefaultRoteirosSettings(), ...record(source.settings) },
   };
 }
@@ -289,6 +320,11 @@ export function validateRoteirosState(value) {
   list(source.scripts).forEach((script, index) => {
     const item = record(script);
     validateIdentity(item, `scripts[${index}]`, issues);
+    if (item.aiContext !== undefined) {
+      const context = record(item.aiContext);
+      if (!Array.isArray(context.profiles)) issues.push(`scripts[${index}].aiContext.profiles deve ser uma lista`);
+      if (!Array.isArray(context.rules)) issues.push(`scripts[${index}].aiContext.rules deve ser uma lista`);
+    }
     list(item.participants).forEach((participant, participantIndex) => { if (typeof record(participant).characterId !== "string") issues.push(`scripts[${index}].participants[${participantIndex}].characterId inválido`); });
     if (item.opening !== undefined) {
       validateIdentity(record(item.opening), `scripts[${index}].opening`, issues);

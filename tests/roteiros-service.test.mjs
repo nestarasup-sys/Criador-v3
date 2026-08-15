@@ -3,6 +3,8 @@ import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
+import { EventEmitter } from "node:events";
+import { createServer } from "node:http";
 import test from "node:test";
 import { createRoteirosService } from "../services/roteiros/service.mjs";
 
@@ -23,6 +25,52 @@ async function call(service, method, path, payload) {
   };
   const handled = await service.handle(mockRequest(method, path, payload), response, new URL(path, "http://127.0.0.1:4318"), () => ({}));
   return { handled, status, value: body ? JSON.parse(body) : undefined };
+}
+
+function generationPayload(baseUrl) {
+  return {
+    settings: { aiProvider: "ollama", aiBaseUrl: baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+    characters: [{ id: "char-1", name: "Nymi", personality: "calma" }],
+    generalContext: "Contexto de teste.",
+    globalRules: [],
+    previousSections: [],
+    targetIndices: [0],
+    mode: "fill-empty",
+    section: { description: "O personagem vê uma cena inesperada.", reactionBlocks: [{ id: "block-1", characterId: "", type: "auto", text: "", emotion: "" }] },
+  };
+}
+
+class EventResponse extends EventEmitter {
+  writeHead(status) { this.status = status; }
+  end(value = "") { this.body = String(value); this.writableEnded = true; }
+}
+
+async function startDelayedModelStub(delayMs, responsePayload = { reactions: [{ characterId: "char-1", type: "speech", emotion: "surpresa", text: "Isso foi inesperado." }] }) {
+  let concurrent = 0;
+  let maxConcurrent = 0;
+  let aborted = false;
+  const server = createServer((request, response) => {
+    if (request.url !== "/api/chat") {
+      response.writeHead(404);
+      response.end();
+      return;
+    }
+    concurrent += 1;
+    maxConcurrent = Math.max(maxConcurrent, concurrent);
+    const finish = () => { concurrent -= 1; };
+    request.once("close", () => {
+      if (!response.writableEnded) aborted = true;
+      finish();
+    });
+    setTimeout(() => {
+      if (response.writableEnded || response.destroyed) return;
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: JSON.stringify(responsePayload) } }));
+    }, delayMs);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  return { server, baseUrl: `http://127.0.0.1:${port}`, get concurrent() { return concurrent; }, get maxConcurrent() { return maxConcurrent; }, get aborted() { return aborted; } };
 }
 
 test("persists the independent Roteiros state in its own PC folder", async () => {
@@ -123,5 +171,67 @@ test("gera blocos de abertura com instrução de pré-vídeo", async () => {
     // Com IA desligada a rota deve recusar de forma acionável, sem tratar a abertura como vídeo.
     assert.equal(response.status, 400);
     assert.match(response.value.error, /IA|LM Studio|Ollama|provedor|desativada/i);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("serializa gerações da IA para não concorrer pela GPU", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-queue-"));
+  const stub = await startDelayedModelStub(60);
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const first = call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
+    const second = call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
+    const responses = await Promise.all([first, second]);
+    assert.ok(responses.every((response) => response.status === 200));
+    assert.equal(stub.maxConcurrent, 1);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("cancela a geração no provedor quando o cliente fecha a resposta", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-cancel-"));
+  const stub = await startDelayedModelStub(500);
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = new EventResponse();
+    const pending = service.handle(mockRequest("POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl)), response, new URL("http://127.0.0.1:4318/roteiros/ai/generate"), () => ({}));
+    setTimeout(() => response.emit("close"), 40);
+    await pending;
+    await new Promise((resolve) => setTimeout(resolve, 80));
+    assert.equal(response.status, undefined);
+    assert.equal(stub.aborted, true);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejeita uma fala vazia retornada pela IA antes de gravar no roteiro", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-validation-"));
+  const stub = await startDelayedModelStub(0, { reactions: [{ characterId: "char-1", type: "speech", emotion: "", text: "" }] });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
+    assert.equal(response.status, 400);
+    assert.match(response.value.error, /fala\/pensamento vazio/i);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejeita índices de blocos fora da seção solicitada", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-targets-"));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/generate", { ...generationPayload("http://127.0.0.1:9"), targetIndices: [9] });
+    assert.equal(response.status, 400);
+    assert.match(response.value.error, /blocos-alvo inválidos/i);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

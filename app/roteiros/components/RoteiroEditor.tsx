@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { buildAiCharacters } from "../ai-context";
-import { nowIso } from "../defaults";
+import { buildAiCharacters, getScriptAiContext } from "../ai-context";
+import { createNarrativeProfile, nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
+import { applyAiContextResult, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
+import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
-import { aiRequest, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
+import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
+import ScriptAiContextPanel from "./ScriptAiContextPanel";
 import type { GeneratedReaction, NarrativeProfile, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, RoteiroExportTarget, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
@@ -129,6 +132,7 @@ type TikTokCardProps = {
 function TikTokCard({ script, section, sectionIndex, characters, state, patch, moveSection, deleteSection, opening = false }: TikTokCardProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [loading, setLoading] = useState("");
+  const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
   const [message, setMessage] = useState("");
   const [improvedContext, setImprovedContext] = useState("");
   const [undoBlocks, setUndoBlocks] = useState<ReactionBlock[] | null>(null);
@@ -137,13 +141,25 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const aiControllerRef = useRef<AbortController | null>(null);
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
   const previousSections = opening ? [] : script.tiktoks.slice(0, sectionIndex);
-  const aiCharacters = buildAiCharacters(script, characters, state.profiles);
+  const scriptAiContext = getScriptAiContext(script, state);
+  const aiCharacters = buildAiCharacters(script, characters, scriptAiContext.profiles);
 
   useEffect(() => () => {
     aiControllerRef.current?.abort();
   }, []);
 
-  const requestAi = async <T,>(path: string, payload: unknown, timeoutMs = 150_000) => {
+  useEffect(() => {
+    if (!loading) {
+      return undefined;
+    }
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      setAiElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [loading]);
+
+  const requestAi = async <T,>(path: string, payload: unknown, timeoutMs = 45_000) => {
     aiControllerRef.current?.abort();
     const controller = new AbortController();
     aiControllerRef.current = controller;
@@ -153,6 +169,8 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
       if (aiControllerRef.current === controller) aiControllerRef.current = null;
     }
   };
+
+  const beginAiLoading = (value: string) => { setAiElapsedSeconds(0); setLoading(value); };
 
   const cancelAi = () => aiControllerRef.current?.abort();
 
@@ -169,13 +187,13 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     if (block) applyBlockCommand((current) => opening ? moveOpeningReactionBlock(current, script.id, block.id, direction) : moveReactionBlock(current, script.id, section.id, block.id, direction));
   };
 
-  const aiPayload = { settings: state.settings, globalRules: state.globalRules, characters: aiCharacters, generalContext: script.generalContext, previousSections, section, ...(opening ? { opening: true } : {}) };
+  const aiPayload = { scriptId: script.id, settings: state.settings, globalRules: scriptAiContext.rules, characters: aiCharacters, generalContext: script.generalContext, previousSections, section, ...(opening ? { opening: true } : {}) };
 
   const generate = async (mode: "fill-empty" | "replace-all") => {
     const targets = mode === "replace-all" ? section.reactionBlocks.map((_, index) => index) : section.reactionBlocks.map((block, index) => ({ block, index })).filter(({ block }) => blockIsEmpty(block)).map(({ index }) => index);
     if (!targets.length) return setMessage("Não há blocos vazios para preencher.");
     if (mode === "replace-all" && !window.confirm(`Substituir todos os blocos desta ${opening ? "abertura" : "TikTok"}? Você poderá desfazer logo depois.`)) return;
-    setLoading(mode); setMessage("");
+    beginAiLoading(mode); setMessage("");
     try {
       if (mode === "replace-all") setUndoBlocks(structuredClone(section.reactionBlocks));
       const result = await requestAi<{ reactions: GeneratedReaction[]; model: string }>("generate", { ...aiPayload, targetIndices: targets, mode });
@@ -187,7 +205,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   };
 
   const improve = async () => {
-    setLoading("improve"); setMessage("");
+    beginAiLoading("improve"); setMessage("");
     try {
       const result = await requestAi<{ improvedContext: string }>("improve-context", { settings: state.settings, description: section.description, generalContext: script.generalContext, sceneGoal: section.sceneEndSeconds === undefined ? section.sceneGoal : `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, sceneEndSeconds: section.sceneEndSeconds, timeline: section.timeline, userInstruction: section.userInstruction, previousDescriptions: previousSections.slice(-state.settings.historyLimit).map((item) => item.description) });
       setImprovedContext(result.improvedContext);
@@ -196,7 +214,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   };
 
   const blockAction = async (blockIndex: number, action: "rewrite" | "regenerate") => {
-    setLoading(`${action}-${blockIndex}`); setMessage("");
+    beginAiLoading(`${action}-${blockIndex}`); setMessage("");
     try {
       const result = await requestAi<{ reaction: GeneratedReaction }>("block", { ...aiPayload, blockIndex, action });
       updateBlock(section.reactionBlocks[blockIndex].id, { ...result.reaction, englishText: "" });
@@ -206,7 +224,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
 
   const translateItems = async (items: Array<{ id: string; text: string; type: "speech" | "thought"; characterName: string }>) => {
     if (!items.length) return setMessage("Não há falas ou pensamentos preenchidos para traduzir.");
-    setLoading("translate"); setMessage("");
+    beginAiLoading("translate"); setMessage("");
     try {
       const result = await requestAi<{ translations: Array<{ id: string; translatedText: string }> }>("translate", { settings: state.settings, sceneDescription: section.description, items });
       const translations = new Map(result.translations.map((item) => [item.id, item.translatedText]));
@@ -321,7 +339,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void generate("replace-all")}>{loading === "replace-all" ? "Gerando…" : "Substituir todos"}</button>
           <button disabled={Boolean(loading) || state.settings.aiProvider === "none"} onClick={() => void translateItems(section.reactionBlocks.filter((block): block is ReactionBlock & { type: "speech" | "thought" } => block.type !== "silent" && Boolean(block.text.trim())).map((block) => ({ id: block.id, text: block.text, type: block.type, characterName: characterName(block.characterId) })))}>{loading === "translate" ? "Traduzindo…" : "Gerar inglês para todos"}</button>
           <button className={styles.addBlockAction} onClick={() => applyBlockCommand((current) => opening ? addOpeningReactionBlock(current, script.id).state : addReactionBlock(current, script.id, section.id).state)}>＋ Adicionar bloco</button>
-          {loading && <button className={styles.cancelButton} onClick={cancelAi}>Cancelar geração</button>}
+          {loading && <><span className={styles.aiProgress}>IA em execução · {aiElapsedSeconds}s · fila única</span><button className={styles.cancelButton} onClick={cancelAi}>Cancelar geração</button></>}
           {undoBlocks && <button className={styles.undoButton} onClick={() => { patch({ reactionBlocks: undoBlocks }); setUndoBlocks(null); }}>↶ Desfazer substituição</button>}
         </div>
       </section>
@@ -355,6 +373,16 @@ export default function RoteiroEditor() {
   const [openingActive, setOpeningActive] = useState(false);
   const [exportLoading, setExportLoading] = useState("");
   const [exportMessage, setExportMessage] = useState("");
+  const contextImportRef = useRef<HTMLInputElement>(null);
+  const [contextImportPreview, setContextImportPreview] = useState<{ fileName: string; data: AiContextResultDocument; sections: number; blocks: number; warnings: string[] } | null>(null);
+  const warmupSettings = useMemo(() => state?.settings, [state?.settings]);
+  useEffect(() => {
+    const settings = warmupSettings;
+    if (!ready || !settings || settings.aiProvider === "none" || !settings.aiModel.trim()) return undefined;
+    const controller = new AbortController();
+    void aiRequest<{ ok: boolean; model: string }>("warmup", { settings }, "POST", { signal: controller.signal, timeoutMs: 120_000 }).catch(() => undefined);
+    return () => controller.abort();
+  }, [ready, warmupSettings]);
   const script = state?.scripts.find((item) => item.id === params.id);
   const characterMap = useMemo(() => new Map(characters.map((character) => [character.id, character])), [characters]);
 
@@ -450,9 +478,43 @@ export default function RoteiroEditor() {
     setExportLoading("script"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, state.profiles, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
+      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, getScriptAiContext(script, state).profiles, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
+    finally { setExportLoading(""); }
+  };
+  const exportAiContext = () => {
+    const context = createAiContextExport(script, characters, state.profiles, state.globalRules);
+    exportTextFile(`EXECUTE_E_GERE_JSON_${exportPathSegment(script.title, "ROTEIRO")}.md`, renderAiContextText(context));
+    setExportMessage(`Contexto exportado com ${context.tiktoks.length + (context.opening ? 1 : 0)} seção(ões), ${context.characters.length} personagem(ns) e duração total ${context.project.duration.totalVideoDurationSeconds === null ? "não disponível" : `${context.project.duration.totalVideoDurationSeconds.toFixed(2)}s`}.`);
+  };
+  const importAiContext = async (file?: File) => {
+    if (!file) return;
+    setExportLoading("context-import"); setExportMessage("");
+    try {
+      const raw = JSON.parse(await file.text()) as unknown;
+      const validation = validateAiContextResult(raw, script);
+      if (!validation.valid || !validation.data) throw new Error([...validation.errors, ...validation.warnings].join("\n") || "Arquivo de contexto inválido.");
+      const sections = [...(validation.data.opening ? [validation.data.opening] : []), ...(validation.data.tiktoks ?? [])];
+      const blocks = sections.reduce((total, section) => total + section.blocks.length, 0);
+      setContextImportPreview({ fileName: file.name, data: validation.data, sections: sections.length, blocks, warnings: validation.warnings });
+      setExportMessage(`Prévia pronta: ${sections.length} seção(ões) e ${blocks} bloco(s) para importar.`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar o contexto da IA."); }
+    finally { setExportLoading(""); if (contextImportRef.current) contextImportRef.current.value = ""; }
+  };
+  const confirmAiContextImport = async () => {
+    if (!contextImportPreview) return;
+    setExportLoading("context-apply"); setExportMessage("");
+    try {
+      await createRoteiroBackup();
+      const validation = validateAiContextResult(contextImportPreview.data, script);
+      if (!validation.valid || !validation.data) throw new Error("O roteiro foi alterado desde a prévia. Importe o arquivo novamente.");
+      const result = applyAiContextResult(script, validation.data);
+      updateState((current) => updateScriptCommand(current, script.id, () => result.script));
+      const report = result.report;
+      setContextImportPreview(null);
+      setExportMessage(`Contexto importado: ${report.blocksImported} bloco(s) preenchido(s), ${report.blocksCreated} criado(s), ${report.manualBlocksSkipped} manual(is) preservado(s).${report.errors.length ? ` Avisos: ${report.errors.join(" | ")}` : ""}`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível aplicar o contexto da IA."); }
     finally { setExportLoading(""); }
   };
   const addBackground = async (file: File) => {
@@ -495,6 +557,7 @@ export default function RoteiroEditor() {
 
   const activeSection = openingActive ? undefined : script.tiktoks.find((section) => section.id === activeSectionId) ?? script.tiktoks[0];
   const activeIndex = activeSection ? script.tiktoks.findIndex((section) => section.id === activeSection.id) : -1;
+  const scriptAiContext = getScriptAiContext(script, state);
   const providerLabel = state.settings.aiProvider === "ollama" ? "Ollama" : state.settings.aiProvider === "lmstudio" ? "LM Studio" : "IA desativada";
 
   return <div className={styles.editorShell}>
@@ -515,7 +578,10 @@ export default function RoteiroEditor() {
         <div className={styles.indexCastHeader}><span>ELENCO</span><button onClick={() => setCastOpen((current) => !current)}>{castOpen ? "Fechar" : "Gerenciar"}</button></div>
         <div className={styles.indexCast}>{script.participants.map((participant) => { const character = characterMap.get(participant.characterId); if (!character) return null; return <article className={!participant.active ? styles.inactiveCast : ""} key={character.id}><CharacterMark character={character} /><strong>{character.name}</strong><label><input type="checkbox" checked={participant.active} onChange={(event) => updateScript((current) => ({ ...current, participants: current.participants.map((item) => item.characterId === character.id ? { ...item, active: event.target.checked } : item) }))} /> ativo</label></article>; })}</div>
         {castOpen && <div className={styles.manageCast}>{characters.map((character) => { const participant = script.participants.find((item) => item.characterId === character.id); return <button className={participant ? styles.selected : ""} key={character.id} onClick={() => updateScript((current) => {
-          if (!participant) return { ...current, participants: [...current.participants, { characterId: character.id, active: true }] };
+          if (!participant) {
+            const aiContext = current.aiContext ?? { profiles: [], rules: [] };
+            return { ...current, participants: [...current.participants, { characterId: character.id, active: true }], aiContext: { ...aiContext, profiles: [...aiContext.profiles, createNarrativeProfile(character.id)] } };
+          }
           const usedBlocks = current.tiktoks.reduce((total, section) => total + section.reactionBlocks.filter((block) => block.characterId === character.id).length, 0);
           if (usedBlocks && !window.confirm(`${character.name} possui ${usedBlocks} bloco(s). Remover o personagem também excluirá esses blocos. Continuar?`)) return current;
           return { ...current, participants: current.participants.filter((item) => item.characterId !== character.id), tiktoks: current.tiktoks.map((section) => ({ ...section, reactionBlocks: section.reactionBlocks.filter((block) => block.characterId !== character.id) })) };
@@ -530,11 +596,21 @@ export default function RoteiroEditor() {
         <div className={styles.contextRailHeader}><div><span>CONTEXTO &amp; IA</span><small><i />{providerLabel}{state.settings.aiModel ? ` · ${state.settings.aiModel}` : ""}</small></div></div>
         <label className={styles.field}><span>Nome do roteiro</span><input value={script.title} maxLength={100} onChange={(event) => patchScript({ title: event.target.value })} /></label>
         <label className={styles.field}><span>Contexto geral</span><textarea rows={8} value={script.generalContext} maxLength={24000} onChange={(event) => patchScript({ generalContext: event.target.value })} placeholder="Explique a situação maior do roteiro…" /></label>
+        <ScriptAiContextPanel script={script} characters={characters} state={state} onPatchScript={patchScript} />
         <div className={styles.railActions}><button className={styles.secondaryButton} disabled={!script.generalContext.trim()} onClick={() => void navigator.clipboard.writeText(script.generalContext).then(() => setGeneralMessage("Contexto geral copiado."))}>Copiar contexto</button><button className={styles.aiButton} disabled={generalLoading || !script.generalContext.trim() || state.settings.aiProvider === "none"} onClick={() => void improveGeneralContext()}>✦ {generalLoading ? "Melhorando…" : "Melhorar contexto"}</button></div>
         {generalMessage && <div className={styles.inlineMessage}>{generalMessage}<button onClick={() => setGeneralMessage("")}>×</button></div>}
         {improvedGeneral && <div className={styles.suggestionBox}><div><span>SUGESTÃO DA IA</span><button onClick={() => setImprovedGeneral("")}>×</button></div><p>{improvedGeneral}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedGeneral("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patchScript({ generalContext: improvedGeneral }); setImprovedGeneral(""); }}>Aceitar</button></footer></div>}
         <section className={styles.exportTools}>
           <span>EXPORTAR PARA O VIDEO MAKER</span>
+          <div className={styles.contextTransferBox}>
+            <strong>CONTEXTO PARA IA EXTERNA</strong>
+            <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
+            <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar contexto</button>
+            <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importAiContext(file); }} />
+            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar respostas da IA</button>
+            <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>
+            {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void confirmAiContextImport()}>{exportLoading === "context-apply" ? "Criando backup…" : "Confirmar e aplicar"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
+          </div>
           <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
           {script.background && <small>Fundo atual: {script.background.name}</small>}
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
@@ -549,7 +625,7 @@ export default function RoteiroEditor() {
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           {exportMessage && <small>{exportMessage}</small>}
         </section>
-        <section className={styles.railRules}><span>REGRAS ATIVAS</span><strong>{state.globalRules.filter((rule) => rule.enabled).length + 10}</strong><small>regras estruturais e personalizadas</small><Link href="/roteiros">Abrir IA e regras</Link></section>
+        <section className={styles.railRules}><span>REGRAS ATIVAS</span><strong>{scriptAiContext.rules.filter((rule) => rule.enabled).length + 10}</strong><small>estruturais + regras deste roteiro</small><Link href="/roteiros">Abrir modelos globais</Link></section>
       </aside>
     </div>
   </div>;

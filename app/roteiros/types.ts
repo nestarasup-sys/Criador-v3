@@ -14,6 +14,7 @@ export type {
   RoteirosState,
   RoteiroExportTarget,
   RulePriority,
+  ScriptAiContext,
   SaveStatus,
   ScriptParticipant,
   ScriptProject,
