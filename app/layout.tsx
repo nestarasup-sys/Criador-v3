@@ -7,6 +7,11 @@ const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Nymi Gacha",
   description: "Estúdio local para criar e exportar personagens.",
+  icons: {
+    icon: "/nymi-logo.png",
+    shortcut: "/nymi-logo.png",
+    apple: "/nymi-logo.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
