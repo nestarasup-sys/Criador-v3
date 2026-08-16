@@ -41,26 +41,12 @@ const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
-const EXPORT_TARGETS = Object.freeze({
-  v1: Object.freeze({
-    id: "v1",
-    label: "Versão 1 · PRIMEIRO-STUDIO",
-    assetsRoot: resolve(process.env.GACHA_VIDEO_MAKER_ASSETS_ROOT ?? "C:\\Users\\luiz\\Documents\\GACHA STUDIO APP\\PRIMEIRO-STUDIO\\assets"),
-  }),
-  v2: Object.freeze({
-    id: "v2",
-    label: "Versão 2 · GACHO EDITOR V2",
-    assetsRoot: resolve(process.env.GACHA_EDITOR_V2_ASSETS_ROOT ?? "C:\\TRABALHO 3\\GACHO EDITOR V2\\data\\assets"),
-  }),
-});
-function exportTargetConfig(value) {
-  return value === "v2" ? EXPORT_TARGETS.v2 : EXPORT_TARGETS.v1;
+const ROTEIRO_EXPORT_ASSETS_ROOT = resolve(process.env.GACHA_EDITOR_TESTE_ASSETS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR TESTE\\data\\assets");
+function roteiroVideoExportRoot() {
+  return join(ROTEIRO_EXPORT_ASSETS_ROOT, "tiktoks", "GACHA MAKER ROTEIROS PRO");
 }
-function roteiroVideoExportRoot(target) {
-  return join(exportTargetConfig(target).assetsRoot, "tiktoks", "GACHA MAKER ROTEIROS PRO");
-}
-function roteiroCharacterExportRoot(target) {
-  return join(exportTargetConfig(target).assetsRoot, "characters", "GACHA MAKER PERSONAGENS");
+function roteiroCharacterExportRoot() {
+  return join(ROTEIRO_EXPORT_ASSETS_ROOT, "characters", "GACHA MAKER PERSONAGENS");
 }
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
@@ -258,10 +244,8 @@ async function ensureFolders() {
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
-    ...Object.values(EXPORT_TARGETS).flatMap((target) => [
-      mkdir(roteiroVideoExportRoot(target.id), { recursive: true }),
-      mkdir(roteiroCharacterExportRoot(target.id), { recursive: true }),
-    ]),
+    mkdir(roteiroVideoExportRoot(), { recursive: true }),
+    mkdir(roteiroCharacterExportRoot(), { recursive: true }),
     mkdir(PRINTS_ROOT, { recursive: true }),
     mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
     mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
@@ -585,10 +569,9 @@ async function route(request, response) {
   if (request.method === "POST" && url.pathname === "/roteiros/open-folder") {
     const body = await requestJson(request);
     const target = String(body?.target || "script");
-    const exportTarget = exportTargetConfig(body?.exportTarget).id;
-    const characterRoot = roteiroCharacterExportRoot(exportTarget);
-    const videoRoot = roteiroVideoExportRoot(exportTarget);
-    const backgroundRoot = join(exportTargetConfig(exportTarget).assetsRoot, "backgrounds");
+    const characterRoot = roteiroCharacterExportRoot();
+    const videoRoot = roteiroVideoExportRoot();
+    const backgroundRoot = join(ROTEIRO_EXPORT_ASSETS_ROOT, "backgrounds");
     const folder = target === "characters"
       ? characterRoot
       : target === "background"
@@ -603,7 +586,7 @@ async function route(request, response) {
     const explorer = spawn("explorer.exe", ["/root,", folder], { detached: true, stdio: "ignore", windowsHide: false });
     explorer.on("error", () => undefined);
     explorer.unref();
-    sendJson(response, request, 200, { ok: true, folder, exportTarget });
+    sendJson(response, request, 200, { ok: true, folder });
     return;
   }
 
@@ -687,8 +670,7 @@ async function route(request, response) {
 
   if (request.method === "POST" && url.pathname === "/roteiros/export-videos") {
     const body = await requestJson(request);
-    const exportTarget = exportTargetConfig(body?.target).id;
-    const exportRoot = roteiroVideoExportRoot(exportTarget);
+    const exportRoot = roteiroVideoExportRoot();
     const folder = join(exportRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
     if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     await mkdir(folder, { recursive: true });
@@ -717,14 +699,13 @@ async function route(request, response) {
     }
     const descriptionFile = join(folder, "descricoes.txt");
     await writeFile(descriptionFile, descriptionLines.join("\n"), "utf8");
-    sendJson(response, request, 200, { ok: true, folder, exported, missing, descriptionFile, exportTarget });
+    sendJson(response, request, 200, { ok: true, folder, exported, missing, descriptionFile });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/roteiros/export-background") {
     const body = await requestJson(request);
-    const exportTarget = exportTargetConfig(body?.target).id;
-    const exportRoot = join(exportTargetConfig(exportTarget).assetsRoot, "backgrounds");
+    const exportRoot = join(ROTEIRO_EXPORT_ASSETS_ROOT, "backgrounds");
     const scriptFolderName = safeExportFolderName(body?.scriptTitle, "Roteiro");
     const folder = join(exportRoot, scriptFolderName);
     if (!inside(exportRoot, folder)) throw new Error("Destino do fundo inválido");
@@ -739,20 +720,19 @@ async function route(request, response) {
     const destination = join(folder, `01${extension}`);
     await copyFile(join(sourceFolder, sourceName), destination);
     const relativePath = `assets/backgrounds/${scriptFolderName}/${destination.split(sep).pop()}`;
-    sendJson(response, request, 200, { ok: true, folder, path: destination, relativePath, fileName: destination.split(sep).pop(), exportTarget });
+    sendJson(response, request, 200, { ok: true, folder, path: destination, relativePath, fileName: destination.split(sep).pop() });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/roteiros/export-text") {
     const body = await requestJson(request);
-    const exportTarget = exportTargetConfig(body?.target).id;
-    const exportRoot = roteiroVideoExportRoot(exportTarget);
+    const exportRoot = roteiroVideoExportRoot();
     const folder = join(exportRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
     if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     await mkdir(folder, { recursive: true });
     const filePath = join(folder, "roteiro.txt");
     await writeFile(filePath, String(body?.content || ""), "utf8");
-    sendJson(response, request, 200, { ok: true, path: filePath, fileName: "roteiro.txt", exportTarget });
+    sendJson(response, request, 200, { ok: true, path: filePath, fileName: "roteiro.txt" });
     return;
   }
 
@@ -763,8 +743,7 @@ async function route(request, response) {
     assertMimeType(contentTypeOf(request, metadata), new Set(["application/zip", "application/x-zip-compressed"]), "O pacote do personagem precisa ser ZIP.");
     const body = await requestBody(request, BODY_LIMITS.zip);
     if (!body.length) throw new Error("ZIP do personagem vazio");
-    const exportTarget = exportTargetConfig(metadata.exportTarget).id;
-    const exportRoot = roteiroCharacterExportRoot(exportTarget);
+    const exportRoot = roteiroCharacterExportRoot();
     const scriptFolderName = safeExportFolderName(metadata.scriptTitle || "Roteiro", "Roteiro");
     const characterFolderName = safeExportFolderName(metadata.characterName || characterId, characterId);
     const scriptFolder = join(exportRoot, scriptFolderName);
@@ -786,7 +765,7 @@ async function route(request, response) {
       files += 1;
     }
     if (!files) throw new Error("ZIP sem arquivos exportáveis");
-    sendJson(response, request, 200, { ok: true, characterId, folder, files, exportTarget });
+    sendJson(response, request, 200, { ok: true, characterId, folder, files });
     return;
   }
 
@@ -1196,5 +1175,3 @@ const server = createServer({
 server.listen(PORT, HOST, () => {
   process.stdout.write(`Nymi Gacha dados locais: http://${HOST}:${PORT}\n`);
 });
-
-

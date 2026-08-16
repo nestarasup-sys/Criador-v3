@@ -256,13 +256,14 @@ function normalizeRoteiroAiContext(value, fallback, participantIds) {
 
 function normalizeRoteiroScript(value, fallbackAiContext = { profiles: [], rules: [] }) {
   const source = record(value);
-  const exportTarget = source.exportTarget === "v2" ? "v2" : source.exportTarget === "v1" ? "v1" : undefined;
+  const sourceWithoutLegacyExportTarget = { ...source };
+  delete sourceWithoutLegacyExportTarget.exportTarget;
   const participants = list(source.participants).map((participant) => {
     const item = record(participant);
     return { ...item, characterId: typeof item.characterId === "string" ? item.characterId : "", active: item.active !== false };
   });
   return {
-    ...source,
+    ...sourceWithoutLegacyExportTarget,
     id: typeof source.id === "string" ? source.id : "",
     title: typeof source.title === "string" ? source.title : "Roteiro sem título",
     generalContext: typeof source.generalContext === "string" ? source.generalContext : "",
@@ -271,7 +272,6 @@ function normalizeRoteiroScript(value, fallbackAiContext = { profiles: [], rules
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     ...(source.background && normalizeBackgroundReference(source.background) ? { background: normalizeBackgroundReference(source.background) } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
-    ...(exportTarget ? { exportTarget } : {}),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
   };
