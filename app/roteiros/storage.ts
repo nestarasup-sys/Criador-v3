@@ -185,7 +185,7 @@ export type AiRequestOptions = { signal?: AbortSignal; timeoutMs?: number };
 
 export async function aiRequest<T>(path: string, body?: unknown, method = "POST", options: AiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
-  const timeoutMs = Math.max(5_000, options.timeoutMs ?? 45_000);
+  const timeoutMs = Math.max(5_000, options.timeoutMs ?? 90_000);
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   const forwardAbort = () => controller.abort();
   if (options.signal?.aborted) controller.abort();

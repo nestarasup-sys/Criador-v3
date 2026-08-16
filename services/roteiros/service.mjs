@@ -4,7 +4,7 @@ import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { emptyRoteirosState, normalizeRoteirosState as normalizeState, validateRoteirosState } from "../../app/domain/document-schemas.mjs";
 
 const EMPTY_STATE = emptyRoteirosState();
-const AI_TIMEOUT_MS = 45_000;
+const AI_TIMEOUT_MS = 90_000;
 const AI_QUEUE_LIMIT = 4;
 const AI_MAX_TARGET_BLOCKS = 32;
 const AI_MAX_CONTEXT_CHARACTERS = 12;
@@ -313,7 +313,7 @@ async function warmStudioModel(settings, signal, contextSize = 2048) {
         think: false,
         options: { num_predict: 1, num_ctx: contextSize },
       }),
-    }, 120_000, signal);
+    }, 90_000, signal);
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.error) throw new Error(data.error || `O Ollama respondeu com erro ${response.status}.`);
     return { model: data.model || config.model, config };
@@ -329,7 +329,7 @@ async function warmStudioModel(settings, signal, contextSize = 2048) {
       max_tokens: 1,
       messages: [{ role: "user", content: " " }],
     }),
-  }, 120_000, signal);
+  }, 90_000, signal);
   const result = await response.json().catch(() => ({}));
   const detail = typeof result.error === "string" ? result.error : result.error?.message;
   if (!response.ok || detail) throw new Error(detail || `O LM Studio respondeu com erro ${response.status}.`);
@@ -535,7 +535,48 @@ async function generateReactions(body, signal) {
   const existing = body.mode === "replace-all" ? [] : (section.reactionBlocks || []).filter((block) => block.characterId && (block.text || block.emotion));
   section.userInstruction = `TIPO DOS BLOCOS:\n- Para type auto, escolha entre speech e thought conforme a reação.\n- Para speech ou thought, preserve o tipo escolhido pelo usuário.\n\n${section.userInstruction || ""}`;
   const prompt = `Crie EXATAMENTE ${targetIndices.length} blocos novos de uma sala de reação. A sequência deve parecer uma conversa contínua.\n\nMODO:\n${body.mode === "replace-all" ? "Substituir todos os blocos." : "Preencher somente os blocos vazios."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS PERSONALIZADAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO RECENTE:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO LITERAL DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nREGRAS ESPECÍFICAS DESTE TIKTOK:\n${promptText(section.specificRules, 700) || "Nenhuma."}\n\nINSTRUÇÃO ADICIONAL:\n${promptText(section.userInstruction, 700) || "Nenhuma."}\n\nREAÇÕES EXISTENTES:\n${JSON.stringify(compactBlocks(existing))}\n\nBLOCOS ALVO (preserve personagem/tipo quando já escolhidos):\n${JSON.stringify(targets)}\n\n${PROTECTED_RULES}\n\nDIVERSIDADE DRAMÁTICA:\nDistribua funções diferentes entre os blocos: dúvida, defesa, suspeita, culpa, ciúme, ironia, medo, proteção, tensão, negação, contraste, silêncio ou percepção.\n${section.shortLines ? "Use falas e pensamentos curtos, preferencialmente com até 12 palavras." : ""}\nRetorne somente JSON: {"reactions":[{"characterId":"id","type":"speech|thought|silent","emotion":"...","text":"..."}]}.`;
-  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, targetIndices.length), undefined, signal, { numPredict: Math.min(900, 300 + targetIndices.length * 140) });
+  const openingPrompt = opening ? `Crie EXATAMENTE ${targetIndices.length} blocos novos para a CENA DE ABERTURA de um roteiro. Esta é uma cena presencial que acontece antes de qualquer TikTok começar.
+
+ATENÇÃO: a descrição abaixo NÃO é a descrição de um vídeo. Ela descreve somente o que acontece na abertura, com os personagens presentes na sala. Não existe vídeo em reprodução neste momento.
+
+MODO:
+${body.mode === "replace-all" ? "Substituir todos os blocos da abertura." : "Preencher somente os blocos vazios da abertura."}
+
+PERSONAGENS PRESENTES:
+${compactCharacters(body.characters)}
+
+CONTEXTO GERAL DO ROTEIRO:
+${promptText(body.generalContext, 1_000) || "Não informado."}
+
+CENA DA ABERTURA — FONTE PRINCIPAL:
+${promptText(body.section?.description, 1_400)}
+
+OBJETIVO DA ABERTURA:
+${promptText(section.sceneGoal, 500) || "Não informado."}
+
+REGRAS ESPECÍFICAS DA ABERTURA:
+${promptText(section.specificRules, 700) || "Nenhuma."}
+
+INSTRUÇÃO ADICIONAL:
+${promptText(section.userInstruction, 700) || "Nenhuma."}
+
+REAÇÕES JÁ EXISTENTES:
+${JSON.stringify(compactBlocks(existing))}
+
+BLOCOS ALVO:
+${JSON.stringify(targets)}
+
+REGRAS OBRIGATÓRIAS DA ABERTURA:
+- Gere falas ou pensamentos somente sobre a cena de abertura e sobre ações explicitamente descritas na fonte principal.
+- Cada bloco deve responder à ação anterior ou à fonte principal; não escreva frases aleatórias, genéricas ou desconectadas.
+- Os personagens estão na sala, não dentro de um vídeo e não estão reagindo a um TikTok.
+- Não mencione, descreva, antecipe ou invente o conteúdo de nenhum TikTok, vídeo, personagem ou acontecimento futuro.
+- Use o contexto geral e as fichas apenas para manter personalidade, relação e estilo de fala; não crie fatos novos a partir deles.
+- Se a fonte não informar um assunto específico, use apenas falas curtas e naturais diretamente ligadas à preparação para começar, sem inventar um conflito ou acontecimento.
+- Preserve personagem e tipo dos blocos que já foram escolhidos.
+- Use somente speech ou thought; ambos devem conter text.
+- Retorne somente JSON no formato {"reactions":[{"characterId":"id","type":"speech|thought","emotion":"...","text":"..."}]}.` : "";
+  const result = await callAi(body.settings, withoutSilentReactionOption(opening ? openingPrompt : prompt), reactionSchema(characterIds, targetIndices.length), undefined, signal, { numPredict: Math.min(900, 300 + targetIndices.length * 140) });
   const reactions = Array.isArray(result.data?.reactions) ? result.data.reactions : [];
   if (reactions.length !== targetIndices.length) throw new Error("A IA retornou uma quantidade diferente de blocos.");
   const normalized = reactions.map((reaction, index) => normalizedReaction(reaction, targets[index].block, characterIds, index));

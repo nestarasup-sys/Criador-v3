@@ -159,7 +159,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     return () => window.clearInterval(timer);
   }, [loading]);
 
-  const requestAi = async <T,>(path: string, payload: unknown, timeoutMs = 45_000) => {
+  const requestAi = async <T,>(path: string, payload: unknown, timeoutMs = 90_000) => {
     aiControllerRef.current?.abort();
     const controller = new AbortController();
     aiControllerRef.current = controller;
@@ -380,7 +380,7 @@ export default function RoteiroEditor() {
     const settings = warmupSettings;
     if (!ready || !settings || settings.aiProvider === "none" || !settings.aiModel.trim()) return undefined;
     const controller = new AbortController();
-    void aiRequest<{ ok: boolean; model: string }>("warmup", { settings }, "POST", { signal: controller.signal, timeoutMs: 120_000 }).catch(() => undefined);
+    void aiRequest<{ ok: boolean; model: string }>("warmup", { settings }, "POST", { signal: controller.signal, timeoutMs: 90_000 }).catch(() => undefined);
     return () => controller.abort();
   }, [ready, warmupSettings]);
   const script = state?.scripts.find((item) => item.id === params.id);
