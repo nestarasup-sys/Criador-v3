@@ -918,7 +918,7 @@ export default function StudioPage() {
   const poseDisabled = selectedPose.variants.length < 2;
   const outfitAdjustDisabled = !selectedPose.variant;
   return (
-    <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""} ${dockSide === "left" ? styles.dockLeftLayout : ""} ${rosterCompact ? styles.rosterCompactLayout : ""}`}>
+    <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
       <StudioCanvas
         stageRef={stageRef}
         studio={studio}

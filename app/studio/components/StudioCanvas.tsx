@@ -37,12 +37,7 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, rende
     if (!viewport) return;
     const updateScale = () => {
       const bounds = viewport.getBoundingClientRect();
-      const computed = window.getComputedStyle(viewport);
-      const horizontalPadding = parseFloat(computed.paddingLeft) + parseFloat(computed.paddingRight);
-      const verticalPadding = parseFloat(computed.paddingTop) + parseFloat(computed.paddingBottom);
-      const availableWidth = Math.max(0, bounds.width - horizontalPadding);
-      const availableHeight = Math.max(0, bounds.height - verticalPadding);
-      setPreviewScale(Math.min(availableWidth / STUDIO_SCENE_WIDTH, availableHeight / STUDIO_SCENE_HEIGHT));
+      setPreviewScale(Math.min(bounds.width / STUDIO_SCENE_WIDTH, bounds.height / STUDIO_SCENE_HEIGHT));
     };
     updateScale();
     const observer = new ResizeObserver(updateScale);
