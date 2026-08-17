@@ -152,12 +152,11 @@ test("o editor possui os controles separados da base externa", async () => {
   assert.match(source, /exportTextFile/);
   assert.match(source, /createRoteiroBackup/);
   assert.match(source, /Exportar guia/);
-  assert.match(source, /calculateReactionBudget/);
-  assert.match(source, /reactionBudget/);
-  assert.match(source, /Fixar posição deste TikTok/);
-  assert.match(source, /Aplicar nova ordem/);
-  assert.match(source, /Aplicar tudo/);
-  assert.match(source, /applyAiOrderingProposal/);
+  assert.doesNotMatch(source, /Liberdade editorial da IA/);
+  assert.doesNotMatch(source, /Fixar posição deste TikTok/);
+  assert.doesNotMatch(source, /ORÇAMENTO DE REAÇÕES/);
+  assert.doesNotMatch(source, /Aplicar nova ordem/);
+  assert.doesNotMatch(source, /Aplicar tudo/);
 });
 
 test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {

@@ -6,9 +6,8 @@ import Link from "next/link";
 import { buildAiCharacters, getScriptAiContext } from "../ai-context";
 import { createNarrativeProfile, nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
-import { applyAiContextResult, applyAiOrderingProposal, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
+import { applyAiContextResult, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
 import { renderAiGuideText } from "../ai-guide";
-import { calculateReactionBudget } from "../generation-budget";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
@@ -47,12 +46,6 @@ function formatTikTokDuration(seconds: number | undefined) {
 function formatSceneEnd(seconds: number | undefined) {
   if (!Number.isFinite(seconds) || seconds === undefined) return "fim não definido";
   return `segundo ${seconds.toFixed(2).replace(".", ",")}`;
-}
-
-function formatReactionBudget(section: TikTokSection) {
-  const budget = calculateReactionBudget(section.video?.durationSeconds, section.sceneEndSeconds);
-  if (budget.recommendedBlockCount === null) return "Preencha a duração e o início das reações para calcular os blocos.";
-  return `${budget.reactionWindowSeconds?.toFixed(2).replace(".", ",")}s para reações · recomendado: ${budget.recommendedBlockRange?.min}–${budget.recommendedBlockRange?.max} blocos`;
 }
 
 function exportPathSegment(value: string, fallback: string) {
@@ -318,8 +311,6 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
             <label className={styles.field}><span>Título opcional</span><input value={section.title} maxLength={120} onChange={(event) => patch({ title: event.target.value })} placeholder="Ex: O passado da FYN" /></label>
             <label className={styles.field}><span>Cena da descrição termina (segundos)</span><input type="number" min="0" max="86400" step="0.01" value={section.sceneEndSeconds ?? ""} onChange={(event) => { const value = event.target.value; patch({ sceneEndSeconds: value === "" ? undefined : Math.max(0, Number(value)) }); }} placeholder="Ex.: 5 ou 5.5" /></label>
           </div>}
-          {!opening && <label className={styles.checkField}><input type="checkbox" checked={Boolean(section.orderLocked)} onChange={(event) => patch({ orderLocked: event.target.checked })} /><span>Fixar posição deste TikTok para a IA</span></label>}
-          {!opening && <div className={styles.reactionBudget}><strong>ORÇAMENTO DE REAÇÕES</strong><span>{formatReactionBudget(section)}</span><small>As reações começam depois da descrição. Continuar após o vídeo é permitido quando necessário, mas a IA deve evitar blocos extras.</small></div>}
           {!opening && <div className={styles.videoUploadBox}>
             {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
@@ -509,31 +500,17 @@ export default function RoteiroEditor() {
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar o contexto da IA."); }
     finally { setExportLoading(""); if (contextImportRef.current) contextImportRef.current.value = ""; }
   };
-  const applyAiContextImport = async (mode: "blocks" | "order" | "all") => {
+  const applyAiContextImport = async () => {
     if (!contextImportPreview) return;
     setExportLoading("context-apply"); setExportMessage("");
     try {
       const validation = validateAiContextResult(contextImportPreview.data, script);
       if (!validation.valid || !validation.data) throw new Error("O roteiro foi alterado desde a prévia. Importe o arquivo novamente.");
-      if ((mode === "order" || mode === "all") && !validation.data.orderingProposal) throw new Error("A resposta não contém uma proposta de ordem para aplicar.");
       await createRoteiroBackup();
-      let nextScript = script;
-      const messages: string[] = [];
-      if (mode === "blocks" || mode === "all") {
-        const result = applyAiContextResult(nextScript, validation.data);
-        nextScript = result.script;
-        messages.push(`${result.report.blocksImported} bloco(s) preenchido(s), ${result.report.blocksCreated} criado(s), ${result.report.manualBlocksSkipped} manual(is) preservado(s)`);
-        if (result.report.errors.length) messages.push(`Avisos: ${result.report.errors.join(" | ")}`);
-      }
-      if (mode === "order" || mode === "all") {
-        const result = applyAiOrderingProposal(nextScript, validation.data);
-        if (result.report.errors.length) throw new Error(result.report.errors.join(" | "));
-        nextScript = result.script;
-        messages.push(`${result.report.moved} TikTok(s) reorganizado(s)`);
-      }
-      updateState((current) => updateScriptCommand(current, script.id, () => nextScript));
+      const result = applyAiContextResult(script, validation.data);
+      updateState((current) => updateScriptCommand(current, script.id, () => result.script));
       setContextImportPreview(null);
-      setExportMessage(`Alterações aplicadas: ${messages.join("; ")}.`);
+      setExportMessage(`Contexto importado: ${result.report.blocksImported} bloco(s) preenchido(s), ${result.report.blocksCreated} criado(s), ${result.report.manualBlocksSkipped} manual(is) preservado(s).${result.report.errors.length ? ` Avisos: ${result.report.errors.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível aplicar o contexto da IA."); }
     finally { setExportLoading(""); }
   };
@@ -631,13 +608,12 @@ export default function RoteiroEditor() {
           <div className={styles.contextTransferBox}>
             <strong>ARQUIVO DA BASE</strong>
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
-            <label className={styles.field}><span>Liberdade editorial da IA</span><select value={script.aiOrderingMode ?? "suggest"} onChange={(event) => patchScript({ aiOrderingMode: event.target.value as ScriptProject["aiOrderingMode"] })}><option value="none">Somente falas e pensamentos</option><option value="suggest">Pode sugerir nova ordem</option><option value="apply">Pode aplicar após confirmação</option></select></label>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={exportAiGuide}>✦ Exportar guia</button>
             <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importAiContext(file); }} />
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar base pronta</button>
             <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>
-            {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}{contextImportPreview.data.orderingProposal && <div className={styles.orderingPreview}><strong>ORDEM PROPOSTA PELA IA</strong><small>{contextImportPreview.data.orderingProposal.reason || "A IA não informou um motivo."}</small><span>{contextImportPreview.data.orderingProposal.orderedSectionIds.map((id, proposedIndex) => { const oldIndex = script.tiktoks.findIndex((section) => section.id === id); const section = script.tiktoks.find((item) => item.id === id); return `${proposedIndex + 1}. ${section?.title || id}${oldIndex === proposedIndex ? "" : ` (era ${oldIndex + 1})`}`; }).join(" → ")}</span><small>{contextImportPreview.data.orderingProposal.changes.length} mudança(s) detalhada(s). TikToks fixos foram validados.</small></div>}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void applyAiContextImport("blocks")}>{exportLoading === "context-apply" ? "Criando backup…" : "Aplicar falas/pensamentos"}</button>{contextImportPreview.data.orderingProposal && <><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || script.aiOrderingMode === "none"} onClick={() => void applyAiContextImport("order")}>Aplicar nova ordem</button><button className={styles.primaryButton} disabled={Boolean(exportLoading) || script.aiOrderingMode === "none"} onClick={() => void applyAiContextImport("all")}>Aplicar tudo</button></>}<button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
+            {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void applyAiContextImport()}>{exportLoading === "context-apply" ? "Criando backup…" : "Confirmar e aplicar"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
           </div>
         </section>
         <section className={`${styles.exportTools} ${styles.railSection}`}>
