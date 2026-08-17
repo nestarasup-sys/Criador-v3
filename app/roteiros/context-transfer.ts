@@ -52,6 +52,7 @@ export type AiContextSection = {
   specificRules: string;
   userInstruction: string;
   shortLines: boolean;
+  orderLocked: boolean;
   video?: TikTokVideoReference;
   durationSeconds: number | null;
   reactionStartSeconds: number | null;
@@ -75,6 +76,10 @@ export type AiContextExportDocument = {
     generalContext: string;
     duration: AiContextDuration;
     orderedSectionIds: string[];
+    editorial: {
+      orderingMode: "none" | "suggest" | "apply";
+      lockedSectionIds: string[];
+    };
   };
   characters: AiContextCharacter[];
   rules: GlobalRule[];
@@ -102,12 +107,27 @@ export type AiContextResultSection = {
   blocks: AiContextResultBlock[];
 };
 
+export type AiOrderingChange = {
+  sectionId: string;
+  fromPosition: number;
+  toPosition: number;
+  reason: string;
+};
+
+export type AiOrderingProposal = {
+  mode: "suggest" | "apply" | "none";
+  orderedSectionIds: string[];
+  reason: string;
+  changes: AiOrderingChange[];
+};
+
 export type AiContextResultDocument = {
   app: typeof AI_CONTEXT_RESULT_APP;
   schemaVersion: typeof AI_CONTEXT_SCHEMA_VERSION;
   sourceScriptId: string;
   tiktoks?: AiContextResultSection[];
   opening?: AiContextResultSection | null;
+  orderingProposal?: AiOrderingProposal;
 };
 
 export type AiContextValidation = {
@@ -123,6 +143,11 @@ export type AiContextImportReport = {
   blocksCreated: number;
   manualBlocksSkipped: number;
   ignoredBlocks: number;
+  errors: string[];
+};
+
+export type AiOrderingImportReport = {
+  moved: number;
   errors: string[];
 };
 
@@ -166,6 +191,7 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     specificRules: section.specificRules,
     userInstruction: section.userInstruction,
     shortLines: section.shortLines,
+    orderLocked: "orderLocked" in section ? Boolean(section.orderLocked) : false,
     ...('video' in section && section.video ? { video: structuredClone(section.video) } : {}),
     durationSeconds: budget.durationSeconds,
     reactionStartSeconds: budget.reactionStartSeconds,
@@ -225,6 +251,10 @@ export function createAiContextExport(script: ScriptProject, characters: Premium
       generalContext: script.generalContext,
       duration: totalDuration(script.tiktoks),
       orderedSectionIds: [...(opening ? [opening.sectionId] : []), ...script.tiktoks.map((section) => section.id)],
+      editorial: {
+        orderingMode: script.aiOrderingMode ?? "suggest",
+        lockedSectionIds: script.tiktoks.filter((section) => section.orderLocked).map((section) => section.id),
+      },
     },
     characters: contextCharacters.filter((character) => participantIds.has(character.characterId)),
     rules: structuredClone(localRules),
@@ -282,6 +312,11 @@ export function renderAiContextText(context: AiContextExportDocument): string {
     "As reações podem ultrapassar a duração do vídeo e a duração total prevista. Não corte blocos por causa disso.",
     `Duração total conhecida dos vídeos: ${duration}.`,
     "",
+    "## LIBERDADE EDITORIAL",
+    `Modo de reorganização: ${context.project.editorial.orderingMode}.`,
+    `TikToks com posição fixa: ${context.project.editorial.lockedSectionIds.length ? context.project.editorial.lockedSectionIds.join(", ") : "nenhum"}.`,
+    "A IA pode sugerir uma nova ordem somente usando os IDs originais. Não altere a abertura e não remova, duplique ou recrie TikToks.",
+    "",
     "## CONTEXTO GERAL",
     context.project.generalContext || "Não informado.",
     "",
@@ -320,6 +355,7 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Regras específicas: ${section.specificRules || "Nenhuma."}`,
       `Instrução adicional: ${section.userInstruction || "Nenhuma."}`,
       `Vídeo: ${section.video ? `${section.video.name} — ${section.video.storedPath}` : "Nenhum vídeo informado."}`,
+      `Posição fixa: ${section.orderLocked ? "sim" : "não"}`,
       `Blocos existentes: ${JSON.stringify(section.existingBlocks)}`,
       `Espaços vazios: ${JSON.stringify(section.emptySlots)}`,
       "",
@@ -330,6 +366,7 @@ export function renderAiContextText(context: AiContextExportDocument): string {
     "Use exatamente este formato:",
     JSON.stringify(responseExample, null, 2),
     "Cada bloco deve conter: blockId opcional ou null, characterId, type, emotion, text e englishText opcional.",
+    "Se a ordem puder melhorar, inclua orderingProposal com todos os sectionIds exatamente uma vez e explique as mudanças.",
     "Preserve scriptId e sectionId. A quantidade de blocos é livre e pode ser maior que a quantidade de espaços vazios.",
     "",
     "## DADOS ESTRUTURADOS COMPLETOS",
@@ -383,6 +420,46 @@ function resultSection(value: unknown, path: string, errors: string[]): AiContex
   return sectionId ? { sectionId, blocks } : null;
 }
 
+function resultOrderingProposal(value: unknown, script: ScriptProject, errors: string[], warnings: string[]): AiOrderingProposal | undefined {
+  if (value === undefined || value === null) return undefined;
+  const source = record(value);
+  const mode = source.mode;
+  if (mode !== "suggest" && mode !== "apply" && mode !== "none") errors.push("orderingProposal.mode deve ser suggest, apply ou none");
+  if (!Array.isArray(source.orderedSectionIds)) errors.push("orderingProposal.orderedSectionIds deve ser uma lista completa");
+  const currentIds = script.tiktoks.map((section) => section.id);
+  const orderedSectionIds = Array.isArray(source.orderedSectionIds) ? source.orderedSectionIds.filter((id): id is string => typeof id === "string") : [];
+  if (orderedSectionIds.length !== currentIds.length) errors.push("orderingProposal deve conter todos os TikToks atuais exatamente uma vez");
+  const seen = new Set<string>();
+  for (const id of orderedSectionIds) {
+    if (seen.has(id)) errors.push(`TikTok ${id} aparece mais de uma vez na proposta de ordem.`);
+    seen.add(id);
+    if (!currentIds.includes(id)) errors.push(`TikTok ${id} não existe neste roteiro.`);
+  }
+  for (const id of currentIds) if (!seen.has(id)) errors.push(`TikTok ${id} não foi incluído na proposta de ordem.`);
+  const currentPositions = new Map(currentIds.map((id, index) => [id, index]));
+  orderedSectionIds.forEach((id, index) => {
+    const original = currentPositions.get(id);
+    const section = script.tiktoks.find((item) => item.id === id);
+    if (original !== undefined && section?.orderLocked && original !== index) errors.push(`TikTok ${id} está com posição fixa e não pode ser movido.`);
+  });
+  if (script.aiOrderingMode === "none") warnings.push("Este roteiro está configurado para não permitir reorganização; a proposta ficará somente para consulta.");
+  const changes = Array.isArray(source.changes) ? source.changes.map((change, index) => {
+    const item = record(change);
+    const sectionId = stringValue(item.sectionId);
+    const fromPosition = Number(item.fromPosition);
+    const toPosition = Number(item.toPosition);
+    const reason = stringValue(item.reason);
+    if (!sectionId || !Number.isInteger(fromPosition) || !Number.isInteger(toPosition)) errors.push(`orderingProposal.changes[${index}] é inválido`);
+    return { sectionId, fromPosition, toPosition, reason };
+  }) : [];
+  return {
+    mode: (mode === "suggest" || mode === "apply" || mode === "none" ? mode : "suggest"),
+    orderedSectionIds,
+    reason: stringValue(source.reason),
+    changes,
+  };
+}
+
 export function validateAiContextResult(value: unknown, script: ScriptProject): AiContextValidation {
   const source = record(value);
   const errors: string[] = [];
@@ -393,15 +470,16 @@ export function validateAiContextResult(value: unknown, script: ScriptProject): 
   if (!Array.isArray(source.tiktoks)) errors.push("tiktoks deve ser uma lista");
   const tiktoks = Array.isArray(source.tiktoks) ? source.tiktoks.map((section, index) => resultSection(section, `tiktoks[${index}]`, errors)).filter((section): section is AiContextResultSection => Boolean(section)) : [];
   const opening = source.opening == null ? undefined : resultSection(source.opening, "opening", errors);
+  const orderingProposal = resultOrderingProposal(source.orderingProposal, script, errors, warnings);
   const sectionIds = new Set([...(script.opening ? [script.opening.id] : []), ...script.tiktoks.map((section) => section.id)]);
   const characterIds = new Set(script.participants.map((participant) => participant.characterId));
   for (const section of [...tiktoks, ...(opening ? [opening] : [])]) {
     if (!sectionIds.has(section.sectionId)) errors.push(`A seção ${section.sectionId} não existe neste roteiro.`);
     for (const block of section.blocks) if (!characterIds.has(block.characterId)) errors.push(`O personagem ${block.characterId} não pertence ao elenco deste roteiro.`);
   }
-  if (!tiktoks.length && !opening?.blocks.length) warnings.push("O arquivo não contém blocos para importar.");
+  if (!tiktoks.length && !opening?.blocks.length && !orderingProposal) warnings.push("O arquivo não contém blocos para importar.");
   if (errors.length) return { valid: false, errors, warnings };
-  return { valid: true, errors, warnings, data: { app: AI_CONTEXT_RESULT_APP, schemaVersion: AI_CONTEXT_SCHEMA_VERSION, sourceScriptId: script.id, tiktoks, ...(opening ? { opening } : {}) } };
+  return { valid: true, errors, warnings, data: { app: AI_CONTEXT_RESULT_APP, schemaVersion: AI_CONTEXT_SCHEMA_VERSION, sourceScriptId: script.id, tiktoks, ...(opening ? { opening } : {}), ...(orderingProposal ? { orderingProposal } : {}) } };
 }
 
 function targetSection(script: ScriptProject, sectionId: string): { section: TikTokSection | OpeningSection; opening: boolean } | null {
@@ -458,4 +536,20 @@ export function applyAiContextResult(script: ScriptProject, result: AiContextRes
   }
   nextScript.updatedAt = nowIso();
   return { script: nextScript, report };
+}
+
+export function applyAiOrderingProposal(script: ScriptProject, result: AiContextResultDocument): { script: ScriptProject; report: AiOrderingImportReport } {
+  const proposal = result.orderingProposal;
+  if (!proposal || proposal.mode === "none") return { script: structuredClone(script), report: { moved: 0, errors: [] } };
+  if (script.aiOrderingMode === "none") return { script: structuredClone(script), report: { moved: 0, errors: ["A reorganização está desativada neste roteiro."] } };
+  const currentIds = script.tiktoks.map((section) => section.id);
+  if (proposal.orderedSectionIds.length !== currentIds.length || new Set(proposal.orderedSectionIds).size !== currentIds.length || proposal.orderedSectionIds.some((id) => !currentIds.includes(id))) {
+    return { script: structuredClone(script), report: { moved: 0, errors: ["A proposta não corresponde exatamente aos TikToks atuais."] } };
+  }
+  const byId = new Map(script.tiktoks.map((section) => [section.id, section]));
+  const moved = proposal.orderedSectionIds.reduce((count, id, index) => count + (currentIds[index] === id ? 0 : 1), 0);
+  const nextScript = structuredClone(script);
+  nextScript.tiktoks = proposal.orderedSectionIds.map((id) => byId.get(id)!).map((section) => ({ ...section }));
+  nextScript.updatedAt = nowIso();
+  return { script: nextScript, report: { moved, errors: [] } };
 }

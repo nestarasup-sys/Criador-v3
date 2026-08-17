@@ -42,7 +42,7 @@ export type RoteiroBackgroundReference = {
 };
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
-  sceneGoal: string; sceneEndSeconds?: number; userInstruction: string; specificRules: string; shortLines: boolean;
+  sceneGoal: string; sceneEndSeconds?: number; userInstruction: string; specificRules: string; shortLines: boolean; orderLocked?: boolean;
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
   createdAt: string; updatedAt: string;
 };
@@ -52,6 +52,8 @@ export type ScriptParticipant = { characterId: string; active: boolean };
 export type ScriptProject = {
   id: string; title: string; generalContext: string; participants: ScriptParticipant[];
   opening?: OpeningSection; tiktoks: TikTokSection[]; createdAt: string; updatedAt: string;
+  /** Liberdade editorial da IA para sugerir ou não a ordem dos TikToks. */
+  aiOrderingMode?: "none" | "suggest" | "apply";
   /** Ausente somente em arquivos antigos; a normalização cria o snapshot automaticamente. */
   aiContext?: ScriptAiContext;
   background?: RoteiroBackgroundReference;

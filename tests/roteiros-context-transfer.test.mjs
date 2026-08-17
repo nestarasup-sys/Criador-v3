@@ -60,6 +60,8 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.equal(context.opening.sectionId, "opening-transfer");
   assert.equal(context.characters[0].profile.personality, "Local do roteiro");
   assert.deepEqual(context.project.orderedSectionIds, ["opening-transfer", "tiktok-1", "tiktok-2"]);
+  assert.equal(context.project.editorial.orderingMode, "suggest");
+  assert.deepEqual(context.project.editorial.lockedSectionIds, []);
   const text = transfer.renderAiContextText(context);
   assert.match(text, /# CONTEXTO COMPLETO DO ROTEIRO/);
   assert.match(text, /3,2 segundos/);
@@ -124,6 +126,10 @@ test("o editor possui os controles separados da base externa", async () => {
   assert.match(source, /Exportar guia/);
   assert.match(source, /calculateReactionBudget/);
   assert.match(source, /reactionBudget/);
+  assert.match(source, /Fixar posição deste TikTok/);
+  assert.match(source, /Aplicar nova ordem/);
+  assert.match(source, /Aplicar tudo/);
+  assert.match(source, /applyAiOrderingProposal/);
 });
 
 test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {
@@ -147,4 +153,39 @@ test("exporta um guia separado sem dados específicos de roteiro", async () => {
   assert.match(text, /orderingProposal/);
   assert.match(text, /Não misture descrições/);
   assert.doesNotMatch(text, /char-duque|script-transfer|TikTok 1 —/);
+});
+
+test("valida e aplica uma nova ordem de TikToks preservando os IDs", async () => {
+  const transfer = await loadTransferModule();
+  const script = scriptFixture();
+  const result = {
+    app: "GACHA_PREMIUM_ROTEIROS_AI_RESULT_V1",
+    schemaVersion: 1,
+    sourceScriptId: script.id,
+    tiktoks: [],
+    orderingProposal: {
+      mode: "suggest",
+      reason: "A consequência funciona melhor antes da apresentação final.",
+      orderedSectionIds: ["tiktok-2", "tiktok-1"],
+      changes: [{ sectionId: "tiktok-2", fromPosition: 2, toPosition: 1, reason: "Antecipar o conflito." }],
+    },
+  };
+  const validation = transfer.validateAiContextResult(result, script);
+  assert.equal(validation.valid, true);
+  assert.equal(validation.data.orderingProposal.orderedSectionIds[0], "tiktok-2");
+  const applied = transfer.applyAiOrderingProposal(script, validation.data);
+  assert.deepEqual(applied.script.tiktoks.map((section) => section.id), ["tiktok-2", "tiktok-1"]);
+  assert.equal(applied.report.moved, 2);
+});
+
+test("rejeita proposta que move TikTok fixado ou duplica IDs", async () => {
+  const transfer = await loadTransferModule();
+  const script = scriptFixture();
+  script.tiktoks[0].orderLocked = true;
+  const locked = transfer.validateAiContextResult({ app: "GACHA_PREMIUM_ROTEIROS_AI_RESULT_V1", schemaVersion: 1, sourceScriptId: script.id, tiktoks: [], orderingProposal: { mode: "suggest", orderedSectionIds: ["tiktok-2", "tiktok-1"], changes: [] } }, script);
+  assert.equal(locked.valid, false);
+  assert.ok(locked.errors.some((error) => error.includes("posição fixa")));
+  const duplicate = transfer.validateAiContextResult({ app: "GACHA_PREMIUM_ROTEIROS_AI_RESULT_V1", schemaVersion: 1, sourceScriptId: script.id, tiktoks: [], orderingProposal: { mode: "suggest", orderedSectionIds: ["tiktok-1", "tiktok-1"], changes: [] } }, script);
+  assert.equal(duplicate.valid, false);
+  assert.ok(duplicate.errors.some((error) => error.includes("mais de uma vez")));
 });
