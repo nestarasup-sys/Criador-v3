@@ -419,6 +419,26 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(canvas, /renderCacheKey\(character, instance\.expressionEmotion, instance\.expressionState, instance\)/);
 });
 
+test("protege o palco contra os docks e mantém o arraste selecionável", async () => {
+  const [page, canvas, roster, css] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioCanvas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioRoster.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /dockLeftLayout/);
+  assert.match(page, /setPointerCapture\(event\.pointerId\)/);
+  assert.match(page, /pointercancel/);
+  assert.doesNotMatch(page, /if \(nextX > \.7\) setDockSide\("left"\)/);
+  assert.match(canvas, /sceneElements/);
+  assert.match(canvas, /\.sort\(\(a, b\) => a\.item\.z - b\.item\.z\)/);
+  assert.match(roster, /Selecionar \$\{character\.name\} no elenco/);
+  assert.match(css, /\.editor:not\(\.viewMode\) \.stageViewport/);
+  assert.match(css, /\.editor:not\(\.viewMode\) \.stage \{ transform-origin: top left; \}/);
+  assert.match(css, /\.rightArea\.dockLeft \.inspectorDock \{[^}]*pointer-events: none/);
+  assert.match(css, /\.rightArea\.dockLeft \.inspectorDock > \.inspector \{[^}]*pointer-events: auto/);
+});
+
 test("ships premium color controls and non-destructive protection masks", async () => {
   const [page, characterContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

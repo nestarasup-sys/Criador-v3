@@ -76,8 +76,15 @@
 .rosterActions .studioGlyph { width: 16px; height: 16px; }
 .emptyStudio > .studioGlyph,
 .backgroundLibraryEmpty > .studioGlyph { width: 40px; height: 40px; }
-.stageViewport { position: absolute; inset: 0; width: 100%; height: 100%; display: grid; place-items: start center; overflow: hidden; touch-action: none; }
+.dockLeftLayout { --studio-dock-left: 1; }
+.rosterCompactLayout { --studio-roster-compact: 1; }
+.stageViewport { position: absolute; inset: 0; width: 100%; height: 100%; box-sizing: border-box; display: grid; place-items: start center; overflow: hidden; touch-action: none; }
+.editor:not(.viewMode) .stageViewport { padding-left: 138px; padding-right: 454px; }
+.editor:not(.viewMode).rosterCompactLayout .stageViewport { padding-right: 370px; }
+.editor:not(.viewMode).dockLeftLayout .stageViewport { padding-left: 360px; padding-right: 240px; }
+.editor:not(.viewMode).dockLeftLayout.rosterCompactLayout .stageViewport { padding-right: 150px; }
 .stage { position: relative; flex: 0 0 auto; width: 1920px; height: 1080px; overflow: hidden; touch-action: none; transform: scale(var(--studio-preview-scale,0)); transform-origin: top center; background: #f3f0f8; }
+.editor:not(.viewMode) .stage { transform-origin: top left; }
 .background { position: absolute; left:50%; top:50%; width:100%; height:100%; object-fit: cover; pointer-events: none; transform: translate(calc(-50% + var(--background-offset-x,0px) + var(--background-drag-x,0px)),calc(-50% + var(--background-offset-y,0px) + var(--background-drag-y,0px))) scale(var(--background-scale,1)); transform-origin:center; }
 .background.contain { object-fit: contain; }
 .background.backgroundEditing { pointer-events:auto; cursor:grab; }
@@ -173,8 +180,8 @@
 .rightArea.rosterAreaCompact { grid-template-columns:210px 136px; }
 .rightArea.dockLeft { left: auto; right: 14px; top: 14px; }
 .inspectorDock { min-width: 0; pointer-events: auto; transition: transform .2s ease; }
-.rightArea.dockLeft .inspectorDock { position: relative; width: auto; transform: none; }
-.rightArea.dockLeft .inspectorDock > .inspector { position: fixed; left: 138px; top: 14px; bottom: 14px; width: 210px; max-height: calc(100vh - 28px); }
+.rightArea.dockLeft .inspectorDock { position: relative; width: auto; transform: none; pointer-events: none; }
+.rightArea.dockLeft .inspectorDock > .inspector { position: fixed; left: 138px; top: 14px; bottom: 14px; width: 210px; max-height: calc(100vh - 28px); pointer-events: auto; }
 .inspector, .roster { min-height: 0; pointer-events: auto; border: 1px solid rgba(255,255,255,.76); border-radius: 17px; background: rgba(250,248,253,.94); box-shadow: 0 14px 35px rgba(20,13,30,.16); backdrop-filter: blur(14px); }
 .inspector { align-self: start; max-height: calc(100vh - 28px); overflow-y: auto; padding: 14px; scrollbar-width: thin; }
 .dockLeft .inspector { max-height: calc(100vh - 28px); }
@@ -247,6 +254,10 @@
   .rightArea { grid-template-columns: 190px 188px; }
   .rosterCard { grid-template-columns: 50px 1fr 14px; }
   .rosterCard img { width: 50px; }
+  .editor:not(.viewMode) .stageViewport { padding-left: 132px; padding-right: 402px; }
+  .editor:not(.viewMode).rosterCompactLayout .stageViewport { padding-right: 350px; }
+  .editor:not(.viewMode).dockLeftLayout .stageViewport { padding-left: 328px; padding-right: 202px; }
+  .editor:not(.viewMode).dockLeftLayout.rosterCompactLayout .stageViewport { padding-right: 150px; }
 }
 @media (max-width: 720px) {
   .libraryHeader { align-items: flex-start; flex-direction: column; }
@@ -265,6 +276,10 @@
   .rightArea.dockLeft .inspectorDock > .inspector { left:106px; top:78px; bottom:14px; width:min(180px,42vw); max-height:calc(100vh - 96px); }
   .inspector { max-height: calc(100vh - 96px); }
   .expressionGrid { grid-template-columns: 1fr; }
+  .editor:not(.viewMode) .stageViewport { padding-left: 96px; padding-right: 350px; }
+  .editor:not(.viewMode).rosterCompactLayout .stageViewport { padding-right: 326px; }
+  .editor:not(.viewMode).dockLeftLayout .stageViewport { padding-left: 300px; padding-right: 202px; }
+  .editor:not(.viewMode).dockLeftLayout.rosterCompactLayout .stageViewport { padding-right: 150px; }
 }
 
 /* Redesign visual kawaii do Studio — sem alterar estrutura ou cena exportável */

@@ -550,15 +550,17 @@ export default function StudioPage() {
           animationFrame = 0;
           element.style.setProperty("--drag-x", `${(nextX - x) * STUDIO_SCENE_WIDTH}px`);
           element.style.setProperty("--drag-y", `${(nextY - y) * STUDIO_SCENE_HEIGHT}px`);
-          if (nextX > .7) setDockSide("left");
-          else if (nextX < .45) setDockSide("right");
         });
       }
     };
+    let stopped = false;
     const stop = () => {
+      if (stopped) return;
+      stopped = true;
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
       updateElement(kind, id, { x: nextX, y: nextY }, false);
       window.requestAnimationFrame(() => {
         element.style.removeProperty("--drag-x");
@@ -567,8 +569,10 @@ export default function StudioPage() {
       });
     };
     element.classList.add(styles.dragging);
+    if (typeof element.setPointerCapture === "function") element.setPointerCapture(event.pointerId);
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
   }
 
   function updateElement(kind: NonNullable<Selection>["kind"], id: string, patch: Record<string, unknown>, history = true) {
@@ -914,7 +918,7 @@ export default function StudioPage() {
   const poseDisabled = selectedPose.variants.length < 2;
   const outfitAdjustDisabled = !selectedPose.variant;
   return (
-    <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
+    <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""} ${dockSide === "left" ? styles.dockLeftLayout : ""} ${rosterCompact ? styles.rosterCompactLayout : ""}`}>
       <StudioCanvas
         stageRef={stageRef}
         studio={studio}

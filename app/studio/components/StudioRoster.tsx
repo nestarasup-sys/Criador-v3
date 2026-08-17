@@ -33,7 +33,7 @@ export function StudioRoster({ rosterIds, charactersById, rendered, renderedFall
         ?? renderedFallback[character.id]
         ?? character.photoUrl
         ?? character.photoDataUrl;
-      return <button key={id} className={`${styles.rosterCard} ${active ? styles.activeRoster : ""}`} onClick={() => onSelectCharacter(id)}>{rosterSource ? <img src={rosterSource} alt="" /> : <span>{character.model === "feminino" ? "F" : "M"}</span>}<strong>{character.name}</strong><i className={instance ? styles.onStage : ""}>{instance ? "●" : "+"}</i></button>;
+      return <button key={id} type="button" aria-label={`Selecionar ${character.name} no elenco`} className={`${styles.rosterCard} ${active ? styles.activeRoster : ""}`} onClick={() => onSelectCharacter(id)}>{rosterSource ? <img src={rosterSource} alt="" /> : <span>{character.model === "feminino" ? "F" : "M"}</span>}<strong>{character.name}</strong><i className={instance ? styles.onStage : ""}>{instance ? "●" : "+"}</i></button>;
     })}</div>
   </section>;
 }
