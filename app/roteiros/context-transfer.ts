@@ -1,10 +1,12 @@
 import { createReactionBlock, nowIso, PROTECTED_RULES } from "./defaults";
 import type { GlobalRule, NarrativeProfile, OpeningSection, PremiumCharacter, ReactionBlock, ReactionBlockType, ScriptProject, TikTokSection, TikTokVideoReference } from "./types";
+import { AI_CONTEXT_MIN_BLOCK_SECONDS, calculateReactionBudget } from "./generation-budget";
+
+export { AI_CONTEXT_MIN_BLOCK_SECONDS } from "./generation-budget";
 
 export const AI_CONTEXT_EXPORT_APP = "GACHA_PREMIUM_ROTEIROS_AI_CONTEXT_V1" as const;
 export const AI_CONTEXT_RESULT_APP = "GACHA_PREMIUM_ROTEIROS_AI_RESULT_V1" as const;
 export const AI_CONTEXT_SCHEMA_VERSION = 1 as const;
-export const AI_CONTEXT_MIN_BLOCK_SECONDS = 3.2;
 
 export type AiContextDuration = {
   totalVideoDurationSeconds: number | null;
@@ -51,6 +53,13 @@ export type AiContextSection = {
   userInstruction: string;
   shortLines: boolean;
   video?: TikTokVideoReference;
+  durationSeconds: number | null;
+  reactionStartSeconds: number | null;
+  reactionWindowSeconds: number | null;
+  recommendedBlockCount: number | null;
+  recommendedBlockRange: { min: number; max: number } | null;
+  allowPostVideoContinuation: true;
+  budgetWarnings: string[];
   existingBlocks: ReactionBlock[];
   emptySlots: AiContextEmptySlot[];
 };
@@ -144,6 +153,7 @@ function blockIsEmpty(block: ReactionBlock) {
 
 function sectionToContext(section: TikTokSection | OpeningSection, kind: "opening" | "tiktok", order: number): AiContextSection {
   const existingBlocks = structuredClone(section.reactionBlocks);
+  const budget = calculateReactionBudget("video" in section ? section.video?.durationSeconds : undefined, section.sceneEndSeconds);
   return {
     sectionId: section.id,
     order,
@@ -157,6 +167,13 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     userInstruction: section.userInstruction,
     shortLines: section.shortLines,
     ...('video' in section && section.video ? { video: structuredClone(section.video) } : {}),
+    durationSeconds: budget.durationSeconds,
+    reactionStartSeconds: budget.reactionStartSeconds,
+    reactionWindowSeconds: budget.reactionWindowSeconds,
+    recommendedBlockCount: budget.recommendedBlockCount,
+    recommendedBlockRange: budget.recommendedBlockRange,
+    allowPostVideoContinuation: budget.allowPostVideoContinuation,
+    budgetWarnings: budget.warnings,
     existingBlocks,
     emptySlots: existingBlocks.filter(blockIsEmpty).map((block) => ({ blockId: block.id, characterId: block.characterId, type: block.type })),
   };
@@ -293,6 +310,11 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Descrição: ${section.description || "Não informada."}`,
       `Duração do vídeo: ${section.video?.durationSeconds === undefined ? "não disponível" : `${section.video.durationSeconds} segundos`}`,
       `Cena da descrição termina no segundo: ${section.sceneEndSeconds === undefined ? "não definido" : section.sceneEndSeconds}`,
+      `Início das falas/pensamentos: ${section.reactionStartSeconds === null ? "não definido" : `${section.reactionStartSeconds} segundos`}`,
+      `Janela disponível para reações: ${section.reactionWindowSeconds === null ? "não calculável" : `${section.reactionWindowSeconds} segundos`}`,
+      `Blocos recomendados: ${section.recommendedBlockCount === null ? "não calculável" : `${section.recommendedBlockRange?.min}–${section.recommendedBlockRange?.max} (alvo ${section.recommendedBlockCount})`}`,
+      `Continuação depois do vídeo: ${section.allowPostVideoContinuation ? "permitida quando necessária, sem gerar blocos extras desnecessários" : "não permitida"}`,
+      ...(section.budgetWarnings.length ? [`Avisos de tempo: ${section.budgetWarnings.join(" | ")}`] : []),
       `Objetivo: ${section.sceneGoal || "Não informado."}`,
       `Linha temporal: ${section.timeline}`,
       `Regras específicas: ${section.specificRules || "Nenhuma."}`,

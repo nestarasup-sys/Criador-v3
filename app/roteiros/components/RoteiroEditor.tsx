@@ -7,6 +7,8 @@ import { buildAiCharacters, getScriptAiContext } from "../ai-context";
 import { createNarrativeProfile, nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
 import { applyAiContextResult, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
+import { renderAiGuideText } from "../ai-guide";
+import { calculateReactionBudget } from "../generation-budget";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
@@ -45,6 +47,12 @@ function formatTikTokDuration(seconds: number | undefined) {
 function formatSceneEnd(seconds: number | undefined) {
   if (!Number.isFinite(seconds) || seconds === undefined) return "fim não definido";
   return `segundo ${seconds.toFixed(2).replace(".", ",")}`;
+}
+
+function formatReactionBudget(section: TikTokSection) {
+  const budget = calculateReactionBudget(section.video?.durationSeconds, section.sceneEndSeconds);
+  if (budget.recommendedBlockCount === null) return "Preencha a duração e o início das reações para calcular os blocos.";
+  return `${budget.reactionWindowSeconds?.toFixed(2).replace(".", ",")}s para reações · recomendado: ${budget.recommendedBlockRange?.min}–${budget.recommendedBlockRange?.max} blocos`;
 }
 
 function exportPathSegment(value: string, fallback: string) {
@@ -310,6 +318,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
             <label className={styles.field}><span>Título opcional</span><input value={section.title} maxLength={120} onChange={(event) => patch({ title: event.target.value })} placeholder="Ex: O passado da FYN" /></label>
             <label className={styles.field}><span>Cena da descrição termina (segundos)</span><input type="number" min="0" max="86400" step="0.01" value={section.sceneEndSeconds ?? ""} onChange={(event) => { const value = event.target.value; patch({ sceneEndSeconds: value === "" ? undefined : Math.max(0, Number(value)) }); }} placeholder="Ex.: 5 ou 5.5" /></label>
           </div>}
+          {!opening && <div className={styles.reactionBudget}><strong>ORÇAMENTO DE REAÇÕES</strong><span>{formatReactionBudget(section)}</span><small>As reações começam depois da descrição. Continuar após o vídeo é permitido quando necessário, mas a IA deve evitar blocos extras.</small></div>}
           {!opening && <div className={styles.videoUploadBox}>
             {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
@@ -481,6 +490,10 @@ export default function RoteiroEditor() {
     exportTextFile(`EXECUTE_E_GERE_JSON_${exportPathSegment(script.title, "ROTEIRO")}.md`, renderAiContextText(context));
     setExportMessage(`Contexto exportado com ${context.tiktoks.length + (context.opening ? 1 : 0)} seção(ões), ${context.characters.length} personagem(ns) e duração total ${context.project.duration.totalVideoDurationSeconds === null ? "não disponível" : `${context.project.duration.totalVideoDurationSeconds.toFixed(2)}s`}.`);
   };
+  const exportAiGuide = () => {
+    exportTextFile("GUIA_DE_GERACAO_E_EDICAO_DE_ROTEIROS_NYMI.md", renderAiGuideText());
+    setExportMessage("Guia de geração exportado.");
+  };
   const importAiContext = async (file?: File) => {
     if (!file) return;
     setExportLoading("context-import"); setExportMessage("");
@@ -605,6 +618,7 @@ export default function RoteiroEditor() {
             <strong>ARQUIVO DA BASE</strong>
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
+            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={exportAiGuide}>✦ Exportar guia</button>
             <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importAiContext(file); }} />
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar base pronta</button>
             <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>

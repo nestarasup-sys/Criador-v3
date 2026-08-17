@@ -4,9 +4,9 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import test from "node:test";
 
-async function loadTransferModule() {
+async function loadModule(entryPoint) {
   const result = await build({
-    entryPoints: [resolve("app/roteiros/context-transfer.ts")],
+    entryPoints: [resolve(entryPoint)],
     bundle: true,
     format: "esm",
     platform: "node",
@@ -14,6 +14,10 @@ async function loadTransferModule() {
     logLevel: "silent",
   });
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString("base64")}`);
+}
+
+async function loadTransferModule() {
+  return loadModule("app/roteiros/context-transfer.ts");
 }
 
 function profile(characterId, personality) {
@@ -48,12 +52,19 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.equal(context.app, "GACHA_PREMIUM_ROTEIROS_AI_CONTEXT_V1");
   assert.equal(context.project.duration.totalVideoDurationSeconds, 15);
   assert.equal(context.instructions.minimumBlockSeconds, 3.2);
+  assert.deepEqual(context.tiktoks[0].durationSeconds, 15);
+  assert.deepEqual(context.tiktoks[0].reactionStartSeconds, 7);
+  assert.deepEqual(context.tiktoks[0].reactionWindowSeconds, 8);
+  assert.deepEqual(context.tiktoks[0].recommendedBlockCount, 3);
+  assert.deepEqual(context.tiktoks[0].recommendedBlockRange, { min: 2, max: 4 });
   assert.equal(context.opening.sectionId, "opening-transfer");
   assert.equal(context.characters[0].profile.personality, "Local do roteiro");
   assert.deepEqual(context.project.orderedSectionIds, ["opening-transfer", "tiktok-1", "tiktok-2"]);
   const text = transfer.renderAiContextText(context);
   assert.match(text, /# CONTEXTO COMPLETO DO ROTEIRO/);
   assert.match(text, /3,2 segundos/);
+  assert.match(text, /Janela disponível para reações: 8 segundos/);
+  assert.match(text, /Blocos recomendados: 2–4 \(alvo 3\)/);
   assert.match(text, /REGRAS ESTRUTURAIS PROTEGIDAS/);
   assert.match(text, /Falas são ouvidas/);
   assert.match(text, /Não pergunte o que deve ser feito/);
@@ -110,4 +121,30 @@ test("o editor possui os controles separados da base externa", async () => {
   assert.doesNotMatch(source, /⇧ Importar respostas da IA/);
   assert.match(source, /exportTextFile/);
   assert.match(source, /createRoteiroBackup/);
+  assert.match(source, /Exportar guia/);
+  assert.match(source, /calculateReactionBudget/);
+  assert.match(source, /reactionBudget/);
+});
+
+test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {
+  const budget = await loadModule("app/roteiros/generation-budget.ts");
+  assert.deepEqual(budget.calculateReactionBudget(20, 10), {
+    durationSeconds: 20,
+    reactionStartSeconds: 10,
+    reactionWindowSeconds: 10,
+    recommendedBlockCount: 4,
+    recommendedBlockRange: { min: 3, max: 5 },
+    allowPostVideoContinuation: true,
+    warnings: [],
+  });
+});
+
+test("exporta um guia separado sem dados específicos de roteiro", async () => {
+  const guide = await loadModule("app/roteiros/ai-guide.ts");
+  const text = guide.renderAiGuideText();
+  assert.match(text, /GUIA DE GERAÇÃO E EDIÇÃO DE ROTEIROS/);
+  assert.match(text, /reactionStartSeconds/);
+  assert.match(text, /orderingProposal/);
+  assert.match(text, /Não misture descrições/);
+  assert.doesNotMatch(text, /char-duque|script-transfer|TikTok 1 —/);
 });
