@@ -63,6 +63,7 @@ export type AiContextSection = {
   budgetWarnings: string[];
   existingBlocks: ReactionBlock[];
   emptySlots: AiContextEmptySlot[];
+  discardedBlockCount: number;
 };
 
 export type AiContextExportDocument = {
@@ -167,7 +168,8 @@ const instructions: AiContextInstructions = {
     "Preserve scriptId, sectionId e characterId.",
     "Retorne os blocos na ordem em que devem acontecer.",
     "Use somente speech ou thought; ambos devem conter texto.",
-    "Não altere vídeos, descrições, regras, fichas ou a ordem dos TikToks.",
+    "Não altere vídeos, descrições, regras, fichas ou a ordem dos TikToks, salvo se orderingProposal estiver sendo usado.",
+    "Blocos vazios, apagados ou órfãos não fazem parte da base exportada e não devem ser recriados por causa de seus IDs.",
     "Use as fichas e regras somente como contexto, sem repetir a ficha artificialmente.",
   ],
 };
@@ -176,8 +178,14 @@ function blockIsEmpty(block: ReactionBlock) {
   return !block.text.trim();
 }
 
-function sectionToContext(section: TikTokSection | OpeningSection, kind: "opening" | "tiktok", order: number): AiContextSection {
-  const existingBlocks = structuredClone(section.reactionBlocks);
+function sectionToContext(section: TikTokSection | OpeningSection, kind: "opening" | "tiktok", order: number, participantIds: Set<string>): AiContextSection {
+  // A duplicação de um roteiro preserva o array de blocos. A UI também pode
+  // deixar placeholders vazios quando o usuário apaga seu conteúdo. Esses
+  // itens não são contexto útil e não podem chegar à base externa como se
+  // fossem blocos reais para a IA preencher.
+  const exportableBlocks = section.reactionBlocks.filter((block) => !blockIsEmpty(block) && participantIds.has(block.characterId));
+  const existingBlocks = structuredClone(exportableBlocks);
+  const discardedBlockCount = section.reactionBlocks.length - exportableBlocks.length;
   const budget = calculateReactionBudget("video" in section ? section.video?.durationSeconds : undefined, section.sceneEndSeconds);
   return {
     sectionId: section.id,
@@ -201,7 +209,10 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     allowPostVideoContinuation: budget.allowPostVideoContinuation,
     budgetWarnings: budget.warnings,
     existingBlocks,
-    emptySlots: existingBlocks.filter(blockIsEmpty).map((block) => ({ blockId: block.id, characterId: block.characterId, type: block.type })),
+    // Mantido por compatibilidade de schema, mas nunca enviamos IDs de
+    // placeholders. A IA pode escolher livremente a quantidade de blocos.
+    emptySlots: [],
+    discardedBlockCount,
   };
 }
 
@@ -239,7 +250,7 @@ export function createAiContextExport(script: ScriptProject, characters: Premium
       }),
     } as AiContextCharacter;
   });
-  const opening = script.opening ? sectionToContext(script.opening, "opening", 0) : null;
+  const opening = script.opening ? sectionToContext(script.opening, "opening", 0, participantIds) : null;
   return {
     app: AI_CONTEXT_EXPORT_APP,
     schemaVersion: AI_CONTEXT_SCHEMA_VERSION,
@@ -259,7 +270,7 @@ export function createAiContextExport(script: ScriptProject, characters: Premium
     characters: contextCharacters.filter((character) => participantIds.has(character.characterId)),
     rules: structuredClone(localRules),
     opening,
-    tiktoks: script.tiktoks.map((section, index) => sectionToContext(section, "tiktok", index + 1)),
+    tiktoks: script.tiktoks.map((section, index) => sectionToContext(section, "tiktok", index + 1, participantIds)),
     responseContract: {
       app: AI_CONTEXT_RESULT_APP,
       preserveScriptId: true,
@@ -357,7 +368,8 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Vídeo: ${section.video ? `${section.video.name} — ${section.video.storedPath}` : "Nenhum vídeo informado."}`,
       `Posição fixa: ${section.orderLocked ? "sim" : "não"}`,
       `Blocos existentes: ${JSON.stringify(section.existingBlocks)}`,
-      `Espaços vazios: ${JSON.stringify(section.emptySlots)}`,
+      `Blocos descartados por estarem vazios ou órfãos: ${section.discardedBlockCount}`,
+      "Espaços vazios: nenhum ID de placeholder é exportado; crie somente os blocos necessários.",
       "",
     ]),
     "## FORMATO OBRIGATÓRIO DA RESPOSTA",

@@ -62,6 +62,9 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.deepEqual(context.project.orderedSectionIds, ["opening-transfer", "tiktok-1", "tiktok-2"]);
   assert.equal(context.project.editorial.orderingMode, "suggest");
   assert.deepEqual(context.project.editorial.lockedSectionIds, []);
+  assert.deepEqual(context.tiktoks[0].existingBlocks.map((item) => item.id), ["manual-1"]);
+  assert.deepEqual(context.tiktoks[0].emptySlots, []);
+  assert.equal(context.tiktoks[0].discardedBlockCount, 1);
   const text = transfer.renderAiContextText(context);
   assert.match(text, /# CONTEXTO COMPLETO DO ROTEIRO/);
   assert.match(text, /3,2 segundos/);
@@ -73,6 +76,31 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.match(text, /arquivo baixável chamado `RESPOSTA_<scriptId>\.json`/);
   assert.match(text, /GACHA_PREMIUM_ROTEIROS_AI_RESULT_V1/);
   assert.match(text, /DADOS ESTRUTURADOS COMPLETOS/);
+  assert.match(text, /Blocos descartados por estarem vazios ou órfãos: 1/);
+  assert.match(text, /nenhum ID de placeholder é exportado/);
+});
+
+test("não exporta placeholders, blocos sem texto ou blocos de personagens removidos", async () => {
+  const transfer = await loadTransferModule();
+  const script = scriptFixture();
+  script.opening.reactionBlocks = [
+    block("opening-empty", "char-duque", "auto", ""),
+    block("opening-emotion-only", "char-duque", "thought", "   "),
+    block("opening-orphan", "char-removido", "speech", "Não deveria sair"),
+    block("opening-real", "char-duque", "thought", "Agora sim"),
+  ];
+  script.tiktoks[0].reactionBlocks = [
+    block("deleted-placeholder", "char-fyn", "auto", ""),
+    block("real-block", "char-fyn", "speech", "Só este bloco permanece"),
+  ];
+
+  const context = transfer.createAiContextExport(script, [{ id: "char-duque", name: "Duque", model: "masculino" }, { id: "char-fyn", name: "FYN", model: "feminino" }], [], []);
+  assert.deepEqual(context.opening.existingBlocks.map((item) => item.id), ["opening-real"]);
+  assert.equal(context.opening.discardedBlockCount, 3);
+  assert.deepEqual(context.tiktoks[0].existingBlocks.map((item) => item.id), ["real-block"]);
+  assert.equal(context.tiktoks[0].discardedBlockCount, 1);
+  assert.equal(JSON.stringify(context).includes("deleted-placeholder"), false);
+  assert.equal(JSON.stringify(context).includes("opening-orphan"), false);
 });
 
 test("valida e aplica resposta externa convertendo legado silencioso em pensamento", async () => {
