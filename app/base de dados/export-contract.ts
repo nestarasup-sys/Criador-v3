@@ -82,32 +82,69 @@ export function buildBaseDadosExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia — gerar roteiro importável para o Nymi Gacha
+  return `# Guia operacional — criar roteiro importável para o Nymi Gacha
 
-## Tarefa
+## Objetivo
 
-Você receberá um TXT com vídeos e personagens. Gere imediatamente um JSON válido para ser importado pelo botão **Importar roteiro da IA** do Nymi Gacha.
+Você receberá um TXT exportado da **Base de dados** com vídeos e personagens. Sua tarefa é escolher os vídeos úteis, organizar a ordem e criar falas e pensamentos curtos, naturais e coerentes. No final, retorne somente um JSON compatível com o botão **Importar roteiro da IA**.
 
-## Regras obrigatórias
+## Fonte de verdade e isolamento
 
-1. Retorne somente JSON válido, sem Markdown, comentários ou explicações fora do JSON.
-2. Use somente IDs de vídeos e personagens presentes na base recebida.
-3. Você pode escolher qualquer quantidade de vídeos e alterar livremente a ordem.
-4. Nunca repita o mesmo vídeo no campo \`videos\`.
-5. Use somente os tipos de bloco \`speech\` e \`thought\`.
-6. Não invente caminhos, durações, descrições, personagens ou IDs.
-7. O app local é a fonte de verdade para caminho, duração, descrição e fim da cena.
-8. Falas e pensamentos de um vídeo devem começar no tempo do fim da cena descrita ou depois dele.
-9. Um pensamento é privado; uma fala é audível. Não use reações silenciosas.
-10. O campo \`sceneEndSeconds\` não precisa ser enviado: o app o preenche localmente a partir da Base de Dados.
+- Use somente os dados presentes no TXT recebido nesta solicitação.
+- Use os IDs exatos dos vídeos e personagens. Nunca invente IDs.
+- A descrição do vídeo atual é a fonte principal do que pode acontecer naquela cena.
+- A ficha narrativa serve para personalidade, história, relações, estilo de fala e regras do personagem. Ela não autoriza inventar acontecimentos, falas, motivos ou reações que não tenham relação com a descrição do vídeo atual.
+- Cada vídeo é uma cena separada. Não misture a descrição, ações ou reações de um vídeo com outro.
+- Caminho absoluto, duração total, descrição e fim da cena pertencem à Base de dados local. Não os reescreva nem tente substituí-los no JSON.
 
-## Como escolher vídeos
+## Escolha e ordem dos vídeos
 
-Cada vídeo possui um ID, uma descrição, o tempo total e o segundo em que a descrição termina. Escolha os vídeos mais úteis para a narrativa e devolva a ordem em \`videos\`. O app copiará automaticamente os dados locais completos pelo ID.
+- Você pode escolher qualquer quantidade de vídeos, inclusive não usar vídeos que não ajudem a narrativa.
+- Você pode reorganizar livremente a ordem usando \`order\`.
+- Um mesmo vídeo pode aparecer no máximo uma vez.
+- Não envie caminhos de arquivo, nomes de arquivo como referência ou duração inventada: use apenas \`videoId\`.
 
-## Como escolher personagens
+## Orçamento de falas e pensamentos
 
-Inclua em \`characters\` somente personagens presentes no TXT e use o ID exato. O campo \`role\` é opcional e serve apenas para explicar a função narrativa; não invente personagens que não estejam na base.
+Não crie blocos em excesso. Para cada vídeo, calcule mentalmente:
+
+\`janelaDeReacao = max(0, tempoTotalDoVideo - tempoQueTerminaACenaDaDescricao)\`
+
+Use como limite superior aproximado:
+
+- janela de 0 segundos: nenhum bloco;
+- até 5 segundos: 1 ou 2 blocos;
+- de 6 a 10 segundos: 2 a 4 blocos;
+- de 11 a 20 segundos: 4 a 6 blocos;
+- acima de 20 segundos: no máximo 8 blocos.
+
+Esses números são limites, não metas. Prefira menos blocos quando a cena tiver pouca informação. Não preencha espaço vazio apenas para fazer todos os personagens falarem. Uma reação curta e boa é melhor que uma conversa longa e inventada.
+
+## Tempo das reações
+
+- Não gere fala nem pensamento antes do fim da cena descrita.
+- Se a descrição termina no segundo 8, o primeiro bloco deve começar no segundo 8 ou depois.
+- Se \`startAt\` for omitido, o app usará automaticamente o fim da cena.
+- O tempo será contado em segundos desde o início do vídeo.
+- O app preencherá localmente o campo \`sceneEndSeconds\`; não envie esse campo.
+- O roteiro pode continuar com falas depois do fim da descrição, desde que ainda faça sentido dentro da cena.
+
+## Qualidade do diálogo
+
+- Cada bloco deve reagir a uma ação, detalhe ou consequência descrita no vídeo atual.
+- Uma fala deve ter, de preferência, 4 a 16 palavras e no máximo duas frases curtas.
+- Um pensamento deve ter, de preferência, 4 a 20 palavras e no máximo duas frases curtas.
+- Nem todos os personagens precisam participar de cada vídeo.
+- Não faça todos comentarem a mesma coisa com palavras diferentes.
+- Não crie ciúme, culpa, medo, briga, revelação, romance ou tensão se isso não estiver sustentado pela descrição e pelas fichas.
+- Não repita a descrição como narração; mostre uma reação àquilo que aconteceu.
+- Não faça exposição longa da história do personagem.
+- Fala é audível e pode ser respondida por outro personagem. Pensamento é privado e não pode ser respondido diretamente como se tivesse sido ouvido.
+- Use somente \`speech\` e \`thought\`. Não use \`silent\`, narração, ação ou outros tipos.
+
+## Abertura e conteúdo fora dos vídeos
+
+O formato \`NYMI_IMPORTABLE_SCRIPT_V1\` cria os TikToks e seus blocos. Não inclua uma seção de abertura em Markdown, texto teatral, comentários ou explicações fora do JSON. Se uma abertura for necessária, ela será editada separadamente no app.
 
 ## Formato obrigatório
 
@@ -126,37 +163,51 @@ Inclua em \`characters\` somente personagens presentes no TXT e use o ID exato. 
       "type": "speech",
       "characterId": "personagem-01",
       "videoId": "video-01",
-      "text": "Texto da fala",
-      "startAt": 10
+      "text": "Ela está bem?",
+      "startAt": 8
     },
     {
       "type": "thought",
       "characterId": "personagem-01",
       "videoId": "video-01",
-      "text": "Texto do pensamento"
+      "text": "Ela ainda faz isso.",
+      "startAt": 11
     }
   ]
 }
 \`\`\`
 
-## Campos
+## Campos do JSON
 
 - \`format\`: sempre \`NYMI_IMPORTABLE_SCRIPT_V1\`.
 - \`title\`: título do novo roteiro.
-- \`videos\`: vídeos selecionados uma única vez, com \`videoId\` e \`order\`.
-- \`characters\`: personagens participantes, com \`characterId\` e função opcional.
-- \`blocks\`: falas e pensamentos associados a um personagem e vídeo.
-- \`startAt\`: opcional, em segundos. Se omitido, o app usará o fim da cena descrita.
+- \`videos\`: lista sem repetição, com \`videoId\` existente e \`order\` inteiro positivo.
+- \`characters\`: somente personagens existentes no TXT, com \`characterId\` e função opcional.
+- \`blocks\`: somente falas e pensamentos realmente necessários.
+- \`characterId\`: personagem que fala ou pensa.
+- \`videoId\`: vídeo ao qual a reação pertence.
+- \`text\`: texto curto, preenchido e em português brasileiro.
+- \`startAt\`: opcional; quando informado, deve ser um número não negativo e não pode ser anterior ao fim da descrição.
 
-## Exemplos inválidos
+## Exemplos de respostas ruins
 
 Não faça isto:
 
 \`\`\`json
-{ "format": "NYMI_IMPORTABLE_SCRIPT_V1", "videos": [{ "videoId": "video-inventado", "order": 1 }, { "videoId": "video-inventado", "order": 2 }] }
+{
+  "videos": [
+    { "videoId": "video-01", "order": 1 },
+    { "videoId": "video-01", "order": 2 }
+  ],
+  "blocks": [
+    { "type": "silent", "characterId": "inventado", "videoId": "video-01", "text": "", "startAt": 2 }
+  ]
+}
 \`\`\`
 
-Esse exemplo é inválido porque inventa um ID, repete o vídeo e não contém o contrato completo. Também é inválido enviar caminhos locais, duração alterada, tipo \`silent\`, personagem que não está no TXT ou \`startAt\` negativo.
+Esse exemplo é inválido porque repete o vídeo, inventa personagem, usa um tipo proibido e começa antes do fim da descrição. Também é ruim gerar quinze blocos para um vídeo de 20 segundos cuja descrição termina no segundo 8 quando três ou quatro reações curtas seriam suficientes.
 
-O app ignora qualquer caminho ou duração que você tente enviar e resolve esses dados na Base de Dados local.\n`;
+## Regra final
+
+Planeje a seleção e o orçamento internamente, mas retorne somente o JSON final. Não inclua Markdown, títulos, análise, ficha do Criador, caminhos absolutos, duração alterada ou explicações fora do JSON.`;
 }

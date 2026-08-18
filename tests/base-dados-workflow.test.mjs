@@ -29,6 +29,12 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
     assert.match(text, /História do Duque/);
     assert.doesNotMatch(text, /FICHA COMPLETA DO CRIADOR/);
     assert.doesNotMatch(text, /selections/);
+    const guide = loaded.buildBaseDadosGuide();
+    assert.match(guide, /Orçamento de falas e pensamentos/);
+    assert.match(guide, /janelaDeReacao/);
+    assert.match(guide, /Não crie blocos em excesso/);
+    assert.match(guide, /NYMI_IMPORTABLE_SCRIPT_V1/);
+    assert.match(guide, /Não inclua uma seção de abertura/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
