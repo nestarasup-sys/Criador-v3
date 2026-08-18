@@ -107,6 +107,17 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
 }
 
+export async function importBaseDadosVideoIntoRoteiro(scriptId: string, tiktokId: string, videoId: string) {
+  const response = await localDataFetch("/roteiros/import-base-video", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scriptId, tiktokId, videoId }),
+  });
+  const result = await response.json().catch(() => ({})) as { error?: string; video?: TikTokVideoReference };
+  if (!response.ok || !result.video) throw new Error(result.error || "Não foi possível copiar o vídeo da Base de dados para o roteiro.");
+  return result.video;
+}
+
 export async function uploadRoteiroBackground(scriptId: string, file: File) {
   const response = await localDataFetch(`/roteiros/backgrounds/${encodeURIComponent(scriptId)}`, {
     method: "POST", headers: { "Content-Type": file.type || "image/png", ...localMeta({ name: file.name, contentType: file.type || "image/png" }) }, body: file,

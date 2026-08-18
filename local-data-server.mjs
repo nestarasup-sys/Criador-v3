@@ -50,6 +50,16 @@ function roteiroVideoExportRoot() {
 function roteiroCharacterExportRoot() {
   return join(ROTEIRO_EXPORT_ASSETS_ROOT, "characters", "GACHA MAKER PERSONAGENS");
 }
+const ROTEIRO_VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
+async function findRoteiroVideoFile(scriptId, tiktokId) {
+  const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
+  for (const extension of ROTEIRO_VIDEO_EXTENSIONS) {
+    const candidate = join(folder, `${tiktokId}${extension}`);
+    if (!inside(ROTEIROS_VIDEOS_ROOT, candidate)) throw new Error("Origem do vídeo inválida");
+    try { await stat(candidate); return candidate; } catch (error) { if (error?.code !== "ENOENT") throw error; }
+  }
+  throw Object.assign(new Error("Vídeo não encontrado"), { code: "ENOENT" });
+}
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const STATE_PATH = join(ROOT, "state.json");
@@ -477,7 +487,7 @@ async function route(request, response) {
     sendJson(response, request, 200, { ok: true, token: SESSION_TOKEN, expires: "process" });
     return;
   }
-  const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|backgrounds\/|export-videos$|export-background$|export-text$|export-characters\/|open-folder$)/.test(url.pathname);
+  const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|backgrounds\/|export-videos$|export-background$|export-text$|export-characters\/|open-folder$|import-base-video$)/.test(url.pathname);
   if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   if (!localRoteirosExportRoute && await roteirosService.handle(request, response, url, corsHeaders)) return;
   if (request.method === "GET" && url.pathname === "/health") {
@@ -625,6 +635,37 @@ async function route(request, response) {
     return;
   }
 
+  if (request.method === "POST" && url.pathname === "/roteiros/import-base-video") {
+    const body = await requestJson(request);
+    const scriptId = safeId(body?.scriptId);
+    const tiktokId = safeId(body?.tiktokId);
+    const videoId = safeId(body?.videoId);
+    const sourceVideo = baseDadosService.getVideo(videoId);
+    if (!sourceVideo) throw Object.assign(new Error("Vídeo da Base de dados não encontrado."), { status: 404 });
+    const extension = extname(sourceVideo.fileName).toLowerCase() || ".mp4";
+    if (!VIDEO_MIME_TYPES.has(sourceVideo.contentType) || ![".mp4", ".webm", ".mov"].includes(extension)) throw new Error("Formato de vídeo não suportado para importação.");
+    const source = join(BASE_DADOS_ROOT, "videos", sourceVideo.fileName);
+    const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
+    const target = join(folder, `${tiktokId}${extension}`);
+    if (!inside(BASE_DADOS_ROOT, source) || !inside(ROTEIROS_VIDEOS_ROOT, target)) throw new Error("Origem ou destino do vídeo inválido.");
+    await stat(source);
+    await mkdir(folder, { recursive: true });
+    await copyFile(source, target);
+    sendJson(response, request, 200, {
+      ok: true,
+      video: {
+        name: sourceVideo.originalName,
+        storedPath: `roteiros/videos/${scriptId}/${tiktokId}${extension}`,
+        url: `http://${HOST}:${PORT}/roteiros/videos/${scriptId}/${tiktokId}`,
+        contentType: sourceVideo.contentType,
+        size: sourceVideo.size,
+        durationSeconds: sourceVideo.durationSeconds,
+        updatedAt: new Date().toISOString(),
+      },
+    });
+    return;
+  }
+
   const roteiroVideoMatch = url.pathname.match(/^\/roteiros\/videos\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
   if (roteiroVideoMatch && request.method === "POST") {
     const scriptId = safeId(roteiroVideoMatch[1]);
@@ -634,18 +675,20 @@ async function route(request, response) {
     assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo do TikTok precisa ser MP4, WebM ou MOV.");
     const fileName = String(metadata.name || "video.mp4");
     if (!/\.(?:mp4|webm|mov)$/i.test(fileName)) throw new Error("O nome do vídeo precisa terminar em .mp4, .webm ou .mov.");
+    const extension = extname(fileName).toLowerCase();
     const body = await requestBody(request, BODY_LIMITS.video);
     if (!body.length) throw new Error("Vídeo vazio");
     const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
-    const filePath = join(folder, `${tiktokId}.mp4`);
+    const filePath = join(folder, `${tiktokId}${extension}`);
     if (!inside(ROTEIROS_VIDEOS_ROOT, filePath)) throw new Error("Destino do vídeo inválido");
     await mkdir(folder, { recursive: true });
+    await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.filter((item) => item !== extension).map((item) => rm(join(folder, `${tiktokId}${item}`), { force: true })));
     await writeFile(filePath, body);
     sendJson(response, request, 200, {
       ok: true,
       video: {
         name: fileName,
-        storedPath: `roteiros/videos/${scriptId}/${tiktokId}.mp4`,
+        storedPath: `roteiros/videos/${scriptId}/${tiktokId}${extension}`,
         url: `http://${HOST}:${PORT}/roteiros/videos/${scriptId}/${tiktokId}`,
         contentType,
         size: body.length,
@@ -658,8 +701,7 @@ async function route(request, response) {
   if (roteiroVideoMatch && request.method === "GET") {
     const scriptId = safeId(roteiroVideoMatch[1]);
     const tiktokId = safeId(roteiroVideoMatch[2]);
-    const filePath = join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}.mp4`);
-    if (!inside(ROTEIROS_VIDEOS_ROOT, filePath)) throw new Error("Origem do vídeo inválida");
+    const filePath = await findRoteiroVideoFile(scriptId, tiktokId);
     await serveFile(response, request, filePath);
     return;
   }
@@ -667,9 +709,7 @@ async function route(request, response) {
   if (roteiroVideoMatch && request.method === "DELETE") {
     const scriptId = safeId(roteiroVideoMatch[1]);
     const tiktokId = safeId(roteiroVideoMatch[2]);
-    const filePath = join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}.mp4`);
-    if (!inside(ROTEIROS_VIDEOS_ROOT, filePath)) throw new Error("Origem do vídeo inválida");
-    await rm(filePath, { force: true });
+    await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.map((extension) => rm(join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}${extension}`), { force: true })));
     sendJson(response, request, 200, { ok: true });
     return;
   }

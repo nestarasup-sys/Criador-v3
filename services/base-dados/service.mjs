@@ -108,6 +108,7 @@ export function createBaseDadosService(root) {
       await mkdir(videosRoot, { recursive: true });
       try {
         state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
+        state.videos = state.videos.map((item) => ({ ...item, absolutePath: item.absolutePath || videoPath(root, item) }));
       } catch (error) {
         if (error?.code !== "ENOENT") throw error;
         await writeJsonAtomic(statePath, state);
@@ -153,6 +154,7 @@ export function createBaseDadosService(root) {
           fileName: `${String(sequence).padStart(2, "0")}${extension}`,
           originalName: String(metadata.name || `${sequence}${extension}`).slice(0, 180),
           storedPath: `base-de-dados/videos/${String(sequence).padStart(2, "0")}${extension}`,
+          absolutePath: videoPath(root, { fileName: `${String(sequence).padStart(2, "0")}${extension}` }),
           contentType,
           size: body.length,
           durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
@@ -196,6 +198,10 @@ export function createBaseDadosService(root) {
       }
 
       return false;
+    },
+    getVideo(id) {
+      const item = state.videos.find((video) => video.id === String(id));
+      return item ? structuredClone(item) : null;
     },
   };
 }

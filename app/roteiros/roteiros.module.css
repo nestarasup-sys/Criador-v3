@@ -85,6 +85,17 @@
 .characterPicker .selected i { background:var(--purple); color:#fff; }
 .modalFooter { margin-top:20px; padding-top:18px; border-top:1px solid var(--line); }
 .modalFooter>span { margin-right:auto; color:var(--muted); font-size:12px; }
+.importSummary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:18px 0 12px; }
+.importSummary span { display:grid; gap:3px; padding:11px; border:1px solid #e6def1; border-radius:10px; color:var(--muted); background:#faf8fd; font-size:10px; text-align:center; }
+.importSummary strong { color:var(--purple); font-size:19px; }
+.importIssues { display:grid; gap:7px; max-height:180px; overflow:auto; }
+.importIssues p { margin:0; padding:9px 10px; border-radius:9px; font-size:11px; line-height:1.4; }
+.importError { color:#9f334d; background:#fff1f4; border:1px solid #f1ccd6; }
+.importWarning { color:#966322; background:#fff8e9; border:1px solid #f0dfb8; }
+.importSuccess { color:#24755d; background:#eefaf5; border:1px solid #cbe9dd; }
+.importPreviewList { display:grid; gap:5px; max-height:190px; overflow:auto; margin-top:14px; padding:12px; border:1px solid #e8e0ef; border-radius:11px; background:#fcfbfd; }
+.importPreviewList strong { color:var(--ink); font-size:11px; }
+.importPreviewList span { color:var(--muted); font-size:10px; line-height:1.35; }
 
 .profileLayout { height:calc(100dvh - 132px); overflow:hidden; display:grid; grid-template-columns:320px minmax(0,1fr); }
 .profileSidebar { min-height:0; overflow-y:auto; padding:30px 22px; border-right:1px solid var(--line); background:#fff; }

@@ -30,7 +30,7 @@ export type ReactionBlockType = "auto" | "speech" | "thought";
 export type TikTokTimeline = "unspecified" | "past" | "present" | "future";
 export type ReactionBlock = {
   id: string; characterId: string; type: ReactionBlockType; emotion: string;
-  text: string; englishText: string; createdAt: string; updatedAt: string;
+  text: string; englishText: string; startAt?: number; createdAt: string; updatedAt: string;
 };
 export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;

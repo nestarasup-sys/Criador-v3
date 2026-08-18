@@ -4,8 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createGlobalRule, createId, createNarrativeProfile, createScriptAiContext, createScriptProject, nowIso, PROTECTED_RULES } from "../defaults";
 import { profileCompletion } from "../ai-context";
+import { createScriptFromImport, validateImportableScript, type ImportValidation } from "../base-dados-import";
 import { normalizeRoteirosState } from "../../domain/document-schemas.mjs";
-import { aiRequest, createRoteiroBackup, exportJson, listRoteiroBackups, restoreRoteiroBackup } from "../storage";
+import { aiRequest, createRoteiroBackup, exportJson, importBaseDadosVideoIntoRoteiro, listRoteiroBackups, removeRoteiroVideo, restoreRoteiroBackup } from "../storage";
+import { loadBaseDados } from "../../base de dados/storage";
+import type { BaseDadosState } from "../../base de dados/types";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState, ScriptProject } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
@@ -59,6 +62,8 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
   const [title, setTitle] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [characterQuery, setCharacterQuery] = useState("");
+  const [importPreview, setImportPreview] = useState<{ validation: ImportValidation; database: BaseDadosState } | null>(null);
+  const [importing, setImporting] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   const visibleScripts = useMemo(() => {
@@ -91,11 +96,17 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
   const importFile = async (file?: File) => {
     if (!file) return;
     try {
-      const raw = JSON.parse(await file.text()) as { app?: string; script?: RoteirosState["scripts"][number]; data?: RoteirosState };
-      if (raw.app !== "GACHA_PREMIUM_ROTEIROS_V1" || (!raw.script?.id && !raw.data)) throw new Error("Este não é um arquivo do novo módulo Roteiros.");
+      const raw = JSON.parse(await file.text()) as unknown;
+      if (raw && typeof raw === "object" && !Array.isArray(raw) && (raw as Record<string, unknown>).format === "NYMI_IMPORTABLE_SCRIPT_V1") {
+        const database = await loadBaseDados();
+        setImportPreview({ database, validation: validateImportableScript(raw, database.videos, characters) });
+        return;
+      }
+      const legacy = raw as { app?: string; script?: RoteirosState["scripts"][number]; data?: RoteirosState };
+      if (legacy.app !== "GACHA_PREMIUM_ROTEIROS_V1" || (!legacy.script?.id && !legacy.data)) throw new Error("Este não é um arquivo de roteiro compatível.");
       updateState((current) => {
-        if (raw.data) {
-          const incoming = normalizeRoteirosState(structuredClone(raw.data));
+        if (legacy.data) {
+          const incoming = normalizeRoteirosState(structuredClone(legacy.data));
           const knownProfileIds = new Set(current.profiles.map((profile) => profile.characterId));
           const knownScriptIds = new Set(current.scripts.map((script) => script.id));
           const knownRuleIds = new Set(current.globalRules.map((rule) => rule.id));
@@ -106,7 +117,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
             globalRules: [...current.globalRules, ...incoming.globalRules.map((rule: GlobalRule) => ({ ...rule, id: knownRuleIds.has(rule.id) ? createId() : rule.id }))],
           };
         }
-        const imported = normalizeRoteirosState({ version: 1, profiles: current.profiles, scripts: [structuredClone(raw.script!)], globalRules: current.globalRules, settings: current.settings }).scripts[0];
+        const imported = normalizeRoteirosState({ version: 1, profiles: current.profiles, scripts: [structuredClone(legacy.script!)], globalRules: current.globalRules, settings: current.settings }).scripts[0];
         if (current.scripts.some((item) => item.id === imported.id)) imported.id = createId();
         imported.updatedAt = nowIso();
         return { ...current, scripts: [...current.scripts, imported] };
@@ -115,13 +126,37 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
     finally { if (importRef.current) importRef.current.value = ""; }
   };
 
+  const confirmBaseImport = async () => {
+    if (!importPreview?.validation.success || !importPreview.validation.data) return;
+    setImporting(true);
+    const copiedSectionIds: string[] = [];
+    const draft = createScriptFromImport(importPreview.validation.data, importPreview.database.videos, characters, state);
+    try {
+      await createRoteiroBackup().catch(() => undefined);
+      for (const item of draft.sections) {
+        item.section.video = await importBaseDadosVideoIntoRoteiro(draft.script.id, item.section.id, item.sourceVideo.id);
+        copiedSectionIds.push(item.section.id);
+      }
+      const importedScript = { ...draft.script, tiktoks: draft.sections.map(({ section }) => section), updatedAt: nowIso() };
+      const nextState = { ...state, scripts: [...state.scripts, importedScript] };
+      if (!await saveSnapshot(nextState)) throw new Error("Não foi possível salvar o roteiro importado no PC.");
+      setImportPreview(null);
+      window.location.href = `/roteiros/${importedScript.id}`;
+    } catch (error) {
+      await Promise.all(copiedSectionIds.map((sectionId) => removeRoteiroVideo(draft.script.id, sectionId).catch(() => undefined)));
+      window.alert(error instanceof Error ? error.message : "Não foi possível importar o roteiro.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <main className={styles.homeContent}>
       <section className={styles.heroRow}>
         <div><span className={styles.eyebrow}>MEUS ROTEIROS</span><h1>Meus roteiros</h1><p>Organize histórias, reações e cenas em um só lugar.</p></div>
         <div className={styles.heroActions}>
           <input ref={importRef} hidden type="file" accept="application/json,.json" onChange={(event) => void importFile(event.target.files?.[0])} />
-          <button className={styles.secondaryButton} onClick={() => importRef.current?.click()}>↑ Importar</button>
+          <button className={styles.secondaryButton} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
           <button className={styles.secondaryButton} onClick={() => exportJson(`gacha-premium-roteiros-${new Date().toISOString().slice(0, 10)}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), data: state })}>↓ Exportar todos</button>
           <button className={styles.primaryButton} onClick={() => setCreating(true)}>＋ Criar roteiro</button>
         </div>
@@ -157,6 +192,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
         })}{characters.length === 0 && <p>Salve personagens no Criador do Premium primeiro.</p>}</div>
         <div className={styles.modalFooter}><span>{selectedIds.length} selecionado(s)</span><button className={styles.secondaryButton} onClick={() => setCreating(false)}>Cancelar</button><button className={styles.primaryButton} disabled={!title.trim()} onClick={create}>Criar e abrir</button></div>
       </section></div>}
+      {importPreview && <div className={styles.modalBackdrop} onMouseDown={(event) => { if (event.target === event.currentTarget && !importing) setImportPreview(null); }}><section className={styles.modal}><div className={styles.modalHeader}><div><span className={styles.eyebrow}>IMPORTAÇÃO VALIDADA</span><h2>{importPreview.validation.data?.title || "Roteiro da IA"}</h2></div><button disabled={importing} onClick={() => setImportPreview(null)}>×</button></div><div className={styles.importSummary}><span><strong>{importPreview.validation.data?.videos.length || 0}</strong> vídeos</span><span><strong>{importPreview.validation.data?.characters.length || 0}</strong> personagens</span><span><strong>{importPreview.validation.data?.blocks.length || 0}</strong> blocos</span></div><div className={styles.importIssues}>{importPreview.validation.issues.length ? importPreview.validation.issues.map((issue, index) => <p className={issue.level === "error" ? styles.importError : styles.importWarning} key={`${issue.path}-${index}`}><strong>{issue.level === "error" ? "Erro" : "Aviso"}</strong> {issue.path}: {issue.message}</p>) : <p className={styles.importSuccess}>JSON válido. O roteiro será criado sem alterar os existentes.</p>}</div><div className={styles.importPreviewList}><strong>Ordem dos vídeos</strong>{(importPreview.validation.data?.videos || []).map((video) => <span key={video.videoId}>{video.order}. {video.videoId} — {importPreview.database.videos.find((item) => item.id === video.videoId)?.description || "sem descrição"}</span>)}</div><div className={styles.modalFooter}><button className={styles.secondaryButton} disabled={importing} onClick={() => setImportPreview(null)}>Cancelar</button><button className={styles.primaryButton} disabled={importing || !importPreview.validation.success} onClick={() => void confirmBaseImport()}>{importing ? "Criando roteiro…" : "Confirmar e criar roteiro"}</button></div></section></div>}
     </main>
   );
 }

@@ -1,4 +1,6 @@
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
+import type { Character } from "../domain/character-contract";
+import type { NarrativeProfile } from "../domain/roteiro-contract";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 
 function metadata(value: unknown) {
@@ -15,6 +17,17 @@ async function request(path: string, init?: RequestInit) {
 export async function loadBaseDados() {
   const result = await request("/base-dados/state");
   return result as unknown as BaseDadosState;
+}
+
+export async function loadBaseDadosCharacterData() {
+  const [appState, roteirosState] = await Promise.all([
+    request("/state"),
+    request("/roteiros/state").catch(() => ({} as Record<string, unknown>)),
+  ]);
+  return {
+    characters: Array.isArray(appState.characters) ? appState.characters as Character[] : [],
+    profiles: Array.isArray(roteirosState.profiles) ? roteirosState.profiles as NarrativeProfile[] : [],
+  };
 }
 
 export function baseDadosVideoUrl(video: BaseDadosVideo) {

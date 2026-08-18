@@ -4,6 +4,7 @@ export type BaseDadosVideo = {
   fileName: string;
   originalName: string;
   storedPath: string;
+  absolutePath?: string;
   url?: string;
   contentType: string;
   size: number;

@@ -177,6 +177,7 @@ function normalizeReactionBlock(value) {
     emotion: legacySilent && !sourceText.trim() ? "" : sourceEmotion,
     text: legacySilent && !sourceText.trim() ? sourceEmotion : sourceText,
     englishText: typeof source.englishText === "string" ? source.englishText : "",
+    ...(Number.isFinite(Number(source.startAt)) && Number(source.startAt) >= 0 ? { startAt: Number(source.startAt) } : {}),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
   };
