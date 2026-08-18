@@ -14,7 +14,7 @@ function formatSeconds(value: number) {
 }
 
 function absoluteVideoPath(video: BaseDadosVideo) {
-  return video.absolutePath || video.storedPath;
+  return video.absolutePath || "CAMINHO ABSOLUTO NÃO DISPONÍVEL";
 }
 
 function characterBlock(item: BaseDadosCharacterExport) {
@@ -40,6 +40,7 @@ export function buildBaseDadosExportText(
     `ID: ${video.id}`,
     `SEQUÊNCIA: ${String(video.sequence).padStart(2, "0")}`,
     `CAMINHO ABSOLUTO: ${absoluteVideoPath(video)}`,
+    `ARQUIVO LOCAL: ${video.fileAvailable === false ? "AUSENTE — não pode ser importado até ser restaurado" : "disponível"}`,
     `NOME ORIGINAL: ${video.originalName}`,
     "DESCRIÇÃO:",
     video.description.trim() || "Não preenchida.",
@@ -85,10 +86,15 @@ Você receberá um TXT com vídeos e personagens. Gere imediatamente um JSON vá
 7. O app local é a fonte de verdade para caminho, duração, descrição e fim da cena.
 8. Falas e pensamentos de um vídeo devem começar no tempo do fim da cena descrita ou depois dele.
 9. Um pensamento é privado; uma fala é audível. Não use reações silenciosas.
+10. O campo \`sceneEndSeconds\` não precisa ser enviado: o app o preenche localmente a partir da Base de Dados.
 
 ## Como escolher vídeos
 
 Cada vídeo possui um ID, uma descrição, o tempo total e o segundo em que a descrição termina. Escolha os vídeos mais úteis para a narrativa e devolva a ordem em \`videos\`. O app copiará automaticamente os dados locais completos pelo ID.
+
+## Como escolher personagens
+
+Inclua em \`characters\` somente personagens presentes no TXT e use o ID exato. O campo \`role\` é opcional e serve apenas para explicar a função narrativa; não invente personagens que não estejam na base.
 
 ## Formato obrigatório
 
@@ -128,6 +134,16 @@ Cada vídeo possui um ID, uma descrição, o tempo total e o segundo em que a de
 - \`characters\`: personagens participantes, com \`characterId\` e função opcional.
 - \`blocks\`: falas e pensamentos associados a um personagem e vídeo.
 - \`startAt\`: opcional, em segundos. Se omitido, o app usará o fim da cena descrita.
+
+## Exemplos inválidos
+
+Não faça isto:
+
+\`\`\`json
+{ "format": "NYMI_IMPORTABLE_SCRIPT_V1", "videos": [{ "videoId": "video-inventado", "order": 1 }, { "videoId": "video-inventado", "order": 2 }] }
+\`\`\`
+
+Esse exemplo é inválido porque inventa um ID, repete o vídeo e não contém o contrato completo. Também é inválido enviar caminhos locais, duração alterada, tipo \`silent\`, personagem que não está no TXT ou \`startAt\` negativo.
 
 O app ignora qualquer caminho ou duração que você tente enviar e resolve esses dados na Base de Dados local.\n`;
 }

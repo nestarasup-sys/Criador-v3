@@ -5,6 +5,8 @@ export type BaseDadosVideo = {
   originalName: string;
   storedPath: string;
   absolutePath?: string;
+  /** Estado derivado pelo servidor ao conferir a pasta local. */
+  fileAvailable?: boolean;
   url?: string;
   contentType: string;
   size: number;
@@ -18,6 +20,8 @@ export type BaseDadosVideo = {
 export type BaseDadosState = {
   app: "NYMI_BASE_DADOS_V1";
   version: 1;
+  /** Próxima sequência reservada; evita reutilizar números excluídos. */
+  nextSequence?: number;
   videos: BaseDadosVideo[];
   updatedAt: string;
 };

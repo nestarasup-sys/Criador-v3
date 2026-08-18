@@ -6,7 +6,7 @@ import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
 import { BODY_LIMITS, VIDEO_MIME_TYPES, assertContentLength, assertMimeType, contentTypeOf } from "../security/local-security.mjs";
 
-const EMPTY_STATE = { app: "NYMI_BASE_DADOS_V1", version: 1, videos: [], updatedAt: new Date(0).toISOString() };
+const EMPTY_STATE = { app: "NYMI_BASE_DADOS_V1", version: 1, nextSequence: 1, videos: [], updatedAt: new Date(0).toISOString() };
 
 function inside(parent, target) {
   return resolve(target).startsWith(resolve(parent) + sep);
@@ -53,7 +53,10 @@ function sendJson(response, headers, status, value) {
 
 function normalizeState(value) {
   const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string") : [];
-  return { app: "NYMI_BASE_DADOS_V1", version: 1, videos, updatedAt: typeof value?.updatedAt === "string" ? value.updatedAt : new Date().toISOString() };
+  const highestSequence = videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0);
+  const requestedNext = Number(value?.nextSequence);
+  const nextSequence = Number.isInteger(requestedNext) && requestedNext > highestSequence ? requestedNext : highestSequence + 1;
+  return { app: "NYMI_BASE_DADOS_V1", version: 1, nextSequence, videos, updatedAt: typeof value?.updatedAt === "string" ? value.updatedAt : new Date().toISOString() };
 }
 
 function extensionFor(name, contentType) {
@@ -62,14 +65,37 @@ function extensionFor(name, contentType) {
   return contentType === "video/webm" ? ".webm" : contentType === "video/quicktime" ? ".mov" : ".mp4";
 }
 
-function nextSequence(videos) {
-  return videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0) + 1;
-}
-
 function videoPath(root, item) {
   const filePath = join(root, "videos", item.fileName);
   if (!inside(join(root, "videos"), filePath)) throw Object.assign(new Error("Origem do vídeo inválida."), { status: 400 });
   return filePath;
+}
+
+async function withFileStatus(root, item) {
+  const absolutePath = videoPath(root, item);
+  try {
+    await stat(absolutePath);
+    return { ...item, absolutePath, fileAvailable: true };
+  } catch (error) {
+    if (error?.code !== "ENOENT") throw error;
+    return { ...item, absolutePath, fileAvailable: false };
+  }
+}
+
+async function fileExists(filePath) {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") return false;
+    throw error;
+  }
+}
+
+async function sequenceFileExists(root, sequence) {
+  const names = [".mp4", ".webm", ".mov"].map((extension) => `${String(sequence).padStart(2, "0")}${extension}`);
+  const results = await Promise.all(names.map((name) => fileExists(videoPath(root, { fileName: name }))));
+  return results.some(Boolean);
 }
 
 async function serveVideo(response, request, headers, filePath, contentType = "video/mp4") {
@@ -108,7 +134,7 @@ export function createBaseDadosService(root) {
       await mkdir(videosRoot, { recursive: true });
       try {
         state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
-        state.videos = state.videos.map((item) => ({ ...item, absolutePath: item.absolutePath || videoPath(root, item) }));
+        state.videos = await Promise.all(state.videos.map((item) => withFileStatus(root, item)));
       } catch (error) {
         if (error?.code !== "ENOENT") throw error;
         await writeJsonAtomic(statePath, state);
@@ -118,6 +144,7 @@ export function createBaseDadosService(root) {
     async handle(request, response, url, headers) {
       const responseHeaders = typeof headers === "function" ? headers(request) : headers;
       if (url.pathname === "/base-dados/state" && request.method === "GET") {
+        state.videos = await Promise.all(state.videos.map((item) => withFileStatus(root, item)));
         sendJson(response, responseHeaders, 200, state);
         return true;
       }
@@ -145,7 +172,8 @@ export function createBaseDadosService(root) {
         assertMimeType(contentType, VIDEO_MIME_TYPES, "A Base aceita somente vídeos MP4, WebM ou MOV.");
         const body = await readBody(request);
         if (!body.length) throw Object.assign(new Error("Vídeo vazio."), { status: 400 });
-        const sequence = nextSequence(state.videos);
+        let sequence = Number.isInteger(state.nextSequence) && state.nextSequence > 0 ? state.nextSequence : 1;
+        while (await sequenceFileExists(root, sequence)) sequence += 1;
         const extension = extensionFor(metadata.name, contentType);
         const id = `video-${Date.now().toString(36)}-${sequence}`;
         const item = {
@@ -155,6 +183,7 @@ export function createBaseDadosService(root) {
           originalName: String(metadata.name || `${sequence}${extension}`).slice(0, 180),
           storedPath: `base-de-dados/videos/${String(sequence).padStart(2, "0")}${extension}`,
           absolutePath: videoPath(root, { fileName: `${String(sequence).padStart(2, "0")}${extension}` }),
+          fileAvailable: true,
           contentType,
           size: body.length,
           durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
@@ -166,8 +195,9 @@ export function createBaseDadosService(root) {
         await mkdir(videosRoot, { recursive: true });
         await writeFile(videoPath(root, item), body);
         state.videos = [...state.videos, item];
+        state.nextSequence = sequence + 1;
         await persist();
-        sendJson(response, responseHeaders, 200, { ok: true, video: { ...item, url: `/base-dados/videos/${item.id}` }, state });
+        sendJson(response, responseHeaders, 200, { ok: true, video: { ...item, fileAvailable: true, url: `/base-dados/videos/${item.id}` }, state });
         return true;
       }
 
@@ -182,7 +212,7 @@ export function createBaseDadosService(root) {
         const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, updatedAt: new Date().toISOString() };
         state.videos = state.videos.map((video) => video.id === id ? updated : video);
         await persist();
-        sendJson(response, responseHeaders, 200, { ok: true, video: updated, state });
+        sendJson(response, responseHeaders, 200, { ok: true, video: await withFileStatus(root, updated), state });
         return true;
       }
 

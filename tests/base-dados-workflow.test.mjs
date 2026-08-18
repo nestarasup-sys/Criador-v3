@@ -44,6 +44,19 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const duplicate = loaded.validateImportableScript({ ...valid, videos: [{ videoId: "video-01", order: 1 }, { videoId: "video-01", order: 2 }] }, videos, characters);
     assert.equal(duplicate.success, false);
     assert.match(duplicate.issues.map((item) => item.message).join(" "), /repetido/);
+
+    const unsorted = loaded.createScriptFromImport({ ...valid, blocks: [
+      { type: "thought", characterId: "char-01", videoId: "video-01", text: "Depois", startAt: 14 },
+      { type: "speech", characterId: "char-01", videoId: "video-01", text: "Antes", startAt: 11 },
+    ] }, videos, characters, state);
+    assert.deepEqual(unsorted.script.tiktoks[0].reactionBlocks.map((block) => block.text), ["Antes", "Depois"]);
+
+    const unavailable = loaded.validateImportableScript(valid, [{ ...videos[0], fileAvailable: false }], characters);
+    assert.equal(unavailable.success, false);
+    assert.match(unavailable.issues.map((item) => item.message).join(" "), /não existe mais/);
+    const withoutDuration = loaded.validateImportableScript(valid, [{ ...videos[0], durationSeconds: 0 }], characters);
+    assert.equal(withoutDuration.success, false);
+    assert.match(withoutDuration.issues.map((item) => item.message).join(" "), /duração calculada/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -65,9 +78,12 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   const basePage = await readFile(new URL("../app/base de dados/BaseDadosPage.tsx", import.meta.url), "utf8");
   const roteiroHome = await readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8");
   assert.match(basePage, /Selecionar personagens/);
+  assert.match(basePage, /Nenhum personagem selecionado/);
+  assert.match(basePage, /characterThumbnail/);
   assert.match(basePage, /setTimeout/);
   assert.match(basePage, /buildBaseDadosExportText/);
   assert.match(roteiroHome, /Importar roteiro da IA/);
   assert.match(roteiroHome, /NYMI_IMPORTABLE_SCRIPT_V1/);
   assert.match(roteiroHome, /Confirmar e criar roteiro/);
+  assert.match(roteiroHome, /await createRoteiroBackup\(\)/);
 });

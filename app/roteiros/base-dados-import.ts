@@ -30,6 +30,10 @@ function finiteNumber(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : Number(value);
 }
 
+function isAbsolutePath(value: unknown) {
+  return typeof value === "string" && (/^[A-Za-z]:[\\/]/.test(value) || value.startsWith("\\\\") || value.startsWith("/"));
+}
+
 export function validateImportableScript(value: unknown, videos: BaseDadosVideo[], characters: PremiumCharacter[]): ImportValidation {
   const source = record(value);
   const issues: ImportIssue[] = [];
@@ -60,7 +64,15 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     if (Number.isInteger(order) && order > 0 && seenOrders.has(order)) issues.push({ level: "error", path: `videos[${index}].order`, message: `A ordem ${order} foi repetida.` });
     if (videoId) seenVideos.add(videoId);
     if (Number.isInteger(order) && order > 0) seenOrders.add(order);
-    if (videoId && Number.isInteger(order) && order > 0 && videoMap.has(videoId)) normalizedVideos.push({ videoId, order });
+    const localVideo = videoId ? videoMap.get(videoId) : undefined;
+    if (localVideo) {
+      if (!Number.isFinite(localVideo.durationSeconds) || localVideo.durationSeconds <= 0) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O vídeo ${videoId} não possui duração calculada localmente.` });
+      if (!isAbsolutePath(localVideo.absolutePath)) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O caminho local absoluto do vídeo ${videoId} não está disponível.` });
+      if (localVideo.fileAvailable === false) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O arquivo local do vídeo ${videoId} não existe mais na Base de dados.` });
+      if (!Number.isFinite(localVideo.sceneEndSeconds) || localVideo.sceneEndSeconds < 0) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O tempo final da cena do vídeo ${videoId} é inválido.` });
+      else if (localVideo.sceneEndSeconds > localVideo.durationSeconds) issues.push({ level: "warning", path: `videos[${index}].videoId`, message: `O fim da descrição do vídeo ${videoId} ultrapassa sua duração total.` });
+    }
+    if (videoId && Number.isInteger(order) && order > 0 && localVideo) normalizedVideos.push({ videoId, order });
   });
 
   const seenCharacters = new Set<string>();
@@ -110,12 +122,16 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
   const timestamp = nowIso();
   const videoMap = new Map(videos.map((video) => [video.id, video]));
   const characterIds = document.characters.map((character) => character.characterId);
-  const blocksByVideo = new Map<string, ImportableBlock[]>();
-  document.blocks.forEach((block) => blocksByVideo.set(block.videoId, [...(blocksByVideo.get(block.videoId) ?? []), block]));
+  const blocksByVideo = new Map<string, Array<{ block: ImportableBlock; index: number }>>();
+  document.blocks.forEach((block, index) => blocksByVideo.set(block.videoId, [...(blocksByVideo.get(block.videoId) ?? []), { block, index }]));
   const sections = document.videos.map((choice) => {
     const sourceVideo = videoMap.get(choice.videoId)!;
     const sectionId = createId();
-    const reactionBlocks: ReactionBlock[] = (blocksByVideo.get(choice.videoId) ?? []).map((block) => {
+    const reactionBlocks: ReactionBlock[] = (blocksByVideo.get(choice.videoId) ?? []).sort((left, right) => {
+      const leftTime = left.block.startAt ?? sourceVideo.sceneEndSeconds;
+      const rightTime = right.block.startAt ?? sourceVideo.sceneEndSeconds;
+      return leftTime - rightTime || left.index - right.index;
+    }).map(({ block }) => {
       const startAt = Math.max(sourceVideo.sceneEndSeconds, block.startAt ?? sourceVideo.sceneEndSeconds);
       return { id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: "", startAt, createdAt: timestamp, updatedAt: timestamp };
     });

@@ -59,3 +59,36 @@ test("Base de dados local cria, edita e remove vídeos numerados isoladamente", 
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-integrity-"));
+  try {
+    const service = createBaseDadosService(root);
+    await service.init();
+    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
+    const upload = async (name) => {
+      const capture = responseCapture();
+      await service.handle(request("POST", "/base-dados/videos", Buffer.from([1, 2, 3]), {
+        "content-type": "video/mp4",
+        "x-gacha-meta": encodeURIComponent(JSON.stringify({ name, durationSeconds: 5 })),
+      }), capture, new URL("http://local/base-dados/videos"), headers);
+      return JSON.parse(capture.capture.body).video;
+    };
+    const first = await upload("primeiro.mp4");
+    assert.equal(first.sequence, 1);
+    const removed = responseCapture();
+    await service.handle(request("DELETE", `/base-dados/videos/${first.id}`), removed, new URL(`http://local/base-dados/videos/${first.id}`), headers);
+    const second = await upload("segundo.mp4");
+    assert.equal(second.sequence, 2);
+    assert.equal(second.fileName, "02.mp4");
+
+    await rm(join(root, "videos", second.fileName));
+    const stateCapture = responseCapture();
+    await service.handle(request("GET", "/base-dados/state"), stateCapture, new URL("http://local/base-dados/state"), headers);
+    const state = JSON.parse(stateCapture.capture.body);
+    assert.equal(state.videos[0].fileAvailable, false);
+    assert.equal(state.videos[0].absolutePath, join(root, "videos", "02.mp4"));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

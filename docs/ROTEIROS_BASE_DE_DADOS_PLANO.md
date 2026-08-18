@@ -190,3 +190,22 @@ A implementação estará 100% concluída quando for possível:
 8. Abrir um roteiro novo com vídeos, descrições, duração, fim da cena, personagens, falas e pensamentos corretos.
 9. Editar o roteiro normalmente sem afetar a Base de dados ou roteiros anteriores.
 
+## Auditoria de execução — 2026-08-18
+
+Status: **concluído em 100%** na branch local de testes.
+
+- [x] Checkpoint local reversível criado antes da auditoria: `13b1a12`.
+- [x] Autosave com debounce, fila por vídeo, cancelamento de edição obsoleta e proteção contra erro de rede.
+- [x] IDs estáveis, sequência visual sem reutilização automática e invalidação de cache do player.
+- [x] Detecção de arquivo local removido, com `fileAvailable` e aviso visual no card.
+- [x] Seletor de personagens com miniatura, busca, ID, modelo, contador, limpeza e persistência local.
+- [x] Exportação TXT V2 com todos os vídeos, caminhos absolutos, tempos, ficha completa e somente personagens escolhidos.
+- [x] Guia independente com regras, schema, exemplos válidos e inválidos, incluindo `speech` e `thought`.
+- [x] Importador V1 com prévia detalhada, validação de IDs, duplicidades, duração, caminho, tempos e tipos.
+- [x] Criação de roteiro novo, cópia local dos vídeos por ID, `sceneEndSeconds`, fichas narrativas, blocos ordenados e rollback de cópias incompletas.
+- [x] Backup obrigatório antes da confirmação da importação; falha no backup impede a operação.
+- [x] Testes unitários, typecheck, build, lint e verificação de diff executados com sucesso após a conclusão.
+
+### Reversão
+
+Para voltar exatamente ao estado anterior à auditoria, usar `git reset --hard 13b1a12` na branch local. O commit final da auditoria será informado junto com os resultados de validação.
