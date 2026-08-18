@@ -62,7 +62,7 @@ export default function BaseDadosPage() {
   const [drafts, setDrafts] = useState<Record<string, VideoDraft>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
-  const [message, setMessage] = useState("");
+  const [, setMessage] = useState("");
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const refresh = async () => {
@@ -152,7 +152,6 @@ export default function BaseDadosPage() {
     <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></div></header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
-      {message && <div className={styles.message} role="status">{message}</div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && <section className={styles.grid}>{database?.videos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const warning = Number.isFinite(end) && end > video.durationSeconds; return <article className={styles.card} key={video.id}>
