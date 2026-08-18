@@ -733,6 +733,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /JSON.*createRoteiroExportDocument|createRoteiroExportDocument.*JSON/);
   assert.match(storage, /uploadRoteiroVideo/);
   assert.match(storage, /removeRoteiroVideo/);
+  assert.match(editor, /videoBaseSrc/);
+  assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
+  assert.match(editor, /key=\{`\$\{section\.video\.storedPath\}-\$\{section\.video\.updatedAt\}`\}/);
   assert.match(storage, /signal\?: AbortSignal/);
   assert.match(service, /AI_TIMEOUT_MS = 90_000/);
   assert.match(service, /FONTE ÚNICA/);

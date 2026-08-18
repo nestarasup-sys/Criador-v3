@@ -282,7 +282,8 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     }
   };
 
-  const videoSrc = section.video?.url || (section.video ? roteiroVideoUrl(script.id, section.id) : "");
+  const videoBaseSrc = section.video?.url || (section.video ? roteiroVideoUrl(script.id, section.id) : "");
+  const videoSrc = videoBaseSrc ? `${videoBaseSrc}${videoBaseSrc.includes("?") ? "&" : "?"}v=${encodeURIComponent(section.video?.updatedAt || "")}` : "";
 
   return <article id={`${opening ? "opening" : "tiktok"}-${section.id}`} className={`${styles.tiktokCard} ${opening ? styles.openingCard : ""}`}>
     {!opening && <input ref={videoInputRef} className={styles.hiddenFileInput} type="file" accept="video/mp4,.mp4,video/*" disabled={videoLoading} onChange={(event) => { void selectVideo(event.target.files?.[0]); event.currentTarget.value = ""; }} />}
@@ -312,7 +313,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
             <label className={styles.field}><span>Cena da descrição termina (segundos)</span><input type="number" min="0" max="86400" step="0.01" value={section.sceneEndSeconds ?? ""} onChange={(event) => { const value = event.target.value; patch({ sceneEndSeconds: value === "" ? undefined : Math.max(0, Number(value)) }); }} placeholder="Ex.: 5 ou 5.5" /></label>
           </div>}
           {!opening && <div className={styles.videoUploadBox}>
-            {section.video ? <video className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
+            {section.video ? <video key={`${section.video.storedPath}-${section.video.updatedAt}`} className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
           </div>}
           <div className={styles.descriptionLayout}>
