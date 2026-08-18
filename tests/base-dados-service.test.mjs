@@ -60,6 +60,33 @@ test("Base de dados local cria, edita e remove vídeos numerados isoladamente", 
   }
 });
 
+test("mantém descrição e tempo depois de reiniciar o serviço local", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-restart-"));
+  try {
+    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
+    const service = createBaseDadosService(root);
+    await service.init();
+    const uploaded = responseCapture();
+    await service.handle(request("POST", "/base-dados/videos", Buffer.from([7, 8, 9]), {
+      "content-type": "video/mp4",
+      "x-gacha-meta": encodeURIComponent(JSON.stringify({ name: "persistente.mp4", durationSeconds: 18 })),
+    }), uploaded, new URL("http://local/base-dados/videos"), headers);
+    const video = JSON.parse(uploaded.capture.body).video;
+    const patched = responseCapture();
+    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto que não pode sumir", sceneEndSeconds: 11 })), { "content-type": "application/json" }), patched, new URL(`http://local/base-dados/videos/${video.id}`), headers);
+
+    const restarted = createBaseDadosService(root);
+    await restarted.init();
+    const stateCapture = responseCapture();
+    await restarted.handle(request("GET", "/base-dados/state"), stateCapture, new URL("http://local/base-dados/state"), headers);
+    const state = JSON.parse(stateCapture.capture.body);
+    assert.equal(state.videos[0].description, "Texto que não pode sumir");
+    assert.equal(state.videos[0].sceneEndSeconds, 11);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente", async () => {
   const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-integrity-"));
   try {

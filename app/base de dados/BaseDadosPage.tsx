@@ -5,12 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
+import { readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
 import { buildBaseDadosExportText, buildBaseDadosGuide, mergeBaseDadosDrafts } from "./export-contract";
 import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import styles from "./base-de-dados.module.css";
 
-type VideoDraft = { description: string; sceneEndSeconds: string };
+type VideoDraft = BaseDadosDraft;
 
 function readVideoDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
@@ -38,6 +39,8 @@ export default function BaseDadosPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [, setMessage] = useState("");
+  const databaseRef = useRef<BaseDadosState | null>(null);
+  const draftsRef = useRef<Record<string, VideoDraft>>({});
   const uploadRef = useRef<HTMLInputElement>(null);
   const saveTimersRef = useRef(new Map<string, number>());
   const saveJobsRef = useRef(new Map<string, Promise<void>>());
@@ -50,7 +53,12 @@ export default function BaseDadosPage() {
     setLoading(true);
     try {
       const [loadedDatabase, loadedCharacters] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterData()]);
+      const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
+      databaseRef.current = loadedDatabase;
+      draftsRef.current = recoveredDrafts;
       setDatabase(loadedDatabase);
+      setDrafts(recoveredDrafts);
+      writeBaseDadosDrafts(window.localStorage, recoveredDrafts);
       setCharacterData(loadedCharacters);
       setMessage("");
     } catch (error) {
@@ -86,12 +94,29 @@ export default function BaseDadosPage() {
     return () => window.clearTimeout(timer);
   }, [characterData.characters]);
 
-  const draftFor = (video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds) };
+  useEffect(() => {
+    databaseRef.current = database;
+  }, [database]);
+
+  useEffect(() => {
+    draftsRef.current = drafts;
+  }, [drafts]);
+
+  useEffect(() => {
+    const persistDrafts = () => writeBaseDadosDrafts(window.localStorage, draftsRef.current);
+    window.addEventListener("pagehide", persistDrafts);
+    return () => window.removeEventListener("pagehide", persistDrafts);
+  }, []);
+
+  const draftFor = (video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), changedAt: 0 };
   const updateDraft = (id: string, patch: Partial<VideoDraft>) => {
     saveRevisionRef.current[id] = (saveRevisionRef.current[id] || 0) + 1;
     scheduledRevisionRef.current[id] = -1;
     saveControllersRef.current.get(id)?.abort();
-    setDrafts((current) => ({ ...current, [id]: { ...(current[id] ?? { description: "", sceneEndSeconds: "0" }), ...patch } }));
+    const next = { ...draftsRef.current, [id]: { ...(draftsRef.current[id] ?? { description: "", sceneEndSeconds: "0", changedAt: 0 }), ...patch, changedAt: (draftsRef.current[id]?.changedAt ?? 0) + 1 } };
+    draftsRef.current = next;
+    writeBaseDadosDrafts(window.localStorage, next);
+    setDrafts(next);
   };
 
   const addVideo = async (file?: File) => {
@@ -101,6 +126,7 @@ export default function BaseDadosPage() {
     try {
       const durationSeconds = await readVideoDuration(file);
       const result = await uploadBaseDadosVideo(file, durationSeconds);
+      databaseRef.current = result.state;
       setDatabase(result.state);
       setMessage(`${result.video.fileName} adicionado à Base de dados.`);
     } catch (error) {
@@ -120,16 +146,18 @@ export default function BaseDadosPage() {
     try {
       const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds }, controller.signal);
       if (saveRevisionRef.current[video.id] !== revision) return;
+      databaseRef.current = result.state;
       setDatabase(result.state);
-      setDrafts((current) => {
-        const currentDraft = current[video.id];
-        const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}`;
-        const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}` : savedSignature;
-        if (currentSignature !== savedSignature) return current;
-        const next = { ...current };
+      const currentDraft = draftsRef.current[video.id];
+      const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}`;
+      const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}` : savedSignature;
+      if (currentSignature === savedSignature) {
+        const next = { ...draftsRef.current };
         delete next[video.id];
-        return next;
-      });
+        draftsRef.current = next;
+        writeBaseDadosDrafts(window.localStorage, next);
+        setDrafts(next);
+      }
       setMessage(`${video.fileName} salvo.`);
     } catch (error) {
       if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
@@ -142,19 +170,20 @@ export default function BaseDadosPage() {
 
   useEffect(() => {
     const timers = saveTimersRef.current;
-    Object.entries(drafts).forEach(([id, draft]) => {
+    Object.keys(drafts).forEach((id) => {
       const previousTimer = timers.get(id);
       if (previousTimer !== undefined) window.clearTimeout(previousTimer);
       const revision = saveRevisionRef.current[id] || 0;
       if (scheduledRevisionRef.current[id] === revision) return;
       scheduledRevisionRef.current[id] = revision;
       const timer = window.setTimeout(() => {
-        const video = database?.videos.find((item) => item.id === id);
-        if (!video) return;
+        const video = databaseRef.current?.videos.find((item) => item.id === id);
+        const currentDraft = draftsRef.current[id];
+        if (!video || !currentDraft) return;
         const previousJob = saveJobsRef.current.get(id) || Promise.resolve();
         const job = previousJob.catch(() => undefined).then(() => {
           if (saveRevisionRef.current[id] !== revision) return;
-          return saveVideo(video, draft, revision);
+          return saveVideo(video, draftsRef.current[id] || currentDraft, revision);
         });
         saveJobsRef.current.set(id, job);
         runningRevisionRef.current.set(id, revision);
@@ -181,23 +210,29 @@ export default function BaseDadosPage() {
     saveControllersRef.current.clear();
   }, []);
 
+  const flushVideoDraft = useCallback(async (id: string) => {
+    const currentDatabase = databaseRef.current;
+    const draft = draftsRef.current[id];
+    const video = currentDatabase?.videos.find((item) => item.id === id);
+    if (!video || !draft) return;
+    const timer = saveTimersRef.current.get(id);
+    if (timer !== undefined) window.clearTimeout(timer);
+    saveTimersRef.current.delete(id);
+    const revision = saveRevisionRef.current[id] || 0;
+    scheduledRevisionRef.current[id] = revision;
+    const previousJob = saveJobsRef.current.get(id);
+    const previousRevision = runningRevisionRef.current.get(id);
+    if (previousJob) await previousJob.catch(() => undefined);
+    if (saveRevisionRef.current[id] !== revision) return;
+    if (previousJob && previousRevision === revision) return;
+    await saveVideo(video, draftsRef.current[id] || draft, revision);
+  }, [saveVideo]);
+
   const flushPendingDrafts = useCallback(async () => {
-    if (!database) return;
-    for (const [id, draft] of Object.entries(drafts)) {
-      const video = database.videos.find((item) => item.id === id);
-      if (!video) continue;
-      const timer = saveTimersRef.current.get(id);
-      if (timer !== undefined) window.clearTimeout(timer);
-      saveTimersRef.current.delete(id);
-      const revision = saveRevisionRef.current[id] || 0;
-      const previousJob = saveJobsRef.current.get(id);
-      const previousRevision = runningRevisionRef.current.get(id);
-      if (previousJob) await previousJob.catch(() => undefined);
-      if (saveRevisionRef.current[id] !== revision) continue;
-      if (previousJob && previousRevision === revision) continue;
-      await saveVideo(video, draft, revision);
+    for (const id of Object.keys(draftsRef.current)) {
+      await flushVideoDraft(id);
     }
-  }, [database, drafts, saveVideo]);
+  }, [flushVideoDraft]);
 
   const deleteVideo = async (video: BaseDadosVideo) => {
     if (!window.confirm(`Excluir ${video.fileName} da Base de dados?`)) return;
@@ -210,8 +245,13 @@ export default function BaseDadosPage() {
     try {
       await saveJobsRef.current.get(video.id)?.catch(() => undefined);
       const result = await removeBaseDadosVideo(video.id);
+      databaseRef.current = result.state;
       setDatabase(result.state);
-      setDrafts((current) => { const next = { ...current }; delete next[video.id]; return next; });
+      const next = { ...draftsRef.current };
+      delete next[video.id];
+      draftsRef.current = next;
+      writeBaseDadosDrafts(window.localStorage, next);
+      setDrafts(next);
       setMessage(`${video.fileName} excluído.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível excluir o vídeo.");
@@ -219,9 +259,11 @@ export default function BaseDadosPage() {
   };
 
   const exportData = async () => {
-    if (!database?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar os dados.");
-    const exportedDatabase = mergeBaseDadosDrafts(database, drafts);
-    const invalidDraft = Object.values(drafts).find((draft) => !Number.isFinite(Number(draft.sceneEndSeconds)) || Number(draft.sceneEndSeconds) < 0);
+    const currentDatabase = databaseRef.current;
+    const currentDrafts = draftsRef.current;
+    if (!currentDatabase?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar os dados.");
+    const exportedDatabase = mergeBaseDadosDrafts(currentDatabase, currentDrafts);
+    const invalidDraft = Object.values(currentDrafts).find((draft) => !Number.isFinite(Number(draft.sceneEndSeconds)) || Number(draft.sceneEndSeconds) < 0);
     if (invalidDraft) return setMessage("Corrija o tempo final da cena antes de exportar os dados.");
     setBusy("export"); setMessage("");
     try {
@@ -236,9 +278,15 @@ export default function BaseDadosPage() {
     } finally { setBusy(""); }
   };
 
-  const exportGuide = () => {
-    downloadText("GUIA_BASE_DE_DADOS_NYMI.md", buildBaseDadosGuide(), "text/markdown;charset=utf-8");
-    setMessage("Guia exportado.");
+  const exportGuide = async () => {
+    setBusy("guide"); setMessage("");
+    try {
+      await flushPendingDrafts();
+      downloadText("GUIA_BASE_DE_DADOS_NYMI.md", buildBaseDadosGuide(), "text/markdown;charset=utf-8");
+      setMessage("Guia exportado.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível exportar o guia.");
+    } finally { setBusy(""); }
   };
 
   const visibleCharacters = useMemo(() => {
@@ -283,7 +331,7 @@ export default function BaseDadosPage() {
       {!loading && Boolean(database?.videos.length) && <section className={styles.grid}>{database?.videos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const warning = Number.isFinite(end) && end > video.durationSeconds; return <article className={styles.card} key={video.id}>
         <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="metadata" /></div>
         <div className={styles.meta}><div className={styles.metaIdentity}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div></div>
-        <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} /><em>segundos</em></div>{warning && <small className={styles.warning}>Esse tempo ultrapassa a duração total do vídeo.</small>}</label><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
+        <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Esse tempo ultrapassa a duração total do vídeo.</small>}</label><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}
     </main>
   </div>;

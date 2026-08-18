@@ -49,6 +49,26 @@ test("exportação usa drafts recentes mesmo antes do debounce terminar", async 
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("recupera rascunhos locais sem ressuscitar vídeos excluídos", async () => {
+  const { loaded, root } = await bundled("app/base de dados/draft-storage.ts");
+  try {
+    const writes = new Map();
+    const storage = {
+      getItem: (key) => writes.get(key) ?? null,
+      setItem: (key, value) => writes.set(key, value),
+      removeItem: (key) => writes.delete(key),
+    };
+    const drafts = { "video-01": { description: "Descrição digitada", sceneEndSeconds: "8", changedAt: Date.now() } };
+    loaded.writeBaseDadosDrafts(storage, drafts);
+    assert.deepEqual(loaded.readBaseDadosDrafts(storage), drafts);
+    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", contentType: "video/mp4", size: 1, durationSeconds: 10, description: "", sceneEndSeconds: 0, createdAt: "", updatedAt: "" }] };
+    assert.deepEqual(loaded.recoverBaseDadosDrafts(database, drafts), drafts);
+    assert.deepEqual(loaded.recoverBaseDadosDrafts({ ...database, videos: [] }, drafts), {});
+    loaded.writeBaseDadosDrafts(storage, {});
+    assert.equal(storage.getItem(loaded.BASE_DADOS_DRAFT_STORAGE_KEY), null);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSeconds", async () => {
   const { loaded, root } = await bundled("app/roteiros/base-dados-import.ts");
   try {
@@ -102,6 +122,9 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /Nenhum personagem selecionado/);
   assert.match(basePage, /characterThumbnail/);
   assert.match(basePage, /setTimeout/);
+  assert.match(basePage, /readBaseDadosDrafts/);
+  assert.match(basePage, /onBlur=\{\(\) => void flushVideoDraft/);
+  assert.match(basePage, /pagehide/);
   assert.match(basePage, /buildBaseDadosExportText/);
   assert.match(roteiroHome, /Importar roteiro da IA/);
   assert.match(roteiroHome, /NYMI_IMPORTABLE_SCRIPT_V1/);
