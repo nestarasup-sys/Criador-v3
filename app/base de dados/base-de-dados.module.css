@@ -22,7 +22,7 @@
 .counter strong { color:#7449c7; font-size:24px; line-height:1; }
 .counter span { color:#988b9f; font-size:10px; }
 .message { margin:16px; padding:11px 14px; border:1px solid #ddcff5; border-radius:10px; color:#62439b; background:#fbf8ff; font-size:12px; }
-.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,360px)); justify-content:start; gap:16px; margin:0; }
 .card { min-width:0; overflow:hidden; border:1px solid #e5dced; border-radius:17px; background:#fff; box-shadow:0 15px 32px rgba(53,36,74,.07); }
 .cardHeader { display:flex; align-items:center; gap:11px; padding:14px 15px; border-bottom:1px solid #f1ebf4; }
 .sequence { display:grid; place-items:center; width:44px; height:38px; border-radius:11px; color:#fff; background:linear-gradient(145deg,#7144d1,#a14bd3); font-size:15px; font-weight:900; }
@@ -58,5 +58,5 @@
 .emptyState>span { color:#8057cc; font-size:36px; }
 .emptyState h2 { margin:0; color:#4f3b5c; font-size:20px; }
 .emptyState p { margin:0 0 8px; font-size:12px; }
-@media (max-width:1050px) { .topbar { gap:10px; padding-inline:14px; } .moduleTitle { display:none; } .grid { grid-template-columns:1fr; } }
-@media (max-width:700px) { .topbarBrand { gap:6px; } .topbarBack { min-width:34px; } .topbar { height:66px; } .content { height:calc(100dvh - 66px); } .actionBar { align-items:stretch; flex-wrap:wrap; padding:10px; } .actionBar button { flex:1 1 calc(50% - 10px); } .actionBack { flex:1 1 100%!important; margin-right:0; text-align:left; } .meta { grid-template-columns:1fr 1fr; } .meta span:last-child { grid-column:1 / -1; } }
+@media (max-width:1050px) { .topbar { gap:10px; padding-inline:14px; } .moduleTitle { display:none; } .grid { grid-template-columns:repeat(auto-fill,minmax(300px,360px)); } }
+@media (max-width:700px) { .topbarBrand { gap:6px; } .topbarBack { min-width:34px; } .topbar { height:66px; } .content { height:calc(100dvh - 66px); } .actionBar { align-items:stretch; flex-wrap:wrap; padding:10px; } .actionBar button { flex:1 1 calc(50% - 10px); } .actionBack { flex:1 1 100%!important; margin-right:0; text-align:left; } .grid { grid-template-columns:minmax(0,360px); } .meta { grid-template-columns:1fr 1fr; } .meta span:last-child { grid-column:1 / -1; } }
