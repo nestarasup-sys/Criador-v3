@@ -32,6 +32,17 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("exportação usa drafts recentes mesmo antes do debounce terminar", async () => {
+  const { loaded, root } = await bundled("app/base de dados/export-contract.ts");
+  try {
+    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "Descrição antiga", sceneEndSeconds: 4, createdAt: "", updatedAt: "" }] };
+    const merged = loaded.mergeBaseDadosDrafts(database, { "video-01": { description: "Descrição digitada agora", sceneEndSeconds: "10" } });
+    assert.equal(merged.videos[0].description, "Descrição digitada agora");
+    assert.equal(merged.videos[0].sceneEndSeconds, 10);
+    assert.equal(database.videos[0].description, "Descrição antiga");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSeconds", async () => {
   const { loaded, root } = await bundled("app/roteiros/base-dados-import.ts");
   try {

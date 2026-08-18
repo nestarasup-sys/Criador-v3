@@ -9,6 +9,21 @@ export type BaseDadosCharacterExport = {
   narrativeProfile?: NarrativeProfile;
 };
 
+export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string };
+
+/** Mescla alterações ainda não confirmadas pelo autosave no snapshot exportado. */
+export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<string, BaseDadosVideoDraft>) {
+  return {
+    ...database,
+    videos: database.videos.map((video) => {
+      const draft = drafts[video.id];
+      if (!draft) return video;
+      const sceneEndSeconds = Number(draft.sceneEndSeconds);
+      return Number.isFinite(sceneEndSeconds) && sceneEndSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds } : video;
+    }),
+  };
+}
+
 function formatSeconds(value: number) {
   return Number.isFinite(value) ? Number(value).toFixed(2) : "não calculado";
 }

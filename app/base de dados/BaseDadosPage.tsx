@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
-import { buildBaseDadosExportText, buildBaseDadosGuide } from "./export-contract";
+import { buildBaseDadosExportText, buildBaseDadosGuide, mergeBaseDadosDrafts } from "./export-contract";
 import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import styles from "./base-de-dados.module.css";
@@ -41,6 +41,7 @@ export default function BaseDadosPage() {
   const uploadRef = useRef<HTMLInputElement>(null);
   const saveTimersRef = useRef(new Map<string, number>());
   const saveJobsRef = useRef(new Map<string, Promise<void>>());
+  const runningRevisionRef = useRef(new Map<string, number>());
   const saveControllersRef = useRef(new Map<string, AbortController>());
   const saveRevisionRef = useRef<Record<string, number>>({});
   const scheduledRevisionRef = useRef<Record<string, number>>({});
@@ -156,8 +157,12 @@ export default function BaseDadosPage() {
           return saveVideo(video, draft, revision);
         });
         saveJobsRef.current.set(id, job);
+        runningRevisionRef.current.set(id, revision);
         void job.finally(() => {
-          if (saveJobsRef.current.get(id) === job) saveJobsRef.current.delete(id);
+          if (saveJobsRef.current.get(id) === job) {
+            saveJobsRef.current.delete(id);
+            if (runningRevisionRef.current.get(id) === revision) runningRevisionRef.current.delete(id);
+          }
         });
       }, 700);
       timers.set(id, timer);
@@ -175,6 +180,24 @@ export default function BaseDadosPage() {
     saveControllersRef.current.forEach((controller) => controller.abort());
     saveControllersRef.current.clear();
   }, []);
+
+  const flushPendingDrafts = useCallback(async () => {
+    if (!database) return;
+    for (const [id, draft] of Object.entries(drafts)) {
+      const video = database.videos.find((item) => item.id === id);
+      if (!video) continue;
+      const timer = saveTimersRef.current.get(id);
+      if (timer !== undefined) window.clearTimeout(timer);
+      saveTimersRef.current.delete(id);
+      const revision = saveRevisionRef.current[id] || 0;
+      const previousJob = saveJobsRef.current.get(id);
+      const previousRevision = runningRevisionRef.current.get(id);
+      if (previousJob) await previousJob.catch(() => undefined);
+      if (saveRevisionRef.current[id] !== revision) continue;
+      if (previousJob && previousRevision === revision) continue;
+      await saveVideo(video, draft, revision);
+    }
+  }, [database, drafts, saveVideo]);
 
   const deleteVideo = async (video: BaseDadosVideo) => {
     if (!window.confirm(`Excluir ${video.fileName} da Base de dados?`)) return;
@@ -195,13 +218,22 @@ export default function BaseDadosPage() {
     } finally { setBusy(""); }
   };
 
-  const exportData = () => {
+  const exportData = async () => {
     if (!database?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar os dados.");
-    const selected = characterData.characters.filter((character) => selectedCharacterIds.includes(character.id)).map((character) => {
-      return { characterId: character.id, name: character.name, narrativeProfile: characterData.profiles.find((profile) => profile.characterId === character.id) };
-    });
-    downloadText("BASE_DE_DADOS_NYMI.txt", buildBaseDadosExportText(database, selected));
-    setMessage("Dados exportados.");
+    const exportedDatabase = mergeBaseDadosDrafts(database, drafts);
+    const invalidDraft = Object.values(drafts).find((draft) => !Number.isFinite(Number(draft.sceneEndSeconds)) || Number(draft.sceneEndSeconds) < 0);
+    if (invalidDraft) return setMessage("Corrija o tempo final da cena antes de exportar os dados.");
+    setBusy("export"); setMessage("");
+    try {
+      await flushPendingDrafts();
+      const selected = characterData.characters.filter((character) => selectedCharacterIds.includes(character.id)).map((character) => {
+        return { characterId: character.id, name: character.name, narrativeProfile: characterData.profiles.find((profile) => profile.characterId === character.id) };
+      });
+      downloadText("BASE_DE_DADOS_NYMI.txt", buildBaseDadosExportText(exportedDatabase, selected));
+      setMessage("Dados exportados.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível exportar os dados.");
+    } finally { setBusy(""); }
   };
 
   const exportGuide = () => {
