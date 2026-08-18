@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
@@ -117,6 +118,15 @@ export function createBaseDadosService(root) {
       const responseHeaders = typeof headers === "function" ? headers(request) : headers;
       if (url.pathname === "/base-dados/state" && request.method === "GET") {
         sendJson(response, responseHeaders, 200, state);
+        return true;
+      }
+
+      if (url.pathname === "/base-dados/open-folder" && request.method === "POST") {
+        await mkdir(videosRoot, { recursive: true });
+        const explorer = spawn("explorer.exe", ["/root,", root], { detached: true, stdio: "ignore", windowsHide: false });
+        explorer.on("error", () => undefined);
+        explorer.unref();
+        sendJson(response, responseHeaders, 200, { ok: true, folder: root });
         return true;
       }
 

@@ -43,6 +43,11 @@ export async function removeBaseDadosVideo(id: string) {
   return result as unknown as { state: BaseDadosState };
 }
 
+export async function openBaseDadosFolder() {
+  const result = await request("/base-dados/open-folder", { method: "POST" });
+  return String(result.folder || "dados-locais-premium/base-de-dados");
+}
+
 export function downloadText(fileName: string, content: string, type = "text/plain;charset=utf-8") {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);

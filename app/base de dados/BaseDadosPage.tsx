@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
-import { downloadText, loadBaseDados, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
+import { downloadText, loadBaseDados, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import styles from "./base-de-dados.module.css";
 
@@ -138,8 +138,18 @@ export default function BaseDadosPage() {
     setMessage("Guia exportado.");
   };
 
+  const openDataFolder = async () => {
+    setBusy("folder"); setMessage("");
+    try {
+      await openBaseDadosFolder();
+      setMessage("Pasta dos dados aberta no Explorador de Arquivos.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível abrir a pasta dos dados.");
+    } finally { setBusy(""); }
+  };
+
   return <div className={styles.app}>
-    <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></div></header>
+    <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></div></header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
       {message && <div className={styles.message} role="status">{message}</div>}
