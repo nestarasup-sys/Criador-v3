@@ -1,4 +1,6 @@
 .app { min-height:100dvh; height:100dvh; overflow:hidden; color:#30263b; background:linear-gradient(180deg,#f8f6ff 0,#fff 32%); font-family:var(--font-geist),Arial,sans-serif; }
+.topbarBrand { display:flex; align-items:center; gap:12px; min-width:0; }
+.topbarBack { flex:0 0 auto; min-width:38px; padding-inline:10px; text-decoration:none; }
 .topbar { height:76px; display:flex; align-items:center; gap:18px; padding:0 24px; border-bottom:1px solid #e7e1ef; background:#fff; box-shadow:0 4px 18px rgba(48,35,71,.05); }
 .backButton { display:inline-flex; align-items:center; justify-content:center; width:42px; height:36px; border:1px solid #e4dfeb; border-radius:10px; color:#635577; background:#fff; font-size:20px; text-decoration:none; }
 .backButton:hover { color:#6040c0; border-color:#cdbcf1; background:#f7f3ff; }

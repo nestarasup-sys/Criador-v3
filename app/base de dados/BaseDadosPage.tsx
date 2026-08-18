@@ -139,10 +139,9 @@ export default function BaseDadosPage() {
   };
 
   return <div className={styles.app}>
-    <header className={styles.topbar}><Link href="/" className={styles.backButton}>← Voltar</Link><NymiBrand compact /><div className={styles.moduleTitle}><span>MÓDULO</span><strong>BASE DE DADOS</strong></div><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /></header>
+    <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></div></header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
-      <header className={styles.actionBar}><button className={styles.actionBack} onClick={() => window.history.back()}>← Voltar</button><button className={styles.actionButton} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className={styles.actionButton} disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className={styles.actionButton} disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></header>
       <section className={styles.heading}><div><span className={styles.eyebrow}>BIBLIOTECA LOCAL</span><h1>Base de dados</h1><p>Adicione vídeos, descreva o que acontece e marque quando a cena descrita termina.</p></div><div className={styles.counter}><strong>{database?.videos.length || 0}</strong><span>vídeos cadastrados</span></div></section>
       {message && <div className={styles.message} role="status">{message}</div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
