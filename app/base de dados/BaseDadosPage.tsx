@@ -16,11 +16,6 @@ function formatDuration(value: number) {
   return minutes ? `${minutes}min ${seconds.toFixed(2).replace(".", ",")}s` : `${seconds.toFixed(2).replace(".", ",")}s`;
 }
 
-function formatBytes(value: number) {
-  if (value < 1024 * 1024) return `${Math.max(1, Math.round(value / 1024))} KB`;
-  return `${(value / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
-}
-
 function readVideoDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
     const preview = document.createElement("video");
@@ -155,9 +150,8 @@ export default function BaseDadosPage() {
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && <section className={styles.grid}>{database?.videos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const warning = Number.isFinite(end) && end > video.durationSeconds; return <article className={styles.card} key={video.id}>
-        <header className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>VÍDEO {String(video.sequence).padStart(2, "0")}</strong><small>{video.originalName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span></header>
         <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="metadata" /></div>
-        <div className={styles.meta}><span><b>Duração total</b>{formatDuration(video.durationSeconds)}</span><span><b>Tamanho</b>{formatBytes(video.size)}</span><span><b>Arquivo</b>{video.fileName}</span></div>
+        <div className={styles.meta}><div className={styles.metaIdentity}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span></div></div>
         <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} /><em>segundos</em></div>{warning && <small className={styles.warning}>Esse tempo ultrapassa a duração total do vídeo.</small>}</label><div className={styles.cardActions}><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => void saveVideo(video)}>{busy === `save:${video.id}` ? "Salvando…" : "Salvar"}</button><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}
     </main>

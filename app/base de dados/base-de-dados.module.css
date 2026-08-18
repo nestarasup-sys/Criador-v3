@@ -35,6 +35,8 @@
 .player { display:grid; place-items:center; aspect-ratio:16/9; background:#17131d; }
 .player video { display:block; width:100%; height:100%; background:#17131d; object-fit:contain; }
 .meta { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:11px 15px; border-bottom:1px solid #f1ebf4; background:#fcfbfd; }
+.metaIdentity { display:flex; align-items:center; justify-content:space-between; min-height:30px; }
+.metaIdentity .sequence { width:34px; height:30px; border-radius:9px; font-size:12px; }
 .meta span { display:grid; gap:4px; min-width:0; overflow:hidden; color:#665a70; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
 .meta b { color:#9c8fa4; font-size:8px; letter-spacing:.08em; text-transform:uppercase; }
 .form { display:grid; gap:14px; padding:16px; }
