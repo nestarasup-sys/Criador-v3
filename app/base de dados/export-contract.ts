@@ -1,11 +1,11 @@
-import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 
 export const BASE_DATABASE_EXPORT_FORMAT = "NYMI_BASE_DATABASE_EXPORT_V2";
 
 export type BaseDadosCharacterExport = {
-  character: Omit<Character, "photoDataUrl" | "photoUrl">;
+  characterId: string;
+  name: string;
   narrativeProfile?: NarrativeProfile;
 };
 
@@ -21,11 +21,9 @@ function characterBlock(item: BaseDadosCharacterExport) {
   const profile = item.narrativeProfile;
   return [
     "PERSONAGEM",
-    `ID: ${item.character.id}`,
-    `NOME: ${item.character.name}`,
-    "FICHA COMPLETA DO CRIADOR (JSON):",
-    JSON.stringify(item.character, null, 2),
-    "FICHA NARRATIVA DO ROTEIROS (JSON):",
+    `ID: ${item.characterId}`,
+    `NOME: ${item.name}`,
+    "FICHA DO ROTEIROS (JSON):",
     JSON.stringify(profile || null, null, 2),
   ].join("\n");
 }

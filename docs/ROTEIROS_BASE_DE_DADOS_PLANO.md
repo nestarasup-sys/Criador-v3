@@ -9,7 +9,7 @@ O campo **tempo que termina a cena da descrição** é uma informação operacio
 ## Regras definitivas
 
 - Os personagens disponíveis vêm do Criador de Personagens.
-- A ficha exportada é a ficha completa disponível localmente: dados completos do personagem, ficha narrativa do Roteiros quando existir e relacionamentos narrativos.
+- A seleção consulta os personagens do Criador, mas a ficha exportada é somente a ficha narrativa do Roteiros: personalidade, história, relações, estilo de fala, regras e relacionamentos narrativos.
 - Os caminhos dos vídeos exportados são absolutos.
 - A IA pode escolher e reorganizar os vídeos livremente.
 - Um mesmo vídeo não pode aparecer mais de uma vez no roteiro importado.
@@ -61,7 +61,7 @@ O campo **tempo que termina a cena da descrição** é uma informação operacio
 - Adicionar busca, seleção individual, limpar seleção e contador.
 - Persistir a seleção durante a sessão e recuperar a seleção válida após reload.
 - Não exportar personagens fora da seleção.
-- Incluir o personagem completo, sem dados binários de foto.
+- Usar os dados do Criador apenas para identificar e apresentar o personagem no seletor; não exportar ajustes, roupas, modelos ou fotos.
 - Anexar a ficha narrativa e relacionamentos existentes no Roteiros.
 
 ## Fase 4 — Exportação TXT
@@ -69,7 +69,7 @@ O campo **tempo que termina a cena da descrição** é uma informação operacio
 - Exportar todos os vídeos cadastrados.
 - Exportar caminho absoluto, ID, sequência, nome original, descrição, duração total e tempo final da cena.
 - Exportar somente os personagens selecionados.
-- Incluir ID e ficha completa de cada personagem.
+- Incluir ID, nome e somente a ficha narrativa de Roteiros de cada personagem.
 - Separar vídeos e personagens com marcadores claros.
 - Preservar acentos, quebras de linha e conteúdo vazio de forma explícita.
 - Não exportar blocos antigos de nenhum roteiro.
@@ -157,7 +157,7 @@ Formato mínimo:
 - Testar autosave com digitação rápida e dois vídeos.
 - Testar exclusão e substituição de vídeo.
 - Testar exportação com zero, um e vários personagens.
-- Testar ficha completa e relacionamentos.
+- Testar ficha narrativa, acentos, quebras de linha e relacionamentos.
 - Testar caminhos absolutos.
 - Testar todos os vídeos e seleção de personagens.
 - Testar guia sem dados específicos.
@@ -199,7 +199,7 @@ Status: **concluído em 100%** na branch local de testes.
 - [x] IDs estáveis, sequência visual sem reutilização automática e invalidação de cache do player.
 - [x] Detecção de arquivo local removido, com `fileAvailable` e aviso visual no card.
 - [x] Seletor de personagens com miniatura, busca, ID, modelo, contador, limpeza e persistência local.
-- [x] Exportação TXT V2 com todos os vídeos, caminhos absolutos, tempos, ficha completa e somente personagens escolhidos.
+- [x] Exportação TXT V2 com todos os vídeos, caminhos absolutos, tempos, ID/nome e somente a ficha narrativa dos personagens escolhidos.
 - [x] Guia independente com regras, schema, exemplos válidos e inválidos, incluindo `speech` e `thought`.
 - [x] Importador V1 com prévia detalhada, validação de IDs, duplicidades, duração, caminho, tempos e tipos.
 - [x] Criação de roteiro novo, cópia local dos vídeos por ID, `sceneEndSeconds`, fichas narrativas, blocos ordenados e rollback de cópias incompletas.
