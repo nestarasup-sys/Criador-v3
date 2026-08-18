@@ -6,6 +6,7 @@ import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs
 import { extname, join, resolve, sep } from "node:path";
 import JSZip from "jszip";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
+import { createBaseDadosService } from "./services/base-dados/service.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
@@ -40,6 +41,7 @@ const VIDEO_MAKER_EXPORTS_ROOT = join(VIDEO_MAKER_ROOT, "exports");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
+const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
 const ROTEIRO_EXPORT_ASSETS_ROOT = resolve(process.env.GACHA_EDITOR_TESTE_ASSETS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR TESTE\\data\\assets");
 function roteiroVideoExportRoot() {
@@ -53,6 +55,7 @@ const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
 const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
+const baseDadosService = createBaseDadosService(BASE_DADOS_ROOT);
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -208,6 +211,7 @@ function isPublicRoute(request, url) {
   if (request.method !== "GET") return false;
   return url.pathname.startsWith("/files/")
     || url.pathname.startsWith("/roteiros/videos/")
+    || url.pathname.startsWith("/base-dados/videos/")
     || url.pathname.startsWith("/roteiros/backgrounds/")
     || url.pathname.startsWith("/video-maker/characters/")
     || url.pathname.startsWith("/video-maker/tiktoks/");
@@ -243,6 +247,7 @@ async function ensureFolders() {
     mkdir(STUDIO_ASSETS_ROOT, { recursive: true }),
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
+    mkdir(BASE_DADOS_ROOT, { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
     mkdir(roteiroVideoExportRoot(), { recursive: true }),
     mkdir(roteiroCharacterExportRoot(), { recursive: true }),
@@ -473,6 +478,7 @@ async function route(request, response) {
     return;
   }
   const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|backgrounds\/|export-videos$|export-background$|export-text$|export-characters\/|open-folder$)/.test(url.pathname);
+  if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   if (!localRoteirosExportRoute && await roteirosService.handle(request, response, url, corsHeaders)) return;
   if (request.method === "GET" && url.pathname === "/health") {
     sendJson(response, request, 200, { ok: true, folder: ROOT });
@@ -1148,7 +1154,7 @@ async function route(request, response) {
   sendJson(response, request, 404, { error: "Rota não encontrada" });
 }
 
-await Promise.all([loadState(), roteirosService.init()]);
+await Promise.all([loadState(), roteirosService.init(), baseDadosService.init()]);
 
 const server = createServer({
   requestTimeout: 120_000,
