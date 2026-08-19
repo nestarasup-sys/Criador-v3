@@ -12,6 +12,8 @@ import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
+import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
+import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
 import { loadBaseDados } from "../../base de dados/storage";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
@@ -491,7 +493,11 @@ export default function RoteiroEditor() {
   const importDatabaseVideos = async () => {
     setExportLoading("database-import"); setExportMessage("");
     try {
-      const database = await loadBaseDados();
+      const loadedDatabase = await loadBaseDados();
+      // A Base de dados mantém alterações recentes no rascunho local enquanto
+      // o autosave do serviço termina. O roteiro precisa importar esse estado
+      // mais recente, e não apenas o snapshot antigo do servidor.
+      const database = mergeBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
       if (!database.videos.length) throw new Error("A Base de dados não possui vídeos cadastrados.");
       await createRoteiroBackup();
       let nextState = state;
