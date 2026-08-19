@@ -10,8 +10,9 @@ import { applyAiContextResult, createAiContextExport, renderAiContextText, valid
 import { renderAiGuideText } from "../ai-guide";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
-import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
+import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
+import { loadBaseDados } from "../../base de dados/storage";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
@@ -487,6 +488,43 @@ export default function RoteiroEditor() {
     exportTextFile("GUIA_DE_GERACAO_E_EDICAO_DE_ROTEIROS_NYMI.md", renderAiGuideText());
     setExportMessage("Guia de geração exportado.");
   };
+  const importDatabaseVideos = async () => {
+    setExportLoading("database-import"); setExportMessage("");
+    try {
+      const database = await loadBaseDados();
+      if (!database.videos.length) throw new Error("A Base de dados não possui vídeos cadastrados.");
+      await createRoteiroBackup();
+      let nextState = state;
+      const imported: string[] = [];
+      const failures: string[] = [];
+      for (const sourceVideo of database.videos) {
+        const draft = addTikTokCommand(nextState, script.id, 1, false);
+        try {
+          const video = await importBaseDadosVideoIntoRoteiro(script.id, draft.section.id, sourceVideo.id);
+          const section: TikTokSection = {
+            ...draft.section,
+            title: `Vídeo ${String(sourceVideo.sequence).padStart(2, "0")}`,
+            description: sourceVideo.description,
+            sceneEndSeconds: sourceVideo.sceneEndSeconds,
+            reactionBlocks: [],
+            video,
+            updatedAt: nowIso(),
+          };
+          nextState = patchTikTokCommand(draft.state, script.id, draft.section.id, section);
+          imported.push(`Vídeo ${String(sourceVideo.sequence).padStart(2, "0")}`);
+        } catch (error) {
+          failures.push(`${sourceVideo.originalName}: ${error instanceof Error ? error.message : "erro desconhecido"}`);
+        }
+      }
+      if (imported.length) {
+        updateState(() => nextState);
+        setActiveSectionId(nextState.scripts.find((item) => item.id === script.id)?.tiktoks.at(-1)?.id || "");
+        setOpeningActive(false);
+      }
+      setExportMessage(`Base de dados importada: ${imported.length}/${database.videos.length} vídeo(s), com descrições e tempos da cena.${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+    } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar a Base de dados."); }
+    finally { setExportLoading(""); }
+  };
   const importAiContext = async (file?: File) => {
     if (!file) return;
     setExportLoading("context-import"); setExportMessage("");
@@ -607,6 +645,7 @@ export default function RoteiroEditor() {
         <section className={`${styles.exportTools} ${styles.railSection}`}>
           <div className={styles.railSectionHeader}><div><span>BASE PARA IA EXTERNA</span><small>Arquivo para gerar ou importar blocos</small></div></div>
           <div className={styles.contextTransferBox}>
+            <button className={styles.databaseImportButton} disabled={Boolean(exportLoading)} onClick={() => void importDatabaseVideos}>{exportLoading === "database-import" ? "Importando vídeos…" : "＋ Importar base de dados"}</button>
             <strong>ARQUIVO DA BASE</strong>
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>

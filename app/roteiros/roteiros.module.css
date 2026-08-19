@@ -245,6 +245,8 @@
 .contextTransferBox small { color:#6d6677; font-size:10px; line-height:1.45; }
 .contextTransferBox button { width:100%; justify-content:center; }
 .contextTransferBox .contextTransferHint { color:#786e8c; font-size:9px; }
+.databaseImportButton { border:1px solid #299b68; border-radius:10px; background:linear-gradient(135deg,#39b978,#218b59); color:#fff; box-shadow:0 7px 16px rgba(39,155,103,.2); font-weight:900; }
+.databaseImportButton:hover:not(:disabled) { background:linear-gradient(135deg,#2eaa6b,#187b4d); transform:translateY(-1px); }
 .contextImportPreview { display:grid; gap:5px; padding:10px; border:1px solid #efca8d; border-radius:9px; background:#fffaf0; }
 .contextImportPreview strong { color:#9d6416; font-size:9px; letter-spacing:.1em; }
 .contextImportPreview small { color:#776b58; font-size:9px; overflow-wrap:anywhere; }
