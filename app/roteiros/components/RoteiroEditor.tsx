@@ -645,7 +645,7 @@ export default function RoteiroEditor() {
         <section className={`${styles.exportTools} ${styles.railSection}`}>
           <div className={styles.railSectionHeader}><div><span>BASE PARA IA EXTERNA</span><small>Arquivo para gerar ou importar blocos</small></div></div>
           <div className={styles.contextTransferBox}>
-            <button className={styles.databaseImportButton} disabled={Boolean(exportLoading)} onClick={() => void importDatabaseVideos}>{exportLoading === "database-import" ? "Importando vídeos…" : "＋ Importar base de dados"}</button>
+            <button className={styles.databaseImportButton} disabled={Boolean(exportLoading)} onClick={() => void importDatabaseVideos()}>{exportLoading === "database-import" ? "Importando vídeos…" : "＋ Importar base de dados"}</button>
             <strong>ARQUIVO DA BASE</strong>
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
