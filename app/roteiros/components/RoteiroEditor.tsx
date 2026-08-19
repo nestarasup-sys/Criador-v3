@@ -6,7 +6,7 @@ import Link from "next/link";
 import { buildAiCharacters, getScriptAiContext } from "../ai-context";
 import { createNarrativeProfile, nowIso } from "../defaults";
 import { addOpening as addOpeningCommand, addOpeningReactionBlock, addReactionBlock, addTikTok as addTikTokCommand, duplicateOpeningReactionBlock, duplicateReactionBlock, moveOpeningReactionBlock, moveReactionBlock, moveTikTok as moveTikTokCommand, patchOpening as patchOpeningCommand, patchOpeningReactionBlock, patchReactionBlock, patchTikTok as patchTikTokCommand, removeOpening as removeOpeningCommand, removeOpeningReactionBlock, removeReactionBlock, removeTikTok as removeTikTokCommand, updateScript as updateScriptCommand } from "../commands";
-import { applyAiContextResult, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
+import { applyAiContextResult, applyAiOrderingProposal, createAiContextExport, renderAiContextText, validateAiContextResult } from "../context-transfer";
 import { renderAiGuideText } from "../ai-guide";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
@@ -552,10 +552,13 @@ export default function RoteiroEditor() {
       const validation = validateAiContextResult(contextImportPreview.data, script);
       if (!validation.valid || !validation.data) throw new Error("O roteiro foi alterado desde a prévia. Importe o arquivo novamente.");
       await createRoteiroBackup();
-      const result = applyAiContextResult(script, validation.data);
-      updateState((current) => updateScriptCommand(current, script.id, () => result.script));
+      const blockResult = applyAiContextResult(script, validation.data);
+      const orderingResult = applyAiOrderingProposal(blockResult.script, validation.data);
+      updateState((current) => updateScriptCommand(current, script.id, () => orderingResult.script));
       setContextImportPreview(null);
-      setExportMessage(`Contexto importado: ${result.report.blocksImported} bloco(s) preenchido(s), ${result.report.blocksCreated} criado(s), ${result.report.manualBlocksSkipped} manual(is) preservado(s).${result.report.errors.length ? ` Avisos: ${result.report.errors.join(" | ")}` : ""}`);
+      const orderingMessage = validation.data.orderingProposal ? ` ${orderingResult.report.moved} TikTok(s) reorganizado(s).` : "";
+      const errors = [...blockResult.report.errors, ...orderingResult.report.errors];
+      setExportMessage(`Contexto importado: ${blockResult.report.blocksImported} bloco(s) preenchido(s), ${blockResult.report.blocksCreated} criado(s), ${blockResult.report.manualBlocksSkipped} manual(is) preservado(s).${orderingMessage}${errors.length ? ` Avisos: ${errors.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível aplicar o contexto da IA."); }
     finally { setExportLoading(""); }
   };
