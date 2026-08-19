@@ -533,6 +533,7 @@ export default function RoteiroEditor() {
   };
   const importAiContext = async (file?: File) => {
     if (!file) return;
+    setContextImportPreview(null);
     setExportLoading("context-import"); setExportMessage("");
     try {
       const raw = JSON.parse(await file.text()) as unknown;
@@ -659,8 +660,8 @@ export default function RoteiroEditor() {
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={exportAiGuide}>✦ Exportar guia</button>
-            <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void importAiContext(file); }} />
-            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => contextImportRef.current?.click()}>⇧ Importar base pronta</button>
+            <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void importAiContext(file); }} />
+            <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => { if (contextImportRef.current) { contextImportRef.current.value = ""; contextImportRef.current.click(); } }}>⇧ Importar base pronta</button>
             <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>
             {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void applyAiContextImport()}>{exportLoading === "context-apply" ? "Criando backup…" : "Confirmar e aplicar"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
           </div>
