@@ -1,211 +1,280 @@
-# Roteiros — Base de Dados e Importação de Roteiros por IA
+# Plano executável — Base de dados + IA externa + IA local de Roteiros
 
-## Objetivo
+## 1. Visão do produto
 
-Transformar a área independente **Base de dados** em uma fonte organizada de vídeos e personagens para uma IA externa. A IA receberá um TXT com todos os vídeos cadastrados e somente os personagens escolhidos; depois devolverá um JSON validado que criará um roteiro novo dentro de **Roteiros**.
+A **Base de dados** será uma biblioteca local de vídeos preparados para reutilização. Cada vídeo terá ID estável, sequência visual, arquivo local, caminho absoluto, duração total calculada, descrição objetiva e o segundo em que a descrição termina.
 
-O campo **tempo que termina a cena da descrição** é uma informação operacional: ao importar o JSON, ele será copiado para o campo \`sceneEndSeconds\` do TikTok criado. Esse é o ponto a partir do qual as falas e pensamentos podem começar.
+O usuário selecionará personagens do Criador de Personagens e exportará uma base para uma IA externa. A IA externa não será responsável por escrever o roteiro final. Ela funcionará como planejadora: escolherá vídeos, definirá a ordem e indicará quais personagens devem reagir em cada um.
 
-## Regras definitivas
+Depois, o Nymi Gacha importará esse plano e usará a IA local já integrada em **Roteiros** para escrever a abertura, falas e pensamentos com as regras e a qualidade atuais do app.
 
-- Os personagens disponíveis vêm do Criador de Personagens.
-- A seleção consulta os personagens do Criador, mas a ficha exportada é somente a ficha narrativa do Roteiros: personalidade, história, relações, estilo de fala, regras e relacionamentos narrativos.
-- Os caminhos dos vídeos exportados são absolutos.
-- A IA pode escolher e reorganizar os vídeos livremente.
-- Um mesmo vídeo não pode aparecer mais de uma vez no roteiro importado.
-- A exportação inclui todos os vídeos cadastrados e somente os personagens selecionados.
-- O botão Salvar da Base de dados será substituído por salvamento automático.
-- O botão Importar de Roteiros será renomeado para **Importar roteiro da IA**.
-- A importação sempre cria um roteiro novo e nunca sobrescreve um roteiro existente.
-- Os tipos de bloco permitidos no JSON novo são somente \`speech\` e \`thought\`.
-- A IA referencia vídeos e personagens por ID; o app resolve os dados localmente e não confia em caminhos enviados pela IA.
+## 2. Divisão das responsabilidades
 
-## Fase 0 — Preparação e contratos
+### Base de dados
 
-- Auditar os contratos atuais de Base de dados, Criador e Roteiros.
-- Registrar este plano em \`docs/ROTEIROS_BASE_DE_DADOS_PLANO.md\`.
-- Criar os formatos versionados \`NYMI_BASE_DATABASE_EXPORT_V2\` e \`NYMI_IMPORTABLE_SCRIPT_V1\`.
-- Preservar compatibilidade com estados antigos da Base de dados e Roteiros.
-- Criar IDs estáveis para vídeos, sem depender do nome original do arquivo.
-- Definir o adaptador de importação para o contrato atual de \`ScriptProject\`, \`TikTokSection\` e \`ReactionBlock\`.
-- Criar commit local de segurança antes das alterações de código.
+Armazena e organiza vídeos, descrições, tempos e arquivos locais.
 
-## Fase 1 — Salvamento automático
+### IA externa
 
-- Remover o botão Salvar dos cards.
-- Salvar descrição e tempo final automaticamente depois de uma pausa na digitação.
-- Usar debounce e fila de gravação para não perder a última alteração.
-- Isolar os drafts por ID de vídeo.
-- Cancelar ou substituir gravações obsoletas.
-- Sincronizar o card depois da resposta do servidor.
-- Manter o estado íntegro em recarregamentos e trocas rápidas de campo.
-- Evitar faixas grandes de aviso na interface.
-- Testar edição, troca de vídeo, reload e gravações consecutivas.
+Responsável somente por analisar a biblioteca, escolher vídeos, reorganizar a ordem, selecionar personagens participantes, propor a função dramática de cada vídeo e devolver um plano JSON válido. Ela não deve escrever falas, pensamentos, abertura ou roteiro literário completo.
 
-## Fase 2 — Identidade e integridade dos vídeos
+### Nymi Gacha / IA local de Roteiros
 
-- Preservar sequência visual 01, 02, 03 etc.
-- Persistir ID interno estável para cada item.
-- Invalidar o cache do player com \`updatedAt\`.
+Responsável por criar a abertura, escrever falas e pensamentos, respeitar fichas, relações, cronologia e o fim da cena descritiva, manter continuidade e permitir a edição dentro do formato atual do app.
+
+### Usuário
+
+Responsável por revisar a seleção, revisar a ordem proposta, confirmar a criação e revisar o texto gerado pela IA local.
+
+## 3. Fluxo final
+
+```text
+Cadastrar vídeos → preencher descrição e fim da cena → selecionar personagens
+→ exportar base TXT → enviar TXT + guia para IA externa
+→ receber plano JSON → importar no Nymi Gacha → validar e revisar prévia
+→ criar roteiro novo → IA local escrever abertura, falas e pensamentos
+→ revisar e exportar
+```
+
+## 4. Contratos de dados
+
+### 4.1 Exportação da Base
+
+O TXT usará o cabeçalho `NYMI_BASE_DATABASE_EXPORT_V2`.
+
+Cada vídeo deverá conter:
+
+```text
+VIDEO 01
+ID: video-...
+SEQUÊNCIA: 01
+CAMINHO ABSOLUTO: C:\...\base-de-dados\videos\01.mp4
+NOME ORIGINAL: video-original.mp4
+DESCRIÇÃO: descrição objetiva do que acontece
+TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: 8.00 segundos
+TEMPO TOTAL DO VÍDEO: 20.00 segundos
+```
+
+Depois dos vídeos, o TXT conterá somente os personagens escolhidos:
+
+```text
+PERSONAGENS SELECIONADOS
+ID: personagem-01
+NOME: Alexander
+FICHA NARRATIVA DO ROTEIROS (JSON): {...}
+```
+
+Não exportar como fonte de decisão da IA externa: ficha técnica do Criador, roupas, cabelo, fotos, ajustes de matiz ou caminhos de assets do Criador. A ficha narrativa do Roteiros é a fonte de personalidade, história, relações e estilo de fala.
+
+### 4.2 Guia para a IA externa
+
+O botão **Exportar guia** gerará um Markdown reutilizável, sem dados específicos de um roteiro. O guia deverá instruir:
+
+1. A Base TXT é a única fonte de vídeos disponíveis.
+2. Só podem ser usados IDs presentes no TXT.
+3. Um vídeo não pode aparecer duas vezes.
+4. A IA pode mudar livremente a ordem.
+5. A IA deve escolher apenas personagens exportados.
+6. A IA deve decidir quais personagens participam de cada vídeo.
+7. O tempo final da descrição é uma restrição operacional.
+8. A IA externa deve produzir planejamento, não diálogo.
+9. A resposta deve conter somente JSON válido.
+10. Caminhos absolutos não devem ser inventados nem usados como identificadores.
+
+### 4.3 Plano JSON da IA externa
+
+Formato versionado:
+
+```json
+{
+  "format": "NYMI_ROTEIRO_PLAN_V1",
+  "title": "Nome do novo roteiro",
+  "concept": "Resumo opcional da linha dramática",
+  "videos": [
+    {
+      "videoId": "video-01",
+      "order": 1,
+      "purpose": "Apresentar FYN de forma inesperada",
+      "characterIds": ["personagem-01", "personagem-02"]
+    }
+  ]
+}
+```
+
+Campos obrigatórios: `format`, `title` e `videos`. Cada vídeo deve ter `videoId`, `order` e `characterIds`. `purpose` e `concept` são opcionais.
+
+O plano não deverá conter `speech`, `thought`, `silent`, texto de fala ou texto de pensamento. Esses campos pertencem à IA local do Roteiros.
+
+## 5. Fases de implementação
+
+### Fase 0 — Auditoria e contratos
+
+- Auditar os contratos atuais da Base, Roteiros e personagens.
+- Registrar os formatos V2 da Base e V1 do plano.
+- Confirmar IDs estáveis dos vídeos.
+- Confirmar que a exportação usa somente a ficha narrativa do Roteiros.
+- Separar o guia externo do prompt interno da IA local.
+- Criar checkpoint Git antes das alterações.
+
+**Concluída quando:** formatos e responsabilidades não estiverem misturados.
+
+### Fase 1 — Base de dados confiável
+
+- Manter upload local dos vídeos.
+- Calcular e persistir duração total.
+- Persistir descrição e `sceneEndSeconds` automaticamente.
+- Salvar ao sair do campo e após debounce.
+- Recuperar rascunho local se a página fechar antes da requisição.
+- Evitar sobrescrita por requisições antigas.
+- Preservar dados ao recarregar a página.
 - Impedir que vídeo excluído reapareça ao adicionar outro.
-- Detectar arquivo ausente na pasta local.
-- Não usar nome original como chave.
-- Preservar duração calculada, descrição e \`sceneEndSeconds\`.
-- Testar exclusão, reimportação e arquivos removidos manualmente.
+- Detectar arquivo removido manualmente.
 
-## Fase 3 — Seleção de personagens
+**Concluída quando:** descrição e tempo permanecerem depois de reload, reinício do servidor e exportação.
 
-- Adicionar o botão **Selecionar personagens** ao lado de Exportar dados.
-- Carregar personagens do Criador pelo endpoint local atual.
-- Mostrar ID, nome, modelo, miniatura e checkbox.
-- Adicionar busca, seleção individual, limpar seleção e contador.
-- Persistir a seleção durante a sessão e recuperar a seleção válida após reload.
-- Não exportar personagens fora da seleção.
-- Usar os dados do Criador apenas para identificar e apresentar o personagem no seletor; não exportar ajustes, roupas, modelos ou fotos.
-- Anexar a ficha narrativa e relacionamentos existentes no Roteiros.
+### Fase 2 — Seleção de personagens
 
-## Fase 4 — Exportação TXT
+- Adicionar o seletor de personagens na Base.
+- Carregar personagens do Criador.
+- Mostrar nome, ID, modelo e miniatura.
+- Adicionar pesquisa, seleção individual, seleção de visíveis e limpeza.
+- Persistir a seleção localmente.
+- Invalidar IDs de personagens apagados.
+- Exportar somente os personagens selecionados.
+
+**Concluída quando:** a IA externa receber exatamente os personagens escolhidos, sem dados extras do Criador.
+
+### Fase 3 — Exportação da Base
 
 - Exportar todos os vídeos cadastrados.
-- Exportar caminho absoluto, ID, sequência, nome original, descrição, duração total e tempo final da cena.
-- Exportar somente os personagens selecionados.
-- Incluir ID, nome e somente a ficha narrativa de Roteiros de cada personagem.
-- Separar vídeos e personagens com marcadores claros.
-- Preservar acentos, quebras de linha e conteúdo vazio de forma explícita.
-- Não exportar blocos antigos de nenhum roteiro.
-- Usar o cabeçalho \`NYMI_BASE_DATABASE_EXPORT_V2\`.
-- Criar testes de conteúdo, seleção, caminhos e ausência de dados.
+- Exportar a descrição mais recente, inclusive alterações ainda em debounce.
+- Exportar duração calculada e fim da cena.
+- Exportar caminhos absolutos e IDs estáveis.
+- Exportar fichas narrativas e relacionamentos.
+- Preservar acentos, quebras de linha e campos vazios.
+- Nunca exportar blocos antigos de outros roteiros.
+- Gerar mensagens de erro para dados inválidos.
 
-## Fase 5 — Guia reutilizável para IA
+**Concluída quando:** o TXT for suficiente para escolher vídeos e entender os personagens.
 
-- Fazer Exportar guia gerar um Markdown independente de qualquer roteiro.
-- Explicar o TXT, IDs, ordem livre e proibição de duplicidade.
-- Explicar falas, pensamentos, vídeos e o tempo final da cena.
-- Descrever o JSON obrigatório e campos opcionais.
-- Instruir a IA a retornar apenas JSON válido.
-- Proibir IDs, caminhos, vídeos e personagens inventados.
-- Incluir exemplos válidos e inválidos.
-- Explicar que o app usa a Base de dados local como fonte de verdade para duração, descrição e \`sceneEndSeconds\`.
+### Fase 4 — Guia da IA externa
 
-## Fase 6 — JSON importável
+- Reescrever o guia com foco em planejamento.
+- Proibir geração de falas e pensamentos.
+- Explicar ordem livre e proibição de duplicidade.
+- Explicar seleção por IDs.
+- Explicar que duração e fim da descrição serão resolvidos pelo app.
+- Fornecer JSON válido completo e exemplos inválidos.
+- Instruir retorno somente em JSON compatível com `NYMI_ROTEIRO_PLAN_V1`.
 
-Formato mínimo:
+**Concluída quando:** uma IA externa conseguir devolver um plano pequeno e importável sem escrever o roteiro final.
 
-\`\`\`json
-{
-  "format": "NYMI_IMPORTABLE_SCRIPT_V1",
-  "title": "Novo roteiro",
-  "videos": [{ "videoId": "video-01", "order": 1 }],
-  "characters": [{ "characterId": "personagem-01", "role": "principal" }],
-  "blocks": [{
-    "type": "speech",
-    "characterId": "personagem-01",
-    "videoId": "video-01",
-    "text": "Texto da fala",
-    "startAt": 10
-  }]
-}
-\`\`\`
+### Fase 5 — Importação do plano
 
-- Aceitar somente \`speech\` e \`thought\`.
-- Exigir IDs existentes.
-- Rejeitar vídeo repetido.
-- Permitir ordem escolhida pela IA.
-- Usar \`order\` para organizar os TikToks.
-- Usar \`startAt\` opcional; quando ausente, usar o fim da descrição.
-- Impedir falas e pensamentos antes de \`sceneEndSeconds\`.
-- Não aceitar caminhos como fonte de verdade.
+- Renomear o fluxo para **Importar plano da IA** ou **Importar roteiro planejado**.
+- Aceitar somente formatos e versões suportados.
+- Validar JSON antes de alterar o estado.
+- Validar título, IDs, ordem e lista de vídeos.
+- Rejeitar vídeo duplicado, ordem duplicada ou personagem inexistente.
+- Ignorar caminhos enviados pela IA.
+- Resolver os arquivos usando a Base local.
 
-## Fase 7 — Importar roteiro da IA
+**Concluída quando:** nenhum plano inválido criar roteiro parcial.
 
-- Renomear o botão Importar para **Importar roteiro da IA**.
-- Aceitar JSON.
-- Ler e validar sem gravar imediatamente.
-- Mostrar prévia com título, vídeos, ordem, personagens, falas, pensamentos, erros e avisos.
+### Fase 6 — Prévia e revisão
+
+- Mostrar título e conceito.
+- Mostrar ordem dos vídeos.
+- Mostrar descrição, duração e fim da cena.
+- Mostrar personagens por vídeo.
+- Avisar vídeos ausentes ou arquivos indisponíveis.
 - Permitir cancelar.
+- Permitir alterar ordem antes da confirmação.
+- Permitir remover vídeos e trocar personagens participantes.
+- Não editar falas nesta etapa, pois elas ainda não existem.
+
+**Concluída quando:** o usuário revisar a estrutura antes de criar o roteiro.
+
+### Fase 7 — Criação e IA local
+
 - Criar roteiro novo com ID novo.
-- Criar backup do estado antes de confirmar.
-- Limpar o input após o processo.
-- Nunca substituir roteiro existente.
-
-## Fase 8 — Montagem do roteiro
-
-- Resolver vídeos por ID na Base de dados.
-- Copiar caminho local, nome, duração e descrição.
-- Copiar \`sceneEndSeconds\` para o campo do TikTok do roteiro.
-- Criar TikToks na ordem do JSON.
-- Resolver personagens por ID no Criador.
+- Criar TikToks na ordem confirmada.
+- Copiar descrição, duração e `sceneEndSeconds` da Base.
+- Copiar vídeos para a pasta local do roteiro.
+- Resolver personagens por ID.
 - Criar participantes ativos.
-- Copiar ficha narrativa para o snapshot \`aiContext\` do roteiro.
-- Criar blocos de fala e pensamento.
-- Gerar IDs novos para seções e blocos.
-- Preservar horários válidos.
-- Permitir edição normal depois da importação.
+- Usar `concept` como contexto geral opcional.
+- Manter a IA local responsável pela escrita.
+- Gerar abertura separadamente.
+- Gerar falas e pensamentos usando o prompt atual de Roteiros.
+- Impedir reações antes do fim da descrição.
+- Permitir regenerar somente bloco ou seção.
 
-## Fase 9 — Validação e erros
+**Concluída quando:** o roteiro importado funcionar como um roteiro criado manualmente, já com vídeos e personagens preparados.
 
-- Rejeitar JSON inválido, versão desconhecida, IDs ausentes, vídeo duplicado, bloco sem texto, personagem ausente, tipo inválido e tempo negativo.
-- Diferenciar erro crítico de aviso.
-- Não salvar roteiro parcial.
-- Mostrar o item e campo que causaram o problema.
-- Avisar quando um bloco foi ajustado para o início mínimo da cena.
-- Avisar quando um arquivo local do vídeo não está disponível.
-- Manter o TXT e JSON originais intactos.
+### Fase 8 — Segurança e rollback
 
-## Fase 10 — Testes
+- Criar backup antes de confirmar a importação.
+- Copiar vídeos de forma rastreável.
+- Remover cópias se a criação falhar.
+- Não alterar a Base original.
+- Não alterar roteiros existentes.
+- Preservar TXT e JSON originais.
+- Mostrar erro acionável em falhas parciais.
+- Impedir acesso a caminhos arbitrários por IDs desconhecidos.
 
-- Testar autosave com digitação rápida e dois vídeos.
-- Testar exclusão e substituição de vídeo.
-- Testar exportação com zero, um e vários personagens.
-- Testar ficha narrativa, acentos, quebras de linha e relacionamentos.
-- Testar caminhos absolutos.
-- Testar todos os vídeos e seleção de personagens.
-- Testar guia sem dados específicos.
-- Testar JSON válido, inválido, duplicado e incompleto.
-- Testar ordem personalizada.
-- Testar falas, pensamentos e tempo mínimo.
-- Testar roteiro novo sem alterar roteiros existentes.
-- Rodar testes unitários, typecheck, build e diff check.
+**Concluída quando:** falhas não deixarem roteiro parcialmente criado nem arquivos órfãos.
 
-## Fase 11 — Commits e entrega
+### Fase 9 — Testes e entrega
 
-- Criar commit de segurança antes da implementação.
-- Criar commits locais por grupo funcional.
-- Manter árvore limpa após cada entrega.
-- Registrar nos commits o que foi implementado.
-- Confirmar que os dados antigos continuam legíveis.
-- Entregar o hash final e instruções de teste manual.
+Testar:
 
-## Critério de conclusão
+- base vazia, um vídeo e vários vídeos;
+- descrição com acentos e várias linhas;
+- tempo zero, decimal e maior que a duração;
+- upload, reload e reinício do servidor;
+- vídeo excluído e novo upload;
+- arquivo removido manualmente;
+- nenhum, um e vários personagens;
+- personagem removido após a seleção;
+- IA externa escolhendo ordem diferente;
+- vídeo repetido, personagem inexistente e caminho inventado;
+- plano vazio ou JSON inválido;
+- prévia cancelada e confirmação;
+- falha ao copiar vídeo;
+- preservação de roteiros existentes e da Base original;
+- IA local recebendo somente o contexto do roteiro importado;
+- falas começando somente após `sceneEndSeconds`.
 
-A implementação estará 100% concluída quando for possível:
+Comandos finais:
 
-1. Cadastrar vídeos e preencher descrição/tempo sem clicar em Salvar.
-2. Selecionar personagens do Criador.
-3. Exportar TXT com todos os vídeos e somente os personagens escolhidos.
-4. Exportar o guia uma vez.
-5. Receber um JSON da IA.
-6. Importar o JSON pelo botão Importar roteiro da IA.
-7. Visualizar a prévia e confirmar.
-8. Abrir um roteiro novo com vídeos, descrições, duração, fim da cena, personagens, falas e pensamentos corretos.
-9. Editar o roteiro normalmente sem afetar a Base de dados ou roteiros anteriores.
+```text
+npm run test:unit
+npm run typecheck
+npm run build
+npm run lint
+git diff --check
+```
 
-## Auditoria de execução — 2026-08-18
+## 6. Critério de conclusão do produto
 
-Status: **concluído em 100%** na branch local de testes.
+O fluxo estará completo quando o usuário conseguir:
 
-- [x] Checkpoint local reversível criado antes da auditoria: `13b1a12`.
-- [x] Autosave com debounce, fila por vídeo, cancelamento de edição obsoleta e proteção contra erro de rede.
-- [x] IDs estáveis, sequência visual sem reutilização automática e invalidação de cache do player.
-- [x] Detecção de arquivo local removido, com `fileAvailable` e aviso visual no card.
-- [x] Seletor de personagens com miniatura, busca, ID, modelo, contador, limpeza e persistência local.
-- [x] Exportação TXT V2 com todos os vídeos, caminhos absolutos, tempos, ID/nome e somente a ficha narrativa dos personagens escolhidos.
-- [x] Guia independente com regras, schema, exemplos válidos e inválidos, incluindo `speech` e `thought`.
-- [x] Importador V1 com prévia detalhada, validação de IDs, duplicidades, duração, caminho, tempos e tipos.
-- [x] Criação de roteiro novo, cópia local dos vídeos por ID, `sceneEndSeconds`, fichas narrativas, blocos ordenados e rollback de cópias incompletas.
-- [x] Backup obrigatório antes da confirmação da importação; falha no backup impede a operação.
-- [x] Testes unitários, typecheck, build, lint e verificação de diff executados com sucesso após a conclusão.
+1. Cadastrar muitos vídeos uma única vez.
+2. Descrever cada vídeo e informar quando a descrição termina.
+3. Selecionar os personagens desejados.
+4. Exportar a Base e o guia.
+5. Enviar esses arquivos para uma IA externa.
+6. Receber um plano JSON pequeno e estruturado.
+7. Importar o plano no Nymi Gacha.
+8. Revisar vídeos, ordem e personagens antes de confirmar.
+9. Criar um roteiro novo automaticamente.
+10. Usar a IA local do Roteiros para escrever a parte criativa.
+11. Revisar e ajustar o roteiro normalmente.
+12. Reutilizar os mesmos vídeos em outros roteiros sem duplicar ou perder a Base.
 
-### Reversão
+## 7. Decisão arquitetural principal
 
-Para voltar exatamente ao estado anterior à auditoria, usar `git reset --hard 13b1a12` na branch local. O commit final da auditoria será informado junto com os resultados de validação.
+Não fazer a IA externa competir com a IA local na escrita das reações. A IA externa organiza a matéria-prima, o app valida e monta a estrutura, a IA local escreve o conteúdo narrativo e o usuário revisa antes e depois da geração.
+
+Essa divisão reduz respostas genéricas, diminui o tamanho do prompt externo e aproveita a especialização que já funciona dentro do Nymi Gacha.
