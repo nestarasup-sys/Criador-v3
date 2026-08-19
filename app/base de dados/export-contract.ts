@@ -81,6 +81,25 @@ export function buildBaseDadosExportText(
   ].join("\n");
 }
 
+/** Exportação compacta para leitura rápida por uma IA ou revisão manual. */
+export function buildBaseDadosSimpleExportText(
+  database: BaseDadosState,
+  characters: BaseDadosCharacterExport[],
+) {
+  const videos = database.videos.map((video) => [
+    `TIKTOK ${String(video.sequence).padStart(2, "0")}`,
+    "DESCRIÇÃO:",
+    video.description.trim() || "Não preenchida.",
+  ].join("\n"));
+  const characterBlocks = characters.map((character, index) => [
+    `PERSONAGEM ${index + 1}`,
+    `NOME: ${character.name}`,
+    "FICHA:",
+    JSON.stringify(character.narrativeProfile || null, null, 2),
+  ].join("\n"));
+  return [...videos, ...characterBlocks].join("\n\n");
+}
+
 export function buildBaseDadosGuide() {
   return `# Guia operacional — criar roteiro importável para o Nymi Gacha
 

@@ -6,7 +6,7 @@ import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiS
 import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import { readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
-import { buildBaseDadosExportText, buildBaseDadosGuide, mergeBaseDadosDrafts } from "./export-contract";
+import { buildBaseDadosExportText, buildBaseDadosGuide, buildBaseDadosSimpleExportText, mergeBaseDadosDrafts } from "./export-contract";
 import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import styles from "./base-de-dados.module.css";
@@ -289,6 +289,25 @@ export default function BaseDadosPage() {
     } finally { setBusy(""); }
   };
 
+  const exportSimpleData = async () => {
+    const currentDatabase = databaseRef.current;
+    if (!currentDatabase?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar os dados.");
+    setBusy("export-simple"); setMessage("");
+    try {
+      await flushPendingDrafts();
+      const exportedDatabase = mergeBaseDadosDrafts(currentDatabase, draftsRef.current);
+      const selected = characterData.characters.filter((character) => selectedCharacterIds.includes(character.id)).map((character) => ({
+        characterId: character.id,
+        name: character.name,
+        narrativeProfile: characterData.profiles.find((profile) => profile.characterId === character.id),
+      }));
+      downloadText("BASE_DE_DADOS_NYMI_SIMPLES.txt", buildBaseDadosSimpleExportText(exportedDatabase, selected));
+      setMessage("Dados simples exportados.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível exportar os dados simples.");
+    } finally { setBusy(""); }
+  };
+
   const visibleCharacters = useMemo(() => {
     const query = characterQuery.trim().toLocaleLowerCase("pt-BR");
     return characterData.characters.filter((character) => !query || character.name.toLocaleLowerCase("pt-BR").includes(query) || character.id.toLocaleLowerCase("pt-BR").includes(query));
@@ -322,7 +341,7 @@ export default function BaseDadosPage() {
   };
 
   return <div className={styles.app}>
-    <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button></div></header>
+    <header className="topbar"><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className="button secondary" disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className="button secondary" disabled={Boolean(busy)} onClick={exportGuide}>✦ Exportar guia</button><button className="button secondary" disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button><button className="button primary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportData}>↓ Exportar dados</button><button className="button secondary" disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados simples</button></div></header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
       {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
