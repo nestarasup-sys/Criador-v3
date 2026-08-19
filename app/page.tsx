@@ -917,6 +917,8 @@ async function prepareHairPair(source: Blob) {
 }
 
 async function prepareHairPairSheet(source: Blob) {
+  const columns = 3;
+  const rows = 2;
   const cleanBlob = await removeChroma(source);
   const url = URL.createObjectURL(cleanBlob);
   try {
@@ -928,14 +930,19 @@ async function prepareHairPairSheet(source: Blob) {
     if (!sourceContext) throw new Error("Canvas indisponível");
     sourceContext.drawImage(image, 0, 0);
 
-    const ratio = sourceCanvas.width / Math.max(1, sourceCanvas.height);
-    if (Math.abs(ratio - 1.5) > .18) throw new Error("A folha precisa usar a proporção 3:2");
+    // A folha é definida pela grade (3 colunas × 2 linhas), não pela
+    // proporção externa da imagem. Geradores e editores costumam adicionar
+    // margens diferentes; por isso uma folha 16:9, 2:1 ou quadrada continua
+    // sendo válida desde que tenha os seis painéis preenchidos.
+    if (sourceCanvas.width < columns || sourceCanvas.height < rows) {
+      throw new Error("A folha é pequena demais para uma grade de três pares");
+    }
 
     const prepareCell = (column: number, row: number) => {
-      const startX = Math.round(column * sourceCanvas.width / 3);
-      const endX = Math.round((column + 1) * sourceCanvas.width / 3);
-      const startY = Math.round(row * sourceCanvas.height / 2);
-      const endY = Math.round((row + 1) * sourceCanvas.height / 2);
+      const startX = Math.round(column * sourceCanvas.width / columns);
+      const endX = Math.round((column + 1) * sourceCanvas.width / columns);
+      const startY = Math.round(row * sourceCanvas.height / rows);
+      const endY = Math.round((row + 1) * sourceCanvas.height / rows);
       const width = endX - startX;
       const height = endY - startY;
       const cell = document.createElement("canvas");
@@ -947,7 +954,7 @@ async function prepareHairPairSheet(source: Blob) {
       const pixels = cellContext.getImageData(0, 0, width, height);
       const bounds = contentBounds(pixels.data, width, height);
       if (!bounds || bounds.width < width * .04 || bounds.height < height * .04) {
-        throw new Error(`A célula ${row * 3 + column + 1} está vazia`);
+        throw new Error(`A célula ${row * columns + column + 1} está vazia`);
       }
 
       const crop = document.createElement("canvas");
@@ -968,11 +975,13 @@ async function prepareHairPairSheet(source: Blob) {
       );
       return crop;
     };
-    const crops = [0, 1, 2].flatMap((column) => [prepareCell(column, 0), prepareCell(column, 1)]);
+    const crops = Array.from({ length: columns }, (_, column) =>
+      Array.from({ length: rows }, (_, row) => prepareCell(column, row)),
+    ).flat();
     const normalized = normalizeCanvasSet(crops, "center");
-    return await Promise.all([0, 1, 2].map(async (column) => {
-      const frontCanvas = normalized[column * 2];
-      const backCanvas = normalized[column * 2 + 1];
+    return await Promise.all(Array.from({ length: columns }, async (_, column) => {
+      const frontCanvas = normalized[column * rows];
+      const backCanvas = normalized[column * rows + 1];
       const shared = { width: frontCanvas.width, height: frontCanvas.height, defaultX: 970, defaultY: 285 };
       return {
         front: { ...shared, blob: await canvasBlob(frontCanvas) },
@@ -1929,9 +1938,10 @@ export default function Home() {
         cabelos: { ...DEFAULT_TRANSFORM },
         cabelosTras: { ...DEFAULT_TRANSFORM },
       }));
-      setNotice("Três pares importados; o primeiro ficou selecionado");
-    } catch {
-      setNotice("Folha incompleta ou fora do formato: use três colunas, frente em cima e traseiro embaixo");
+      setNotice(`${preparedPairs.length} pares importados; o primeiro ficou selecionado`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "formato inválido";
+      setNotice(`Não foi possível importar a folha: ${reason}. Use três colunas, frente em cima e traseiro embaixo`);
     } finally {
       setIsProcessing(false);
     }

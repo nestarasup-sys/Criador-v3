@@ -255,7 +255,9 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(catalog, /Folha · 3 pares/);
   assert.match(page, /Frente 1[\s\S]*Frente 2[\s\S]*Frente 3[\s\S]*Trás 1[\s\S]*Trás 2[\s\S]*Trás 3/);
   assert.match(page, /linkedHairId: frontId/);
-  assert.match(page, /Math\.abs\(ratio - 1\.5\)/);
+  assert.match(page, /const columns = 3/);
+  assert.match(page, /const rows = 2/);
+  assert.doesNotMatch(page, /proporção 3:2/);
   assert.match(css, /\.hair-sheet-layout/);
 });
 
