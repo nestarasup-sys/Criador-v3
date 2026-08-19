@@ -7,6 +7,7 @@ import { findVisibleBounds } from "./image-bounds.mjs";
 import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBounds } from "./creator/image-processing";
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
+import { detectHairSheetGrid } from "./creator/hair-sheet-processing";
 import { processChromaPixels } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -917,8 +918,6 @@ async function prepareHairPair(source: Blob) {
 }
 
 async function prepareHairPairSheet(source: Blob) {
-  const columns = 3;
-  const rows = 2;
   const cleanBlob = await removeChroma(source);
   const url = URL.createObjectURL(cleanBlob);
   try {
@@ -930,31 +929,24 @@ async function prepareHairPairSheet(source: Blob) {
     if (!sourceContext) throw new Error("Canvas indisponível");
     sourceContext.drawImage(image, 0, 0);
 
-    // A folha é definida pela grade (3 colunas × 2 linhas), não pela
-    // proporção externa da imagem. Geradores e editores costumam adicionar
-    // margens diferentes; por isso uma folha 16:9, 2:1 ou quadrada continua
-    // sendo válida desde que tenha os seis painéis preenchidos.
-    if (sourceCanvas.width < columns || sourceCanvas.height < rows) {
-      throw new Error("A folha é pequena demais para uma grade de três pares");
-    }
+    const regions = detectHairSheetGrid(
+      sourceContext.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height).data,
+      sourceCanvas.width,
+      sourceCanvas.height,
+    );
+    if (regions.length !== 6) throw new Error("não encontrei seis painéis preenchidos");
 
-    const prepareCell = (column: number, row: number) => {
-      const startX = Math.round(column * sourceCanvas.width / columns);
-      const endX = Math.round((column + 1) * sourceCanvas.width / columns);
-      const startY = Math.round(row * sourceCanvas.height / rows);
-      const endY = Math.round((row + 1) * sourceCanvas.height / rows);
-      const width = endX - startX;
-      const height = endY - startY;
+    const prepareCell = (region: ImageRegion, index: number) => {
       const cell = document.createElement("canvas");
-      cell.width = width;
-      cell.height = height;
+      cell.width = region.width;
+      cell.height = region.height;
       const cellContext = cell.getContext("2d", { willReadFrequently: true });
       if (!cellContext) throw new Error("Canvas indisponível");
-      cellContext.drawImage(sourceCanvas, startX, startY, width, height, 0, 0, width, height);
-      const pixels = cellContext.getImageData(0, 0, width, height);
-      const bounds = contentBounds(pixels.data, width, height);
-      if (!bounds || bounds.width < width * .04 || bounds.height < height * .04) {
-        throw new Error(`A célula ${row * columns + column + 1} está vazia`);
+      cellContext.drawImage(sourceCanvas, region.x, region.y, region.width, region.height, 0, 0, region.width, region.height);
+      const pixels = cellContext.getImageData(0, 0, region.width, region.height);
+      const bounds = contentBounds(pixels.data, region.width, region.height);
+      if (!bounds || bounds.width < region.width * .04 || bounds.height < region.height * .04) {
+        throw new Error(`a célula ${index + 1} está vazia`);
       }
 
       const crop = document.createElement("canvas");
@@ -975,13 +967,11 @@ async function prepareHairPairSheet(source: Blob) {
       );
       return crop;
     };
-    const crops = Array.from({ length: columns }, (_, column) =>
-      Array.from({ length: rows }, (_, row) => prepareCell(column, row)),
-    ).flat();
+    const crops = regions.map((region, index) => prepareCell(region, index));
     const normalized = normalizeCanvasSet(crops, "center");
-    return await Promise.all(Array.from({ length: columns }, async (_, column) => {
-      const frontCanvas = normalized[column * rows];
-      const backCanvas = normalized[column * rows + 1];
+    return await Promise.all([0, 1, 2].map(async (column) => {
+      const frontCanvas = normalized[column * 2];
+      const backCanvas = normalized[column * 2 + 1];
       const shared = { width: frontCanvas.width, height: frontCanvas.height, defaultX: 970, defaultY: 285 };
       return {
         front: { ...shared, blob: await canvasBlob(frontCanvas) },

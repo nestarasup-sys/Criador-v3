@@ -246,6 +246,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fit\)/);
   assert.doesNotMatch(page, /category === "cabelosTras" \? "cabelos" : category/);
   assert.match(page, /prepareHairPair/);
+  assert.match(page, /detectHairSheetGrid/);
   assert.match(page, /const \[back, front\] = await Promise\.all/);
   assert.match(page, /async function swapSelectedHairPair/);
   assert.match(page, /Inverter lados do par/);
@@ -255,9 +256,10 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(catalog, /Folha · 3 pares/);
   assert.match(page, /Frente 1[\s\S]*Frente 2[\s\S]*Frente 3[\s\S]*Trás 1[\s\S]*Trás 2[\s\S]*Trás 3/);
   assert.match(page, /linkedHairId: frontId/);
-  assert.match(page, /const columns = 3/);
-  assert.match(page, /const rows = 2/);
   assert.doesNotMatch(page, /proporção 3:2/);
+  const hairSheet = await readFile(new URL("../app/creator/hair-sheet-processing.ts", import.meta.url), "utf8");
+  assert.match(hairSheet, /detectHairSheetGrid/);
+  assert.match(hairSheet, /height \* \.38/);
   assert.match(css, /\.hair-sheet-layout/);
 });
 
