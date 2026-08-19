@@ -6,7 +6,7 @@ import { createGlobalRule, createId, createNarrativeProfile, createScriptAiConte
 import { profileCompletion } from "../ai-context";
 import { createScriptFromImport, validateImportableScript, type ImportValidation } from "../base-dados-import";
 import { normalizeRoteirosState } from "../../domain/document-schemas.mjs";
-import { aiRequest, createRoteiroBackup, exportJson, importBaseDadosVideoIntoRoteiro, listRoteiroBackups, removeRoteiroVideo, restoreRoteiroBackup } from "../storage";
+import { aiRequest, cleanupRoteiroOrphans, createRoteiroBackup, exportJson, importBaseDadosVideoIntoRoteiro, listRoteiroBackups, listRoteiroOrphans, removeRoteiro, removeRoteiroVideo, restoreRoteiroBackup, type RoteiroOrphans } from "../storage";
 import { loadBaseDados } from "../../base de dados/storage";
 import type { BaseDadosState } from "../../base de dados/types";
 import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
@@ -64,6 +64,8 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
   const [characterQuery, setCharacterQuery] = useState("");
   const [importPreview, setImportPreview] = useState<{ validation: ImportValidation; database: BaseDadosState } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [orphanPreview, setOrphanPreview] = useState<RoteiroOrphans | null>(null);
+  const [orphanBusy, setOrphanBusy] = useState(false);
   const importRef = useRef<HTMLInputElement>(null);
 
   const visibleScripts = useMemo(() => {
@@ -126,6 +128,34 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
     finally { if (importRef.current) importRef.current.value = ""; }
   };
 
+  const deleteScript = async (script: ScriptProject) => {
+    if (!window.confirm(`Excluir “${script.title}” e todas as pastas dele do PC?`)) return;
+    try {
+      await removeRoteiro(script.id);
+      const nextState = { ...state, scripts: state.scripts.filter((item) => item.id !== script.id) };
+      if (!await saveSnapshot(nextState)) throw new Error("O roteiro foi removido no servidor, mas a lista local não pôde ser atualizada.");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível excluir o roteiro.");
+    }
+  };
+
+  const auditOrphans = async () => {
+    setOrphanBusy(true);
+    try { setOrphanPreview(await listRoteiroOrphans()); }
+    catch (error) { window.alert(error instanceof Error ? error.message : "Não foi possível auditar as pastas."); }
+    finally { setOrphanBusy(false); }
+  };
+
+  const cleanupOrphans = async () => {
+    if (!orphanPreview) return;
+    const count = orphanPreview.internal.videos.length + orphanPreview.internal.backgrounds.length + orphanPreview.exports.length;
+    if (!count || !window.confirm(`Excluir ${count} pasta(s) órfã(s) encontradas?`)) return;
+    setOrphanBusy(true);
+    try { setOrphanPreview(null); await cleanupRoteiroOrphans(); await auditOrphans(); }
+    catch (error) { window.alert(error instanceof Error ? error.message : "Não foi possível limpar as pastas órfãs."); }
+    finally { setOrphanBusy(false); }
+  };
+
   const confirmBaseImport = async () => {
     if (!importPreview?.validation.success || !importPreview.validation.data) return;
     setImporting(true);
@@ -156,6 +186,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
         <div><span className={styles.eyebrow}>MEUS ROTEIROS</span><h1>Meus roteiros</h1><p>Organize histórias, reações e cenas em um só lugar.</p></div>
         <div className={styles.heroActions}>
           <input ref={importRef} hidden type="file" accept="application/json,.json" onChange={(event) => void importFile(event.target.files?.[0])} />
+          <button className={styles.secondaryButton} onClick={() => void auditOrphans()} disabled={orphanBusy}>⌕ Auditar pastas</button>
           <button className={styles.secondaryButton} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
           <button className={styles.secondaryButton} onClick={() => exportJson(`gacha-premium-roteiros-${new Date().toISOString().slice(0, 10)}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), data: state })}>↓ Exportar todos</button>
           <button className={styles.primaryButton} onClick={() => setCreating(true)}>＋ Criar roteiro</button>
@@ -175,12 +206,14 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
         const blockCount = script.tiktoks.reduce((total, section) => total + section.reactionBlocks.length, 0);
         return <article className={styles.scriptCard} key={script.id}>
           <div className={styles.cardAccent} />
-          <div className={styles.cardTop}><span>{script.tiktoks.length} TIKTOK{script.tiktoks.length === 1 ? "" : "S"}</span><div className={styles.cardMenu}><button title="Duplicar" onClick={() => duplicate(script.id)}>⧉</button><button title="Exportar" onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), script })}>↓</button><button title="Excluir" onClick={() => { if (window.confirm(`Excluir “${script.title}”?`)) updateState((current) => ({ ...current, scripts: current.scripts.filter((item) => item.id !== script.id) })); }}>×</button></div></div>
+          <div className={styles.cardTop}><span>{script.tiktoks.length} TIKTOK{script.tiktoks.length === 1 ? "" : "S"}</span><div className={styles.cardMenu}><button title="Duplicar" onClick={() => duplicate(script.id)}>⧉</button><button title="Exportar" onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), script })}>↓</button><button title="Excluir roteiro e pastas" onClick={() => void deleteScript(script)}>×</button></div></div>
           <h2>{script.title}</h2><p>{script.generalContext || "Contexto geral ainda não escrito."}</p>
           <div className={styles.castRow}>{cast.slice(0, 5).map((character) => <CharacterMark key={character.id} character={character} />)}{cast.length > 5 && <span className={styles.moreCast}>+{cast.length - 5}</span>}<small>{cast.length} personagens · {blockCount} blocos</small></div>
           <div className={styles.cardFooter}><time>{new Date(script.updatedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</time><a href={`/roteiros/${script.id}`}>Abrir roteiro →</a></div>
         </article>;
       })}</div>}
+
+      {orphanPreview && <div className={styles.modalBackdrop} onMouseDown={(event) => { if (event.target === event.currentTarget && !orphanBusy) setOrphanPreview(null); }}><section className={styles.modal}><div className={styles.modalHeader}><div><span className={styles.eyebrow}>AUDITORIA LOCAL</span><h2>Pastas órfãs</h2></div><button disabled={orphanBusy} onClick={() => setOrphanPreview(null)}>×</button></div><p>Pastas sem roteiro correspondente. Elas não são removidas automaticamente.</p><div className={styles.importIssues}><p><strong>Vídeos internos:</strong> {orphanPreview.internal.videos.length}</p><p><strong>Fundos internos:</strong> {orphanPreview.internal.backgrounds.length}</p><p><strong>Exportações rastreadas:</strong> {orphanPreview.exports.length}</p></div><div className={styles.modalFooter}><button className={styles.secondaryButton} disabled={orphanBusy} onClick={() => setOrphanPreview(null)}>Fechar</button><button className={styles.dangerButton} disabled={orphanBusy || !(orphanPreview.internal.videos.length + orphanPreview.internal.backgrounds.length + orphanPreview.exports.length)} onClick={() => void cleanupOrphans()}>{orphanBusy ? "Limpando…" : "Limpar órfãs"}</button></div></section></div>}
 
       {creating && <div className={styles.modalBackdrop} onMouseDown={(event) => { if (event.target === event.currentTarget) setCreating(false); }}><section className={styles.modal}>
         <div className={styles.modalHeader}><div><span className={styles.eyebrow}>NOVO PROJETO</span><h2>Criar roteiro</h2></div><button onClick={() => setCreating(false)}>×</button></div>

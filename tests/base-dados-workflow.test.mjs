@@ -127,6 +127,8 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /pagehide/);
   assert.match(basePage, /buildBaseDadosExportText/);
   assert.match(roteiroHome, /Importar roteiro da IA/);
+  assert.match(roteiroHome, /Auditar pastas/);
+  assert.match(roteiroHome, /Excluir roteiro e pastas/);
   assert.match(roteiroHome, /NYMI_IMPORTABLE_SCRIPT_V1/);
   assert.match(roteiroHome, /Confirmar e criar roteiro/);
   assert.match(roteiroHome, /await createRoteiroBackup\(\)/);

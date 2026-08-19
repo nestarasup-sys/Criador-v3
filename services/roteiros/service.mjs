@@ -622,6 +622,8 @@ export function createRoteirosService(rootFolder) {
   const root = resolve(rootFolder);
   const statePath = join(root, "estado.json");
   const backupsRoot = join(root, "backups");
+  const videosRoot = join(root, "videos");
+  const backgroundsRoot = join(root, "backgrounds");
   let state = structuredClone(EMPTY_STATE);
   let writeQueue = Promise.resolve();
   let aiQueueTail = Promise.resolve();
@@ -739,7 +741,7 @@ export function createRoteirosService(rootFolder) {
   }
 
   async function init() {
-    await Promise.all([mkdir(root, { recursive: true }), mkdir(backupsRoot, { recursive: true })]);
+    await Promise.all([mkdir(root, { recursive: true }), mkdir(backupsRoot, { recursive: true }), mkdir(videosRoot, { recursive: true }), mkdir(backgroundsRoot, { recursive: true })]);
     try {
       state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
     } catch (error) {
@@ -766,6 +768,70 @@ export function createRoteirosService(rootFolder) {
       await writeJsonAtomic(statePath, state);
     });
     return writeQueue;
+  }
+
+  function safeScriptId(value) {
+    const id = String(value || "");
+    if (!/^[a-zA-Z0-9_-]{1,160}$/.test(id)) throw Object.assign(new Error("Identificador de roteiro inválido."), { status: 400 });
+    return id;
+  }
+
+  async function removeScript(scriptId) {
+    const id = safeScriptId(scriptId);
+    let result;
+    writeQueue = writeQueue.catch(() => undefined).then(async () => {
+      const script = state.scripts.find((item) => item.id === id);
+      if (!script) throw Object.assign(new Error("Roteiro não encontrado."), { status: 404 });
+      const safetyBackup = await createBackup("roteiros-antes-exclusao");
+      state = normalizeState({ ...state, scripts: state.scripts.filter((item) => item.id !== id) });
+      await writeJsonAtomic(statePath, state);
+      const folders = [join(videosRoot, id), join(backgroundsRoot, id)];
+      for (const folder of folders) {
+        if (!inside(root, folder)) throw new Error("Pasta do roteiro fora da área permitida.");
+        await rm(folder, { recursive: true, force: true });
+      }
+      result = { script: structuredClone(script), safetyBackup: safetyBackup?.fileName ?? null, legacyTitleSafe: !state.scripts.some((item) => item.title === script.title), removedFolders: folders };
+    });
+    await writeQueue;
+    return result;
+  }
+
+  async function listOrphanScriptFolders() {
+    const knownIds = new Set(state.scripts.map((script) => script.id));
+    const list = async (parent) => {
+      try {
+        return (await readdir(parent, { withFileTypes: true }))
+          .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,160}$/.test(entry.name) && !knownIds.has(entry.name))
+          .map((entry) => entry.name);
+      } catch (error) {
+        if (error?.code === "ENOENT") return [];
+        throw error;
+      }
+    };
+    return { videos: await list(videosRoot), backgrounds: await list(backgroundsRoot) };
+  }
+
+  async function removeOrphanScriptFolders() {
+    const orphans = await listOrphanScriptFolders();
+    const removed = [];
+    for (const [kind, ids] of Object.entries(orphans)) {
+      const parent = kind === "videos" ? videosRoot : backgroundsRoot;
+      for (const id of ids) {
+        const folder = join(parent, id);
+        if (!inside(root, folder)) throw new Error("Pasta órfã fora da área permitida.");
+        await rm(folder, { recursive: true, force: true });
+        removed.push({ kind, id });
+      }
+    }
+    return { ...orphans, removed };
+  }
+
+  function getScriptIds() {
+    return state.scripts.map((script) => script.id);
+  }
+
+  function getScriptTitles() {
+    return state.scripts.map((script) => script.title);
   }
 
   async function handle(request, response, url, corsHeaders) {
@@ -869,5 +935,5 @@ export function createRoteirosService(rootFolder) {
     }
   }
 
-  return { init, handle };
+  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles };
 }

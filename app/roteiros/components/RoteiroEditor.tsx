@@ -440,7 +440,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
@@ -461,7 +461,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }

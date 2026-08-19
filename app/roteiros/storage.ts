@@ -107,6 +107,28 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
 }
 
+export async function removeRoteiro(scriptId: string) {
+  const response = await localDataFetch(`/roteiros/scripts/${encodeURIComponent(scriptId)}`, { method: "DELETE" });
+  const result = await response.json().catch(() => ({})) as { error?: string; scriptId?: string; safetyBackup?: string | null; removedFolders?: string[] };
+  if (!response.ok) throw new Error(result.error || "Não foi possível excluir o roteiro e suas pastas do PC.");
+  return result;
+}
+
+export type RoteiroOrphans = {
+  internal: { videos: string[]; backgrounds: string[] };
+  exports: Array<{ kind: string; folder: string; scriptId: string; untracked?: boolean }>;
+};
+
+export async function listRoteiroOrphans() {
+  const result = await request("/roteiros/orphans");
+  return result as RoteiroOrphans;
+}
+
+export async function cleanupRoteiroOrphans() {
+  const result = await request("/roteiros/orphans/cleanup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+  return result as { ok: boolean; internal: RoteiroOrphans["internal"] & { removed: Array<{ kind: string; id: string }> }; exports: { orphans: RoteiroOrphans["exports"]; removed: string[] } };
+}
+
 export async function importBaseDadosVideoIntoRoteiro(scriptId: string, tiktokId: string, videoId: string) {
   const response = await localDataFetch("/roteiros/import-base-video", {
     method: "POST",
@@ -156,10 +178,10 @@ export async function exportRoteiroText(script: ScriptProject, content: string) 
   return result as { path: string; fileName: string };
 }
 
-export async function exportRoteiroCharacter(scriptTitle: string, characterId: string, characterName: string, bundle: Blob) {
+export async function exportRoteiroCharacter(scriptId: string, scriptTitle: string, characterId: string, characterName: string, bundle: Blob) {
   const response = await localDataFetch(`/roteiros/export-characters/${encodeURIComponent(characterId)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/zip", ...localMeta({ scriptTitle, characterName }) },
+    headers: { "Content-Type": "application/zip", ...localMeta({ scriptId, scriptTitle, characterName }) },
     body: bundle,
   });
   const result = await response.json().catch(() => ({}));

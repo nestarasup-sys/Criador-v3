@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Readable } from "node:stream";
@@ -250,6 +250,61 @@ test("rejeita índices de blocos fora da seção solicitada", async () => {
     assert.equal(response.status, 400);
     assert.match(response.value.error, /blocos-alvo inválidos/i);
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("exclui roteiro e pastas próprias sem tocar em outro roteiro", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-roteiros-delete-"));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const state = {
+      version: 1,
+      profiles: [],
+      scripts: [
+        { id: "script-one", title: "Um", generalContext: "", participants: [], tiktoks: [], createdAt: "", updatedAt: "" },
+        { id: "script-two", title: "Dois", generalContext: "", participants: [], tiktoks: [], createdAt: "", updatedAt: "" },
+      ],
+      globalRules: [],
+      settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: 0.4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 },
+    };
+    const saved = await call(service, "POST", "/roteiros/state", state);
+    assert.equal(saved.status, 200);
+    await mkdir(join(root, "videos", "script-one"), { recursive: true });
+    await mkdir(join(root, "backgrounds", "script-one"), { recursive: true });
+    await mkdir(join(root, "videos", "script-two"), { recursive: true });
+    await writeFile(join(root, "videos", "script-one", "tiktok-1.mp4"), Buffer.from([1]));
+    await writeFile(join(root, "backgrounds", "script-one", "background.png"), Buffer.from([2]));
+    await writeFile(join(root, "videos", "script-two", "tiktok-1.mp4"), Buffer.from([3]));
+
+    const result = await service.removeScript("script-one");
+    assert.equal(result.script.id, "script-one");
+    await assert.rejects(stat(join(root, "videos", "script-one")));
+    await assert.rejects(stat(join(root, "backgrounds", "script-one")));
+    assert.equal((await stat(join(root, "videos", "script-two", "tiktok-1.mp4"))).size, 1);
+    const persisted = JSON.parse(await readFile(join(root, "estado.json"), "utf8"));
+    assert.deepEqual(persisted.scripts.map((script) => script.id), ["script-two"]);
+    assert.match(result.safetyBackup, /roteiros-antes-exclusao/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("lista e limpa somente pastas internas órfãs", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-roteiros-orphans-"));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    await mkdir(join(root, "videos", "script-orphan"), { recursive: true });
+    await mkdir(join(root, "backgrounds", "script-orphan"), { recursive: true });
+    const found = await service.listOrphanScriptFolders();
+    assert.deepEqual(found, { videos: ["script-orphan"], backgrounds: ["script-orphan"] });
+    const cleaned = await service.removeOrphanScriptFolders();
+    assert.equal(cleaned.removed.length, 2);
+    await assert.rejects(stat(join(root, "videos", "script-orphan")));
+    await assert.rejects(stat(join(root, "backgrounds", "script-orphan")));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });
 
 test("isola a melhoria da descrição do vídeo de qualquer outro TikTok e exige uma reescrita substancial", async () => {
