@@ -378,6 +378,7 @@ export default function RoteiroEditor() {
   const [openingActive, setOpeningActive] = useState(false);
   const [exportLoading, setExportLoading] = useState("");
   const [exportMessage, setExportMessage] = useState("");
+  const [contextImportInputKey, setContextImportInputKey] = useState(0);
   const contextImportRef = useRef<HTMLInputElement>(null);
   const [contextImportPreview, setContextImportPreview] = useState<{ fileName: string; data: AiContextResultDocument; sections: number; blocks: number; warnings: string[] } | null>(null);
   const warmupSettings = useMemo(() => state?.settings, [state?.settings]);
@@ -544,7 +545,7 @@ export default function RoteiroEditor() {
       setContextImportPreview({ fileName: file.name, data: validation.data, sections: sections.length, blocks, warnings: validation.warnings });
       setExportMessage(`Prévia pronta: ${sections.length} seção(ões) e ${blocks} bloco(s) para importar.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar o contexto da IA."); }
-    finally { setExportLoading(""); if (contextImportRef.current) contextImportRef.current.value = ""; }
+    finally { setExportLoading(""); setContextImportInputKey((value) => value + 1); if (contextImportRef.current) contextImportRef.current.value = ""; }
   };
   const applyAiContextImport = async () => {
     if (!contextImportPreview) return;
@@ -660,9 +661,10 @@ export default function RoteiroEditor() {
             <small>Exporta abertura, vídeos, durações, descrições, fichas locais e regras deste roteiro em um único documento de texto.</small>
             <button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={exportAiContext}>⇩ Exportar base</button>
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={exportAiGuide}>✦ Exportar guia</button>
-            <input ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void importAiContext(file); }} />
+            <input key={contextImportInputKey} ref={contextImportRef} type="file" accept="application/json,.json" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) void importAiContext(file); }} />
             <button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => { if (contextImportRef.current) { contextImportRef.current.value = ""; contextImportRef.current.click(); } }}>⇧ Importar base pronta</button>
             <small className={styles.contextTransferHint}>A IA pode escolher qualquer quantidade de blocos. Reações além da duração do vídeo são aceitas.</small>
+            {exportMessage && <small className={styles.contextTransferMessage}>{exportMessage}</small>}
             {contextImportPreview && <div className={styles.contextImportPreview}><strong>PRÉVIA DE IMPORTAÇÃO</strong><small>{contextImportPreview.fileName}</small><span>{contextImportPreview.sections} seção(ões) · {contextImportPreview.blocks} bloco(s)</span>{contextImportPreview.warnings.map((warning) => <small key={warning}>Aviso: {warning}</small>)}<button className={styles.primaryButton} disabled={Boolean(exportLoading)} onClick={() => void applyAiContextImport()}>{exportLoading === "context-apply" ? "Criando backup…" : "Confirmar e aplicar"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => setContextImportPreview(null)}>Cancelar</button></div>}
           </div>
         </section>
