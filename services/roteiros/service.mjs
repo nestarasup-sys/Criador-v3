@@ -590,14 +590,26 @@ async function blockAction(body, signal) {
     : (body.section || {});
   const block = section.reactionBlocks?.[body.blockIndex];
   if (!block?.characterId) throw new Error("Escolha o personagem deste bloco.");
+  if (!String(block.text || "").trim()) throw new Error("Escreva uma frase no bloco antes de usar esta ação.");
   const characterIds = (body.characters || []).map((character) => character.id).filter(Boolean);
   const previous = (section.reactionBlocks || []).slice(0, body.blockIndex).reverse().find((item) => item.characterId && (item.text || item.emotion));
   const next = (section.reactionBlocks || []).slice(body.blockIndex + 1).find((item) => item.characterId && (item.text || item.emotion));
-  const prompt = `${body.action === "rewrite" ? "Reescreva somente a frase do bloco alvo, preservando personagem, tipo, fatos, intenção e sentido." : "Crie uma alternativa para o bloco alvo sem quebrar a conversa."}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nBLOCO ANTERIOR:\n${JSON.stringify(compactBlocks(previous ? [previous] : []))}\n\nBLOCO ALVO:\n${JSON.stringify(compactBlocks([block]))}\n\nBLOCO SEGUINTE:\n${JSON.stringify(compactBlocks(next ? [next] : []))}\n\n${PROTECTED_RULES}\n\nREGRAS FINAIS:\n- Use characterId ${block.characterId}.\n- Use type ${block.type}.\n- Se for silent, deixe text vazio.\n- Retorne exatamente uma reação.\nRetorne somente JSON no formato solicitado.`;
-  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, 1), undefined, signal, { numPredict: 420 });
-  const reaction = result.data?.reactions?.[0];
-  if (!reaction) throw new Error("A IA não retornou o bloco.");
-  return { reaction: normalizedReaction(reaction, block, characterIds, 0), model: result.model };
+  // Mantém compatibilidade com clientes antigos: rewrite era o botão de
+  // refazer frase e regenerate era a regeneração unitária.
+  const action = body.action === "rewrite" ? "variations" : body.action === "regenerate" ? "improve" : body.action;
+  if (action !== "variations" && action !== "improve") throw new Error("Ação de frase inválida.");
+  const variationCount = action === "variations" ? 3 : 1;
+  const instruction = action === "variations"
+    ? "Gere EXATAMENTE 3 variações distintas da FRASE ATUAL. Cada variação deve preservar personagem, tipo de bloco, fatos, intenção e sentido, mudando a construção e o ritmo sem inventar informação. Não escolha uma vencedora e não repita a frase original."
+    : "Melhore a escrita da FRASE ATUAL em uma única versão. Preserve personagem, tipo de bloco, fatos, intenção e sentido. Corrija clareza, naturalidade, gramática e força da frase sem adicionar informação nova.";
+  const prompt = `${instruction}\n\nFRASE ATUAL — fonte principal da operação:\n${promptText(block.text, AI_MAX_GENERATED_TEXT)}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nBLOCO ANTERIOR:\n${JSON.stringify(compactBlocks(previous ? [previous] : []))}\n\nBLOCO ALVO:\n${JSON.stringify(compactBlocks([block]))}\n\nBLOCO SEGUINTE:\n${JSON.stringify(compactBlocks(next ? [next] : []))}\n\n${PROTECTED_RULES}\n\nREGRAS FINAIS:\n- Use characterId ${block.characterId}.\n- Preserve o tipo ${block.type === "auto" ? "escolha o tipo mais adequado" : block.type}.\n- Retorne ${variationCount === 3 ? "exatamente 3 reações, em ordem, sem texto extra" : "exatamente 1 reação, sem texto extra"}.\nRetorne somente JSON no formato solicitado.`;
+  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, variationCount), undefined, signal, { numPredict: variationCount === 3 ? 900 : 520 });
+  const reactions = Array.isArray(result.data?.reactions) ? result.data.reactions : [];
+  if (reactions.length !== variationCount) throw new Error(`A IA retornou ${reactions.length} opção(ões); eram esperadas ${variationCount}.`);
+  const normalized = reactions.map((reaction, index) => normalizedReaction(reaction, block, characterIds, index));
+  return variationCount === 3
+    ? { variations: normalized, model: result.model }
+    : { reaction: normalized[0], model: result.model };
 }
 
 async function translate(body, signal) {

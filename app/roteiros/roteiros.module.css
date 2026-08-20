@@ -300,6 +300,17 @@
 .blockActions { display:flex; flex-wrap:wrap; gap:4px; margin-top:9px; }
 .blockActions button { border:1px solid var(--line); border-radius:7px; padding:6px 8px; background:#fff; color:#6d6677; font-size:9px; font-weight:750; cursor:pointer; }
 .blockActions button:disabled { opacity:.38; cursor:default; }
+.phraseVariations { margin-top:11px; padding:12px; border:1px solid #d9cff7; border-radius:11px; background:linear-gradient(135deg,#f8f5ff,#fff); }
+.phraseVariationsHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#5e49a7; font-size:11px; }
+.phraseVariationsHeader button { border:0; background:transparent; color:#776b88; font-size:18px; cursor:pointer; }
+.phraseVariations>small { display:block; margin-top:4px; color:#766c80; font-size:10px; line-height:1.4; }
+.phraseVariationList { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:10px; }
+.phraseVariation { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:5px; padding:10px; border:1px solid #ded5f4; border-radius:9px; background:#fff; color:#342944; text-align:left; cursor:pointer; }
+.phraseVariation:hover { border-color:#8a69d8; background:#fbf9ff; box-shadow:0 5px 14px rgba(83,50,179,.1); }
+.phraseVariation span { color:#7652ca; font-size:9px; font-weight:900; letter-spacing:.1em; }
+.phraseVariation strong { display:block; width:100%; overflow-wrap:anywhere; font-size:11px; line-height:1.45; }
+.phraseVariation small { color:#776d82; font-size:9px; }
+.phraseVariationModel { opacity:.85; }
 .addTikTokFooter { width:min(1100px,100%); margin:18px auto 0; padding:16px; border:1px dashed #cfc5e3; border-radius:13px; background:rgba(255,255,255,.55); color:var(--purple); font-weight:800; cursor:pointer; }
 .loadingPage, .notFound { width:100%; height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; background:#f6f4f8; text-align:center; }
 .loadingPage>span, .notFound>span { width:56px; height:56px; display:grid; place-items:center; border-radius:18px; background:var(--purple-soft,#eee9ff); color:#7257d9; font-size:24px; }

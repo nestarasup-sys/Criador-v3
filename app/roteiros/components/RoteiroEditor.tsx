@@ -139,6 +139,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
   const [message, setMessage] = useState("");
   const [improvedContext, setImprovedContext] = useState("");
+  const [phraseVariations, setPhraseVariations] = useState<{ blockId: string; items: GeneratedReaction[]; model: string } | null>(null);
   const [undoBlocks, setUndoBlocks] = useState<ReactionBlock[] | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -217,13 +218,27 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     finally { setLoading(""); }
   };
 
-  const blockAction = async (blockIndex: number, action: "rewrite" | "regenerate") => {
+  const blockAction = async (blockIndex: number, action: "variations" | "improve") => {
     beginAiLoading(`${action}-${blockIndex}`); setMessage("");
+    setPhraseVariations(null);
     try {
-      const result = await requestAi<{ reaction: GeneratedReaction }>("block", { ...aiPayload, blockIndex, action });
-      updateBlock(section.reactionBlocks[blockIndex].id, { ...result.reaction, englishText: "" });
+      const result = await requestAi<{ reaction?: GeneratedReaction; variations?: GeneratedReaction[]; model: string }>("block", { ...aiPayload, blockIndex, action });
+      if (action === "variations") {
+        if (!result.variations || result.variations.length !== 3) throw new Error("A IA não retornou exatamente 3 variações.");
+        setPhraseVariations({ blockId: section.reactionBlocks[blockIndex].id, items: result.variations, model: result.model });
+        setMessage("Escolha uma das 3 variações para aplicar ao bloco.");
+      } else if (result.reaction) {
+        updateBlock(section.reactionBlocks[blockIndex].id, { ...result.reaction, englishText: "" });
+        setMessage(`Frase melhorada com ${result.model}.`);
+      }
     } catch (error) { setMessage(error instanceof Error ? error.message : "A ação falhou."); }
     finally { setLoading(""); }
+  };
+
+  const selectPhraseVariation = (blockId: string, variation: GeneratedReaction) => {
+    updateBlock(blockId, { ...variation, englishText: "" });
+    setPhraseVariations(null);
+    setMessage("Variação aplicada ao bloco.");
   };
 
   const translateItems = async (items: Array<{ id: string; text: string; type: "speech" | "thought"; characterName: string }>) => {
@@ -359,6 +374,9 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
         onUpdateBlock={updateBlock}
         onMoveBlock={moveBlock}
         onBlockAction={blockAction}
+        phraseVariations={phraseVariations}
+        onSelectVariation={selectPhraseVariation}
+        onDismissVariations={() => setPhraseVariations(null)}
         onTranslate={(block) => void translateItems([{ id: block.id, text: block.text, type: block.type as "speech" | "thought", characterName: characterName(block.characterId) }])}
         onDuplicateBlock={(block) => applyBlockCommand((current) => opening ? duplicateOpeningReactionBlock(current, script.id, block.id) : duplicateReactionBlock(current, script.id, section.id, block.id))}
         onRemoveBlock={(id) => applyBlockCommand((current) => opening ? removeOpeningReactionBlock(current, script.id, id) : removeReactionBlock(current, script.id, section.id, id))}

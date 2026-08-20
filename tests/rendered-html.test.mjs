@@ -536,7 +536,7 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(editor, /Preencher vazios/);
   assert.match(editor, /Substituir todos/);
   assert.match(editor, /Gerar inglês para todos/);
-  assert.match(blocks, /Regenerar/);
+  assert.match(blocks, /Melhorar frase/);
   assert.match(blocks, /Refazer frase/);
   assert.match(types, /RoteirosState/);
   assert.match(contract, /type RoteirosState/);
@@ -578,8 +578,9 @@ test("keeps every script control interactive inside the colored editor hierarchy
   assert.match(blocks, /<option value="thought">Pensamento<\/option>/);
   assert.doesNotMatch(blocks, /<option value="silent">Reação<\/option>/);
   assert.match(blocks, /onMoveBlock\(blockIndex, -1\)/);
-  assert.match(blocks, /onBlockAction\(blockIndex, "regenerate"\)/);
-  assert.match(blocks, /onBlockAction\(blockIndex, "rewrite"\)/);
+  assert.match(blocks, /onBlockAction\(blockIndex, "improve"\)/);
+  assert.match(blocks, /onBlockAction\(blockIndex, "variations"\)/);
+  assert.match(blocks, /phraseVariations/);
   assert.match(blocks, /Duplicar/);
   assert.match(blocks, /deleteButton/);
   assert.match(css, /\.contextZone/);

@@ -241,6 +241,47 @@ test("rejeita uma fala vazia retornada pela IA antes de gravar no roteiro", asyn
   }
 });
 
+test("separa refazer frase em três variações e melhorar frase em uma única versão", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-block-actions-"));
+  const variationsStub = await startDelayedModelStub(0, {
+    reactions: [
+      { characterId: "char-1", type: "speech", emotion: "calma", text: "Variação um." },
+      { characterId: "char-1", type: "speech", emotion: "calma", text: "Variação dois." },
+      { characterId: "char-1", type: "speech", emotion: "calma", text: "Variação três." },
+    ],
+  });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const base = {
+      settings: { aiProvider: "ollama", aiBaseUrl: variationsStub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+      characters: [{ id: "char-1", name: "Nymi", personality: "calma" }],
+      generalContext: "Contexto de teste.",
+      globalRules: [],
+      previousSections: [],
+      section: { description: "O personagem vê uma cena inesperada.", reactionBlocks: [{ id: "block-1", characterId: "char-1", type: "speech", text: "Eu não esperava por isso.", emotion: "surpresa" }] },
+      blockIndex: 0,
+    };
+    const variations = await call(service, "POST", "/roteiros/ai/block", { ...base, action: "variations" });
+    assert.equal(variations.status, 200);
+    assert.equal(variations.value.reaction, undefined);
+    assert.deepEqual(variations.value.variations.map((item) => item.text), ["Variação um.", "Variação dois.", "Variação três."]);
+
+    const improveStub = await startDelayedModelStub(0, { reactions: [{ characterId: "char-1", type: "speech", emotion: "firme", text: "Eu realmente não esperava por isso." }] });
+    try {
+      const improve = await call(service, "POST", "/roteiros/ai/block", { ...base, settings: { ...base.settings, aiBaseUrl: improveStub.baseUrl }, action: "improve" });
+      assert.equal(improve.status, 200);
+      assert.equal(improve.value.variations, undefined);
+      assert.equal(improve.value.reaction.text, "Eu realmente não esperava por isso.");
+    } finally {
+      await new Promise((resolve) => improveStub.server.close(resolve));
+    }
+  } finally {
+    await new Promise((resolve) => variationsStub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("rejeita índices de blocos fora da seção solicitada", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-targets-"));
   try {
