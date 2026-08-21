@@ -44,6 +44,43 @@ function findSeparator(profile: number[], expected: number, lower: number, upper
   return best;
 }
 
+/**
+ * A linha de baixo normalmente começa depois de uma faixa de transição, mas
+ * não necessariamente depois de uma faixa totalmente transparente: pontas
+ * finas do cabelo podem ocupar alguns pixels nessa região. Escolher o centro
+ * do vale, como numa grade comum, acaba misturando as duas linhas. Aqui
+ * encontramos o ponto mais baixo e avançamos até a ocupação voltar de forma
+ * consistente, colocando a borda antes do primeiro conteúdo da linha inferior.
+ */
+function findRowBand(profile: number[], expected: number, lower: number, upper: number) {
+  const start = Math.max(1, Math.floor(lower));
+  const end = Math.min(profile.length - 2, Math.ceil(upper));
+  if (end <= start) {
+    const fallback = Math.round(expected);
+    return { topEnd: fallback, bottomStart: fallback };
+  }
+
+  let valley = start;
+  for (let position = start + 1; position <= end; position += 1) {
+    if (profile[position] < profile[valley] || (profile[position] === profile[valley] && Math.abs(position - expected) < Math.abs(valley - expected))) {
+      valley = position;
+    }
+  }
+
+  const peak = Math.max(...profile.slice(start, end + 1));
+  const threshold = Math.max(profile[valley] + 18, Math.round(peak * .18));
+  let boundary = valley;
+  while (boundary < end && profile[boundary] <= threshold) boundary += 1;
+  if (boundary <= valley) {
+    const fallback = Math.round(expected);
+    return { topEnd: fallback, bottomStart: fallback };
+  }
+
+  // Discard the transition band entirely. It can contain thin tips from the
+  // lower hairstyle and also anti-aliased remnants of the upper hairstyle.
+  return { topEnd: valley, bottomStart: boundary };
+}
+
 function regionHasContent(data: Uint8ClampedArray, width: number, height: number, region: ImageRegion) {
   const left = Math.max(0, Math.floor(region.x));
   const top = Math.max(0, Math.floor(region.y));
@@ -75,15 +112,17 @@ export function detectHairSheetGrid(data: Uint8ClampedArray, width: number, heig
     const x = xBounds[column];
     const nextX = xBounds[column + 1];
     const yProfile = occupancyProfile(data, width, height, "y", x, nextX);
-    // Keep the search near the middle row boundary. A long hair strand can
-    // create transparent holes farther down the second panel; allowing the
-    // separator to wander that far would split one hairstyle internally.
-    const split = findSeparator(yProfile, height / 2, height * .38, height * .62);
-    const yBounds = [0, split, height];
+    // Find the beginning of the lower row, rather than cutting through the
+    // middle of the transition valley. Long top-row strands often overlap the
+    // expected midpoint by a few pixels, especially on female hair sheets.
+    const rowBand = findRowBand(yProfile, height / 2, height * .38, height * .62);
+    const rowRegions = [
+      { y: 0, height: rowBand.topEnd },
+      { y: rowBand.bottomStart, height: height - rowBand.bottomStart },
+    ];
     for (let row = 0; row < rows; row += 1) {
-      const y = yBounds[row];
-      const nextY = yBounds[row + 1];
-      const region = { x, y, width: nextX - x, height: nextY - y };
+      const { y, height: regionHeight } = rowRegions[row];
+      const region = { x, y, width: nextX - x, height: regionHeight };
       if (!regionHasContent(data, width, height, region)) return [];
       regions.push(region);
     }
