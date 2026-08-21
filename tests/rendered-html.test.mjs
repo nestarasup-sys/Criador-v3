@@ -536,6 +536,8 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(editor, /Preencher vazios/);
   assert.match(editor, /Substituir todos/);
   assert.match(editor, /Gerar inglês para todos/);
+  assert.match(editor, /Português: \$\{block\.text\}/);
+  assert.match(editor, /English: \$\{block\.englishText \|\| "Não preenchido\."\}/);
   assert.match(blocks, /Melhorar frase/);
   assert.match(blocks, /Refazer frase/);
   assert.match(types, /RoteirosState/);

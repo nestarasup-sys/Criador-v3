@@ -94,7 +94,9 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     blocks.forEach((block, blockIndex) => {
       const name = names.get(block.characterId) || "Personagem removido";
       const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "automático";
-      lines.push(`${blockIndex + 1} - ${name} (${type}): ${block.text}`);
+      lines.push(`${blockIndex + 1} - ${name} (${type})`);
+      lines.push(`Português: ${block.text}`);
+      lines.push(`English: ${block.englishText || "Não preenchido."}`);
     });
     return [...lines, ""];
   })() : [];
@@ -108,7 +110,9 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
       const name = names.get(block.characterId) || "Personagem removido";
       const type = block.type === "speech" ? "fala" : block.type === "thought" ? "pensamento" : "automático";
       const text = block.text;
-      lines.push(`${blockIndex + 1} - ${name} (${type}): ${text}`);
+      lines.push(`${blockIndex + 1} - ${name} (${type})`);
+      lines.push(`Português: ${text}`);
+      lines.push(`English: ${block.englishText || "Não preenchido."}`);
     });
     return [...lines, ""];
   });
