@@ -3385,7 +3385,9 @@ export default function Home() {
     mask.width = item.width ?? image.naturalWidth;
     mask.height = item.height ?? image.naturalHeight;
     protectionMaskCanvasRef.current = mask;
-    const savedMask = protectionMasks[category];
+    const savedMask = category === "roupas" && item.id
+      ? outfitProtectionMasksByBasePack[outfitStateKey(item.id, basePackId)] ?? protectionMasks[category]
+      : protectionMasks[category];
     if (savedMask) {
       const savedImage = await loadImage(savedMask);
       mask.getContext("2d")?.drawImage(savedImage, 0, 0, mask.width, mask.height);
@@ -3476,28 +3478,6 @@ export default function Home() {
     const mask = protectionMaskCanvasRef.current;
     if (!image || !mask || !colorEditorSamplePoint || !colorEditorSample) return;
     applyProtectionFill(image, mask, colorEditorSamplePoint.x, colorEditorSamplePoint.y, colorEditorTolerance, true, false, colorEditorSample);
-    if (category === "roupas" && selectedOutfit?.outfitGroupId) {
-      const groupItems = modelOutfits.filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId);
-      const nextMasks = { ...outfitProtectionMasksByBasePack };
-      for (const item of groupItems) {
-        if (!item.url || item.id === selectedOutfit.id) continue;
-        const variantImage = await loadImage(item.url);
-        const variantMask = document.createElement("canvas");
-        variantMask.width = item.width ?? variantImage.naturalWidth;
-        variantMask.height = item.height ?? variantImage.naturalHeight;
-        const variantKey = outfitStateKey(item.id, basePackId);
-        const savedMask = nextMasks[variantKey];
-        if (savedMask) {
-          const savedImage = await loadImage(savedMask);
-          variantMask.getContext("2d")?.drawImage(savedImage, 0, 0, variantMask.width, variantMask.height);
-        }
-        applyProtectionFill(variantImage, variantMask, 0, 0, colorEditorTolerance, true, false, colorEditorSample);
-        nextMasks[variantKey] = variantMask.toDataURL("image/png");
-      }
-      nextMasks[outfitStateKey(selectedOutfit.id, basePackId)] = mask.toDataURL("image/png");
-      setOutfitProtectionMasksByBasePack(nextMasks);
-      setNotice(`Cor protegida nas ${groupItems.length} versões da roupa`);
-    }
     commitColorEditorHistory();
   }
 
@@ -3522,12 +3502,9 @@ export default function Home() {
     const mask = protectionMaskCanvasRef.current;
     mask?.getContext("2d")?.clearRect(0, 0, mask.width, mask.height);
     if (category === "roupas" && selectedOutfit) {
-      const groupItemIds = new Set((selectedOutfit.outfitGroupId
-        ? modelOutfits.filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
-        : [selectedOutfit])
-        .map((item) => outfitStateKey(item.id, basePackId)));
+      const selectedKey = outfitStateKey(selectedOutfit.id, basePackId);
       setOutfitProtectionMasksByBasePack((current) => Object.fromEntries(
-        Object.entries(current).filter(([key]) => !groupItemIds.has(key)),
+        Object.entries(current).filter(([key]) => key !== selectedKey),
       ));
     }
     commitColorEditorHistory();
@@ -3544,22 +3521,17 @@ export default function Home() {
       return next;
     });
     if (category === "roupas" && selectedOutfit) {
-      const groupItems = selectedOutfit.outfitGroupId
-        ? modelOutfits.filter((item) => item.outfitGroupId === selectedOutfit.outfitGroupId)
-        : [selectedOutfit];
       setOutfitProtectionMasksByBasePack((current) => {
         const next = { ...current };
-        for (const item of groupItems) {
-          const key = outfitStateKey(item.id, basePackId);
-          if (savedMask) next[key] = savedMask;
-          else delete next[key];
-        }
+        const key = outfitStateKey(selectedOutfit.id, basePackId);
+        if (savedMask) next[key] = savedMask;
+        else delete next[key];
         return next;
       });
     }
     setColorEditorOpen(false);
-    setNotice(category === "roupas" && activeOutfitVariantCount > 1
-      ? `Proteção salva no conjunto com ${activeOutfitVariantCount} versões`
+    setNotice(category === "roupas" && selectedOutfit?.outfitGroupId
+      ? `Áreas protegidas da ${selectedOutfit.outfitVariantIndex === 0 ? "versão padrão" : `variante ${selectedOutfit.outfitVariantIndex ?? 1}`} salvas`
       : `Áreas protegidas de ${CATEGORY_LABELS[category].toLowerCase()} salvas`);
   }
 
@@ -3989,7 +3961,7 @@ export default function Home() {
               <div className="color-options">
                 {(category === "cabelos" || category === "cabelosTras") && <label><input type="checkbox" checked={syncHairColor} onChange={(event) => setSyncHairColor(event.target.checked)} /> Aplicar ao par</label>}
                 {category === "roupas" && <>
-                  <button className="protect-color-button" onClick={openColorProtectionEditor}>{protectionMasks.roupas ? "Editar áreas protegidas" : "Proteger pele e detalhes"}</button>
+                  <button className="protect-color-button" onClick={openColorProtectionEditor}>{(selectedOutfit && outfitProtectionMasksByBasePack[outfitStateKey(selectedOutfit.id, basePackId)]) || protectionMasks.roupas ? `Editar áreas protegidas · ${selectedOutfit?.outfitVariantIndex === 0 ? "padrão" : `variante ${selectedOutfit?.outfitVariantIndex ?? 1}`}` : "Proteger pele e detalhes"}</button>
                   {selectedOutfit?.outfitGroupId && activeOutfitVariantCount > 1 && <button className="protect-color-button" onClick={applyStandardOutfitAdjustment}>Ajustar para padrão</button>}
                 </>}
               </div>
