@@ -453,7 +453,11 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /colorAdjustments/);
   assert.match(page, /createColorAdjustedCanvas/);
   assert.match(page, /tintStrength/);
-  assert.match(page, /Cor direta/);
+  assert.match(page, /Cor desejada/);
+  assert.match(page, /color-neutral-presets/);
+  assert.match(page, /detailPreservation/);
+  assert.match(page, /Contraste/);
+  assert.match(page, /Textura/);
   assert.match(page, /syncHairColor/);
   assert.match(page, /Aplicar ao par/);
   assert.match(page, /protectionMasks/);
@@ -466,13 +470,14 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(css, /\.color-panel/);
 });
 
-test("shares outfit color and sampled protection across every linked variant", async () => {
+test("shares outfit color while keeping protection individual per variant", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(page, /outfitColorAdjustmentsByGroup/);
   assert.match(page, /outfitColorGroupKey/);
-  assert.match(page, /groupItems\.length/);
-  assert.match(page, /Proteger nas \$\{activeOutfitVariantCount\} versões/);
+  assert.match(page, /Proteger nesta variante/);
+  assert.match(page, /A proteção será salva somente nesta variante/);
+  assert.match(page, /const selectedKey = outfitStateKey\(selectedOutfit\.id, basePackId\)/);
   assert.match(css, /\.color-group-scope/);
   assert.match(css, /\.protection-group-note/);
 });

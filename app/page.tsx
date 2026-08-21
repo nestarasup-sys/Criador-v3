@@ -3328,6 +3328,19 @@ export default function Home() {
       : "Cor original restaurada");
   }
 
+  function applyTargetColor(tint: string, patch: Partial<ColorAdjustment> = {}) {
+    updateColorAdjustment({
+      hue: 0,
+      saturation: 100,
+      brightness: 100,
+      contrast: 100,
+      detailPreservation: 78,
+      tint,
+      tintStrength: 100,
+      ...patch,
+    });
+  }
+
   function drawColorEditorCanvas() {
     const canvas = colorEditorCanvasRef.current;
     const image = colorEditorImageRef.current;
@@ -3945,19 +3958,25 @@ export default function Home() {
               )}
               <div className="color-swatches" aria-label="Cores rápidas">
                 {[
-                  [0, "#8c70d8"], [25, "#ef8b74"], [55, "#efc66f"], [110, "#68c79a"], [190, "#69b8dc"], [245, "#6964d8"], [310, "#df6fae"],
-                ].map(([hue, color]) => (
-                  <button key={hue} style={{ background: color }} aria-label={`Matiz ${hue}`} onClick={() => updateColorAdjustment({ hue: Number(hue) })} />
+                  ["Violeta", "#8c70d8"], ["Coral", "#ef756d"], ["Dourado", "#e4bb58"], ["Verde", "#55b988"], ["Azul", "#519ec9"], ["Índigo", "#5550c7"], ["Rosa", "#db65a6"],
+                ].map(([label, color]) => (
+                  <button key={color} style={{ background: color }} aria-label={`Recolorir para ${label}`} title={label} onClick={() => applyTargetColor(color)} />
                 ))}
               </div>
-              <div className="color-custom-row">
-                <label><span>Cor direta</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, tintStrength: Math.max(35, activeColor.tintStrength) })} /></label>
-                <button type="button" onClick={() => updateColorAdjustment({ tint: "#ffffff", tintStrength: 0 })}>Desligar cor direta</button>
+              <div className="color-neutral-presets" aria-label="Cores neutras">
+                {[["Branco", "#f7f7f7"], ["Prata", "#c6cbd3"], ["Cinza", "#777b82"], ["Preto", "#111216"]].map(([label, color]) => <button key={color} onClick={() => applyTargetColor(color)}><i style={{ background: color }} />{label}</button>)}
               </div>
-              <label className="color-range"><span>Matiz</span><input type="range" min="0" max="360" value={activeColor.hue} onChange={(event) => updateColorAdjustment({ hue: Number(event.target.value) })} /><strong>{activeColor.hue}°</strong></label>
+              <div className="color-custom-row">
+                <label><span>Cor desejada</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, hue: 0, tintStrength: 100 })} /></label>
+                <button type="button" onClick={() => updateColorAdjustment({ tintStrength: 0 })}>Desligar recoloração</button>
+              </div>
+              <label className="color-range"><span>Matiz fina</span><input type="range" min="0" max="360" value={activeColor.hue} onChange={(event) => updateColorAdjustment({ hue: Number(event.target.value) })} /><strong>{activeColor.hue}°</strong></label>
               <label className="color-range"><span>Saturação</span><input type="range" min="0" max="250" value={activeColor.saturation} onChange={(event) => updateColorAdjustment({ saturation: Number(event.target.value) })} /><strong>{activeColor.saturation}%</strong></label>
-              <label className="color-range"><span>Brilho</span><input type="range" min="0" max="250" value={activeColor.brightness} onChange={(event) => updateColorAdjustment({ brightness: Number(event.target.value) })} /><strong>{activeColor.brightness}%</strong></label>
-              <label className="color-range"><span>Intensidade</span><input type="range" min="0" max="100" value={activeColor.tintStrength} onChange={(event) => updateColorAdjustment({ tintStrength: Number(event.target.value) })} /><strong>{activeColor.tintStrength}%</strong></label>
+              <label className="color-range"><span>Luminosidade</span><input type="range" min="0" max="250" value={activeColor.brightness} onChange={(event) => updateColorAdjustment({ brightness: Number(event.target.value) })} /><strong>{activeColor.brightness}%</strong></label>
+              <label className="color-range"><span>Contraste</span><input type="range" min="0" max="200" value={activeColor.contrast} onChange={(event) => updateColorAdjustment({ contrast: Number(event.target.value) })} /><strong>{activeColor.contrast}%</strong></label>
+              <label className="color-range"><span>Textura</span><input type="range" min="0" max="100" value={activeColor.detailPreservation} onChange={(event) => updateColorAdjustment({ detailPreservation: Number(event.target.value) })} /><strong>{activeColor.detailPreservation}%</strong></label>
+              <label className="color-range"><span>Força</span><input type="range" min="0" max="100" value={activeColor.tintStrength} onChange={(event) => updateColorAdjustment({ tintStrength: Number(event.target.value) })} /><strong>{activeColor.tintStrength}%</strong></label>
+              <p className="color-help">A recoloração tonal usa as sombras e luzes originais para alcançar cores claras, escuras e neutras sem achatar o desenho.</p>
               <div className="color-options">
                 {(category === "cabelos" || category === "cabelosTras") && <label><input type="checkbox" checked={syncHairColor} onChange={(event) => setSyncHairColor(event.target.checked)} /> Aplicar ao par</label>}
                 {category === "roupas" && <>
@@ -4204,13 +4223,13 @@ export default function Home() {
               <aside>
                 <strong>Como funciona</strong>
                 <p>A área vermelha ficará com a cor original quando você mudar a matiz da roupa.</p>
-                {category === "roupas" && activeOutfitVariantCount > 1 && <div className="protection-group-note">✦ Esta roupa possui {activeOutfitVariantCount} versões vinculadas.</div>}
-                <ol><li>Use o conta-gotas na pele ou detalhe.</li><li>Proteja cores semelhantes em todas as variantes.</li><li>Use pincel, balde ou borracha para refinar esta variante.</li></ol>
+                {category === "roupas" && activeOutfitVariantCount > 1 && <div className="protection-group-note">✦ A proteção será salva somente nesta variante da roupa.</div>}
+                <ol><li>Use o conta-gotas na pele ou detalhe.</li><li>Proteja cores semelhantes nesta variante.</li><li>Use pincel, balde ou borracha para refinar a máscara.</li></ol>
                 {colorEditorSample && (
                   <div className="sampled-color">
                     <i style={{ background: `rgb(${colorEditorSample[0]}, ${colorEditorSample[1]}, ${colorEditorSample[2]})` }} />
                     <span>RGB {colorEditorSample[0]}, {colorEditorSample[1]}, {colorEditorSample[2]}</span>
-                    <button onClick={() => void protectSampledColor()}>{category === "roupas" && activeOutfitVariantCount > 1 ? `Proteger nas ${activeOutfitVariantCount} versões` : "Proteger cores semelhantes"}</button>
+                    <button onClick={() => void protectSampledColor()}>{category === "roupas" && activeOutfitVariantCount > 1 ? "Proteger nesta variante" : "Proteger cores semelhantes"}</button>
                   </div>
                 )}
                 <button className="clear-protection" onClick={clearColorProtection}>Limpar proteção</button>

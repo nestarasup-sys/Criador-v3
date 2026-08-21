@@ -1,4 +1,5 @@
 import type { ColorAdjustment } from "./character-contract";
+import { recolorPixels } from "./color-pipeline.mjs";
 
 export const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
   hue: 0,
@@ -7,6 +8,8 @@ export const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
   enabled: true,
   tint: "#ffffff",
   tintStrength: 0,
+  contrast: 100,
+  detailPreservation: 78,
 };
 
 function finite(value: unknown, fallback: number) {
@@ -30,6 +33,8 @@ export function normalizeColorAdjustment(value?: Partial<ColorAdjustment> | null
     enabled: value?.enabled !== false,
     tint: normalizeTint(value?.tint),
     tintStrength: clamp(value?.tintStrength, 0, 100, DEFAULT_COLOR_ADJUSTMENT.tintStrength),
+    contrast: clamp(value?.contrast, 0, 250, DEFAULT_COLOR_ADJUSTMENT.contrast),
+    detailPreservation: clamp(value?.detailPreservation, 0, 100, DEFAULT_COLOR_ADJUSTMENT.detailPreservation),
   };
 }
 
@@ -40,6 +45,7 @@ export function colorAdjustmentIsActive(value?: Partial<ColorAdjustment> | null)
     || color.saturation !== 100
     || color.brightness !== 100
     || color.tintStrength > 0
+    || color.contrast !== 100
   );
 }
 
@@ -58,19 +64,21 @@ export function createColorAdjustedCanvas(
   const output = document.createElement("canvas");
   output.width = width;
   output.height = height;
-  const context = output.getContext("2d");
+  const context = output.getContext("2d", { willReadFrequently: color.tintStrength > 0 });
   if (!context) throw new Error("Canvas de cor indisponível");
-  context.filter = `hue-rotate(${color.hue}deg) saturate(${color.saturation}%) brightness(${color.brightness}%)`;
-  context.drawImage(image, 0, 0, width, height);
-  context.filter = "none";
-  if (color.tintStrength > 0) {
-    context.save();
-    context.globalCompositeOperation = "source-atop";
-    context.globalAlpha = color.tintStrength / 100;
-    context.fillStyle = color.tint;
-    context.fillRect(0, 0, width, height);
-    context.restore();
+  if (color.tintStrength <= 0) {
+    // Preserve the historical hue/saturation/brightness behavior whenever a
+    // target color is not active, keeping existing characters compatible.
+    context.filter = `hue-rotate(${color.hue}deg) saturate(${color.saturation}%) brightness(${color.brightness}%) contrast(${color.contrast}%)`;
+    context.drawImage(image, 0, 0, width, height);
+    context.filter = "none";
+    return output;
   }
+
+  context.drawImage(image, 0, 0, width, height);
+  const imageData = context.getImageData(0, 0, width, height);
+  imageData.data.set(recolorPixels(imageData.data, color));
+  context.putImageData(imageData, 0, 0);
   return output;
 }
 

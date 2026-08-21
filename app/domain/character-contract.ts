@@ -19,6 +19,10 @@ export type ColorAdjustment = {
   tint: string;
   /** Blend amount of the direct tint, from 0 (off) to 100 (full). */
   tintStrength: number;
+  /** Tonal contrast centered at 100. */
+  contrast: number;
+  /** Amount of source shading and texture retained by tonal recoloring. */
+  detailPreservation: number;
 };
 
 export type ColorAdjustments = Record<Category, ColorAdjustment>;
