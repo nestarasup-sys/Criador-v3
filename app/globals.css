@@ -199,20 +199,23 @@ a { color: inherit; }
 .chroma-mode-button { border: 1px solid #ded9ec; background: white; color: #6f687d; border-radius: 8px; padding: 7px 9px; font-size: 11.25px; font-weight: 750; cursor: pointer; }
 .chroma-mode-button.active { background: #238c68; border-color: #238c68; color: white; }
 .chroma-mode-button:disabled { opacity: .45; cursor: default; }
-.chroma-toolbar { width: min(100%, 1080px); max-width: 100%; min-width: 0; box-sizing: border-box; margin: -4px auto 10px; padding: 9px 10px; display: grid; grid-template-columns: minmax(160px,1.2fr) auto auto minmax(135px,1fr) minmax(135px,1fr); gap: 9px; align-items: center; border: 1px solid #cfe8df; border-radius: 11px; background: rgba(247,253,251,.98); box-shadow: 0 7px 18px rgba(47,38,68,.07); }
+.chroma-toolbar { width: min(100%, 1080px); max-width: 100%; min-width: 0; box-sizing: border-box; margin: -4px auto 10px; padding: 10px 12px; display: grid; grid-template-columns: minmax(190px,.8fr) minmax(0,2.2fr); gap: 9px 14px; align-items: center; border: 1px solid #cfe8df; border-radius: 11px; background: rgba(247,253,251,.98); box-shadow: 0 7px 18px rgba(47,38,68,.07); }
 .chroma-heading { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .chroma-heading strong { color: #197455; font-size: 11.25px; }
 .chroma-heading span { color: #6e857d; font-size: 10px; line-height: 1.3; white-space: normal; }
 .chroma-color-control { display: flex; align-items: center; gap: 6px; color: #62766f; font-size: 10px; white-space: nowrap; }
 .chroma-color-control input[type="color"] { width: 30px; height: 27px; padding: 2px; border: 1px solid #bfddd2; border-radius: 7px; background: white; cursor: pointer; }
-.standard-green-button, .chroma-actions button { border: 1px solid #c9e2d9; border-radius: 7px; padding: 7px 8px; background: white; color: #26795e; font-size: 10px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.chroma-color-row { min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.standard-green-button, .standard-blue-button, .chroma-actions button { border: 1px solid #c9e2d9; border-radius: 7px; padding: 7px 8px; background: white; color: #26795e; font-size: 10px; font-weight: 750; white-space: nowrap; cursor: pointer; }
+.standard-blue-button { border-color: #c9daf2; color: #2469a8; }
+.chroma-sliders { min-width: 0; grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3,minmax(180px,1fr)); gap: 7px 12px; padding: 8px 0; border-top: 1px solid #deeee8; border-bottom: 1px solid #deeee8; }
 .chroma-range { min-width: 0; display: grid; grid-template-columns: auto 1fr 25px; align-items: center; gap: 6px; }
 .chroma-range span, .chroma-range strong { color: #62766f; font-size: 10px; }
 .chroma-range input { min-width: 0; accent-color: #238c68; }
-.chroma-options { min-width: 0; grid-column: 1 / 3; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: #62766f; font-size: 10px; white-space: nowrap; }
+.chroma-options { min-width: 0; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 12px; color: #62766f; font-size: 10px; white-space: nowrap; }
 .chroma-options label { display: flex; align-items: center; gap: 4px; }
 .chroma-options input { accent-color: #238c68; }
-.chroma-actions { min-width: 0; grid-column: 3 / -1; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.chroma-actions { min-width: 0; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
 .chroma-actions .apply-chroma { border-color: #238c68; background: #238c68; color: white; }
 .chroma-actions button:disabled { opacity: .55; cursor: wait; }
 .eraser-toolbar { width: min(100%, 980px); max-width: 100%; min-width: 0; box-sizing: border-box; margin: -4px auto 10px; padding: 8px; display: grid; grid-template-columns: auto auto minmax(150px,1fr) auto; gap: 8px; align-items: center; border: 1px solid #e6dfe8; border-radius: 11px; background: rgba(255,255,255,.96); box-shadow: 0 7px 18px rgba(47,38,68,.07); }
@@ -429,6 +432,8 @@ a { color: inherit; }
 @container creator-stage (max-width: 720px) {
   .chroma-toolbar { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
   .chroma-heading, .chroma-options, .chroma-actions { grid-column: 1 / -1; }
+  .chroma-color-row { justify-content: flex-start; }
+  .chroma-sliders { grid-template-columns: repeat(2,minmax(150px,1fr)); }
   .chroma-actions { justify-content: flex-start; }
   .eraser-toolbar, .export-frame-toolbar { grid-template-columns: minmax(0,1fr); }
   .mask-history-actions, .export-frame-actions { justify-content: flex-start; flex-wrap: wrap; }
@@ -437,6 +442,8 @@ a { color: inherit; }
 @container creator-stage (max-width: 430px) {
   .chroma-toolbar { grid-template-columns: minmax(0,1fr); }
   .chroma-toolbar > * { grid-column: 1 / -1; }
+  .chroma-color-row { flex-wrap: wrap; }
+  .chroma-sliders { grid-template-columns: minmax(0,1fr); }
   .chroma-color-control, .standard-green-button { justify-self: start; }
 }
 

@@ -408,7 +408,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
   assert.match(printRenderer, /backgroundRect/);
   assert.match(characterRenderer, /processChromaPixels/);
-  assert.match(characterRenderer, /processChromaPixels\([^;]+, true, true\)/);
+  assert.match(characterRenderer, /processChromaPixels\([\s\S]+?false,[\s\S]+?cleanEdges: true[\s\S]+?despill: 72/);
   assert.match(characterRenderer, /colorAdjustmentIsActive/);
   assert.match(characterRenderer, /applyProtectedOriginal/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
@@ -619,11 +619,16 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /variantIndex: index/);
   assert.match(page, /detectOutfitSheetRegions/);
   assert.match(page, /prepareOutfitCatalogImages/);
-  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, true, true\)/);
+  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, false/);
   assert.match(workerClient, /processChromaPixels/);
   assert.match(workerClient, /applyChromaPixels/);
   assert.match(worker, /applyChromaPixels/);
-  assert.match(page, /createChromaResult\(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, true\)/);
+  assert.match(page, /createChromaResultAsync\(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly/);
+  assert.match(page, /chromaMaskAdjustment/);
+  assert.match(page, /chromaFeather/);
+  assert.match(page, /chromaDespill/);
+  assert.match(page, /chromaIntensity/);
+  assert.match(page, /Proteger cores internas semelhantes/);
   assert.match(page, /async function toggleChromaTool/);
   assert.match(page, /Chroma detectado automaticamente · limpeza avançada ativa/);
   assert.match(page, /canvasSize = 1024/);
@@ -658,8 +663,8 @@ test("keeps preview toolbars inside the central workspace at narrow widths", asy
   assert.match(css, /\.stage-section[^}]*container-name:\s*creator-stage/);
   assert.match(css, /\.chroma-toolbar[^}]*max-width:\s*100%/);
   assert.match(css, /\.chroma-toolbar[^}]*box-sizing:\s*border-box/);
-  assert.match(css, /\.chroma-options[^}]*grid-column:\s*1\s*\/\s*3/);
-  assert.match(css, /\.chroma-actions[^}]*grid-column:\s*3\s*\/\s*-1/);
+  assert.match(css, /\.chroma-sliders[^}]*grid-column:\s*1\s*\/\s*-1/);
+  assert.match(css, /\.chroma-sliders[^}]*repeat\(3,minmax\(180px,1fr\)\)/);
   assert.match(css, /\.chroma-actions[^}]*flex-wrap:\s*wrap/);
   assert.match(css, /@container creator-stage \(max-width:\s*720px\)/);
   assert.match(css, /\.eraser-toolbar[^}]*max-width:\s*100%/);

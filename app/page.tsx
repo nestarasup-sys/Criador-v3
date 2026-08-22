@@ -2,13 +2,13 @@
 
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCharacterBundle, createCharacterVariantsBundle, outfitVariantsForExport } from "./studio/character-export";
-import { applyChromaPixels } from "./chroma-processing.mjs";
+import { applyChromaPixels, estimateChromaKey } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
 import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBounds } from "./creator/image-processing";
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-processing";
-import { processChromaPixels } from "./creator/chroma-worker-client";
+import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
@@ -300,9 +300,18 @@ async function removeChroma(source: Blob | string) {
     if (!context) throw new Error("Canvas indisponível");
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    // Keep the matte connected to the real background. This prevents a green
-    // iris, eye highlight or clothing detail from being treated as background.
-    const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, true, true);
+    const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height)
+      ?? { color: { r: 0, g: 195, b: 102 }, tolerance: 18, softness: 24 };
+    const processed = await processChromaPixels(
+      pixels.data,
+      canvas.width,
+      canvas.height,
+      estimate.color,
+      estimate.tolerance,
+      estimate.softness,
+      false,
+      { cleanEdges: true, feather: 1, despill: 72, intensity: 100 },
+    );
     pixels.data.set(processed);
 
     context.putImageData(pixels, 0, 0);
@@ -322,7 +331,7 @@ function createChromaResult(
   tolerance: number,
   softness: number,
   connectedOnly: boolean,
-  cleanEdges = false,
+  options: ChromaProcessingOptions = {},
 ) {
   const output = document.createElement("canvas");
   output.width = source.width;
@@ -331,7 +340,37 @@ function createChromaResult(
   if (!context) throw new Error("Canvas do Chroma Key indisponível");
   context.drawImage(source, 0, 0);
   const pixels = context.getImageData(0, 0, output.width, output.height);
-  applyChromaPixels(pixels.data, output.width, output.height, color, tolerance, softness, connectedOnly, { cleanEdges });
+  applyChromaPixels(pixels.data, output.width, output.height, color, tolerance, softness, connectedOnly, options);
+  context.putImageData(pixels, 0, 0);
+  return output;
+}
+
+async function createChromaResultAsync(
+  source: HTMLCanvasElement,
+  color: ChromaColor,
+  tolerance: number,
+  softness: number,
+  connectedOnly: boolean,
+  options: ChromaProcessingOptions = {},
+) {
+  const output = document.createElement("canvas");
+  output.width = source.width;
+  output.height = source.height;
+  const context = output.getContext("2d", { willReadFrequently: true });
+  if (!context) throw new Error("Canvas do Chroma Key indisponível");
+  context.drawImage(source, 0, 0);
+  const pixels = context.getImageData(0, 0, output.width, output.height);
+  const processed = await processChromaPixels(
+    pixels.data,
+    output.width,
+    output.height,
+    color,
+    tolerance,
+    softness,
+    connectedOnly,
+    options,
+  );
+  pixels.data.set(processed);
   context.putImageData(pixels, 0, 0);
   return output;
 }
@@ -383,42 +422,12 @@ function createCharacterPhotoDataUrl(source: HTMLCanvasElement) {
   return photo.toDataURL("image/png");
 }
 
-function percentile(values: number[], ratio: number) {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((left, right) => left - right);
-  return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * ratio)))];
-}
-
-/** Estima o verde real usando as bordas; imagens geradas por IA raramente usam um verde perfeitamente chapado. */
+/** Estima qualquer chroma saturado pelas bordas, sem pressupor verde. */
 function estimateImportChroma(source: HTMLCanvasElement, boost = 0) {
   const context = source.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("Canvas do recorte indisponível");
   const pixels = context.getImageData(0, 0, source.width, source.height).data;
-  const samples: Array<[number, number, number]> = [];
-  const step = Math.max(1, Math.floor(Math.min(source.width, source.height) / 90));
-  const add = (x: number, y: number) => {
-    const index = (y * source.width + x) * 4;
-    if (pixels[index + 3] > 20) samples.push([pixels[index], pixels[index + 1], pixels[index + 2]]);
-  };
-  for (let x = 0; x < source.width; x += step) {
-    add(x, 0);
-    add(x, source.height - 1);
-  }
-  for (let y = step; y < source.height - step; y += step) {
-    add(0, y);
-    add(source.width - 1, y);
-  }
-  if (samples.length === 0) return null;
-  const color = {
-    r: Math.round(percentile(samples.map((sample) => sample[0]), .5)),
-    g: Math.round(percentile(samples.map((sample) => sample[1]), .5)),
-    b: Math.round(percentile(samples.map((sample) => sample[2]), .5)),
-  };
-  if (color.g < 75 || color.g < color.r * 1.18 || color.g < color.b * 1.18) return null;
-  const distances = samples.map(([r, g, b]) => Math.hypot(r - color.r, g - color.g, b - color.b));
-  const tolerance = Math.max(18, Math.min(82, Math.round(percentile(distances, .72) + 6 + boost * .35)));
-  const softness = Math.max(22, Math.min(110, Math.round(percentile(distances, .98) - tolerance + 28 + boost * .65)));
-  return { color, tolerance, softness };
+  return estimateChromaKey(pixels, source.width, source.height, boost);
 }
 
 function autoChromaImport(source: HTMLCanvasElement, boost = 0) {
@@ -434,7 +443,12 @@ function autoChromaImport(source: HTMLCanvasElement, boost = 0) {
   // do fundo, inclusive ilhas fechadas entre braços, mãos, pernas ou partes da
   // roupa. O modo manual continua oferecendo "Somente fundo conectado" para
   // casos em que o usuário precisa preservar uma área verde da arte.
-  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, true, true);
+  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, false, {
+    cleanEdges: true,
+    feather: 1,
+    despill: 72,
+    intensity: 100,
+  });
 }
 
 function contentBoundsInside(
@@ -1163,9 +1177,13 @@ export default function Home() {
   const [fitOpacity, setFitOpacity] = useState(65);
   const [chromaMode, setChromaMode] = useState(false);
   const [chromaColor, setChromaColor] = useState<ChromaColor>({ r: 0, g: 195, b: 102 });
-  const [chromaTolerance, setChromaTolerance] = useState(34);
-  const [chromaSoftness, setChromaSoftness] = useState(48);
-  const [chromaConnectedOnly, setChromaConnectedOnly] = useState(true);
+  const [chromaTolerance, setChromaTolerance] = useState(18);
+  const [chromaSoftness, setChromaSoftness] = useState(24);
+  const [chromaFeather, setChromaFeather] = useState(1);
+  const [chromaMaskAdjustment, setChromaMaskAdjustment] = useState(0);
+  const [chromaDespill, setChromaDespill] = useState(72);
+  const [chromaIntensity, setChromaIntensity] = useState(100);
+  const [chromaConnectedOnly, setChromaConnectedOnly] = useState(false);
   const [chromaShowOriginal, setChromaShowOriginal] = useState(false);
   const [chromaApplyPair, setChromaApplyPair] = useState(true);
   const [isApplyingChroma, setIsApplyingChroma] = useState(false);
@@ -1695,7 +1713,13 @@ export default function Home() {
       sourceContext.drawImage(image, 0, 0);
       const result = chromaShowOriginal
         ? source
-        : createChromaResult(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, true);
+        : await createChromaResultAsync(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, {
+            cleanEdges: true,
+            maskAdjustment: chromaMaskAdjustment,
+            feather: chromaFeather,
+            despill: chromaDespill,
+            intensity: chromaIntensity,
+          });
       visibleCanvas.width = 1920;
       visibleCanvas.height = 1080;
       const context = visibleCanvas.getContext("2d");
@@ -1711,7 +1735,7 @@ export default function Home() {
     } finally {
       URL.revokeObjectURL(temporaryUrl);
     }
-  }, [catalog, category, chromaColor, chromaConnectedOnly, chromaMode, chromaShowOriginal, chromaSoftness, chromaTolerance, selections]);
+  }, [catalog, category, chromaColor, chromaConnectedOnly, chromaDespill, chromaFeather, chromaIntensity, chromaMaskAdjustment, chromaMode, chromaShowOriginal, chromaSoftness, chromaTolerance, selections]);
 
   useEffect(() => {
     if (!chromaMode) return;
@@ -2524,7 +2548,13 @@ export default function Home() {
       const sourceContext = source.getContext("2d", { willReadFrequently: true });
       if (!sourceContext) throw new Error("Canvas do Chroma Key indisponível");
       sourceContext.drawImage(image, 0, 0);
-      const result = createChromaResult(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, true);
+      const result = await createChromaResultAsync(source, chromaColor, chromaTolerance, chromaSoftness, chromaConnectedOnly, {
+        cleanEdges: true,
+        maskAdjustment: chromaMaskAdjustment,
+        feather: chromaFeather,
+        despill: chromaDespill,
+        intensity: chromaIntensity,
+      });
       const resultContext = result.getContext("2d", { willReadFrequently: true });
       if (!resultContext) throw new Error("Resultado do Chroma Key indisponível");
       const pixels = resultContext.getImageData(0, 0, result.width, result.height);
@@ -3630,38 +3660,64 @@ export default function Home() {
             <div className="chroma-toolbar">
               <div className="chroma-heading">
                 <strong>Chroma Key</strong>
-                <span>Limpeza avançada ativa · clique no fundo para trocar a cor</span>
+                <span>Máscara por crominância em toda a imagem · clique no fundo para capturar a cor</span>
               </div>
-              <label className="chroma-color-control">
-                <input
-                  type="color"
-                  value={`#${[chromaColor.r, chromaColor.g, chromaColor.b].map((value) => value.toString(16).padStart(2, "0")).join("")}`}
-                  onChange={(event) => {
-                    const value = Number.parseInt(event.target.value.slice(1), 16);
-                    setChromaColor({ r: value >> 16, g: (value >> 8) & 255, b: value & 255 });
-                    setChromaShowOriginal(false);
-                  }}
-                  aria-label="Cor do Chroma Key"
-                />
-                <span>RGB {chromaColor.r}, {chromaColor.g}, {chromaColor.b}</span>
-              </label>
-              <button className="standard-green-button" onClick={() => { setChromaColor({ r: 0, g: 195, b: 102 }); setChromaShowOriginal(false); }}>Verde padrão</button>
-              <label className="chroma-range">
-                <span>Tolerância</span>
-                <input type="range" min="0" max="160" step="1" value={chromaTolerance} onChange={(event) => { setChromaTolerance(Number(event.target.value)); setChromaShowOriginal(false); }} />
-                <strong>{chromaTolerance}</strong>
-              </label>
-              <label className="chroma-range">
-                <span>Suavidade</span>
-                <input type="range" min="0" max="100" step="1" value={chromaSoftness} onChange={(event) => { setChromaSoftness(Number(event.target.value)); setChromaShowOriginal(false); }} />
-                <strong>{chromaSoftness}</strong>
-              </label>
+              <div className="chroma-color-row">
+                <label className="chroma-color-control">
+                  <input
+                    type="color"
+                    value={`#${[chromaColor.r, chromaColor.g, chromaColor.b].map((value) => value.toString(16).padStart(2, "0")).join("")}`}
+                    onChange={(event) => {
+                      const value = Number.parseInt(event.target.value.slice(1), 16);
+                      setChromaColor({ r: value >> 16, g: (value >> 8) & 255, b: value & 255 });
+                      setChromaShowOriginal(false);
+                    }}
+                    aria-label="Cor do Chroma Key"
+                  />
+                  <span>RGB {chromaColor.r}, {chromaColor.g}, {chromaColor.b}</span>
+                </label>
+                <button className="standard-green-button" onClick={() => { setChromaColor({ r: 0, g: 195, b: 102 }); setChromaShowOriginal(false); }}>Verde</button>
+                <button className="standard-blue-button" onClick={() => { setChromaColor({ r: 0, g: 86, b: 214 }); setChromaShowOriginal(false); }}>Azul</button>
+              </div>
+              <div className="chroma-sliders">
+                <label className="chroma-range">
+                  <span>Tolerância</span>
+                  <input type="range" min="0" max="120" step="1" value={chromaTolerance} onChange={(event) => { setChromaTolerance(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaTolerance}</strong>
+                </label>
+                <label className="chroma-range">
+                  <span>Transição</span>
+                  <input type="range" min="0" max="100" step="1" value={chromaSoftness} onChange={(event) => { setChromaSoftness(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaSoftness}</strong>
+                </label>
+                <label className="chroma-range">
+                  <span>Borda</span>
+                  <input type="range" min="0" max="8" step="1" value={chromaFeather} onChange={(event) => { setChromaFeather(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaFeather}</strong>
+                </label>
+                <label className="chroma-range">
+                  <span>Máscara</span>
+                  <input type="range" min="-8" max="8" step="1" value={chromaMaskAdjustment} onChange={(event) => { setChromaMaskAdjustment(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaMaskAdjustment > 0 ? "+" : ""}{chromaMaskAdjustment}</strong>
+                </label>
+                <label className="chroma-range">
+                  <span>Despill</span>
+                  <input type="range" min="0" max="100" step="1" value={chromaDespill} onChange={(event) => { setChromaDespill(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaDespill}</strong>
+                </label>
+                <label className="chroma-range">
+                  <span>Força</span>
+                  <input type="range" min="0" max="100" step="1" value={chromaIntensity} onChange={(event) => { setChromaIntensity(Number(event.target.value)); setChromaShowOriginal(false); }} />
+                  <strong>{chromaIntensity}</strong>
+                </label>
+              </div>
               <div className="chroma-options">
-                <label><input type="checkbox" checked={chromaConnectedOnly} onChange={(event) => setChromaConnectedOnly(event.target.checked)} /> Somente fundo conectado</label>
+                <label title="Use somente quando uma parte legítima da arte tiver exatamente a cor do fundo"><input type="checkbox" checked={chromaConnectedOnly} onChange={(event) => setChromaConnectedOnly(event.target.checked)} /> Proteger cores internas semelhantes</label>
                 {chromaPairAvailable && <label><input type="checkbox" checked={chromaApplyPair} onChange={(event) => setChromaApplyPair(event.target.checked)} /> Aplicar ao par</label>}
               </div>
               <div className="chroma-actions">
                 <button onPointerDown={() => setChromaShowOriginal(true)} onPointerUp={() => setChromaShowOriginal(false)} onPointerLeave={() => setChromaShowOriginal(false)}>Segure: original</button>
+                <button onClick={() => { setChromaTolerance(18); setChromaSoftness(24); setChromaFeather(1); setChromaMaskAdjustment(0); setChromaDespill(72); setChromaIntensity(100); setChromaConnectedOnly(false); setChromaShowOriginal(false); }}>Redefinir</button>
                 <button onClick={() => setChromaMode(false)}>Cancelar</button>
                 <button className="apply-chroma" disabled={isApplyingChroma} onClick={applyChromaKey}>{isApplyingChroma ? "Aplicando…" : "Aplicar"}</button>
               </div>
@@ -3780,7 +3836,7 @@ export default function Home() {
             </div>
           </div>
           <p className="stage-help">{chromaMode
-            ? "Clique em uma área do fundo para capturar sua cor. Ajuste tolerância e suavidade antes de aplicar."
+            ? "Clique no fundo para capturar a cor. A máscara remove também o chroma entre braços, pernas, cabelo e acessórios; ative a proteção interna apenas se a arte tiver detalhes legítimos da mesma cor."
             : exportFrameMode
             ? "Arraste o conjunto inteiro e ajuste a escala. Este enquadramento será aplicado ao PNG e a todas as imagens do ZIP."
             : previewPanMode

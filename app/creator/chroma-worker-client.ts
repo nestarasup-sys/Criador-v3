@@ -1,6 +1,13 @@
 import { applyChromaPixels } from "../chroma-processing.mjs";
 
 type ChromaColor = { r: number; g: number; b: number };
+export type ChromaProcessingOptions = {
+  cleanEdges?: boolean;
+  maskAdjustment?: number;
+  feather?: number;
+  despill?: number;
+  intensity?: number;
+};
 type PendingTask = { resolve: (data: Uint8ClampedArray) => void; reject: (error: Error) => void };
 
 let worker: Worker | null = null;
@@ -38,11 +45,11 @@ export function processChromaPixels(
   tolerance: number,
   softness: number,
   connectedOnly: boolean,
-  cleanEdges = false,
+  options: ChromaProcessingOptions = {},
 ) {
   worker ??= createWorker();
   if (!worker) {
-    applyChromaPixels(data, width, height, color, tolerance, softness, connectedOnly, { cleanEdges });
+    applyChromaPixels(data, width, height, color, tolerance, softness, connectedOnly, options);
     return Promise.resolve(data);
   }
   const id = ++sequence;
@@ -50,14 +57,14 @@ export function processChromaPixels(
   const fallback = new Uint8ClampedArray(data);
   return new Promise<Uint8ClampedArray>((resolve) => {
     pending.set(id, { resolve, reject: () => {
-      applyChromaPixels(fallback, width, height, color, tolerance, softness, connectedOnly, { cleanEdges });
+      applyChromaPixels(fallback, width, height, color, tolerance, softness, connectedOnly, options);
       resolve(fallback);
     } });
     try {
-      worker!.postMessage({ id, buffer: input.buffer, width, height, color, tolerance, softness, connectedOnly, cleanEdges }, [input.buffer]);
+      worker!.postMessage({ id, buffer: input.buffer, width, height, color, tolerance, softness, connectedOnly, options }, [input.buffer]);
     } catch {
       pending.delete(id);
-      applyChromaPixels(fallback, width, height, color, tolerance, softness, connectedOnly, { cleanEdges });
+      applyChromaPixels(fallback, width, height, color, tolerance, softness, connectedOnly, options);
       resolve(fallback);
     }
   });

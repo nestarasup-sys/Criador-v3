@@ -8,6 +8,7 @@ import type {
   PcExpressionPack,
 } from "./types";
 import { processChromaPixels } from "../creator/chroma-worker-client";
+import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
@@ -31,7 +32,18 @@ function transparentChroma(src: string) {
       configureHighQualityContext(context);
       context.drawImage(image, 0, 0);
       const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-      const processed = await processChromaPixels(pixels.data, canvas.width, canvas.height, { r: 0, g: 195, b: 102 }, 34, 58, true, true);
+      const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height)
+        ?? { color: { r: 0, g: 195, b: 102 }, tolerance: 18, softness: 24 };
+      const processed = await processChromaPixels(
+        pixels.data,
+        canvas.width,
+        canvas.height,
+        estimate.color,
+        estimate.tolerance,
+        estimate.softness,
+        false,
+        { cleanEdges: true, feather: 1, despill: 72, intensity: 100 },
+      );
       pixels.data.set(processed);
       context.putImageData(pixels, 0, 0);
       return canvas;
