@@ -522,6 +522,10 @@ body { background: #f8f6f7; }
 .stage-toolbar > div:first-child { display: flex; align-items: baseline; gap: 10px; }
 .stage-toolbar strong { color: #282b49; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
 .stage-toolbar span { font-size: 11.25px; }
+.character-history-controls { display: inline-flex; align-items: center; gap: 5px; }
+.character-history-button { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid #dfd8f3; border-radius: 8px; background: #fff; color: var(--accent-dark); font-size: 20px; line-height: 1; cursor: pointer; transition: background .16s ease, border-color .16s ease, color .16s ease, transform .16s ease; }
+.character-history-button:hover:not(:disabled) { background: var(--accent-soft); border-color: #c9bbed; transform: translateY(-1px); }
+.character-history-button:disabled { color: #c8c4cf; background: #f7f6f8; border-color: #ebe8ee; cursor: default; }
 .canvas-with-tools { position: relative; width: min(100%, 980px); max-width: 100%; min-width: 0; margin: 0 auto; }
 .stage-tools {
   position: absolute; z-index: 7; top: 34px; left: 12px;
@@ -568,6 +572,8 @@ body { background: #f8f6f7; }
 .back-hair-help .swap-hair-button { margin: 0; padding: 6px 8px; }
 .back-hair-help .import-format-help, .back-hair-help .hair-sheet-layout { display: none; }
 .catalog-panel > .color-panel { order: 7; margin: 0 4px 8px; padding: 10px 11px; border: 1px solid #ece7ec; border-radius: 11px; background: #fff; }
+.catalog-panel > .color-panel.is-collapsed { padding-bottom: 8px; }
+.color-panel-body { display: block; }
 .color-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .color-heading strong { font-size: 12.5px; }
 .color-heading button { border: 0; background: transparent; color: var(--accent); font-size: 10px; font-weight: 750; cursor: pointer; }
@@ -594,6 +600,9 @@ body { background: #f8f6f7; }
 .color-options label { display: flex; align-items: center; gap: 5px; color: #6c6b7a; font-size: 10px; }
 .color-options input { accent-color: var(--accent); }
 .protect-color-button { border: 1px solid #dcd2fa; border-radius: 8px; padding: 7px 9px; background: #f4efff; color: var(--accent-dark); font-size: 10px; font-weight: 750; cursor: pointer; }
+.color-collapse-button { width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 9px; border: 1px solid #e2d8f8; border-radius: 8px; padding: 7px 9px; background: #faf8ff; color: var(--accent-dark); font-size: 10px; font-weight: 800; cursor: pointer; transition: background .16s ease, border-color .16s ease, transform .16s ease; }
+.color-collapse-button:hover { background: #f1ebff; border-color: #cfc1f4; transform: translateY(-1px); }
+.color-collapse-button span { font-size: 13px; line-height: 1; }
 .catalog-panel > .expression-workspace { order: 5; flex: 1 1 auto; overflow-y: auto; }
 .adjust-panel.collapsed > :not(.adjust-heading) { display: none; }
 .adjust-panel.collapsed .adjust-heading { margin: 0; }

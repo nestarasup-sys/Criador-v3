@@ -294,6 +294,10 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
 
   assert.match(page, /Salvando automaticamente/);
   assert.match(page, /persistEditorSnapshot/);
+  assert.match(page, /undoCharacterChange/);
+  assert.match(page, /redoCharacterChange/);
+  assert.match(page, /Histórico do personagem atual/);
+  assert.match(page, /characterHistoryRef/);
   assert.match(page, /hasRealCustomization/);
   assert.match(page, /!activeCharacter && \(!draftStarted \|\| !hasRealCustomization\)/);
   assert.match(page, /layerMasks/);
@@ -455,6 +459,9 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /tintStrength/);
   assert.match(page, /Cor desejada/);
   assert.match(page, /color-neutral-presets/);
+  assert.match(page, /colorPanelOpen/);
+  assert.match(page, /Ocultar controles de cor/);
+  assert.match(page, /Mostrar controles de cor/);
   assert.match(page, /detailPreservation/);
   assert.match(page, /Contraste/);
   assert.match(page, /Textura/);
@@ -468,6 +475,25 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /Salvar proteção/);
   assert.match(css, /\.color-editor-modal/);
   assert.match(css, /\.color-panel/);
+  assert.match(css, /\.color-panel-body/);
+  assert.match(css, /\.color-collapse-button/);
+});
+
+test("oferece desfazer e refazer isolados para o personagem atual", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /aria-label="Desfazer alteração do personagem"/);
+  assert.match(page, /aria-label="Refazer alteração do personagem"/);
+  assert.match(page, /history\.past = \[\.\.\.history\.past, history\.current\]\.slice\(-80\)/);
+  assert.match(page, /history\.future\.unshift\(history\.current\)/);
+  assert.match(page, /history\.future = \[\]/);
+  assert.match(page, /setSelections\(normalizeSelections\(snapshot\.selections\)\)/);
+  assert.match(page, /setAdjustments\(normalizeAdjustments\(snapshot\.adjustments\)\)/);
+  assert.match(page, /setLayerMasks\(normalizeLayerMasks\(snapshot\.layerMasks, snapshot\.maskStrokes\)\)/);
+  assert.match(css, /\.character-history-controls/);
+  assert.match(css, /\.character-history-button:disabled/);
 });
 
 test("shares outfit color while keeping protection individual per variant", async () => {

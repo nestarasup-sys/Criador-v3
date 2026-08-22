@@ -69,6 +69,7 @@ import type {
 type BrushMode = "erase" | "restore";
 type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit";
 type LayerMasks = Record<MaskTarget, MaskStroke[]>;
+type CharacterHistory = { past: string[]; future: string[]; current: string | null; changedAt: number };
 
 function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId) {
   return `${outfitId ?? "nenhuma"}:${packId}`;
@@ -1152,6 +1153,11 @@ export default function Home() {
   const [colorEditorHistory, setColorEditorHistory] = useState<string[]>([]);
   const [colorEditorRedo, setColorEditorRedo] = useState<string[]>([]);
   const [colorEditorRevision, setColorEditorRevision] = useState(0);
+  const [colorPanelOpen, setColorPanelOpen] = useState(true);
+  const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
+  const historyActiveKeyRef = useRef<string | null>(null);
+  const historyRestoreRef = useRef<string | null>(null);
+  const [historyAvailability, setHistoryAvailability] = useState({ undo: false, redo: false });
   const [hairAdjustmentsByBasePack, setHairAdjustmentsByBasePack] = useState<Partial<Record<BasePackId, {
     cabelos: ItemTransform;
     cabelosTras: ItemTransform;
@@ -1371,6 +1377,104 @@ export default function Home() {
     || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => colorAdjustmentIsActive(adjustment))
     || Object.keys(protectionMasks).length > 0
     || Object.keys(outfitProtectionMasksByBasePack).length > 0;
+
+  useEffect(() => {
+    const key = activeCharacter ?? "draft";
+    const history = characterHistoryRef.current.get(key) ?? {
+      past: [],
+      future: [],
+      current: null,
+      changedAt: 0,
+    } satisfies CharacterHistory;
+    const keyChanged = historyActiveKeyRef.current !== key;
+    historyActiveKeyRef.current = key;
+    if (keyChanged && history.current === null) {
+      history.current = editorSnapshot;
+      history.changedAt = Date.now();
+      characterHistoryRef.current.set(key, history);
+      setHistoryAvailability({ undo: false, redo: false });
+      return;
+    }
+    if (historyRestoreRef.current === editorSnapshot) {
+      history.current = editorSnapshot;
+      history.changedAt = Date.now();
+      historyRestoreRef.current = null;
+      characterHistoryRef.current.set(key, history);
+      setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
+      return;
+    }
+    if (history.current === null) {
+      history.current = editorSnapshot;
+    } else if (history.current !== editorSnapshot) {
+      const now = Date.now();
+      // Arraste e sliders formam um único passo, mesmo que produzam muitos renders.
+      if (now - history.changedAt >= 420) history.past = [...history.past, history.current].slice(-80);
+      history.current = editorSnapshot;
+      history.future = [];
+      history.changedAt = now;
+    }
+    characterHistoryRef.current.set(key, history);
+    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
+  }, [activeCharacter, editorSnapshot]);
+
+  function applyHistorySnapshot(snapshotText: string) {
+    const snapshot = JSON.parse(snapshotText) as CharacterSnapshot;
+    historyRestoreRef.current = snapshotText;
+    setCharacterName(snapshot.name ?? "Novo personagem");
+    setModel(snapshot.model);
+    setBasePackId(snapshot.basePackId ?? "modelo-1");
+    setSelections(normalizeSelections(snapshot.selections));
+    setAdjustments(normalizeAdjustments(snapshot.adjustments));
+    setColorAdjustments(normalizeColorAdjustments(snapshot.colorAdjustments));
+    setOutfitColorAdjustmentsByGroup(snapshot.outfitColorAdjustmentsByGroup ?? {});
+    setProtectionMasks(snapshot.protectionMasks ?? {});
+    setHairAdjustmentsByBasePack(snapshot.hairAdjustmentsByBasePack ?? {});
+    setOutfitAdjustmentsByBasePack(snapshot.outfitAdjustmentsByBasePack ?? {});
+    setOutfitLayerMasksByBasePack(snapshot.outfitLayerMasksByBasePack ?? {});
+    setOutfitProtectionMasksByBasePack(snapshot.outfitProtectionMasksByBasePack ?? {});
+    setFaceMode(snapshot.faceMode ?? "base");
+    setActivePackId(snapshot.expressionPackId ?? null);
+    setExpressionEmotion(snapshot.expressionEmotion ?? "normal");
+    setExpressionState(snapshot.expressionState ?? "default");
+    setLayerMasks(normalizeLayerMasks(snapshot.layerMasks, snapshot.maskStrokes));
+    setMaskRedo(emptyLayerMasks());
+    setMaskTarget("body");
+    setPreviewPan(snapshot.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
+    setExportFrame(snapshot.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+    setAnimationMode(null);
+    setFitMode(false);
+    setEraserMode(false);
+    setPreviewPanMode(false);
+    setExportFrameMode(false);
+    setChromaMode(false);
+    setNotice("Alteração restaurada");
+  }
+
+  function undoCharacterChange() {
+    const key = activeCharacter ?? "draft";
+    const history = characterHistoryRef.current.get(key);
+    if (!history?.past.length || !history.current) return;
+    const target = history.past.pop()!;
+    history.future.unshift(history.current);
+    history.current = target;
+    history.changedAt = Date.now();
+    characterHistoryRef.current.set(key, history);
+    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
+    applyHistorySnapshot(target);
+  }
+
+  function redoCharacterChange() {
+    const key = activeCharacter ?? "draft";
+    const history = characterHistoryRef.current.get(key);
+    if (!history?.future.length || !history.current) return;
+    const target = history.future.shift()!;
+    history.past = [...history.past, history.current].slice(-80);
+    history.current = target;
+    history.changedAt = Date.now();
+    characterHistoryRef.current.set(key, history);
+    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
+    applyHistorySnapshot(target);
+  }
 
   useEffect(() => {
     if (suspendAutoSaveRef.current) {
@@ -3137,6 +3241,9 @@ export default function Home() {
 
   function newCharacter(saveCurrent = true) {
     if (saveCurrent) persistEditorSnapshot("Salvo automaticamente");
+    characterHistoryRef.current.delete("draft");
+    historyRestoreRef.current = null;
+    setHistoryAvailability({ undo: false, redo: false });
     suspendAutoSaveRef.current = true;
     setDraftStarted(true);
     setActiveCharacter(null);
@@ -3616,6 +3723,9 @@ export default function Home() {
     return () => window.removeEventListener("keydown", moveWithKeyboard);
   }, [activeAdjustmentCategory, fitMode, hasActiveItem]);
 
+  const canUndoCharacter = historyAvailability.undo;
+  const canRedoCharacter = historyAvailability.redo;
+
   return (
     <main className="app-shell">
       <CreatorTopbar
@@ -3655,6 +3765,24 @@ export default function Home() {
         <section className="stage-section">
           <div className="stage-toolbar">
             <div><strong>Pré-visualização</strong><span>1920 × 1080 · fundo transparente</span></div>
+            <div className="character-history-controls" aria-label="Histórico do personagem atual">
+              <button
+                type="button"
+                className="character-history-button"
+                disabled={!canUndoCharacter}
+                onClick={undoCharacterChange}
+                title="Desfazer alteração do personagem"
+                aria-label="Desfazer alteração do personagem"
+              >↶</button>
+              <button
+                type="button"
+                className="character-history-button"
+                disabled={!canRedoCharacter}
+                onClick={redoCharacterChange}
+                title="Refazer alteração do personagem"
+                aria-label="Refazer alteração do personagem"
+              >↷</button>
+            </div>
           </div>
           {chromaMode && (
             <div className="chroma-toolbar">
@@ -4009,6 +4137,7 @@ export default function Home() {
           {colorEligible && (
             <section className="color-panel" aria-label="Ajustes de cor">
               <div className="color-heading"><strong>Cor do item</strong><button onClick={resetActiveColor}>Restaurar</button></div>
+              {colorPanelOpen && <div className="color-panel-body">
               {category === "roupas" && activeOutfitVariantCount > 1 && (
                 <div className="color-group-scope"><span>✦ Conjunto vinculado</span><strong>{activeOutfitVariantCount} versões ao mesmo tempo</strong></div>
               )}
@@ -4039,7 +4168,11 @@ export default function Home() {
                   <button className="protect-color-button" onClick={openColorProtectionEditor}>{(selectedOutfit && outfitProtectionMasksByBasePack[outfitStateKey(selectedOutfit.id, basePackId)]) || protectionMasks.roupas ? `Editar áreas protegidas · ${selectedOutfit?.outfitVariantIndex === 0 ? "padrão" : `variante ${selectedOutfit?.outfitVariantIndex ?? 1}`}` : "Proteger pele e detalhes"}</button>
                   {selectedOutfit?.outfitGroupId && activeOutfitVariantCount > 1 && <button className="protect-color-button" onClick={applyStandardOutfitAdjustment}>Ajustar para padrão</button>}
                 </>}
-              </div>
+              </div></div>}
+              <button className="color-collapse-button" type="button" aria-expanded={colorPanelOpen} onClick={() => setColorPanelOpen((open) => !open)}>
+                <span aria-hidden="true">{colorPanelOpen ? "⌃" : "⌄"}</span>
+                {colorPanelOpen ? "Ocultar controles de cor" : "Mostrar controles de cor"}
+              </button>
             </section>
           )}
 
