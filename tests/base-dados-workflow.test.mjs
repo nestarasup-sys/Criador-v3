@@ -89,7 +89,7 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
   try {
     const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, createdAt: "", updatedAt: "" }];
     const characters = [{ id: "char-01", name: "Duque", model: "masculino", photoUrl: undefined, updatedAt: "" }];
-    const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", startAt: 2 }] };
+    const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", englishText: "Hello", startAt: 2 }] };
     const validation = loaded.validateImportableScript(valid, videos, characters);
     assert.equal(validation.success, true);
     assert.equal(validation.issues.some((item) => item.level === "warning"), true);
@@ -97,6 +97,7 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 10);
+    assert.equal(draft.script.tiktoks[0].reactionBlocks[0].englishText, "Hello");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").personality, "Ficha enviada no JSON");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").speakingStyle, "Direto");
     const duplicate = loaded.validateImportableScript({ ...valid, videos: [{ videoId: "video-01", order: 1 }, { videoId: "video-01", order: 2 }] }, videos, characters);
@@ -149,7 +150,7 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /createScriptFromImport/);
   assert.match(basePage, /Confirmar e criar roteiro/);
   assert.match(basePage, /Pacote completo para IA/);
-  assert.match(basePage, /Guia V4\.md/);
+  assert.match(basePage, /Guia V5\.md/);
   assert.match(basePage, /dados para fazer roteiro\.txt/);
   assert.match(roteiroHome, /Auditar pastas/);
   assert.match(roteiroHome, /Excluir roteiro e pastas/);

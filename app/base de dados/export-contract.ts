@@ -115,9 +115,9 @@ export function buildBaseDadosSimpleExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia V4 — criar roteiro importável para o Nymi Gacha
+  return `# Guia V5 — criar roteiro importável para o Nymi Gacha
 
-> Versão do guia: V4. Este guia permite importar personagens novos, contexto geral e uma abertura antes do TikTok 01.
+> Versão do guia: V5. Este guia permite importar personagens novos, contexto geral, uma abertura antes do TikTok 01 e o texto em inglês de cada bloco.
 
 ## Objetivo
 
@@ -264,6 +264,7 @@ Exemplo:
 - \`characterId\`: personagem que fala ou pensa.
 - \`videoId\`: vídeo ao qual a reação pertence.
 - \`text\`: texto curto, preenchido e em português brasileiro.
+- \`englishText\`: tradução correspondente em inglês, opcional. Quando presente, será importada no campo de inglês do mesmo bloco; não substitua nem traduza o campo \`text\`.
 - \`startAt\`: opcional; quando informado, deve ser um número não negativo e não pode ser anterior ao fim da descrição.
 
 ## Exemplos de respostas ruins

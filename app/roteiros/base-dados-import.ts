@@ -6,7 +6,7 @@ export const IMPORTABLE_SCRIPT_FORMAT = "NYMI_IMPORTABLE_SCRIPT_V1";
 
 export type ImportableVideoChoice = { videoId: string; order: number };
 export type ImportableCharacterChoice = { characterId: string; role?: string; name?: string; model?: "feminino" | "masculino"; aliases?: string[]; narrativeProfile?: Partial<NarrativeProfile> };
-export type ImportableBlock = { type: "speech" | "thought"; characterId: string; videoId?: string; text: string; startAt?: number };
+export type ImportableBlock = { type: "speech" | "thought"; characterId: string; videoId?: string; text: string; englishText?: string; startAt?: number };
 export type ImportableScriptDocument = {
   format: typeof IMPORTABLE_SCRIPT_FORMAT;
   title: string;
@@ -106,13 +106,14 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     const characterId = stringValue(item.characterId);
     const videoId = stringValue(item.videoId);
     const text = stringValue(item.text);
+    const englishText = stringValue(item.englishText ?? item.english);
     const startAt = item.startAt === undefined ? undefined : finiteNumber(item.startAt);
     if (!type) issues.push({ level: "error", path: `blocks[${index}].type`, message: "O bloco precisa ser speech ou thought." });
     if (!text) issues.push({ level: "error", path: `blocks[${index}].text`, message: "O bloco precisa conter texto." });
     if (!allowedCharacterIds.has(characterId)) issues.push({ level: "error", path: `blocks[${index}].characterId`, message: "O bloco usa um personagem que não foi selecionado." });
     if (!allowedVideoIds.has(videoId)) issues.push({ level: "error", path: `blocks[${index}].videoId`, message: "O bloco usa um vídeo que não foi selecionado." });
     if (startAt !== undefined && (!Number.isFinite(startAt) || startAt < 0)) issues.push({ level: "error", path: `blocks[${index}].startAt`, message: "startAt precisa ser um número igual ou maior que zero." });
-    if (type && text && allowedCharacterIds.has(characterId) && allowedVideoIds.has(videoId) && (startAt === undefined || (Number.isFinite(startAt) && startAt >= 0))) normalizedBlocks.push({ type, characterId, videoId, text, ...(startAt === undefined ? {} : { startAt }) });
+    if (type && text && allowedCharacterIds.has(characterId) && allowedVideoIds.has(videoId) && (startAt === undefined || (Number.isFinite(startAt) && startAt >= 0))) normalizedBlocks.push({ type, characterId, videoId, text, ...(englishText ? { englishText } : {}), ...(startAt === undefined ? {} : { startAt }) });
   });
 
   const normalizedOpeningBlocks: Array<Omit<ImportableBlock, "videoId">> = [];
@@ -122,10 +123,11 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     const type = item.type === "speech" || item.type === "thought" ? item.type : "";
     const characterId = stringValue(item.characterId);
     const text = stringValue(item.text);
+    const englishText = stringValue(item.englishText ?? item.english);
     if (!type) issues.push({ level: "error", path: `opening.blocks[${index}].type`, message: "O bloco da abertura precisa ser speech ou thought." });
     if (!text) issues.push({ level: "error", path: `opening.blocks[${index}].text`, message: "O bloco da abertura precisa conter texto." });
     if (!allowedCharacterIds.has(characterId)) issues.push({ level: "error", path: `opening.blocks[${index}].characterId`, message: "A abertura usa um personagem que não foi selecionado." });
-    if (type && text && allowedCharacterIds.has(characterId)) normalizedOpeningBlocks.push({ type, characterId, text });
+    if (type && text && allowedCharacterIds.has(characterId)) normalizedOpeningBlocks.push({ type, characterId, text, ...(englishText ? { englishText } : {}) });
   });
 
   const selectedVideoMap = new Map(videos.filter((video) => allowedVideoIds.has(video.id)).map((video) => [video.id, video]));
@@ -156,7 +158,7 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
       return leftTime - rightTime || left.index - right.index;
     }).map(({ block }) => {
       const startAt = Math.max(sourceVideo.sceneEndSeconds, block.startAt ?? sourceVideo.sceneEndSeconds);
-      return { id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: "", startAt, createdAt: timestamp, updatedAt: timestamp };
+      return { id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: block.englishText || "", startAt, createdAt: timestamp, updatedAt: timestamp };
     });
     const section: TikTokSection = {
       id: sectionId,
@@ -179,7 +181,7 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
   const profilesWithJsonPriority = [...state.profiles.filter((profile) => !importedProfileIds.has(profile.characterId)), ...importedProfiles];
   const baseAiContext = createScriptAiContext(characterIds, profilesWithJsonPriority, state.globalRules);
   const opening = document.opening ? createOpeningSection(Math.max(1, document.opening.blocks.length), false) : undefined;
-  if (opening && document.opening) opening.reactionBlocks = document.opening.blocks.map((block) => ({ id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: "", createdAt: timestamp, updatedAt: timestamp }));
+  if (opening && document.opening) opening.reactionBlocks = document.opening.blocks.map((block) => ({ id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: block.englishText || "", createdAt: timestamp, updatedAt: timestamp }));
   const script: ScriptProject = {
     id: createId(),
     title: document.title,

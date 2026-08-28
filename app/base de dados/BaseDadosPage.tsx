@@ -288,7 +288,7 @@ export default function BaseDadosPage() {
       const exportedDatabase = mergeBaseDadosDrafts(currentDatabase, draftsRef.current);
       const guide = buildBaseDadosGuide();
       const data = buildBaseDadosExportText(exportedDatabase, selectedCharactersForExport());
-      downloadText("Guia V4.md", `${guide}\n\n---\n\n${data}`, "text/markdown;charset=utf-8");
+      downloadText("Guia V5.md", `${guide}\n\n---\n\n${data}`, "text/markdown;charset=utf-8");
       setMessage("Pacote completo exportado: guia e dados técnicos reunidos em um único arquivo.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível exportar o pacote completo.");
