@@ -135,6 +135,17 @@
 .importPreviewList { display:grid; gap:6px; max-height:160px; overflow-y:auto; padding:10px; border:1px solid #e8dff1; border-radius:11px; background:#fcfbfe; }
 .importPreviewList strong { color:#4a3658; font-size:11px; }
 .importPreviewList span { overflow-wrap:anywhere; color:#786782; font-size:10px; line-height:1.4; }
+.importedManagerPanel { width:min(620px,calc(100vw - 28px)); }
+.importedManagerList { min-height:0; overflow-y:auto; display:grid; gap:12px; padding:2px 4px 4px 0; }
+.importedScriptCard { display:grid; gap:12px; padding:16px; border:1px solid #eadff3; border-radius:16px; background:linear-gradient(135deg,#fff,#fbf8ff); box-shadow:0 8px 22px rgba(72,42,104,.06); }
+.importedScriptHeading { display:flex; align-items:center; gap:11px; }
+.importedScriptIcon { display:grid; place-items:center; width:36px; height:36px; border-radius:11px; color:#fff; background:linear-gradient(135deg,#6d3bd1,#e2549c); font-size:18px; }
+.importedScriptHeading div { display:grid; gap:3px; }
+.importedScriptHeading strong { color:#38234e; font-size:14px; }
+.importedScriptHeading small { color:#927fa0; font-size:11px; }
+.importedCharacterChips { display:flex; flex-wrap:wrap; gap:7px; }
+.importedCharacterChips span { padding:6px 10px; border-radius:999px; color:#5a3b74; background:#f1e8ff; font-size:11px; font-weight:700; }
+.importedScriptActions { display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; }
 .secondaryButton,.primaryButton { min-height:36px; border:1px solid #d8cdf1; border-radius:9px; padding:8px 13px; font-size:11px; font-weight:850; cursor:pointer; }
 .secondaryButton { color:#654a84; background:#fff; }
 .secondaryButton:hover:not(:disabled) { border-color:#bca1e5; background:#f7f2ff; }
