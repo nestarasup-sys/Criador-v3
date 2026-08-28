@@ -158,7 +158,9 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
     return { section, sourceVideo };
   });
   const importedProfiles = document.characters.flatMap((choice) => choice.narrativeProfile ? [{ ...createNarrativeProfile(choice.characterId), ...choice.narrativeProfile, characterId: choice.characterId, updatedAt: timestamp }] : []);
-  const baseAiContext = createScriptAiContext(characterIds, [...state.profiles, ...importedProfiles], state.globalRules);
+  const importedProfileIds = new Set(importedProfiles.map((profile) => profile.characterId));
+  const profilesWithJsonPriority = [...state.profiles.filter((profile) => !importedProfileIds.has(profile.characterId)), ...importedProfiles];
+  const baseAiContext = createScriptAiContext(characterIds, profilesWithJsonPriority, state.globalRules);
   const script: ScriptProject = {
     id: createId(),
     title: document.title,
