@@ -348,6 +348,8 @@ export default function BaseDadosPage() {
         id: choice.characterId,
         name: choice.name || `Personagem importado ${choice.characterId.slice(0, 8)}`,
         model: choice.model || "feminino",
+        basePackId: "modelo-1",
+        faceMode: "base",
         selections: Object.fromEntries(categories.map((category) => [category, null])),
         adjustments: Object.fromEntries(categories.map((category) => [category, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false }])),
         ...(choice.aliases?.length ? { aliases: choice.aliases } : {}),

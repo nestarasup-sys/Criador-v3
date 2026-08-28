@@ -43,7 +43,7 @@ export function expressionKeysForCharacter(
   packs: PcExpressionPack[] = [],
   modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {},
 ): readonly ExpressionKey[] {
-  if (character.faceMode !== "base") {
+  if (character.faceMode === "single" || character.faceMode === "pack") {
     const pack = packs.find((item) => item.id === character.expressionPackId);
     if (pack?.frames.length) return pack.frames.map((frame) => frame.key);
     return PACK_EXPRESSION_KEYS;
@@ -186,7 +186,7 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
 /** Monta exatamente a estrutura de um ZIP do Criador, agora reutilizável pelos Roteiros. */
 export async function buildCharacterBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {}) {
   const keys = expressionKeysForCharacter(character, packs, modelPacks);
-  const usesBuiltInBase = character.faceMode === "base";
+  const usesBuiltInBase = character.faceMode !== "single" && character.faceMode !== "pack";
   const pack = packs.find((item) => item.id === character.expressionPackId);
   return createCharacterBundle({
     folderName: character.name,
@@ -240,7 +240,7 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
       return {
         folderName: variant.label,
         character: { ...variantCharacter, id: character.id },
-        usesBuiltInBase: character.faceMode === "base",
+        usesBuiltInBase: character.faceMode !== "single" && character.faceMode !== "pack",
         expressions,
         renderPreview: async () => dataUrlBlob(await renderStudioCharacter(variantCharacter, expressions[0], catalog, packs)),
         renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(variantCharacter, key as ExpressionKey, catalog, packs)),
