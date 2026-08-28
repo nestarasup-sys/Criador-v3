@@ -10,8 +10,8 @@ const links: Array<{ area: NymiArea; label: string; href: string; icon: string }
 ]; 
 
 export function NymiBrand({ compact = false }: { compact?: boolean }) {
-  return <div className={`nymi-brand ${compact ? "nymi-brand-compact" : ""}`}>
-    <span className="nymi-brand-mark" aria-hidden="true">✦</span>
+  return <div className={`nymi-brand ${compact ? "nymi-brand-compact" : ""}`} aria-label="Estúdio de personagens">
+    <span className="nymi-brand-mark"><img src="/gacha-nymi.ico" alt="" /></span>
     <span className="nymi-brand-copy"><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></span>
   </div>;
 }

@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   title: "Nymi Gacha",
   description: "Estúdio local para criar e exportar personagens.",
   icons: {
-    icon: "/nymi-logo.png",
-    shortcut: "/nymi-logo.png",
-    apple: "/nymi-logo.png",
+    icon: "/gacha-nymi.ico",
+    shortcut: "/gacha-nymi.ico",
+    apple: "/gacha-nymi.ico",
   },
 };
 

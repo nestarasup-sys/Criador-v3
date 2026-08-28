@@ -6,7 +6,7 @@ import { createGlobalRule, createId, createNarrativeProfile, createScriptAiConte
 import { profileCompletion } from "../ai-context";
 import { normalizeRoteirosState } from "../../domain/document-schemas.mjs";
 import { aiRequest, cleanupRoteiroOrphans, createRoteiroBackup, exportJson, listRoteiroBackups, listRoteiroOrphans, removeRoteiro, restoreRoteiroBackup, type RoteiroOrphans } from "../storage";
-import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
+import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState, ScriptProject } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import RecoveryBanner from "./RecoveryBanner";
@@ -29,7 +29,7 @@ function Header({ tab, setTab, saveStatus, pcAvailable, saveNow }: { tab: HomeTa
     <>
       <header className={styles.topbar}>
         <Link className={styles.backButton} href="/" aria-label="Voltar ao criador">←</Link>
-        <div className={styles.brandBlock}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div>
+        <NymiBrand />
         <div className={styles.moduleBadge}><small>MÓDULO</small><strong>ROTEIROS</strong></div>
         <div className={styles.saveCluster}>
           <NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} />

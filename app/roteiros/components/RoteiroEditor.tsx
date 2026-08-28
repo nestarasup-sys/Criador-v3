@@ -15,7 +15,7 @@ import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCh
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
 import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
 import { loadBaseDados } from "../../base de dados/storage";
-import { NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
+import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
 import ScriptAiContextPanel from "./ScriptAiContextPanel";
@@ -122,7 +122,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
 
 function RoteiroHeader({ script, saveStatus, pcAvailable, saveNow, addTikTok }: { script: ScriptProject; saveStatus: keyof typeof statusText; pcAvailable: boolean; saveNow: () => void; addTikTok: () => void }) {
   const blockCount = script.tiktoks.reduce((total, section) => total + section.reactionBlocks.length, 0);
-  return <header className={styles.editorTopbar}><Link href="/roteiros" className={styles.backButton}>←</Link><div className={styles.editorBrand}><span>✦</span><div><strong>Nymi Gacha</strong><small>CHARACTER STUDIO</small></div></div><div className={styles.editorTitle}><span>ROTEIRO</span><strong>{script.title}</strong></div><div className={styles.editorStats}><span>{script.participants.length} personagens</span><span>{script.tiktoks.length} TikToks</span><span>{blockCount} blocos</span></div><div className={styles.editorTopActions}><NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} /><NymiNavigation active="roteiros" compact /><button className={styles.ghostButton} onClick={saveNow}>Salvar</button><button className={styles.secondaryButton} onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, createRoteiroExportDocument(script))}>{"{ }"} JSON</button><button className={styles.primaryButton} onClick={addTikTok}>＋ TikTok</button></div></header>;
+  return <header className={styles.editorTopbar}><Link href="/roteiros" className={styles.backButton}>←</Link><NymiBrand compact /><div className={styles.editorTitle}><span>ROTEIRO</span><strong>{script.title}</strong></div><div className={styles.editorStats}><span>{script.participants.length} personagens</span><span>{script.tiktoks.length} TikToks</span><span>{blockCount} blocos</span></div><div className={styles.editorTopActions}><NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} /><NymiNavigation active="roteiros" compact /><button className={styles.ghostButton} onClick={saveNow}>Salvar</button><button className={styles.secondaryButton} onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, createRoteiroExportDocument(script))}>{"{ }"} JSON</button><button className={styles.primaryButton} onClick={addTikTok}>＋ TikTok</button></div></header>;
 }
 
 type TikTokCardProps = {
