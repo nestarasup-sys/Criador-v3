@@ -320,7 +320,11 @@ export default function BaseDadosPage() {
     setImportPreview(null); setBusy("import-preview"); setMessage("");
     try {
       const raw = JSON.parse(await file.text()) as unknown;
-      const [loadedDatabase, loadedRoteiros] = await Promise.all([loadBaseDados(), loadRoteirosState()]);
+      // A descrição pode ainda estar no debounce/local draft quando o usuário importa.
+      // Confirme esses drafts antes de montar o roteiro para nenhum vídeo perder metadados.
+      await flushPendingDrafts();
+      const [loadedDatabaseRaw, loadedRoteiros] = await Promise.all([loadBaseDados(), loadRoteirosState()]);
+      const loadedDatabase = mergeBaseDadosDrafts(loadedDatabaseRaw, draftsRef.current);
       if (!loadedRoteiros.pcAvailable) throw new Error("O serviço local de Roteiros não está disponível para importar este arquivo.");
       const validation = validateImportableScript(raw, loadedDatabase.videos, characterData.characters);
       setImportPreview({ validation, database: loadedDatabase, roteiroState: loadedRoteiros.state });
