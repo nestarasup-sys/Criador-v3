@@ -145,7 +145,9 @@ type OutfitVariantLike = Pick<PcCatalogItem, "id" | "category" | "outfitGroupId"
 /** Retorna as variantes da roupa atual em ordem estável para os diretórios POSE 1, POSE 2… */
 export function outfitVariantsForExport(character: Character, catalog: readonly OutfitVariantLike[]): CharacterVariant[] {
   const selected = catalog.find((item) => item.id === character.selections.roupas && item.category === "roupas");
-  if (!selected?.outfitGroupId) return selected ? [{ id: selected.id, index: 0, label: "POSE 1" }] : [];
+  // Roupa é opcional: personagens novos ou básicos ainda devem exportar uma pose válida.
+  if (!selected) return [{ id: "", index: 0, label: "POSE 1" }];
+  if (!selected.outfitGroupId) return [{ id: selected.id, index: 0, label: "POSE 1" }];
   const variants = catalog
     .filter((item) => item.category === "roupas" && item.outfitGroupId === selected.outfitGroupId && item.id)
     .sort((left, right) => (left.outfitVariantIndex ?? (left.outfitCover ? 0 : Number.MAX_SAFE_INTEGER))
