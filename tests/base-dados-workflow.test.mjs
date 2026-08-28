@@ -22,6 +22,8 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
     const text = loaded.buildBaseDadosExportText(database, [{ characterId: "char-01", name: "Duque", narrativeProfile: { characterId: "char-01", personality: "Reservado", backstory: "História do Duque", fynRelationship: "Aliado", speakingStyle: "Formal", additionalRules: "Não inventa fatos", relationships: [{ id: "rel-01", targetCharacterId: "char-02", description: "Confia pouco" }], updatedAt: "" } }], "2026-01-01T00:00:00.000Z");
     assert.match(text, /NYMI_BASE_DATABASE_EXPORT_V2/);
     assert.match(text, /CAMINHO ABSOLUTO: C:\\NYMI\\01\.mp4/);
+    assert.match(text, /REFERÊNCIA CANÔNICA: video-01/);
+    assert.match(text, /HASH SHA-256: não calculado/);
     assert.match(text, /TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: 10\.00 segundos/);
     assert.match(text, /TEMPO TOTAL DO VÍDEO: 20\.00 segundos/);
     assert.match(text, /ID: char-01/);
@@ -46,6 +48,19 @@ test("exportação usa drafts recentes mesmo antes do debounce terminar", async 
     assert.equal(merged.videos[0].description, "Descrição digitada agora");
     assert.equal(merged.videos[0].sceneEndSeconds, 10);
     assert.equal(database.videos[0].description, "Descrição antiga");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("dados simples exporta somente conteúdo narrativo, sem metadados técnicos", async () => {
+  const { loaded, root } = await bundled("app/base de dados/export-contract.ts");
+  try {
+    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "FYN entra na sala.", sceneEndSeconds: 4, createdAt: "", updatedAt: "" }] };
+    const profile = { characterId: "char-01", personality: "Reservado", backstory: "História", fynRelationship: "Aliado", speakingStyle: "Curto", relationships: [{ id: "rel-01", targetCharacterId: "char-02", description: "Confia pouco" }], additionalRules: "Não inventa", updatedAt: "2026-01-01T00:00:00.000Z" };
+    const text = loaded.buildBaseDadosSimpleExportText(database, [{ characterId: "char-01", name: "Elias", narrativeProfile: profile }], { "char-02": "FYN" });
+    assert.match(text, /FYN entra na sala/);
+    assert.match(text, /"character": "FYN"/);
+    assert.match(text, /"description": "Confia pouco"/);
+    assert.doesNotMatch(text, /char-01|char-02|rel-01|updatedAt/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -126,10 +141,15 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /onBlur=\{\(\) => void flushVideoDraft/);
   assert.match(basePage, /pagehide/);
   assert.match(basePage, /buildBaseDadosExportText/);
-  assert.match(roteiroHome, /Importar roteiro da IA/);
+  assert.doesNotMatch(roteiroHome, /Importar roteiro da IA/);
+  assert.match(basePage, /Importar roteiro da IA/);
+  assert.match(basePage, /validateImportableScript/);
+  assert.match(basePage, /createScriptFromImport/);
+  assert.match(basePage, /Confirmar e criar roteiro/);
+  assert.match(basePage, /Pacote completo para IA/);
+  assert.match(basePage, /Guia V1\.md/);
+  assert.match(basePage, /dados para fazer roteiro\.txt/);
   assert.match(roteiroHome, /Auditar pastas/);
   assert.match(roteiroHome, /Excluir roteiro e pastas/);
-  assert.match(roteiroHome, /NYMI_IMPORTABLE_SCRIPT_V1/);
-  assert.match(roteiroHome, /Confirmar e criar roteiro/);
   assert.match(roteiroHome, /await createRoteiroBackup\(\)/);
 });

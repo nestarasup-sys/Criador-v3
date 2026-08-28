@@ -546,8 +546,18 @@ export default function RoteiroEditor() {
       await createRoteiroBackup();
       let nextState = state;
       const imported: string[] = [];
+      const skipped: string[] = [];
       const failures: string[] = [];
       for (const sourceVideo of database.videos) {
+        const alreadyLinked = nextState.scripts
+          .find((item) => item.id === script.id)
+          ?.tiktoks.some((item) => item.video?.libraryVideoId === sourceVideo.id || (
+            sourceVideo.contentHash && item.video?.contentHash === sourceVideo.contentHash
+          ));
+        if (alreadyLinked) {
+          skipped.push(`Vídeo ${String(sourceVideo.sequence).padStart(2, "0")}`);
+          continue;
+        }
         const draft = addTikTokCommand(nextState, script.id, 1, false);
         try {
           const video = await importBaseDadosVideoIntoRoteiro(script.id, draft.section.id, sourceVideo.id);
@@ -571,7 +581,7 @@ export default function RoteiroEditor() {
         setActiveSectionId(nextState.scripts.find((item) => item.id === script.id)?.tiktoks.at(-1)?.id || "");
         setOpeningActive(false);
       }
-      setExportMessage(`Base de dados importada: ${imported.length}/${database.videos.length} vídeo(s), com descrições e tempos da cena.${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+      setExportMessage(`Base de dados importada: ${imported.length}/${database.videos.length} vídeo(s), com descrições e tempos da cena.${skipped.length ? ` Ignorados por já estarem neste roteiro: ${skipped.join(", ")}.` : ""}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar a Base de dados."); }
     finally { setExportLoading(""); }
   };

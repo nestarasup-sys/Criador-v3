@@ -53,6 +53,8 @@ export function buildBaseDadosExportText(
     `ID: ${video.id}`,
     `SEQUÊNCIA: ${String(video.sequence).padStart(2, "0")}`,
     `CAMINHO ABSOLUTO: ${absoluteVideoPath(video)}`,
+    `REFERÊNCIA CANÔNICA: ${video.id}`,
+    `HASH SHA-256: ${video.contentHash || "não calculado"}`,
     `ARQUIVO LOCAL: ${video.fileAvailable === false ? "AUSENTE — não pode ser importado até ser restaurado" : "disponível"}`,
     `NOME ORIGINAL: ${video.originalName}`,
     "DESCRIÇÃO:",
@@ -85,17 +87,29 @@ export function buildBaseDadosExportText(
 export function buildBaseDadosSimpleExportText(
   database: BaseDadosState,
   characters: BaseDadosCharacterExport[],
+  characterNames: Record<string, string> = {},
 ) {
   const videos = database.videos.map((video) => [
     `TIKTOK ${String(video.sequence).padStart(2, "0")}`,
     "DESCRIÇÃO:",
     video.description.trim() || "Não preenchida.",
   ].join("\n"));
+  const narrativeProfile = (profile: NarrativeProfile | undefined) => profile ? {
+    personality: profile.personality,
+    backstory: profile.backstory,
+    fynRelationship: profile.fynRelationship,
+    speakingStyle: profile.speakingStyle,
+    relationships: profile.relationships.map((relationship) => ({
+      character: characterNames[relationship.targetCharacterId] || "Personagem relacionado",
+      description: relationship.description,
+    })),
+    additionalRules: profile.additionalRules,
+  } : null;
   const characterBlocks = characters.map((character, index) => [
     `PERSONAGEM ${index + 1}`,
     `NOME: ${character.name}`,
     "FICHA:",
-    JSON.stringify(character.narrativeProfile || null, null, 2),
+    JSON.stringify(narrativeProfile(character.narrativeProfile), null, 2),
   ].join("\n"));
   return [...videos, ...characterBlocks].join("\n\n");
 }
@@ -105,7 +119,14 @@ export function buildBaseDadosGuide() {
 
 ## Objetivo
 
-Você receberá um TXT exportado da **Base de dados** com vídeos e personagens. Sua tarefa é escolher os vídeos úteis, organizar a ordem e criar falas e pensamentos curtos, naturais e coerentes. No final, retorne somente um JSON compatível com o botão **Importar roteiro da IA**.
+Você receberá dados exportados da **Base de dados** com vídeos e personagens. Sua tarefa é escolher os vídeos úteis, organizar a ordem e criar falas e pensamentos curtos, naturais e coerentes. No final, retorne somente um JSON compatível com o botão **Importar roteiro da IA**, localizado na Base de dados.
+
+## Fluxo recomendado em duas etapas
+
+- **Dados simples:** podem ser enviados primeiro para planejamento criativo. Use as descrições e fichas para sugerir quais vídeos usar, a ordem e a estrutura narrativa. Nesta etapa, não é necessário gerar JSON.
+- **Dados completos ou pacote completo:** depois que o planejamento for aprovado, use os IDs técnicos, tempos e referências deste documento para produzir o JSON final.
+- Se este documento vier como **pacote completo**, ele já contém este guia e os dados completos. Não peça outro arquivo de instruções.
+- Se o planejamento foi feito em outra mensagem ou arquivo, preserve-o e apenas faça a vinculação técnica no segundo passo; não crie uma história diferente sem motivo.
 
 ## Fonte de verdade e isolamento
 
