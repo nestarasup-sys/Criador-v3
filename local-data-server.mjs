@@ -650,7 +650,7 @@ async function route(request, response) {
     const removableCharacterIds = shouldDeleteImportedCharacters ? [...importedIds].filter((id) => !otherScriptCharacterIds.has(id)) : [];
     const keptCharacterIds = [...importedIds].filter((id) => !removableCharacterIds.includes(id));
     if (removableCharacterIds.length) {
-      state.characters = state.characters.filter((character) => !removableCharacterIds.includes(String(character.id)) || character.importedFrom?.scriptId !== scriptId);
+      state.characters = state.characters.filter((character) => !removableCharacterIds.includes(String(character.id)));
       await queueStateWrite();
     }
     sendJson(response, request, 200, { ok: true, scriptId: result.script.id, safetyBackup: result.safetyBackup, removedFolders: [...result.removedFolders, ...exportFolders], removedCharacters: removableCharacterIds, keptCharacters: keptCharacterIds });

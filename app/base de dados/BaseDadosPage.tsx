@@ -363,7 +363,10 @@ export default function BaseDadosPage() {
         copiedSectionIds.push(item.section.id);
       }
       const importedScript = { ...draft.script, importOrigin: { kind: "ai-json" as const, importId, importedAt: nowIso(), createdCharacterIds: createdCharacters.map((character) => character.id), sourceTitle: draft.script.title }, tiktoks: draft.sections.map(({ section }) => section), updatedAt: new Date().toISOString() };
-      const nextState = { ...importPreview.roteiroState, scripts: [...importPreview.roteiroState.scripts, importedScript] };
+      const providedProfileIds = new Set(importPreview.validation.data.characters.filter((choice) => choice.narrativeProfile).map((choice) => choice.characterId));
+      const profilesToPersist = (draft.script.aiContext?.profiles || []).filter((profile) => providedProfileIds.has(profile.characterId) || createdCharacters.some((character) => character.id === profile.characterId));
+      const profileIds = new Set(profilesToPersist.map((profile) => profile.characterId));
+      const nextState = { ...importPreview.roteiroState, profiles: [...importPreview.roteiroState.profiles.filter((profile) => !profileIds.has(profile.characterId)), ...profilesToPersist], scripts: [...importPreview.roteiroState.scripts, importedScript] };
       await saveRoteirosState(nextState);
       setCharacterData((current) => ({ ...current, characters: [...createdCharacters, ...current.characters] }));
       setRoteirosState(nextState);
