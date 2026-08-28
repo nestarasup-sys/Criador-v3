@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -117,5 +117,38 @@ test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente
     assert.equal(state.videos[0].absolutePath, join(root, "videos", "02.mp4"));
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("reutiliza o mesmo vídeo por hash e importa metadados do roteiro sem duplicar arquivo", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-dedup-"));
+  const sourceRoot = await mkdtemp(join(tmpdir(), "nymi-roteiro-source-"));
+  try {
+    const service = createBaseDadosService(root);
+    await service.init();
+    const source = join(sourceRoot, "01.mp4");
+    await writeFile(source, Buffer.from([9, 8, 7, 6]));
+
+    const first = await service.importFile(source, {
+      name: "primeiro-nome.mp4", contentType: "video/mp4", durationSeconds: 20,
+      description: "Cena original", sceneEndSeconds: 7.5,
+    });
+    assert.equal(first.duplicate, false);
+    assert.equal(first.video.sequence, 1);
+    assert.equal(first.video.contentHash.length, 64);
+
+    const second = await service.importFile(source, {
+      name: "mesmo-arquivo-com-outro-nome.mp4", contentType: "video/mp4", durationSeconds: 20,
+      description: "Descrição atualizada", sceneEndSeconds: 10,
+    });
+    assert.equal(second.duplicate, true);
+    assert.equal(second.video.id, first.video.id);
+    assert.equal(second.video.description, "Descrição atualizada");
+    assert.equal(second.video.sceneEndSeconds, 10);
+    assert.equal(second.state.videos.length, 1);
+    assert.equal((await stat(join(root, "videos", "01.mp4"))).size, 4);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(sourceRoot, { recursive: true, force: true });
   }
 });

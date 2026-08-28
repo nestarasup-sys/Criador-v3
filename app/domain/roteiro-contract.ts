@@ -21,9 +21,11 @@ export type GlobalRule = {
 };
 /** Snapshot editável do contexto narrativo pertencente a um único roteiro. */
 export type ScriptAiContext = { profiles: NarrativeProfile[]; rules: GlobalRule[] };
-export type AiProvider = "none" | "lmstudio" | "ollama";
+export type AiProvider = "none" | "lmstudio" | "ollama" | "openai";
 export type RoteirosSettings = {
   aiProvider: AiProvider; aiBaseUrl: string; aiModel: string; temperature: number;
+  openAiModel: string; openAiReasoningEffort: "low" | "medium" | "high"; openAiMaxOutputTokens: number; openAiTimeoutMs: number;
+  fillEmptyPrompt: string;
   defaultBlockCount: number; shortLinesByDefault: boolean; historyLimit: number;
 };
 export type ReactionBlockType = "auto" | "speech" | "thought";

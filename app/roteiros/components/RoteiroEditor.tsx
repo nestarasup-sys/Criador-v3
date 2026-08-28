@@ -10,7 +10,7 @@ import { applyAiContextResult, applyAiOrderingProposal, createAiContextExport, r
 import { renderAiGuideText } from "../ai-guide";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
-import { aiRequest, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
+import { aiRequest, copyRoteiroTikTokToBase, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
 import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
@@ -146,6 +146,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
   const [phraseVariations, setPhraseVariations] = useState<{ blockId: string; items: GeneratedReaction[]; model: string } | null>(null);
   const [undoBlocks, setUndoBlocks] = useState<ReactionBlock[] | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
+  const [databaseLoading, setDatabaseLoading] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const aiControllerRef = useRef<AbortController | null>(null);
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
@@ -304,6 +305,26 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     }
   };
 
+  const sendToDatabase = async () => {
+    if (!section.video || databaseLoading) return setMessage("Adicione um vídeo antes de enviá-lo para a Base de dados.");
+    setDatabaseLoading(true); setMessage("");
+    try {
+      const result = await copyRoteiroTikTokToBase(script.id, section.id, {
+        name: section.video.name,
+        description: section.description,
+        sceneEndSeconds: section.sceneEndSeconds,
+        durationSeconds: section.video.durationSeconds,
+      });
+      setMessage(result.duplicate
+        ? `Vídeo já existia na Base como ${String(result.video.sequence).padStart(2, "0")}.mp4; descrição e tempo foram sincronizados.`
+        : `TikTok enviado para a Base como ${String(result.video.sequence).padStart(2, "0")}.mp4.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível enviar o TikTok para a Base de dados.");
+    } finally {
+      setDatabaseLoading(false);
+    }
+  };
+
   const videoBaseSrc = section.video?.url || (section.video ? roteiroVideoUrl(script.id, section.id) : "");
   const videoSrc = videoBaseSrc ? `${videoBaseSrc}${videoBaseSrc.includes("?") ? "&" : "?"}v=${encodeURIComponent(section.video?.updatedAt || "")}` : "";
 
@@ -317,7 +338,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
         <p>{section.reactionBlocks.length} blocos · {section.reactionBlocks.filter((block) => !blockIsEmpty(block)).length} preenchidos</p>
       </div>
       <div className={styles.tiktokHeaderActions}>
-        {!opening && <><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Adicionar vídeo"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Substituir vídeo"}</button><button disabled={sectionIndex === 0} onClick={() => moveSection(-1)} aria-label="Mover TikTok para cima">↑</button><button disabled={sectionIndex === script.tiktoks.length - 1} onClick={() => moveSection(1)} aria-label="Mover TikTok para baixo">↓</button></>}
+        {!opening && <><button className={styles.sendToDatabaseButton} disabled={videoLoading || databaseLoading || !section.video} onClick={() => void sendToDatabase()} title="Enviar vídeo, descrição e tempo para a Base de dados">{databaseLoading ? "Enviando…" : "＋ Base de dados"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Adicionar vídeo"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Substituir vídeo"}</button><button disabled={sectionIndex === 0} onClick={() => moveSection(-1)} aria-label="Mover TikTok para cima">↑</button><button disabled={sectionIndex === script.tiktoks.length - 1} onClick={() => moveSection(1)} aria-label="Mover TikTok para baixo">↓</button></>}
         <button onClick={() => void copyTikTok()}>▣ Copiar</button>
         <button className={styles.dangerButton} onClick={deleteSection}>Excluir</button>
       </div>
@@ -406,7 +427,7 @@ export default function RoteiroEditor() {
   const warmupSettings = useMemo(() => state?.settings, [state?.settings]);
   useEffect(() => {
     const settings = warmupSettings;
-    if (!ready || !settings || settings.aiProvider === "none" || !settings.aiModel.trim()) return undefined;
+    if (!ready || !settings || settings.aiProvider === "none" || settings.aiProvider === "openai" || !settings.aiModel.trim()) return undefined;
     const controller = new AbortController();
     void aiRequest<{ ok: boolean; model: string }>("warmup", { settings }, "POST", { signal: controller.signal, timeoutMs: 90_000 }).catch(() => undefined);
     return () => controller.abort();
@@ -627,7 +648,7 @@ export default function RoteiroEditor() {
   const activeSection = openingActive ? undefined : script.tiktoks.find((section) => section.id === activeSectionId) ?? script.tiktoks[0];
   const activeIndex = activeSection ? script.tiktoks.findIndex((section) => section.id === activeSection.id) : -1;
   const scriptAiContext = getScriptAiContext(script, state);
-  const providerLabel = state.settings.aiProvider === "ollama" ? "Ollama" : state.settings.aiProvider === "lmstudio" ? "LM Studio" : "IA desativada";
+  const providerLabel = state.settings.aiProvider === "ollama" ? "Ollama" : state.settings.aiProvider === "lmstudio" ? "LM Studio" : state.settings.aiProvider === "openai" ? "ChatGPT API" : "IA desativada";
 
   return <div className={styles.editorShell}>
     <RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />
@@ -662,7 +683,7 @@ export default function RoteiroEditor() {
       </main>
 
       <aside className={styles.contextRail}>
-        <div className={styles.contextRailHeader}><div><span>CONTEXTO &amp; IA</span><small><i />{providerLabel}{state.settings.aiModel ? ` · ${state.settings.aiModel}` : ""}</small></div></div>
+        <div className={styles.contextRailHeader}><div><span>CONTEXTO &amp; IA</span><small><i />{providerLabel}{state.settings.aiProvider === "openai" ? ` · ${state.settings.openAiModel}` : state.settings.aiModel ? ` · ${state.settings.aiModel}` : ""}</small></div></div>
         <section className={styles.railSection}>
           <div className={styles.railSectionHeader}><div><span>ROTEIRO</span><small>Identificação do projeto atual</small></div></div>
           <label className={styles.field}><span>Nome do roteiro</span><input value={script.title} maxLength={100} onChange={(event) => patchScript({ title: event.target.value })} /></label>

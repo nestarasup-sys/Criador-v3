@@ -572,6 +572,33 @@ async function route(request, response) {
     return;
   }
   const localRoteirosExportRoute = /^\/roteiros\/(?:videos\/|backgrounds\/|export-videos$|export-background$|export-text$|export-characters\/|open-folder$|import-base-video$)/.test(url.pathname);
+  if (request.method === "POST" && url.pathname === "/base-dados/import-from-roteiro") {
+    const body = await requestJson(request);
+    const scriptId = safeId(body?.scriptId);
+    const tiktokId = safeId(body?.tiktokId);
+    const script = roteirosService.getScript(scriptId);
+    const section = script?.tiktoks?.find((item) => item.id === tiktokId);
+    if (!script || !section) throw Object.assign(new Error("TikTok não encontrado no roteiro atual."), { status: 404 });
+    if (!section.video) throw Object.assign(new Error("Adicione um vídeo a este TikTok antes de enviá-lo para a Base de dados."), { status: 400 });
+    const source = await findRoteiroVideoFile(scriptId, tiktokId);
+    if (!inside(ROTEIROS_VIDEOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
+    const extension = extname(source).toLowerCase();
+    const contentType = extension === ".webm" ? "video/webm" : extension === ".mov" ? "video/quicktime" : "video/mp4";
+    const imported = await baseDadosService.importFile(source, {
+      name: String(body?.name || section.video.name || source.split(sep).pop()),
+      contentType,
+      durationSeconds: body?.durationSeconds ?? section.video.durationSeconds,
+      description: body?.description ?? section.description,
+      sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
+    });
+    sendJson(response, request, 200, {
+      ok: true,
+      duplicate: imported.duplicate,
+      video: imported.video,
+      state: imported.state,
+    });
+    return;
+  }
   if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   const roteiroScriptMatch = url.pathname.match(/^\/roteiros\/scripts\/([a-zA-Z0-9_-]{1,160})$/);
   if (roteiroScriptMatch && request.method === "DELETE") {
@@ -1304,6 +1331,22 @@ async function route(request, response) {
   sendJson(response, request, 404, { error: "Rota não encontrada" });
 }
 
+async function loadLocalEnvironment() {
+  for (const fileName of [".env.local", ".env"]) {
+    try {
+      const source = await readFile(join(process.cwd(), fileName), "utf8");
+      for (const line of source.split(/\r?\n/)) {
+        const match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+        if (!match || process.env[match[1]]) continue;
+        process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, "");
+      }
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+}
+
+await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init()]);
 
 const server = createServer({

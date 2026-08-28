@@ -107,6 +107,17 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
 }
 
+export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; durationSeconds?: number; name?: string }) {
+  const response = await localDataFetch("/base-dados/import-from-roteiro", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ scriptId, tiktokId, ...metadata }),
+  });
+  const result = await response.json().catch(() => ({})) as { error?: string; duplicate?: boolean; video?: { sequence: number; originalName: string } };
+  if (!response.ok || !result.video) throw new Error(result.error || "Não foi possível enviar o TikTok para a Base de dados.");
+  return result as { duplicate: boolean; video: { sequence: number; originalName: string } };
+}
+
 export async function removeRoteiro(scriptId: string) {
   const response = await localDataFetch(`/roteiros/scripts/${encodeURIComponent(scriptId)}`, { method: "DELETE" });
   const result = await response.json().catch(() => ({})) as { error?: string; scriptId?: string; safetyBackup?: string | null; removedFolders?: string[] };

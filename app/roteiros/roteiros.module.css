@@ -159,6 +159,9 @@
 .protectedRules summary { cursor:pointer; font-size:12px; font-weight:850; color:var(--purple-dark); }
 .protectedRules ol { margin:13px 0 0; padding-left:22px; }
 .protectedRules li { margin:7px 0; color:var(--muted); font-size:11px; line-height:1.5; }
+.promptPreview { margin-top:16px; padding:14px 16px; border:1px solid #ddd6eb; border-radius:11px; background:#f8f6fb; color:#615a6c; }
+.promptPreview summary { cursor:pointer; color:var(--purple-dark); font-size:12px; font-weight:850; }
+.promptPreview pre { margin:13px 0 0; max-height:360px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; color:#6d6677; font:inherit; font-size:11px; line-height:1.6; }
 .rulesList article { display:grid; grid-template-columns:minmax(180px,1fr) 110px 80px; gap:9px; padding:14px; border:1px solid var(--line); border-radius:12px; background:#fcfbfd; }
 .rulesList textarea { grid-column:1/4; }
 .ruleTitle { font-weight:800; }
@@ -213,6 +216,8 @@
 .tiktokHeaderActions button { min-height:31px; border:1px solid var(--line); border-radius:8px; padding:0 9px; background:#fff; color:#716a7b; font-size:10px; font-weight:750; cursor:pointer; }
 .tiktokHeaderActions button:disabled { opacity:.35; cursor:default; }
 .tiktokHeaderActions .videoHeaderButton { border-color:#d9cff7; background:#f8f5ff; color:#624db0; }
+.tiktokHeaderActions .sendToDatabaseButton { border-color:#299b68; background:linear-gradient(135deg,#39b978,#218b59); color:#fff; box-shadow:0 4px 10px rgba(39,155,103,.16); }
+.tiktokHeaderActions .sendToDatabaseButton:hover:not(:disabled) { background:linear-gradient(135deg,#2eaa6b,#187b4d); transform:translateY(-1px); }
 .hiddenFileInput { display:none; }
 .dangerButton { border-color:#f2d2d7!important; color:#c74359!important; background:#fff7f8!important; box-shadow:none; }
 .tiktokBody { padding:22px; }

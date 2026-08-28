@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
@@ -92,6 +93,10 @@ async function fileExists(filePath) {
   }
 }
 
+async function hashFile(filePath) {
+  return createHash("sha256").update(await readFile(filePath)).digest("hex");
+}
+
 async function sequenceFileExists(root, sequence) {
   const names = [".mp4", ".webm", ".mov"].map((extension) => `${String(sequence).padStart(2, "0")}${extension}`);
   const results = await Promise.all(names.map((name) => fileExists(videoPath(root, { fileName: name }))));
@@ -127,6 +132,82 @@ export function createBaseDadosService(root) {
     state.updatedAt = new Date().toISOString();
     writeQueue = writeQueue.catch(() => undefined).then(() => writeJsonAtomic(statePath, state));
     return writeQueue;
+  }
+
+  async function findVideoByHash(contentHash) {
+    let changed = false;
+    for (const item of state.videos) {
+      if (item.contentHash === contentHash) return { item, changed };
+      if (item.contentHash || item.fileAvailable === false) continue;
+      try {
+        const itemHash = await hashFile(videoPath(root, item));
+        if (itemHash === contentHash) {
+          item.contentHash = itemHash;
+          changed = true;
+          return { item, changed };
+        }
+        item.contentHash = itemHash;
+        changed = true;
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+    }
+    return { item: null, changed };
+  }
+
+  async function updateImportedMetadata(item, metadata) {
+    const description = String(metadata.description ?? "").trim();
+    const sceneEnd = Number(metadata.sceneEndSeconds);
+    const duration = Number(metadata.durationSeconds);
+    const updated = {
+      ...item,
+      ...(description ? { description } : {}),
+      ...(Number.isFinite(sceneEnd) && sceneEnd >= 0 ? { sceneEndSeconds: sceneEnd } : {}),
+      ...(Number.isFinite(duration) && duration >= 0 ? { durationSeconds: duration } : {}),
+      updatedAt: new Date().toISOString(),
+    };
+    state.videos = state.videos.map((video) => video.id === item.id ? updated : video);
+    await persist();
+    return updated;
+  }
+
+  async function importFile(sourcePath, metadata = {}) {
+    const sourceInfo = await stat(sourcePath);
+    if (!sourceInfo.isFile() || sourceInfo.size <= 0) throw Object.assign(new Error("Vídeo vazio ou inválido."), { status: 400 });
+    if (sourceInfo.size > BODY_LIMITS.video) throw Object.assign(new Error("Arquivo grande demais para esta operação."), { status: 413 });
+    const contentType = String(metadata.contentType || contentTypeOf({ headers: { "content-type": "application/octet-stream" } }, metadata));
+    assertMimeType(contentType, VIDEO_MIME_TYPES, "A Base aceita somente vídeos MP4, WebM ou MOV.");
+    const contentHash = await hashFile(sourcePath);
+    const existingResult = await findVideoByHash(contentHash);
+    if (existingResult.changed && !existingResult.item) await persist();
+    if (existingResult.item) {
+      const updated = await updateImportedMetadata(existingResult.item, metadata);
+      return { duplicate: true, video: await withFileStatus(root, updated), state };
+    }
+
+    let sequence = Number.isInteger(state.nextSequence) && state.nextSequence > 0 ? state.nextSequence : 1;
+    while (await sequenceFileExists(root, sequence)) sequence += 1;
+    const extension = extensionFor(metadata.name, contentType);
+    const fileName = `${String(sequence).padStart(2, "0")}${extension}`;
+    const id = `video-${Date.now().toString(36)}-${sequence}`;
+    const now = new Date().toISOString();
+    const item = {
+      id, sequence, fileName,
+      originalName: String(metadata.name || `${sequence}${extension}`).slice(0, 180),
+      storedPath: `base-de-dados/videos/${fileName}`,
+      absolutePath: videoPath(root, { fileName }), fileAvailable: true,
+      contentType, size: sourceInfo.size, contentHash,
+      durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
+      description: String(metadata.description || ""),
+      sceneEndSeconds: Number(metadata.sceneEndSeconds) >= 0 ? Number(metadata.sceneEndSeconds) : 0,
+      createdAt: now, updatedAt: now,
+    };
+    await mkdir(videosRoot, { recursive: true });
+    await copyFile(sourcePath, videoPath(root, item));
+    state.videos = [...state.videos, item];
+    state.nextSequence = sequence + 1;
+    await persist();
+    return { duplicate: false, video: { ...item, fileAvailable: true, url: `/base-dados/videos/${item.id}` }, state };
   }
 
   return {
@@ -172,32 +253,14 @@ export function createBaseDadosService(root) {
         assertMimeType(contentType, VIDEO_MIME_TYPES, "A Base aceita somente vídeos MP4, WebM ou MOV.");
         const body = await readBody(request);
         if (!body.length) throw Object.assign(new Error("Vídeo vazio."), { status: 400 });
-        let sequence = Number.isInteger(state.nextSequence) && state.nextSequence > 0 ? state.nextSequence : 1;
-        while (await sequenceFileExists(root, sequence)) sequence += 1;
-        const extension = extensionFor(metadata.name, contentType);
-        const id = `video-${Date.now().toString(36)}-${sequence}`;
-        const item = {
-          id,
-          sequence,
-          fileName: `${String(sequence).padStart(2, "0")}${extension}`,
-          originalName: String(metadata.name || `${sequence}${extension}`).slice(0, 180),
-          storedPath: `base-de-dados/videos/${String(sequence).padStart(2, "0")}${extension}`,
-          absolutePath: videoPath(root, { fileName: `${String(sequence).padStart(2, "0")}${extension}` }),
-          fileAvailable: true,
-          contentType,
-          size: body.length,
-          durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
-          description: "",
-          sceneEndSeconds: 0,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        await mkdir(videosRoot, { recursive: true });
-        await writeFile(videoPath(root, item), body);
-        state.videos = [...state.videos, item];
-        state.nextSequence = sequence + 1;
-        await persist();
-        sendJson(response, responseHeaders, 200, { ok: true, video: { ...item, fileAvailable: true, url: `/base-dados/videos/${item.id}` }, state });
+        const temporaryPath = join(videosRoot, `.incoming-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+        await writeFile(temporaryPath, body);
+        try {
+          const imported = await importFile(temporaryPath, { ...metadata, contentType, durationSeconds: metadata.durationSeconds });
+          sendJson(response, responseHeaders, 200, { ok: true, duplicate: imported.duplicate, video: { ...imported.video, url: `/base-dados/videos/${imported.video.id}` }, state: imported.state });
+        } finally {
+          await rm(temporaryPath, { force: true });
+        }
         return true;
       }
 
@@ -233,5 +296,6 @@ export function createBaseDadosService(root) {
       const item = state.videos.find((video) => video.id === String(id));
       return item ? structuredClone(item) : null;
     },
+    importFile,
   };
 }

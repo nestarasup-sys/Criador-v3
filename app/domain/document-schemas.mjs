@@ -131,6 +131,28 @@ export function emptyRoteirosState() {
   return { version: ROTEIROS_STATE_VERSION, profiles: [], scripts: [], globalRules: [], settings: createDefaultRoteirosSettings() };
 }
 
+function normalizeRoteirosSettings(value) {
+  const source = record(value);
+  const defaults = createDefaultRoteirosSettings();
+  const numeric = (name, min, max) => Number.isFinite(Number(source[name])) ? Math.max(min, Math.min(max, Number(source[name]))) : defaults[name];
+  return {
+    ...defaults,
+    ...source,
+    aiProvider: ["none", "lmstudio", "ollama", "openai"].includes(source.aiProvider) ? source.aiProvider : defaults.aiProvider,
+    aiBaseUrl: typeof source.aiBaseUrl === "string" ? source.aiBaseUrl : defaults.aiBaseUrl,
+    aiModel: typeof source.aiModel === "string" ? source.aiModel : defaults.aiModel,
+    temperature: numeric("temperature", 0, 1.5),
+    openAiModel: typeof source.openAiModel === "string" && source.openAiModel.trim() ? source.openAiModel.trim() : defaults.openAiModel,
+    openAiReasoningEffort: ["low", "medium", "high"].includes(source.openAiReasoningEffort) ? source.openAiReasoningEffort : defaults.openAiReasoningEffort,
+    openAiMaxOutputTokens: numeric("openAiMaxOutputTokens", 256, 8000),
+    openAiTimeoutMs: numeric("openAiTimeoutMs", 5_000, 180_000),
+    fillEmptyPrompt: typeof source.fillEmptyPrompt === "string" ? source.fillEmptyPrompt.slice(0, 12_000) : defaults.fillEmptyPrompt,
+    defaultBlockCount: Math.round(numeric("defaultBlockCount", 1, 24)),
+    historyLimit: Math.round(numeric("historyLimit", 0, 10)),
+    shortLinesByDefault: source.shortLinesByDefault === true,
+  };
+}
+
 function normalizeRoteiroProfile(value) {
   const source = record(value);
   return {
@@ -291,7 +313,7 @@ export function normalizeRoteirosState(value) {
     profiles,
     scripts: list(source.scripts).map((script) => normalizeRoteiroScript(script, fallbackAiContext)),
     globalRules,
-    settings: { ...createDefaultRoteirosSettings(), ...record(source.settings) },
+    settings: normalizeRoteirosSettings(source.settings),
   };
 }
 

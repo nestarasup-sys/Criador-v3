@@ -10,6 +10,8 @@ export type BaseDadosVideo = {
   url?: string;
   contentType: string;
   size: number;
+  /** SHA-256 do conteúdo; impede cópias físicas do mesmo vídeo. */
+  contentHash?: string;
   durationSeconds: number;
   description: string;
   sceneEndSeconds: number;
