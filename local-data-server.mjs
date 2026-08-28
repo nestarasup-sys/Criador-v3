@@ -144,6 +144,18 @@ async function findRoteiroVideoFile(scriptId, tiktokId) {
   }
   throw Object.assign(new Error("Vídeo não encontrado"), { code: "ENOENT" });
 }
+async function findVideoReferenceFile(video, scriptId, tiktokId) {
+  const libraryId = video?.libraryVideoId;
+  if (libraryId) {
+    const libraryVideo = baseDadosService.getVideo(libraryId);
+    if (!libraryVideo) throw Object.assign(new Error("Vídeo compartilhado não encontrado na Base de dados."), { code: "ENOENT" });
+    const source = join(BASE_DADOS_ROOT, "videos", libraryVideo.fileName);
+    if (!inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo compartilhado inválida.");
+    await stat(source);
+    return source;
+  }
+  return findRoteiroVideoFile(scriptId, tiktokId);
+}
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const STATE_PATH = join(ROOT, "state.json");
@@ -580,8 +592,9 @@ async function route(request, response) {
     const section = script?.tiktoks?.find((item) => item.id === tiktokId);
     if (!script || !section) throw Object.assign(new Error("TikTok não encontrado no roteiro atual."), { status: 404 });
     if (!section.video) throw Object.assign(new Error("Adicione um vídeo a este TikTok antes de enviá-lo para a Base de dados."), { status: 400 });
-    const source = await findRoteiroVideoFile(scriptId, tiktokId);
-    if (!inside(ROTEIROS_VIDEOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
+    const sourceIsLocal = !section.video.libraryVideoId;
+    const source = await findVideoReferenceFile(section.video, scriptId, tiktokId);
+    if (!inside(ROTEIROS_VIDEOS_ROOT, source) && !inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
     const extension = extname(source).toLowerCase();
     const contentType = extension === ".webm" ? "video/webm" : extension === ".mov" ? "video/quicktime" : "video/mp4";
     const imported = await baseDadosService.importFile(source, {
@@ -591,13 +604,35 @@ async function route(request, response) {
       description: body?.description ?? section.description,
       sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
     });
+    const sharedVideo = {
+      name: imported.video.originalName,
+      storedPath: imported.video.storedPath,
+      url: `http://${HOST}:${PORT}/base-dados/videos/${imported.video.id}`,
+      contentType: imported.video.contentType,
+      size: imported.video.size,
+      durationSeconds: imported.video.durationSeconds,
+      libraryVideoId: imported.video.id,
+      contentHash: imported.video.contentHash,
+      updatedAt: new Date().toISOString(),
+    };
+    const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo);
+    if (sourceIsLocal) await rm(source, { force: true });
     sendJson(response, request, 200, {
       ok: true,
       duplicate: imported.duplicate,
-      video: imported.video,
+      video: linkedVideo,
       state: imported.state,
     });
     return;
+  }
+  const baseVideoDeleteMatch = url.pathname.match(/^\/base-dados\/videos\/([a-zA-Z0-9_-]{1,160})$/);
+  if (baseVideoDeleteMatch && request.method === "DELETE") {
+    const videoId = safeId(baseVideoDeleteMatch[1]);
+    const inUse = state.scripts.some((script) => script.tiktoks.some((section) => section.video?.libraryVideoId === videoId));
+    if (inUse) {
+      sendJson(response, request, 409, { error: "Este vídeo está sendo usado por um ou mais roteiros. Remova-o dos roteiros antes de excluí-lo da Base." });
+      return;
+    }
   }
   if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   const roteiroScriptMatch = url.pathname.match(/^\/roteiros\/scripts\/([a-zA-Z0-9_-]{1,160})$/);
@@ -775,21 +810,19 @@ async function route(request, response) {
     const extension = extname(sourceVideo.fileName).toLowerCase() || ".mp4";
     if (!VIDEO_MIME_TYPES.has(sourceVideo.contentType) || ![".mp4", ".webm", ".mov"].includes(extension)) throw new Error("Formato de vídeo não suportado para importação.");
     const source = join(BASE_DADOS_ROOT, "videos", sourceVideo.fileName);
-    const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
-    const target = join(folder, `${tiktokId}${extension}`);
-    if (!inside(BASE_DADOS_ROOT, source) || !inside(ROTEIROS_VIDEOS_ROOT, target)) throw new Error("Origem ou destino do vídeo inválido.");
+    if (!inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
     await stat(source);
-    await mkdir(folder, { recursive: true });
-    await copyFile(source, target);
     sendJson(response, request, 200, {
       ok: true,
       video: {
         name: sourceVideo.originalName,
-        storedPath: `roteiros/videos/${scriptId}/${tiktokId}${extension}`,
-        url: `http://${HOST}:${PORT}/roteiros/videos/${scriptId}/${tiktokId}`,
+        storedPath: sourceVideo.storedPath,
+        url: `http://${HOST}:${PORT}/base-dados/videos/${sourceVideo.id}`,
         contentType: sourceVideo.contentType,
         size: sourceVideo.size,
         durationSeconds: sourceVideo.durationSeconds,
+        libraryVideoId: sourceVideo.id,
+        contentHash: sourceVideo.contentHash,
         updatedAt: new Date().toISOString(),
       },
     });
@@ -831,7 +864,9 @@ async function route(request, response) {
   if (roteiroVideoMatch && request.method === "GET") {
     const scriptId = safeId(roteiroVideoMatch[1]);
     const tiktokId = safeId(roteiroVideoMatch[2]);
-    const filePath = await findRoteiroVideoFile(scriptId, tiktokId);
+    const script = roteirosService.getScript(scriptId);
+    const section = script?.tiktoks?.find((item) => item.id === tiktokId);
+    const filePath = await findVideoReferenceFile(section?.video, scriptId, tiktokId);
     await serveFile(response, request, filePath);
     return;
   }
@@ -839,7 +874,9 @@ async function route(request, response) {
   if (roteiroVideoMatch && request.method === "DELETE") {
     const scriptId = safeId(roteiroVideoMatch[1]);
     const tiktokId = safeId(roteiroVideoMatch[2]);
-    await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.map((extension) => rm(join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}${extension}`), { force: true })));
+    const script = roteirosService.getScript(scriptId);
+    const section = script?.tiktoks?.find((item) => item.id === tiktokId);
+    if (!section?.video?.libraryVideoId) await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.map((extension) => rm(join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}${extension}`), { force: true })));
     sendJson(response, request, 200, { ok: true });
     return;
   }
@@ -861,9 +898,9 @@ async function route(request, response) {
       const description = String(item?.description ?? "");
       descriptionLines.push(`${number}.mp4\nDescrição: ${description}\n`);
       const storedPath = String(item?.video?.storedPath || "").replace(/[\\/]+/g, sep);
-      const source = storedPath ? resolve(ROOT, storedPath) : null;
+      const source = item?.video ? await findVideoReferenceFile(item.video, scriptId, item.id).catch(() => null) : (storedPath ? resolve(ROOT, storedPath) : null);
       const destination = join(folder, `${number}.mp4`);
-      if (!source || !inside(ROTEIROS_VIDEOS_ROOT, source)) {
+      if (!source || (!inside(ROTEIROS_VIDEOS_ROOT, source) && !inside(BASE_DADOS_ROOT, source))) {
         missing.push(`${number}.mp4`);
         continue;
       }

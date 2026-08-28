@@ -36,7 +36,7 @@ export type ReactionBlock = {
 };
 export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;
-  size: number; updatedAt: string; durationSeconds?: number;
+  size: number; updatedAt: string; durationSeconds?: number; libraryVideoId?: string; contentHash?: string;
 };
 export type RoteiroBackgroundReference = {
   name: string; storedPath: string; url?: string; contentType: string; size: number;

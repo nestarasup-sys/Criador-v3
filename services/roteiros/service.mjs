@@ -868,6 +868,28 @@ export function createRoteirosService(rootFolder) {
     return state.scripts.map((script) => script.title);
   }
 
+  async function linkVideo(scriptId, tiktokId, video) {
+    const id = safeScriptId(scriptId);
+    const sectionId = String(tiktokId || "");
+    if (!/^[a-zA-Z0-9_-]{1,160}$/.test(sectionId)) throw Object.assign(new Error("Identificador de TikTok inválido."), { status: 400 });
+    let linked;
+    writeQueue = writeQueue.catch(() => undefined).then(async () => {
+      const script = state.scripts.find((item) => item.id === id);
+      const section = script?.tiktoks.find((item) => item.id === sectionId);
+      if (!script || !section) throw Object.assign(new Error("TikTok não encontrado no roteiro."), { status: 404 });
+      const nextScripts = state.scripts.map((item) => item.id !== id ? item : {
+        ...item,
+        tiktoks: item.tiktoks.map((current) => current.id === sectionId ? { ...current, video, updatedAt: new Date().toISOString() } : current),
+        updatedAt: new Date().toISOString(),
+      });
+      state = normalizeState({ ...state, scripts: nextScripts });
+      await writeJsonAtomic(statePath, state);
+      linked = structuredClone(state.scripts.find((item) => item.id === id)?.tiktoks.find((item) => item.id === sectionId)?.video);
+    });
+    await writeQueue;
+    return linked;
+  }
+
   async function handle(request, response, url, corsHeaders) {
     const isRoteirosRoute = url.pathname.startsWith("/roteiros/");
     const isStudioAiRoute = url.pathname.startsWith("/studio/ai/");
@@ -975,5 +997,5 @@ export function createRoteirosService(rootFolder) {
     return script ? structuredClone(script) : null;
   }
 
-  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript };
+  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript, linkVideo };
 }
