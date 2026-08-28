@@ -1,4 +1,4 @@
-import { createId, createNarrativeProfile, createScriptAiContext, nowIso } from "./defaults";
+import { createId, createNarrativeProfile, createOpeningSection, createScriptAiContext, nowIso } from "./defaults";
 import type { BaseDadosVideo } from "../base de dados/types";
 import type { NarrativeProfile, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "./types";
 
@@ -6,13 +6,15 @@ export const IMPORTABLE_SCRIPT_FORMAT = "NYMI_IMPORTABLE_SCRIPT_V1";
 
 export type ImportableVideoChoice = { videoId: string; order: number };
 export type ImportableCharacterChoice = { characterId: string; role?: string; name?: string; model?: "feminino" | "masculino"; aliases?: string[]; narrativeProfile?: Partial<NarrativeProfile> };
-export type ImportableBlock = { type: "speech" | "thought"; characterId: string; videoId: string; text: string; startAt?: number };
+export type ImportableBlock = { type: "speech" | "thought"; characterId: string; videoId?: string; text: string; startAt?: number };
 export type ImportableScriptDocument = {
   format: typeof IMPORTABLE_SCRIPT_FORMAT;
   title: string;
   videos: ImportableVideoChoice[];
   characters: ImportableCharacterChoice[];
   blocks: ImportableBlock[];
+  generalContext?: string;
+  opening?: { blocks: Array<Omit<ImportableBlock, "videoId">> };
 };
 
 export type ImportIssue = { level: "error" | "warning"; path: string; message: string };
@@ -45,6 +47,8 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
   const rawVideos = Array.isArray(source.videos) ? source.videos : [];
   const rawCharacters = Array.isArray(source.characters) ? source.characters : [];
   const rawBlocks = Array.isArray(source.blocks) ? source.blocks : [];
+  const rawOpening = record(source.opening);
+  const rawOpeningBlocks = Array.isArray(rawOpening.blocks) ? rawOpening.blocks : [];
   if (!rawVideos.length) issues.push({ level: "error", path: "videos", message: "O roteiro precisa escolher pelo menos um vídeo." });
   if (!Array.isArray(source.videos)) issues.push({ level: "error", path: "videos", message: "videos precisa ser uma lista." });
   if (!Array.isArray(source.characters)) issues.push({ level: "error", path: "characters", message: "characters precisa ser uma lista." });
@@ -111,6 +115,19 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     if (type && text && allowedCharacterIds.has(characterId) && allowedVideoIds.has(videoId) && (startAt === undefined || (Number.isFinite(startAt) && startAt >= 0))) normalizedBlocks.push({ type, characterId, videoId, text, ...(startAt === undefined ? {} : { startAt }) });
   });
 
+  const normalizedOpeningBlocks: Array<Omit<ImportableBlock, "videoId">> = [];
+  if (source.opening !== undefined && !Array.isArray(rawOpening.blocks)) issues.push({ level: "error", path: "opening.blocks", message: "opening.blocks precisa ser uma lista." });
+  rawOpeningBlocks.forEach((entry, index) => {
+    const item = record(entry);
+    const type = item.type === "speech" || item.type === "thought" ? item.type : "";
+    const characterId = stringValue(item.characterId);
+    const text = stringValue(item.text);
+    if (!type) issues.push({ level: "error", path: `opening.blocks[${index}].type`, message: "O bloco da abertura precisa ser speech ou thought." });
+    if (!text) issues.push({ level: "error", path: `opening.blocks[${index}].text`, message: "O bloco da abertura precisa conter texto." });
+    if (!allowedCharacterIds.has(characterId)) issues.push({ level: "error", path: `opening.blocks[${index}].characterId`, message: "A abertura usa um personagem que não foi selecionado." });
+    if (type && text && allowedCharacterIds.has(characterId)) normalizedOpeningBlocks.push({ type, characterId, text });
+  });
+
   const selectedVideoMap = new Map(videos.filter((video) => allowedVideoIds.has(video.id)).map((video) => [video.id, video]));
   normalizedBlocks.forEach((block, index) => {
     const video = selectedVideoMap.get(block.videoId);
@@ -118,7 +135,7 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
   });
 
   normalizedVideos.sort((left, right) => left.order - right.order);
-  const data: ImportableScriptDocument = { format: IMPORTABLE_SCRIPT_FORMAT, title, videos: normalizedVideos, characters: normalizedCharacters, blocks: normalizedBlocks };
+  const data: ImportableScriptDocument = { format: IMPORTABLE_SCRIPT_FORMAT, title, videos: normalizedVideos, characters: normalizedCharacters, blocks: normalizedBlocks, ...(stringValue(source.generalContext) ? { generalContext: stringValue(source.generalContext) } : {}), ...(source.opening !== undefined ? { opening: { blocks: normalizedOpeningBlocks } } : {}) };
   return { success: !issues.some((issue) => issue.level === "error"), data, issues };
 }
 
@@ -129,7 +146,7 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
   const videoMap = new Map(videos.map((video) => [video.id, video]));
   const characterIds = document.characters.map((character) => character.characterId);
   const blocksByVideo = new Map<string, Array<{ block: ImportableBlock; index: number }>>();
-  document.blocks.forEach((block, index) => blocksByVideo.set(block.videoId, [...(blocksByVideo.get(block.videoId) ?? []), { block, index }]));
+  document.blocks.forEach((block, index) => { if (block.videoId) blocksByVideo.set(block.videoId, [...(blocksByVideo.get(block.videoId) ?? []), { block, index }]); });
   const sections = document.videos.map((choice) => {
     const sourceVideo = videoMap.get(choice.videoId)!;
     const sectionId = createId();
@@ -161,13 +178,16 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
   const importedProfileIds = new Set(importedProfiles.map((profile) => profile.characterId));
   const profilesWithJsonPriority = [...state.profiles.filter((profile) => !importedProfileIds.has(profile.characterId)), ...importedProfiles];
   const baseAiContext = createScriptAiContext(characterIds, profilesWithJsonPriority, state.globalRules);
+  const opening = document.opening ? createOpeningSection(Math.max(1, document.opening.blocks.length), false) : undefined;
+  if (opening && document.opening) opening.reactionBlocks = document.opening.blocks.map((block) => ({ id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: "", createdAt: timestamp, updatedAt: timestamp }));
   const script: ScriptProject = {
     id: createId(),
     title: document.title,
-    generalContext: "",
+    generalContext: document.generalContext || "",
     participants: characterIds.map((characterId) => ({ characterId, active: true })),
     aiOrderingMode: "none",
     aiContext: baseAiContext,
+    ...(opening ? { opening } : {}),
     tiktoks: sections.map(({ section }) => section),
     createdAt: timestamp,
     updatedAt: timestamp,

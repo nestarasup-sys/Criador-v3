@@ -149,7 +149,7 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /createScriptFromImport/);
   assert.match(basePage, /Confirmar e criar roteiro/);
   assert.match(basePage, /Pacote completo para IA/);
-  assert.match(basePage, /Guia V2\.md/);
+  assert.match(basePage, /Guia V3\.md/);
   assert.match(basePage, /dados para fazer roteiro\.txt/);
   assert.match(roteiroHome, /Auditar pastas/);
   assert.match(roteiroHome, /Excluir roteiro e pastas/);

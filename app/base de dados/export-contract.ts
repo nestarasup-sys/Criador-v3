@@ -115,9 +115,9 @@ export function buildBaseDadosSimpleExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia V2 — criar roteiro importável para o Nymi Gacha
+  return `# Guia V3 — criar roteiro importável para o Nymi Gacha
 
-> Versão do guia: V2. Este guia permite que a importação crie personagens novos quando o JSON fornecer os dados necessários.
+> Versão do guia: V3. Este guia permite importar personagens novos, contexto geral e uma abertura antes do TikTok 01.
 
 ## Objetivo
 
@@ -218,6 +218,27 @@ O formato \`NYMI_IMPORTABLE_SCRIPT_V1\` cria os TikToks e seus blocos. Não incl
       "startAt": 11
     }
   ]
+}
+\`\`\`
+
+## Contexto geral e abertura
+
+- \`generalContext\` é opcional e será colocado no campo de contexto geral do roteiro importado.
+- \`opening\` é opcional e representa a cena antes do TikTok 01.
+- A abertura aceita somente \`speech\` e \`thought\`, com \`characterId\` pertencente a \`characters\` e \`text\` preenchido.
+- Não coloque \`videoId\` nos blocos da abertura. Ela não possui vídeo próprio.
+
+Exemplo:
+
+\`\`\`json
+{
+  "generalContext": "Os personagens foram reunidos para descobrir o que aconteceu com FYN.",
+  "opening": {
+    "blocks": [
+      { "type": "speech", "characterId": "personagem-novo-01", "text": "Podemos começar." },
+      { "type": "thought", "characterId": "personagem-novo-01", "text": "Espero que a gravação explique alguma coisa." }
+    ]
+  }
 }
 \`\`\`
 
