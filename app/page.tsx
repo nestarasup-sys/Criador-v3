@@ -1498,7 +1498,7 @@ export default function Home() {
     autoSaveTimerRef.current = window.setTimeout(() => {
       const snapshot = JSON.parse(editorSnapshot) as CharacterSnapshot;
       const id = activeCharacter ?? crypto.randomUUID();
-      const character: Character = { ...snapshot, id, updatedAt: new Date().toISOString() };
+      const character: Character = { ...(current.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
       setCharacters((current) => current.some((entry) => entry.id === id)
         ? current.map((entry) => entry.id === id ? character : entry)
         : [character, ...current]);
@@ -3183,7 +3183,7 @@ export default function Home() {
     if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
     const snapshot = JSON.parse(editorSnapshot) as CharacterSnapshot;
     const id = activeCharacter ?? crypto.randomUUID();
-    const character: Character = { ...snapshot, id, updatedAt: new Date().toISOString() };
+    const character: Character = { ...(characters.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
     setCharacters((current) => current.some((entry) => entry.id === id)
       ? current.map((entry) => entry.id === id ? character : entry)
       : [character, ...current]);

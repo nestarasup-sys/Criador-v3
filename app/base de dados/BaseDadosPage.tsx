@@ -357,7 +357,7 @@ export default function BaseDadosPage() {
     });
     try {
       await createRoteiroBackup();
-      if (createdCharacters.length) await savePremiumCharacters([...characterData.characters, ...createdCharacters]);
+      if (createdCharacters.length) await savePremiumCharacters([...createdCharacters, ...characterData.characters]);
       for (const item of draft.sections) {
         item.section.video = await importBaseDadosVideoIntoRoteiro(draft.script.id, item.section.id, item.sourceVideo.id);
         copiedSectionIds.push(item.section.id);
@@ -365,7 +365,7 @@ export default function BaseDadosPage() {
       const importedScript = { ...draft.script, importOrigin: { kind: "ai-json" as const, importId, importedAt: nowIso(), createdCharacterIds: createdCharacters.map((character) => character.id), sourceTitle: draft.script.title }, tiktoks: draft.sections.map(({ section }) => section), updatedAt: new Date().toISOString() };
       const nextState = { ...importPreview.roteiroState, scripts: [...importPreview.roteiroState.scripts, importedScript] };
       await saveRoteirosState(nextState);
-      setCharacterData((current) => ({ ...current, characters: [...current.characters, ...createdCharacters] }));
+      setCharacterData((current) => ({ ...current, characters: [...createdCharacters, ...current.characters] }));
       setRoteirosState(nextState);
       setImportPreview(null);
       window.location.href = `/roteiros/${importedScript.id}`;
