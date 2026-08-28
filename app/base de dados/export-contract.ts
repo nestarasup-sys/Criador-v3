@@ -115,7 +115,9 @@ export function buildBaseDadosSimpleExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia operacional — criar roteiro importável para o Nymi Gacha
+  return `# Guia V2 — criar roteiro importável para o Nymi Gacha
+
+> Versão do guia: V2. Este guia permite que a importação crie personagens novos quando o JSON fornecer os dados necessários.
 
 ## Objetivo
 
@@ -131,7 +133,9 @@ Você receberá dados exportados da **Base de dados** com vídeos e personagens.
 ## Fonte de verdade e isolamento
 
 - Use somente os dados presentes no TXT recebido nesta solicitação.
-- Use os IDs exatos dos vídeos e personagens. Nunca invente IDs.
+- Use os IDs exatos dos vídeos. Para personagens, reutilize um \`characterId\` listado ou crie um ID novo e único quando quiser que o Nymi crie esse personagem automaticamente.
+- Um personagem novo precisa trazer \`characterId\`, \`name\` e \`model\` (\`feminino\` ou \`masculino\`). Inclua \`aliases\` e \`narrativeProfile\` completo para que ele seja utilizável no roteiro.
+- Nunca use o ID de um personagem existente para representar outro personagem: IDs existentes reutilizam o personagem já salvo no app.
 - A descrição do vídeo atual é a fonte principal do que pode acontecer naquela cena.
 - A ficha narrativa serve para personalidade, história, relações, estilo de fala e regras do personagem. Ela não autoriza inventar acontecimentos, falas, motivos ou reações que não tenham relação com a descrição do vídeo atual.
 - Cada vídeo é uma cena separada. Não misture a descrição, ações ou reações de um vídeo com outro.
@@ -222,7 +226,11 @@ O formato \`NYMI_IMPORTABLE_SCRIPT_V1\` cria os TikToks e seus blocos. Não incl
 - \`format\`: sempre \`NYMI_IMPORTABLE_SCRIPT_V1\`.
 - \`title\`: título do novo roteiro.
 - \`videos\`: lista sem repetição, com \`videoId\` existente e \`order\` inteiro positivo.
-- \`characters\`: somente personagens existentes no TXT, com \`characterId\` e função opcional.
+- \`characters\`: personagens do roteiro. Podem ser existentes ou novos; personagens novos são criados automaticamente pelo app.
+- \`name\`: nome do personagem novo.
+- \`model\`: modelo visual do personagem novo: \`feminino\` ou \`masculino\`.
+- \`aliases\`: nomes alternativos opcionais.
+- \`narrativeProfile\`: ficha narrativa recomendada para personagens novos; ela será salva no contexto do roteiro.
 - \`blocks\`: somente falas e pensamentos realmente necessários.
 - \`characterId\`: personagem que fala ou pensa.
 - \`videoId\`: vídeo ao qual a reação pertence.
@@ -245,7 +253,7 @@ Não faça isto:
 }
 \`\`\`
 
-Esse exemplo é inválido porque repete o vídeo, inventa personagem, usa um tipo proibido e começa antes do fim da descrição. Também é ruim gerar quinze blocos para um vídeo de 20 segundos cuja descrição termina no segundo 8 quando três ou quatro reações curtas seriam suficientes.
+Esse exemplo é inválido porque repete o vídeo, não define os dados necessários de um personagem novo, usa um tipo proibido e começa antes do fim da descrição. Também é ruim gerar quinze blocos para um vídeo de 20 segundos cuja descrição termina no segundo 8 quando três ou quatro reações curtas seriam suficientes.
 
 ## Regra final
 
