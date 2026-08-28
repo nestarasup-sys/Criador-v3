@@ -1,9 +1,9 @@
 .app { min-height:100dvh; height:100dvh; overflow:hidden; color:#30263b; background:#f0edf6; font-family:var(--font-geist),Arial,sans-serif; }
 .topbarBrand { display:flex; align-items:center; gap:12px; min-width:0; }
 .topbarBack { flex:0 0 auto; min-width:38px; padding-inline:10px; text-decoration:none; }
-.topbar { height:82px; flex:0 0 82px; min-width:0; display:flex; align-items:center; gap:16px; padding:0 24px; overflow:hidden; border-bottom:1px solid #e7e1ef; background:#fff; box-shadow:0 4px 18px rgba(48,35,71,.05); }
+.topbar { height:82px; flex:0 0 82px; min-width:0; display:flex; align-items:center; gap:16px; padding:0 24px; overflow:visible; border-bottom:1px solid #e7e1ef; background:#fff; box-shadow:0 4px 18px rgba(48,35,71,.05); }
 .topbarBrand { flex:0 0 auto; }
-.topbar :global(.top-actions) { display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; flex:1 1 auto; overflow-x:auto; overflow-y:hidden; padding:4px 2px; scrollbar-width:thin; }
+.topbar :global(.top-actions) { display:flex; align-items:center; justify-content:flex-start; gap:8px; min-width:0; flex:1 1 auto; overflow-x:auto; overflow-y:hidden; padding:6px 2px; scrollbar-width:thin; overscroll-behavior-x:contain; }
 .topbar :global(.top-actions)>* { flex:0 0 auto; }
 .topbar :global(.top-actions)>.button { min-height:42px; padding:0 13px; font-size:12px; line-height:1.1; text-align:center; white-space:nowrap; }
 .topbar :global(.nymi-navigation) { flex:0 0 auto; }
@@ -28,8 +28,8 @@
 .counter strong { color:#7449c7; font-size:24px; line-height:1; }
 .counter span { color:#988b9f; font-size:10px; }
 .message { margin:16px; padding:11px 14px; border:1px solid #ddcff5; border-radius:10px; color:#62439b; background:#fbf8ff; font-size:12px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,360px)); justify-content:start; gap:16px; margin:0; padding:14px 16px 64px; }
-.card { min-width:0; overflow:hidden; border:1px solid #d9d0e6; border-radius:17px; background:#fff; box-shadow:0 14px 30px rgba(53,36,74,.11); }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,360px)); justify-content:start; gap:18px; width:min(1180px,calc(100% - 32px)); margin:0 auto; padding:14px 0 64px; }
+.card { width:100%; min-width:0; overflow:hidden; border:1px solid #d9d0e6; border-radius:17px; background:#fff; box-shadow:0 14px 30px rgba(53,36,74,.11); }
 .cardHeader { display:flex; align-items:center; gap:11px; padding:14px 15px; border-bottom:1px solid #f1ebf4; }
 .sequence { display:grid; place-items:center; width:44px; height:38px; border-radius:11px; color:#fff; background:linear-gradient(145deg,#7144d1,#a14bd3); font-size:15px; font-weight:900; }
 .cardTitle { display:grid; min-width:0; flex:1; gap:4px; }
@@ -95,4 +95,4 @@
 .characterPickerPanel>footer { display:flex; align-items:center; justify-content:space-between; gap:10px; padding-top:5px; border-top:1px solid #f0eaf5; }
 .characterPickerPanel>footer>span { color:#8c7d95; font-size:9px; line-height:1.4; }
 @media (max-width:1050px) { .topbar { gap:10px; padding-inline:14px; } .topbar :global(.nymi-connection-status span) { display:none; } .moduleTitle { display:none; } .grid { grid-template-columns:repeat(auto-fill,minmax(300px,360px)); } }
-@media (max-width:700px) { .topbarBrand { gap:6px; } .topbarBack { min-width:34px; } .topbar { height:66px; flex-basis:66px; padding-inline:10px; } .topbar :global(.nymi-brand-copy) { display:none; } .topbar :global(.top-actions) { justify-content:flex-start; } .topbar :global(.nymi-navigation-link span:last-child) { display:none; } .content { height:calc(100dvh - 66px); } .actionBar { align-items:stretch; flex-wrap:wrap; padding:10px; } .actionBar button { flex:1 1 calc(50% - 10px); } .actionBack { flex:1 1 100%!important; margin-right:0; text-align:left; } .grid { grid-template-columns:minmax(0,360px); padding-inline:10px; } .meta { grid-template-columns:1fr 1fr; } .meta span:last-child { grid-column:1 / -1; } }
+@media (max-width:700px) { .topbarBrand { gap:6px; } .topbarBack { min-width:34px; } .topbar { height:66px; flex-basis:66px; padding-inline:10px; } .topbar :global(.nymi-brand-copy) { display:none; } .topbar :global(.top-actions) { justify-content:flex-start; } .topbar :global(.nymi-navigation-link span:last-child) { display:none; } .content { height:calc(100dvh - 66px); } .actionBar { align-items:stretch; flex-wrap:wrap; padding:10px; } .actionBar button { flex:1 1 calc(50% - 10px); } .actionBack { flex:1 1 100%!important; margin-right:0; text-align:left; } .grid { grid-template-columns:minmax(0,360px); width:calc(100% - 20px); } .meta { grid-template-columns:1fr 1fr; } .meta span:last-child { grid-column:1 / -1; } }
