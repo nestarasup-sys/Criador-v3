@@ -38,6 +38,9 @@ export default function BaseDadosPage() {
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
   const [characterQuery, setCharacterQuery] = useState("");
+  const [videoQuery, setVideoQuery] = useState("");
+  const [videoFilter, setVideoFilter] = useState<"all" | "filled" | "pending">("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, VideoDraft>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -371,6 +374,22 @@ export default function BaseDadosPage() {
     setSelectedCharacterIds([]);
   };
 
+  const visibleVideos = useMemo(() => {
+    if (!database) return [];
+    const query = videoQuery.trim().toLocaleLowerCase("pt-BR");
+    return database.videos.filter((video) => {
+      const draft = draftFor(video);
+      const matchesQuery = !query || [
+        `vídeo ${String(video.sequence).padStart(2, "0")}`,
+        video.fileName,
+        draft.description,
+      ].some((value) => value.toLocaleLowerCase("pt-BR").includes(query));
+      const filled = draft.description.trim().length > 0;
+      const matchesFilter = videoFilter === "all" || (videoFilter === "filled" ? filled : !filled);
+      return matchesQuery && matchesFilter;
+    });
+  }, [database, drafts, videoFilter, videoQuery]);
+
   const openDataFolder = async () => {
     setBusy("folder"); setMessage("");
     try {
@@ -382,16 +401,57 @@ export default function BaseDadosPage() {
   };
 
   return <div className={styles.app}>
-    <header className={`${styles.topbar} topbar`}><div className={styles.topbarBrand}><Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link><NymiBrand /></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /><button className={`button secondary ${styles.actionFolder}`} disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button><button className={`button secondary ${styles.actionAdd}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button><button className={`button secondary ${styles.actionPackage}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote completo para IA</button><button className={`button secondary ${styles.actionImport}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button><button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button><button className={`button secondary ${styles.actionSimple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados simples</button></div></header>
+    <header className={`${styles.topbar} topbar`}>
+      <div className={styles.topbarBrand}>
+        <Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link>
+        <NymiBrand />
+      </div>
+      <div className="top-actions">
+        <NymiConnectionStatus connected={Boolean(database)} />
+        <NymiNavigation active="base-dados" compact />
+        <button className={`button secondary ${styles.actionFolder}`} disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button>
+        <button className={`button secondary ${styles.actionAdd}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button>
+        <button className={`button secondary ${styles.actionPackage}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote completo para IA</button>
+        <button className={`button secondary ${styles.actionImport}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
+        <button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
+        <button className={`button secondary ${styles.actionSimple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados simples</button>
+      </div>
+    </header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
       <input ref={importRef} hidden type="file" accept="application/json,.json" disabled={Boolean(busy) || importing} onChange={(event) => void importRoteiroFromAi(event.target.files?.[0])} />
+      {!loading && database && <section className={styles.pageHeader}>
+        <div className={styles.pageHeading}>
+          <span className={styles.pageIcon} aria-hidden="true">▤</span>
+          <div>
+            <span className={styles.eyebrow}>BIBLIOTECA LOCAL</span>
+            <h1>Base de dados</h1>
+            <p>Gerencie e organize as cenas de vídeo que você pode reutilizar nos seus roteiros.</p>
+          </div>
+        </div>
+        <div className={styles.pageTools}>
+          <div className={styles.counter}><strong>{database.videos.length}</strong><span>vídeos cadastrados</span></div>
+          <label className={styles.searchWrap}>
+            <span aria-hidden="true">⌕</span>
+            <input aria-label="Buscar vídeos" value={videoQuery} onChange={(event) => setVideoQuery(event.target.value)} placeholder="Buscar cenas…" />
+          </label>
+          <div className={styles.filterWrap}>
+            <button className={styles.filterButton} aria-expanded={filtersOpen} aria-controls="base-dados-filters" onClick={() => setFiltersOpen((open) => !open)}>⌁ <span>Filtros</span></button>
+            {filtersOpen && <div id="base-dados-filters" className={styles.filterMenu} role="menu">
+              <button className={videoFilter === "all" ? styles.filterActive : ""} onClick={() => { setVideoFilter("all"); setFiltersOpen(false); }}>Todos</button>
+              <button className={videoFilter === "filled" ? styles.filterActive : ""} onClick={() => { setVideoFilter("filled"); setFiltersOpen(false); }}>Preenchidos</button>
+              <button className={videoFilter === "pending" ? styles.filterActive : ""} onClick={() => { setVideoFilter("pending"); setFiltersOpen(false); }}>Pendentes</button>
+            </div>}
+          </div>
+        </div>
+      </section>}
       {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
-      {!loading && Boolean(database?.videos.length) && <section className={styles.grid}>{database?.videos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const warning = Number.isFinite(end) && end > video.durationSeconds; return <article className={styles.card} key={video.id}>
+      {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
+      {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const warning = Number.isFinite(end) && end > video.durationSeconds; return <article className={styles.card} key={video.id}>
         <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
-        <div className={styles.meta}><div className={styles.metaIdentity}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div></div>
+        <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>
         <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Esse tempo ultrapassa a duração total do vídeo.</small>}</label><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}
       {importPreview && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !importing) setImportPreview(null); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-import-title"><header><div><span className={styles.eyebrow}>IMPORTAÇÃO VALIDADA</span><h2 id="base-dados-import-title">{importPreview.validation.data?.title || "Roteiro da IA"}</h2><p>O roteiro será criado sem alterar os roteiros existentes.</p></div><button className={styles.closeButton} disabled={importing} onClick={() => setImportPreview(null)} aria-label="Fechar">×</button></header><div className={styles.importSummary}><span><strong>{importPreview.validation.data?.videos.length || 0}</strong> vídeos</span><span><strong>{importPreview.validation.data?.characters.length || 0}</strong> personagens</span><span><strong>{importPreview.validation.data?.blocks.length || 0}</strong> blocos</span></div><div className={styles.importIssues}>{importPreview.validation.issues.length ? importPreview.validation.issues.map((issue, index) => <p className={issue.level === "error" ? styles.importError : styles.warning} key={`${issue.path}-${index}`}><strong>{issue.level === "error" ? "Erro" : "Aviso"}</strong> {issue.path}: {issue.message}</p>) : <p className={styles.importSuccess}>JSON válido. Os vídeos serão vinculados à Base sem copiar os arquivos.</p>}</div>{importPreview.validation.data && <div className={styles.importPreviewList}><strong>Ordem dos vídeos</strong>{importPreview.validation.data.videos.map((video) => <span key={video.videoId}>{video.order}. {video.videoId} — {importPreview.database.videos.find((item) => item.id === video.videoId)?.description || "sem descrição"}</span>)}</div>}<footer><span>Os vídeos continuarão protegidos na Base de dados.</span><button className={styles.secondaryButton} disabled={importing} onClick={() => setImportPreview(null)}>Cancelar</button><button className={styles.actionButtonPrimary} disabled={importing || !importPreview.validation.success} onClick={() => void confirmRoteiroImport()}>{importing ? "Criando roteiro…" : "Confirmar e criar roteiro"}</button></footer></section></div>}
