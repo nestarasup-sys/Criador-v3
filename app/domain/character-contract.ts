@@ -52,6 +52,8 @@ export type Character = {
   maskStrokes?: MaskStroke[];
   previewPan?: PreviewPan;
   exportFrame?: ExportFrame;
+  aliases?: string[];
+  importedFrom?: { importId: string; scriptId: string; importedAt: string; sourceTitle?: string };
   hairAdjustmentsByBasePack?: HairAdjustmentsByBasePack;
   outfitAdjustmentsByBasePack?: Record<string, ItemTransform>;
   outfitLayerMasksByBasePack?: Record<string, MaskStroke[]>;
@@ -64,5 +66,5 @@ export type CharacterSnapshot = Omit<Character, "id" | "updatedAt">;
 /** Visão mínima usada por Roteiros sem acoplar o editor ao compositor. */
 export type PremiumCharacter = Pick<
   Character,
-  "id" | "name" | "model" | "photoUrl" | "photoDataUrl" | "basePackId" | "expressionPackId" | "updatedAt"
+  "id" | "name" | "model" | "photoUrl" | "photoDataUrl" | "basePackId" | "expressionPackId" | "updatedAt" | "aliases" | "importedFrom"
 >;

@@ -1,11 +1,11 @@
-import { createId, createScriptAiContext, nowIso } from "./defaults";
+import { createId, createNarrativeProfile, createScriptAiContext, nowIso } from "./defaults";
 import type { BaseDadosVideo } from "../base de dados/types";
-import type { PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "./types";
+import type { NarrativeProfile, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "./types";
 
 export const IMPORTABLE_SCRIPT_FORMAT = "NYMI_IMPORTABLE_SCRIPT_V1";
 
 export type ImportableVideoChoice = { videoId: string; order: number };
-export type ImportableCharacterChoice = { characterId: string; role?: string };
+export type ImportableCharacterChoice = { characterId: string; role?: string; name?: string; model?: "feminino" | "masculino"; aliases?: string[]; narrativeProfile?: Partial<NarrativeProfile> };
 export type ImportableBlock = { type: "speech" | "thought"; characterId: string; videoId: string; text: string; startAt?: number };
 export type ImportableScriptDocument = {
   format: typeof IMPORTABLE_SCRIPT_FORMAT;
@@ -81,10 +81,16 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     const item = record(entry);
     const characterId = stringValue(item.characterId);
     if (!characterId) issues.push({ level: "error", path: `characters[${index}].characterId`, message: "ID do personagem ausente." });
-    else if (!characterMap.has(characterId)) issues.push({ level: "error", path: `characters[${index}].characterId`, message: `O personagem ${characterId} não existe no Criador.` });
+    else if (!characterMap.has(characterId)) issues.push({ level: "warning", path: `characters[${index}].characterId`, message: `O personagem ${characterId} não existe; será criado automaticamente com os dados disponíveis no JSON.` });
     if (characterId && seenCharacters.has(characterId)) issues.push({ level: "error", path: `characters[${index}].characterId`, message: `O personagem ${characterId} foi repetido.` });
     if (characterId) seenCharacters.add(characterId);
-    if (characterId && characterMap.has(characterId)) normalizedCharacters.push({ characterId, ...(stringValue(item.role) ? { role: stringValue(item.role) } : {}) });
+    if (characterId) {
+      const name = stringValue(item.name);
+      const model = item.model === "masculino" || item.model === "feminino" ? item.model : undefined;
+      const aliases = Array.isArray(item.aliases) ? item.aliases.filter((alias): alias is string => typeof alias === "string" && alias.trim()).map((alias) => alias.trim()) : undefined;
+      const profile = record(item.narrativeProfile ?? item.profile);
+      normalizedCharacters.push({ characterId, ...(stringValue(item.role) ? { role: stringValue(item.role) } : {}), ...(name ? { name } : {}), ...(model ? { model } : {}), ...(aliases?.length ? { aliases } : {}), ...(Object.keys(profile).length ? { narrativeProfile: profile as Partial<NarrativeProfile> } : {}) });
+    }
   });
 
   const allowedVideoIds = new Set(normalizedVideos.map((video) => video.videoId));
@@ -151,13 +157,15 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
     };
     return { section, sourceVideo };
   });
+  const importedProfiles = document.characters.flatMap((choice) => choice.narrativeProfile ? [{ ...createNarrativeProfile(choice.characterId), ...choice.narrativeProfile, characterId: choice.characterId, updatedAt: timestamp }] : []);
+  const baseAiContext = createScriptAiContext(characterIds, [...state.profiles, ...importedProfiles], state.globalRules);
   const script: ScriptProject = {
     id: createId(),
     title: document.title,
     generalContext: "",
     participants: characterIds.map((characterId) => ({ characterId, active: true })),
     aiOrderingMode: "none",
-    aiContext: createScriptAiContext(characterIds, state.profiles, state.globalRules),
+    aiContext: baseAiContext,
     tiktoks: sections.map(({ section }) => section),
     createdAt: timestamp,
     updatedAt: timestamp,

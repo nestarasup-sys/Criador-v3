@@ -107,6 +107,14 @@ export async function removeRoteiroVideo(scriptId: string, tiktokId: string) {
   if (!response.ok) throw new Error(result.error || "Não foi possível remover o vídeo do PC.");
 }
 
+export async function savePremiumCharacters(characters: Character[]) {
+  await request("/characters", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(characters),
+  });
+}
+
 export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; durationSeconds?: number; name?: string }) {
   const response = await localDataFetch("/base-dados/import-from-roteiro", {
     method: "POST",
@@ -118,9 +126,10 @@ export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string
   return result as { duplicate: boolean; video: { sequence: number; originalName: string } };
 }
 
-export async function removeRoteiro(scriptId: string) {
-  const response = await localDataFetch(`/roteiros/scripts/${encodeURIComponent(scriptId)}`, { method: "DELETE" });
-  const result = await response.json().catch(() => ({})) as { error?: string; scriptId?: string; safetyBackup?: string | null; removedFolders?: string[] };
+export async function removeRoteiro(scriptId: string, options: { deleteImportedCharacters?: boolean } = {}) {
+  const query = options.deleteImportedCharacters ? "?deleteImportedCharacters=true" : "";
+  const response = await localDataFetch(`/roteiros/scripts/${encodeURIComponent(scriptId)}${query}`, { method: "DELETE" });
+  const result = await response.json().catch(() => ({})) as { error?: string; scriptId?: string; safetyBackup?: string | null; removedFolders?: string[]; removedCharacters?: string[]; keptCharacters?: string[] };
   if (!response.ok) throw new Error(result.error || "Não foi possível excluir o roteiro e suas pastas do PC.");
   return result;
 }

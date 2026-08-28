@@ -59,6 +59,7 @@ export type ScriptProject = {
   /** Ausente somente em arquivos antigos; a normalização cria o snapshot automaticamente. */
   aiContext?: ScriptAiContext;
   background?: RoteiroBackgroundReference;
+  importOrigin?: { kind: "ai-json"; importId: string; importedAt: string; createdCharacterIds: string[]; sourceTitle?: string };
 };
 export type RoteirosState = {
   version: RoteirosStateVersion;

@@ -637,9 +637,23 @@ async function route(request, response) {
   if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   const roteiroScriptMatch = url.pathname.match(/^\/roteiros\/scripts\/([a-zA-Z0-9_-]{1,160})$/);
   if (roteiroScriptMatch && request.method === "DELETE") {
-    const result = await roteirosService.removeScript(roteiroScriptMatch[1]);
+    const scriptId = roteiroScriptMatch[1];
+    const targetScript = roteirosService.getScript(scriptId);
+    const shouldDeleteImportedCharacters = url.searchParams.get("deleteImportedCharacters") === "true";
+    const importedIds = new Set(targetScript?.importOrigin?.createdCharacterIds || []);
+    const otherScriptCharacterIds = new Set(roteirosService.getScripts().filter((script) => script.id !== scriptId).flatMap((script) => [
+      ...(script.participants || []).map((participant) => participant.characterId),
+      ...(script.aiContext?.profiles || []).map((profile) => profile.characterId),
+    ]));
+    const result = await roteirosService.removeScript(scriptId);
     const exportFolders = await removeRoteiroExportFolders(result.script, result.legacyTitleSafe);
-    sendJson(response, request, 200, { ok: true, scriptId: result.script.id, safetyBackup: result.safetyBackup, removedFolders: [...result.removedFolders, ...exportFolders] });
+    const removableCharacterIds = shouldDeleteImportedCharacters ? [...importedIds].filter((id) => !otherScriptCharacterIds.has(id)) : [];
+    const keptCharacterIds = [...importedIds].filter((id) => !removableCharacterIds.includes(id));
+    if (removableCharacterIds.length) {
+      state.characters = state.characters.filter((character) => !removableCharacterIds.includes(String(character.id)) || character.importedFrom?.scriptId !== scriptId);
+      await queueStateWrite();
+    }
+    sendJson(response, request, 200, { ok: true, scriptId: result.script.id, safetyBackup: result.safetyBackup, removedFolders: [...result.removedFolders, ...exportFolders], removedCharacters: removableCharacterIds, keptCharacters: keptCharacterIds });
     return;
   }
   if (request.method === "GET" && url.pathname === "/roteiros/orphans") {

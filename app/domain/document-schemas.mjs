@@ -30,11 +30,16 @@ function normalizeAdjustments(value) {
 
 export function normalizeCharacterDocument(value) {
   const source = record(value);
+  const aliases = list(source.aliases).filter((alias) => typeof alias === "string" && alias.trim()).map((alias) => alias.trim());
+  const importedFrom = record(source.importedFrom);
+  const hasImportedFrom = typeof importedFrom.importId === "string" && typeof importedFrom.scriptId === "string";
   return {
     ...source,
     basePackId: normalizeBasePackId(source.basePackId),
     selections: normalizeSelections(source.selections),
     adjustments: normalizeAdjustments(source.adjustments),
+    ...(aliases.length ? { aliases } : {}),
+    ...(hasImportedFrom ? { importedFrom: { importId: importedFrom.importId, scriptId: importedFrom.scriptId, importedAt: typeof importedFrom.importedAt === "string" ? importedFrom.importedAt : "", ...(typeof importedFrom.sourceTitle === "string" ? { sourceTitle: importedFrom.sourceTitle } : {}) } } : {}),
   };
 }
 
@@ -296,6 +301,7 @@ function normalizeRoteiroScript(value, fallbackAiContext = { profiles: [], rules
     aiContext: normalizeRoteiroAiContext(source.aiContext, fallbackAiContext, participants.map((participant) => participant.characterId)),
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     ...(source.background && normalizeBackgroundReference(source.background) ? { background: normalizeBackgroundReference(source.background) } : {}),
+    ...(record(source.importOrigin).kind === "ai-json" && typeof source.importOrigin.importId === "string" ? { importOrigin: { kind: "ai-json", importId: source.importOrigin.importId, importedAt: typeof source.importOrigin.importedAt === "string" ? source.importOrigin.importedAt : "", createdCharacterIds: list(source.importOrigin.createdCharacterIds).filter((id) => typeof id === "string"), ...(typeof source.importOrigin.sourceTitle === "string" ? { sourceTitle: source.importOrigin.sourceTitle } : {}) } } : {}),
     tiktoks: list(source.tiktoks).map(normalizeRoteiroSection),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",

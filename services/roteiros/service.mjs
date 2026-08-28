@@ -997,5 +997,9 @@ export function createRoteirosService(rootFolder) {
     return script ? structuredClone(script) : null;
   }
 
-  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript, linkVideo };
+  function getScripts() {
+    return structuredClone(state.scripts);
+  }
+
+  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript, getScripts, linkVideo };
 }

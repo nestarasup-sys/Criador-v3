@@ -10,7 +10,8 @@ import { buildBaseDadosExportText, buildBaseDadosGuide, buildBaseDadosSimpleExpo
 import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import { createScriptFromImport, validateImportableScript, type ImportValidation } from "../roteiros/base-dados-import";
-import { createRoteiroBackup, importBaseDadosVideoIntoRoteiro, loadRoteirosState, removeRoteiroVideo, saveRoteirosState } from "../roteiros/storage";
+import { createRoteiroBackup, importBaseDadosVideoIntoRoteiro, loadRoteirosState, removeRoteiro, removeRoteiroVideo, savePremiumCharacters, saveRoteirosState } from "../roteiros/storage";
+import { createId, nowIso } from "../roteiros/defaults";
 import type { RoteirosState } from "../roteiros/types";
 import styles from "./base-de-dados.module.css";
 
@@ -35,8 +36,10 @@ function readVideoDuration(file: File) {
 export default function BaseDadosPage() {
   const [database, setDatabase] = useState<BaseDadosState | null>(null);
   const [characterData, setCharacterData] = useState<{ characters: Character[]; profiles: NarrativeProfile[] }>({ characters: [], profiles: [] });
+  const [roteirosState, setRoteirosState] = useState<RoteirosState | null>(null);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
+  const [importedManagerOpen, setImportedManagerOpen] = useState(false);
   const [characterQuery, setCharacterQuery] = useState("");
   const [videoQuery, setVideoQuery] = useState("");
   const [videoFilter, setVideoFilter] = useState<"all" | "filled" | "pending">("all");
@@ -61,7 +64,7 @@ export default function BaseDadosPage() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const [loadedDatabase, loadedCharacters] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterData()]);
+      const [loadedDatabase, loadedCharacters, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterData(), loadRoteirosState()]);
       const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
       databaseRef.current = loadedDatabase;
       draftsRef.current = recoveredDrafts;
@@ -69,6 +72,7 @@ export default function BaseDadosPage() {
       setDrafts(recoveredDrafts);
       writeBaseDadosDrafts(window.localStorage, recoveredDrafts);
       setCharacterData(loadedCharacters);
+      setRoteirosState(loadedRoteiros.state);
       setMessage("");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível carregar a Base de dados.");
@@ -335,21 +339,57 @@ export default function BaseDadosPage() {
     setImporting(true); setMessage("");
     const copiedSectionIds: string[] = [];
     const draft = createScriptFromImport(importPreview.validation.data, importPreview.database.videos, characterData.characters, importPreview.roteiroState);
+    const importId = createId();
+    const existingIds = new Set(characterData.characters.map((character) => character.id));
+    const categories = ["cabelos", "cabelosTras", "rostos", "roupas"] as const;
+    const createdCharacters: Character[] = importPreview.validation.data.characters.filter((choice) => !existingIds.has(choice.characterId)).map((choice) => {
+      const timestamp = nowIso();
+      return {
+        id: choice.characterId,
+        name: choice.name || `Personagem importado ${choice.characterId.slice(0, 8)}`,
+        model: choice.model || "feminino",
+        selections: Object.fromEntries(categories.map((category) => [category, null])),
+        adjustments: Object.fromEntries(categories.map((category) => [category, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false }])),
+        ...(choice.aliases?.length ? { aliases: choice.aliases } : {}),
+        importedFrom: { importId, scriptId: draft.script.id, importedAt: timestamp, sourceTitle: draft.script.title },
+        updatedAt: timestamp,
+      };
+    });
     try {
       await createRoteiroBackup();
+      if (createdCharacters.length) await savePremiumCharacters([...characterData.characters, ...createdCharacters]);
       for (const item of draft.sections) {
         item.section.video = await importBaseDadosVideoIntoRoteiro(draft.script.id, item.section.id, item.sourceVideo.id);
         copiedSectionIds.push(item.section.id);
       }
-      const importedScript = { ...draft.script, tiktoks: draft.sections.map(({ section }) => section), updatedAt: new Date().toISOString() };
+      const importedScript = { ...draft.script, importOrigin: { kind: "ai-json" as const, importId, importedAt: nowIso(), createdCharacterIds: createdCharacters.map((character) => character.id), sourceTitle: draft.script.title }, tiktoks: draft.sections.map(({ section }) => section), updatedAt: new Date().toISOString() };
       const nextState = { ...importPreview.roteiroState, scripts: [...importPreview.roteiroState.scripts, importedScript] };
       await saveRoteirosState(nextState);
+      setCharacterData((current) => ({ ...current, characters: [...current.characters, ...createdCharacters] }));
+      setRoteirosState(nextState);
       setImportPreview(null);
       window.location.href = `/roteiros/${importedScript.id}`;
     } catch (error) {
       await Promise.all(copiedSectionIds.map((sectionId) => removeRoteiroVideo(draft.script.id, sectionId).catch(() => undefined)));
+      if (createdCharacters.length) await savePremiumCharacters(characterData.characters).catch(() => undefined);
       setMessage(error instanceof Error ? error.message : "Não foi possível criar o roteiro importado.");
     } finally { setImporting(false); }
+  };
+
+  const importedScripts = useMemo(() => (roteirosState?.scripts || []).filter((script) => script.importOrigin?.kind === "ai-json"), [roteirosState]);
+  const importedCharactersFor = (script: RoteirosState["scripts"][number]) => {
+    const ids = new Set(script.importOrigin?.createdCharacterIds || []);
+    return characterData.characters.filter((character) => ids.has(character.id));
+  };
+  const deleteImportedScript = async (script: RoteirosState["scripts"][number], deleteCharacters: boolean) => {
+    if (!window.confirm(deleteCharacters ? `Excluir “${script.title}” e os personagens criados por essa importação? Personagens usados em outros roteiros serão preservados.` : `Excluir somente “${script.title}”? Os personagens serão preservados.`)) return;
+    setBusy(`delete-script:${script.id}`); setMessage("");
+    try {
+      const result = await removeRoteiro(script.id, { deleteImportedCharacters: deleteCharacters });
+      setMessage(deleteCharacters ? `Roteiro excluído. ${result.removedCharacters?.length || 0} personagem(ns) removido(s).` : "Roteiro excluído; personagens preservados.");
+      await refresh();
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível excluir o roteiro."); }
+    finally { setBusy(""); }
   };
 
   const visibleCharacters = useMemo(() => {
@@ -413,6 +453,7 @@ export default function BaseDadosPage() {
         <button className={`button secondary ${styles.actionAdd}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button>
         <button className={`button secondary ${styles.actionPackage}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote completo para IA</button>
         <button className={`button secondary ${styles.actionImport}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
+        <button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy) || !importedScripts.length} onClick={() => setImportedManagerOpen(true)}>♙ Roteiros importados</button>
         <button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
         <button className={`button secondary ${styles.actionSimple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados simples</button>
       </div>
@@ -446,6 +487,7 @@ export default function BaseDadosPage() {
         </div>
       </section>}
       {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
+      {importedManagerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setImportedManagerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-imported-title"><header><div><span className={styles.eyebrow}>IMPORTAÇÕES</span><h2 id="base-dados-imported-title">Personagens criados por roteiros</h2><p>Gerencie a origem dos personagens sem apagar os que já existiam.</p></div><button className={styles.closeButton} onClick={() => setImportedManagerOpen(false)} aria-label="Fechar">×</button></header><div className={styles.importPreviewList}>{importedScripts.map((script) => <div key={script.id}><strong>{script.title}</strong><span>{importedCharactersFor(script).length} personagem(ns) criado(s) nesta importação</span><small>{importedCharactersFor(script).map((character) => `${character.name} (${character.id})`).join(" · ") || "Nenhum personagem novo"}</small><div className={styles.cardActions}><button className={styles.secondaryButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, false)}>Excluir roteiro, manter personagens</button><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, true)}>Excluir roteiro + personagens criados</button></div></div>)}</div><footer><span>Personagens usados por outros roteiros sempre são preservados.</span><button className={styles.actionButtonPrimary} onClick={() => setImportedManagerOpen(false)}>Fechar</button></footer></section></div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
