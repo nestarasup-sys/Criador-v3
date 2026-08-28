@@ -115,9 +115,9 @@ export function buildBaseDadosSimpleExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia V3 — criar roteiro importável para o Nymi Gacha
+  return `# Guia V4 — criar roteiro importável para o Nymi Gacha
 
-> Versão do guia: V3. Este guia permite importar personagens novos, contexto geral e uma abertura antes do TikTok 01.
+> Versão do guia: V4. Este guia permite importar personagens novos, contexto geral e uma abertura antes do TikTok 01.
 
 ## Objetivo
 
@@ -150,7 +150,7 @@ Você receberá dados exportados da **Base de dados** com vídeos e personagens.
 
 ## Orçamento de falas e pensamentos
 
-Não crie blocos em excesso. Para cada vídeo, calcule mentalmente:
+Esta orientação vale somente quando você estiver criando blocos novos a partir de uma descrição que ainda não contém roteiro. Para cada vídeo, calcule mentalmente:
 
 \`janelaDeReacao = max(0, tempoTotalDoVideo - tempoQueTerminaACenaDaDescricao)\`
 
@@ -162,7 +162,15 @@ Use como limite superior aproximado:
 - de 11 a 20 segundos: 4 a 6 blocos;
 - acima de 20 segundos: no máximo 8 blocos.
 
-Esses números são limites, não metas. Prefira menos blocos quando a cena tiver pouca informação. Não preencha espaço vazio apenas para fazer todos os personagens falarem. Uma reação curta e boa é melhor que uma conversa longa e inventada.
+Esses números são referências de economia, não uma autorização para apagar conteúdo. Não crie blocos em excesso quando estiver gerando um roteiro novo somente a partir de descrição, mas não aplique essa orientação a conteúdo já escrito. Se o usuário fornecer falas, pensamentos ou blocos prontos, preserve todos exatamente como foram enviados, mesmo que ultrapassem essa referência. Nunca remova, resuma, combine, reordene ou substitua blocos fornecidos apenas para caber no orçamento. Se houver conteúdo pronto e também blocos vazios, preencha somente os vazios. Para conteúdo novo, não crie blocos artificiais apenas para fazer todos os personagens falarem.
+
+## Integridade do roteiro recebido
+
+- Diferencie sempre entre descrição de vídeo e roteiro já escrito.
+- Se a entrada contiver blocos de fala ou pensamento, eles são conteúdo autoral do usuário e devem ser mantidos integralmente.
+- O Guia V4 não exige reduzir a quantidade de blocos de um roteiro existente.
+- Só faça alterações em blocos existentes se o usuário pedir explicitamente para revisar, melhorar, substituir ou reorganizar.
+- Se o JSON estiver sendo montado a partir de um roteiro fornecido, copie cada bloco válido para o JSON e preserve seu personagem, tipo, texto e vínculo com o vídeo.
 
 ## Tempo das reações
 
