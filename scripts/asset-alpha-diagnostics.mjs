@@ -11,6 +11,7 @@ await fs.mkdir(outputDir, { recursive: true });
 
 const catalog = new Map(state.catalog.map((item) => [item.id, item]));
 const assets = [
+  ["body", { id: `${character.model}/${character.basePackId}/${character.expressionEmotion ?? "normal"}_${character.expressionState ?? "default"}`, url: `/models/modelos/${character.model}/${character.basePackId}/${character.expressionEmotion ?? "normal"}_${character.expressionState ?? "default"}.png` }],
   ["backhair", catalog.get(character.selections.cabelosTras)],
   ["fronthair", catalog.get(character.selections.cabelos)],
   ["clothes", catalog.get(character.selections.roupas)],
