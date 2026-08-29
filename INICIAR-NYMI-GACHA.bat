@@ -14,7 +14,7 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-powershell -NoProfile -Command "$listeners = @(Get-NetTCPConnection -LocalAddress '127.0.0.1' -LocalPort 6700,6800 -State Listen -ErrorAction SilentlyContinue); foreach ($listener in $listeners) { $owner = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $listener.OwningProcess); if ($owner.Name -eq 'node.exe' -and (($listener.LocalPort -eq 6800 -and $owner.CommandLine -match 'local-data-server\.mjs') -or ($listener.LocalPort -eq 6700 -and $owner.CommandLine -match 'production-server\.mjs'))) { Stop-Process -Id $listener.OwningProcess -Force } }"
+powershell -NoProfile -Command "$ports = @(6700,6800); foreach ($port in $ports) { $listeners = @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue); foreach ($listener in $listeners) { $owner = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $listener.OwningProcess); if ($owner.Name -eq 'node.exe' -and (($port -eq 6800 -and $owner.CommandLine -match 'local-data-server\.mjs') -or ($port -eq 6700 -and $owner.CommandLine -match 'production-server\.mjs'))) { Stop-Process -Id $listener.OwningProcess -Force } } }"
 echo.
 echo O CMD permanecera aberto enquanto o Nymi Gacha estiver ativo.
 echo Fechar esta janela encerra os dois servidores.
