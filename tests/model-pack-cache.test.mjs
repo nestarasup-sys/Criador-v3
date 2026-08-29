@@ -27,5 +27,5 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
   assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
   assert.match(renderer, /discovered\.version/);
-  assert.match(studioPage, /data\.modelPacks/);
+  assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);
 });

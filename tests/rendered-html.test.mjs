@@ -294,6 +294,11 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
 
   assert.match(page, /Salvando automaticamente/);
   assert.match(page, /persistEditorSnapshot/);
+  assert.match(page, /charactersRef/);
+  assert.match(page, /charactersRef\.current\.find/);
+  assert.doesNotMatch(page, /\.\.\.\(current\.find\(/);
+  assert.match(page, /flushCurrentCharacterBeforeSwitch/);
+  assert.match(page, /saveCharactersToBrowser/);
   assert.match(page, /undoCharacterChange/);
   assert.match(page, /redoCharacterChange/);
   assert.match(page, /Histórico do personagem atual/);
@@ -332,6 +337,8 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(client, /X-Gacha-Session/);
   assert.match(library, /Migrar dados deste navegador/);
   assert.match(storage, /saveCharactersToPc/);
+  assert.match(storage, /characterSaveQueue/);
+  assert.match(storage, /characterSaveQueue = operation\.then/);
   assert.match(storage, /saveCatalogItemToPc/);
   assert.match(storage, /saveExpressionPackToPc/);
   assert.match(server, /const HOST = "127\.0\.0\.1"/);

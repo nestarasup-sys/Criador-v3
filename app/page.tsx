@@ -169,6 +169,20 @@ function emptyLayerMasks(): LayerMasks {
   return { body: [], hairFront: [], hairBack: [], outfit: [] };
 }
 
+function saveCharactersToBrowser(characters: Character[]) {
+  if (typeof window === "undefined") return;
+  try {
+    const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
+      void _photoUrl;
+      void _photoDataUrl;
+      return character;
+    });
+    window.localStorage.setItem(CHARACTER_KEY, JSON.stringify(charactersWithoutPhotos));
+  } catch (error) {
+    console.error("[creator] Não foi possível manter o checkpoint no navegador", error);
+  }
+}
+
 function cloneMaskStrokes(strokes: MaskStroke[]) {
   return strokes.map((stroke) => ({
     ...stroke,
@@ -1097,6 +1111,8 @@ export default function Home() {
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveBaselineRef = useRef<string | null>(null);
   const suspendAutoSaveRef = useRef(false);
+  const charactersRef = useRef<Character[]>([]);
+  const characterSwitchRef = useRef(false);
   const pcSyncReadyRef = useRef(false);
   const browserMigrationRef = useRef<{ characters: Character[]; catalog: CatalogItem[]; expressionPacks: ExpressionPack[] }>({
     characters: [],
@@ -1281,14 +1297,17 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
-      void _photoUrl;
-      void _photoDataUrl;
-      return character;
-    });
-    localStorage.setItem(CHARACTER_KEY, JSON.stringify(charactersWithoutPhotos));
+    charactersRef.current = characters;
+    saveCharactersToBrowser(characters);
     const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
-    if (pcSyncReadyRef.current) saveCharactersToPc(characters).then(notifyStudio).catch(() => undefined);
+    if (pcSyncReadyRef.current) {
+      saveCharactersToPc(characters)
+        .then(notifyStudio)
+        .catch((error) => {
+          console.error("[creator] Falha no autosave do personagem", error);
+          setNotice("Autosave no PC falhou; uma cópia ficou neste navegador");
+        });
+    }
     else notifyStudio();
   }, [characters]);
 
@@ -1499,10 +1518,15 @@ export default function Home() {
     autoSaveTimerRef.current = window.setTimeout(() => {
       const snapshot = JSON.parse(editorSnapshot) as CharacterSnapshot;
       const id = activeCharacter ?? crypto.randomUUID();
-      const character: Character = { ...(current.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
-      setCharacters((current) => current.some((entry) => entry.id === id)
-        ? current.map((entry) => entry.id === id ? character : entry)
-        : [character, ...current]);
+      const character: Character = { ...(charactersRef.current.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
+      setCharacters((current) => {
+        const next = current.some((entry) => entry.id === id)
+          ? current.map((entry) => entry.id === id ? character : entry)
+          : [character, ...current];
+        charactersRef.current = next;
+        saveCharactersToBrowser(next);
+        return next;
+      });
       if (!activeCharacter) setActiveCharacter(id);
       autoSaveBaselineRef.current = editorSnapshot;
       autoSaveTimerRef.current = null;
@@ -3180,71 +3204,105 @@ export default function Home() {
     setNotice(`${item.name} removido do catálogo`);
   }
 
-  function persistEditorSnapshot(message: string, force = false) {
+  function persistEditorSnapshot(message: string, force = false): Character[] | null {
     if (!force && !activeCharacter && (!draftStarted || !hasRealCustomization)) {
       if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
       autoSaveBaselineRef.current = editorSnapshot;
-      return;
+      return null;
     }
-    if (!force && autoSaveBaselineRef.current === editorSnapshot) return;
+    if (!force && autoSaveBaselineRef.current === editorSnapshot) return null;
     if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
     const snapshot = JSON.parse(editorSnapshot) as CharacterSnapshot;
     const id = activeCharacter ?? crypto.randomUUID();
-    const character: Character = { ...(characters.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
-    setCharacters((current) => current.some((entry) => entry.id === id)
-      ? current.map((entry) => entry.id === id ? character : entry)
-      : [character, ...current]);
+    const character: Character = { ...(charactersRef.current.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
+    const nextCharacters = charactersRef.current.some((entry) => entry.id === id)
+      ? charactersRef.current.map((entry) => entry.id === id ? character : entry)
+      : [character, ...charactersRef.current];
+    charactersRef.current = nextCharacters;
+    saveCharactersToBrowser(nextCharacters);
+    setCharacters(nextCharacters);
     if (!activeCharacter) setActiveCharacter(id);
     autoSaveBaselineRef.current = editorSnapshot;
     autoSaveTimerRef.current = null;
     setNotice(message);
+    return nextCharacters;
   }
 
-  function saveCharacter() {
-    persistEditorSnapshot("Alterações salvas", true);
+  async function saveCharacter() {
+    const nextCharacters = persistEditorSnapshot("Alterações salvas", true) ?? charactersRef.current;
+    if (!pcSyncReadyRef.current) return;
+    setNotice("Salvando no PC…");
+    try {
+      await saveCharactersToPc(nextCharacters);
+      setNotice("Alterações salvas no PC");
+    } catch (error) {
+      console.error("[creator] Falha ao salvar personagem manualmente", error);
+      setNotice("Não foi possível salvar no PC; uma cópia ficou neste navegador");
+    }
   }
 
-  function openCharacter(character: Character) {
-    persistEditorSnapshot("Salvo automaticamente");
-    suspendAutoSaveRef.current = true;
-    setDraftStarted(false);
-    const openedBasePack = getBasePack(basePacks, character.model, character.basePackId);
-    const openedBasePackId = openedBasePack.id;
-    const openedPrimaryPackId = getBasePack(basePacks, character.model).id;
-    setActiveCharacter(character.id);
-    setCharacterName(character.name);
-    setCharacterPhoto(character.photoUrl ?? character.photoDataUrl ?? null);
-    setModel(character.model);
-    setBasePackId(openedBasePackId);
-    setSelections(normalizeSelections(character.selections));
-    setAdjustments(normalizeAdjustments(character.adjustments));
-    setColorAdjustments(normalizeColorAdjustments(character.colorAdjustments));
-    setOutfitColorAdjustmentsByGroup(character.outfitColorAdjustmentsByGroup ?? {});
-    setProtectionMasks(character.protectionMasks ?? {});
-    setHairAdjustmentsByBasePack(character.hairAdjustmentsByBasePack ?? {});
-    setOutfitAdjustmentsByBasePack(character.outfitAdjustmentsByBasePack ?? {});
-    setOutfitLayerMasksByBasePack(character.outfitLayerMasksByBasePack ?? {});
-    setOutfitProtectionMasksByBasePack(character.outfitProtectionMasksByBasePack ?? {});
-    setOutfitCatalogMode("standard");
-    setOutfitGroupViewId(null);
-    setFaceMode(openedBasePackId === openedPrimaryPackId ? character.faceMode ?? "base" : "base");
-    setActivePackId(openedBasePackId === openedPrimaryPackId ? character.expressionPackId ?? null : null);
-    const openedEmotion = character.expressionEmotion ?? "normal";
-    const emotionSupported = openedBasePack.expressionKeys.includes(openedEmotion);
-    setExpressionEmotion(emotionSupported ? openedEmotion : "normal");
-    setExpressionState(emotionSupported ? character.expressionState ?? "default" : "default");
-    setLayerMasks(normalizeLayerMasks(character.layerMasks, character.maskStrokes));
-    setMaskRedo(emptyLayerMasks());
-    setMaskTarget("body");
-    setPreviewPan(character.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
-    setPreviewPanMode(false);
-    setExportFrame(character.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
-    setExportFrameMode(false);
-    setAnimationMode(null);
-    setFitMode(false);
-    setEraserMode(false);
-    setNotice(`${character.name} aberto`);
+  async function flushCurrentCharacterBeforeSwitch() {
+    const nextCharacters = persistEditorSnapshot("Salvando automaticamente") ?? charactersRef.current;
+    saveCharactersToBrowser(nextCharacters);
+    if (!pcSyncReadyRef.current) return true;
+    try {
+      setNotice("Salvando antes de trocar de personagem…");
+      await saveCharactersToPc(nextCharacters);
+      return true;
+    } catch (error) {
+      console.error("[creator] Falha ao salvar antes de trocar de personagem", error);
+      setNotice("Não foi possível salvar no PC; o personagem atual permaneceu aberto");
+      return false;
+    }
+  }
+
+  async function openCharacter(character: Character) {
+    if (characterSwitchRef.current || character.id === activeCharacter) return;
+    characterSwitchRef.current = true;
+    try {
+      if (!await flushCurrentCharacterBeforeSwitch()) return;
+      suspendAutoSaveRef.current = true;
+      setDraftStarted(false);
+      const openedBasePack = getBasePack(basePacks, character.model, character.basePackId);
+      const openedBasePackId = openedBasePack.id;
+      const openedPrimaryPackId = getBasePack(basePacks, character.model).id;
+      setActiveCharacter(character.id);
+      setCharacterName(character.name);
+      setCharacterPhoto(character.photoUrl ?? character.photoDataUrl ?? null);
+      setModel(character.model);
+      setBasePackId(openedBasePackId);
+      setSelections(normalizeSelections(character.selections));
+      setAdjustments(normalizeAdjustments(character.adjustments));
+      setColorAdjustments(normalizeColorAdjustments(character.colorAdjustments));
+      setOutfitColorAdjustmentsByGroup(character.outfitColorAdjustmentsByGroup ?? {});
+      setProtectionMasks(character.protectionMasks ?? {});
+      setHairAdjustmentsByBasePack(character.hairAdjustmentsByBasePack ?? {});
+      setOutfitAdjustmentsByBasePack(character.outfitAdjustmentsByBasePack ?? {});
+      setOutfitLayerMasksByBasePack(character.outfitLayerMasksByBasePack ?? {});
+      setOutfitProtectionMasksByBasePack(character.outfitProtectionMasksByBasePack ?? {});
+      setOutfitCatalogMode("standard");
+      setOutfitGroupViewId(null);
+      setFaceMode(openedBasePackId === openedPrimaryPackId ? character.faceMode ?? "base" : "base");
+      setActivePackId(openedBasePackId === openedPrimaryPackId ? character.expressionPackId ?? null : null);
+      const openedEmotion = character.expressionEmotion ?? "normal";
+      const emotionSupported = openedBasePack.expressionKeys.includes(openedEmotion);
+      setExpressionEmotion(emotionSupported ? openedEmotion : "normal");
+      setExpressionState(emotionSupported ? character.expressionState ?? "default" : "default");
+      setLayerMasks(normalizeLayerMasks(character.layerMasks, character.maskStrokes));
+      setMaskRedo(emptyLayerMasks());
+      setMaskTarget("body");
+      setPreviewPan(character.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
+      setPreviewPanMode(false);
+      setExportFrame(character.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+      setExportFrameMode(false);
+      setAnimationMode(null);
+      setFitMode(false);
+      setEraserMode(false);
+      setNotice(`${character.name} aberto`);
+    } finally {
+      characterSwitchRef.current = false;
+    }
   }
 
   function newCharacter(saveCurrent = true) {

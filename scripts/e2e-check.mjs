@@ -16,6 +16,7 @@ try {
   // Aguarda a hidratação e a leitura inicial do armazenamento antes de
   // substituir a massa temporária usada exclusivamente pelo teste.
   await page.waitForTimeout(1_500);
+  await seedCreatorAutosaveFixture(page);
   await seedStudioQualityFixture(page);
 
   // Direct route loads are intentional here: Vinext's development HMR can
@@ -146,6 +147,58 @@ async function seedStudioQualityFixture(currentPage) {
     characterIds: [character.id],
     studioIds: [studio.id],
   });
+}
+
+async function seedCreatorAutosaveFixture(currentPage) {
+  const transform = { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
+  const now = new Date().toISOString();
+  const makeCharacter = (id, name) => ({
+    id,
+    name,
+    model: "feminino",
+    basePackId: "modelo-1",
+    selections: { cabelos: null, cabelosTras: null, rostos: null, roupas: null },
+    adjustments: { cabelos: transform, cabelosTras: transform, rostos: transform, roupas: transform },
+    faceMode: "base",
+    expressionEmotion: "normal",
+    expressionState: "default",
+    updatedAt: now,
+  });
+  const result = await currentPage.evaluate(async ({ dataUrl, characters }) => {
+    const sessionResponse = await fetch(`${dataUrl}/session`, { cache: "no-store" });
+    const session = await sessionResponse.json();
+    const response = await fetch(`${dataUrl}/characters`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Gacha-Session": session.token },
+      body: JSON.stringify(characters),
+    });
+    return response.status;
+  }, {
+    dataUrl: process.env.NYMI_E2E_DATA_URL ?? "http://127.0.0.1:6810",
+    characters: [makeCharacter("creator-autosave-a", "Autosave A"), makeCharacter("creator-autosave-b", "Autosave B")],
+  });
+  assert.equal(result, 200);
+  await currentPage.reload({ waitUntil: "domcontentloaded" });
+  await waitForImages(currentPage);
+  await currentPage.waitForTimeout(700);
+  const savedCharacters = currentPage.locator("button.saved-main");
+  assert.equal(await savedCharacters.count(), 2);
+  await savedCharacters.nth(0).click();
+  await currentPage.waitForTimeout(400);
+  await currentPage.locator("details.character-settings > summary").click();
+  await currentPage.locator("#character-name:visible").fill("Roupa salva pelo autosave");
+  // Switch while the debounce may still be pending. The switch must flush the
+  // current snapshot before loading the other character.
+  await savedCharacters.nth(1).click();
+  await currentPage.waitForTimeout(500);
+  await currentPage.reload({ waitUntil: "domcontentloaded" });
+  await waitForImages(currentPage);
+  await currentPage.waitForTimeout(700);
+  await currentPage.locator("button.saved-main").nth(0).click();
+  await currentPage.waitForTimeout(500);
+  const settings = currentPage.locator("details.character-settings");
+  if (!(await settings.getAttribute("open"))) await settings.locator("> summary").click();
+  assert.equal(await currentPage.locator("#character-name:visible").inputValue(), "Roupa salva pelo autosave");
 }
 
 async function addTikTokAndWait(currentPage) {

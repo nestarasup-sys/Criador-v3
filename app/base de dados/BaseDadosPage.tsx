@@ -345,7 +345,6 @@ export default function BaseDadosPage() {
     const draft = createScriptFromImport(importPreview.validation.data, importPreview.database.videos, characterData.characters, importPreview.roteiroState);
     const importId = createId();
     const existingIds = new Set(characterData.characters.map((character) => character.id));
-    const categories = ["cabelos", "cabelosTras", "rostos", "roupas"] as const;
     const createdCharacters: Character[] = importPreview.validation.data.characters.filter((choice) => !existingIds.has(choice.characterId)).map((choice) => {
       const timestamp = nowIso();
       return {
@@ -354,8 +353,18 @@ export default function BaseDadosPage() {
         model: choice.model || "feminino",
         basePackId: "modelo-1",
         faceMode: "base",
-        selections: Object.fromEntries(categories.map((category) => [category, null])),
-        adjustments: Object.fromEntries(categories.map((category) => [category, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false }])),
+        selections: {
+          cabelos: null,
+          cabelosTras: null,
+          rostos: null,
+          roupas: null,
+        },
+        adjustments: {
+          cabelos: { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false },
+          cabelosTras: { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false },
+          rostos: { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false },
+          roupas: { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false },
+        },
         ...(choice.aliases?.length ? { aliases: choice.aliases } : {}),
         importedFrom: { importId, scriptId: draft.script.id, importedAt: timestamp, sourceTitle: draft.script.title },
         updatedAt: timestamp,

@@ -89,13 +89,26 @@ export function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(it
   });
 }
 
-export async function saveCharactersToPc(characters: Character[]) {
+let characterSaveQueue: Promise<void> = Promise.resolve();
+
+export function saveCharactersToPc(characters: Character[]) {
   const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
     void _photoUrl;
     void _photoDataUrl;
     return character;
   });
-  await pcRequest("/characters", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(charactersWithoutPhotos) });
+  const body = JSON.stringify(charactersWithoutPhotos);
+  const operation = characterSaveQueue
+    .catch(() => undefined)
+    .then(async () => {
+      await pcRequest("/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+    });
+  characterSaveQueue = operation.then(() => undefined, () => undefined);
+  return operation;
 }
 
 export async function uploadCharacterPhotoToPc(characterId: string, blob: Blob) {

@@ -91,7 +91,7 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     if (characterId) {
       const name = stringValue(item.name);
       const model = item.model === "masculino" || item.model === "feminino" ? item.model : undefined;
-      const aliases = Array.isArray(item.aliases) ? item.aliases.filter((alias): alias is string => typeof alias === "string" && alias.trim()).map((alias) => alias.trim()) : undefined;
+      const aliases = Array.isArray(item.aliases) ? item.aliases.filter((alias): alias is string => typeof alias === "string" && alias.trim().length > 0).map((alias) => alias.trim()) : undefined;
       const profile = record(item.narrativeProfile ?? item.profile);
       normalizedCharacters.push({ characterId, ...(stringValue(item.role) ? { role: stringValue(item.role) } : {}), ...(name ? { name } : {}), ...(model ? { model } : {}), ...(aliases?.length ? { aliases } : {}), ...(Object.keys(profile).length ? { narrativeProfile: profile as Partial<NarrativeProfile> } : {}) });
     }
@@ -132,7 +132,7 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
 
   const selectedVideoMap = new Map(videos.filter((video) => allowedVideoIds.has(video.id)).map((video) => [video.id, video]));
   normalizedBlocks.forEach((block, index) => {
-    const video = selectedVideoMap.get(block.videoId);
+    const video = block.videoId ? selectedVideoMap.get(block.videoId) : undefined;
     if (video && block.startAt !== undefined && block.startAt < video.sceneEndSeconds) issues.push({ level: "warning", path: `blocks[${index}].startAt`, message: `O bloco começará no fim da descrição do vídeo (${video.sceneEndSeconds.toFixed(2)}s), porque o horário informado é anterior.` });
   });
 

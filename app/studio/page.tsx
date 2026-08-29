@@ -388,7 +388,7 @@ export default function StudioPage() {
     }
     requested.forEach((request, key) => {
       if (renderedRef.current[key]) return;
-      tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks, data.modelPacks)
+      tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks, modelPacks)
         .then((src) => {
           if (cancelled) return;
           renderedRef.current[key] = src;
