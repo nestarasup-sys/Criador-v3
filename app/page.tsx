@@ -1565,6 +1565,7 @@ export default function Home() {
     canvas.height = 1080;
     const finalContext = canvas.getContext("2d");
     if (!finalContext) throw new Error("Canvas indisponível");
+    configureHighQualityContext(finalContext);
     const sceneCanvas = document.createElement("canvas");
     sceneCanvas.width = canvas.width + SCENE_PADDING.x * 2;
     sceneCanvas.height = canvas.height + SCENE_PADDING.y * 2;
