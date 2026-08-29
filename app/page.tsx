@@ -16,6 +16,7 @@ import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
+import { markRenderDebug } from "./studio/render-debug";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1545,6 +1546,9 @@ export default function Home() {
     editingPreview = false,
     variantOutfitId?: string,
   ) => {
+    const renderId = `creator-${crypto.randomUUID()}`;
+    const target = variantOutfitId ? "creator-variant" : editingPreview ? "preview" : "single-export";
+    markRenderDebug("render:start", { renderId, target, layer: expressionKey });
     const variantStateKey = variantOutfitId ? outfitStateKey(variantOutfitId, basePackId) : null;
     const renderSelections = variantOutfitId ? { ...selections, roupas: variantOutfitId } : selections;
     const renderAdjustments = variantStateKey && outfitAdjustmentsByBasePack[variantStateKey]
@@ -1584,6 +1588,7 @@ export default function Home() {
       targetContext: CanvasRenderingContext2D = context,
     ) => {
       if (!item.url) return;
+      markRenderDebug("layer:start", { renderId, target, layer: layerCategory ?? "unknown", source: item.url });
       const image = await loadImage(item.url);
       const width = item.width ?? image.naturalWidth;
       const height = item.height ?? image.naturalHeight;
@@ -1641,6 +1646,7 @@ export default function Home() {
         layerContext.restore();
         compositeCharacterLayers(targetContext, [layerCanvas]);
       }
+      markRenderDebug("layer:complete", { renderId, target, layer: layerCategory ?? "unknown", source: item.url });
     };
 
     let baseImage = processedBases.current[model];
@@ -1744,6 +1750,7 @@ export default function Home() {
     // A exportação gera um PNG achatado. Componha as camadas na ordem
     // definitiva antes de entregar a imagem ao outro aplicativo.
     compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
+    markRenderDebug("layers:flattened", { renderId, target, layer: "backHair→body→outfit" });
 
     if (includeExpression && faceMode !== "base") {
       if (faceMode === "pack" && activeExpressionPack) {
@@ -1779,6 +1786,7 @@ export default function Home() {
     finalContext.translate(-960, -540);
     finalContext.drawImage(sceneCanvas, -SCENE_PADDING.x, -SCENE_PADDING.y);
     finalContext.restore();
+    markRenderDebug("render:complete", { renderId, target });
     return canvas;
   }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 

@@ -14,6 +14,7 @@ import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
+import { markRenderDebug } from "./render-debug";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -116,6 +117,8 @@ function expressionSource(
   key: ExpressionKey,
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
 ) {
+  const renderId = `studio-${crypto.randomUUID()}`;
+  markRenderDebug("render:start", { renderId, target: "studio-render" });
   const legacyPack = character.basePackId ?? "modelo-1";
   const pack = legacyPack === "padrao"
     ? "modelo-1"
@@ -185,6 +188,8 @@ export async function renderStudioCharacter(
   packs: PcExpressionPack[],
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
 ) {
+  const renderId = `studio-${crypto.randomUUID()}`;
+  markRenderDebug("render:start", { renderId, target: "studio-render" });
   const final = document.createElement("canvas");
   final.width = WIDTH;
   final.height = HEIGHT;
@@ -212,6 +217,7 @@ export async function renderStudioCharacter(
     layerCategory?: Category,
     targetContext: CanvasRenderingContext2D = context,
   ) => {
+    markRenderDebug("layer:start", { renderId, target: "studio-render", layer: layerCategory ?? "unknown", source: item.fileUrl });
     const image = await loadStudioImage(item.fileUrl);
     const width = item.width ?? image.naturalWidth;
     const height = item.height ?? image.naturalHeight;
@@ -261,6 +267,7 @@ export async function renderStudioCharacter(
       target.restore();
       compositeCharacterLayers(targetContext, [layer]);
     }
+    markRenderDebug("layer:complete", { renderId, target: "studio-render", layer: layerCategory ?? "unknown", source: item.fileUrl });
   };
 
   const backHair = catalog.find((item) => item.id === character.selections.cabelosTras);
@@ -322,6 +329,7 @@ export async function renderStudioCharacter(
   // Exportações são PNGs achatados: a ordem precisa ser explícita antes de
   // chegar ao outro aplicativo, que não recebe as camadas separadamente.
   compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
+  markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: "backHair→body→outfit" });
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {
@@ -344,5 +352,7 @@ export async function renderStudioCharacter(
   finalContext.translate(-WIDTH / 2, -HEIGHT / 2);
   finalContext.drawImage(scene, -PADDING.x, -PADDING.y);
   finalContext.restore();
-  return trimCanvas(final).toDataURL("image/png");
+  const output = trimCanvas(final).toDataURL("image/png");
+  markRenderDebug("render:complete", { renderId, target: "studio-render" });
+  return output;
 }

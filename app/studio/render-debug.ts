@@ -2,6 +2,9 @@ type RenderDebugEvent = {
   at: number;
   operation: string;
   canvasId?: string;
+  renderId?: string;
+  target?: string;
+  layer?: string;
   source?: string;
   args?: unknown[];
   state?: Record<string, unknown>;
