@@ -14,11 +14,12 @@ test("cacheia expressões pelo pacote realmente resolvido", async () => {
 });
 
 test("invalida o cache quando um modelo ou expressão é substituído", async () => {
-  const [server, basePacks, creatorStorage, renderer, studioPage, characterExport] = await Promise.all([
+  const [server, basePacks, creatorStorage, renderer, compositor, studioPage, characterExport] = await Promise.all([
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/layer-compositor.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-export.ts", import.meta.url), "utf8"),
   ]);
@@ -28,9 +29,15 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
   assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
   assert.match(renderer, /discovered\.version/);
+  assert.match(compositor, /globalCompositeOperation = "source-over"/);
+  assert.match(compositor, /globalAlpha = 1/);
+  assert.match(compositor, /context\.save\(\)/);
+  assert.match(compositor, /context\.restore\(\)/);
   assert.match(renderer, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
   assert.match(renderer, /const outfitLayer = document\.createElement\("canvas"\)/);
-  assert.match(renderer, /if \(backHairLayer\) context\.drawImage\(backHairLayer, 0, 0\)[\s\S]*context\.drawImage\(bodyLayer, 0, 0\)[\s\S]*context\.drawImage\(outfitLayer, 0, 0\)/);
+  assert.match(renderer, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
+  assert.match(renderer, /character\.adjustments\.cabelosTras \?\? packAdjustments\?\.cabelosTras/);
+  assert.match(renderer, /character\.adjustments\.cabelos \?\? packAdjustments\?\.cabelos/);
   assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);

@@ -15,6 +15,7 @@ import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader"
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
+import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1606,6 +1607,8 @@ export default function Home() {
       }
       const layerContext = layerCanvas?.getContext("2d") ?? targetContext;
       layerContext.save();
+      layerContext.globalCompositeOperation = "source-over";
+      layerContext.globalAlpha = 1;
       layerContext.translate(SCENE_PADDING.x + centerX + transform.x, SCENE_PADDING.y + centerY + transform.y);
       layerContext.rotate((transform.rotation * Math.PI) / 180);
       layerContext.scale(
@@ -1632,10 +1635,11 @@ export default function Home() {
       }
       layerContext.restore();
       if (layerCanvas) {
+        layerContext.save();
         layerContext.globalCompositeOperation = "destination-in";
         layerContext.drawImage(createBodyMask(mask, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
-        layerContext.globalCompositeOperation = "source-over";
-        targetContext.drawImage(layerCanvas, 0, 0);
+        layerContext.restore();
+        compositeCharacterLayers(targetContext, [layerCanvas]);
       }
     };
 
@@ -1661,10 +1665,12 @@ export default function Home() {
 
     const backHair = catalog.find((entry) => entry.id === renderSelections.cabelosTras);
     const backHairLayer = backHair ? document.createElement("canvas") : null;
-    const backHairContext = backHairLayer?.getContext("2d");
+    let backHairContext: CanvasRenderingContext2D | null = null;
     if (backHairLayer) {
       backHairLayer.width = sceneCanvas.width;
       backHairLayer.height = sceneCanvas.height;
+      backHairContext = backHairLayer.getContext("2d");
+      if (backHairContext) configureHighQualityContext(backHairContext);
     }
     if (backHair) {
       if (variantStateKey) {
@@ -1737,9 +1743,7 @@ export default function Home() {
 
     // A exportação gera um PNG achatado. Componha as camadas na ordem
     // definitiva antes de entregar a imagem ao outro aplicativo.
-    if (backHairLayer) context.drawImage(backHairLayer, 0, 0);
-    context.drawImage(bodyLayer, 0, 0);
-    context.drawImage(outfitLayer, 0, 0);
+    compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
 
     if (includeExpression && faceMode !== "base") {
       if (faceMode === "pack" && activeExpressionPack) {

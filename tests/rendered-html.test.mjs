@@ -244,7 +244,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.ok(backLayerPosition >= 0 && baseLayerPosition > backLayerPosition);
   assert.match(page, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
   assert.match(page, /const outfitLayer = document\.createElement\("canvas"\)/);
-  assert.match(page, /if \(backHairLayer\) context\.drawImage\(backHairLayer, 0, 0\)[\s\S]*context\.drawImage\(bodyLayer, 0, 0\)[\s\S]*context\.drawImage\(outfitLayer, 0, 0\)/);
+  assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fit\)/);
   assert.doesNotMatch(page, /category === "cabelosTras" \? "cabelos" : category/);

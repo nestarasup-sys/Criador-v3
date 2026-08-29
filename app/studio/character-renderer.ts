@@ -13,6 +13,7 @@ import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
+import { compositeCharacterLayers } from "./layer-compositor";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -246,29 +247,38 @@ export async function renderStudioCharacter(
     if (!target) return;
     configureHighQualityContext(target);
     target.save();
+    target.globalCompositeOperation = "source-over";
+    target.globalAlpha = 1;
     target.translate(PADDING.x + centerX + transform.x, PADDING.y + centerY + transform.y);
     target.rotate(transform.rotation * Math.PI / 180);
     target.scale(transform.scale * transform.scaleX * (transform.flipX ? -1 : 1), transform.scale * transform.scaleY);
     target.drawImage(renderImage, -width / 2, -height / 2, width, height);
     target.restore();
     if (layer) {
+      target.save();
       target.globalCompositeOperation = "destination-in";
       target.drawImage(createMask(mask, scene.width, scene.height), 0, 0);
-      target.globalCompositeOperation = "source-over";
-      targetContext.drawImage(layer, 0, 0);
+      target.restore();
+      compositeCharacterLayers(targetContext, [layer]);
     }
   };
 
   const backHair = catalog.find((item) => item.id === character.selections.cabelosTras);
   const backHairLayer = backHair ? document.createElement("canvas") : null;
-  const backHairContext = backHairLayer?.getContext("2d");
+  let backHairContext: CanvasRenderingContext2D | null = null;
   if (backHairLayer) {
     backHairLayer.width = scene.width;
     backHairLayer.height = scene.height;
+    backHairContext = backHairLayer.getContext("2d");
+    if (backHairContext) configureHighQualityContext(backHairContext);
   }
   const activePackId = normalizeBasePackId(character.basePackId);
+  // O estado principal é a fonte canônica do personagem ativo e é o mesmo
+  // que o Criador usa na prévia. O mapa por pacote continua servindo para
+  // restaurar ajustes ao trocar de modelo, mas não pode sobrescrever o estado
+  // atual durante uma exportação.
   const packAdjustments = character.hairAdjustmentsByBasePack?.[activePackId];
-  if (backHair) await drawItem(backHair, normalizedTransform(packAdjustments?.cabelosTras ?? character.adjustments.cabelosTras), masks.hairBack, "cabelosTras", backHairContext ?? context);
+  if (backHair) await drawItem(backHair, normalizedTransform(character.adjustments.cabelosTras ?? packAdjustments?.cabelosTras), masks.hairBack, "cabelosTras", backHairContext ?? context);
 
   const normalizedPack = activePackId;
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
@@ -311,9 +321,7 @@ export async function renderStudioCharacter(
 
   // Exportações são PNGs achatados: a ordem precisa ser explícita antes de
   // chegar ao outro aplicativo, que não recebe as camadas separadamente.
-  if (backHairLayer) context.drawImage(backHairLayer, 0, 0);
-  context.drawImage(bodyLayer, 0, 0);
-  context.drawImage(outfitLayer, 0, 0);
+  compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {
@@ -327,7 +335,7 @@ export async function renderStudioCharacter(
   }
 
   const frontHair = catalog.find((item) => item.id === character.selections.cabelos);
-  if (frontHair) await drawItem(frontHair, normalizedTransform(packAdjustments?.cabelos ?? character.adjustments.cabelos), masks.hairFront, "cabelos");
+  if (frontHair) await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos ?? packAdjustments?.cabelos), masks.hairFront, "cabelos");
 
   const frame = character.exportFrame ?? { x: 0, y: 0, scale: 1 };
   finalContext.save();
