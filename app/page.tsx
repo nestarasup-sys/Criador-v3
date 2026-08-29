@@ -1794,7 +1794,7 @@ export default function Home() {
         await drawLayer(hair, adjustments.cabelos, category === "cabelos", layerMasks.hairFront, "cabelos");
       }
       markRenderDebug("layer:frontHairDone", { renderId, target, layer: "cabelos" });
-      captureRenderDebug("snapshot:after-frontHair", context, { renderId, target, layer: "cabelos" });
+      captureRenderDebug("snapshot:after-frontHair", context.canvas, { renderId, target, layer: "cabelos" });
     }
     const activeMask = renderLayerMasks[maskTarget];
     if (editingPreview && eraserMode && showEraseMask && activeMask.length > 0) {

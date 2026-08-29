@@ -366,7 +366,7 @@ export async function renderStudioCharacter(
   if (frontHair) {
     await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos ?? packAdjustments?.cabelos), masks.hairFront, "cabelos");
     markRenderDebug("layer:frontHairDone", { renderId, target: "studio-render", layer: "cabelos" });
-    captureRenderDebug("snapshot:after-frontHair", context, { renderId, target: "studio-render", layer: "cabelos" });
+    captureRenderDebug("snapshot:after-frontHair", context.canvas, { renderId, target: "studio-render", layer: "cabelos" });
   }
 
   const frame = character.exportFrame ?? { x: 0, y: 0, scale: 1 };
