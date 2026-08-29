@@ -27,6 +27,7 @@ try {
     await page.waitForTimeout(120);
   }
 
+  await page.locator("details.character-settings > summary").click();
   const modelButtons = page.locator(".model-switch button");
   const modelCount = await modelButtons.count();
   for (let index = 0; index < modelCount; index += 1) {
