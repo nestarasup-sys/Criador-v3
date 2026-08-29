@@ -401,7 +401,7 @@ export default function StudioPage() {
     });
     Promise.allSettled(tasks).catch(() => undefined);
     return () => { cancelled = true; };
-  }, [characterRenderSignature, currentId, charactersById, data.catalog, data.expressionPacks, renderCacheKey]);
+  }, [characterRenderSignature, currentId, charactersById, data.catalog, data.expressionPacks, modelPacks, renderCacheKey]);
 
   function resetRosterUi() {
     setCharacterPositionsLocked(false);
