@@ -1571,6 +1571,7 @@ export default function Home() {
     sceneCanvas.height = canvas.height + SCENE_PADDING.y * 2;
     const context = sceneCanvas.getContext("2d");
     if (!context) throw new Error("Canvas de composição indisponível");
+    configureHighQualityContext(context);
 
     if (!processedBases.current[model]) {
       const transparentBase = await removeChroma(`/models/${model}.png`);
@@ -1704,6 +1705,7 @@ export default function Home() {
     if (baseImage) {
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
+      configureHighQualityContext(bodyContext);
       const debugBody = colorizeRenderDebugLayer(baseImage, baseImage.naturalWidth || canvas.width, baseImage.naturalHeight || canvas.height, "corpo");
       const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
       if (headOnly) {
