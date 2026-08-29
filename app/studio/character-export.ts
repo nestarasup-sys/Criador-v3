@@ -55,8 +55,23 @@ export function expressionKeysForCharacter(
     : NEW_BASE_EXPRESSION_KEYS;
 }
 
-async function dataUrlBlob(dataUrl: string) {
-  return fetch(dataUrl).then((response) => response.blob());
+function dataUrlBlob(dataUrl: string) {
+  const separator = dataUrl.indexOf(",");
+  if (!dataUrl.startsWith("data:") || separator < 0) {
+    throw new Error("A prévia renderizada não é um data URL válido.");
+  }
+  const header = dataUrl.slice(5, separator);
+  const payload = dataUrl.slice(separator + 1);
+  const parts = header.split(";");
+  const mime = parts.shift() || "application/octet-stream";
+  const binary = parts.some((part) => part.toLowerCase() === "base64")
+    ? atob(payload)
+    : decodeURIComponent(payload);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return new Blob([bytes], { type: mime });
 }
 
 async function frameBlob(frame: { fileUrl: string }) {
