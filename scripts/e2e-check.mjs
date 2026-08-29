@@ -32,7 +32,7 @@ try {
   assert.ok(stageBox, "O palco do Studio precisa ter dimensões visíveis");
   assert.ok(Math.abs(stageBox.width / stageBox.height - 16 / 9) < 0.01, `Proporção inesperada do palco: ${stageBox.width}x${stageBox.height}`);
   assert.ok(stageBox.width <= 1280 && stageBox.height <= 720, "A prévia deve caber responsivamente na janela do teste");
-  const qualityCharacter = page.getByRole("button", { name: "Selecionar Qualidade E2E" });
+  const qualityCharacter = page.getByRole("button", { name: "Selecionar Qualidade E2E", exact: true });
   await assertVisible(qualityCharacter);
   await qualityCharacter.click();
   assert.equal(await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).count(), 0, "Avisos técnicos de qualidade não devem poluir o Studio");
