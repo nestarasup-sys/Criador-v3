@@ -1306,6 +1306,7 @@ export default function Home() {
     && normalizeBasePackId(pack.basePackId) === basePackId,
   ) ?? null;
   const activeBasePack = getBasePack(basePacks, model, basePackId);
+  const availableBasePacks = basePacks?.[model] ?? DEFAULT_BASE_PACKS[model];
   const activeBaseExpressionKeys = activeBasePack.expressionKeys;
   const activeExpressionKey = (expressionState === "default"
     ? expressionEmotion
@@ -3203,7 +3204,7 @@ export default function Home() {
     setDraftStarted(false);
     const openedBasePack = getBasePack(basePacks, character.model, character.basePackId);
     const openedBasePackId = openedBasePack.id;
-    const openedPrimaryPackId = basePacks[character.model][0]?.id ?? "modelo-1";
+    const openedPrimaryPackId = getBasePack(basePacks, character.model).id;
     setActiveCharacter(character.id);
     setCharacterName(character.name);
     setCharacterPhoto(character.photoUrl ?? character.photoDataUrl ?? null);
@@ -3249,7 +3250,7 @@ export default function Home() {
     setActiveCharacter(null);
     setCharacterName("Novo personagem");
     setCharacterPhoto(null);
-    setBasePackId(basePacks[model][0]?.id ?? "modelo-1");
+    setBasePackId(getBasePack(basePacks, model).id);
     setSelections({ ...EMPTY_SELECTIONS });
     setAdjustments(emptyAdjustments());
     setColorAdjustments(emptyColorAdjustments());
@@ -4070,10 +4071,10 @@ export default function Home() {
               <button className={faceMode === "base" ? "active" : ""} onClick={() => { setFaceMode("base"); setAnimationMode(null); }}>
                 Base pronta
               </button>
-              <button className={faceMode === "single" ? "active" : ""} onClick={() => { setFaceMode("single"); setAnimationMode(null); }} disabled={basePackId !== (basePacks[model][0]?.id ?? "modelo-1")} title={basePackId !== (basePacks[model][0]?.id ?? "modelo-1") ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
+              <button className={faceMode === "single" ? "active" : ""} onClick={() => { setFaceMode("single"); setAnimationMode(null); }} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
                 Rosto avulso
               </button>
-              <button className={faceMode === "pack" ? "active" : ""} onClick={() => setFaceMode("pack")} disabled={basePackId !== (basePacks[model][0]?.id ?? "modelo-1")} title={basePackId !== (basePacks[model][0]?.id ?? "modelo-1") ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
+              <button className={faceMode === "pack" ? "active" : ""} onClick={() => setFaceMode("pack")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
                 Pack de expressões
               </button>
             </div>
@@ -4183,7 +4184,7 @@ export default function Home() {
                 <small>Modelos são carregados da pasta local; roupas e cabelos são compartilhados pelo gênero.</small>
               </div>
               <div className="base-pack-selector" role="group" aria-label={`Modelos ${model}`}>
-                {basePacks[model].map((pack) => (
+                {availableBasePacks.map((pack) => (
                   <button
                     key={pack.id}
                     className={basePackId === pack.id ? "active" : ""}

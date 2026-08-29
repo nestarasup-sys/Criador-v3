@@ -32,7 +32,8 @@ export const DEFAULT_BASE_PACKS: BasePackCollection = {
 
 export function getBasePack(packs: BasePackCollection, model: Model, packId?: BasePackId): BasePackDefinition {
   const normalizedId = normalizeBasePackId(packId);
-  return packs[model].find((pack) => pack.id === normalizedId) ?? packs[model][0];
+  const modelPacks = packs?.[model] ?? DEFAULT_BASE_PACKS[model] ?? DEFAULT_BASE_PACKS.feminino;
+  return modelPacks.find((pack) => pack.id === normalizedId) ?? modelPacks[0] ?? DEFAULT_BASE_PACKS.feminino[0];
 }
 
 export function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
