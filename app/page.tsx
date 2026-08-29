@@ -1790,7 +1790,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
