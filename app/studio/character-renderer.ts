@@ -293,17 +293,27 @@ export async function renderStudioCharacter(
     bodyContext.globalCompositeOperation = "destination-in";
     bodyContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
   }
-  context.drawImage(bodyLayer, 0, 0);
-
+  const outfitLayer = document.createElement("canvas");
+  outfitLayer.width = scene.width;
+  outfitLayer.height = scene.height;
+  const outfitContext = outfitLayer.getContext("2d");
+  if (outfitContext) configureHighQualityContext(outfitContext);
   const outfit = catalog.find((item) => item.id === character.selections.roupas);
-  if (outfit) await drawItem(outfit, normalizedTransform(character.adjustments.roupas), masks.outfit, "roupas");
-
-  if (backHairLayer && backHairContext) {
-    context.save();
-    context.globalCompositeOperation = "destination-over";
-    context.drawImage(backHairLayer, 0, 0);
-    context.restore();
+  if (outfit) {
+    await drawItem(
+      outfit,
+      normalizedTransform(character.adjustments.roupas),
+      masks.outfit,
+      "roupas",
+      outfitContext ?? context,
+    );
   }
+
+  // Exportações são PNGs achatados: a ordem precisa ser explícita antes de
+  // chegar ao outro aplicativo, que não recebe as camadas separadamente.
+  if (backHairLayer) context.drawImage(backHairLayer, 0, 0);
+  context.drawImage(bodyLayer, 0, 0);
+  context.drawImage(outfitLayer, 0, 0);
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {

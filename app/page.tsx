@@ -14,6 +14,7 @@ import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar"
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
+import { configureHighQualityContext } from "./studio/render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1673,10 +1674,10 @@ export default function Home() {
       }
     }
 
+    const bodyLayer = document.createElement("canvas");
+    bodyLayer.width = sceneCanvas.width;
+    bodyLayer.height = sceneCanvas.height;
     if (baseImage) {
-      const bodyLayer = document.createElement("canvas");
-      bodyLayer.width = sceneCanvas.width;
-      bodyLayer.height = sceneCanvas.height;
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
       const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
@@ -1704,24 +1705,41 @@ export default function Home() {
         bodyContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         bodyContext.globalCompositeOperation = "source-over";
       }
-      context.drawImage(bodyLayer, 0, 0);
     }
 
+    const outfitLayer = document.createElement("canvas");
+    outfitLayer.width = sceneCanvas.width;
+    outfitLayer.height = sceneCanvas.height;
+    const outfitContext = outfitLayer.getContext("2d");
+    if (outfitContext) configureHighQualityContext(outfitContext);
     const outfit = catalog.find((item) => item.id === renderSelections.roupas);
     if (outfit) {
       if (variantStateKey) {
-        await drawLayer(outfit, renderAdjustments.roupas, category === "roupas", renderLayerMasks.outfit, "roupas");
+        await drawLayer(
+          outfit,
+          renderAdjustments.roupas,
+          category === "roupas",
+          renderLayerMasks.outfit,
+          "roupas",
+          outfitContext ?? context,
+        );
       } else {
-        await drawLayer(outfit, adjustments.roupas, category === "roupas", layerMasks.outfit, "roupas");
+        await drawLayer(
+          outfit,
+          adjustments.roupas,
+          category === "roupas",
+          layerMasks.outfit,
+          "roupas",
+          outfitContext ?? context,
+        );
       }
     }
 
-    if (backHairLayer && backHairContext) {
-      context.save();
-      context.globalCompositeOperation = "destination-over";
-      context.drawImage(backHairLayer, 0, 0);
-      context.restore();
-    }
+    // A exportação gera um PNG achatado. Componha as camadas na ordem
+    // definitiva antes de entregar a imagem ao outro aplicativo.
+    if (backHairLayer) context.drawImage(backHairLayer, 0, 0);
+    context.drawImage(bodyLayer, 0, 0);
+    context.drawImage(outfitLayer, 0, 0);
 
     if (includeExpression && faceMode !== "base") {
       if (faceMode === "pack" && activeExpressionPack) {
