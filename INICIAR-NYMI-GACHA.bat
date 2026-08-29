@@ -7,7 +7,6 @@ rem O supervisor inicia local-data-server.mjs e substitui o antigo npm run start
 rem Contratos: LocalPort 6800, localhost:6700 e WindowStyle Hidden para processos auxiliares.
 rem O build de produção fica em dist\server\index.js; npm run start continua sendo o comando equivalente.
 echo Preparando o build atualizado do Nymi Gacha...
-powershell -NoProfile -Command "$ports = @(6700,6800); foreach ($port in $ports) { $listeners = @(Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue); foreach ($listener in $listeners) { $owner = Get-CimInstance Win32_Process -Filter ('ProcessId=' + $listener.OwningProcess); if ($owner.Name -eq 'node.exe' -and (($port -eq 6800 -and $owner.CommandLine -match 'local-data-server\.mjs') -or ($port -eq 6700 -and $owner.CommandLine -match 'production-server\.mjs'))) { Stop-Process -Id $listener.OwningProcess -Force } } }"
 rem Encerra os servidores antes do build. No Windows, reconstruir o dist enquanto
 rem um processo antigo ainda o serve pode misturar manifesto e assets de versões.
 for /l %%N in (1,1,10) do (
