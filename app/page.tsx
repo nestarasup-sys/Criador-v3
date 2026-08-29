@@ -1619,6 +1619,7 @@ export default function Home() {
         layerCanvas.height = sceneCanvas.height;
       }
       const layerContext = layerCanvas?.getContext("2d") ?? targetContext;
+      configureHighQualityContext(layerContext);
       layerContext.save();
       layerContext.globalCompositeOperation = "source-over";
       layerContext.globalAlpha = 1;
