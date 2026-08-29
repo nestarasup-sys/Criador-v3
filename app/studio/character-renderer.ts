@@ -117,8 +117,6 @@ function expressionSource(
   key: ExpressionKey,
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
 ) {
-  const renderId = `studio-${crypto.randomUUID()}`;
-  markRenderDebug("render:start", { renderId, target: "studio-render" });
   const legacyPack = character.basePackId ?? "modelo-1";
   const pack = legacyPack === "padrao"
     ? "modelo-1"
