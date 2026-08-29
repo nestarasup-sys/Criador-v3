@@ -156,3 +156,12 @@ export function markRenderDebug(operation: string, details: Partial<RenderDebugE
   const debugWindow = typeof window === "undefined" ? undefined : window as RenderDebugWindow;
   debugWindow?.__NYMI_CHARACTER_RENDER_DEBUG__?.mark(operation, details);
 }
+
+export function captureRenderDebug(
+  operation: string,
+  canvas: HTMLCanvasElement,
+  details: Partial<RenderDebugEvent> = {},
+) {
+  const debugWindow = typeof window === "undefined" ? undefined : window as RenderDebugWindow;
+  debugWindow?.__NYMI_CHARACTER_RENDER_DEBUG__?.capture(operation, canvas, details);
+}
