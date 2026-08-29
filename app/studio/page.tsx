@@ -38,7 +38,13 @@ import {
 } from "./types";
 
 const EMPTY_DATA: AppData = { characters: [], catalog: [], expressionPacks: [], studios: [], studioAssets: [] };
-type StudioModelPacks = Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>;
+type StudioModelPacks = Record<string, Array<{
+  id: string;
+  name: string;
+  expressionKeys: string[];
+  source: string;
+  version?: string;
+}>>;
 function emotionOptionsForCharacter(character: Character, expressionPacks: PcExpressionPack[], modelPacks: StudioModelPacks): ReadonlyArray<readonly [Emotion, string]> {
   if (character.faceMode === "pack" && character.expressionPackId) {
     const pack = expressionPacks.find((item) => item.id === character.expressionPackId);
@@ -382,7 +388,7 @@ export default function StudioPage() {
     }
     requested.forEach((request, key) => {
       if (renderedRef.current[key]) return;
-      tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks)
+      tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks, data.modelPacks)
         .then((src) => {
           if (cancelled) return;
           renderedRef.current[key] = src;

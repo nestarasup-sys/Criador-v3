@@ -382,13 +382,21 @@ async function discoverModels() {
     for (const [index, entry] of entries.entries()) {
       const folder = join(genderRoot, entry.name);
       const files = await readdir(folder);
-      const expressionKeys = files
-        .filter((name) => name.toLowerCase().endsWith(".png"))
+      const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
+      const expressionKeys = pngFiles
         .map((name) => name.slice(0, -4))
         .sort((left, right) => left.localeCompare(right, "pt-BR", { numeric: true }));
       if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));
+      const versionParts = await Promise.all(pngFiles.map(async (name) => {
+        const metadata = await stat(join(folder, name));
+        return `${name}:${metadata.size}:${metadata.mtimeMs}`;
+      }));
+      const version = createHash("sha1")
+        .update(versionParts.sort().join("|"))
+        .digest("hex")
+        .slice(0, 16);
       const numberedModel = entry.name.match(/^modelo-(\d+)$/i);
       result[gender].push({
         id: entry.name,
@@ -399,6 +407,7 @@ async function discoverModels() {
           : `Modelo ${index + 1}`,
         expressionKeys,
         source: `/models/modelos/${gender}/${entry.name}`,
+        version,
         ...(config?.type === "head-only" ? {
           type: "head-only",
           ...(config?.anchor === "neck-base" ? { anchor: "neck-base" } : {}),

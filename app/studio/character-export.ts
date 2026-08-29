@@ -184,7 +184,7 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
 }
 
 /** Monta exatamente a estrutura de um ZIP do Criador, agora reutilizável pelos Roteiros. */
-export async function buildCharacterBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {}) {
+export async function buildCharacterBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}) {
   const keys = expressionKeysForCharacter(character, packs, modelPacks);
   const usesBuiltInBase = character.faceMode !== "single" && character.faceMode !== "pack";
   const pack = packs.find((item) => item.id === character.expressionPackId);
@@ -193,9 +193,9 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
     character: { ...character, id: character.id },
     usesBuiltInBase,
     expressions: keys,
-    renderPreview: async () => dataUrlBlob(await renderStudioCharacter(character, keys[0], catalog, packs)),
-    renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(character, key as ExpressionKey, catalog, packs)),
-    renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...character, faceMode: "base" }, "normal", catalog, packs)),
+    renderPreview: async () => dataUrlBlob(await renderStudioCharacter(character, keys[0], catalog, packs, modelPacks)),
+    renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(character, key as ExpressionKey, catalog, packs, modelPacks)),
+    renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks)),
     faceFrame: async (key) => {
       const frame = pack?.frames.find((item) => item.key === key);
       return frame ? frameBlob(frame) : null;
@@ -204,7 +204,7 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
 }
 
 /** Monta todas as variantes de roupa para exportação pelo Roteiros. */
-export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {}) {
+export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}) {
   const variants = outfitVariantsForExport(character, catalog);
   const expressions = expressionKeysForCharacter(character, packs, modelPacks);
   const pack = packs.find((item) => item.id === character.expressionPackId);
@@ -242,9 +242,9 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
         character: { ...variantCharacter, id: character.id },
         usesBuiltInBase: character.faceMode !== "single" && character.faceMode !== "pack",
         expressions,
-        renderPreview: async () => dataUrlBlob(await renderStudioCharacter(variantCharacter, expressions[0], catalog, packs)),
-        renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(variantCharacter, key as ExpressionKey, catalog, packs)),
-        renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs)),
+        renderPreview: async () => dataUrlBlob(await renderStudioCharacter(variantCharacter, expressions[0], catalog, packs, modelPacks)),
+        renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks)),
+        renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks)),
         faceFrame: async (key) => {
           const frame = pack?.frames.find((item) => item.key === key);
           return frame ? frameBlob(frame) : null;

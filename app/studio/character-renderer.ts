@@ -104,12 +104,26 @@ function createMask(strokes: MaskStroke[], width: number, height: number) {
   return canvas;
 }
 
-function expressionSource(character: Character, key: ExpressionKey) {
+type DiscoveredModelPack = {
+  id: string;
+  source?: string;
+  version?: string;
+};
+
+function expressionSource(
+  character: Character,
+  key: ExpressionKey,
+  modelPacks: Record<string, DiscoveredModelPack[]> = {},
+) {
   const legacyPack = character.basePackId ?? "modelo-1";
   const pack = legacyPack === "padrao"
     ? "modelo-1"
     : legacyPack.replace(/^pack-(\d+)$/, (_, index) => `modelo-${Number(index) + 1}`);
-  return `/models/modelos/${character.model}/${pack}/${key}.png`;
+  const discovered = modelPacks[character.model]?.find((item) => item.id === pack);
+  const source = discovered?.source ?? `/models/modelos/${character.model}/${pack}`;
+  return discovered?.version
+    ? `${source}/${key}.png?v=${encodeURIComponent(discovered.version)}`
+    : `${source}/${key}.png`;
 }
 
 function normalizedTransform(transform?: Partial<ItemTransform>): ItemTransform {
@@ -168,6 +182,7 @@ export async function renderStudioCharacter(
   key: ExpressionKey,
   catalog: PcCatalogItem[],
   packs: PcExpressionPack[],
+  modelPacks: Record<string, DiscoveredModelPack[]> = {},
 ) {
   const final = document.createElement("canvas");
   final.width = WIDTH;
@@ -250,12 +265,12 @@ export async function renderStudioCharacter(
 
   const normalizedPack = activePackId;
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
-  const baseSource = faceMode === "base" ? expressionSource(character, key) : `/models/${character.model}.png`;
+  const baseSource = faceMode === "base" ? expressionSource(character, key, modelPacks) : `/models/${character.model}.png`;
   let base: HTMLCanvasElement;
   try {
     base = await transparentChroma(baseSource);
   } catch {
-    base = await transparentChroma(expressionSource(character, "normal"));
+    base = await transparentChroma(expressionSource(character, "normal", modelPacks));
   }
   const bodyLayer = document.createElement("canvas");
   bodyLayer.width = scene.width;

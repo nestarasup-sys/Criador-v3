@@ -12,3 +12,20 @@ test("cacheia expressões pelo pacote realmente resolvido", async () => {
   assert.match(page, /basePackCacheKey\(model, activeBasePack\.id\)/);
   assert.doesNotMatch(page, /basePackCacheKey\(model, basePackId\)/);
 });
+
+test("invalida o cache quando um modelo ou expressão é substituído", async () => {
+  const [server, basePacks, creatorStorage, renderer, studioPage] = await Promise.all([
+    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(server, /versionParts = await Promise\.all/);
+  assert.match(server, /version = createHash\("sha1"\)/);
+  assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
+  assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
+  assert.match(renderer, /discovered\.version/);
+  assert.match(studioPage, /data\.modelPacks/);
+});

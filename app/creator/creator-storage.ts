@@ -30,6 +30,7 @@ type PcBasePackDefinition = {
   name: string;
   expressionKeys: string[];
   source: string;
+  version?: string;
 };
 type PcBasePackCollection = Record<Model, PcBasePackDefinition[]>;
 
@@ -45,7 +46,7 @@ export async function loadPcState(): Promise<PcState> {
 }
 
 export async function loadPcModels(): Promise<BasePackCollection> {
-  const response = await pcRequest("/models");
+  const response = await pcRequest("/models", { cache: "no-store" });
   const discovered = await response.json() as PcBasePackCollection;
   return Object.fromEntries((['feminino', 'masculino'] as Model[]).map((gender) => {
     const validModels = (discovered[gender] ?? []).map((pack) => ({

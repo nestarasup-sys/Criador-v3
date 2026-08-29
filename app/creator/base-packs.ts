@@ -8,6 +8,8 @@ export type BasePackDefinition = {
   name: string;
   expressionKeys: readonly ExpressionKey[];
   source: string;
+  /** Changes whenever a file in the discovered folder changes. */
+  version?: string;
   type?: "full-body" | "head-only";
   anchor?: "neck-base";
   anchorX?: number;
@@ -37,7 +39,8 @@ export function getBasePack(packs: BasePackCollection, model: Model, packId?: Ba
 }
 
 export function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
-  return `${pack.source}/${key}.png`;
+  const source = `${pack.source}/${key}.png`;
+  return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
 }
 
 export function basePackCacheKey(model: Model, packId: BasePackId) {

@@ -9,7 +9,13 @@ let studioSaveQueue: Promise<void> = Promise.resolve();
 type StudioDeletion = { id: string; deletedAt: string };
 
 export type LoadedAppData = AppData & {
-  modelPacks: Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>;
+  modelPacks: Record<string, Array<{
+    id: string;
+    name: string;
+    expressionKeys: string[];
+    source: string;
+    version?: string;
+  }>>;
   pcStorageAvailable: boolean;
   migrationAvailable: boolean;
   browserStudios: Studio[];
@@ -133,7 +139,13 @@ export async function loadAppData(): Promise<LoadedAppData> {
     ]);
     const data = await response.json() as Partial<AppData>;
     const modelPacks = modelsResponse
-      ? await modelsResponse.json() as Record<string, Array<{ id: string; name: string; expressionKeys: string[]; source: string }>>
+      ? await modelsResponse.json() as Record<string, Array<{
+        id: string;
+        name: string;
+        expressionKeys: string[];
+        source: string;
+        version?: string;
+      }>>
       : {};
     const pcStudios = data.studios ?? [];
     const migrationAvailable = hasBrowserChanges(pcStudios, browserStudios, browserDeletions);
