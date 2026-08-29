@@ -53,6 +53,22 @@ try {
   for (let index = 1; index <= renderCount; index += 1) renders.push(await exportPng(index));
   const uniqueHashes = [...new Set(renders.map((item) => item.sha256))];
   const uniqueSizes = [...new Set(renders.map((item) => item.bytes))];
+  const baselineHash = renders[0].sha256;
+  const otherCharacter = page.locator("button.saved-main").filter({ hasNotText: characterName }).first();
+  let interference = { tested: false, restoredHash: null, restoredBytes: null, matchesBaseline: null };
+  if (await otherCharacter.count() && await otherCharacter.isVisible()) {
+    await otherCharacter.click();
+    await page.waitForTimeout(750);
+    await character.click();
+    await page.waitForTimeout(1_000);
+    const restored = await exportPng(renderCount + 1);
+    interference = {
+      tested: true,
+      restoredHash: restored.sha256,
+      restoredBytes: restored.bytes,
+      matchesBaseline: restored.sha256 === baselineHash && restored.bytes === renders[0].bytes,
+    };
+  }
   const result = {
     baseUrl,
     characterName,
@@ -60,13 +76,14 @@ try {
     uniqueHashes,
     uniqueSizes,
     deterministic: uniqueHashes.length === 1 && uniqueSizes.length === 1,
+    interference,
     pageErrors,
     consoleErrors,
     renders,
   };
   await writeFile(path.join(outputDir, "manifest.json"), JSON.stringify(result, null, 2));
   console.log(JSON.stringify({ ...result, renders: renders.map(({ index, bytes, sha256 }) => ({ index, bytes, sha256 })) }, null, 2));
-  if (!result.deterministic || pageErrors.length || consoleErrors.length) process.exitCode = 1;
+  if (!result.deterministic || (interference.tested && !interference.matchesBaseline) || pageErrors.length || consoleErrors.length) process.exitCode = 1;
 } finally {
   await browser.close();
 }
