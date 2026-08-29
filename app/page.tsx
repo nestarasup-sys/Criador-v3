@@ -1579,6 +1579,7 @@ export default function Home() {
       editable = false,
       mask: MaskStroke[] = [],
       layerCategory?: Category,
+      targetContext: CanvasRenderingContext2D = context,
     ) => {
       if (!item.url) return;
       const image = await loadImage(item.url);
@@ -1602,7 +1603,7 @@ export default function Home() {
         layerCanvas.width = sceneCanvas.width;
         layerCanvas.height = sceneCanvas.height;
       }
-      const layerContext = layerCanvas?.getContext("2d") ?? context;
+      const layerContext = layerCanvas?.getContext("2d") ?? targetContext;
       layerContext.save();
       layerContext.translate(SCENE_PADDING.x + centerX + transform.x, SCENE_PADDING.y + centerY + transform.y);
       layerContext.rotate((transform.rotation * Math.PI) / 180);
@@ -1633,7 +1634,7 @@ export default function Home() {
         layerContext.globalCompositeOperation = "destination-in";
         layerContext.drawImage(createBodyMask(mask, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         layerContext.globalCompositeOperation = "source-over";
-        context.drawImage(layerCanvas, 0, 0);
+        targetContext.drawImage(layerCanvas, 0, 0);
       }
     };
 
@@ -1658,11 +1659,17 @@ export default function Home() {
     }
 
     const backHair = catalog.find((entry) => entry.id === renderSelections.cabelosTras);
+    const backHairLayer = backHair ? document.createElement("canvas") : null;
+    const backHairContext = backHairLayer?.getContext("2d");
+    if (backHairLayer) {
+      backHairLayer.width = sceneCanvas.width;
+      backHairLayer.height = sceneCanvas.height;
+    }
     if (backHair) {
       if (variantStateKey) {
-        await drawLayer(backHair, renderAdjustments.cabelosTras, category === "cabelosTras", renderLayerMasks.hairBack, "cabelosTras");
+        await drawLayer(backHair, renderAdjustments.cabelosTras, category === "cabelosTras", renderLayerMasks.hairBack, "cabelosTras", backHairContext ?? context);
       } else {
-        await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras");
+        await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras", backHairContext ?? context);
       }
     }
 
@@ -1707,6 +1714,13 @@ export default function Home() {
       } else {
         await drawLayer(outfit, adjustments.roupas, category === "roupas", layerMasks.outfit, "roupas");
       }
+    }
+
+    if (backHairLayer && backHairContext) {
+      context.save();
+      context.globalCompositeOperation = "destination-over";
+      context.drawImage(backHairLayer, 0, 0);
+      context.restore();
     }
 
     if (includeExpression && faceMode !== "base") {

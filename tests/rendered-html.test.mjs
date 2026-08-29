@@ -242,6 +242,8 @@ test("pairs front and back hair and renders the back layer behind the model", as
   const backLayerPosition = page.indexOf("const backHair = catalog.find");
   const baseLayerPosition = page.indexOf("const bodyLayer = document.createElement", backLayerPosition);
   assert.ok(backLayerPosition >= 0 && baseLayerPosition > backLayerPosition);
+  assert.match(page, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
+  assert.match(page, /globalCompositeOperation = "destination-over"/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fit\)/);
   assert.doesNotMatch(page, /category === "cabelosTras" \? "cabelos" : category/);

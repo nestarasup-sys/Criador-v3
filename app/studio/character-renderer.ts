@@ -209,6 +209,7 @@ export async function renderStudioCharacter(
     transform: ItemTransform,
     mask: MaskStroke[] = [],
     layerCategory?: Category,
+    targetContext: CanvasRenderingContext2D = context,
   ) => {
     const image = await loadStudioImage(item.fileUrl);
     const width = item.width ?? image.naturalWidth;
@@ -241,7 +242,7 @@ export async function renderStudioCharacter(
       layer.width = scene.width;
       layer.height = scene.height;
     }
-    const target = layer?.getContext("2d") ?? context;
+    const target = layer?.getContext("2d") ?? targetContext;
     if (!target) return;
     configureHighQualityContext(target);
     target.save();
@@ -254,14 +255,20 @@ export async function renderStudioCharacter(
       target.globalCompositeOperation = "destination-in";
       target.drawImage(createMask(mask, scene.width, scene.height), 0, 0);
       target.globalCompositeOperation = "source-over";
-      context.drawImage(layer, 0, 0);
+      targetContext.drawImage(layer, 0, 0);
     }
   };
 
   const backHair = catalog.find((item) => item.id === character.selections.cabelosTras);
+  const backHairLayer = backHair ? document.createElement("canvas") : null;
+  const backHairContext = backHairLayer?.getContext("2d");
+  if (backHairLayer) {
+    backHairLayer.width = scene.width;
+    backHairLayer.height = scene.height;
+  }
   const activePackId = normalizeBasePackId(character.basePackId);
   const packAdjustments = character.hairAdjustmentsByBasePack?.[activePackId];
-  if (backHair) await drawItem(backHair, normalizedTransform(packAdjustments?.cabelosTras ?? character.adjustments.cabelosTras), masks.hairBack, "cabelosTras");
+  if (backHair) await drawItem(backHair, normalizedTransform(packAdjustments?.cabelosTras ?? character.adjustments.cabelosTras), masks.hairBack, "cabelosTras", backHairContext ?? context);
 
   const normalizedPack = activePackId;
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
@@ -290,6 +297,13 @@ export async function renderStudioCharacter(
 
   const outfit = catalog.find((item) => item.id === character.selections.roupas);
   if (outfit) await drawItem(outfit, normalizedTransform(character.adjustments.roupas), masks.outfit, "roupas");
+
+  if (backHairLayer && backHairContext) {
+    context.save();
+    context.globalCompositeOperation = "destination-over";
+    context.drawImage(backHairLayer, 0, 0);
+    context.restore();
+  }
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {
