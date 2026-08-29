@@ -1153,7 +1153,7 @@ export default function Home() {
   const [colorEditorHistory, setColorEditorHistory] = useState<string[]>([]);
   const [colorEditorRedo, setColorEditorRedo] = useState<string[]>([]);
   const [colorEditorRevision, setColorEditorRevision] = useState(0);
-  const [colorPanelOpen, setColorPanelOpen] = useState(true);
+  const [colorPanelOpen, setColorPanelOpen] = useState(false);
   const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
   const historyActiveKeyRef = useRef<string | null>(null);
   const historyRestoreRef = useRef<string | null>(null);
