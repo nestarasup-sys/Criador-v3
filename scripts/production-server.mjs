@@ -25,4 +25,10 @@ if (process.env.NYMI_E2E === "1") {
 
 const { startProdServer } = await import("vinext/server/prod-server");
 const port = Number(process.env.PORT ?? process.argv[2] ?? "6700");
-await startProdServer({ port, host: "0.0.0.0", outDir: path.resolve(process.cwd(), "dist") });
+const { server } = await startProdServer({ port, host: "0.0.0.0", outDir: path.resolve(process.cwd(), "dist") });
+
+// This is a local development/production-preview server. Never let Chrome
+// keep an old HTML or client bundle after the app has been rebuilt.
+server.prependListener("request", (_request, response) => {
+  if (!response.headersSent) response.setHeader("Cache-Control", "no-store, max-age=0");
+});
