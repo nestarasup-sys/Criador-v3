@@ -16,7 +16,7 @@ import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
-import { markRenderDebug } from "./studio/render-debug";
+import { captureRenderDebug, markRenderDebug } from "./studio/render-debug";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1751,6 +1751,7 @@ export default function Home() {
     // definitiva antes de entregar a imagem ao outro aplicativo.
     compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
     markRenderDebug("layers:flattened", { renderId, target, layer: "backHair→body→outfit" });
+    captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: "backHair→body→outfit" });
 
     if (includeExpression && faceMode !== "base") {
       if (faceMode === "pack" && activeExpressionPack) {
@@ -1786,6 +1787,7 @@ export default function Home() {
     finalContext.translate(-960, -540);
     finalContext.drawImage(sceneCanvas, -SCENE_PADDING.x, -SCENE_PADDING.y);
     finalContext.restore();
+    captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
   }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);

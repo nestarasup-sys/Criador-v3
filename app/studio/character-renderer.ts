@@ -14,7 +14,7 @@ import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
-import { markRenderDebug } from "./render-debug";
+import { captureRenderDebug, markRenderDebug } from "./render-debug";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -328,6 +328,7 @@ export async function renderStudioCharacter(
   // chegar ao outro aplicativo, que não recebe as camadas separadamente.
   compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
   markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: "backHair→body→outfit" });
+  captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target: "studio-render", layer: "backHair→body→outfit" });
 
   if (faceMode !== "base") {
     if (faceMode === "pack") {
@@ -350,6 +351,7 @@ export async function renderStudioCharacter(
   finalContext.translate(-WIDTH / 2, -HEIGHT / 2);
   finalContext.drawImage(scene, -PADDING.x, -PADDING.y);
   finalContext.restore();
+  captureRenderDebug("snapshot:before-trim", final, { renderId, target: "studio-render", layer: "final-canvas" });
   const output = trimCanvas(final).toDataURL("image/png");
   markRenderDebug("render:complete", { renderId, target: "studio-render" });
   return output;
