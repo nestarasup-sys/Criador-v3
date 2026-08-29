@@ -8,6 +8,8 @@ type RenderDebugEvent = {
   source?: string;
   args?: unknown[];
   state?: Record<string, unknown>;
+  callStack?: string;
+  snapshot?: string;
 };
 
 type RenderDebugWindow = Window & {
@@ -16,6 +18,7 @@ type RenderDebugWindow = Window & {
     events: RenderDebugEvent[];
     clear: () => void;
     mark: (operation: string, details?: Partial<RenderDebugEvent>) => void;
+    capture: (operation: string, canvas: HTMLCanvasElement, details?: Partial<RenderDebugEvent>) => void;
   };
 };
 
@@ -62,7 +65,12 @@ function installRenderDebug() {
   };
 
   const record = (operation: string, details: Partial<RenderDebugEvent> = {}) => {
-    events.push({ at: performance.now(), operation, ...details });
+    events.push({
+      at: performance.now(),
+      operation,
+      callStack: new Error().stack?.split("\\n").slice(2, 7).join("\\n"),
+      ...details,
+    });
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
   };
 
@@ -71,6 +79,20 @@ function installRenderDebug() {
     events,
     clear: () => events.splice(0, events.length),
     mark: record,
+    capture: (operation, canvas, details = {}) => {
+      let snapshot: string | undefined;
+      try {
+        snapshot = canvas.toDataURL("image/png");
+      } catch {
+        snapshot = undefined;
+      }
+      record(operation, {
+        ...details,
+        canvasId: getCanvasId(canvas),
+        args: [canvas.width, canvas.height],
+        snapshot,
+      });
+    },
   };
 
   const contextPrototype = CanvasRenderingContext2D.prototype;
