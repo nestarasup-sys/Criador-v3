@@ -389,9 +389,12 @@ async function discoverModels() {
       if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));
+      const numberedModel = entry.name.match(/^modelo-(\d+)$/i);
       result[gender].push({
         id: entry.name,
-        name: typeof config?.name === "string" && config.name.trim()
+        name: numberedModel
+          ? `Modelo ${Number(numberedModel[1])}`
+          : typeof config?.name === "string" && config.name.trim()
           ? config.name.trim()
           : `Modelo ${index + 1}`,
         expressionKeys,

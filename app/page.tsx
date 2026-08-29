@@ -1618,7 +1618,11 @@ export default function Home() {
       const currentBasePack = getBasePack(basePacks, model, basePackId);
       const packExpressionKeys = currentBasePack.expressionKeys;
       const resolvedExpressionKey = packExpressionKeys.includes(expressionKey) ? expressionKey : "normal";
-      const cacheKey = basePackCacheKey(model, basePackId);
+      // Use the pack that was actually resolved. During startup the requested
+      // id may not exist in the default list yet; caching that fallback under
+      // the requested id would make modelo-8 keep showing another face after
+      // the discovered packs arrive.
+      const cacheKey = basePackCacheKey(model, currentBasePack.id);
       processedBaseExpressions.current[cacheKey] ??= {};
       if (!processedBaseExpressions.current[cacheKey][resolvedExpressionKey]) {
         const transparentExpression = await removeChroma(baseExpressionSource(currentBasePack, resolvedExpressionKey));
@@ -2749,7 +2753,10 @@ export default function Home() {
       let baseImage = processedBases.current[model];
       if (faceMode === "base") {
         const resolvedExpressionKey = activeBaseExpressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
-        const cacheKey = basePackCacheKey(model, basePackId);
+        // The discovered pack list can arrive after the first render. Key the
+        // processed image by the resolved pack, never by an id that temporarily
+        // fell back to another pack.
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
         processedBaseExpressions.current[cacheKey] ??= {};
         if (!processedBaseExpressions.current[cacheKey][resolvedExpressionKey]) {
           const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, resolvedExpressionKey));
