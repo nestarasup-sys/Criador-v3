@@ -1854,7 +1854,7 @@ export default function Home() {
     if (nextModel === model) return;
     persistEditorSnapshot("Salvo automaticamente");
     setModel(nextModel);
-    setBasePackId(basePacks[nextModel][0]?.id ?? "modelo-1");
+    setBasePackId(getBasePack(basePacks, nextModel).id);
     setSelections({ ...EMPTY_SELECTIONS });
     setAdjustments(emptyAdjustments());
     setColorAdjustments(emptyColorAdjustments());
