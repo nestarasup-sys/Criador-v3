@@ -16,7 +16,7 @@ import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
-import { captureRenderDebug, markRenderDebug } from "./studio/render-debug";
+import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1612,6 +1612,7 @@ export default function Home() {
         await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadImage);
         renderSource = adjusted;
       }
+      renderSource = colorizeRenderDebugLayer(renderSource, width, height, layerCategory ?? "");
       const layerCanvas = mask.length > 0 ? document.createElement("canvas") : null;
       if (layerCanvas) {
         layerCanvas.width = sceneCanvas.width;
@@ -1701,6 +1702,7 @@ export default function Home() {
     if (baseImage) {
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
+      const debugBody = colorizeRenderDebugLayer(baseImage, baseImage.naturalWidth || canvas.width, baseImage.naturalHeight || canvas.height, "corpo");
       const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
       if (headOnly) {
         // The anchor is expressed in the model's original 1920×1080 canvas.
@@ -1712,14 +1714,14 @@ export default function Home() {
         const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
         const targetAnchorX = activeBasePack.anchorX ?? canvas.width / 2;
         const targetAnchorY = activeBasePack.anchorY ?? canvas.height;
-        bodyContext.drawImage(baseImage,
+        bodyContext.drawImage(debugBody,
           SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
           SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
           sourceWidth,
           sourceHeight,
         );
       } else {
-        bodyContext.drawImage(baseImage, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
+        bodyContext.drawImage(debugBody, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
       }
       if (renderLayerMasks.body.length > 0) {
         bodyContext.globalCompositeOperation = "destination-in";

@@ -29,6 +29,45 @@ function isEnabled() {
     && new URLSearchParams(window.location.search).get("characterRenderDebug") === "1";
 }
 
+const DEBUG_LAYER_COLORS: Record<string, [number, number, number]> = {
+  cabelosTras: [255, 0, 255],
+  corpo: [255, 220, 0],
+  roupas: [0, 255, 255],
+  rosto: [40, 100, 255],
+  cabelos: [255, 40, 40],
+};
+
+/**
+ * Recolore apenas em modo diagnóstico para provar a identidade de cada layer.
+ * A flag é deliberadamente separada do debug de eventos: o fluxo normal nunca
+ * lê pixels nem cria este canvas adicional.
+ */
+export function colorizeRenderDebugLayer(
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+  layer: string,
+) {
+  if (typeof window === "undefined" || new URLSearchParams(window.location.search).get("characterRenderLayers") !== "1") return source;
+  const color = DEBUG_LAYER_COLORS[layer];
+  if (!color) return source;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return source;
+  context.drawImage(source, 0, 0, width, height);
+  const pixels = context.getImageData(0, 0, width, height);
+  for (let index = 0; index < pixels.data.length; index += 4) {
+    if (pixels.data[index + 3] === 0) continue;
+    pixels.data[index] = color[0];
+    pixels.data[index + 1] = color[1];
+    pixels.data[index + 2] = color[2];
+  }
+  context.putImageData(pixels, 0, 0);
+  return canvas;
+}
+
 function sourceLabel(source: CanvasImageSource | undefined) {
   if (!source) return undefined;
   if (source instanceof HTMLImageElement) return source.currentSrc || source.src;

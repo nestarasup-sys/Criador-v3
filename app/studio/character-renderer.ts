@@ -14,7 +14,7 @@ import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
-import { captureRenderDebug, markRenderDebug } from "./render-debug";
+import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -250,6 +250,7 @@ export async function renderStudioCharacter(
       await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadStudioImage);
       renderImage = adjusted;
     }
+    renderImage = colorizeRenderDebugLayer(renderImage, width, height, layerCategory ?? "");
     if (layer) {
       layer.width = scene.width;
       layer.height = scene.height;
@@ -313,7 +314,7 @@ export async function renderStudioCharacter(
   if (bodyContext) {
     // Legacy Studio rendering remains unchanged; Creator applies model
     // metadata before the character is saved.
-    bodyContext.drawImage(base, PADDING.x, PADDING.y, WIDTH, HEIGHT);
+    bodyContext.drawImage(colorizeRenderDebugLayer(base, WIDTH, HEIGHT, "corpo"), PADDING.x, PADDING.y, WIDTH, HEIGHT);
   }
   if (bodyContext && masks.body.length) {
     bodyContext.globalCompositeOperation = "destination-in";
