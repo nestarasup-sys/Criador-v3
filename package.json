@@ -26,7 +26,8 @@
     "security:phase9": "npm audit --omit=dev --audit-level=high",
     "typecheck": "tsc --noEmit --incremental false",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "diagnose:base-expressions": "node scripts/repair-base-expression-neck.mjs --check"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
