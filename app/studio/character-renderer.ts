@@ -217,6 +217,13 @@ export async function renderStudioCharacter(
   ) => {
     markRenderDebug("layer:start", { renderId, target: "studio-render", layer: layerCategory ?? "unknown", source: item.fileUrl });
     const image = await loadStudioImage(item.fileUrl);
+    markRenderDebug("asset:ready", {
+      renderId,
+      target: "studio-render",
+      layer: layerCategory ?? "unknown",
+      source: item.fileUrl,
+      args: [image.naturalWidth, image.naturalHeight],
+    });
     const width = item.width ?? image.naturalWidth;
     const height = item.height ?? image.naturalHeight;
     const centerX = item.defaultX ?? width / 2;
@@ -283,7 +290,11 @@ export async function renderStudioCharacter(
   // restaurar ajustes ao trocar de modelo, mas não pode sobrescrever o estado
   // atual durante uma exportação.
   const packAdjustments = character.hairAdjustmentsByBasePack?.[activePackId];
-  if (backHair) await drawItem(backHair, normalizedTransform(character.adjustments.cabelosTras ?? packAdjustments?.cabelosTras), masks.hairBack, "cabelosTras", backHairContext ?? context);
+  if (backHair) {
+    await drawItem(backHair, normalizedTransform(character.adjustments.cabelosTras ?? packAdjustments?.cabelosTras), masks.hairBack, "cabelosTras", backHairContext ?? context);
+    markRenderDebug("layer:backHairDone", { renderId, target: "studio-render", layer: "cabelosTras" });
+    if (backHairLayer) captureRenderDebug("snapshot:after-backHair", backHairLayer, { renderId, target: "studio-render", layer: "cabelosTras" });
+  }
 
   const normalizedPack = activePackId;
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
@@ -308,6 +319,8 @@ export async function renderStudioCharacter(
     bodyContext.globalCompositeOperation = "destination-in";
     bodyContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
   }
+  markRenderDebug("layer:bodyDone", { renderId, target: "studio-render", layer: "corpo" });
+  captureRenderDebug("snapshot:after-body", bodyLayer, { renderId, target: "studio-render", layer: "corpo" });
   const outfitLayer = document.createElement("canvas");
   outfitLayer.width = scene.width;
   outfitLayer.height = scene.height;
@@ -322,6 +335,8 @@ export async function renderStudioCharacter(
       "roupas",
       outfitContext ?? context,
     );
+    markRenderDebug("layer:clothesDone", { renderId, target: "studio-render", layer: "roupas" });
+    captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target: "studio-render", layer: "roupas" });
   }
 
   // Exportações são PNGs achatados: a ordem precisa ser explícita antes de
@@ -334,15 +349,25 @@ export async function renderStudioCharacter(
     if (faceMode === "pack") {
       const pack = packs.find((item) => item.id === character.expressionPackId);
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
-      if (frame) await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos));
+      if (frame) {
+        await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos));
+        markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "rosto" });
+      }
     } else {
       const face = catalog.find((item) => item.id === character.selections.rostos);
-      if (face) await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos");
+      if (face) {
+        await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos");
+        markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "rosto" });
+      }
     }
   }
 
   const frontHair = catalog.find((item) => item.id === character.selections.cabelos);
-  if (frontHair) await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos ?? packAdjustments?.cabelos), masks.hairFront, "cabelos");
+  if (frontHair) {
+    await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos ?? packAdjustments?.cabelos), masks.hairFront, "cabelos");
+    markRenderDebug("layer:frontHairDone", { renderId, target: "studio-render", layer: "cabelos" });
+    captureRenderDebug("snapshot:after-frontHair", context, { renderId, target: "studio-render", layer: "cabelos" });
+  }
 
   const frame = character.exportFrame ?? { x: 0, y: 0, scale: 1 };
   finalContext.save();

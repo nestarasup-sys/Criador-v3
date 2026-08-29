@@ -1590,6 +1590,13 @@ export default function Home() {
       if (!item.url) return;
       markRenderDebug("layer:start", { renderId, target, layer: layerCategory ?? "unknown", source: item.url });
       const image = await loadImage(item.url);
+      markRenderDebug("asset:ready", {
+        renderId,
+        target,
+        layer: layerCategory ?? "unknown",
+        source: item.url,
+        args: [image.naturalWidth, image.naturalHeight],
+      });
       const width = item.width ?? image.naturalWidth;
       const height = item.height ?? image.naturalHeight;
       const centerX = item.defaultX ?? width / 2;
@@ -1684,6 +1691,8 @@ export default function Home() {
       } else {
         await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras", backHairContext ?? context);
       }
+      markRenderDebug("layer:backHairDone", { renderId, target, layer: "cabelosTras" });
+      if (backHairLayer) captureRenderDebug("snapshot:after-backHair", backHairLayer, { renderId, target, layer: "cabelosTras" });
     }
 
     const bodyLayer = document.createElement("canvas");
@@ -1717,6 +1726,8 @@ export default function Home() {
         bodyContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         bodyContext.globalCompositeOperation = "source-over";
       }
+      markRenderDebug("layer:bodyDone", { renderId, target, layer: "corpo" });
+      captureRenderDebug("snapshot:after-body", bodyLayer, { renderId, target, layer: "corpo" });
     }
 
     const outfitLayer = document.createElement("canvas");
@@ -1745,6 +1756,8 @@ export default function Home() {
           outfitContext ?? context,
         );
       }
+      markRenderDebug("layer:clothesDone", { renderId, target, layer: "roupas" });
+      captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target, layer: "roupas" });
     }
 
     // A exportação gera um PNG achatado. Componha as camadas na ordem
@@ -1762,10 +1775,14 @@ export default function Home() {
             renderAdjustments.rostos,
             category === "rostos",
           );
+          markRenderDebug("layer:faceDone", { renderId, target, layer: "rosto" });
         }
       } else {
         const face = catalog.find((entry) => entry.id === renderSelections.rostos);
-        if (face) await drawLayer(face, renderAdjustments.rostos, category === "rostos", [], "rostos");
+        if (face) {
+          await drawLayer(face, renderAdjustments.rostos, category === "rostos", [], "rostos");
+          markRenderDebug("layer:faceDone", { renderId, target, layer: "rosto" });
+        }
       }
     }
 
@@ -1776,6 +1793,8 @@ export default function Home() {
       } else {
         await drawLayer(hair, adjustments.cabelos, category === "cabelos", layerMasks.hairFront, "cabelos");
       }
+      markRenderDebug("layer:frontHairDone", { renderId, target, layer: "cabelos" });
+      captureRenderDebug("snapshot:after-frontHair", context, { renderId, target, layer: "cabelos" });
     }
     const activeMask = renderLayerMasks[maskTarget];
     if (editingPreview && eraserMode && showEraseMask && activeMask.length > 0) {
