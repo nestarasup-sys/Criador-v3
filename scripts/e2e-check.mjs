@@ -19,6 +19,15 @@ try {
   await seedCreatorAutosaveFixture(page);
   await seedStudioQualityFixture(page);
 
+  await page.goto(`${baseURL}/Ferramentas/fabricador-de-modelo`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(page);
+  await assertVisible(page.getByRole("heading", { name: "Fabricador de Modelo" }));
+  await assertVisible(page.getByRole("button", { name: "Gerar prévias" }));
+  assert.equal(await page.getByText("21 + 21", { exact: true }).count(), 1);
+  assert.equal(await page.getByRole("button", { name: "Salvar modelo no catálogo" }).isDisabled(), true);
+  const fabricatorLayout = await page.evaluate(() => ({ scrollHeight: document.documentElement.scrollHeight, clientHeight: document.documentElement.clientHeight }));
+  assert.ok(fabricatorLayout.scrollHeight >= fabricatorLayout.clientHeight, "A página do Fabricador precisa permitir rolagem vertical");
+
   // Direct route loads are intentional here: Vinext's development HMR can
   // emit an unrelated duplicate-React warning during client-side <Link>
   // transitions, while the production build uses the same route contracts.
