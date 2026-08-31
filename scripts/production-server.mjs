@@ -68,8 +68,14 @@ function serveLiveModelAsset(request, response) {
   return true;
 }
 
-server.prependListener("request", (request, response) => {
-  serveLiveModelAsset(request, response);
+// Vinext registers its own request listener. Wrap it so a model file that was
+// added after the build is served from the live public folder first; otherwise
+// both listeners race to write the same response.
+const vinextRequestListeners = server.listeners("request");
+server.removeAllListeners("request");
+server.on("request", (request, response) => {
+  if (serveLiveModelAsset(request, response)) return;
+  for (const listener of vinextRequestListeners) listener.call(server, request, response);
 });
 
 // This is a local development/production-preview server. Never let Chrome
