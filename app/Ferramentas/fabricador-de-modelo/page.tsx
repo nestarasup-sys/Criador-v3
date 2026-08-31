@@ -46,6 +46,7 @@ export default function FabricadorDeModeloPage() {
   const [reviewed, setReviewed] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState<string>();
   const [view, setView] = useState<"all" | SheetId>("all");
+  const [compareSheet, setCompareSheet] = useState<SheetId>("primary");
   const [compareColumn, setCompareColumn] = useState(0);
   const [compareState, setCompareState] = useState<"default" | "blink" | "talk">("default");
   const [playback, setPlayback] = useState<PlaybackMode>("static");
@@ -68,9 +69,10 @@ export default function FabricadorDeModeloPage() {
   const currentSprite = allSprites.find((sprite) => keyOf(sprite) === selectedKey) ?? allSprites[0];
   const primarySheet = sheets.find((sheet) => sheet.id === "primary");
   const extensionSheet = sheets.find((sheet) => sheet.id === "extension");
-  const comparisonExpression = primarySheet?.expressions[compareColumn];
+  const comparisonSourceSheet = compareSheet === "extension" ? extensionSheet : primarySheet;
+  const comparisonExpression = comparisonSourceSheet?.expressions[compareColumn];
   const comparisonCurrent = comparisonExpression?.[compareState];
-  const comparisonGhost = comparisonCurrent?.sourceSheet === "primary" ? extensionSheet?.expressions[compareColumn]?.[compareState] : primarySheet?.expressions[compareColumn]?.[compareState];
+  const comparisonGhost = compareSheet === "primary" ? extensionSheet?.expressions[compareColumn]?.[compareState] : primarySheet?.expressions[compareColumn]?.[compareState];
   const comparisonTrio = comparisonExpression ? [comparisonExpression.default, comparisonExpression.blink, comparisonExpression.talk] : [];
   const criticalCount = allSprites.filter((sprite) => sprite.quality.critical).length;
   const expectedCount = extension ? 42 : 21;
@@ -91,7 +93,7 @@ export default function FabricadorDeModeloPage() {
     const expressions = sprite.sourceSheet === "primary" ? PRIMARY_EXPRESSIONS : EXTENSION_EXPRESSIONS;
     const baseKey = sprite.key.replace(/_(blink|talk)$/, "");
     const column = expressions.indexOf(baseKey as never);
-    if (column >= 0) { setCompareColumn(column); setCompareState(sprite.state); }
+    if (column >= 0) { setCompareSheet(sprite.sourceSheet); setCompareColumn(column); setCompareState(sprite.state); }
   }
 
   async function applyAdjustment(adjustment: SpriteAdjustment) {
@@ -137,7 +139,7 @@ export default function FabricadorDeModeloPage() {
     <div className={styles.layout}><div>
       <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Entrada</span><h2>Folhas de rostos</h2><p>A Folha 1 é a base. A Folha 2 entra como extensão com escala X/Y limitada.</p></div><span className={styles.pipelineBadge}>21 + 21</span></div><div className={styles.uploadGrid}><SheetUploader title="Folha 1 · obrigatória" description="PNG, JPG ou WebP · 7 × 3" file={primary} onChange={setPrimary} /><SheetUploader title="Folha 2 · opcional" description="7 expressões adicionais · 7 × 3" file={extension} onChange={setExtension} /></div><StatusMessage tone={tone}>{message}</StatusMessage></section>
       <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Revisão visual</span><h2>Prévias geradas</h2><p>Selecione um rosto para abrir a qualidade e os ajustes manuais.</p></div><span className={styles.count}>{allSprites.length}/{expectedCount}</span></div><div className={styles.filterBar}>{(["all", "primary", "extension"] as const).map((item) => <button key={item} type="button" className={`${styles.filterButton} ${view === item ? styles.filterActive : ""}`} disabled={item === "extension" && !extensionSheet} onClick={() => setView(item)}>{item === "all" ? `Alternar ${expectedCount}` : item === "primary" ? "Folha 1 (21)" : "Folha 2 (21)"}</button>)}</div>{allSprites.length ? <PreviewGrid sheets={sheets} view={view} selectedKey={selectedKey} onSelect={selectSprite} reviewed={reviewed} /> : <div className={styles.emptyState}>As 21 ou 42 prévias aparecerão aqui depois de “Gerar prévias”.</div>}</section>
-      <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Comparação</span><h2>Trio de expressão</h2><p>Compare default, blink e talk do mesmo rosto sem sair da tela.</p></div><div className={styles.compareSelects}><select value={compareColumn} onChange={(event) => { setCompareColumn(Number(event.target.value)); setPlayback("static"); }} disabled={!primarySheet}>{PRIMARY_EXPRESSIONS.map((expression, index) => <option key={expression} value={index}>{expression}</option>)}</select><select value={compareState} onChange={(event) => { setCompareState(event.target.value as typeof compareState); setPlayback("static"); }} disabled={!comparisonExpression}><option value="default">default</option><option value="blink">blink</option><option value="talk">talk</option></select></div></div><ComparisonPlayer current={comparisonCurrent} ghost={comparisonGhost} trio={comparisonTrio} mode={playback} onMode={setPlayback} /></section>
+      <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Comparação</span><h2>Trio de expressão</h2><p>Compare default, blink e talk do mesmo rosto sem sair da tela.</p></div><div className={styles.compareSelects}><select value={compareSheet} onChange={(event) => { setCompareSheet(event.target.value as SheetId); setCompareColumn(0); setPlayback("static"); }} disabled={!primarySheet}><option value="primary">Folha 1</option><option value="extension" disabled={!extensionSheet}>Folha 2</option></select><select value={compareColumn} onChange={(event) => { setCompareColumn(Number(event.target.value)); setPlayback("static"); }} disabled={!comparisonSourceSheet}>{(compareSheet === "primary" ? PRIMARY_EXPRESSIONS : EXTENSION_EXPRESSIONS).map((expression, index) => <option key={expression} value={index}>{expression}</option>)}</select><select value={compareState} onChange={(event) => { setCompareState(event.target.value as typeof compareState); setPlayback("static"); }} disabled={!comparisonExpression}><option value="default">default</option><option value="blink">blink</option><option value="talk">talk</option></select></div></div><ComparisonPlayer current={comparisonCurrent} ghost={comparisonGhost} trio={comparisonTrio} mode={playback} onMode={setPlayback} /></section>
     </div><aside className={styles.sideColumn}>
       <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Modelo final</span><h2>Configuração</h2></div><span className={styles.secureBadge}>Local</span></div><ModelSettingsPanel name={name} folderName={folderName} gender={gender} onName={setName} onFolder={setFolderName} onGender={setGender} /><div className={styles.divider} /><CalibrationPanel settings={settings} onChange={setSettings} /><ExportPanel count={allSprites.length} busy={busy} onGenerate={() => void generate()} onSave={() => void save()} /></section>
       <section className={styles.panel}><QualityPanel sprite={currentSprite} compatibility={currentSprite?.sourceSheet === "extension" ? extensionSheet?.compatibility : undefined} /><ManualAdjustmentPanel key={`${selectedKey ?? "empty"}:${currentSprite?.adjustment.scale ?? ""}:${currentSprite?.adjustment.scaleX ?? ""}:${currentSprite?.adjustment.scaleY ?? ""}:${currentSprite?.adjustment.dx ?? ""}:${currentSprite?.adjustment.dy ?? ""}`} sprite={currentSprite} onApply={(adjustment) => void applyAdjustment(adjustment)} onReview={reviewCurrent} onCopyTrio={() => void copyTrio()} onReset={() => void resetAdjustment()} /></section>
