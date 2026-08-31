@@ -42,7 +42,7 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
   const localMaster = buildHeadMaster(validAnatomies);
   const calibration = options.referenceMaster
     ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment)
-    : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection);
+    : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
   const targetMaster = options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
   const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility?.overall : undefined));
