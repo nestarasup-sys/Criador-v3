@@ -1,0 +1,10 @@
+export type SheetId = "primary" | "extension";
+export type ExpressionState = "default" | "blink" | "talk";
+export type ChromaColor = { r: number; g: number; b: number };
+export type FaceRegion = { x: number; y: number; width: number; height: number; row: number; column: number };
+export type GeneratedSprite = { key: string; sourceSheet: SheetId; state: ExpressionState; dataUrl: string; width: number; height: number };
+export type ModelExpression = { key: string; sourceSheet: SheetId; default: GeneratedSprite; blink: GeneratedSprite; talk: GeneratedSprite };
+export type HeadMaster = { width: number; height: number; centerX: number; neckY: number; neckWidth: number };
+export type ModelSettings = { name: string; folderName: string; gender: "feminino" | "masculino"; anchorX: number; anchorY: number };
+export type SheetResult = { id: SheetId; fileName: string; width: number; height: number; regions: FaceRegion[]; expressions: ModelExpression[]; imageUrl: string };
+export type ModelValidation = { errors: string[]; warnings: string[]; critical: number };
