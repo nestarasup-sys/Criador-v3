@@ -3,7 +3,7 @@ import type { HeadMaster } from "../types/face-model";
 
 export function canvasFromPixels(data: Uint8ClampedArray, width: number, height: number) {
   const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
-  canvas.getContext("2d")!.putImageData(new ImageData(data, width, height), 0, 0);
+  canvas.getContext("2d")!.putImageData(new ImageData(new Uint8ClampedArray(data), width, height), 0, 0);
   return canvas;
 }
 

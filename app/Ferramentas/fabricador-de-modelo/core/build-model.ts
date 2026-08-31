@@ -31,7 +31,7 @@ export async function processSheet(file: File, sheet: SheetId, master?: HeadMast
   const regions = detectFaceSheet(keyed, source.data.width, source.data.height);
   if (regions.length !== 21) throw new Error("Não foi possível localizar as 21 células da folha.");
   const crops = regions.map((region) => cropFace(keyed, source.data.width, source.data.height, region));
-  const localMaster: HeadMaster = master ?? { width: median(crops.map((crop) => crop.width)), height: median(crops.map((crop) => crop.height)), centerX: OUTPUT_WIDTH / 2, neckY: 346 };
+  const localMaster: HeadMaster = master ?? { width: median(crops.map((crop) => crop.width)), height: median(crops.map((crop) => crop.height)), centerX: OUTPUT_WIDTH / 2, neckY: 346, neckWidth: 1 };
   const scaleX = master ? master.width / Math.max(1, median(crops.map((crop) => crop.width))) : 1.1;
   const scaleY = master ? master.height / Math.max(1, median(crops.map((crop) => crop.height))) : 1.1;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
