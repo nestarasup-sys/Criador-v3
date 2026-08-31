@@ -27,6 +27,13 @@ try {
   assert.equal(await page.getByRole("button", { name: "Salvar modelo no catálogo" }).isDisabled(), true);
   const fabricatorLayout = await page.evaluate(() => ({ scrollHeight: document.documentElement.scrollHeight, clientHeight: document.documentElement.clientHeight }));
   assert.ok(fabricatorLayout.scrollHeight >= fabricatorLayout.clientHeight, "A página do Fabricador precisa permitir rolagem vertical");
+  const syntheticSheet = await createSyntheticFaceSheet(page);
+  await page.locator('input[type="file"]').nth(0).setInputFiles({ name: "folha-1-e2e.png", mimeType: "image/png", buffer: syntheticSheet });
+  await page.getByRole("button", { name: "Gerar prévias" }).click();
+  await page.waitForFunction(() => document.body.innerText.includes("21 sprites gerados"), undefined, { timeout: 30_000 });
+  assert.equal(await page.getByText("21/21", { exact: true }).count(), 1);
+  assert.equal(await page.getByRole("button", { name: "Folha 1 (21)", exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole("button", { name: "Animar trio", exact: true }).isEnabled(), true);
 
   // Direct route loads are intentional here: Vinext's development HMR can
   // emit an unrelated duplicate-React warning during client-side <Link>
@@ -156,6 +163,33 @@ async function seedStudioQualityFixture(currentPage) {
     characterIds: [character.id],
     studioIds: [studio.id],
   });
+}
+
+async function createSyntheticFaceSheet(currentPage) {
+  const dataUrl = await currentPage.evaluate(async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 896;
+    canvas.height = 384;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Canvas 2D indisponível no teste do Fabricador.");
+    context.fillStyle = "rgb(0, 255, 0)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    for (let row = 0; row < 3; row += 1) {
+      for (let column = 0; column < 7; column += 1) {
+        const centerX = column * 128 + 64;
+        const centerY = row * 128 + 64;
+        context.fillStyle = "rgb(235, 235, 235)";
+        context.beginPath();
+        context.ellipse(centerX, centerY, 42, 50, 0, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = "rgb(60, 60, 60)";
+        context.fillRect(centerX - 18, centerY - 4, 8, 4);
+        context.fillRect(centerX + 10, centerY - 4, 8, 4);
+      }
+    }
+    return canvas.toDataURL("image/png");
+  });
+  return Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64");
 }
 
 async function seedCreatorAutosaveFixture(currentPage) {
