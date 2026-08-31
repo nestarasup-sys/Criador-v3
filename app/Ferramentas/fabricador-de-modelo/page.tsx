@@ -5,6 +5,7 @@ import Link from "next/link";
 import { NymiNavigation } from "../../shared/NymiShell";
 import { localDataFetch } from "../../lib/local-data-client";
 import { processSheet } from "./core/build-model";
+import { emptyHeadMaster } from "./core/compositor";
 import type { ModelExpression, SheetResult } from "./types/face-model";
 import { ExportPanel } from "./components/ExportPanel";
 import { ModelSettingsPanel } from "./components/ModelSettingsPanel";
@@ -51,7 +52,7 @@ export default function FabricadorDeModeloPage() {
     setBusy(true); setTone(""); setMessage("Processando chroma, detecção, recorte e calibração…");
     try {
       const base = await processSheet(primary, "primary");
-      const result = extension ? [base, await processSheet(extension, "extension", { width: base.expressions[0].default.width, height: base.expressions[0].default.height, centerX: 960, neckY: 346, neckWidth: 1 })] : [base];
+      const result = extension ? [base, await processSheet(extension, "extension", emptyHeadMaster(base.headMaster.width, base.headMaster.height))] : [base];
       setSheets(result); setCompareIndex(0); setTone("ok"); setMessage(`${result.reduce((total, sheet) => total + sheet.expressions.length * 3, 0)} sprites gerados. Revise as prévias antes de salvar.`);
     } catch (error) { setSheets([]); setTone("error"); setMessage(error instanceof Error ? error.message : "Não foi possível processar a folha."); }
     finally { setBusy(false); }

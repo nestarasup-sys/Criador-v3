@@ -2,8 +2,11 @@ import { EXTENSION_EXPRESSIONS, OUTPUT_HEIGHT, OUTPUT_WIDTH, PRIMARY_EXPRESSIONS
 import { cropFace } from "./crop";
 import { removeSheetChroma } from "./chroma-key";
 import { detectFaceSheet } from "./detection";
-import { canvasFromPixels, analyzeHead, placeFace } from "./compositor";
-import type { GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult } from "../types/face-model";
+import { canvasFromPixels, emptyHeadMaster, placeFace } from "./compositor";
+import { analyzeFaceAnatomy } from "./anatomy";
+import { buildHeadMaster } from "./head-master";
+import { scoreFace } from "./quality";
+import type { FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult } from "../types/face-model";
 
 async function imageDataFromFile(file: File) {
   const bitmap = await createImageBitmap(file);
@@ -19,10 +22,11 @@ function expressionsFor(sheet: SheetId) { return sheet === "primary" ? PRIMARY_E
 
 function spriteKey(sheet: SheetId, index: number) { return `${expressionsFor(sheet)[index % 7]}${Math.floor(index / 7) === 0 ? "" : Math.floor(index / 7) === 1 ? "_blink" : "_talk"}`; }
 
-function buildSprite(face: ReturnType<typeof cropFace>, key: string, sheet: SheetId, master: HeadMaster, scaleX: number, scaleY: number, state: GeneratedSprite["state"]): GeneratedSprite {
+function buildSprite(face: ReturnType<typeof cropFace>, anatomy: FaceAnatomy, key: string, sheet: SheetId, master: HeadMaster, scaleX: number, scaleY: number, state: GeneratedSprite["state"]): GeneratedSprite {
   const source = canvasFromPixels(face.data, face.width, face.height);
   const output = placeFace(document.createElement("canvas"), source, master, scaleX, scaleY);
-  return { key, sourceSheet: sheet, state, dataUrl: output.toDataURL("image/png"), width: OUTPUT_WIDTH, height: OUTPUT_HEIGHT };
+  const adjustment = { scaleX, scaleY, dx: 0, dy: 0, reviewed: false };
+  return { key, sourceSheet: sheet, state, dataUrl: output.toDataURL("image/png"), width: OUTPUT_WIDTH, height: OUTPUT_HEIGHT, anatomy, adjustment, quality: scoreFace(anatomy, master, adjustment, master.stabilityScore) };
 }
 
 export async function processSheet(file: File, sheet: SheetId, master?: HeadMaster): Promise<SheetResult> {
@@ -31,11 +35,14 @@ export async function processSheet(file: File, sheet: SheetId, master?: HeadMast
   const regions = detectFaceSheet(keyed, source.data.width, source.data.height);
   if (regions.length !== 21) throw new Error("Não foi possível localizar as 21 células da folha.");
   const crops = regions.map((region) => cropFace(keyed, source.data.width, source.data.height, region));
-  const localMaster: HeadMaster = master ?? { width: median(crops.map((crop) => crop.width)), height: median(crops.map((crop) => crop.height)), centerX: OUTPUT_WIDTH / 2, neckY: 346, neckWidth: 1 };
+  const anatomies = crops.map((crop) => analyzeFaceAnatomy(crop.data, crop.width, crop.height));
+  if (anatomies.some((anatomy) => !anatomy)) throw new Error("Não foi possível analisar a anatomia de um ou mais rostos.");
+  const validAnatomies = anatomies as FaceAnatomy[];
+  const localMaster: HeadMaster = master ?? buildHeadMaster(validAnatomies);
   const scaleX = master ? master.width / Math.max(1, median(crops.map((crop) => crop.width))) : 1.1;
   const scaleY = master ? master.height / Math.max(1, median(crops.map((crop) => crop.height))) : 1.1;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
-  const sprites = crops.map((crop, index) => buildSprite(crop, spriteKey(sheet, index), sheet, localMaster, scaleX, scaleY, states[Math.floor(index / 7)]));
+  const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, localMaster, scaleX, scaleY, states[Math.floor(index / 7)]));
   const expressions: ModelExpression[] = expressionsFor(sheet).map((key, column) => ({ key, sourceSheet: sheet, default: sprites[column], blink: sprites[column + 7], talk: sprites[column + 14] }));
-  return { id: sheet, fileName: file.name, width: source.data.width, height: source.data.height, regions, expressions, imageUrl: source.imageUrl };
+  return { id: sheet, fileName: file.name, width: source.data.width, height: source.data.height, regions, expressions, imageUrl: source.imageUrl, headMaster: localMaster };
 }
