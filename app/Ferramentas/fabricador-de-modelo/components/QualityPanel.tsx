@@ -1,0 +1,8 @@
+import type { GeneratedSprite } from "../types/face-model";
+import styles from "../../ferramentas.module.css";
+
+export function QualityPanel({ sprite, compatibility }: { sprite?: GeneratedSprite; compatibility?: { overall: number; status: string; size: number; proportion: number; silhouette: number; jaw: number; neck: number } }) {
+  if (!sprite) return null;
+  const quality = sprite.quality;
+  return <div className={styles.qualityPanel}><div className={styles.qualityHeader}><div><span className={styles.sectionLabel}>Qualidade</span><strong>{Math.round(quality.overall)} / 100</strong></div><span className={`${styles.qualityBadge} ${quality.critical ? styles.qualityCritical : quality.warning ? styles.qualityWarning : styles.qualityGood}`}>{quality.critical ? "Crítico" : quality.warning ? "Revisar" : "Pronto"}</span></div><div className={styles.metricGrid}>{[["Escala", quality.scale], ["Posição", quality.position], ["Proporção", quality.proportion], ["Silhueta", quality.shape], ["Pescoço", quality.neck]].map(([label, value]) => <div key={String(label)}><small>{label}</small><strong>{Math.round(Number(value))}</strong></div>)}</div>{compatibility && <div className={styles.compatibility}><small>Compatibilidade da Folha 2 · {compatibility.status}</small><strong>{compatibility.overall}/100</strong><span>Tamanho {compatibility.size} · proporção {compatibility.proportion} · silhueta {compatibility.silhouette} · mandíbula {compatibility.jaw} · pescoço {compatibility.neck}</span></div>}{quality.reasons.length > 0 && <p className={styles.warningText}>{quality.reasons.join(" · ")}</p>}</div>;
+}
