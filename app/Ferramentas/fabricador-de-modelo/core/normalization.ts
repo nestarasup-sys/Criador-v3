@@ -3,7 +3,7 @@ import { clamp, mad, median, robustZ } from "../utils/statistics";
 import { compareProfiles } from "./head-master";
 import { scoreFace } from "./quality";
 
-export type CalibrationOutput = { adjustments: SpriteAdjustment[]; metrics: QualityMetrics[]; trioTargets: Array<{ width: number; height: number }>; outlierIndices: number[] };
+export type CalibrationOutput = { adjustments: SpriteAdjustment[]; metrics: QualityMetrics[]; trioTargets: Array<{ width: number; height: number }>; outlierIndices: number[]; compatibility?: CompatibilityMetrics };
 
 function usableForTrio(anatomies: readonly FaceAnatomy[], indices: number[]) {
   const widths = indices.map((index) => anatomies[index].width); const heights = indices.map((index) => anatomies[index].height);

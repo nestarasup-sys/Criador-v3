@@ -1,12 +1,13 @@
-import { EXTENSION_EXPRESSIONS, OUTPUT_HEIGHT, OUTPUT_WIDTH, PRIMARY_EXPRESSIONS } from "../constants/expressions";
+import { DEFAULT_CALIBRATION_SETTINGS, EXTENSION_EXPRESSIONS, PRIMARY_EXPRESSIONS } from "../constants/expressions";
 import { cropFace } from "./crop";
 import { removeSheetChroma } from "./chroma-key";
 import { detectFaceSheet } from "./detection";
-import { canvasFromPixels, emptyHeadMaster, placeFace } from "./compositor";
+import { canvasFromPixels, placeFace } from "./compositor";
 import { analyzeFaceAnatomy } from "./anatomy";
 import { buildHeadMaster } from "./head-master";
 import { scoreFace } from "./quality";
-import type { FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult } from "../types/face-model";
+import { calibrateExtension, calibratePrimary } from "./normalization";
+import type { CalibrationSettings, FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult, SpriteAdjustment } from "../types/face-model";
 
 async function imageDataFromFile(file: File) {
   const bitmap = await createImageBitmap(file);
@@ -22,27 +23,31 @@ function expressionsFor(sheet: SheetId) { return sheet === "primary" ? PRIMARY_E
 
 function spriteKey(sheet: SheetId, index: number) { return `${expressionsFor(sheet)[index % 7]}${Math.floor(index / 7) === 0 ? "" : Math.floor(index / 7) === 1 ? "_blink" : "_talk"}`; }
 
-function buildSprite(face: ReturnType<typeof cropFace>, anatomy: FaceAnatomy, key: string, sheet: SheetId, master: HeadMaster, scaleX: number, scaleY: number, state: GeneratedSprite["state"]): GeneratedSprite {
+function buildSprite(face: ReturnType<typeof cropFace>, anatomy: FaceAnatomy, key: string, sheet: SheetId, master: HeadMaster, adjustment: SpriteAdjustment, state: GeneratedSprite["state"], settings: CalibrationSettings, compatibility?: number): GeneratedSprite {
   const source = canvasFromPixels(face.data, face.width, face.height);
-  const output = placeFace(document.createElement("canvas"), source, master, scaleX, scaleY);
-  const adjustment = { scaleX, scaleY, dx: 0, dy: 0, reviewed: false };
-  return { key, sourceSheet: sheet, state, dataUrl: output.toDataURL("image/png"), width: OUTPUT_WIDTH, height: OUTPUT_HEIGHT, anatomy, adjustment, quality: scoreFace(anatomy, master, adjustment, master.stabilityScore) };
+  const output = placeFace(document.createElement("canvas"), source, anatomy, master, adjustment, settings);
+  return { key, sourceSheet: sheet, state, dataUrl: output.toDataURL("image/png"), width: output.width, height: output.height, anatomy, adjustment, quality: scoreFace(anatomy, master, adjustment, master.stabilityScore, compatibility) };
 }
 
-export async function processSheet(file: File, sheet: SheetId, master?: HeadMaster): Promise<SheetResult> {
+export type ProcessSheetOptions = { referenceMaster?: HeadMaster; settings?: Partial<CalibrationSettings>; manualAdjustments?: readonly Partial<SpriteAdjustment>[] };
+
+export async function processSheet(file: File, sheet: SheetId, options: ProcessSheetOptions = {}): Promise<SheetResult> {
+  const settings: CalibrationSettings = { ...DEFAULT_CALIBRATION_SETTINGS, ...options.settings };
   const source = await imageDataFromFile(file);
-  const keyed = await removeSheetChroma(source.data.data, source.data.width, source.data.height);
+  const keyed = await removeSheetChroma(source.data.data, source.data.width, source.data.height, settings);
   const regions = detectFaceSheet(keyed, source.data.width, source.data.height);
   if (regions.length !== 21) throw new Error("Não foi possível localizar as 21 células da folha.");
   const crops = regions.map((region) => cropFace(keyed, source.data.width, source.data.height, region));
   const anatomies = crops.map((crop) => analyzeFaceAnatomy(crop.data, crop.width, crop.height));
   if (anatomies.some((anatomy) => !anatomy)) throw new Error("Não foi possível analisar a anatomia de um ou mais rostos.");
   const validAnatomies = anatomies as FaceAnatomy[];
-  const localMaster: HeadMaster = master ?? buildHeadMaster(validAnatomies);
-  const scaleX = master ? master.width / Math.max(1, median(crops.map((crop) => crop.width))) : 1.1;
-  const scaleY = master ? master.height / Math.max(1, median(crops.map((crop) => crop.height))) : 1.1;
+  const localMaster = buildHeadMaster(validAnatomies);
+  const calibration = options.referenceMaster
+    ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment)
+    : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection);
+  const targetMaster = options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
-  const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, localMaster, scaleX, scaleY, states[Math.floor(index / 7)]));
+  const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility.overall : undefined));
   const expressions: ModelExpression[] = expressionsFor(sheet).map((key, column) => ({ key, sourceSheet: sheet, default: sprites[column], blink: sprites[column + 7], talk: sprites[column + 14] }));
-  return { id: sheet, fileName: file.name, width: source.data.width, height: source.data.height, regions, expressions, imageUrl: source.imageUrl, headMaster: localMaster };
+  return { id: sheet, fileName: file.name, width: source.data.width, height: source.data.height, regions, expressions, imageUrl: source.imageUrl, headMaster: localMaster, compatibility: options.referenceMaster ? calibration.compatibility : undefined };
 }

@@ -1,5 +1,5 @@
 import { OUTPUT_HEIGHT, OUTPUT_WIDTH } from "../constants/expressions";
-import type { HeadMaster } from "../types/face-model";
+import type { CalibrationSettings, FaceAnatomy, HeadMaster, SpriteAdjustment } from "../types/face-model";
 
 export function emptyHeadMaster(width = 1, height = 1): HeadMaster {
   return {
@@ -24,11 +24,12 @@ export function canvasFromPixels(data: Uint8ClampedArray, width: number, height:
   return canvas;
 }
 
-export function placeFace(canvas: HTMLCanvasElement, face: HTMLCanvasElement, master: HeadMaster, scaleX = 1, scaleY = 1) {
+export function placeFace(canvas: HTMLCanvasElement, face: HTMLCanvasElement, anatomy: FaceAnatomy, master: HeadMaster, adjustment: SpriteAdjustment, settings: CalibrationSettings) {
   canvas.width = OUTPUT_WIDTH; canvas.height = OUTPUT_HEIGHT;
-  const context = canvas.getContext("2d")!; context.clearRect(0, 0, canvas.width, canvas.height);
-  const width = master.width * scaleX; const height = master.height * scaleY;
-  context.drawImage(face, (OUTPUT_WIDTH - width) / 2, master.neckBaseY - height, width, height);
+  const context = canvas.getContext("2d")!; context.setTransform(1, 0, 0, 1, 0, 0); context.globalAlpha = 1; context.globalCompositeOperation = "source-over"; context.clearRect(0, 0, canvas.width, canvas.height); context.imageSmoothingEnabled = true; context.imageSmoothingQuality = "high";
+  const scaleX = settings.baseScale * adjustment.scaleX; const scaleY = settings.baseScale * adjustment.scaleY; const width = face.width * scaleX; const height = face.height * scaleY;
+  const sourceAnchorX = anatomy.neckCenterX; const sourceAnchorY = anatomy.neckBaseY + 1; const targetX = settings.anchorX + adjustment.dx; const targetY = settings.anchorY + adjustment.dy;
+  context.drawImage(face, targetX - sourceAnchorX * scaleX, targetY - sourceAnchorY * scaleY, width, height);
   return canvas;
 }
 
