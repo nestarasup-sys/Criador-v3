@@ -44,9 +44,8 @@ function adaptiveRegions(data: Uint8ClampedArray, width: number, height: number)
   const top = candidates.slice(0, Math.min(30, candidates.length)); const medianWidth = top.map((item) => item.width).sort((a, b) => a - b)[Math.floor(top.length / 2)] ?? width / 7; const medianHeight = top.map((item) => item.height).sort((a, b) => a - b)[Math.floor(top.length / 2)] ?? height / 3;
   const filtered = candidates.filter((item) => item.width > medianWidth * .32 && item.width < medianWidth * 3.1 && item.height > medianHeight * .32 && item.height < medianHeight * 3.1);
   if (filtered.length < 21) return null;
-  const rows: Component[][] = [[], [], []];
-  const rowCenters = [height / 6, height / 2, height * 5 / 6];
-  for (const candidate of filtered) rows.sort((a, b) => mean(a.map((item) => item.centerY)) - mean(b.map((item) => item.centerY))).find((row) => row.length < 7 && Math.abs(candidate.centerY - (row.length ? mean(row.map((item) => item.centerY)) : rowCenters[rows.indexOf(row)])) < height / 5)?.push(candidate);
+  const ordered = [...filtered].sort((a, b) => a.centerY - b.centerY || a.centerX - b.centerX);
+  const rows: Component[][] = [ordered.slice(0, 7), ordered.slice(7, 14), ordered.slice(14, 21)];
   if (rows.some((row) => row.length < 7)) return null;
   const selected = rows.map((row) => row.sort((a, b) => a.centerX - b.centerX).slice(0, 7));
   const rowTops = selected.map((row) => mean(row.map((item) => item.y))); const rowBottoms = selected.map((row) => mean(row.map((item) => item.y + item.height)));
