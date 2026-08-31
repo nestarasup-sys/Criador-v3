@@ -17,8 +17,6 @@ async function imageDataFromFile(file: File) {
   return { data: context.getImageData(0, 0, canvas.width, canvas.height), imageUrl: URL.createObjectURL(file) };
 }
 
-function median(values: number[]) { const sorted = [...values].sort((a, b) => a - b); return sorted[Math.floor(sorted.length / 2)] ?? 1; }
-
 function expressionsFor(sheet: SheetId) { return sheet === "primary" ? PRIMARY_EXPRESSIONS : EXTENSION_EXPRESSIONS; }
 
 function spriteKey(sheet: SheetId, index: number) { return `${expressionsFor(sheet)[index % 7]}${Math.floor(index / 7) === 0 ? "" : Math.floor(index / 7) === 1 ? "_blink" : "_talk"}`; }

@@ -35,7 +35,7 @@ export function placeFace(canvas: HTMLCanvasElement, face: HTMLCanvasElement, an
 
 export function analyzeHead(canvas: HTMLCanvasElement): HeadMaster {
   const context = canvas.getContext("2d", { willReadFrequently: true })!;
-  const image = context.getImageData(0, 0, canvas.width, canvas.height); let minX = canvas.width; let maxX = 0; let minY = canvas.height; let maxY = 0; let neckY = 0; let count = 0;
+  const image = context.getImageData(0, 0, canvas.width, canvas.height); let minX = canvas.width; let maxX = 0; let minY = canvas.height; let maxY = 0; let count = 0;
   for (let y = 0; y < canvas.height; y += 1) for (let x = 0; x < canvas.width; x += 1) if (image.data[(y * canvas.width + x) * 4 + 3] > 40) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); count += 1; }
   if (!count) return emptyHeadMaster();
   const width = maxX - minX + 1; const height = maxY - minY + 1;
