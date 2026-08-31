@@ -62,10 +62,12 @@ export const EXPRESSION_STATES = [
   ["default", "Normal"], ["blink", "Piscando"], ["talk", "Falando"],
 ] as const;
 
-export type ExpressionKey = (typeof ALL_BASE_EXPRESSION_KEYS)[number];
-export type Emotion = (typeof EMOTIONS)[number][0];
+// Built-in expressions remain listed above for defaults and labels, while
+// model folders may add arbitrary PNG stems without an app update.
+export type ExpressionKey = string;
+export type Emotion = string;
 export type ExpressionState = (typeof EXPRESSION_STATES)[number][0];
 
 export function isExpressionKey(value: string): value is ExpressionKey {
-  return (ALL_BASE_EXPRESSION_KEYS as readonly string[]).includes(value);
+  return value.trim().length > 0 && !/[\\/]/.test(value);
 }

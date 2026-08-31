@@ -11,6 +11,7 @@ import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
+import { collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
 import {
   BODY_LIMITS,
   IMAGE_MIME_TYPES,
@@ -383,9 +384,7 @@ async function discoverModels() {
       const folder = join(genderRoot, entry.name);
       const files = await readdir(folder);
       const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
-      const expressionKeys = pngFiles
-        .map((name) => name.slice(0, -4))
-        .sort((left, right) => left.localeCompare(right, "pt-BR", { numeric: true }));
+      const expressionKeys = collectModelExpressionKeys(pngFiles);
       if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));

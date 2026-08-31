@@ -1,5 +1,5 @@
 import { normalizeBasePackId } from "../domain/base-model.mjs";
-import { ALL_BASE_EXPRESSION_KEYS, type ExpressionKey } from "../domain/expression-contract";
+import { isExpressionKey, type ExpressionKey } from "../domain/expression-contract";
 import type { Character } from "../domain/character-contract";
 import type { BasePackCollection } from "./base-packs";
 import type {
@@ -51,9 +51,7 @@ export async function loadPcModels(): Promise<BasePackCollection> {
   return Object.fromEntries((['feminino', 'masculino'] as Model[]).map((gender) => {
     const validModels = (discovered[gender] ?? []).map((pack) => ({
       ...pack,
-      expressionKeys: pack.expressionKeys.filter((key): key is ExpressionKey =>
-        (ALL_BASE_EXPRESSION_KEYS as readonly string[]).includes(key),
-      ),
+      expressionKeys: pack.expressionKeys.filter((key): key is ExpressionKey => isExpressionKey(key)),
     })).filter((pack) => pack.expressionKeys.includes("normal"));
     return [gender, validModels.length > 0 ? validModels : DEFAULT_BASE_PACKS[gender]];
   })) as unknown as BasePackCollection;

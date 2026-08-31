@@ -123,9 +123,10 @@ function expressionSource(
     : legacyPack.replace(/^pack-(\d+)$/, (_, index) => `modelo-${Number(index) + 1}`);
   const discovered = modelPacks[character.model]?.find((item) => item.id === pack);
   const source = discovered?.source ?? `/models/modelos/${character.model}/${pack}`;
+  const encodedKey = encodeURIComponent(key);
   return discovered?.version
-    ? `${source}/${key}.png?v=${encodeURIComponent(discovered.version)}`
-    : `${source}/${key}.png`;
+    ? `${source}/${encodedKey}.png?v=${encodeURIComponent(discovered.version)}`
+    : `${source}/${encodedKey}.png`;
 }
 
 function normalizedTransform(transform?: Partial<ItemTransform>): ItemTransform {

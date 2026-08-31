@@ -39,7 +39,7 @@ export function getBasePack(packs: BasePackCollection, model: Model, packId?: Ba
 }
 
 export function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
-  const source = `${pack.source}/${key}.png`;
+  const source = `${pack.source}/${encodeURIComponent(key)}.png`;
   return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
 }
 
