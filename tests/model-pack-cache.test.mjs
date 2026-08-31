@@ -25,6 +25,7 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   ]);
 
   assert.match(server, /versionParts = await Promise\.all/);
+  assert.match(server, /collectModelExpressionKeys\(pngFiles\)/);
   assert.match(server, /version = createHash\("sha1"\)/);
   assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
   assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
@@ -41,4 +42,6 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);
+  assert.match(studioPage, /dynamicEmotionOptions/);
+  assert.match(renderer, /encodeURIComponent\(key\)/);
 });

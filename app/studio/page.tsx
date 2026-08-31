@@ -51,14 +51,14 @@ function emotionOptionsForCharacter(character: Character, expressionPacks: PcExp
     const pack = expressionPacks.find((item) => item.id === character.expressionPackId);
     if (pack) {
       const available = new Set(pack.frames.filter((frame) => !frame.key.endsWith("_blink") && !frame.key.endsWith("_talk")).map((frame) => frame.key));
-      return dynamicEmotionOptions([...available], EMOTIONS) as ReadonlyArray<readonly [Emotion, string]>;
+      return dynamicEmotionOptions([...available], EMOTIONS) as unknown as ReadonlyArray<readonly [Emotion, string]>;
     }
   }
   const modelPack = modelPacks[character.model]?.find((pack) => pack.id === normalizeBasePackId(character.basePackId));
   if (modelPack?.expressionKeys?.length) {
     const available = new Set(modelPack.expressionKeys
       .filter((key) => !key.endsWith("_blink") && !key.endsWith("_talk")));
-    return dynamicEmotionOptions([...available], EMOTIONS) as ReadonlyArray<readonly [Emotion, string]>;
+    return dynamicEmotionOptions([...available], EMOTIONS) as unknown as ReadonlyArray<readonly [Emotion, string]>;
   }
   const normalizedPack = character.basePackId === "padrao" ? "modelo-1" : character.basePackId ?? "modelo-1";
   return normalizedPack !== "modelo-1" ? NEW_BASE_EMOTIONS : STANDARD_EMOTIONS;
