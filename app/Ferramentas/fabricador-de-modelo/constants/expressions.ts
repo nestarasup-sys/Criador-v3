@@ -22,6 +22,7 @@ export const DEFAULT_CALIBRATION_SETTINGS = {
   cleanEdges: true,
   contentPadding: 4,
   squareCrop: true,
+  tightCrop: false,
   anchorX: DEFAULT_ANCHOR_X,
   anchorY: DEFAULT_ANCHOR_Y,
 } as const;

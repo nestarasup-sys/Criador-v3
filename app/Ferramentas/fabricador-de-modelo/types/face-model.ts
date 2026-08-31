@@ -46,6 +46,7 @@ export type CalibrationSettings = {
   cleanEdges: boolean;
   contentPadding: number;
   squareCrop: boolean;
+  tightCrop: boolean;
   anchorX: number;
   anchorY: number;
 };

@@ -74,7 +74,8 @@ export default function FabricadorDeModeloPage() {
   const comparisonCurrent = comparisonExpression?.[compareState];
   const comparisonGhost = compareSheet === "primary" ? extensionSheet?.expressions[compareColumn]?.[compareState] : primarySheet?.expressions[compareColumn]?.[compareState];
   const comparisonTrio = comparisonExpression ? [comparisonExpression.default, comparisonExpression.blink, comparisonExpression.talk] : [];
-  const criticalCount = allSprites.filter((sprite) => sprite.quality.critical).length;
+  const criticalSprites = allSprites.filter((sprite) => sprite.quality.critical);
+  const unreviewedCriticalCount = criticalSprites.filter((sprite) => !reviewed.has(keyOf(sprite)) && !sprite.adjustment.reviewed).length;
   const expectedCount = extension ? 42 : 21;
 
   async function generate(edits = manualEdits) {
@@ -122,7 +123,7 @@ export default function FabricadorDeModeloPage() {
 
   async function save() {
     if (allSprites.length !== expectedCount) { setTone("error"); setMessage(`Gere ${expectedCount} sprites antes de salvar.`); return; }
-    if (criticalCount > 0) { setTone("error"); setMessage(`Não é possível salvar: ${criticalCount} rosto(s) estão em estado crítico. Corrija ou revise a folha.`); return; }
+    if (unreviewedCriticalCount > 0) { setTone("error"); setMessage(`Não é possível salvar: ${unreviewedCriticalCount} rosto(s) críticos ainda não foram revisados.`); return; }
     setBusy(true); setTone(""); setMessage("Salvando modelo no catálogo local…");
     try {
       const response = await localDataFetch("/models/fabricator", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, folderName, gender, config: { anchorX: settings.anchorX, anchorY: settings.anchorY, baseScale: settings.baseScale, expressions: allSprites.map((sprite) => sprite.key) }, sprites: spritePayload(sheets) }) });

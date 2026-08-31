@@ -21,12 +21,15 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(constants, /baseScale: 1\.1/);
   assert.match(constants, /extensionMaxCorrection: \.08/);
   assert.match(constants, /extensionMicroAdjustment: \.02/);
+  assert.match(constants, /squareCrop: true/);
   assert.match(constants, /anchorX: DEFAULT_ANCHOR_X/);
   assert.match(types, /SheetId = "primary" \| "extension"/);
   assert.match(types, /scale: number; scaleX: number; scaleY: number/);
+  assert.match(types, /tightCrop: boolean/);
   assert.match(buildModel, /referenceMaster\?: HeadMaster/);
   assert.match(buildModel, /calibrateExtension/);
   assert.match(buildModel, /manualAdjustments/);
+  assert.match(buildModel, /settings\.contentPadding, settings\.squareCrop, settings\.tightCrop/);
   assert.match(compositor, /OUTPUT_WIDTH/);
   assert.match(compositor, /OUTPUT_HEIGHT/);
   assert.match(compositor, /settings\.anchorX/);
@@ -47,6 +50,7 @@ test("salvamento mantém as proteções de tamanho e duplicidade", async () => {
   assert.match(server, /sprites\.length !== 21 && sprites\.length !== 42/);
   assert.match(server, /new Set\(spriteNames\)\.size !== spriteNames\.length/);
   assert.match(server, /anchorX, anchorY, baseScale, width: 1920, height: 1080/);
-  assert.match(page, /criticalCount > 0/);
+  assert.match(page, /unreviewedCriticalCount > 0/);
+  assert.match(page, /ainda não foram revisados/);
   assert.match(page, /Não é possível salvar/);
 });

@@ -35,7 +35,7 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
   const keyed = await removeSheetChroma(source.data.data, source.data.width, source.data.height, settings);
   const regions = detectFaceSheet(keyed, source.data.width, source.data.height);
   if (regions.length !== 21) throw new Error("Não foi possível localizar as 21 células da folha.");
-  const crops = regions.map((region) => cropFace(keyed, source.data.width, source.data.height, region));
+  const crops = regions.map((region) => cropFace(keyed, source.data.width, source.data.height, region, settings.contentPadding, settings.squareCrop, settings.tightCrop));
   const anatomies = crops.map((crop) => analyzeFaceAnatomy(crop.data, crop.width, crop.height));
   if (anatomies.some((anatomy) => !anatomy)) throw new Error("Não foi possível analisar a anatomia de um ou mais rostos.");
   const validAnatomies = anatomies as FaceAnatomy[];
