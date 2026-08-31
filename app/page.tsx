@@ -1300,6 +1300,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const refreshModels = () => { void loadPcModels().then(setBasePacks).catch(() => undefined); };
+    window.addEventListener("nymi:models-updated", refreshModels);
+    return () => window.removeEventListener("nymi:models-updated", refreshModels);
+  }, []);
+
+  useEffect(() => {
     charactersRef.current = characters;
     saveCharactersToBrowser(characters);
     const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
