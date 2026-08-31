@@ -1,5 +1,5 @@
 import type { SheetResult } from "../types/face-model";
-import styles from "../ferramentas.module.css";
+import styles from "../../ferramentas.module.css";
 
 export function PreviewGrid({ sheets }: { sheets: SheetResult[] }) {
   const sprites = sheets.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk]));
