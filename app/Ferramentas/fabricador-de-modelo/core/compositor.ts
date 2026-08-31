@@ -27,7 +27,7 @@ export function canvasFromPixels(data: Uint8ClampedArray, width: number, height:
 export function placeFace(canvas: HTMLCanvasElement, face: HTMLCanvasElement, anatomy: FaceAnatomy, master: HeadMaster, adjustment: SpriteAdjustment, settings: CalibrationSettings) {
   canvas.width = OUTPUT_WIDTH; canvas.height = OUTPUT_HEIGHT;
   const context = canvas.getContext("2d")!; context.setTransform(1, 0, 0, 1, 0, 0); context.globalAlpha = 1; context.globalCompositeOperation = "source-over"; context.clearRect(0, 0, canvas.width, canvas.height); context.imageSmoothingEnabled = true; context.imageSmoothingQuality = "high";
-  const scaleX = settings.baseScale * adjustment.scaleX; const scaleY = settings.baseScale * adjustment.scaleY; const width = face.width * scaleX; const height = face.height * scaleY;
+  const uniform = adjustment.scale ?? 1; const scaleX = settings.baseScale * uniform * adjustment.scaleX; const scaleY = settings.baseScale * uniform * adjustment.scaleY; const width = face.width * scaleX; const height = face.height * scaleY;
   const sourceAnchorX = anatomy.neckCenterX; const sourceAnchorY = anatomy.neckBaseY + 1; const targetX = settings.anchorX + adjustment.dx; const targetY = settings.anchorY + adjustment.dy;
   context.drawImage(face, targetX - sourceAnchorX * scaleX, targetY - sourceAnchorY * scaleY, width, height);
   return canvas;

@@ -17,7 +17,7 @@ export type FaceAnatomy = {
   profile: StructuralProfilePoint[];
   visualBounds: { x: number; y: number; width: number; height: number };
 };
-export type SpriteAdjustment = { scaleX: number; scaleY: number; dx: number; dy: number; reviewed: boolean };
+export type SpriteAdjustment = { scale: number; scaleX: number; scaleY: number; dx: number; dy: number; reviewed: boolean };
 export type QualityMetrics = {
   overall: number;
   stability: number;

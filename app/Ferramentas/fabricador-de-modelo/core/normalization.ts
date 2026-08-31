@@ -24,7 +24,7 @@ export function calibratePrimary(anatomies: readonly FaceAnatomy[], master: Head
   });
   const adjustments = anatomies.map((anatomy, index) => {
     const target = trioTargets[index % 7];
-    return { scaleX: clamp(target.width / Math.max(1, anatomy.width), 1 - maximumCorrection, 1 + maximumCorrection), scaleY: clamp(target.height / Math.max(1, anatomy.height), 1 - maximumCorrection, 1 + maximumCorrection), dx: 0, dy: 0, reviewed: false };
+    return { scale: 1, scaleX: clamp(target.width / Math.max(1, anatomy.width), 1 - maximumCorrection, 1 + maximumCorrection), scaleY: clamp(target.height / Math.max(1, anatomy.height), 1 - maximumCorrection, 1 + maximumCorrection), dx: 0, dy: 0, reviewed: false };
   });
   const metrics = anatomies.map((anatomy, index) => scoreFace(anatomy, master, adjustments[index], 100 - Math.max(Math.abs(anatomy.width - globalWidth) / Math.max(1, globalWidth), Math.abs(anatomy.height - globalHeight) / Math.max(1, globalHeight)) * 100));
   return { adjustments, metrics, trioTargets, outlierIndices: master.outlierIndices };
@@ -40,7 +40,7 @@ export function calibrateExtension(anatomies: readonly FaceAnatomy[], master: He
     const usable = usableForTrio(anatomies, indices); const source = usable.length ? usable : indices;
     return { width: median(source.map((index) => anatomies[index].width)), height: median(source.map((index) => anatomies[index].height)) };
   });
-  const adjustments = anatomies.map((anatomy, index) => ({ scaleX: globalX * clamp(trioTargets[index % 7].width / Math.max(1, anatomy.width), 1 - microAdjustment, 1 + microAdjustment), scaleY: globalY * clamp(trioTargets[index % 7].height / Math.max(1, anatomy.height), 1 - microAdjustment, 1 + microAdjustment), dx: 0, dy: 0, reviewed: false }));
+  const adjustments = anatomies.map((anatomy, index) => ({ scale: 1, scaleX: globalX * clamp(trioTargets[index % 7].width / Math.max(1, anatomy.width), 1 - microAdjustment, 1 + microAdjustment), scaleY: globalY * clamp(trioTargets[index % 7].height / Math.max(1, anatomy.height), 1 - microAdjustment, 1 + microAdjustment), dx: 0, dy: 0, reviewed: false }));
   const profile = compareProfiles(anatomies[0]?.profile ?? [], master.profile);
   const proportionError = Math.abs(Math.log(Math.max(.001, (sourceWidth / Math.max(1, sourceHeight)) / (master.width / Math.max(1, master.height)))));
   const neckWidth = median(anatomies.map((anatomy) => anatomy.neckWidth));

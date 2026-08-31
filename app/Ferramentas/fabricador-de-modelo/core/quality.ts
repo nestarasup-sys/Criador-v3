@@ -2,8 +2,8 @@ import type { FaceAnatomy, HeadMaster, QualityMetrics } from "../types/face-mode
 import { clamp } from "../utils/statistics";
 import { compareProfiles } from "./head-master";
 
-export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scaleX: number; scaleY: number }, stability: number, compatibility?: number): QualityMetrics {
-  const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, adjustment.scaleX))), Math.abs(Math.log(Math.max(.001, adjustment.scaleY))));
+export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scale?: number; scaleX: number; scaleY: number }, stability: number, compatibility?: number): QualityMetrics {
+  const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, (adjustment.scale ?? 1) * adjustment.scaleX))), Math.abs(Math.log(Math.max(.001, (adjustment.scale ?? 1) * adjustment.scaleY))));
   const positionError = Math.abs(anatomy.neckCenterX - master.neckCenterX) / Math.max(1, master.width);
   const proportionError = Math.abs(Math.log(Math.max(.001, (anatomy.width / Math.max(1, anatomy.height)) / (master.width / Math.max(1, master.height)))));
   const profile = compareProfiles(anatomy.profile, master.profile);
