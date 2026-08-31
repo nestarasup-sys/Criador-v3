@@ -47,7 +47,7 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
     : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection);
   const targetMaster = options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
-  const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility.overall : undefined));
+  const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility?.overall : undefined));
   const expressions: ModelExpression[] = expressionsFor(sheet).map((key, column) => ({ key, sourceSheet: sheet, default: sprites[column], blink: sprites[column + 7], talk: sprites[column + 14] }));
   return { id: sheet, fileName: file.name, width: source.data.width, height: source.data.height, regions, expressions, imageUrl: source.imageUrl, headMaster: localMaster, compatibility: options.referenceMaster ? calibration.compatibility : undefined };
 }
