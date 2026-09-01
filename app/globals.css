@@ -257,6 +257,8 @@ a { color: inherit; }
 .head-fit-source-outline { fill: rgba(229, 145, 46, .08); stroke: #e3912e; stroke-width: 3; stroke-dasharray: 7 5; }
 .head-fit-target-neck { stroke: #1cae9e; stroke-width: 3; }
 .head-fit-source-neck { stroke: #e3912e; stroke-width: 3; }
+.head-fit-target-top { stroke: #168d82; stroke-width: 4; }
+.head-fit-source-top { stroke: #c67716; stroke-width: 4; }
 .head-fit-center-line { stroke: rgba(114,87,217,.68); stroke-width: 2; stroke-dasharray: 4 6; }
 .head-fit-target-label, .head-fit-source-label { font-size: 22px; font-weight: 800; paint-order: stroke; stroke: rgba(255,255,255,.9); stroke-width: 7px; }
 .head-fit-target-label { fill: #168d82; }

@@ -111,7 +111,6 @@ type HeadFitGuide = {
   defaultX?: number;
   defaultY?: number;
   targetAnchorX?: number;
-  targetAnchorY?: number;
 };
 
 
@@ -2965,7 +2964,7 @@ export default function Home() {
           defaultY: selectedOutfit.defaultY,
         },
         headOnly
-          ? { x: activeBasePack.anchorX, y: activeBasePack.anchorY }
+          ? { x: activeBasePack.anchorX }
           : undefined,
       );
       const nextTransform = normalizeTransform({
@@ -2981,7 +2980,6 @@ export default function Home() {
         defaultX: selectedOutfit.defaultX,
         defaultY: selectedOutfit.defaultY,
         targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
-        targetAnchorY: headOnly ? activeBasePack.anchorY : undefined,
       });
       const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
       setOutfitAdjustmentsByBasePack((current) => ({ ...current, [stateKey]: nextTransform }));
@@ -3739,7 +3737,8 @@ export default function Home() {
         adjustments.roupas,
       )
     : null;
-  const headFitTargetBaseY = headFitGuide?.targetAnchorY ?? headFitGuide?.target.bottom ?? null;
+  const headFitTargetTopY = headFitGuide?.target.top ?? null;
+  const headFitTargetBaseY = headFitGuide?.target.bottom ?? null;
   const headFitTargetBaseX = headFitGuide?.targetAnchorX ?? headFitGuide?.target.centerX ?? null;
   const usesBuiltInBase = faceMode === "base";
   const hasActiveItem = category === "rostos" && faceMode === "base"
@@ -4277,7 +4276,7 @@ export default function Home() {
               onPointerEnter={(event) => eraserMode && updateBrushCursor(event)}
               onPointerLeave={(event) => eraserMode && updateBrushCursor(event, false)}
             />
-            {headFitGuide && projectedHeadFit && headFitTargetBaseY !== null && headFitTargetBaseX !== null && (
+            {headFitGuide && projectedHeadFit && headFitTargetTopY !== null && headFitTargetBaseY !== null && headFitTargetBaseX !== null && (
               <svg
                 className="head-fit-overlay"
                 viewBox="0 0 1920 1080"
@@ -4303,6 +4302,8 @@ export default function Home() {
                 />
                 <line className="head-fit-target-neck" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetBaseY} y2={headFitTargetBaseY} />
                 <line className="head-fit-source-neck" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.bottom} y2={projectedHeadFit.bottom} />
+                <line className="head-fit-target-top" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetTopY} y2={headFitTargetTopY} />
+                <line className="head-fit-source-top" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.top} y2={projectedHeadFit.top} />
                 <line className="head-fit-center-line" x1={headFitTargetBaseX} x2={headFitTargetBaseX} y1={Math.min(headFitGuide.target.top, projectedHeadFit.top)} y2={Math.max(headFitTargetBaseY, projectedHeadFit.bottom)} />
                 <text className="head-fit-target-label" x={headFitGuide.target.left + 8} y={headFitGuide.target.top - 10}>modelo</text>
                 <text className="head-fit-source-label" x={projectedHeadFit.left + 8} y={projectedHeadFit.top - 10}>roupa</text>
@@ -4364,8 +4365,8 @@ export default function Home() {
                 {category === "roupas" && selectedOutfit && headFitGuide && (
                   <>
                     <div className="head-fit-guide-summary">
-                      <span><i className="head-fit-swatch model" />Modelo: {Math.round(headFitGuide.target.width)} px · base {Math.round(headFitTargetBaseY ?? headFitGuide.target.bottom)} px</span>
-                      <span><i className="head-fit-swatch outfit" />Roupa: {Math.round(projectedHeadFit?.width ?? 0)} px · base {Math.round(projectedHeadFit?.bottom ?? 0)} px</span>
+                      <span><i className="head-fit-swatch model" />Modelo: {Math.round(headFitGuide.target.width)} px · topo {Math.round(headFitTargetTopY ?? headFitGuide.target.top)} px</span>
+                      <span><i className="head-fit-swatch outfit" />Roupa: {Math.round(projectedHeadFit?.width ?? 0)} px · topo {Math.round(projectedHeadFit?.top ?? 0)} px</span>
                     </div>
                     <div className="head-fit-fine-controls">
                       <span className="head-fit-control-title">Ajuste fino</span>

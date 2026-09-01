@@ -125,9 +125,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 /**
  * Calculates the transform used by Creator's renderer. The target is in the
  * final 1920×1080 scene; the source point is in the item's native image.
- * Horizontal sides and the lower head/neck point are the anchors. The top is
- * intentionally not used as a hard anchor because expressions and hairlines
- * can change it slightly.
+ * The two horizontal sides and the uppermost head point are the anchors. The
+ * lower head/neck point remains useful for measuring height and showing a
+ * guide, but it is not used as a hard anchor because clothing necklines vary.
  */
 export function calculateHeadFit(
   source: HeadMeasurement,
@@ -140,7 +140,7 @@ export function calculateHeadFit(
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
   const targetCenterX = targetAnchor?.x ?? target.centerX;
-  const targetBaseY = targetAnchor?.y ?? target.bottom;
+  const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.
   // Solve that same equation instead of relying on a second coordinate system.
@@ -152,7 +152,7 @@ export function calculateHeadFit(
       targetCenterX - (centerX - item.width / 2 * scaleX + source.centerX * scaleX)
     ).toFixed(2),
     y: +(
-      targetBaseY - (centerY - item.height / 2 * scaleY + source.bottom * scaleY)
+      targetTopY - (centerY - item.height / 2 * scaleY + source.top * scaleY)
     ).toFixed(2),
   };
 }
