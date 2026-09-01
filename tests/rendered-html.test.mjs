@@ -686,6 +686,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /fitByBasePack/);
   assert.match(page, /layerMasksByBasePack/);
   assert.match(page, /protectionMasksByBasePack/);
+  assert.match(page, /colorAdjustmentsByBasePack/);
   assert.match(page, /saveSelectedItemForModel/);
   assert.match(page, /Salvar p\/Modelo/);
   assert.match(page, /Excluir o pack de expressões/);

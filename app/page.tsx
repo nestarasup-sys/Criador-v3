@@ -2568,6 +2568,14 @@ export default function Home() {
         cabelos: normalizeTransform(item?.fitByBasePack?.[basePackId] ?? item?.fit),
         cabelosTras: normalizeTransform(linkedBackHair?.fitByBasePack?.[basePackId] ?? linkedBackHair?.fit),
       }));
+      setColorAdjustments((current) => {
+        const next = { ...current };
+        const frontPreset = item?.colorAdjustmentsByBasePack?.[basePackId];
+        const backPreset = linkedBackHair?.colorAdjustmentsByBasePack?.[basePackId];
+        if (frontPreset && !colorAdjustmentIsActive(current.cabelos)) next.cabelos = normalizeColorAdjustment(frontPreset);
+        if (backPreset && !colorAdjustmentIsActive(current.cabelosTras)) next.cabelosTras = normalizeColorAdjustment(backPreset);
+        return next;
+      });
       setNotice(id && linkedBackHair
         ? "Cabelo frontal e sua parte traseira selecionados"
         : id
@@ -2600,6 +2608,12 @@ export default function Home() {
         ...current,
         cabelosTras: normalizeTransform(selectedBackHair?.fitByBasePack?.[basePackId] ?? selectedBackHair?.fit),
       }));
+      const backColorPreset = selectedBackHair?.colorAdjustmentsByBasePack?.[basePackId];
+      if (backColorPreset) {
+        setColorAdjustments((current) => colorAdjustmentIsActive(current.cabelosTras)
+          ? current
+          : { ...current, cabelosTras: normalizeColorAdjustment(backColorPreset) });
+      }
       setNotice(id
         ? "Parte traseira vinculada ao cabelo frontal selecionado"
         : "Vínculo com a parte traseira removido");
@@ -2662,6 +2676,16 @@ export default function Home() {
         else delete next.roupas;
         return next;
       });
+      const colorGroupKey = outfitColorGroupKey(item);
+      const colorPreset = item.colorAdjustmentsByBasePack?.[basePackId];
+      if (colorGroupKey && colorPreset) {
+        setOutfitColorAdjustmentsByGroup((current) => {
+          const existing = current[colorGroupKey];
+          return existing && colorAdjustmentIsActive(existing)
+            ? current
+            : { ...current, [colorGroupKey]: normalizeColorAdjustment(colorPreset) };
+        });
+      }
       setNotice(item.outfitGroupId
         ? `${item.outfitGroupName ?? item.name}: ${item.outfitVariantIndex === 0 ? "Padrão" : `Variante ${item.outfitVariantIndex ?? 1}`}`
         : `${item.name} selecionada`);
@@ -3303,12 +3327,20 @@ export default function Home() {
               ...front.fitByBasePack,
               [basePackId]: normalizeTransform(adjustments.cabelos),
             },
+            colorAdjustmentsByBasePack: {
+              ...front.colorAdjustmentsByBasePack,
+              [basePackId]: normalizeColorAdjustment(colorAdjustments.cabelos),
+            },
           } : null,
           back ? {
             ...back,
             fitByBasePack: {
               ...back.fitByBasePack,
               [basePackId]: normalizeTransform(adjustments.cabelosTras),
+            },
+            colorAdjustmentsByBasePack: {
+              ...back.colorAdjustmentsByBasePack,
+              [basePackId]: normalizeColorAdjustment(colorAdjustments.cabelosTras),
             },
           } : null,
         ];
@@ -3340,6 +3372,10 @@ export default function Home() {
             ? protectionMasks.roupas
             : outfitProtectionMasksByBasePack[stateKey]
               ?? item.protectionMasksByBasePack?.[basePackId];
+          const colorGroupKey = outfitColorGroupKey(selected);
+          const color = colorGroupKey
+            ? normalizeColorAdjustment(outfitColorAdjustmentsByGroup[colorGroupKey] ?? colorAdjustments.roupas)
+            : normalizeColorAdjustment(colorAdjustments.roupas);
           const nextProtectionMasks = { ...item.protectionMasksByBasePack };
           if (protection) nextProtectionMasks[basePackId] = protection;
           else delete nextProtectionMasks[basePackId];
@@ -3348,6 +3384,10 @@ export default function Home() {
             fitByBasePack: {
               ...item.fitByBasePack,
               [basePackId]: transform,
+            },
+            colorAdjustmentsByBasePack: {
+              ...item.colorAdjustmentsByBasePack,
+              [basePackId]: color,
             },
             layerMasksByBasePack: {
               ...item.layerMasksByBasePack,
