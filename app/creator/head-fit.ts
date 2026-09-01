@@ -204,19 +204,31 @@ function median(values: number[]) {
     : sorted[middle];
 }
 
-export function headContourPolygon(measurement: HeadMeasurement) {
+/**
+ * Builds the filled contour used by the automatic outfit-head eraser.
+ *
+ * The optional side margin is intentionally applied only above the detected
+ * neck band. The antialiased edge of an imported head can otherwise survive
+ * as a one-pixel line, while expanding the neck itself would remove part of
+ * the collar/skin that the eraser is meant to preserve.
+ */
+export function headContourPolygon(measurement: HeadMeasurement, horizontalMargin = 0) {
   const rows = measurement.contour?.filter((row) => row.right >= row.left) ?? [];
+  const margin = Math.max(0, horizontalMargin);
+  const sideMarginFor = (y: number) => (
+    measurement.neckY === undefined || y < measurement.neckY - 2 ? margin : 0
+  );
   if (rows.length < 2) {
     return [
-      { x: measurement.left, y: measurement.top },
-      { x: measurement.right, y: measurement.top },
-      { x: measurement.right, y: measurement.bottom },
-      { x: measurement.left, y: measurement.bottom },
+      { x: measurement.left - margin, y: measurement.top },
+      { x: measurement.right + margin, y: measurement.top },
+      { x: measurement.right + margin, y: measurement.bottom },
+      { x: measurement.left - margin, y: measurement.bottom },
     ];
   }
   return [
-    ...rows.map((row) => ({ x: row.left, y: row.y })),
-    ...rows.slice().reverse().map((row) => ({ x: row.right, y: row.y })),
+    ...rows.map((row) => ({ x: row.left - sideMarginFor(row.y), y: row.y })),
+    ...rows.slice().reverse().map((row) => ({ x: row.right + sideMarginFor(row.y), y: row.y })),
   ];
 }
 

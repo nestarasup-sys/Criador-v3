@@ -121,6 +121,9 @@ const EMPTY_SELECTIONS: Record<Category, string | null> = {
   roupas: null,
 };
 
+// Compensa a borda antialiasada da cabeça da roupa sem alcançar o pescoço.
+const AUTOMATIC_HEAD_ERASE_SIDE_MARGIN = 3;
+
 const DEFAULT_TRANSFORM: ItemTransform = {
   x: 0,
   y: 0,
@@ -3186,8 +3189,8 @@ export default function Home() {
         },
         adjustments.roupas,
       );
-      const modelHeadPath = headContourPolygon(targetHead);
-      const outfitHeadPath = headContourPolygon(projectedOutfitHead);
+      const modelHeadPath = headContourPolygon(targetHead, AUTOMATIC_HEAD_ERASE_SIDE_MARGIN);
+      const outfitHeadPath = headContourPolygon(projectedOutfitHead, AUTOMATIC_HEAD_ERASE_SIDE_MARGIN);
 
       const automaticHeadMask: MaskStroke = {
         id: crypto.randomUUID(),
