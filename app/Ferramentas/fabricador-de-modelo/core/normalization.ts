@@ -54,10 +54,16 @@ export function calibrateExtension(anatomies: readonly FaceAnatomy[], master: He
   });
   const adjustments = anatomies.map((anatomy, index) => {
     const paired = referenceAnatomies[index];
-    const targetWidth = paired ? paired.width * .78 + master.width * .22 : trioTargets[index % 7].width;
-    const targetHeight = paired ? paired.height * .78 + master.height * .22 : trioTargets[index % 7].height;
-    const pairedX = clamp(targetWidth / Math.max(1, anatomy.width), 1 - maximumCorrection, 1 + maximumCorrection);
-    const pairedY = clamp(targetHeight / Math.max(1, anatomy.height), 1 - maximumCorrection, 1 + maximumCorrection);
+    // Expressions can change the visible eyes/mouth, so the pair is aligned
+    // using only the stable structure: cranium, jaw/neck silhouette and the
+    // structural top-to-bottom span. The neck anchor remains the compositor's
+    // positional reference; these values only correct framing scale.
+    const anatomyStructuralHeight = Math.max(1, anatomy.structuralBottom - anatomy.structuralTop + 1);
+    const targetStructuralHeight = paired ? Math.max(1, paired.structuralBottom - paired.structuralTop + 1) : trioTargets[index % 7].height;
+    const targetCranialWidth = paired ? paired.cranialWidth * .78 + master.width * .22 : trioTargets[index % 7].width;
+    const targetHeight = paired ? targetStructuralHeight * .78 + master.height * .22 : targetStructuralHeight;
+    const pairedX = clamp(targetCranialWidth / Math.max(1, anatomy.cranialWidth), 1 - maximumCorrection, 1 + maximumCorrection);
+    const pairedY = clamp(targetHeight / Math.max(1, paired ? anatomyStructuralHeight : anatomy.height), 1 - maximumCorrection, 1 + maximumCorrection);
     const localX = clamp(pairedX / Math.max(.001, globalX), 1 - microAdjustment, 1 + microAdjustment);
     const localY = clamp(pairedY / Math.max(.001, globalY), 1 - microAdjustment, 1 + microAdjustment);
     return { scale: 1, scaleX: clamp(globalX * localX, 1 - maximumCorrection, 1 + maximumCorrection), scaleY: clamp(globalY * localY, 1 - maximumCorrection, 1 + maximumCorrection), dx: 0, dy: 0, reviewed: false };
