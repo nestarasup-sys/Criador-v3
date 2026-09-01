@@ -72,12 +72,12 @@ export default function FabricadorDeModeloPage() {
     let active = true;
     void localDataFetch("/models", { cache: "no-store" }).then((response) => response.json()).then((models: Record<string, Array<{ id: string }>>) => {
       if (!active) return;
-      const ids = (models.feminino ?? []).concat(models.masculino ?? []).map((model) => Number(model.id.match(/modelo-(\d+)/i)?.[1] ?? 0));
+      const ids = (models[gender] ?? []).map((model) => Number(model.id.match(/modelo-(\d+)/i)?.[1] ?? 0));
       const next = Math.max(0, ...ids) + 1;
       setName(`Modelo ${next}`); setFolderName(`modelo-${next}`);
     }).catch(() => undefined);
     return () => { active = false; };
-  }, []);
+  }, [gender]);
 
   const allSprites = useMemo(() => sheets.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk])), [sheets]);
   const currentSprite = allSprites.find((sprite) => keyOf(sprite) === selectedKey) ?? allSprites[0];

@@ -44,6 +44,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(page, /Trio de expressão/);
   assert.match(page, /allSprites\.forEach\(\(sprite\)/);
   assert.match(page, /manualAdjustments: manualArray\("extension", edits\)/);
+  assert.match(page, /models\[gender\]/);
   assert.match(comparison, /Animar trio/);
   assert.match(comparison, /max="10"/);
   assert.match(comparison, /onPanCommit/);
