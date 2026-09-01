@@ -8,6 +8,7 @@ import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBou
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
+import { calculateHeadFit, measureHeadSilhouette } from "./creator/head-fit";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -2843,6 +2844,107 @@ export default function Home() {
     setNotice("Encaixe inicial aplicado; arraste e refine se necessário");
   }
 
+  async function adjustSelectedOutfitByHead() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    setIsProcessing(true);
+    setNotice("Medindo a cabeça do modelo e ajustando a roupa…");
+    try {
+      const outfitWidth = selectedOutfit.width ?? 0;
+      const outfitHeight = selectedOutfit.height ?? 0;
+      if (!outfitWidth || !outfitHeight) throw new Error("Dimensões da roupa indisponíveis");
+
+      const outfitImage = await loadImage(selectedOutfit.url);
+      const outfitScan = document.createElement("canvas");
+      outfitScan.width = outfitWidth;
+      outfitScan.height = outfitHeight;
+      const outfitContext = outfitScan.getContext("2d", { willReadFrequently: true });
+      if (!outfitContext) throw new Error("Canvas da roupa indisponível");
+      outfitContext.clearRect(0, 0, outfitWidth, outfitHeight);
+      outfitContext.drawImage(outfitImage, 0, 0, outfitWidth, outfitHeight);
+      const outfitPixels = outfitContext.getImageData(0, 0, outfitWidth, outfitHeight);
+      const sourceHead = measureHeadSilhouette(outfitPixels.data, outfitWidth, outfitHeight, 0.46);
+      if (!sourceHead) throw new Error("Não foi possível localizar a cabeça da roupa");
+
+      // Use a expressão normal do modelo atual como referência estável. A
+      // roupa continua sendo ajustada apenas no personagem/modelo selecionado;
+      // nenhuma imagem do catálogo é sobrescrita.
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
+      if (!baseImage) throw new Error("Modelo selecionado indisponível");
+
+      const referenceCanvas = document.createElement("canvas");
+      referenceCanvas.width = 1920;
+      referenceCanvas.height = 1080;
+      const referenceContext = referenceCanvas.getContext("2d", { willReadFrequently: true });
+      if (!referenceContext) throw new Error("Canvas do modelo indisponível");
+      const sourceWidth = baseImage.naturalWidth || referenceCanvas.width;
+      const sourceHeight = baseImage.naturalHeight || referenceCanvas.height;
+      const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
+      if (headOnly) {
+        const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
+        const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
+        const targetAnchorX = activeBasePack.anchorX ?? referenceCanvas.width / 2;
+        const targetAnchorY = activeBasePack.anchorY ?? referenceCanvas.height;
+        referenceContext.drawImage(
+          baseImage,
+          targetAnchorX - sourceAnchorX,
+          targetAnchorY - sourceAnchorY,
+          sourceWidth,
+          sourceHeight,
+        );
+      } else {
+        referenceContext.drawImage(baseImage, 0, 0, referenceCanvas.width, referenceCanvas.height);
+      }
+      const referencePixels = referenceContext.getImageData(0, 0, referenceCanvas.width, referenceCanvas.height);
+      const targetHead = measureHeadSilhouette(referencePixels.data, referenceCanvas.width, referenceCanvas.height, headOnly ? 0.86 : 0.46);
+      if (!targetHead) throw new Error("Não foi possível localizar a cabeça do modelo");
+
+      const fitted = calculateHeadFit(
+        sourceHead,
+        targetHead,
+        {
+          width: outfitWidth,
+          height: outfitHeight,
+          defaultX: selectedOutfit.defaultX,
+          defaultY: selectedOutfit.defaultY,
+        },
+        headOnly
+          ? { x: activeBasePack.anchorX, y: activeBasePack.anchorY }
+          : undefined,
+      );
+      const nextTransform = normalizeTransform({
+        ...fitted,
+        rotation: adjustments.roupas.rotation,
+        flipX: adjustments.roupas.flipX,
+      });
+      const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
+      setOutfitAdjustmentsByBasePack((current) => ({ ...current, [stateKey]: nextTransform }));
+      setAdjustments((current) => ({ ...current, roupas: nextTransform }));
+      setFitMode(true);
+      setNotice("Roupa ajustada pela cabeça do modelo; você ainda pode refinar manualmente");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   async function autoFrameCharacter() {
     setNotice("Calculando o enquadramento final…");
     try {
@@ -3926,6 +4028,17 @@ export default function Home() {
         <section className="stage-section">
           <div className="stage-toolbar">
             <div><strong>Pré-visualização</strong><span>1920 × 1080 · fundo transparente</span></div>
+            {category === "roupas" && selectedOutfit && (
+              <button
+                type="button"
+                className="head-fit-button"
+                onClick={() => { void adjustSelectedOutfitByHead(); }}
+                disabled={isProcessing}
+                title="Ajustar somente esta roupa no personagem e modelo selecionados"
+              >
+                {isProcessing ? "Ajustando…" : "Ajustar roupa"}
+              </button>
+            )}
             <div className="character-history-controls" aria-label="Histórico do personagem atual">
               <button
                 type="button"
