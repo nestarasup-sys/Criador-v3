@@ -25,6 +25,8 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(constants, /anchorX: DEFAULT_ANCHOR_X/);
   assert.match(types, /SheetId = "primary" \| "extension"/);
   assert.match(types, /scale: number; scaleX: number; scaleY: number/);
+  assert.match(types, /structuralBounds: \{ x: number; y: number; width: number; height: number \}/);
+  assert.match(types, /structuralLeft: number;\s+structuralRight: number;\s+structuralBottom: number/);
   assert.match(types, /tightCrop: boolean/);
   assert.match(buildModel, /referenceMaster\?: HeadMaster/);
   assert.match(buildModel, /calibrateExtension/);
@@ -38,6 +40,8 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(detection, /return grid\(width, height\)/);
   assert.match(normalization, /globalX = clamp\(rawGlobalX, 1 - maximumCorrection, 1 \+ maximumCorrection\)/);
   assert.match(normalization, /microAdjustment/);
+  assert.match(normalization, /sideScale\(sourceFrame, targetFrame\)/);
+  assert.match(normalization, /targetFrame\.bottom - sourceFrame\.bottom \* scaleY/);
   assert.match(page, /Alternar \$\{expectedCount\}/);
   assert.match(page, /Folha 1 \(21\)/);
   assert.match(page, /Folha 2 \(21\)/);
@@ -48,6 +52,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(comparison, /Animar trio/);
   assert.match(comparison, /max="10"/);
   assert.match(comparison, /onPanCommit/);
+  assert.match(comparison, /Guias estruturais/);
   assert.match(comparison, /\[trio\[0\], trio\[1\], trio\[0\], trio\[2\], trio\[0\]\]/);
   assert.match(comparison, /setFrame\(sequence\[index\]\)/);
 });

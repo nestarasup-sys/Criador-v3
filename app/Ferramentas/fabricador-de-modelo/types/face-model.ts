@@ -15,6 +15,7 @@ export type FaceAnatomy = {
   neckBaseY: number;
   cranialWidth: number;
   profile: StructuralProfilePoint[];
+  structuralBounds: { x: number; y: number; width: number; height: number };
   visualBounds: { x: number; y: number; width: number; height: number };
 };
 export type SpriteAdjustment = { scale: number; scaleX: number; scaleY: number; dx: number; dy: number; reviewed: boolean };
@@ -69,6 +70,10 @@ export type HeadMaster = {
   neckCenterX: number;
   neckWidth: number;
   neckBaseY: number;
+  structuralLeft: number;
+  structuralRight: number;
+  structuralBottom: number;
+  structuralWidth: number;
   profile: StructuralProfilePoint[];
   usableIndices: number[];
   outlierIndices: number[];

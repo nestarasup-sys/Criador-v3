@@ -28,6 +28,9 @@ export function buildHeadMaster(anatomies: readonly FaceAnatomy[]): HeadMaster {
   const outlierIndices = anatomies.map((_, index) => index).filter((index) => robustZ(widths[index], widthMedian, widthMad, widthMedian * .012) > 3.5 || robustZ(heights[index], heightMedian, heightMad, heightMedian * .012) > 3.5);
   const usableIndices = anatomies.map((_, index) => index).filter((index) => !outlierIndices.includes(index));
   const usable = usableIndices.length ? usableIndices : anatomies.map((_, index) => index);
+  const structuralLeft = median(usable.map((index) => anatomies[index].structuralBounds.x - anatomies[index].neckCenterX));
+  const structuralRight = median(usable.map((index) => anatomies[index].structuralBounds.x + anatomies[index].structuralBounds.width - 1 - anatomies[index].neckCenterX));
+  const structuralBottom = median(usable.map((index) => anatomies[index].structuralBottom - anatomies[index].neckBaseY));
   const profile = medianProfile(anatomies, usable);
   let bestTrioColumn = 0; let bestTrioScore = Number.POSITIVE_INFINITY;
   for (let column = 0; column < Math.min(7, anatomies.length); column += 1) {
@@ -45,6 +48,10 @@ export function buildHeadMaster(anatomies: readonly FaceAnatomy[]): HeadMaster {
     neckCenterX: median(usable.map((index) => anatomies[index].neckCenterX)),
     neckWidth: median(usable.map((index) => anatomies[index].neckWidth)),
     neckBaseY: median(usable.map((index) => anatomies[index].neckBaseY)),
+    structuralLeft,
+    structuralRight,
+    structuralBottom,
+    structuralWidth: Math.max(1, structuralRight - structuralLeft + 1),
     profile,
     usableIndices: usable,
     outlierIndices,

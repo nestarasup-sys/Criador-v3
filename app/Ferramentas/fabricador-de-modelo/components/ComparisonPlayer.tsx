@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import type { GeneratedSprite } from "../types/face-model";
+import type { GeneratedSprite, HeadMaster } from "../types/face-model";
 import styles from "../../ferramentas.module.css";
 
 export type PlaybackMode = "static" | "ghost" | "flicker" | "animation";
 
-export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio, mode, onMode, speed, onSpeed, animationScope, onAnimationScope, onPanCommit }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; animationFrames?: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void; speed: number; onSpeed: (speed: number) => void; animationScope: "selected" | "both"; onAnimationScope: (scope: "selected" | "both") => void; onPanCommit: (x: number, y: number, width: number, height: number) => void }) {
+export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio, mode, onMode, speed, onSpeed, animationScope, onAnimationScope, onPanCommit, reference, anchorX = 960, anchorY = 346, baseScale = 1.1 }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; animationFrames?: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void; speed: number; onSpeed: (speed: number) => void; animationScope: "selected" | "both"; onAnimationScope: (scope: "selected" | "both") => void; onPanCommit: (x: number, y: number, width: number, height: number) => void; reference?: HeadMaster; anchorX?: number; anchorY?: number; baseScale?: number }) {
   const [frame, setFrame] = useState<GeneratedSprite | undefined>();
   const [zoom, setZoom] = useState(1.35);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [showGuide, setShowGuide] = useState(true);
   const panRef = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ pointerId: number; x: number; y: number; startX: number; startY: number } | null>(null);
@@ -30,7 +31,11 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
     panRef.current = next;
     setPan(next);
   }
-  useEffect(() => { updatePan({ x: 0, y: 0 }); }, [current?.key]);
+  useEffect(() => {
+    panRef.current = { x: 0, y: 0 };
+    const resetFrame = window.requestAnimationFrame(() => setPan({ x: 0, y: 0 }));
+    return () => window.cancelAnimationFrame(resetFrame);
+  }, [current?.key]);
   function startDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (zoom <= 1) return;
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -64,10 +69,14 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
   }
   if (!current) return <div className={styles.emptyState}>Gere as prévias para ativar o comparador.</div>;
   const isGhost = mode === "ghost" && ghost;
+  const guideLeft = reference ? anchorX + reference.structuralLeft * baseScale : anchorX - 160;
+  const guideRight = reference ? anchorX + reference.structuralRight * baseScale : anchorX + 160;
+  const guideBottom = reference ? anchorY + reference.structuralBottom * baseScale : anchorY;
   return <div className={styles.comparisonShell}>
     <div className={`${styles.comparisonStage} ${zoom > 1 ? styles.comparisonZoomed : ""}`} onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={stopDrag} onPointerCancel={stopDrag}>
       <img ref={imageRef} className={styles.comparisonImage} style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }} src={(mode === "static" || mode === "ghost" ? current : frame ?? current)?.dataUrl} alt={(mode === "static" || mode === "ghost" ? current : frame ?? current)?.key} />
       {isGhost && <img className={`${styles.comparisonImage} ${styles.ghostImage}`} src={ghost.dataUrl} alt={`${ghost.key} sobreposto`} />}
+      {showGuide && <svg className={styles.comparisonGuide} viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" aria-label="Guias estruturais"><line x1={anchorX} x2={anchorX} y1="0" y2="1080" /><line x1={guideLeft} x2={guideLeft} y1="0" y2={guideBottom} /><line x1={guideRight} x2={guideRight} y1="0" y2={guideBottom} /><line x1={guideLeft} x2={guideRight} y1={guideBottom} y2={guideBottom} /></svg>}
       <span className={styles.stageBadge}>{mode === "ghost" ? "Ghost" : mode === "flicker" ? "Flicker" : mode === "animation" ? "Animação" : "Prévia"}</span>
     </div>
     <div className={styles.compareControls}>
@@ -75,6 +84,7 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
       <div className={styles.modeButtons}>
         {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} title={item === "animation" ? "Animar trio e todas as expressões" : undefined} disabled={item === "ghost" && !ghost || item === "animation" && animationFrames.length < 2} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Testar animação"}</button>)}
       </div>
+      <button type="button" className={`${styles.chipButton} ${showGuide ? styles.chipActive : ""}`} onClick={() => setShowGuide((value) => !value)}>{showGuide ? "Ocultar guias" : "Mostrar guias"}</button>
       {mode === "animation" && <label className={styles.speedControl}><span>Velocidade <strong>{speed.toFixed(1)}×</strong></span><input type="range" min="0.25" max="10" step="0.05" value={speed} onChange={(event) => onSpeed(Number(event.target.value))} /><small>Mais lento</small><small>Mais rápido · 10×</small></label>}
       <label className={styles.speedControl}><span>Zoom e enquadramento <strong>{Math.round(zoom * 100)}%</strong></span><input type="range" min="0.8" max="2.2" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><small>Menor</small><small>Maior</small><em>Amplie e arraste a cabeça. Ao soltar, o enquadramento é aplicado a todas as expressões.</em></label>
       {mode === "animation" && <div className={styles.animationScope}><span>Sequência</span><button type="button" className={`${styles.chipButton} ${animationScope === "selected" ? styles.chipActive : ""}`} onClick={() => onAnimationScope("selected")}>Folha atual</button><button type="button" className={`${styles.chipButton} ${animationScope === "both" ? styles.chipActive : ""}`} disabled={animationFrames.every((item) => item.sourceSheet === current.sourceSheet)} onClick={() => onAnimationScope("both")}>Folha 1 + Folha 2</button></div>}

@@ -3,8 +3,15 @@ import { clamp } from "../utils/statistics";
 import { compareProfiles } from "./head-master";
 
 export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scale?: number; scaleX: number; scaleY: number }, stability: number, compatibility?: number): QualityMetrics {
-  const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, (adjustment.scale ?? 1) * adjustment.scaleX))), Math.abs(Math.log(Math.max(.001, (adjustment.scale ?? 1) * adjustment.scaleY))));
-  const positionError = Math.abs(anatomy.neckCenterX - master.neckCenterX) / Math.max(1, master.width);
+  const uniform = adjustment.scale ?? 1;
+  const effectiveScaleX = uniform * adjustment.scaleX;
+  const effectiveScaleY = uniform * adjustment.scaleY;
+  const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, effectiveScaleX))), Math.abs(Math.log(Math.max(.001, effectiveScaleY))));
+  const sourceLeft = (anatomy.structuralBounds.x - anatomy.neckCenterX) * effectiveScaleX;
+  const sourceRight = (anatomy.structuralBounds.x + anatomy.structuralBounds.width - 1 - anatomy.neckCenterX) * effectiveScaleX;
+  const sourceBottom = (anatomy.structuralBottom - anatomy.neckBaseY) * effectiveScaleY;
+  const positionError = Math.max(Math.abs(sourceLeft - master.structuralLeft), Math.abs(sourceRight - master.structuralRight)) / Math.max(1, master.structuralWidth)
+    + Math.abs(sourceBottom - master.structuralBottom) / Math.max(1, master.height) * .5;
   const proportionError = Math.abs(Math.log(Math.max(.001, (anatomy.width / Math.max(1, anatomy.height)) / (master.width / Math.max(1, master.height)))));
   const profile = compareProfiles(anatomy.profile, master.profile);
   const shape = clamp(100 - profile.total * 900, 0, 100);

@@ -65,6 +65,7 @@ export function analyzeFaceAnatomy(data: Uint8ClampedArray, width: number, heigh
     neckBaseY: visualComponent.y + visualComponent.height - 1,
     cranialWidth,
     profile,
+    structuralBounds: { x: structuralComponent.x, y: structuralComponent.y, width: structuralComponent.width, height: structuralComponent.height },
     visualBounds: { x: visualComponent.x, y: visualComponent.y, width: visualComponent.width, height: visualComponent.height },
   };
 }

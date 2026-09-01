@@ -9,6 +9,10 @@ export function emptyHeadMaster(width = 1, height = 1): HeadMaster {
     neckCenterX: width / 2,
     neckWidth: Math.max(1, width * .34),
     neckBaseY: height - 1,
+    structuralLeft: -width / 2,
+    structuralRight: width / 2,
+    structuralBottom: 0,
+    structuralWidth: width,
     profile: [],
     usableIndices: [],
     outlierIndices: [],
@@ -39,5 +43,5 @@ export function analyzeHead(canvas: HTMLCanvasElement): HeadMaster {
   for (let y = 0; y < canvas.height; y += 1) for (let x = 0; x < canvas.width; x += 1) if (image.data[(y * canvas.width + x) * 4 + 3] > 40) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); count += 1; }
   if (!count) return emptyHeadMaster();
   const width = maxX - minX + 1; const height = maxY - minY + 1;
-  return { ...emptyHeadMaster(width, height), centerX: (minX + maxX) / 2, neckCenterX: (minX + maxX) / 2, neckBaseY: maxY, neckWidth: Math.max(1, Math.round(width * .34)) };
+  return { ...emptyHeadMaster(width, height), centerX: (minX + maxX) / 2, neckCenterX: (minX + maxX) / 2, neckBaseY: maxY, neckWidth: Math.max(1, Math.round(width * .34)), structuralLeft: minX - (minX + maxX) / 2, structuralRight: maxX - (minX + maxX) / 2, structuralBottom: 0, structuralWidth: width };
 }
