@@ -2965,13 +2965,75 @@ export default function Home() {
         },
         headOnly
           ? { x: activeBasePack.anchorX }
-          : undefined,
+        : undefined,
       );
       const nextTransform = normalizeTransform({
         ...fitted,
         rotation: adjustments.roupas.rotation,
         flipX: adjustments.roupas.flipX,
       });
+      const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
+      const skippedVariants: string[] = [];
+      const outfitGroupId = selectedOutfit.outfitGroupId;
+      const outfitVariants = outfitGroupId
+        ? catalog
+            .filter((item) => item.category === "roupas" && item.outfitGroupId === outfitGroupId)
+            .sort((left, right) => (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
+        : [selectedOutfit];
+
+      for (const variant of outfitVariants) {
+        const variantWidth = variant.width ?? 0;
+        const variantHeight = variant.height ?? 0;
+        if (!variant.url || !variantWidth || !variantHeight) {
+          skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
+          continue;
+        }
+        const variantUrl = variant.url;
+
+        const variantHead = variant.id === selectedOutfit.id
+          ? sourceHead
+          : await (async () => {
+              const image = await loadImage(variantUrl);
+              const scan = document.createElement("canvas");
+              scan.width = variantWidth;
+              scan.height = variantHeight;
+              const scanContext = scan.getContext("2d", { willReadFrequently: true });
+              if (!scanContext) return null;
+              scanContext.clearRect(0, 0, variantWidth, variantHeight);
+              scanContext.drawImage(image, 0, 0, variantWidth, variantHeight);
+              const pixels = scanContext.getImageData(0, 0, variantWidth, variantHeight);
+              return measureHeadSilhouette(pixels.data, variantWidth, variantHeight, 0.46);
+            })();
+        if (!variantHead) {
+          skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
+          continue;
+        }
+
+        const variantKey = outfitStateKey(variant.id, basePackId);
+        const existingVariantTransform = variant.id === selectedOutfit.id
+          ? adjustments.roupas
+          : normalizeTransform(
+              outfitAdjustmentsByBasePack[variantKey]
+                ?? variant.fit
+                ?? suggestedFit(variant, model),
+            );
+        const variantFit = calculateHeadFit(
+          variantHead,
+          targetHead,
+          {
+            width: variantWidth,
+            height: variantHeight,
+            defaultX: variant.defaultX,
+            defaultY: variant.defaultY,
+          },
+          headOnly ? { x: activeBasePack.anchorX } : undefined,
+        );
+        variantTransforms[variantKey] = normalizeTransform({
+          ...variantFit,
+          rotation: existingVariantTransform.rotation,
+          flipX: existingVariantTransform.flipX,
+        });
+      }
       setHeadFitGuide({
         source: sourceHead,
         target: targetHead,
@@ -2982,10 +3044,19 @@ export default function Home() {
         targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
       });
       const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
-      setOutfitAdjustmentsByBasePack((current) => ({ ...current, [stateKey]: nextTransform }));
+      variantTransforms[stateKey] = nextTransform;
+      setOutfitAdjustmentsByBasePack(variantTransforms);
       setAdjustments((current) => ({ ...current, roupas: nextTransform }));
       setFitMode(true);
-      setNotice("Roupa ajustada pela cabeça do modelo; você ainda pode refinar manualmente");
+      const adjustedVariantCount = outfitVariants.length - skippedVariants.length;
+      const skippedMessage = skippedVariants.length > 0
+        ? ` ${skippedVariants.length} variante(s) ficaram sem alteração por não ter cabeça detectável.`
+        : "";
+      setNotice(
+        outfitVariants.length > 1
+          ? `${adjustedVariantCount} versões da roupa ajustadas pela cabeça do modelo; você ainda pode refinar manualmente.${skippedMessage}`
+          : "Roupa ajustada pela cabeça do modelo; você ainda pode refinar manualmente",
+      );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");
     } finally {
