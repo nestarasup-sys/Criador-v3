@@ -32,24 +32,53 @@ export function measureHeadSilhouette(
 
   let contentTop = height;
   let contentBottom = -1;
-  let contentLeft = width;
-  let contentRight = -1;
   for (let index = 3; index < pixels.length; index += 4) {
     if (pixels[index] <= 12) continue;
     const pixel = (index - 3) / 4;
-    const x = pixel % width;
     const y = Math.floor(pixel / width);
     contentTop = Math.min(contentTop, y);
     contentBottom = Math.max(contentBottom, y);
-    contentLeft = Math.min(contentLeft, x);
-    contentRight = Math.max(contentRight, x);
   }
-  if (contentRight < contentLeft || contentBottom < contentTop) return null;
+  if (contentBottom < contentTop) return null;
 
   const visibleLimit = Math.min(
     contentBottom,
     Math.round(contentTop + (contentBottom - contentTop) * maxVisibleYRatio),
   );
+
+  // Build the horizontal silhouette profile. The first narrow, sustained
+  // section after the widest part is the neck; this is much more reliable for
+  // full-body clothing than treating an arbitrary percentage of the image as
+  // the head. Small antialiased gaps are tolerated by looking at neighboring
+  // rows while keeping the original pixel positions.
+  const rows: Array<{ left: number; right: number; width: number }> = [];
+  for (let y = contentTop; y <= visibleLimit; y += 1) {
+    let left = width;
+    let right = -1;
+    for (let x = 0; x < width; x += 1) {
+      if (pixels[(y * width + x) * 4 + 3] <= 12) continue;
+      left = Math.min(left, x);
+      right = Math.max(right, x);
+    }
+    rows.push({ left, right, width: right >= left ? right - left + 1 : 0 });
+  }
+  const validRows = rows.filter((row) => row.width > 0);
+  if (validRows.length === 0) return null;
+  const widestRow = rows.reduce<{ left: number; right: number; width: number; index: number }>(
+    (best, row, index) => row.width > best.width ? { ...row, index } : best,
+    { ...rows[0], index: 0 },
+  );
+  const minimumNeckWidth = widestRow.width * 0.62;
+  let neckIndex = -1;
+  for (let index = widestRow.index + 4; index < rows.length; index += 1) {
+    if (rows[index].width <= 0 || rows[index].width > minimumNeckWidth) continue;
+    const following = rows.slice(index, Math.min(rows.length, index + 5)).filter((row) => row.width > 0);
+    if (following.length >= 3 && following.filter((row) => row.width <= widestRow.width * 0.72).length >= 3) {
+      neckIndex = index;
+      break;
+    }
+  }
+  const headEnd = neckIndex >= 0 ? contentTop + neckIndex : visibleLimit;
   let left = width;
   let right = -1;
   let top = height;
@@ -59,7 +88,7 @@ export function measureHeadSilhouette(
     const pixel = (index - 3) / 4;
     const x = pixel % width;
     const y = Math.floor(pixel / width);
-    if (y > visibleLimit) continue;
+    if (y > headEnd) continue;
     left = Math.min(left, x);
     right = Math.max(right, x);
     top = Math.min(top, y);
