@@ -80,6 +80,12 @@
 .compareControls strong, .compareControls small { display:block; }
 .compareControls small { margin-top:3px; color:#92788a; font-size:11px; }
 .modeButtons { display:flex; gap:7px; flex-wrap:wrap; }
+.speedControl { display:grid; grid-template-columns:1fr auto; gap:5px 10px; padding:10px 12px; border:1px solid #ecd9e4; border-radius:11px; background:#fff8fb; color:#806477; font-size:11px; font-weight:800; }
+.speedControl span { grid-column:1 / -1; display:flex; justify-content:space-between; color:#684560; }
+.speedControl span strong { color:#a14b79; }
+.speedControl input { grid-column:1 / -1; width:100%; accent-color:#a14b79; }
+.speedControl small { color:#a28c98; font-size:9px; font-weight:700; }
+.speedControl small:last-child { justify-self:end; }
 .compareSelects { display:flex; gap:8px; flex-wrap:wrap; }
 .compareSelects select { max-width:160px; padding:9px 10px; border:1px solid #e6ccd9; border-radius:10px; color:#61435b; background:#fff; font:inherit; font-size:12px; }
 .qualityPanel { display:grid; gap:14px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid #f2e2ea; }
