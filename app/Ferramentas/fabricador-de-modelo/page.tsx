@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { NymiNavigation } from "../../shared/NymiShell";
+import { ToolsTopbar } from "../components/ToolsTopbar";
 import { localDataFetch } from "../../lib/local-data-client";
 import { DEFAULT_CALIBRATION_SETTINGS, EXTENSION_EXPRESSIONS, PRIMARY_EXPRESSIONS } from "./constants/expressions";
 import { processSheet } from "./core/build-model";
@@ -134,8 +134,8 @@ export default function FabricadorDeModeloPage() {
     finally { setBusy(false); }
   }
 
-  return <div className={styles.page}><NymiNavigation active="tools" /><main className={styles.main}>
-    <div className={styles.toolbar}><Link className={styles.back} href="/Ferramentas">← Ferramentas</Link><span className={styles.toolbarHint}>Importador e calibrador de modelos head-only</span></div>
+  return <div className={styles.page}><ToolsTopbar title="Fabricador de Modelo" subtitle="Importador e calibrador head-only" /><main className={`${styles.main} ${styles.fabricatorMain}`}>
+    <div className={styles.breadcrumb}><Link href="/Ferramentas">Ferramentas</Link><b>/</b><strong>Fabricador de Modelo</strong></div>
     <section className={styles.hero}><div><span className={styles.eyebrow}>Ferramenta nativa</span><h1>Fabricador de Modelo</h1><p>Transforme uma ou duas folhas de rostos em um modelo consistente, revise cada sprite e salve direto no catálogo local.</p></div><div className={styles.heroStat}><strong>{allSprites.length || 0}</strong><span>sprites prontos</span></div></section>
     <div className={styles.layout}><div>
       <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Entrada</span><h2>Folhas de rostos</h2><p>A Folha 1 é a base. A Folha 2 entra como extensão com escala X/Y limitada.</p></div><span className={styles.pipelineBadge}>21 + 21</span></div><div className={styles.uploadGrid}><SheetUploader title="Folha 1 · obrigatória" description="PNG, JPG ou WebP · 7 × 3" file={primary} onChange={setPrimary} /><SheetUploader title="Folha 2 · opcional" description="7 expressões adicionais · 7 × 3" file={extension} onChange={setExtension} /></div><StatusMessage tone={tone}>{message}</StatusMessage></section>

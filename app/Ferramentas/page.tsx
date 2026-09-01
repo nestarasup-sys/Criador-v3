@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { NymiNavigation } from "../shared/NymiShell";
+import { ToolsTopbar } from "./components/ToolsTopbar";
 import styles from "./ferramentas.module.css";
 
 export default function FerramentasPage() {
-  return <div className={styles.page}><NymiNavigation active="tools" /><main className={styles.main}>
-    <section className={styles.hero}><div><span className={styles.eyebrow}>Área independente</span><h1>Ferramentas</h1><p>Ferramentas auxiliares para preparar e organizar os seus assets sem misturar o fluxo principal do Nymi Gacha.</p></div></section>
-    <section className={styles.grid}><Link className={styles.toolCard} href="/Ferramentas/fabricador-de-modelo"><span className={styles.toolIcon}>✦</span><h2>Fabricador de Modelo</h2><p>Transforme folhas de rostos em um modelo head-only com expressões, calibração e exportação prontas para o catálogo.</p><span className={styles.back}>Abrir ferramenta →</span></Link></section>
+  return <div className={styles.page}><ToolsTopbar title="Ferramentas" subtitle="Utilitários para o seu fluxo de criação" backHref="/" /><main className={`${styles.main} ${styles.dashboardMain}`}>
+    <div className={styles.breadcrumb}><span>Workspace</span><b>/</b><strong>Ferramentas</strong></div>
+    <section className={`${styles.hero} ${styles.dashboardHero}`}><div><span className={styles.eyebrow}>Área independente</span><h1>Ferramentas</h1><p>Um espaço organizado para preparar assets e acelerar a produção sem misturar as ferramentas ao fluxo principal.</p></div><div className={styles.heroStat}><strong>01</strong><span>ferramenta disponível</span></div></section>
+    <section className={styles.sectionIntro}><div><span className={styles.sectionLabel}>Seu workspace</span><h2>Escolha uma ferramenta</h2><p>Entre direto no utilitário que você precisa agora.</p></div><span className={styles.availability}><i /> Operacional</span></section>
+    <section className={styles.grid}><Link className={styles.toolCard} href="/Ferramentas/fabricador-de-modelo"><div className={styles.toolCardTop}><span className={styles.toolIcon} aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 8.5A2.5 2.5 0 0 1 9.5 6h13A2.5 2.5 0 0 1 25 8.5v10a2.5 2.5 0 0 1-2.5 2.5H17l-4.5 4v-4H9.5A2.5 2.5 0 0 1 7 18.5v-10Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M11 12h10M11 15.5h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></span><span className={styles.toolStatus}>Disponível</span></div><div className={styles.toolCardBody}><h2>Fabricador de Modelo</h2><p>Transforme folhas de rostos em modelos head-only prontos para o catálogo, com detecção, calibração e revisão visual.</p></div><div className={styles.toolCardFooter}><span>21 ou 42 sprites · processamento local</span><span className={styles.toolArrow}>Abrir <b>→</b></span></div></Link></section>
+    <section className={styles.flowPanel}><div className={styles.flowHeading}><span className={styles.sectionLabel}>Fluxo rápido</span><h2>Da folha ao catálogo</h2></div><div className={styles.flowSteps}><div><span>01</span><strong>Importe</strong><small>Folha 1 e extensão opcional</small></div><div><span>02</span><strong>Revise</strong><small>Compare, calibre e marque rostos</small></div><div><span>03</span><strong>Salve</strong><small>Modelo disponível no Criador</small></div></div></section>
   </main></div>;
 }
