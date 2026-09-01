@@ -6,20 +6,20 @@ import styles from "../../ferramentas.module.css";
 
 export type PlaybackMode = "static" | "ghost" | "flicker" | "animation";
 
-export function ComparisonPlayer({ current, ghost, trio, mode, onMode }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void }) {
+export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio, mode, onMode, speed, onSpeed }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; animationFrames?: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void; speed: number; onSpeed: (speed: number) => void }) {
   const [frame, setFrame] = useState<GeneratedSprite | undefined>();
   useEffect(() => {
     if (mode === "static" || mode === "ghost") return undefined;
-    const animationSequence = trio.length >= 3 ? [trio[0], trio[1], trio[0], trio[2], trio[0]] : trio;
+    const animationSequence = animationFrames.length >= 2 ? animationFrames : trio.length >= 3 ? [trio[0], trio[1], trio[0], trio[2], trio[0]] : trio;
     const sequence = mode === "animation" ? animationSequence : [current, ghost].filter((item): item is GeneratedSprite => Boolean(item));
     if (sequence.length < 2) return undefined;
     let index = 0;
     const timer = window.setInterval(() => {
       index = (index + 1) % sequence.length;
       setFrame(sequence[index]);
-    }, mode === "animation" ? 520 : 320);
+    }, Math.round((mode === "animation" ? 520 : 320) / speed));
     return () => window.clearInterval(timer);
-  }, [current, ghost, mode, trio]);
+  }, [animationFrames, current, ghost, mode, speed, trio]);
   if (!current) return <div className={styles.emptyState}>Gere as prévias para ativar o comparador.</div>;
   const isGhost = mode === "ghost" && ghost;
   return <div className={styles.comparisonShell}>
@@ -31,8 +31,9 @@ export function ComparisonPlayer({ current, ghost, trio, mode, onMode }: { curre
     <div className={styles.compareControls}>
       <div><strong>{current.key}</strong><small>{current.sourceSheet === "primary" ? "Folha 1" : "Folha 2"} · {current.state}</small></div>
       <div className={styles.modeButtons}>
-        {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} disabled={item === "ghost" && !ghost || item === "animation" && trio.length < 3} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Animar trio"}</button>)}
+        {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} disabled={item === "ghost" && !ghost || item === "animation" && animationFrames.length < 2} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Testar animação"}</button>)}
       </div>
-    </div>
+      {mode === "animation" && <label className={styles.speedControl}><span>Velocidade <strong>{speed.toFixed(1)}×</strong></span><input type="range" min="0.25" max="2.5" step="0.05" value={speed} onChange={(event) => onSpeed(Number(event.target.value))} /><small>Mais lento</small><small>Mais rápido</small></label>}
+      </div>
   </div>;
 }
