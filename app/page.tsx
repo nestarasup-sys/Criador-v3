@@ -2912,7 +2912,13 @@ export default function Home() {
         referenceContext.drawImage(baseImage, 0, 0, referenceCanvas.width, referenceCanvas.height);
       }
       const referencePixels = referenceContext.getImageData(0, 0, referenceCanvas.width, referenceCanvas.height);
-      const targetHead = measureHeadSilhouette(referencePixels.data, referenceCanvas.width, referenceCanvas.height, headOnly ? 0.86 : 0.46);
+      const targetHead = measureHeadSilhouette(
+        referencePixels.data,
+        referenceCanvas.width,
+        referenceCanvas.height,
+        headOnly ? 0.86 : 0.46,
+        false,
+      );
       if (!targetHead) throw new Error("Não foi possível localizar a cabeça do modelo");
 
       const fitted = calculateHeadFit(

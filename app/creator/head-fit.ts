@@ -27,6 +27,7 @@ export function measureHeadSilhouette(
   width: number,
   height: number,
   maxVisibleYRatio = 0.64,
+  requireNeckTransition = true,
 ): HeadMeasurement | null {
   if (width <= 0 || height <= 0 || pixels.length < width * height * 4) return null;
 
@@ -62,9 +63,12 @@ export function measureHeadSilhouette(
     }
     rows.push({ left, right, width: right >= left ? right - left + 1 : 0 });
   }
-  const validRows = rows.filter((row) => row.width > 0);
-  if (validRows.length === 0) return null;
-  const widestRow = rows.reduce<{ left: number; right: number; width: number; index: number }>(
+  if (rows.every((row) => row.width <= 0)) return null;
+  // Find the head's widest point before the shoulders can inflate the
+  // profile. For a full-body outfit this usually covers the upper 45% of the
+  // inspected region; for a head-only model it still contains the cranium.
+  const peakSearchEnd = Math.max(1, Math.ceil(rows.length * 0.45));
+  const widestRow = rows.slice(0, peakSearchEnd).reduce<{ left: number; right: number; width: number; index: number }>(
     (best, row, index) => row.width > best.width ? { ...row, index } : best,
     { ...rows[0], index: 0 },
   );
@@ -78,6 +82,10 @@ export function measureHeadSilhouette(
       break;
     }
   }
+  // A full-body clothing asset without its own head starts at the shoulders
+  // and has no head-to-neck transition. Refusing that case is safer than
+  // stretching the torso as if it were a head.
+  if (requireNeckTransition && neckIndex < 0) return null;
   const headEnd = neckIndex >= 0 ? contentTop + neckIndex : visibleLimit;
   let left = width;
   let right = -1;
@@ -124,8 +132,8 @@ export function calculateHeadFit(
   item: { width: number; height: number; defaultX?: number; defaultY?: number },
   targetAnchor?: { x?: number; y?: number },
 ): HeadFitResult {
-  const scaleX = clamp(target.width / source.width, 0.65, 1.6);
-  const scaleY = clamp(target.height / source.height, 0.65, 1.6);
+  const scaleX = clamp(target.width / source.width, 0.35, 2.4);
+  const scaleY = clamp(target.height / source.height, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
   const targetCenterX = targetAnchor?.x ?? target.centerX;
