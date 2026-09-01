@@ -84,12 +84,43 @@ export function measureHeadSilhouette(
   );
   const minimumNeckWidth = widestRow.width * 0.62;
   let neckIndex = -1;
+
+  // A jaw can become narrower than the neck before it reaches the chin.
+  // Therefore the first narrow row is not a reliable boundary: on Iris, for
+  // example, the profile narrows from ~207 px to ~122 px while the chin still
+  // continues for several dozen rows. The neck is the first *stable* narrow
+  // band after that curve, not the first row below a width threshold.
   for (let index = widestRow.index + 4; index < rows.length; index += 1) {
-    if (rows[index].width <= 0 || rows[index].width > minimumNeckWidth) continue;
-    const following = rows.slice(index, Math.min(rows.length, index + 5)).filter((row) => row.width > 0);
-    if (following.length >= 3 && following.filter((row) => row.width <= widestRow.width * 0.72).length >= 3) {
+    const row = rows[index];
+    if (row.width <= 0 || row.width > widestRow.width * 0.72) continue;
+    const following = rows
+      .slice(index, Math.min(rows.length, index + 9))
+      .filter((candidate) => candidate.width > 0);
+    if (following.length < 6) continue;
+    const minimumFollowingWidth = Math.min(...following.map((candidate) => candidate.width));
+    const maximumFollowingWidth = Math.max(...following.map((candidate) => candidate.width));
+    const stableBand =
+      maximumFollowingWidth <= minimumFollowingWidth * 1.1 &&
+      row.width <= minimumFollowingWidth * 1.08 &&
+      following.filter((candidate) => candidate.width <= widestRow.width * 0.72).length >= 6;
+    if (stableBand) {
       neckIndex = index;
       break;
+    }
+  }
+
+  // Keep a conservative fallback for assets whose neck is short or has
+  // antialiased gaps. This fallback is deliberately stricter than the old
+  // “first sustained narrowing” rule, so a gradual jaw curve cannot end the
+  // head polygon by itself.
+  if (neckIndex < 0) {
+    for (let index = widestRow.index + 4; index < rows.length; index += 1) {
+      if (rows[index].width <= 0 || rows[index].width > minimumNeckWidth) continue;
+      const following = rows.slice(index, Math.min(rows.length, index + 7)).filter((row) => row.width > 0);
+      if (following.length >= 5 && following.filter((row) => row.width <= widestRow.width * 0.68).length >= 5) {
+        neckIndex = index;
+        break;
+      }
     }
   }
   // A full-body clothing asset without its own head starts at the shoulders
