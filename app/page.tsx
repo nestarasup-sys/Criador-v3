@@ -712,10 +712,13 @@ function paintMaskStroke(context: CanvasRenderingContext2D, stroke: MaskStroke, 
   context.save();
   context.fillStyle = color;
   if (stroke.shape === "polygon" && stroke.points.length >= 3) {
+    const paths = [stroke.points, ...(stroke.paths ?? [])].filter((path) => path.length >= 3);
     context.beginPath();
-    context.moveTo(stroke.points[0].x, stroke.points[0].y);
-    for (const point of stroke.points.slice(1)) context.lineTo(point.x, point.y);
-    context.closePath();
+    for (const path of paths) {
+      context.moveTo(path[0].x, path[0].y);
+      for (const point of path.slice(1)) context.lineTo(point.x, point.y);
+      context.closePath();
+    }
     context.fill();
     context.restore();
     return;
@@ -3127,12 +3130,42 @@ export default function Home() {
         throw new Error("Não foi possível identificar com segurança a linha entre a cabeça e o pescoço deste modelo.");
       }
 
+      const outfitImage = await loadImage(selectedOutfit.url);
+      const outfitWidth = selectedOutfit.width ?? outfitImage.naturalWidth;
+      const outfitHeight = selectedOutfit.height ?? outfitImage.naturalHeight;
+      if (!outfitWidth || !outfitHeight) throw new Error("Dimensões da roupa indisponíveis");
+      const outfitScan = document.createElement("canvas");
+      outfitScan.width = outfitWidth;
+      outfitScan.height = outfitHeight;
+      const outfitContext = outfitScan.getContext("2d", { willReadFrequently: true });
+      if (!outfitContext) throw new Error("Canvas da roupa indisponível");
+      outfitContext.clearRect(0, 0, outfitWidth, outfitHeight);
+      outfitContext.drawImage(outfitImage, 0, 0, outfitWidth, outfitHeight);
+      const outfitPixels = outfitContext.getImageData(0, 0, outfitWidth, outfitHeight);
+      const outfitHead = measureHeadSilhouette(outfitPixels.data, outfitWidth, outfitHeight, 0.46);
+      if (!outfitHead?.contour?.length) {
+        throw new Error("Esta roupa não possui uma cabeça detectável; a borracha automática não apagará o pescoço. Ajuste manualmente pelo decote.");
+      }
+      const projectedOutfitHead = projectHeadMeasurement(
+        outfitHead,
+        {
+          width: outfitWidth,
+          height: outfitHeight,
+          defaultX: selectedOutfit.defaultX,
+          defaultY: selectedOutfit.defaultY,
+        },
+        adjustments.roupas,
+      );
+      const modelHeadPath = headContourPolygon(targetHead);
+      const outfitHeadPath = headContourPolygon(projectedOutfitHead);
+
       const automaticHeadMask: MaskStroke = {
         id: crypto.randomUUID(),
         mode: "erase",
         size: 1,
-        points: headContourPolygon(targetHead),
+        points: modelHeadPath,
         shape: "polygon",
+        paths: [outfitHeadPath],
       };
       const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
       const nextMask = [...layerMasks.outfit, automaticHeadMask];
@@ -3141,7 +3174,7 @@ export default function Home() {
       setMaskRedo((current) => ({ ...current, outfit: [] }));
       setHeadFitGuide(null);
       setMaskTarget("outfit");
-      setShowEraseMask(false);
+      setShowEraseMask(true);
       setEraserMode(true);
       setFitMode(false);
       setPreviewPanMode(false);

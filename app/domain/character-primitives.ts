@@ -22,6 +22,7 @@ export type MaskStroke = {
   size: number;
   points: MaskPoint[];
   shape?: "polygon";
+  paths?: MaskPoint[][];
 };
 
 export type StoredLayerMasks = Partial<
