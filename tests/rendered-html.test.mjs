@@ -678,6 +678,8 @@ test("imports one outfit as standard plus three or five additional variants shar
   const headFit = await readFile(new URL("../app/creator/head-fit.ts", import.meta.url), "utf8");
   assert.match(headFit, /neckWidth/);
   assert.match(headFit, /target\.neckWidth && source\.neckWidth/);
+  assert.match(headFit, /NECK_FIT_WIDTH_MARGIN/);
+  assert.match(headFit, /\* NECK_FIT_WIDTH_MARGIN/);
   assert.match(headFit, /target\.neckCenterX \?\? target\.centerX/);
   assert.match(page, /function applyStandardOutfitAdjustment\(\)/);
   assert.match(page, /Ajustar para padrão/);

@@ -32,6 +32,10 @@ export type HeadFitResult = {
 
 export type HeadFitProjection = HeadMeasurement;
 
+// Pequena folga para a roupa cobrir completamente o pescoço, sem deixar
+// frestas nas bordas por causa do antialiasing dos dois assets.
+const NECK_FIT_WIDTH_MARGIN = 1.02;
+
 /**
  * Measures the upper silhouette of a transparent character image.
  * Clothing imports contain a full body, so the lower part is deliberately
@@ -235,7 +239,7 @@ export function calculateHeadFit(
 ): HeadFitResult {
   const scaleX = clamp(
     target.neckWidth && source.neckWidth
-      ? target.neckWidth / source.neckWidth
+      ? (target.neckWidth / source.neckWidth) * NECK_FIT_WIDTH_MARGIN
       : target.width / source.width,
     0.35,
     2.4,
