@@ -3139,8 +3139,9 @@ export default function Home() {
       setLayerMasks((current) => ({ ...current, outfit: [...current.outfit, automaticHeadMask] }));
       setOutfitLayerMasksByBasePack((current) => ({ ...current, [stateKey]: nextMask }));
       setMaskRedo((current) => ({ ...current, outfit: [] }));
+      setHeadFitGuide(null);
       setMaskTarget("outfit");
-      setShowEraseMask(true);
+      setShowEraseMask(false);
       setEraserMode(true);
       setFitMode(false);
       setPreviewPanMode(false);
