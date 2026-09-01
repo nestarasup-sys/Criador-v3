@@ -12,7 +12,7 @@ import { ComparisonPlayer, type PlaybackMode } from "./components/ComparisonPlay
 import { ExportPanel } from "./components/ExportPanel";
 import { ManualAdjustmentPanel } from "./components/ManualAdjustmentPanel";
 import { ModelSettingsPanel } from "./components/ModelSettingsPanel";
-import { PreviewGrid } from "./components/PreviewGrid";
+import { PreviewGrid, type ReviewFilter } from "./components/PreviewGrid";
 import { QualityPanel } from "./components/QualityPanel";
 import { SheetUploader } from "./components/SheetUploader";
 import { StatusMessage } from "./components/StatusMessage";
@@ -46,6 +46,9 @@ export default function FabricadorDeModeloPage() {
   const [reviewed, setReviewed] = useState<Set<string>>(new Set());
   const [selectedKey, setSelectedKey] = useState<string>();
   const [view, setView] = useState<"all" | SheetId>("all");
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("all");
+  const [step, setStep] = useState(1);
+  const [showFinalPreview, setShowFinalPreview] = useState(false);
   const [compareSheet, setCompareSheet] = useState<SheetId>("primary");
   const [compareColumn, setCompareColumn] = useState(0);
   const [compareState, setCompareState] = useState<"default" | "blink" | "talk">("default");
@@ -77,6 +80,26 @@ export default function FabricadorDeModeloPage() {
   const criticalSprites = allSprites.filter((sprite) => sprite.quality.critical);
   const unreviewedCriticalCount = criticalSprites.filter((sprite) => !reviewed.has(keyOf(sprite)) && !sprite.adjustment.reviewed).length;
   const expectedCount = extension ? 42 : 21;
+  const warningCount = allSprites.filter((sprite) => sprite.quality.warning && !sprite.quality.critical).length;
+  const reviewedCount = allSprites.filter((sprite) => reviewed.has(keyOf(sprite)) || sprite.adjustment.reviewed).length;
+  const readyCount = allSprites.length - criticalSprites.length - warningCount;
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("nymi:fabricador-draft");
+    if (!saved) return;
+    try {
+      const draft = JSON.parse(saved) as { name?: string; folderName?: string; gender?: "feminino" | "masculino"; settings?: CalibrationSettings; manualEdits?: Record<string, Partial<SpriteAdjustment>> };
+      if (draft.name) setName(draft.name);
+      if (draft.folderName) setFolderName(draft.folderName);
+      if (draft.gender === "feminino" || draft.gender === "masculino") setGender(draft.gender);
+      if (draft.settings) setSettings((current) => ({ ...current, ...draft.settings }));
+      if (draft.manualEdits) setManualEdits(draft.manualEdits);
+    } catch { window.localStorage.removeItem("nymi:fabricador-draft"); }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("nymi:fabricador-draft", JSON.stringify({ name, folderName, gender, settings, manualEdits }));
+  }, [name, folderName, gender, settings, manualEdits]);
 
   async function generate(edits = manualEdits) {
     if (!primary) { setTone("error"); setMessage("A Folha 1 é obrigatória."); return; }
@@ -84,7 +107,7 @@ export default function FabricadorDeModeloPage() {
     try {
       const base = await processSheet(primary, "primary", { settings, manualAdjustments: manualArray("primary", edits) });
       const result = extension ? [base, await processSheet(extension, "extension", { referenceMaster: base.headMaster, settings, manualAdjustments: manualArray("extension", edits) })] : [base];
-      setSheets(result); setSelectedKey((current) => current && result.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk])).some((sprite) => keyOf(sprite) === current) ? current : keyOf(result[0].expressions[0].default)); setTone("ok"); setMessage(`${result.reduce((total, sheet) => total + sheet.expressions.length * 3, 0)} sprites gerados. Revise a qualidade antes de salvar.`);
+      setSheets(result); setStep(3); setSelectedKey((current) => current && result.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk])).some((sprite) => keyOf(sprite) === current) ? current : keyOf(result[0].expressions[0].default)); setTone("ok"); setMessage(`${result.reduce((total, sheet) => total + sheet.expressions.length * 3, 0)} sprites gerados. Revise a qualidade antes de salvar.`);
     } catch (error) { setSheets([]); setTone("error"); setMessage(error instanceof Error ? error.message : "Não foi possível processar a folha."); }
     finally { setBusy(false); }
   }
@@ -129,22 +152,23 @@ export default function FabricadorDeModeloPage() {
       const response = await localDataFetch("/models/fabricator", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, folderName, gender, config: { anchorX: settings.anchorX, anchorY: settings.anchorY, baseScale: settings.baseScale, expressions: allSprites.map((sprite) => sprite.key) }, sprites: spritePayload(sheets) }) });
       const result = await response.json().catch(() => ({})) as { error?: string };
       if (!response.ok) throw new Error(result.error || "Não foi possível salvar o modelo.");
-      window.dispatchEvent(new CustomEvent("nymi:models-updated")); setTone("ok"); setMessage("Modelo salvo. O catálogo recebeu as expressões e já pode ser atualizado sem reiniciar a aplicação.");
+      window.localStorage.removeItem("nymi:fabricador-draft"); window.dispatchEvent(new CustomEvent("nymi:models-updated")); setStep(4); setTone("ok"); setMessage("Modelo salvo. O catálogo recebeu as expressões e já pode ser atualizado sem reiniciar a aplicação.");
     } catch (error) { setTone("error"); setMessage(error instanceof Error ? error.message : "Falha ao salvar o modelo."); }
     finally { setBusy(false); }
   }
 
   return <div className={styles.page}><ToolsTopbar title="Fabricador de Modelo" subtitle="Importador e calibrador head-only" /><main className={`${styles.main} ${styles.fabricatorMain}`}>
     <div className={styles.breadcrumb}><Link href="/Ferramentas">Ferramentas</Link><b>/</b><strong>Fabricador de Modelo</strong></div>
+    <nav className={styles.stepper} aria-label="Etapas do fabricador">{[[1,"Importar folhas"],[2,"Processar"],[3,"Revisar e calibrar"],[4,"Salvar no catálogo"]].map(([number, label]) => <button key={String(number)} type="button" className={step >= Number(number) ? styles.stepActive : ""} onClick={() => setStep(Number(number))}><span>{number}</span><strong>{label}</strong></button>)}</nav>
     <section className={styles.hero}><div><span className={styles.eyebrow}>Ferramenta nativa</span><h1>Fabricador de Modelo</h1><p>Transforme uma ou duas folhas de rostos em um modelo consistente, revise cada sprite e salve direto no catálogo local.</p></div><div className={styles.heroStat}><strong>{allSprites.length || 0}</strong><span>sprites prontos</span></div></section>
     <div className={styles.layout}><div>
       <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Entrada</span><h2>Folhas de rostos</h2><p>A Folha 1 é a base. A Folha 2 entra como extensão com escala X/Y limitada.</p></div><span className={styles.pipelineBadge}>21 + 21</span></div><div className={styles.uploadGrid}><SheetUploader title="Folha 1 · obrigatória" description="PNG, JPG ou WebP · 7 × 3" file={primary} onChange={setPrimary} /><SheetUploader title="Folha 2 · opcional" description="7 expressões adicionais · 7 × 3" file={extension} onChange={setExtension} /></div><StatusMessage tone={tone}>{message}</StatusMessage></section>
-      <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Revisão visual</span><h2>Prévias geradas</h2><p>Selecione um rosto para abrir a qualidade e os ajustes manuais.</p></div><span className={styles.count}>{allSprites.length}/{expectedCount}</span></div><div className={styles.filterBar}>{(["all", "primary", "extension"] as const).map((item) => <button key={item} type="button" className={`${styles.filterButton} ${view === item ? styles.filterActive : ""}`} disabled={item === "extension" && !extensionSheet} onClick={() => setView(item)}>{item === "all" ? `Alternar ${expectedCount}` : item === "primary" ? "Folha 1 (21)" : "Folha 2 (21)"}</button>)}</div>{allSprites.length ? <PreviewGrid sheets={sheets} view={view} selectedKey={selectedKey} onSelect={selectSprite} reviewed={reviewed} /> : <div className={styles.emptyState}>As 21 ou 42 prévias aparecerão aqui depois de “Gerar prévias”.</div>}</section>
+      <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Revisão visual</span><h2>Prévias geradas</h2><p>Selecione um rosto para abrir a qualidade e os ajustes manuais.</p></div><span className={styles.count}>{allSprites.length}/{expectedCount}</span></div><div className={styles.reviewSummary}><span className={styles.summaryGood}>{readyCount} prontos</span><span className={styles.summaryWarning}>{warningCount} revisar</span><span className={styles.summaryCritical}>{criticalSprites.length} críticos</span><span>{reviewedCount} revisados</span></div><div className={styles.filterBar}>{(["all", "primary", "extension"] as const).map((item) => <button key={item} type="button" className={`${styles.filterButton} ${view === item ? styles.filterActive : ""}`} disabled={item === "extension" && !extensionSheet} onClick={() => setView(item)}>{item === "all" ? `Alternar ${expectedCount}` : item === "primary" ? "Folha 1 (21)" : "Folha 2 (21)"}</button>)}{(["all","critical","warning","unreviewed","default","blink","talk"] as ReviewFilter[]).map((item) => <button key={item} type="button" className={`${styles.filterButton} ${reviewFilter === item ? styles.filterActive : ""}`} onClick={() => setReviewFilter(item)}>{item === "all" ? "Todos" : item === "critical" ? "Críticos" : item === "warning" ? "Avisos" : item === "unreviewed" ? "Não revisados" : item}</button>)}</div>{allSprites.length ? <PreviewGrid sheets={sheets} view={view} filter={reviewFilter} selectedKey={selectedKey} onSelect={selectSprite} reviewed={reviewed} /> : <div className={styles.emptyState}>As 21 ou 42 prévias aparecerão aqui depois de “Gerar prévias”.</div>}</section>
       <section className={styles.panel}><div className={styles.previewHeader}><div><span className={styles.sectionLabel}>Comparação</span><h2>Trio de expressão</h2><p>Compare default, blink e talk do mesmo rosto sem sair da tela.</p></div><div className={styles.compareSelects}><select value={compareSheet} onChange={(event) => { setCompareSheet(event.target.value as SheetId); setCompareColumn(0); setPlayback("static"); }} disabled={!primarySheet}><option value="primary">Folha 1</option><option value="extension" disabled={!extensionSheet}>Folha 2</option></select><select value={compareColumn} onChange={(event) => { setCompareColumn(Number(event.target.value)); setPlayback("static"); }} disabled={!comparisonSourceSheet}>{(compareSheet === "primary" ? PRIMARY_EXPRESSIONS : EXTENSION_EXPRESSIONS).map((expression, index) => <option key={expression} value={index}>{expression}</option>)}</select><select value={compareState} onChange={(event) => { setCompareState(event.target.value as typeof compareState); setPlayback("static"); }} disabled={!comparisonExpression}><option value="default">default</option><option value="blink">blink</option><option value="talk">talk</option></select></div></div><ComparisonPlayer current={comparisonCurrent} ghost={comparisonGhost} trio={comparisonTrio} mode={playback} onMode={setPlayback} /></section>
     </div><aside className={styles.sideColumn}>
-      <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Modelo final</span><h2>Configuração</h2></div><span className={styles.secureBadge}>Local</span></div><ModelSettingsPanel name={name} folderName={folderName} gender={gender} onName={setName} onFolder={setFolderName} onGender={setGender} /><div className={styles.divider} /><CalibrationPanel settings={settings} onChange={setSettings} /><ExportPanel count={allSprites.length} busy={busy} onGenerate={() => void generate()} onSave={() => void save()} /></section>
+      <section className={styles.panel}><div className={styles.panelHeading}><div><span className={styles.sectionLabel}>Modelo final</span><h2>Configuração</h2></div><span className={styles.secureBadge}>Local</span></div><ModelSettingsPanel name={name} folderName={folderName} gender={gender} onName={setName} onFolder={setFolderName} onGender={setGender} /><div className={styles.divider} /><CalibrationPanel settings={settings} onChange={setSettings} /><button type="button" className={styles.previewModelButton} disabled={!allSprites.length} onClick={() => setShowFinalPreview((value) => !value)}>{showFinalPreview ? "Ocultar prévia do catálogo" : "Prévia do modelo final"}</button>{showFinalPreview && currentSprite && <div className={styles.finalPreview}><img src={currentSprite.dataUrl} alt={`Prévia final ${currentSprite.key}`} /><span>{currentSprite.key} · transparente · âncora real</span></div>}<ExportPanel count={allSprites.length} busy={busy} onGenerate={() => void generate()} onSave={() => void save()} /></section>
       <section className={styles.panel}><QualityPanel sprite={currentSprite} compatibility={currentSprite?.sourceSheet === "extension" ? extensionSheet?.compatibility : undefined} /><ManualAdjustmentPanel key={`${selectedKey ?? "empty"}:${currentSprite?.adjustment.scale ?? ""}:${currentSprite?.adjustment.scaleX ?? ""}:${currentSprite?.adjustment.scaleY ?? ""}:${currentSprite?.adjustment.dx ?? ""}:${currentSprite?.adjustment.dy ?? ""}`} sprite={currentSprite} onApply={(adjustment) => void applyAdjustment(adjustment)} onReview={reviewCurrent} onCopyTrio={() => void copyTrio()} onReset={() => void resetAdjustment()} /></section>
       <section className={styles.panel}><span className={styles.sectionLabel}>Legenda</span><div className={styles.legend}><span><i className={styles.dotGood} /> pronto</span><span><i className={styles.dotWarning} /> revisar</span><span><i className={styles.dotCritical} /> crítico</span></div><p className={styles.helpText}>Estados críticos bloqueiam o salvamento. Avisos permanecem disponíveis para revisão manual.</p></section>
     </aside></div>
-  </main></div>;
+  </main><div className={styles.actionDock}><div><strong>{busy ? "Processando…" : `${allSprites.length}/${expectedCount} sprites`}</strong><small>{message}</small></div><button type="button" className={styles.button} disabled={busy || !primary} onClick={() => void generate()}>{busy ? "Processando…" : "Gerar prévias"}</button><button type="button" className={`${styles.button} ${styles.secondary}`} disabled={busy || allSprites.length === 0} onClick={() => void save()}>Salvar modelo</button></div></div>;
 }

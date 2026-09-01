@@ -21,6 +21,7 @@ import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCan
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
+  deleteBaseModelFromPc,
   deleteExpressionPack,
   hydratePcState,
   loadCatalog,
@@ -3434,6 +3435,22 @@ export default function Home() {
     setNotice("Personagem excluído");
   }
 
+  async function removeBaseModel(packId: string) {
+    const pack = availableBasePacks.find((item) => item.id === packId);
+    if (!pack || !pcStorageAvailable) return;
+    const users = characters.filter((character) => character.model === model && normalizeBasePackId(character.basePackId) === packId).length;
+    const warning = users ? ` ${users} personagem(ns) usam este modelo e poderão ficar sem a referência visual.` : "";
+    if (!window.confirm(`Excluir “${pack.name}” do catálogo local?${warning} Esta ação remove a pasta do modelo e não pode ser desfeita.`)) return;
+    try {
+      await deleteBaseModelFromPc(model, packId);
+      setBasePacks((current) => ({ ...current, [model]: current[model].filter((item) => item.id !== packId) }));
+      if (basePackId === packId) setBasePackId((availableBasePacks.find((item) => item.id !== packId) ?? DEFAULT_BASE_PACKS[model][0]).id);
+      setNotice(`${pack.name} excluído do catálogo`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível excluir o modelo");
+    }
+  }
+
   async function exportPng() {
     persistEditorSnapshot("Salvo automaticamente");
     try {
@@ -3902,6 +3919,7 @@ export default function Home() {
           onMigrate={() => { void migrateBrowserDataToPc(); }}
           onOpenCharacter={openCharacter}
           onRemoveCharacter={removeCharacter}
+          onRemoveModel={removeBaseModel}
           onNewCharacter={() => newCharacter()}
         />
 
@@ -4327,10 +4345,13 @@ export default function Home() {
               </div>
               <div className="base-pack-selector" role="group" aria-label={`Modelos ${model}`}>
                 {availableBasePacks.map((pack) => (
-                  <button
+                  <div
                     key={pack.id}
                     className={basePackId === pack.id ? "active" : ""}
                     onClick={() => changeBasePack(pack.id)}
+                    onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") changeBasePack(pack.id); }}
+                    role="button"
+                    tabIndex={0}
                     title={`Selecionar ${pack.name}`}
                   >
                     {/* Static local base preview. */}
@@ -4338,7 +4359,8 @@ export default function Home() {
                     <img src={baseExpressionSource(pack, "normal")} alt="" />
                     <span>{pack.name}</span>
                     <small>{pack.expressionKeys.length} expressões</small>
-                  </button>
+                    <span className="base-pack-actions"><button type="button" className="base-pack-delete" title={`Excluir ${pack.name}`} aria-label={`Excluir ${pack.name}`} onClick={(event) => { event.stopPropagation(); void removeBaseModel(pack.id); }}>Excluir</button></span>
+                  </div>
                 ))}
               </div>
 

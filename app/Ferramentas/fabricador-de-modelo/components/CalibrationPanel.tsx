@@ -5,7 +5,9 @@ import styles from "../../ferramentas.module.css";
 
 export function CalibrationPanel({ settings, onChange }: { settings: CalibrationSettings; onChange: (settings: CalibrationSettings) => void }) {
   const number = (key: keyof CalibrationSettings, value: string) => onChange({ ...settings, [key]: Number(value) });
-  return <div className={styles.controls}>
+  return <details className={styles.advancedPanel}>
+    <summary><span>Calibração, recorte e chroma</span><small>Controles avançados</small></summary>
+    <div className={styles.controls}>
     <div className={styles.sectionLabel}>Calibração e chroma</div>
     <label className={styles.field}>Escala base <output>{Math.round(settings.baseScale * 100)}%</output><input type="range" min="0.8" max="1.3" step="0.01" value={settings.baseScale} onChange={(event) => number("baseScale", event.target.value)} /></label>
     <label className={styles.field}>Intensidade Folha 1 <output>{Math.round(settings.primaryStrength * 100)}%</output><input type="range" min="0" max="1" step="0.05" value={settings.primaryStrength} onChange={(event) => number("primaryStrength", event.target.value)} /></label>
@@ -23,5 +25,6 @@ export function CalibrationPanel({ settings, onChange }: { settings: Calibration
     <label className={styles.check}><input type="checkbox" checked={settings.squareCrop} onChange={(event) => onChange({ ...settings, squareCrop: event.target.checked })} /> Manter recorte quadrado</label>
     <div className={styles.twoFields}><label className={styles.field}>Âncora X<input type="number" min="0" max="1920" value={settings.anchorX} onChange={(event) => number("anchorX", event.target.value)} /></label><label className={styles.field}>Âncora Y<input type="number" min="0" max="1080" value={settings.anchorY} onChange={(event) => number("anchorY", event.target.value)} /></label></div>
     <p className={styles.helpText}>Folha 2 usa apenas escala X/Y global e microajustes de até 2%. Nenhum warp regional é aplicado.</p>
-  </div>;
+    </div>
+  </details>;
 }

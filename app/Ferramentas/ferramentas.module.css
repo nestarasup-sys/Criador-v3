@@ -107,8 +107,35 @@
 .dotCritical { background:#d65b6c; }
 .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:17px; }
 .actions .button { flex:1 1 150px; }
+.stepper { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:0 0 22px; padding:8px; border:1px solid #ead9e3; border-radius:16px; background:#fff; box-shadow:0 8px 24px #8f4f6d0d; }
+.stepper button { display:flex; align-items:center; gap:9px; min-width:0; padding:10px 12px; border:0; border-radius:11px; background:transparent; color:#9b8792; font:inherit; text-align:left; cursor:pointer; }
+.stepper button span { display:grid; place-items:center; flex:none; width:25px; height:25px; border-radius:50%; background:#f1e8ee; color:#9a7b8c; font-size:11px; font-weight:900; }
+.stepper button strong { font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.stepper button.stepActive { color:#713c60; background:#fceef5; }
+.stepper button.stepActive span { color:#fff; background:#a14b79; }
+.reviewSummary { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 13px; color:#8f7a87; font-size:11px; font-weight:800; }
+.reviewSummary span { padding:6px 9px; border-radius:999px; background:#f8f1f5; }
+.reviewSummary .summaryGood { color:#28724b; background:#edf9f2; }
+.reviewSummary .summaryWarning { color:#916c12; background:#fff7dc; }
+.reviewSummary .summaryCritical { color:#a33e52; background:#fff0f2; }
+.advancedPanel { margin-top:18px; border-top:1px solid #f2e2ea; padding-top:14px; }
+.advancedPanel summary { display:flex; justify-content:space-between; align-items:center; gap:10px; color:#684560; font-size:12px; font-weight:900; cursor:pointer; list-style:none; }
+.advancedPanel summary::-webkit-details-marker { display:none; }
+.advancedPanel summary::after { content:"⌄"; color:#a14b79; font-size:16px; }
+.advancedPanel[open] summary::after { content:"⌃"; }
+.advancedPanel summary small { margin-left:auto; color:#a28d98; font-size:10px; font-weight:700; }
+.previewModelButton { width:100%; padding:10px 12px; border:1px solid #e7cddd; border-radius:11px; background:#fff7fb; color:#8f4771; font:inherit; font-size:12px; font-weight:850; cursor:pointer; }
+.previewModelButton:disabled { cursor:not-allowed; opacity:.5; }
+.finalPreview { display:grid; gap:6px; margin-top:10px; padding:10px; border:1px solid #ecd9e4; border-radius:13px; background:repeating-conic-gradient(#f0e6eb 0 25%,#fff 0 50%) 0/16px 16px; text-align:center; }
+.finalPreview img { display:block; width:100%; max-height:190px; object-fit:contain; }
+.finalPreview span { color:#806477; font-size:10px; font-weight:800; }
+.actionDock { position:fixed; z-index:20; right:22px; bottom:18px; left:22px; display:flex; align-items:center; justify-content:space-between; gap:16px; width:min(1100px,calc(100% - 44px)); margin:auto; padding:11px 14px 11px 18px; border:1px solid #e7d0dd; border-radius:17px; background:#fff; box-shadow:0 14px 42px #4d29421f; }
+.actionDock > div { display:grid; min-width:0; gap:3px; }
+.actionDock strong { color:#573348; font-size:12px; }
+.actionDock small { max-width:580px; overflow:hidden; color:#927b89; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.actionDock .button { flex:0 0 auto; padding:10px 14px; }
 @media (max-width:900px) { .layout { grid-template-columns:1fr; } .layout > aside { position:static; } }
-@media (max-width:620px) { .page :global(.nymi-navigation) { max-width:calc(100% - 24px); margin-top:12px; } .main { padding:24px 16px 58px; } .uploadGrid, .comparison, .twoFields { grid-template-columns:1fr; } .hero { display:block; margin-top:22px; } .hero h1 { font-size:34px; } .heroStat { display:inline-grid; margin-top:16px; } .panel { padding:18px; border-radius:18px; } .metricGrid { grid-template-columns:repeat(3,1fr); } }
+@media (max-width:620px) { .page :global(.nymi-navigation) { max-width:calc(100% - 24px); margin-top:12px; } .main { padding:24px 16px 108px; } .uploadGrid, .comparison, .twoFields { grid-template-columns:1fr; } .hero { display:block; margin-top:22px; } .hero h1 { font-size:34px; } .heroStat { display:inline-grid; margin-top:16px; } .panel { padding:18px; border-radius:18px; } .metricGrid { grid-template-columns:repeat(3,1fr); } .stepper { grid-template-columns:repeat(2,1fr); } .stepper button { padding:8px; } .stepper button strong { font-size:10px; } .actionDock { right:10px; bottom:10px; left:10px; width:calc(100% - 20px); padding:10px; } .actionDock small { display:none; } .actionDock .button { padding:9px 10px; font-size:11px; } }
 
 /* Visual system for the independent Tools workspace. */
 .page { background: #f6f4f8; color: #2a2333; }

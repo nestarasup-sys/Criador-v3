@@ -1,0 +1,3092 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Importador de Folha de Rostos V10.1</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09070a;
+      --panel: #140d12;
+      --panel-2: #21131b;
+      --line: #5a2942;
+      --text: #ffffff;
+      --muted: #f2b8d2;
+      --accent: #ff2d8d;
+      --accent-2: #ffb6d9;
+      --warn: #ff9fc9;
+      --danger: #ff2d6f;
+      --ok: #ff69aa;
+      --shadow: 0 18px 45px rgba(255,47,143,.14);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    body { min-height: 100vh; }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(9,7,10,.94);
+      backdrop-filter: blur(14px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      width: 38px; height: 38px; border-radius: 12px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--accent), #ff9fc9);
+      font-weight: 900; box-shadow: var(--shadow);
+    }
+    .brand h1 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .brand p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      min-height: 38px;
+      padding: 8px 13px;
+      border-radius: 10px;
+      transition: .16s ease;
+    }
+    .btn:hover:not(:disabled) { transform: translateY(-1px); border-color: #ff77b6; }
+    .btn:disabled { opacity: .42; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); border-color: transparent; font-weight: 750; }
+    .btn.success { background: #d81b73; border-color: #ff4b9e; font-weight: 750; }
+    .btn.ghost { background: transparent; }
+    .btn.danger { color: #ffffff; border-color: #8f2457; background: #2a0c1a; }
+    .btn.small { min-height: 30px; padding: 5px 9px; font-size: 12px; border-radius: 8px; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      min-height: calc(100vh - 68px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 16px;
+      overflow: auto;
+      max-height: calc(100vh - 68px);
+      position: sticky;
+      top: 68px;
+    }
+
+    .section {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,182,217,.035);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .section > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 13px;
+      font-weight: 760;
+      cursor: pointer;
+      user-select: none;
+    }
+    .section > summary::-webkit-details-marker { display: none; }
+    .section > summary::after { content: "⌄"; color: var(--muted); }
+    .section[open] > summary::after { transform: rotate(180deg); }
+    .section-body { padding: 0 13px 13px; }
+
+    .field { margin-top: 11px; }
+    .field:first-child { margin-top: 0; }
+    label, .label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: #ffe4f0; margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #110b10;
+      color: var(--text);
+      border-radius: 9px;
+      padding: 9px 10px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,45,141,.18); }
+    input[type="range"] { width: 100%; accent-color: var(--accent); }
+    input[type="color"] { width: 42px; height: 34px; padding: 2px; border: 1px solid var(--line); border-radius: 8px; background: #110b10; }
+    input[type="checkbox"] { accent-color: var(--accent); }
+
+    .inline { display: flex; gap: 8px; align-items: center; }
+    .inline > * { flex: 1; }
+    .check { justify-content: flex-start; gap: 8px; margin: 0; color: var(--text); }
+    .value { color: var(--accent-2); font-variant-numeric: tabular-nums; }
+    .hint { margin: 8px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+    .button-stack { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .button-stack .wide { grid-column: 1 / -1; }
+
+    .drop-zone {
+      border: 1.5px dashed #ff77b6;
+      border-radius: 12px;
+      min-height: 122px;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      text-align: center;
+      color: var(--muted);
+      background: #110b10;
+      transition: .15s ease;
+    }
+    .drop-zone.drag { border-color: var(--accent-2); background: rgba(255,182,217,.10); }
+    .drop-zone strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .drop-zone input { display: none; }
+
+    .main { min-width: 0; padding: 18px; }
+    .workspace-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .workspace-head h2 { margin: 0; font-size: 18px; }
+    .workspace-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+
+    .status-pill {
+      border: 1px solid var(--line); background: var(--panel); color: var(--muted);
+      border-radius: 999px; padding: 7px 10px; font-size: 12px; white-space: nowrap;
+    }
+    .status-pill.ok { color: var(--ok); border-color: rgba(255,105,170,.48); }
+    .status-pill.warn { color: var(--warn); border-color: rgba(255,159,201,.48); }
+    .status-pill.error { color: var(--danger); border-color: rgba(255,45,111,.48); }
+
+    .canvas-shell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 440px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      background:
+        linear-gradient(45deg, #1a1016 25%, transparent 25%),
+        linear-gradient(-45deg, #1a1016 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1a1016 75%),
+        linear-gradient(-45deg, transparent 75%, #1a1016 75%), #0d090c;
+      background-size: 24px 24px;
+      background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      box-shadow: var(--shadow);
+    }
+    #editorCanvas { display: block; max-width: 100%; max-height: 70vh; touch-action: none; }
+    .empty-state { text-align: center; color: var(--muted); padding: 36px; max-width: 460px; }
+    .empty-state b { color: var(--text); display: block; font-size: 18px; margin-bottom: 8px; }
+
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 8px; padding: 10px 0;
+    }
+    .toolbar-group { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+    .kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 5px; color: var(--muted); font-size: 10px; }
+
+    .message {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 14px;
+    }
+    .message.ok { color: #ffd6e8; border-color: rgba(255,105,170,.40); background: rgba(138,20,76,.20); }
+    .message.warn { color: #ffe0ef; border-color: rgba(255,159,201,.40); background: rgba(122,45,83,.20); }
+    .message.error { color: #ffd3e5; border-color: rgba(255,45,111,.40); background: rgba(105,16,55,.22); }
+
+    .preview-head { display: flex; align-items: end; justify-content: space-between; gap: 10px; margin: 24px 0 10px; }
+    .preview-head h2 { margin: 0; font-size: 18px; }
+    .preview-head p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+    .preview-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--panel);
+      min-width: 0;
+      transition: .15s ease;
+    }
+    .preview-card:hover { border-color: #ff86bd; transform: translateY(-1px); }
+    .preview-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(255,45,141,.20); }
+    .thumb {
+      aspect-ratio: 19 / 27;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(45deg, #2b1723 25%, transparent 25%),
+        linear-gradient(-45deg, #2b1723 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #2b1723 75%),
+        linear-gradient(-45deg, transparent 75%, #2b1723 75%), #120b10;
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      overflow: hidden;
+    }
+    .thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .thumb .placeholder { color: #d99bb8; font-size: 11px; }
+    .card-info { padding: 9px; }
+    .file-name { font-size: 12px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .meta { color: var(--muted); font-size: 10px; margin-top: 3px; display: flex; justify-content: space-between; gap: 6px; }
+    .tag-ok { color: var(--ok); }
+    .tag-warn { color: var(--warn); }
+    .card-actions { display: flex; gap: 6px; padding-top: 8px; }
+
+
+    .compare-panel {
+      border: 1px solid var(--line); border-radius: 16px; background: var(--panel);
+      padding: 12px; margin: 12px 0 18px;
+    }
+    .compare-top { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .compare-top strong { font-size:13px; }
+    .compare-stage {
+      position:relative; width:min(100%, 760px); aspect-ratio:16/9; margin:0 auto; overflow:hidden;
+      border:1px solid var(--line); border-radius:12px;
+      background: linear-gradient(45deg,#29151f 25%,transparent 25%),linear-gradient(-45deg,#29151f 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#29151f 75%),linear-gradient(-45deg,transparent 75%,#29151f 75%),#10090e;
+      background-size:22px 22px; background-position:0 0,0 11px,11px -11px,-11px 0;
+    }
+    .compare-stage img { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; }
+    .compare-stage .reference { opacity:.28; }
+    .compare-empty { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:12px; text-align:center; padding:20px; }
+    .compare-controls { display:flex; align-items:center; justify-content:center; gap:7px; flex-wrap:wrap; margin-top:10px; }
+    .compare-meta { color:var(--muted); font-size:11px; margin-top:8px; text-align:center; }
+    .tag-critical { color: var(--danger); font-weight: 800; }
+    .tag-review { color: var(--warn); font-weight: 750; }
+    .trio-layer { opacity:.30; }
+    .trio-compare { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; width:min(100%,760px); margin:10px auto 0; }
+    .trio-card { border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#10090e; }
+    .trio-card img { display:block; width:100%; aspect-ratio:16/9; object-fit:contain; background:transparent; }
+    .trio-card span { display:block; padding:6px 8px; color:var(--muted); font-size:10px; text-align:center; }
+    .manual-editor { border-top:1px solid var(--line); margin-top:12px; padding-top:12px; }
+    .manual-editor-head { display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+    .manual-grid { display:grid; grid-template-columns:repeat(5,minmax(92px,1fr)); gap:8px; }
+    .manual-grid .field { margin-top:0; }
+    .manual-actions { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-top:9px; }
+    .quality-line { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .quality-chip { border:1px solid var(--line); border-radius:999px; padding:4px 8px; color:var(--muted); font-size:10px; }
+    .quality-chip.ok { color:var(--ok); border-color:rgba(255,105,170,.48); }
+    .quality-chip.warn { color:var(--warn); border-color:rgba(255,159,201,.48); }
+    .quality-chip.error { color:var(--danger); border-color:rgba(255,45,111,.48); }
+    .metric-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-top:9px; }
+    .metric { border:1px solid var(--line); border-radius:9px; padding:7px; background:#110b10; }
+    .metric b { display:block; font-size:11px; }
+    .metric span { color:var(--muted); font-size:10px; }
+
+    .progress-wrap { display: none; margin: 10px 0; }
+    .progress-wrap.show { display: block; }
+    .progress-track { height: 8px; background: #1a1016; border: 1px solid var(--line); border-radius: 99px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .16s ease; }
+    .progress-text { color: var(--muted); font-size: 11px; margin-top: 5px; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.35); display: none; place-items: center; padding: 20px;
+    }
+    .modal-backdrop.show { display: grid; }
+    .modal { width: min(760px, 100%); max-height: 86vh; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 20px; }
+    .modal h2 { margin: 0 0 10px; }
+    .modal h3 { margin: 18px 0 6px; font-size: 14px; }
+    .modal p, .modal li { color: #f3c8dc; font-size: 13px; line-height: 1.55; }
+    .modal code { color: #ffb6d9; }
+    .modal-footer { display: flex; justify-content: flex-end; margin-top: 18px; }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: relative; top: auto; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
+      .main { padding: 12px; }
+      .canvas-shell { min-height: 320px; }
+    }
+    @media (max-width: 600px) {
+      .app-header { align-items: flex-start; padding: 12px; }
+      .brand p { display: none; }
+      .top-actions .btn.ghost { display: none; }
+      .button-stack { grid-template-columns: 1fr; }
+      .button-stack .wide { grid-column: auto; }
+      .preview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .manual-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .trio-compare { grid-template-columns:1fr; }
+    }
+  
+
+    /* TEMA VISUAL: branco + rosa forte + rosa claro + preto */
+    :root {
+      color-scheme: light;
+      --bg: #ffffff;
+      --panel: #fff7fb;
+      --panel-2: #ffe3f0;
+      --line: #f3a6c8;
+      --text: #111111;
+      --muted: #7a405b;
+      --accent: #ff2d8d;
+      --accent-2: #ffb6d9;
+      --warn: #d86a9e;
+      --danger: #d91f66;
+      --ok: #c92372;
+      --shadow: 0 14px 34px rgba(255,45,141,.14);
+    }
+
+    html, body { background: #ffffff !important; color: #111111 !important; }
+    body { background: #ffffff !important; }
+    .app-header {
+      background: rgba(255,255,255,.96) !important;
+      border-bottom-color: #f3a6c8 !important;
+      color: #111111 !important;
+    }
+    .brand-mark {
+      color: #ffffff !important;
+      background: linear-gradient(135deg,#ff2d8d,#ff86bd) !important;
+    }
+    .brand h1 { color:#111111 !important; }
+    .brand p { color:#8b4b68 !important; }
+
+    .layout, .main { background:#ffffff !important; }
+    .sidebar {
+      background:#fff4f9 !important;
+      border-right-color:#f3a6c8 !important;
+    }
+    .section {
+      background:#ffffff !important;
+      border-color:#f3a6c8 !important;
+      box-shadow:0 3px 12px rgba(255,45,141,.05);
+    }
+    .section > summary { color:#111111 !important; background:#fff0f7 !important; }
+    .section > summary::after { color:#ff2d8d !important; }
+    .section-body { background:#ffffff !important; }
+
+    label, .label-row, .check { color:#111111 !important; }
+    .hint, .workspace-head p, .preview-head p, .compare-meta, .meta,
+    .progress-text, .metric span, .quality-chip, .kbd, .empty-state {
+      color:#7a405b !important;
+    }
+    .value { color:#d91f73 !important; font-weight:700; }
+
+    input[type="text"], input[type="number"], select {
+      background:#ffffff !important;
+      color:#111111 !important;
+      border-color:#f3a6c8 !important;
+    }
+    input[type="text"]::placeholder, input[type="number"]::placeholder { color:#9b6a81 !important; }
+    input[type="color"] { background:#ffffff !important; border-color:#f3a6c8 !important; }
+    input:focus, select:focus { border-color:#ff2d8d !important; box-shadow:0 0 0 3px rgba(255,45,141,.14) !important; }
+
+    .btn {
+      background:#ffffff !important;
+      color:#111111 !important;
+      border-color:#f3a6c8 !important;
+    }
+    .btn:hover:not(:disabled) { border-color:#ff2d8d !important; background:#fff0f7 !important; }
+    .btn.primary, .btn.success {
+      background:#ff2d8d !important;
+      color:#ffffff !important;
+      border-color:#ff2d8d !important;
+    }
+    .btn.ghost { background:#ffffff !important; color:#111111 !important; }
+    .btn.danger { background:#111111 !important; color:#ffffff !important; border-color:#111111 !important; }
+
+    .drop-zone {
+      background:#fff8fb !important;
+      color:#7a405b !important;
+      border-color:#ff74b3 !important;
+    }
+    .drop-zone strong { color:#111111 !important; }
+    .drop-zone.drag { background:#ffe3f0 !important; border-color:#ff2d8d !important; }
+
+    .status-pill, .message, .preview-card, .compare-panel, .modal {
+      background:#ffffff !important;
+      color:#111111 !important;
+      border-color:#f3a6c8 !important;
+    }
+    .status-pill.ok, .status-pill.warn, .status-pill.error,
+    .quality-chip.ok, .quality-chip.warn, .quality-chip.error {
+      background:#fff4f9 !important;
+    }
+    .message.ok { background:#ffeaf4 !important; color:#7f1747 !important; }
+    .message.warn { background:#fff4f8 !important; color:#7a405b !important; }
+    .message.error { background:#ffe5ef !important; color:#a30f4e !important; }
+
+    .canvas-shell, .thumb, .compare-stage, .trio-card {
+      background-color:#fff7fb !important;
+      border-color:#f3a6c8 !important;
+    }
+    .canvas-shell {
+      background-image:
+        linear-gradient(45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(-45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#ffe6f1 75%),
+        linear-gradient(-45deg,transparent 75%,#ffe6f1 75%) !important;
+    }
+    .thumb {
+      background-image:
+        linear-gradient(45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(-45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#ffe6f1 75%),
+        linear-gradient(-45deg,transparent 75%,#ffe6f1 75%) !important;
+      background-color:#ffffff !important;
+    }
+    .compare-stage {
+      background-image:
+        linear-gradient(45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(-45deg,#ffe6f1 25%,transparent 25%),
+        linear-gradient(45deg,transparent 75%,#ffe6f1 75%),
+        linear-gradient(-45deg,transparent 75%,#ffe6f1 75%) !important;
+      background-color:#ffffff !important;
+    }
+
+    .preview-card:hover { border-color:#ff2d8d !important; }
+    .preview-card.selected { border-color:#ff2d8d !important; box-shadow:0 0 0 2px rgba(255,45,141,.16) !important; }
+    .file-name, .compare-top strong, .metric b, .workspace-head h2, .preview-head h2 { color:#111111 !important; }
+    .thumb .placeholder { color:#a26481 !important; }
+
+    .metric { background:#fff7fb !important; border-color:#f3a6c8 !important; }
+    .manual-editor { border-top-color:#f3a6c8 !important; }
+    .quality-chip { border-color:#f3a6c8 !important; }
+    .progress-track { background:#ffe6f1 !important; border-color:#f3a6c8 !important; }
+    .progress-bar { background:linear-gradient(90deg,#ff2d8d,#ff8fc3) !important; }
+
+    .modal-backdrop { background:rgba(0,0,0,.28) !important; }
+    .modal p, .modal li { color:#4b2436 !important; }
+    .modal code { color:#d91f73 !important; background:#fff0f7; padding:1px 4px; border-radius:4px; }
+
+    .trio-card { background:#ffffff !important; }
+    .trio-card span { color:#7a405b !important; }
+</style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark">21</div>
+      <div>
+        <h1>Importador de Folha de Rostos V10.1</h1>
+        <p>Head Master, duas folhas 7×3 e exportação 1920×1080 · V10.1</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" id="helpBtn">Como usar</button>
+      <button class="btn primary" id="buildBtn" disabled>Gerar prévias</button>
+      <button class="btn success" id="downloadBtn" disabled>Salvar pasta</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <details class="section" open>
+        <summary>1. Folha e modelo</summary>
+        <div class="section-body">
+          <label class="drop-zone" id="dropZone">
+            <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp">
+            <span><strong>Escolher folha PNG/JPG</strong>ou arraste a imagem para cá</span>
+          </label>
+          <div class="field">
+            <label for="gender">Gênero do modelo</label>
+            <select id="gender">
+              <option value="feminino">Feminino</option>
+              <option value="masculino">Masculino</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="modelName">Nome exibido</label>
+            <input id="modelName" type="text" value="modelo-7" maxlength="80">
+          </div>
+          <div class="field">
+            <label for="folderName">Nome da pasta</label>
+            <input id="folderName" type="text" value="modelo-7" maxlength="80">
+          </div>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>2. Folha extra (+21)</summary>
+        <div class="section-body">
+          <label class="drop-zone" id="extraDropZone">
+            <input id="extraFileInput" type="file" accept="image/png,image/jpeg,image/webp">
+            <span><strong>Adicionar Folha 2 com 21 rostos</strong>7 expressões × aberto / blink / talk</span>
+          </label>
+          <div class="field">
+            <div class="label-row"><span>Status</span><span class="value" id="extraStatus">Opcional</span></div>
+          </div>
+          <div class="extra-names" id="extraNames">
+            <input data-extra-name="0" value="envergonhado_panico" aria-label="Expressão extra 1 — Envergonhado/Pânico" readonly>
+            <input data-extra-name="1" value="emburrado" aria-label="Expressão extra 2 — Emburrado" readonly>
+            <input data-extra-name="2" value="sonolento" aria-label="Expressão extra 3 — Sonolento" readonly>
+            <input data-extra-name="3" value="confuso" aria-label="Expressão extra 4 — Confuso" readonly>
+            <input data-extra-name="4" value="flertando" aria-label="Expressão extra 5 — Flertando" readonly>
+            <input data-extra-name="5" value="sorriso_maligno" aria-label="Expressão extra 6 — Sorriso maligno" readonly>
+            <input data-extra-name="6" value="chocado" aria-label="Expressão extra 7 — Chocado" readonly>
+          </div>
+          <div class="button-stack">
+            <button class="btn" id="calibrateExtraBtn" disabled>Recalibrar Folha 2</button><button class="btn danger" id="removeExtraBtn" disabled>Remover</button>
+          </div>
+          <p class="hint">A Folha 1 define a geometria oficial. A Folha 2 contém 7 novas expressões em 3 estados (aberto, blink e talk), totalizando 21 rostos. Cada trio é estabilizado primeiro e depois toda a Folha 2 é adaptada ao Head Master sem usar olhos, boca ou sobrancelhas como referência.</p>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>3. Fundo e chroma key</summary>
+        <div class="section-body">
+          <div class="field">
+            <label class="check"><input type="checkbox" id="autoBg" checked> Detectar fundo pelas bordas</label>
+          </div>
+          <div class="field">
+            <div class="label-row"><span>Cor do fundo</span><input id="bgColor" type="color" value="#00ff00"></div>
+            <button class="btn small" id="pickBgBtn" style="width:100%">Selecionar cor na imagem</button>
+          </div>
+          <div class="field">
+            <label for="tolerance"><span>Tolerância cromática</span><span class="value" id="toleranceValue">34</span></label>
+            <input id="tolerance" type="range" min="5" max="90" value="34">
+          </div>
+          <div class="field">
+            <label for="feather"><span>Suavização da borda</span><span class="value" id="featherValue">2 px</span></label>
+            <input id="feather" type="range" min="0" max="8" value="2">
+          </div>
+          <div class="field">
+            <label for="despill"><span>Remover halo verde</span><span class="value" id="despillValue">65%</span></label>
+            <input id="despill" type="range" min="0" max="100" value="65">
+          </div>
+          <p class="hint">A remoção começa pelas bordas. Verde dentro dos olhos, roupas ou acessórios tende a ser preservado quando não está conectado ao fundo.</p>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>4. Detecção e caixas</summary>
+        <div class="section-body">
+          <div class="button-stack">
+            <button class="btn" id="detectBtn" disabled>Detectar rostos</button>
+            <button class="btn" id="gridBtn" disabled>Grade 7×3</button>
+            <button class="btn wide" id="resetBtn" disabled>Restaurar última detecção</button>
+          </div>
+          <div class="field">
+            <label for="boxPadding"><span>Expansão das molduras</span><span class="value" id="boxPaddingValue">0%</span></label>
+            <input id="boxPadding" type="range" min="0" max="10" value="0">
+          </div>
+          <p class="hint">Arraste uma caixa para mover. Use os quadrados nas bordas para redimensionar. Setas movem a caixa selecionada; Shift + setas move 10 px.</p>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>5. Recorte final</summary>
+        <div class="section-body">
+          <div class="field">
+            <label class="check"><input type="checkbox" id="removeWhiteFrame" checked> Remover resíduos do molde nas bordas</label>
+          </div>
+          <div class="field">
+            <label for="edgeBand"><span>Faixa de limpeza nas bordas</span><span class="value" id="edgeBandValue">6 px</span></label>
+            <input id="edgeBand" type="range" min="1" max="16" value="6">
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="autoTightCrop" checked> Detectar o rosto automaticamente dentro da moldura</label>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="squareCrop" checked> Fazer recorte quadrado perfeito sem cortar topo/baixo</label>
+          </div>
+          <div class="field">
+            <label for="contentPadding"><span>Margem extra ao redor do rosto</span><span class="value" id="contentPaddingValue">0 px</span></label>
+            <input id="contentPadding" type="range" min="0" max="24" value="0">
+          </div>
+          <div class="inline">
+            <div class="field"><label for="outWidth">Largura final</label><input id="outWidth" type="number" value="1920" min="64" max="8192"></div>
+            <div class="field"><label for="outHeight">Altura final</label><input id="outHeight" type="number" value="1080" min="64" max="8192"></div>
+          </div>
+          <div class="field">
+            <label for="faceHeight"><span>Escala base do rosto</span><span class="value" id="faceHeightValue">110%</span></label>
+            <input id="faceHeight" type="range" min="25" max="300" value="110">
+          </div>
+          <div class="field">
+            <label for="centerX"><span>Centro horizontal</span><span class="value" id="centerXValue">50%</span></label>
+            <input id="centerX" type="range" min="0" max="100" value="50">
+          </div>
+          <div class="field">
+            <label for="baseY"><span>Base do pescoço</span><span class="value" id="baseYValue">32%</span></label>
+            <input id="baseY" type="range" min="0" max="120" value="32">
+          </div>
+          <p class="hint">Depois de remover o fundo e os resíduos do molde, a ferramenta mantém o rosto no tamanho original detectado e apenas o posiciona dentro do canvas final de 1920×1080. A escala base agora começa em 110% para deixar a cabeça um pouco maior no app, sem esticar; a calibração pode fazer somente pequenas correções entre as 21 expressões. A posição vertical padrão agora coloca a cabeça mais acima no quadro, com a base do pescoço em 32%.</p>
+        </div>
+      </details>
+
+      <details class="section" open>
+        <summary>6. Calibração e Head Master</summary>
+        <div class="section-body">
+          <div class="field">
+            <label class="check"><input type="checkbox" id="normalizeFaces" checked> Corrigir diferenças de escala/posição geradas na própria folha</label>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="normalizeByTrio" checked> Normalizar primeiro cada trio aberto / blink / talk</label>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="excludeOutliers" checked> Excluir outliers do cálculo da referência</label>
+          </div>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="protectExpressive" checked> Ignorar detalhes expressivos na calibração</label>
+          </div>
+          <p class="hint">Sobrancelhas, cílios, lágrimas e pequenas saliências continuam intactos no PNG, mas não aumentam artificialmente a largura/altura usada para calibrar a cabeça.</p>
+          <div class="field">
+            <label class="check"><input type="checkbox" id="matchHeadShape" checked> Alinhar o formato das 21 cabeças pela silhueta estrutural</label>
+          </div>
+          <div class="field">
+            <label for="shapeStrength"><span>Força do ajuste de formato</span><span class="value" id="shapeStrengthValue">85%</span></label>
+            <input id="shapeStrength" type="range" min="0" max="100" value="85">
+          </div>
+          <div class="field">
+            <label for="maxShapeWarp"><span>Correção lateral máxima por faixa</span><span class="value" id="maxShapeWarpValue">4%</span></label>
+            <input id="maxShapeWarp" type="range" min="0" max="10" step="0.5" value="4">
+          </div>
+          <div class="field">
+            <label for="maxExternalCorrection"><span>Correção externa máxima da cabeça</span><span class="value" id="maxExternalCorrectionValue">2%</span></label>
+            <input id="maxExternalCorrection" type="range" min="0" max="8" step="0.5" value="2">
+          </div>
+          <div class="field">
+            <label for="normalizationMode">Modo de correção</label>
+            <select id="normalizationMode">
+              <option value="xy" selected>Largura e altura independentes</option>
+              <option value="uniform">Escala uniforme, sem alterar proporção</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="normalizationStrength"><span>Força dentro do trio</span><span class="value" id="normalizationStrengthValue">100%</span></label>
+            <input id="normalizationStrength" type="range" min="0" max="100" value="100">
+          </div>
+          <div class="field">
+            <label for="globalStrength"><span>Correção global entre expressões</span><span class="value" id="globalStrengthValue">75%</span></label>
+            <input id="globalStrength" type="range" min="0" max="100" value="75">
+          </div>
+          <div class="field">
+            <label for="maxCorrection"><span>Correção automática máxima por eixo</span><span class="value" id="maxCorrectionValue">7%</span></label>
+            <input id="maxCorrection" type="range" min="1" max="20" value="7">
+          </div>
+          <div class="metric-grid" id="normalizationSummary">
+            <div class="metric"><b>Referência</b><span>Aguardando geração</span></div>
+            <div class="metric"><b>Outliers</b><span>—</span></div>
+            <div class="metric"><b>Críticos</b><span>—</span></div>
+          </div>
+          <div class="field">
+            <label for="extraGlobalMax"><span>Correção global máxima da Folha 2</span><span class="value" id="extraGlobalMaxValue">8%</span></label>
+            <input id="extraGlobalMax" type="range" min="2" max="15" step="0.5" value="8">
+          </div>
+          <div class="field">
+            <label for="extraMicroMax"><span>Microajuste individual máximo</span><span class="value" id="extraMicroMaxValue">2%</span></label>
+            <input id="extraMicroMax" type="range" min="0" max="5" step="0.25" value="2">
+          </div>
+          <p class="hint">A calibração usa duas camadas: visual (tudo que será exportado) e estrutural (crânio, laterais, mandíbula e pescoço). Olhos, boca, sobrancelhas, cílios e lágrimas não dirigem o alinhamento. O algoritmo compara a silhueta da cabeça em várias faixas horizontais e corrige apenas pequenas diferenças de formato entre os 21 rostos.</p>
+        </div>
+      </details>
+
+      <details class="section">
+        <summary>7. Exportação</summary>
+        <div class="section-body">
+          <label class="check"><input type="checkbox" id="includeJson" checked> Incluir <code>model.json</code></label>
+          <label class="check" style="margin-top:9px"><input type="checkbox" id="includeReport" checked> Incluir relatório de importação</label>
+          <p class="hint">A ferramenta salva 21 PNGs do conjunto base ou 42 PNGs quando a Folha 2 completa estiver calibrada. Nenhum arquivo é enviado para a internet.</p>
+        </div>
+      </details>
+    </aside>
+
+    <main class="main">
+      <div class="workspace-head">
+        <div>
+          <h2>Folha original</h2>
+          <p id="imageInfo">Nenhuma imagem selecionada.</p>
+        </div>
+        <div class="status-pill" id="statusPill">Aguardando imagem</div>
+      </div>
+
+      <div class="message" id="messageBox">Selecione uma folha. A ferramenta procurará primeiro os 21 rostos pelo contraste com o fundo, em 3 linhas × 7 colunas. Depois, ela detectará automaticamente o conteúdo de cada rosto respeitando corredores exclusivos para cada uma das 3 linhas, impedindo que o recorte pegue uma fatia da cabeça de baixo.</div>
+
+      <div class="canvas-shell" id="canvasShell">
+        <div class="empty-state" id="emptyState"><b>Carregue uma folha de rostos</b>Os 21 recortes serão identificados, nomeados e preparados para exportação.</div>
+        <canvas id="editorCanvas" hidden></canvas>
+      </div>
+
+      <div class="toolbar">
+        <div class="toolbar-group">
+          <button class="btn small" id="prevCellBtn" disabled>← Anterior</button>
+          <button class="btn small" id="nextCellBtn" disabled>Próxima →</button>
+          <span id="selectedLabel" class="status-pill">Nenhuma caixa</span>
+        </div>
+        <div class="toolbar-group">
+          <span class="kbd">Setas</span><span style="color:var(--muted);font-size:11px">mover</span>
+          <span class="kbd">Delete</span><span style="color:var(--muted);font-size:11px">restaurar caixa</span>
+        </div>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text" id="progressText">Preparando…</div>
+      </div>
+
+      <div class="preview-head">
+        <div>
+          <h2>Pré-visualização final</h2>
+          <p>Prévia dos 21 PNGs finais em canvas 1920×1080.</p>
+        </div>
+        <span class="status-pill" id="previewStatus">0/21 gerados</span>
+      </div>
+      <div class="compare-panel" id="comparePanel">
+        <div class="compare-top">
+          <strong>Controle de qualidade e estabilidade · extensão única de 42 sprites</strong>
+          <span class="status-pill" id="compareLabel">Gere as prévias</span>
+        </div>
+        <div class="compare-stage">
+          <img id="compareReference" class="reference" alt="Referência automática" hidden>
+          <img id="compareCurrent" alt="Rosto atual" hidden>
+          <img id="compareBlink" class="trio-layer" alt="Blink" hidden>
+          <img id="compareTalk" class="trio-layer" alt="Talk" hidden>
+          <div class="compare-empty" id="compareEmpty">Depois de gerar, alterne os 42 sprites como um único modelo. Use os botões da Folha 1 ou Folha 2 para revisar cada conjunto separadamente.</div>
+        </div>
+        <div class="trio-compare" id="trioCompare" hidden>
+          <div class="trio-card"><img id="trioOpen" alt="Aberto"><span>Aberto</span></div>
+          <div class="trio-card"><img id="trioBlink" alt="Blink"><span>Blink</span></div>
+          <div class="trio-card"><img id="trioTalk" alt="Talk"><span>Talk</span></div>
+        </div>
+        <div class="compare-controls">
+          <button class="btn small" id="comparePrev" disabled>←</button>
+          <button class="btn small" id="comparePlay" disabled>▶ Alternar 42</button>
+          <button class="btn small" id="comparePlayBase" disabled>▶ Folha 1 (21)</button>
+          <button class="btn small" id="comparePlayExtra" disabled>▶ Folha 2 (21)</button>
+          <button class="btn small" id="compareNext" disabled>→</button>
+          <button class="btn small" id="animationTest" disabled>▶ Teste de animação</button>
+          <select id="compareMode" style="width:auto;min-width:155px"><option value="single">Individual</option><option value="trio">Comparar trio</option></select>
+          <label class="check"><input type="checkbox" id="ghostReference"> Fantasma da referência automática</label>
+          <label style="margin:0;min-width:150px">Velocidade <input id="compareSpeed" type="range" min="80" max="800" step="20" value="220"></label>
+        </div>
+        <div class="compare-meta" id="compareMeta">—</div>
+        <div class="quality-line" id="qualityLine"></div>
+
+        <div class="manual-editor" id="manualEditor">
+          <div class="manual-editor-head"><strong>Ajuste individual pós-calibração</strong><span class="status-pill" id="manualLabel">Nenhum rosto</span></div>
+          <div class="manual-grid">
+            <div class="field"><label for="manualScale">Escala geral %</label><input id="manualScale" type="number" min="70" max="130" step="0.1" value="100"></div>
+            <div class="field"><label for="manualScaleX">Largura %</label><input id="manualScaleX" type="number" min="70" max="130" step="0.1" value="100"></div>
+            <div class="field"><label for="manualScaleY">Altura %</label><input id="manualScaleY" type="number" min="70" max="130" step="0.1" value="100"></div>
+            <div class="field"><label for="manualX">Posição X px</label><input id="manualX" type="number" min="-500" max="500" step="1" value="0"></div>
+            <div class="field"><label for="manualY">Posição Y px</label><input id="manualY" type="number" min="-500" max="500" step="1" value="0"></div>
+          </div>
+          <div class="manual-actions">
+            <button class="btn small primary" id="applyManual" disabled>Aplicar ao rosto</button>
+            <button class="btn small" id="resetManual" disabled>Restaurar automático</button>
+            <button class="btn small" id="copyManualTrio" disabled>Copiar ajuste para aberto/blink/talk</button>
+            <label class="check"><input type="checkbox" id="manualReviewed" disabled> Revisado manualmente / liberar crítico</label>
+          </div>
+          <p class="hint">O ajuste manual acontece depois da calibração automática. Escala mantém as âncoras; X/Y deslocam o sprite final. A aprovação manual remove o bloqueio somente daquele rosto crítico.</p>
+        </div>
+      </div>
+      <div class="preview-grid" id="previewGrid"></div>
+
+      <section class="extra-panel" id="extraPanel">
+        <div class="extra-panel-head">
+          <div>
+            <div class="v10-badge">V10.1 · HEAD MASTER</div>
+            <h2 style="margin-top:7px">Expressões extras (Folha 2)</h2>
+            <p>As 21 expressões da Folha 2 também aparecem junto com as prévias da Folha 1, na grade principal. Este painel fica só para comparação detalhada da Folha 2.</p>
+          </div>
+          <div class="extra-actions">
+            <button class="btn small" id="extraPrev" disabled>←</button>
+            <select id="extraCompareMode" style="width:auto">
+              <option value="after">Depois</option>
+              <option value="before">Antes</option>
+              <option value="ghost">Fantasma</option>
+              <option value="contour">Contorno</option>
+            </select>
+            <button class="btn small" id="extraFlicker" disabled>▶ Flicker</button>
+            <button class="btn small" id="extraNext" disabled>→</button>
+          </div>
+        </div>
+        <div class="extra-compare">
+          <div class="extra-stage" id="extraStage">
+            <img id="extraMasterImage" class="ghost" alt="Head Master" hidden>
+            <img id="extraBeforeImage" alt="Antes" hidden>
+            <img id="extraAfterImage" alt="Depois" hidden>
+            <canvas id="extraContourCanvas" hidden></canvas>
+            <div class="extra-stage-empty" id="extraStageEmpty">Adicione uma Folha 2 e gere a Folha Principal para criar o Head Master.</div>
+          </div>
+          <aside class="head-master-card">
+            <h3>Head Master</h3>
+            <div class="head-master-score" id="extraOverallScore">—</div>
+            <p id="headMasterInfo">Aguardando os 21 rostos principais.</p>
+            <div class="compat-grid" id="compatibilityGrid">
+              <div class="compat-card"><b>Tamanho</b><span>—</span></div>
+              <div class="compat-card"><b>Proporção</b><span>—</span></div>
+              <div class="compat-card"><b>Silhueta</b><span>—</span></div>
+              <div class="compat-card"><b>Mandíbula</b><span>—</span></div>
+              <div class="compat-card"><b>Pescoço</b><span>—</span></div>
+              <div class="compat-card"><b>Status</b><span>—</span></div>
+            </div>
+            <p id="extraTransformInfo">A correção global da Folha 2 aparecerá aqui.</p>
+          </aside>
+        </div>
+        <div class="extra-preview-grid" id="extraPreviewGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="helpModal">
+    <div class="modal">
+      <h2>Como usar</h2>
+      <p>Esta página funciona localmente. A imagem não é enviada para nenhum servidor.</p>
+      <h3>Fluxo recomendado</h3>
+      <ol>
+        <li>Selecione a folha PNG/JPG.</li>
+        <li>Confira se as 21 caixas acompanham as molduras brancas, na ordem de 3 linhas × 7 colunas.</li>
+        <li>Ajuste o chroma key e as molduras. Clique em <b>Gerar prévias</b>.</li>
+        <li>Revise os 21 quadros. Se quiser, carregue a Folha 2 com mais 21 rostos (7 expressões × aberto/blink/talk). Ao clicar em <b>Gerar prévias</b>, a ferramenta gera a Folha Principal e também as prévias da Folha 2 automaticamente.</li><li>Confira a compatibilidade/Flicker das extras e clique em <b>Salvar pasta</b>.</li>
+        <li>Extraia a pasta gerada manualmente em <code>public/models/modelos/feminino</code> ou <code>masculino</code>.</li>
+      </ol>
+      <h3>Mapeamento</h3>
+      <p>Colunas base: normal, sorriso_canto, serio, raiva, assustado, corado, surpreso. Linhas: aberto, blink e talk. A Folha 2 usa as colunas: envergonhado_panico, emburrado, sonolento, confuso, flertando, sorriso_maligno e chocado; as linhas continuam aberto, blink e talk.</p>
+      <h3>Calibração e controle de qualidade</h3>
+      <p>Os três estados de cada expressão são normalizados primeiro entre si. Depois, a ferramenta compara o formato externo da cabeça em várias faixas horizontais, usando crânio, laterais, mandíbula e pescoço. Olhos, boca e sobrancelhas ficam livres e não influenciam a calibração.</p>
+      <p>Use o fantasma, a comparação do trio e o teste de animação para localizar tremores. Rostos críticos bloqueiam a exportação até serem corrigidos ou revisados manualmente.</p>
+      <h3>Importante</h3>
+      <p>A ferramenta nunca adiciona uma cabeça de referência e não preenche células vazias. A referência automática é apenas geométrica e vem de um dos 21 rostos da própria folha. Se um recorte estiver vazio, a exportação será bloqueada.</p>
+      <div class="modal-footer"><button class="btn primary" id="closeHelpBtn">Entendi</button></div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  const EXPRESSIONS = ['normal', 'sorriso_canto', 'serio', 'raiva', 'assustado', 'corado', 'surpreso'];
+  const ROW_LABELS = ['Olhos abertos', 'Blink', 'Talk'];
+  const ROW_SUFFIX = ['', '_blink', '_talk'];
+  const TOTAL = 21;
+  const EXTRA_EXPRESSIONS = ['envergonhado_panico','emburrado','sonolento','confuso','flertando','sorriso_maligno','chocado'];
+  const EXTRA_TOTAL = 21;
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    fileInput: $('fileInput'), dropZone: $('dropZone'), gender: $('gender'), modelName: $('modelName'), folderName: $('folderName'),
+    extraFileInput: $('extraFileInput'), extraDropZone: $('extraDropZone'), extraStatus: $('extraStatus'), extraNames: $('extraNames'), calibrateExtraBtn: $('calibrateExtraBtn'), removeExtraBtn: $('removeExtraBtn'),
+    autoBg: $('autoBg'), bgColor: $('bgColor'), pickBgBtn: $('pickBgBtn'), tolerance: $('tolerance'), feather: $('feather'), despill: $('despill'),
+    detectBtn: $('detectBtn'), gridBtn: $('gridBtn'), resetBtn: $('resetBtn'), boxPadding: $('boxPadding'),
+    removeWhiteFrame: $('removeWhiteFrame'), edgeBand: $('edgeBand'), autoTightCrop: $('autoTightCrop'), squareCrop: $('squareCrop'), contentPadding: $('contentPadding'), outWidth: $('outWidth'), outHeight: $('outHeight'), faceHeight: $('faceHeight'), centerX: $('centerX'), baseY: $('baseY'), normalizeFaces: $('normalizeFaces'), normalizeByTrio: $('normalizeByTrio'), excludeOutliers: $('excludeOutliers'), protectExpressive: $('protectExpressive'), matchHeadShape: $('matchHeadShape'), shapeStrength: $('shapeStrength'), maxShapeWarp: $('maxShapeWarp'), maxExternalCorrection: $('maxExternalCorrection'), normalizationMode: $('normalizationMode'), normalizationStrength: $('normalizationStrength'), globalStrength: $('globalStrength'), maxCorrection: $('maxCorrection'), normalizationSummary: $('normalizationSummary'),
+    includeJson: $('includeJson'), includeReport: $('includeReport'), buildBtn: $('buildBtn'), downloadBtn: $('downloadBtn'), extraGlobalMax: $('extraGlobalMax'), extraMicroMax: $('extraMicroMax'),
+    editorCanvas: $('editorCanvas'), emptyState: $('emptyState'), imageInfo: $('imageInfo'), statusPill: $('statusPill'), messageBox: $('messageBox'),
+    prevCellBtn: $('prevCellBtn'), nextCellBtn: $('nextCellBtn'), selectedLabel: $('selectedLabel'), previewGrid: $('previewGrid'), previewStatus: $('previewStatus'),
+    progressWrap: $('progressWrap'), progressBar: $('progressBar'), progressText: $('progressText'), canvasShell: $('canvasShell'), compareReference: $('compareReference'), compareCurrent: $('compareCurrent'), compareBlink: $('compareBlink'), compareTalk: $('compareTalk'), compareEmpty: $('compareEmpty'), compareLabel: $('compareLabel'), compareMeta: $('compareMeta'), comparePrev: $('comparePrev'), compareNext: $('compareNext'), comparePlay: $('comparePlay'), comparePlayBase: $('comparePlayBase'), comparePlayExtra: $('comparePlayExtra'), animationTest: $('animationTest'), compareMode: $('compareMode'), ghostReference: $('ghostReference'), compareSpeed: $('compareSpeed'), trioCompare: $('trioCompare'), trioOpen: $('trioOpen'), trioBlink: $('trioBlink'), trioTalk: $('trioTalk'), qualityLine: $('qualityLine'), manualEditor: $('manualEditor'), manualLabel: $('manualLabel'), manualScale: $('manualScale'), manualScaleX: $('manualScaleX'), manualScaleY: $('manualScaleY'), manualX: $('manualX'), manualY: $('manualY'), applyManual: $('applyManual'), resetManual: $('resetManual'), copyManualTrio: $('copyManualTrio'), manualReviewed: $('manualReviewed'),
+    extraPanel: $('extraPanel'), extraStage: $('extraStage'), extraPrev: $('extraPrev'), extraNext: $('extraNext'), extraFlicker: $('extraFlicker'), extraCompareMode: $('extraCompareMode'), extraMasterImage: $('extraMasterImage'), extraBeforeImage: $('extraBeforeImage'), extraAfterImage: $('extraAfterImage'), extraContourCanvas: $('extraContourCanvas'), extraStageEmpty: $('extraStageEmpty'), extraPreviewGrid: $('extraPreviewGrid'), extraOverallScore: $('extraOverallScore'), headMasterInfo: $('headMasterInfo'), compatibilityGrid: $('compatibilityGrid'), extraTransformInfo: $('extraTransformInfo'),
+    helpBtn: $('helpBtn'), helpModal: $('helpModal'), closeHelpBtn: $('closeHelpBtn')
+  };
+
+  const state = {
+    sourceImage: null,
+    sourceCanvas: document.createElement('canvas'),
+    sourceCtx: null,
+    sourceFileName: '',
+    cells: [],
+    baselineCells: [],
+    selected: 0,
+    displayScale: 1,
+    drag: null,
+    pickBackground: false,
+    bgRgb: [0, 255, 0],
+    outputs: [],
+    previewUrls: [],
+    busy: false,
+    detection: { mode: 'none', confidence: 0, details: '' },
+    buildId: 0,
+    compareIndex: 0,
+    compareTimer: null,
+    animationTimer: null,
+    animationStep: 0,
+    normalizationStats: null,
+    processedCrops: [],
+    manualAdjustments: Array.from({length:TOTAL},()=>({scale:1,scaleX:1,scaleY:1,dx:0,dy:0})),
+    manualReviewed: Array(TOTAL).fill(false),
+    headMaster: null,
+    extra: {
+      sourceImage:null,
+      sourceCanvas:document.createElement('canvas'),
+      sourceCtx:null,
+      sourceFileName:'',
+      bgRgb:[0,255,0],
+      cells:[],
+      crops:[],
+      outputs:[],
+      beforeOutputs:[],
+      urls:[],
+      beforeUrls:[],
+      names:[...EXTRA_EXPRESSIONS],
+      detection:null,
+      calibration:null,
+      compatibility:null,
+      selected:0,
+      flickerTimer:null,
+      flickerPhase:false,
+      buildId:0
+    }
+  };
+  state.sourceCtx = state.sourceCanvas.getContext('2d', { willReadFrequently: true });
+  state.extra.sourceCtx = state.extra.sourceCanvas.getContext('2d', { willReadFrequently: true });
+  const displayCtx = els.editorCanvas.getContext('2d');
+
+  function filenameFor(index) {
+    const row = Math.floor(index / 7);
+    const col = index % 7;
+    return EXPRESSIONS[col] + ROW_SUFFIX[row] + '.png';
+  }
+
+  function labelFor(index) {
+    const row = Math.floor(index / 7);
+    const col = index % 7;
+    return `${row + 1}×${col + 1} · ${EXPRESSIONS[col]} · ${ROW_LABELS[row]}`;
+  }
+
+  function deepCopyCells(cells) { return cells.map(c => ({ ...c })); }
+  function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  function median(values) {
+    if (!values.length) return 0;
+    const s = [...values].sort((a,b) => a-b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m-1] + s[m]) / 2;
+  }
+  function mean(values) { return values.length ? values.reduce((a,b) => a+b, 0) / values.length : 0; }
+  function std(values) {
+    if (!values.length) return 0;
+    const m = mean(values);
+    return Math.sqrt(mean(values.map(v => (v-m) ** 2)));
+  }
+  function percentile(values, q) {
+    if (!values.length) return 0;
+    const s=[...values].sort((a,b)=>a-b);
+    const pos=(s.length-1)*clamp(q,0,1), lo=Math.floor(pos), hi=Math.ceil(pos);
+    return lo===hi?s[lo]:s[lo]+(s[hi]-s[lo])*(pos-lo);
+  }
+  function mad(values, med=median(values)) { return values.length ? median(values.map(v=>Math.abs(v-med))) : 0; }
+  function robustZ(value, med, madValue, floorScale=1) {
+    const scale=Math.max(1.4826*madValue, floorScale, 1e-6);
+    return Math.abs(value-med)/scale;
+  }
+  function trioIndicesFor(index) { const col=index%7; return [col,col+7,col+14]; }
+  function blankManualAdjustment(){ return {scale:1,scaleX:1,scaleY:1,dx:0,dy:0}; }
+  function nextFrame() { return new Promise(resolve => requestAnimationFrame(resolve)); }
+
+  function hexToRgb(hex) {
+    const n = parseInt(hex.replace('#',''), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function rgbToHex([r,g,b]) {
+    return '#' + [r,g,b].map(v => clamp(Math.round(v),0,255).toString(16).padStart(2,'0')).join('');
+  }
+  function rgbToYCbCr(r,g,b) {
+    const y = 0.299*r + 0.587*g + 0.114*b;
+    return [y, 128 - 0.168736*r - 0.331264*g + 0.5*b, 128 + 0.5*r - 0.418688*g - 0.081312*b];
+  }
+  function chromaDistance(r,g,b, bgYCbCr) {
+    const [y, cb, cr] = rgbToYCbCr(r,g,b);
+    const dy = (y - bgYCbCr[0]) * 0.08;
+    return Math.sqrt((cb-bgYCbCr[1])**2 + (cr-bgYCbCr[2])**2 + dy*dy);
+  }
+
+  function setMessage(text, type = '') {
+    els.messageBox.textContent = text;
+    els.messageBox.className = 'message' + (type ? ` ${type}` : '');
+  }
+  function setStatus(text, type = '') {
+    els.statusPill.textContent = text;
+    els.statusPill.className = 'status-pill' + (type ? ` ${type}` : '');
+  }
+  function setProgress(percent, text) {
+    els.progressWrap.classList.add('show');
+    els.progressBar.style.width = `${clamp(percent,0,100)}%`;
+    els.progressText.textContent = text;
+  }
+  function hideProgress() { els.progressWrap.classList.remove('show'); }
+  function sanitizeFolderName(value) {
+    return value
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase().replace(/[^a-z0-9_-]+/g, '-')
+      .replace(/-+/g, '-').replace(/^[-_.]+|[-_.]+$/g, '') || 'modelo-7';
+  }
+
+  function updateRangeLabels() {
+    $('toleranceValue').textContent = els.tolerance.value;
+    $('featherValue').textContent = `${els.feather.value} px`;
+    $('despillValue').textContent = `${els.despill.value}%`;
+    $('boxPaddingValue').textContent = `${els.boxPadding.value}%`;
+    $('edgeBandValue').textContent = `${els.edgeBand.value} px`;
+    $('contentPaddingValue').textContent = `${els.contentPadding.value} px`;
+    $('faceHeightValue').textContent = `${els.faceHeight.value}%`;
+    $('centerXValue').textContent = `${els.centerX.value}%`;
+    $('baseYValue').textContent = `${els.baseY.value}%`;
+    $('normalizationStrengthValue').textContent = `${els.normalizationStrength.value}%`;
+    $('globalStrengthValue').textContent = `${els.globalStrength.value}%`;
+    $('maxCorrectionValue').textContent = `${els.maxCorrection.value}%`;
+    $('shapeStrengthValue').textContent = `${els.shapeStrength.value}%`;
+    $('maxShapeWarpValue').textContent = `${els.maxShapeWarp.value}%`;
+    $('maxExternalCorrectionValue').textContent = `${els.maxExternalCorrection.value}%`;
+    if($('extraGlobalMaxValue')) $('extraGlobalMaxValue').textContent = `${els.extraGlobalMax.value}%`;
+    if($('extraMicroMaxValue')) $('extraMicroMaxValue').textContent = `${els.extraMicroMax.value}%`;
+  }
+
+  function effectiveCriticalCount() {
+    return state.outputs.reduce((n,o,i)=>n + (o?.critical && !state.manualReviewed[i] ? 1 : 0), 0);
+  }
+  function extraCriticalCount() {
+    return state.extra.outputs.reduce((n,o)=>n+(o?.critical?1:0),0);
+  }
+  function extraIsRequired() { return !!state.extra.sourceImage; }
+
+  function updateExportGuard() {
+    const critical=effectiveCriticalCount();
+    const extraCritical=extraCriticalCount();
+    const baseReady=state.outputs.length===TOTAL;
+    const extraReady=!extraIsRequired() || state.extra.outputs.length===EXTRA_TOTAL;
+    els.downloadBtn.disabled = state.busy || !baseReady || !extraReady || critical > 0 || extraCritical > 0;
+    if (baseReady) {
+      const totalReady=TOTAL + (extraIsRequired()?state.extra.outputs.length:0);
+      const totalExpected=TOTAL + (extraIsRequired()?EXTRA_TOTAL:0);
+      const suffix=extraIsRequired()?` · Folha 2 ${state.extra.outputs.length}/${EXTRA_TOTAL}`:'';
+      els.previewStatus.textContent = critical ? `${totalReady}/${totalExpected} · ${critical} crítico(s)${suffix}` : `${totalReady}/${totalExpected} · liberado${suffix}`;
+      els.previewStatus.className = 'status-pill' + (critical ? ' error' : ' ok');
+    }
+  }
+
+  function renderNormalizationSummary() {
+    if (!els.normalizationSummary) return;
+    const s=state.normalizationStats;
+    if(!s){
+      els.normalizationSummary.innerHTML='<div class="metric"><b>Referência</b><span>Aguardando geração</span></div><div class="metric"><b>Outliers</b><span>—</span></div><div class="metric"><b>Críticos</b><span>—</span></div>';
+      return;
+    }
+    const ref=filenameFor(s.referenceIndex);
+    const outliers=s.outlierIndices.length;
+    const critical=effectiveCriticalCount();
+    els.normalizationSummary.innerHTML=`<div class="metric"><b>Referência automática</b><span>${ref}</span></div><div class="metric"><b>Outliers excluídos</b><span>${outliers} / 21</span></div><div class="metric"><b>Críticos pendentes</b><span>${critical}</span></div>`;
+  }
+
+  function invalidateOutputs(reason = '') {
+    stopComparePlayback(); stopAnimationTest();
+    state.outputs = [];
+    state.processedCrops = [];
+    state.normalizationStats = null;
+    state.manualAdjustments=Array.from({length:TOTAL},()=>blankManualAdjustment());
+    state.manualReviewed=Array(TOTAL).fill(false);
+    state.headMaster=null;
+    invalidateExtraOutputs(false);
+    state.buildId++;
+    state.previewUrls.forEach(URL.revokeObjectURL);
+    state.previewUrls = [];
+    els.downloadBtn.disabled = true;
+    renderPreviewGrid(); renderComparison(); renderNormalizationSummary(); renderManualEditor();
+    if (reason && state.sourceImage) setMessage(reason, 'warn');
+  }
+
+  function setBusy(busy) {
+    state.busy = busy;
+    [els.fileInput, els.detectBtn, els.gridBtn, els.resetBtn, els.buildBtn].forEach(el => {
+      if (el === els.fileInput) el.disabled = busy;
+      else el.disabled = busy || !state.sourceImage;
+    });
+    if(els.extraFileInput) els.extraFileInput.disabled=busy;
+    if(els.calibrateExtraBtn) els.calibrateExtraBtn.disabled=busy || !state.extra.sourceImage || !state.headMaster;
+    if(els.removeExtraBtn) els.removeExtraBtn.disabled=busy || !state.extra.sourceImage;
+    if(state.outputs.length===TOTAL){
+      [els.comparePrev,els.compareNext,els.comparePlay,els.comparePlayBase,els.comparePlayExtra,els.animationTest].forEach(el=>el.disabled=busy);
+      renderManualEditor(state.compareIndex);
+    }
+    updateExportGuard();
+  }
+
+  function renderPreviewGrid() {
+    els.previewGrid.innerHTML = '';
+    const items = [];
+    for (let i = 0; i < TOTAL; i++) {
+      items.push({ kind:'base', index:i, name:filenameFor(i), output:state.outputs[i], url:state.previewUrls[i], label:labelFor(i) });
+    }
+    if (state.extra.outputs && state.extra.outputs.length === EXTRA_TOTAL) {
+      for (let i = 0; i < EXTRA_TOTAL; i++) {
+        items.push({ kind:'extra', index:i, name:extraFilename(i), output:state.extra.outputs[i], url:state.extra.urls[i], label:`Folha 2 · ${Math.floor(i/7)+1}×${i%7+1}` });
+      }
+    }
+    items.forEach(item => {
+      const output = item.output;
+      const card = document.createElement('article');
+      const selected = item.kind === 'base' ? state.selected === item.index : state.extra.selected === item.index;
+      card.className = 'preview-card' + (selected ? ' selected' : '');
+      card.dataset.index = item.index;
+      card.dataset.kind = item.kind;
+      const thumb = document.createElement('div'); thumb.className = 'thumb';
+      if (output) {
+        const img = document.createElement('img'); img.alt = item.name; img.src = item.url; thumb.appendChild(img);
+      } else {
+        const ph = document.createElement('span'); ph.className='placeholder'; ph.textContent=item.kind==='base' ? `${item.index+1}` : `E${item.index+1}`; thumb.appendChild(ph);
+      }
+      const info=document.createElement('div'); info.className='card-info';
+      const name=document.createElement('div'); name.className='file-name'; name.textContent=item.name;
+      const meta=document.createElement('div'); meta.className='meta';
+      if(output){
+        const reviewed=item.kind==='base' ? state.manualReviewed[item.index] : false;
+        let status='válido', cls='tag-ok';
+        if(output.critical && !reviewed){status=`crítico · ${output.score}%`;cls='tag-critical';}
+        else if(output.critical && reviewed){status=`revisado · ${output.score}%`;cls='tag-review';}
+        else if(output.warning){status=`revisar · ${output.score}%`;cls='tag-warn';}
+        else status=`${output.score}%`;
+        const source = item.kind==='base' ? 'Folha 1' : 'Folha 2';
+        meta.innerHTML=`<span>${source} · ${output.anatomy?.width||'-'}×${output.anatomy?.height||'-'} anat.</span><span class="${cls}">${status}</span>`;
+      } else meta.innerHTML=`<span>${item.label}</span><span>pendente</span>`;
+      info.append(name,meta);
+      if(output){
+        const actions=document.createElement('div');actions.className='card-actions';
+        const dl=document.createElement('button');dl.className='btn small';dl.textContent='Baixar PNG';dl.addEventListener('click',e=>{e.stopPropagation();downloadBlob(output.blob,output.name);});
+        actions.appendChild(dl);info.appendChild(actions);
+      }
+      card.append(thumb,info);
+      card.addEventListener('click',()=>{
+        if(item.kind==='extra'){
+          state.extra.selected=item.index;
+          renderComparison(TOTAL+item.index);
+          renderExtraComparison(item.index);
+        }else{
+          selectCell(item.index);
+          if(state.outputs.length) renderComparison(item.index);
+        }
+        [...els.previewGrid.children].forEach(node=>node.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+      els.previewGrid.appendChild(card);
+    });
+    const totalReady = state.outputs.length + ((state.extra.outputs && state.extra.outputs.length===EXTRA_TOTAL) ? EXTRA_TOTAL : 0);
+    const totalExpected = TOTAL + (state.extra.sourceImage ? EXTRA_TOTAL : 0);
+    if(totalReady!==totalExpected){ els.previewStatus.textContent=`${totalReady}/${totalExpected} gerados`; els.previewStatus.className='status-pill'; }
+    updateExportGuard();
+  }
+
+  function combinedCompareCount() {
+    return TOTAL + ((state.extra.outputs && state.extra.outputs.length===EXTRA_TOTAL) ? EXTRA_TOTAL : 0);
+  }
+
+  function combinedCompareItem(logicalIndex) {
+    const count=combinedCompareCount();
+    if(!count) return null;
+    const idx=((logicalIndex%count)+count)%count;
+    if(idx<TOTAL){
+      return {kind:'base', logicalIndex:idx, index:idx, output:state.outputs[idx], url:state.previewUrls[idx], name:filenameFor(idx)};
+    }
+    const ei=idx-TOTAL;
+    return {kind:'extra', logicalIndex:idx, index:ei, output:state.extra.outputs[ei], url:state.extra.urls[ei], name:extraFilename(ei)};
+  }
+
+  function stopComparePlayback() {
+    if (state.compareTimer) { clearInterval(state.compareTimer); state.compareTimer = null; }
+    if (els.comparePlay) els.comparePlay.textContent = '▶ Alternar 42';
+    if (els.comparePlayBase) els.comparePlayBase.textContent = '▶ Folha 1 (21)';
+    if (els.comparePlayExtra) els.comparePlayExtra.textContent = '▶ Folha 2 (21)';
+  }
+
+  function stopAnimationTest() {
+    if(state.animationTimer){ clearInterval(state.animationTimer); state.animationTimer=null; }
+    state.animationStep=0;
+    if(els.animationTest) els.animationTest.textContent='▶ Teste de animação';
+  }
+
+  function buildAnimationSequence() {
+    const seq=[];
+    for(let col=0;col<7;col++) seq.push(col,col+7,col,col+14,col);
+    if(state.extra.outputs.length===EXTRA_TOTAL){
+      for(let col=0;col<7;col++) seq.push(TOTAL+col,TOTAL+col+7,TOTAL+col,TOTAL+col+14,TOTAL+col);
+    }
+    return seq;
+  }
+
+  function renderQualityLine(o,index,kind='base'){
+    if(!o){els.qualityLine.innerHTML='';return;}
+    const chips=[];
+    chips.push(`<span class="quality-chip ${o.score>=90?'ok':o.score>=75?'warn':'error'}">Estabilidade ${o.score}%</span>`);
+    if(kind==='base'){
+      const reviewed=state.manualReviewed[index];
+      const metric=state.normalizationStats?.metrics?.[index];
+      if(metric){
+        chips.push(`<span class="quality-chip ${metric.externalScore>=90?'ok':metric.externalScore>=75?'warn':'error'}">Escala ${metric.externalScore}%</span>`);
+        chips.push(`<span class="quality-chip ${metric.shapeScore>=90?'ok':metric.shapeScore>=75?'warn':'error'}">Formato cabeça ${metric.shapeScore}%</span>`);
+      }
+      chips.push(`<span class="quality-chip ${o.outlier?'warn':'ok'}">${o.outlier?'Outlier excluído':'Dentro da referência'}</span>`);
+      chips.push(`<span class="quality-chip ${o.critical&&!reviewed?'error':o.critical?'warn':'ok'}">${o.critical?(reviewed?'Crítico revisado':'Crítico'):'Não crítico'}</span>`);
+      if(state.normalizationStats?.referenceIndex===index)chips.push('<span class="quality-chip ok">Referência automática</span>');
+    } else {
+      chips.push('<span class="quality-chip ok">Extensão da Folha 1</span>');
+      chips.push(`<span class="quality-chip ${o.critical?'error':'ok'}">${o.critical?'Crítico':'Não crítico'}</span>`);
+      if(state.extra.compatibility) chips.push(`<span class="quality-chip ${state.extra.compatibility.overall>=90?'ok':state.extra.compatibility.overall>=82?'warn':'error'}">Compat. ${state.extra.compatibility.overall}%</span>`);
+    }
+    els.qualityLine.innerHTML=chips.join('');
+  }
+
+  function renderManualEditor(index=state.compareIndex) {
+    const isBase=index<TOTAL;
+    const baseIndex=isBase?index:-1;
+    const enabled=isBase && state.outputs.length===TOTAL && !!state.outputs[baseIndex];
+    [els.manualScale,els.manualScaleX,els.manualScaleY,els.manualX,els.manualY,els.applyManual,els.resetManual,els.copyManualTrio,els.manualReviewed].forEach(el=>el.disabled=!enabled || state.busy);
+    if(!enabled){
+      els.manualLabel.textContent=isBase?'Nenhum rosto':'Folha 2 · ajuste herdado da extensão';
+      return;
+    }
+    const a=state.manualAdjustments[baseIndex]||blankManualAdjustment();
+    els.manualScale.value=(a.scale*100).toFixed(1); els.manualScaleX.value=(a.scaleX*100).toFixed(1); els.manualScaleY.value=(a.scaleY*100).toFixed(1);
+    els.manualX.value=Math.round(a.dx); els.manualY.value=Math.round(a.dy); els.manualReviewed.checked=!!state.manualReviewed[baseIndex];
+    els.manualLabel.textContent=filenameFor(baseIndex);
+  }
+
+  function renderComparison(index = state.compareIndex) {
+    const count=combinedCompareCount();
+    if (!state.outputs.length || !count) {
+      stopComparePlayback(); stopAnimationTest();
+      [els.compareReference,els.compareCurrent,els.compareBlink,els.compareTalk].forEach(img=>img.hidden=true);
+      els.trioCompare.hidden=true; els.compareEmpty.hidden=false; els.compareLabel.textContent='Gere as prévias'; els.compareMeta.textContent='—'; els.qualityLine.innerHTML='';
+      [els.comparePrev,els.compareNext,els.comparePlay,els.comparePlayBase,els.comparePlayExtra,els.animationTest].forEach(b=>b.disabled=true); renderManualEditor(); return;
+    }
+    state.compareIndex=((index%count)+count)%count;
+    const item=combinedCompareItem(state.compareIndex);
+    const o=item.output;
+    const mode=els.compareMode.value;
+    els.compareEmpty.hidden=true; els.compareCurrent.hidden=false; els.compareCurrent.src=item.url;
+
+    const refIndex=state.normalizationStats?.referenceIndex ?? 0;
+    els.compareReference.src=state.previewUrls[refIndex];
+    els.compareReference.hidden=!els.ghostReference.checked || (item.kind==='base' && item.index===refIndex);
+    els.compareBlink.hidden=true; els.compareTalk.hidden=true; els.trioCompare.hidden=true;
+
+    if(mode==='trio'){
+      const col=item.index%7;
+      const urls=item.kind==='base' ? state.previewUrls : state.extra.urls;
+      const ids=[col,col+7,col+14];
+      els.compareCurrent.src=urls[ids[0]]; els.compareBlink.src=urls[ids[1]]; els.compareTalk.src=urls[ids[2]];
+      els.compareBlink.hidden=false; els.compareTalk.hidden=false; els.trioCompare.hidden=false;
+      els.trioOpen.src=urls[ids[0]];els.trioBlink.src=urls[ids[1]];els.trioTalk.src=urls[ids[2]];
+    }
+    [els.comparePrev,els.compareNext,els.comparePlay,els.animationTest].forEach(b=>b.disabled=false);
+    if(els.comparePlayBase) els.comparePlayBase.disabled=false;
+    if(els.comparePlayExtra) els.comparePlayExtra.disabled=state.extra.outputs.length!==EXTRA_TOTAL;
+
+    const sheetLabel=item.kind==='base'?'Folha 1':'Folha 2';
+    els.compareLabel.textContent=`${state.compareIndex+1}/${count} · ${sheetLabel} · ${o.name}`;
+    const nx=o.normalization?.scaleX??1,ny=o.normalization?.scaleY??1;
+    const dx=((nx-1)*100).toFixed(2),dy=((ny-1)*100).toFixed(2);
+    const a=o.anatomy;
+    if(item.kind==='base'){
+      els.compareMeta.textContent=`crânio ${a?.width||'-'}×${a?.height||'-'} px · formato ${Math.round(o.normalization?.shapeScore??100)}% · pescoço X ${a?.neckCenterX?.toFixed?.(1)??a?.neckCenterX??'-'} · auto X ${Number(dx)>=0?'+':''}${dx}% · Y ${Number(dy)>=0?'+':''}${dy}%`;
+    }else{
+      els.compareMeta.textContent=`extensão · crânio ${a?.width||'-'}×${a?.height||'-'} px · ajuste simples X ${Number(dx)>=0?'+':''}${dx}% · Y ${Number(dy)>=0?'+':''}${dy}% · sem warp de silhueta`;
+    }
+    renderQualityLine(o,item.index,item.kind);renderManualEditor(state.compareIndex);
+  }
+
+  function toggleComparePlayback(scope='all') {
+    if (!state.outputs.length) return;
+    stopAnimationTest();
+    if (state.compareTimer) { stopComparePlayback(); return; }
+    const hasExtra=state.extra.outputs.length===EXTRA_TOTAL;
+    if(scope==='extra'&&!hasExtra)return;
+    if(scope==='all') els.comparePlay.textContent='■ Parar 42';
+    if(scope==='base') els.comparePlayBase.textContent='■ Parar Folha 1';
+    if(scope==='extra') els.comparePlayExtra.textContent='■ Parar Folha 2';
+    let start,end;
+    if(scope==='base'){start=0;end=TOTAL; if(state.compareIndex>=TOTAL)state.compareIndex=0;}
+    else if(scope==='extra'){start=TOTAL;end=TOTAL+EXTRA_TOTAL; if(state.compareIndex<TOTAL)state.compareIndex=TOTAL;}
+    else {start=0;end=combinedCompareCount();}
+    renderComparison(state.compareIndex);
+    state.compareTimer=setInterval(()=>{
+      let next=state.compareIndex+1;
+      if(next>=end||next<start)next=start;
+      renderComparison(next);
+    },Number(els.compareSpeed.value)||220);
+  }
+
+  function toggleAnimationTest() {
+    if(!state.outputs.length)return;
+    stopComparePlayback();
+    if(state.animationTimer){stopAnimationTest();return;}
+    els.compareMode.value='single';els.animationTest.textContent='■ Parar teste';
+    const seq=buildAnimationSequence();state.animationStep=0;renderComparison(seq[0]);
+    state.animationTimer=setInterval(()=>{state.animationStep=(state.animationStep+1)%seq.length;renderComparison(seq[state.animationStep]);},Number(els.compareSpeed.value)||220);
+  }
+
+
+  function updateSelectedUI() {
+    if (!state.cells.length) { els.selectedLabel.textContent='Nenhuma caixa'; return; }
+    els.selectedLabel.textContent=labelFor(state.selected);
+    els.prevCellBtn.disabled=state.busy||!state.sourceImage; els.nextCellBtn.disabled=state.busy||!state.sourceImage;
+    [...els.previewGrid.children].forEach((el,i)=>el.classList.toggle('selected',i===state.selected));
+  }
+
+  function selectCell(index) {
+    if (!state.cells.length) return;
+    state.selected=(index+TOTAL)%TOTAL; updateSelectedUI(); drawEditor();
+  }
+
+  function createGridCells() {
+    const w = state.sourceCanvas.width;
+    const h = state.sourceCanvas.height;
+    const cells = [];
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 7; col++) {
+        const x1 = Math.round(w * col / 7);
+        const x2 = Math.round(w * (col + 1) / 7);
+        const y1 = Math.round(h * row / 3);
+        const y2 = Math.round(h * (row + 1) / 3);
+        cells.push({ x: x1, y: y1, w: x2-x1, h: y2-y1, source: 'grade' });
+      }
+    }
+    return cells;
+  }
+
+  function resizeEditorCanvas() {
+    if (!state.sourceImage) return;
+    const available = Math.max(300, els.canvasShell.clientWidth - 2);
+    const maxH = Math.max(320, window.innerHeight * 0.70);
+    const scale = Math.min(1, available / state.sourceCanvas.width, maxH / state.sourceCanvas.height);
+    state.displayScale = scale;
+    els.editorCanvas.width = Math.max(1, Math.round(state.sourceCanvas.width * scale));
+    els.editorCanvas.height = Math.max(1, Math.round(state.sourceCanvas.height * scale));
+    drawEditor();
+  }
+
+  function drawEditor() {
+    if (!state.sourceImage) return;
+    const c = els.editorCanvas;
+    const ctx = displayCtx;
+    const s = state.displayScale;
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.drawImage(state.sourceCanvas, 0,0,c.width,c.height);
+
+    ctx.save();
+    ctx.lineWidth = 1.5;
+    ctx.font = '600 11px system-ui';
+    ctx.textBaseline = 'top';
+    state.cells.forEach((cell, index) => {
+      const x = cell.x*s, y = cell.y*s, w = cell.w*s, h = cell.h*s;
+      const row = Math.floor(index / 7);
+      const selected = index === state.selected;
+      const colors = ['#43d18d', '#4aa8ff', '#ffb84d'];
+      ctx.strokeStyle = selected ? '#ffffff' : colors[row];
+      ctx.lineWidth = selected ? 2.5 : 1.3;
+      ctx.setLineDash(selected ? [] : [5,4]);
+      ctx.strokeRect(x+.5,y+.5,w-1,h-1);
+      ctx.setLineDash([]);
+      const label = `${index+1} ${EXPRESSIONS[index%7]}${ROW_SUFFIX[row]}`;
+      const tw = Math.min(w, ctx.measureText(label).width + 10);
+      ctx.fillStyle = selected ? 'rgba(124,92,255,.92)' : 'rgba(8,11,16,.72)';
+      ctx.fillRect(x, y, tw, 19);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(label, x+5, y+3);
+      if (selected) drawHandles(ctx, x,y,w,h);
+    });
+    ctx.restore();
+
+    if (state.pickBackground) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,.66)';
+      ctx.fillRect(0, c.height-31, c.width, 31);
+      ctx.fillStyle = '#fff';
+      ctx.font = '600 12px system-ui';
+      ctx.fillText('Clique em uma área do fundo', 12, c.height-20);
+      ctx.restore();
+    }
+  }
+
+  function drawHandles(ctx,x,y,w,h) {
+    const size = 9;
+    const points = [
+      [x,y],[x+w/2,y],[x+w,y],
+      [x,y+h/2],[x+w,y+h/2],
+      [x,y+h],[x+w/2,y+h],[x+w,y+h]
+    ];
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#121620';
+    ctx.lineWidth = 1;
+    points.forEach(([px,py]) => {
+      ctx.fillRect(px-size/2,py-size/2,size,size);
+      ctx.strokeRect(px-size/2,py-size/2,size,size);
+    });
+  }
+
+  function canvasPoint(event) {
+    const rect = els.editorCanvas.getBoundingClientRect();
+    return {
+      dx: (event.clientX - rect.left) * els.editorCanvas.width / rect.width,
+      dy: (event.clientY - rect.top) * els.editorCanvas.height / rect.height,
+      x: (event.clientX - rect.left) * els.editorCanvas.width / rect.width / state.displayScale,
+      y: (event.clientY - rect.top) * els.editorCanvas.height / rect.height / state.displayScale
+    };
+  }
+
+  function hitTest(point) {
+    const threshold = 10 / state.displayScale;
+    for (let i = state.cells.length-1; i >= 0; i--) {
+      const c = state.cells[i];
+      const handles = [
+        ['nw',c.x,c.y],['n',c.x+c.w/2,c.y],['ne',c.x+c.w,c.y],
+        ['w',c.x,c.y+c.h/2],['e',c.x+c.w,c.y+c.h/2],
+        ['sw',c.x,c.y+c.h],['s',c.x+c.w/2,c.y+c.h],['se',c.x+c.w,c.y+c.h]
+      ];
+      for (const [type,hx,hy] of handles) {
+        if (Math.abs(point.x-hx) <= threshold && Math.abs(point.y-hy) <= threshold) return { index:i, type };
+      }
+      if (point.x >= c.x && point.x <= c.x+c.w && point.y >= c.y && point.y <= c.y+c.h) return { index:i, type:'move' };
+    }
+    return null;
+  }
+
+  function moveCell(cell, type, dx, dy) {
+    const minSize = Math.max(8, Math.min(state.sourceCanvas.width, state.sourceCanvas.height) * .012);
+    let {x,y,w,h} = cell;
+    if (type === 'move') { x += dx; y += dy; }
+    if (type.includes('w')) { x += dx; w -= dx; }
+    if (type.includes('e')) { w += dx; }
+    if (type.includes('n')) { y += dy; h -= dy; }
+    if (type.includes('s')) { h += dy; }
+    if (w < minSize) { if (type.includes('w')) x -= minSize-w; w=minSize; }
+    if (h < minSize) { if (type.includes('n')) y -= minSize-h; h=minSize; }
+    if (type === 'move') {
+      x = clamp(x, 0, state.sourceCanvas.width-w);
+      y = clamp(y, 0, state.sourceCanvas.height-h);
+    } else {
+      if (x < 0) { w += x; x = 0; }
+      if (y < 0) { h += y; y = 0; }
+      w = Math.min(w, state.sourceCanvas.width-x);
+      h = Math.min(h, state.sourceCanvas.height-y);
+    }
+    Object.assign(cell, { x, y, w, h, source:'manual' });
+  }
+
+  els.editorCanvas.addEventListener('pointerdown', e => {
+    if (!state.sourceImage || state.busy) return;
+    const p = canvasPoint(e);
+    if (state.pickBackground) {
+      const ix = clamp(Math.floor(p.x),0,state.sourceCanvas.width-1);
+      const iy = clamp(Math.floor(p.y),0,state.sourceCanvas.height-1);
+      const data = state.sourceCtx.getImageData(ix,iy,1,1).data;
+      state.bgRgb = [data[0],data[1],data[2]];
+      els.bgColor.value = rgbToHex(state.bgRgb);
+      els.autoBg.checked = false;
+      state.pickBackground = false;
+      els.pickBgBtn.textContent = 'Selecionar cor na imagem';
+      setMessage(`Cor do fundo escolhida: ${els.bgColor.value}. Gere novamente as prévias para aplicar.`, 'ok');
+      invalidateOutputs();
+      drawEditor();
+      return;
+    }
+    const hit = hitTest(p);
+    if (!hit) return;
+    selectCell(hit.index);
+    state.drag = { type:hit.type, index:hit.index, startX:p.x, startY:p.y, original:{...state.cells[hit.index]} };
+    els.editorCanvas.setPointerCapture(e.pointerId);
+  });
+  els.editorCanvas.addEventListener('pointermove', e => {
+    if (!state.drag) return;
+    const p = canvasPoint(e);
+    const dx = p.x-state.drag.startX, dy=p.y-state.drag.startY;
+    const cell = { ...state.drag.original };
+    moveCell(cell, state.drag.type, dx, dy);
+    state.cells[state.drag.index] = cell;
+    drawEditor();
+  });
+  function endDrag() {
+    if (!state.drag) return;
+    state.drag = null;
+    invalidateOutputs('Caixa ajustada. Gere novamente as prévias.');
+  }
+  els.editorCanvas.addEventListener('pointerup', endDrag);
+  els.editorCanvas.addEventListener('pointercancel', endDrag);
+
+  document.addEventListener('keydown', e => {
+    if (!state.sourceImage || state.busy || ['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    const cell = state.cells[state.selected];
+    if (!cell) return;
+    const step = e.shiftKey ? 10 : 1;
+    let dx=0,dy=0;
+    if (e.key === 'ArrowLeft') dx=-step;
+    else if (e.key === 'ArrowRight') dx=step;
+    else if (e.key === 'ArrowUp') dy=-step;
+    else if (e.key === 'ArrowDown') dy=step;
+    else if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      state.cells[state.selected] = {...state.baselineCells[state.selected]};
+      invalidateOutputs('Caixa restaurada para a última detecção.');
+      drawEditor();
+      return;
+    } else return;
+    e.preventDefault();
+    moveCell(cell,'move',dx,dy);
+    invalidateOutputs();
+    drawEditor();
+  });
+
+  function estimateBackgroundFromCanvas(canvas) {
+    const maxDim = 900;
+    const scale = Math.min(1, maxDim/Math.max(canvas.width,canvas.height));
+    const w = Math.max(1,Math.round(canvas.width*scale)), h=Math.max(1,Math.round(canvas.height*scale));
+    const temp = document.createElement('canvas'); temp.width=w; temp.height=h;
+    const ctx=temp.getContext('2d',{willReadFrequently:true}); ctx.drawImage(canvas,0,0,w,h);
+    const data=ctx.getImageData(0,0,w,h).data;
+    const bins=new Map();
+    const samples=[];
+    const band=Math.max(2,Math.round(Math.min(w,h)*.025));
+    const step=Math.max(1,Math.floor(Math.max(w,h)/450));
+    function add(x,y){
+      const i=(y*w+x)*4; if(data[i+3]<10)return;
+      const r=data[i],g=data[i+1],b=data[i+2];
+      const key=`${r>>4},${g>>4},${b>>4}`;
+      let obj=bins.get(key); if(!obj){obj={n:0,r:0,g:0,b:0};bins.set(key,obj);}
+      obj.n++;obj.r+=r;obj.g+=g;obj.b+=b;samples.push([r,g,b]);
+    }
+    for(let y=0;y<h;y+=step) for(let x=0;x<w;x+=step) if(x<band||x>=w-band||y<band||y>=h-band)add(x,y);
+    let best=null; for(const v of bins.values()) if(!best||v.n>best.n) best=v;
+    return best ? [Math.round(best.r/best.n),Math.round(best.g/best.n),Math.round(best.b/best.n)] : [0,255,0];
+  }
+
+  async function loadImageFile(file) {
+    if (!file || !file.type.startsWith('image/')) { setMessage('Escolha um arquivo de imagem PNG, JPG ou WebP.', 'error'); return; }
+    setBusy(true); setStatus('Carregando…'); setProgress(5,'Lendo a imagem…');
+    try {
+      const bitmap = await createImageBitmap(file);
+      state.sourceCanvas.width=bitmap.width; state.sourceCanvas.height=bitmap.height;
+      state.sourceCtx.clearRect(0,0,bitmap.width,bitmap.height);
+      state.sourceCtx.drawImage(bitmap,0,0); bitmap.close?.();
+      state.sourceImage=true; state.sourceFileName=file.name;
+      if (els.autoBg.checked) {
+        state.bgRgb=estimateBackgroundFromCanvas(state.sourceCanvas);
+        els.bgColor.value=rgbToHex(state.bgRgb);
+      }
+      state.cells=createGridCells(); state.baselineCells=deepCopyCells(state.cells); state.selected=0;
+      state.outputs=[]; state.processedCrops=[]; state.normalizationStats=null; state.previewUrls.forEach(URL.revokeObjectURL); state.previewUrls=[];
+      state.manualAdjustments=Array.from({length:TOTAL},()=>blankManualAdjustment()); state.manualReviewed=Array(TOTAL).fill(false);
+      state.headMaster=null;invalidateExtraOutputs(false);
+      els.emptyState.hidden=true; els.editorCanvas.hidden=false;
+      els.imageInfo.textContent=`${file.name} · ${state.sourceCanvas.width}×${state.sourceCanvas.height}px`;
+      setProgress(18,'Imagem carregada. Procurando os 21 rostos…');
+      await nextFrame(); resizeEditorCanvas(); renderPreviewGrid(); updateSelectedUI();
+      await autoDetect();
+    } catch (err) {
+      console.error(err); setMessage(`Não foi possível abrir a imagem: ${err.message}`, 'error'); setStatus('Erro', 'error');
+    } finally { hideProgress(); setBusy(false); }
+  }
+
+  function downscaledImageData(maxDim=1100) {
+    const scale=Math.min(1,maxDim/Math.max(state.sourceCanvas.width,state.sourceCanvas.height));
+    const w=Math.max(1,Math.round(state.sourceCanvas.width*scale)),h=Math.max(1,Math.round(state.sourceCanvas.height*scale));
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(state.sourceCanvas,0,0,w,h);
+    return {imageData:ctx.getImageData(0,0,w,h),w,h,scale};
+  }
+
+  function connectedBackgroundMask(imageData,w,h,bgRgb,tolerance) {
+    const d=imageData.data,n=w*h;
+    const visited=new Uint8Array(n);
+    const queue=new Int32Array(n);
+    let head=0,tail=0;
+    const bgYcc=rgbToYCbCr(...bgRgb);
+    const isBg=(idx)=>{
+      const o=idx*4; if(d[o+3]<12)return true;
+      return chromaDistance(d[o],d[o+1],d[o+2],bgYcc)<=tolerance;
+    };
+    const push=(idx)=>{if(!visited[idx]&&isBg(idx)){visited[idx]=1;queue[tail++]=idx;}};
+    for(let x=0;x<w;x++){push(x);push((h-1)*w+x);}
+    for(let y=1;y<h-1;y++){push(y*w);push(y*w+w-1);}
+    while(head<tail){
+      const idx=queue[head++],x=idx%w;
+      let ni;
+      if(idx>=w){ni=idx-w;if(!visited[ni]&&isBg(ni)){visited[ni]=1;queue[tail++]=ni;}}
+      if(idx<n-w){ni=idx+w;if(!visited[ni]&&isBg(ni)){visited[ni]=1;queue[tail++]=ni;}}
+      if(x>0){ni=idx-1;if(!visited[ni]&&isBg(ni)){visited[ni]=1;queue[tail++]=ni;}}
+      if(x<w-1){ni=idx+1;if(!visited[ni]&&isBg(ni)){visited[ni]=1;queue[tail++]=ni;}}
+    }
+    return visited;
+  }
+
+  function dilate(mask,w,h,iterations) {
+    let src=mask;
+    for(let it=0;it<iterations;it++){
+      const out=new Uint8Array(src.length);
+      for(let y=1;y<h-1;y++){
+        const row=y*w;
+        for(let x=1;x<w-1;x++){
+          const i=row+x;
+          if(src[i]||src[i-1]||src[i+1]||src[i-w]||src[i+w]||src[i-w-1]||src[i-w+1]||src[i+w-1]||src[i+w+1])out[i]=1;
+        }
+      }
+      src=out;
+    }
+    return src;
+  }
+
+  function components(mask,w,h) {
+    const seen=new Uint8Array(mask.length),queue=new Int32Array(mask.length),out=[];
+    for(let start=0;start<mask.length;start++){
+      if(!mask[start]||seen[start])continue;
+      let head=0,tail=0;queue[tail++]=start;seen[start]=1;
+      let minX=w,minY=h,maxX=0,maxY=0,area=0;
+      while(head<tail){
+        const idx=queue[head++],x=idx%w,y=(idx/w)|0;area++;
+        if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+        const ns=[idx-w,idx+w,idx-1,idx+1];
+        if(y>0&&!seen[ns[0]]&&mask[ns[0]]){seen[ns[0]]=1;queue[tail++]=ns[0];}
+        if(y<h-1&&!seen[ns[1]]&&mask[ns[1]]){seen[ns[1]]=1;queue[tail++]=ns[1];}
+        if(x>0&&!seen[ns[2]]&&mask[ns[2]]){seen[ns[2]]=1;queue[tail++]=ns[2];}
+        if(x<w-1&&!seen[ns[3]]&&mask[ns[3]]){seen[ns[3]]=1;queue[tail++]=ns[3];}
+      }
+      out.push({x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1,area,cx:(minX+maxX)/2,cy:(minY+maxY)/2,density:area/((maxX-minX+1)*(maxY-minY+1))});
+    }
+    return out;
+  }
+
+  function kmeans1d(values,k=3) {
+    const sorted=[...values].sort((a,b)=>a-b);
+    let centers=Array.from({length:k},(_,i)=>sorted[Math.round((i+.5)*sorted.length/k-.5)] ?? 0);
+    let labels=new Array(values.length).fill(0);
+    for(let it=0;it<30;it++){
+      let changed=false;
+      values.forEach((v,i)=>{
+        let best=0,bd=Infinity;
+        centers.forEach((c,j)=>{const d=Math.abs(v-c);if(d<bd){bd=d;best=j;}});
+        if(labels[i]!==best){labels[i]=best;changed=true;}
+      });
+      const next=centers.map((c,j)=>{const group=values.filter((_,i)=>labels[i]===j);return group.length?mean(group):c;});
+      centers=next;
+      if(!changed)break;
+    }
+    const order=centers.map((c,i)=>({c,i})).sort((a,b)=>a.c-b.c);
+    const remap=new Map(order.map((o,n)=>[o.i,n]));
+    return labels.map(l=>remap.get(l));
+  }
+
+  function selectDetectedBoxes(comps,w,h) {
+    const minArea=w*h*0.00018;
+    let candidates=comps.filter(c=>c.area>=minArea&&c.w>=w*.018&&c.h>=h*.025&&c.w<=w*.32&&c.h<=h*.48&&c.density>.025&&c.w/c.h>.12&&c.w/c.h<4.5);
+    if(candidates.length<21) return {ok:false,reason:`Apenas ${candidates.length} componentes visuais confiáveis.`};
+
+    const top=candidates.sort((a,b)=>b.area-a.area).slice(0,Math.min(70,candidates.length));
+    const medW=median(top.slice(0,Math.min(30,top.length)).map(c=>c.w));
+    const medH=median(top.slice(0,Math.min(30,top.length)).map(c=>c.h));
+    candidates=top.filter(c=>c.w>medW*.32&&c.w<medW*3.1&&c.h>medH*.32&&c.h<medH*3.1);
+    if(candidates.length<21) return {ok:false,reason:`Após remover ruídos restaram ${candidates.length} candidatos.`};
+
+    candidates.forEach(c=>{
+      const sizePenalty=Math.abs(Math.log(c.w/medW))+Math.abs(Math.log(c.h/medH));
+      c.score=Math.log1p(c.area)+c.density*2-sizePenalty*1.4;
+    });
+    const labels=kmeans1d(candidates.map(c=>c.cy),3);
+    const rows=[[],[],[]]; candidates.forEach((c,i)=>rows[labels[i]].push(c));
+    if(rows.some(r=>r.length<7)) return {ok:false,reason:`Distribuição por linhas: ${rows.map(r=>r.length).join(', ')} candidatos.`};
+
+    const selected=[];
+    for(const row of rows){
+      const byScore=[...row].sort((a,b)=>b.score-a.score);
+      let chosen=byScore.slice(0,7).sort((a,b)=>a.cx-b.cx);
+      // Evita escolher dois resíduos praticamente no mesmo X.
+      const minGap=w*.035;
+      for(let pass=0;pass<3;pass++){
+        let replaced=false;
+        for(let i=1;i<chosen.length;i++){
+          if(chosen[i].cx-chosen[i-1].cx<minGap){
+            const weaker=chosen[i].score<chosen[i-1].score?chosen[i]:chosen[i-1];
+            const alternatives=byScore.filter(c=>!chosen.includes(c)).sort((a,b)=>b.score-a.score);
+            const alt=alternatives.find(c=>chosen.every(o=>o===weaker||Math.abs(o.cx-c.cx)>=minGap));
+            if(alt){chosen[chosen.indexOf(weaker)]=alt;chosen.sort((a,b)=>a.cx-b.cx);replaced=true;break;}
+          }
+        }
+        if(!replaced)break;
+      }
+      selected.push(...chosen);
+    }
+    const widths=selected.map(c=>c.w),heights=selected.map(c=>c.h);
+    const cvW=std(widths)/(mean(widths)||1),cvH=std(heights)/(mean(heights)||1);
+    const rowCounts=rows.map(r=>r.length);
+    const confidence=clamp(1-(cvW+cvH)*.35-Math.max(0,candidates.length-21)*.005,0,1);
+    return {ok:true,boxes:selected,confidence,rowCounts,cvW,cvH};
+  }
+
+
+  function projectionPeaks(projection, expected, absoluteMinimum) {
+    const maxValue = Math.max(...projection);
+    const ratios = [.82, .72, .62, .52, .42, .32, .24];
+    for (const ratio of ratios) {
+      const threshold = Math.max(absoluteMinimum, maxValue * ratio);
+      const groups = [];
+      let start = -1;
+      for (let i = 0; i <= projection.length; i++) {
+        const active = i < projection.length && projection[i] >= threshold;
+        if (active && start < 0) start = i;
+        if (!active && start >= 0) {
+          const end = i - 1;
+          let weight = 0, weighted = 0, peak = 0;
+          for (let p = start; p <= end; p++) {
+            weight += projection[p];
+            weighted += projection[p] * p;
+            peak = Math.max(peak, projection[p]);
+          }
+          groups.push({ start, end, center: weight ? weighted / weight : (start + end) / 2, peak });
+          start = -1;
+        }
+      }
+      if (groups.length >= expected) {
+        return groups
+          .sort((a,b) => b.peak - a.peak)
+          .slice(0, expected)
+          .sort((a,b) => a.center - b.center);
+      }
+    }
+    return null;
+  }
+
+  function detectSubjectsAdaptive() {
+    const sampled = downscaledImageData(1200);
+    const { imageData, w, h, scale } = sampled;
+    const tolerance = Math.max(8, Number(els.tolerance.value));
+    const bgMask = connectedBackgroundMask(imageData, w, h, state.bgRgb, tolerance);
+
+    // Primeiro plano real: tudo que não pertence ao fundo conectado às bordas.
+    // Uma pequena dilatação reconecta antialiasing e detalhes finos sem unir
+    // rostos vizinhos.
+    let fg = new Uint8Array(w*h);
+    for (let i=0;i<fg.length;i++) fg[i] = bgMask[i] ? 0 : 1;
+    fg = dilate(fg, w, h, 1);
+
+    const comps = components(fg, w, h);
+    const selected = selectDetectedBoxes(comps, w, h);
+    if (!selected.ok) return selected;
+
+    const padPct = Number(els.boxPadding.value) / 100;
+
+    // Os 21 boxes já chegam ordenados em 3 linhas de 7. Criamos limites
+    // verticais entre as linhas usando o espaço REAL entre os rostos. Isso é
+    // essencial em folhas sem moldura: a margem inferior de uma cabeça nunca
+    // pode alcançar o topo da cabeça da linha seguinte.
+    const detectedRows = [selected.boxes.slice(0,7), selected.boxes.slice(7,14), selected.boxes.slice(14,21)];
+    const rowTops = detectedRows.map(row => median(row.map(b => b.y)));
+    const rowBottoms = detectedRows.map(row => median(row.map(b => b.y + b.h)));
+    const rowBoundaries = [
+      0,
+      (rowBottoms[0] + rowTops[1]) / 2,
+      (rowBottoms[1] + rowTops[2]) / 2,
+      h
+    ];
+    // Pequena zona de segurança em pixels da imagem reduzida. Não encosta na
+    // linha vizinha mesmo quando o antialiasing deixa 1–2 pixels soltos.
+    const rowGuard = Math.max(2, Math.round(h * 0.0025));
+
+    const cells = selected.boxes.map((box,index) => {
+      const rowIndex = Math.floor(index / 7);
+      // Margem mínima interna para preservar o topo da cabeça, orelhas,
+      // pescoço e detalhes soltos. A expansão configurável é somada a ela,
+      // porém sempre respeitando o corredor exclusivo da linha atual.
+      const px = box.w * (0.035 + padPct);
+      const pyTop = box.h * (0.035 + padPct);
+      const pyBottom = box.h * (0.055 + padPct);
+      const safeTop = rowIndex === 0 ? 0 : rowBoundaries[rowIndex] + rowGuard;
+      const safeBottom = rowIndex === 2 ? h : rowBoundaries[rowIndex + 1] - rowGuard;
+      const x = clamp((box.x - px) / scale, 0, state.sourceCanvas.width - 1);
+      const rawTop = Math.max(box.y - pyTop, safeTop);
+      const rawBottom = Math.min(box.y + box.h + pyBottom, safeBottom);
+      const y = clamp(rawTop / scale, 0, state.sourceCanvas.height - 1);
+      const right = clamp((box.x + box.w + px) / scale, 1, state.sourceCanvas.width);
+      const bottom = clamp(rawBottom / scale, 1, state.sourceCanvas.height);
+      return { x, y, w:right-x, h:Math.max(1,bottom-y), source:'rostos-adaptativo', rowBoundary:true };
+    });
+
+    const widths = cells.map(c=>c.w), heights = cells.map(c=>c.h);
+    return {
+      ok:true,
+      cells,
+      confidence:selected.confidence,
+      width:Math.round(median(widths)),
+      height:Math.round(median(heights)),
+      cvW:selected.cvW,
+      cvH:selected.cvH,
+      details:`21 componentes principais encontrados · linhas ${selected.rowCounts.join('/')}`
+    };
+  }
+
+  function detectWhiteTemplateCells() {
+    const w = state.sourceCanvas.width, h = state.sourceCanvas.height;
+    const data = state.sourceCtx.getImageData(0, 0, w, h).data;
+    const xProjection = new Uint32Array(w);
+    const yProjection = new Uint32Array(h);
+
+    for (let y = 0; y < h; y++) {
+      const row = y * w;
+      for (let x = 0; x < w; x++) {
+        const o = (row + x) * 4;
+        const r = data[o], g = data[o+1], b = data[o+2], a = data[o+3];
+        const max = Math.max(r,g,b), min = Math.min(r,g,b);
+        const nearWhite = a > 120 && min > 220 && max - min < 40;
+        if (nearWhite) {
+          xProjection[x]++;
+          yProjection[y]++;
+        }
+      }
+    }
+
+    const xLines = projectionPeaks(xProjection, 14, Math.max(24, h * .075));
+    const yLines = projectionPeaks(yProjection, 6, Math.max(40, w * .14));
+    if (!xLines || !yLines) {
+      return { ok:false, reason:`Foram encontradas ${xLines?.length || 0}/14 linhas verticais e ${yLines?.length || 0}/6 linhas horizontais confiáveis.` };
+    }
+
+    const xPairs = [];
+    for (let i = 0; i < 14; i += 2) {
+      const left = xLines[i], right = xLines[i+1];
+      const x = Math.round(left.center);
+      const width = Math.max(1, Math.round(right.center - left.center) + 1);
+      xPairs.push({ x, w: width, peak: Math.min(left.peak, right.peak) });
+    }
+    const yPairs = [];
+    for (let i = 0; i < 6; i += 2) {
+      const top = yLines[i], bottom = yLines[i+1];
+      const y = Math.round(top.center);
+      const height = Math.max(1, Math.round(bottom.center - top.center) + 1);
+      yPairs.push({ y, h: height, peak: Math.min(top.peak, bottom.peak) });
+    }
+
+    const widths = xPairs.map(p => p.w), heights = yPairs.map(p => p.h);
+    const medW = median(widths), medH = median(heights);
+    const badWidth = widths.some(v => v < medW * .72 || v > medW * 1.28);
+    const badHeight = heights.some(v => v < medH * .72 || v > medH * 1.28);
+    if (badWidth || badHeight || medW < w * .045 || medH < h * .12) {
+      return { ok:false, reason:`As linhas brancas foram encontradas, mas as dimensões não formam uma grade 7×3 consistente (${Math.round(medW)}×${Math.round(medH)} px).` };
+    }
+
+    const padPct = Number(els.boxPadding.value) / 100;
+    const cells = [];
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 7; col++) {
+        const xp = xPairs[col], yp = yPairs[row];
+        const px = xp.w * padPct, py = yp.h * padPct;
+        const x = clamp(xp.x - px, 0, w - 1);
+        const y = clamp(yp.y - py, 0, h - 1);
+        const right = clamp(xp.x + xp.w + px, 1, w);
+        const bottom = clamp(yp.y + yp.h + py, 1, h);
+        cells.push({ x, y, w:right-x, h:bottom-y, source:'template-branco' });
+      }
+    }
+
+    const cvW = std(widths) / (mean(widths) || 1);
+    const cvH = std(heights) / (mean(heights) || 1);
+    const lineStrength = Math.min(
+      mean(xLines.map(v => v.peak)) / Math.max(1, h),
+      mean(yLines.map(v => v.peak)) / Math.max(1, w)
+    );
+    const confidence = clamp(.92 - (cvW + cvH) * 1.4 + Math.min(.08, lineStrength * .2), 0, 1);
+    return { ok:true, cells, confidence, width:Math.round(medW), height:Math.round(medH), cvW, cvH };
+  }
+
+  async function autoDetect() {
+    if(!state.sourceImage)return;
+    setBusy(true); setStatus('Detectando rostos…'); setProgress(18,'Separando personagens do fundo…');
+    try{
+      if(els.autoBg.checked){state.bgRgb=estimateBackgroundFromCanvas(state.sourceCanvas);els.bgColor.value=rgbToHex(state.bgRgb);}
+      else state.bgRgb=hexToRgb(els.bgColor.value);
+
+      await nextFrame();
+      let result = detectSubjectsAdaptive();
+      let mode = 'rostos-adaptativo';
+
+      // Compatibilidade com folhas antigas: se a segmentação dos personagens
+      // não produzir 21 candidatos confiáveis, tenta localizar o template
+      // branco. A grade fixa é usada apenas como último recurso.
+      if(!result.ok){
+        setProgress(58,'Detecção por conteúdo insuficiente. Tentando o template antigo…');
+        await nextFrame();
+        const legacy = detectWhiteTemplateCells();
+        if(legacy.ok){ result = legacy; mode = 'template-branco-legado'; }
+      }
+
+      if(!result.ok){
+        state.cells=createGridCells();state.baselineCells=deepCopyCells(state.cells);
+        state.detection={mode:'grade',confidence:0,details:result.reason};
+        setMessage(`A detecção automática não encontrou exatamente 21 rostos confiáveis: ${result.reason} A grade 7×3 foi aplicada para correção manual.`, 'warn');
+        setStatus('Grade manual', 'warn');
+      }else{
+        state.cells=result.cells;
+        state.baselineCells=deepCopyCells(state.cells);
+        state.detection={
+          mode,
+          confidence:result.confidence,
+          details:result.details || `Área mediana ${result.width}×${result.height}px · variação de largura ${(result.cvW*100).toFixed(1)}% · altura ${(result.cvH*100).toFixed(1)}%`
+        };
+        const type=result.confidence>.72?'ok':'warn';
+        const method=mode==='rostos-adaptativo'?'pelo conteúdo real, sem depender da cor da moldura':'pelo template branco antigo';
+        setMessage(`21 rostos detectados ${method}. As caixas foram ajustadas ao personagem e recebem uma margem de segurança para preservar topo, orelhas e pescoço.`,type);
+        setStatus(`21 rostos · ${(result.confidence*100).toFixed(0)}%`,type);
+      }
+      state.selected=0;invalidateOutputs();drawEditor();updateSelectedUI();
+      setProgress(100,'Detecção automática concluída.');
+    }catch(err){
+      console.error(err); state.cells=createGridCells();state.baselineCells=deepCopyCells(state.cells);
+      setMessage(`A detecção automática falhou (${err.message}). A grade 7×3 foi aplicada para ajuste manual.`, 'warn');setStatus('Grade manual','warn');drawEditor();
+    }finally{hideProgress();setBusy(false);}
+  }
+
+  function applyGrid() {
+    if(!state.sourceImage)return;
+    state.cells=createGridCells();state.baselineCells=deepCopyCells(state.cells);state.detection={mode:'grade',confidence:1,details:'Grade fixa 7×3'};
+    state.selected=0;invalidateOutputs('Grade fixa 7×3 aplicada sobre a imagem inteira. Ajuste cada caixa para envolver somente o rosto correspondente.');setStatus('Grade 7×3','warn');drawEditor();updateSelectedUI();
+  }
+
+  function restoreDetection() {
+    if(!state.baselineCells.length)return;
+    state.cells=deepCopyCells(state.baselineCells);invalidateOutputs('Caixas restauradas para a última detecção.');drawEditor();
+  }
+
+  function removeBackgroundInCrop(cell) {
+    const x=clamp(Math.floor(cell.x),0,state.sourceCanvas.width-1), y=clamp(Math.floor(cell.y),0,state.sourceCanvas.height-1);
+    const w=clamp(Math.ceil(cell.w),1,state.sourceCanvas.width-x),h=clamp(Math.ceil(cell.h),1,state.sourceCanvas.height-y);
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(state.sourceCanvas,x,y,w,h,0,0,w,h);
+    const img=ctx.getImageData(0,0,w,h),data=img.data;
+    const bgRgb=hexToRgb(els.bgColor.value),tol=Number(els.tolerance.value);
+    const bgMask=connectedBackgroundMask(img,w,h,bgRgb,tol);
+    const feather=Number(els.feather.value),despill=Number(els.despill.value)/100;
+    const edgeDepth=new Uint8Array(w*h);
+    if(feather>0){
+      let frontier=[];
+      for(let yy=1;yy<h-1;yy++)for(let xx=1;xx<w-1;xx++){
+        const i=yy*w+xx;if(bgMask[i])continue;
+        if(bgMask[i-1]||bgMask[i+1]||bgMask[i-w]||bgMask[i+w]){edgeDepth[i]=1;frontier.push(i);}
+      }
+      for(let layer=2;layer<=feather;layer++){
+        const next=[];
+        for(const i of frontier){
+          const x0=i%w,y0=(i/w)|0;
+          const ns=[i-1,i+1,i-w,i+w];
+          for(const n of ns){if(x0<=0||x0>=w-1||y0<=0||y0>=h-1)continue;if(!bgMask[n]&&!edgeDepth[n]){edgeDepth[n]=layer;next.push(n);}}
+        }
+        frontier=next;
+      }
+    }
+    const dominant=bgRgb.indexOf(Math.max(...bgRgb));
+    for(let i=0;i<w*h;i++){
+      const o=i*4;
+      if(bgMask[i]){data[o+3]=0;continue;}
+      const depth=edgeDepth[i];
+      if(depth){
+        const alpha=clamp(depth/(feather+1),.10,1);
+        data[o+3]=Math.round(data[o+3]*alpha);
+        if(despill>0){
+          const others=[0,1,2].filter(c=>c!==dominant);
+          const neutral=Math.max(data[o+others[0]],data[o+others[1]]);
+          const excess=Math.max(0,data[o+dominant]-neutral-8);
+          data[o+dominant]=Math.round(data[o+dominant]-excess*despill*(1-alpha*.35));
+        }
+      }
+    }
+    ctx.putImageData(img,0,0);
+    return canvas;
+  }
+
+  function removeWhiteTemplateBorder(canvas) {
+    if (!els.removeWhiteFrame.checked) return canvas;
+    const ctx = canvas.getContext('2d', { willReadFrequently:true });
+    const w = canvas.width, h = canvas.height;
+    const image = ctx.getImageData(0,0,w,h), data=image.data;
+    const band = clamp(Number(els.edgeBand.value), 2, Math.max(2, Math.floor(Math.min(w,h)/3)));
+
+    // Remove qualquer resíduo fino do molde que sobreviva ao chroma key,
+    // independentemente de ser branco, verde ou cinza. Apenas componentes
+    // próximos às bordas são candidatos; detalhes internos do rosto não são
+    // usados como semente.
+    const visible = new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++) if(data[i*4+3]>16) visible[i]=1;
+    const comps = components(visible,w,h);
+    const remove = new Uint8Array(w*h);
+
+    for(const c of comps){
+      const touchesEdge = c.x < band*2 || c.y < band*2 || c.x+c.w > w-band*2 || c.y+c.h > h-band*2;
+      const longThin = Math.min(c.w,c.h) <= Math.max(5, band*.9) && Math.max(c.w,c.h) >= band*1.5;
+      const tiny = c.area < Math.max(80, w*h*.0035);
+      const frameLike = touchesEdge && (longThin || tiny || c.density < .22);
+      if(!frameLike) continue;
+      for(let yy=c.y;yy<c.y+c.h;yy++) for(let xx=c.x;xx<c.x+c.w;xx++){
+        const i=yy*w+xx;
+        if(visible[i]) remove[i]=1;
+      }
+    }
+
+    // Uma passagem cromática adicional apaga pixels muito próximos da cor do
+    // fundo na faixa externa. Isso cobre linhas verdes semelhantes ao fundo.
+    const bgYcc=rgbToYCbCr(...hexToRgb(els.bgColor.value));
+    const tol=Number(els.tolerance.value)*1.18;
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+      const nearEdge=x<band*2||y<band*2||x>=w-band*2||y>=h-band*2;
+      if(!nearEdge) continue;
+      const i=y*w+x,o=i*4;
+      if(data[o+3]>0 && chromaDistance(data[o],data[o+1],data[o+2],bgYcc)<=tol) remove[i]=1;
+    }
+
+    for(let i=0;i<w*h;i++) if(remove[i]) data[i*4+3]=0;
+    ctx.putImageData(image,0,0);
+    return canvas;
+  }
+
+  function findVisibleBounds(canvas, alphaThreshold = 12) {
+    const ctx = canvas.getContext('2d', { willReadFrequently:true });
+    const w = canvas.width, h = canvas.height;
+    const data = ctx.getImageData(0,0,w,h).data;
+    let minX = w, minY = h, maxX = -1, maxY = -1;
+    for (let y=0; y<h; y++) {
+      for (let x=0; x<w; x++) {
+        const a = data[(y*w+x)*4 + 3];
+        if (a > alphaThreshold) {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (maxX < minX || maxY < minY) return null;
+    return { minX, minY, maxX, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
+  }
+
+  function removeForeignEdgeFragments(canvas) {
+    // Defesa extra para folhas muito compactas. Depois do chroma key, uma
+    // pequena fatia da cabeça da linha vizinha costuma aparecer como um
+    // componente DESCONECTADO encostado no topo/baixo do recorte. Preservamos
+    // integralmente o maior componente (cabeça + pescoço) e os detalhes
+    // internos, removendo somente fragmentos de borda claramente estrangeiros.
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const w=canvas.width,h=canvas.height;
+    if(w<2||h<2)return canvas;
+    const img=ctx.getImageData(0,0,w,h),d=img.data;
+    const mask=new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++)mask[i]=d[i*4+3]>12?1:0;
+
+    // Componentes com a lista exata de pixels. Isso evita apagar sobrancelhas,
+    // cílios ou acessórios apenas porque o retângulo deles cruza outra área.
+    const seen=new Uint8Array(mask.length),queue=new Int32Array(mask.length),found=[];
+    for(let startPixel=0;startPixel<mask.length;startPixel++){
+      if(!mask[startPixel]||seen[startPixel])continue;
+      let qh=0,qt=0;queue[qt++]=startPixel;seen[startPixel]=1;
+      const pixels=[];let minX=w,minY=h,maxX=-1,maxY=-1;
+      while(qh<qt){
+        const i=queue[qh++],x=i%w,y=(i/w)|0;pixels.push(i);
+        if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+        if(x>0){const n=i-1;if(mask[n]&&!seen[n]){seen[n]=1;queue[qt++]=n;}}
+        if(x<w-1){const n=i+1;if(mask[n]&&!seen[n]){seen[n]=1;queue[qt++]=n;}}
+        if(y>0){const n=i-w;if(mask[n]&&!seen[n]){seen[n]=1;queue[qt++]=n;}}
+        if(y<h-1){const n=i+w;if(mask[n]&&!seen[n]){seen[n]=1;queue[qt++]=n;}}
+      }
+      found.push({pixels,area:pixels.length,x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1,bottom:maxY});
+    }
+    if(found.length<2)return canvas;
+    found.sort((a,b)=>b.area-a.area);
+    const main=found[0],mainTop=main.y,mainBottom=main.bottom;
+    const edgeBand=Math.max(3,Math.round(h*.045));
+    const maxForeignArea=main.area*.38;
+    let removed=0;
+    for(let ci=1;ci<found.length;ci++){
+      const c=found[ci];
+      const touchesTop=c.y<=edgeBand;
+      const touchesBottom=c.bottom>=h-1-edgeBand;
+      if(!touchesTop&&!touchesBottom)continue;
+      if(c.area>maxForeignArea)continue;
+      const clearlyAbove=touchesTop && c.bottom < mainTop + Math.max(2,main.h*.08);
+      const clearlyBelow=touchesBottom && c.y > mainBottom - Math.max(2,main.h*.08);
+      if(!clearlyAbove&&!clearlyBelow)continue;
+      for(const i of c.pixels){d[i*4+3]=0;removed++;}
+    }
+    if(removed)ctx.putImageData(img,0,0);
+    return canvas;
+  }
+
+  function cropToVisibleContent(canvas, padding = 0, forceSquare = true) {
+    const bounds = findVisibleBounds(canvas, 12);
+    if (!bounds) return { canvas, bounds: null };
+
+    let left = bounds.minX - padding;
+    let top = bounds.minY - padding;
+    let right = bounds.maxX + padding;
+    let bottom = bounds.maxY + padding;
+
+    if (forceSquare) {
+      const width = right - left + 1;
+      const height = bottom - top + 1;
+      const side = Math.max(width, height);
+      const cx = (left + right) / 2;
+      const cy = (top + bottom) / 2;
+      left = Math.round(cx - (side - 1) / 2);
+      top = Math.round(cy - (side - 1) / 2);
+      right = left + side - 1;
+      bottom = top + side - 1;
+
+      // Importante: não cortar a altura quando o quadrado é maior do que a
+      // largura da moldura. Em vez de encolher o quadrado para caber na fonte,
+      // criamos um canvas quadrado e completamos as áreas externas com
+      // transparência, preservando o último pixel visível do topo e da base.
+      const out = document.createElement('canvas');
+      out.width = side;
+      out.height = side;
+      const ctx = out.getContext('2d');
+
+      const sx = Math.max(0, left);
+      const sy = Math.max(0, top);
+      const ex = Math.min(canvas.width - 1, right);
+      const ey = Math.min(canvas.height - 1, bottom);
+      const sw = Math.max(0, ex - sx + 1);
+      const sh = Math.max(0, ey - sy + 1);
+      const dx = sx - left;
+      const dy = sy - top;
+      if (sw > 0 && sh > 0) {
+        ctx.drawImage(canvas, sx, sy, sw, sh, dx, dy, sw, sh);
+      }
+
+      return {
+        canvas: out,
+        bounds: { left, top, right, bottom, width: side, height: side, visible: bounds }
+      };
+    }
+
+    left = clamp(left, 0, canvas.width - 1);
+    top = clamp(top, 0, canvas.height - 1);
+    right = clamp(right, 0, canvas.width - 1);
+    bottom = clamp(bottom, 0, canvas.height - 1);
+
+    const outW = Math.max(1, right - left + 1);
+    const outH = Math.max(1, bottom - top + 1);
+    const out = document.createElement('canvas');
+    out.width = outW; out.height = outH;
+    out.getContext('2d').drawImage(canvas, left, top, outW, outH, 0, 0, outW, outH);
+    return {
+      canvas: out,
+      bounds: { left, top, right, bottom, width: outW, height: outH, visible: bounds }
+    };
+  }
+
+  function erodeMask(mask,w,h,iterations=1) {
+    let src=mask;
+    for(let it=0;it<iterations;it++){
+      const out=new Uint8Array(src.length);
+      for(let y=1;y<h-1;y++){
+        for(let x=1;x<w-1;x++){
+          const i=y*w+x;
+          if(src[i]&&src[i-1]&&src[i+1]&&src[i-w]&&src[i+w]&&src[i-w-1]&&src[i-w+1]&&src[i+w-1]&&src[i+w+1])out[i]=1;
+        }
+      }
+      src=out;
+    }
+    return src;
+  }
+
+  function largestMaskComponent(mask,w,h) {
+    const seen=new Uint8Array(mask.length),queue=new Int32Array(mask.length);
+    let best=null;
+    for(let start=0;start<mask.length;start++){
+      if(!mask[start]||seen[start])continue;
+      let head=0,tail=0;queue[tail++]=start;seen[start]=1;
+      const pixels=[];let minX=w,minY=h,maxX=-1,maxY=-1;
+      while(head<tail){
+        const i=queue[head++],x=i%w,y=(i/w)|0;pixels.push(i);
+        if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+        if(x>0){const n=i-1;if(mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n;}}
+        if(x<w-1){const n=i+1;if(mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n;}}
+        if(y>0){const n=i-w;if(mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n;}}
+        if(y<h-1){const n=i+w;if(mask[n]&&!seen[n]){seen[n]=1;queue[tail++]=n;}}
+      }
+      if(!best||pixels.length>best.area)best={pixels,area:pixels.length,minX,maxX,minY,maxY,w:maxX-minX+1,h:maxY-minY+1};
+    }
+    if(!best)return null;
+    const out=new Uint8Array(mask.length);for(const i of best.pixels)out[i]=1;
+    return {...best,mask:out};
+  }
+
+  function longestRunInRow(mask,w,y,minX=0,maxX=w-1) {
+    let bestStart=-1,bestEnd=-1,start=-1;
+    for(let x=minX;x<=maxX+1;x++){
+      const on=x<=maxX&&!!mask[y*w+x];
+      if(on&&start<0)start=x;
+      if(!on&&start>=0){
+        const end=x-1;
+        if(bestStart<0||end-start>bestEnd-bestStart){bestStart=start;bestEnd=end;}
+        start=-1;
+      }
+    }
+    if(bestStart<0)return null;
+    return {left:bestStart,right:bestEnd,width:bestEnd-bestStart+1,center:(bestStart+bestEnd)/2};
+  }
+
+  function buildStructuralMask(primaryMask,w,h,primary) {
+    if(!els.protectExpressive?.checked)return {mask:primaryMask,component:primary,openingRadius:0,ignoredPixels:0};
+    // Abertura morfológica leve: desprende/ignora linhas finas e pequenas saliências
+    // (sobrancelhas, cílios, lágrimas) sem tocar na imagem visual exportada.
+    const minDim=Math.min(primary.w,primary.h);
+    const radius=minDim>=210?3:minDim>=105?2:1;
+    let opened=erodeMask(primaryMask,w,h,radius);
+    opened=dilate(opened,w,h,radius);
+    const core=largestMaskComponent(opened,w,h);
+    if(!core||core.area<primary.area*.48)return {mask:primaryMask,component:primary,openingRadius:0,ignoredPixels:0};
+    let ignored=0;
+    for(let i=0;i<primaryMask.length;i++)if(primaryMask[i]&&!core.mask[i])ignored++;
+    return {mask:core.mask,component:core,openingRadius:radius,ignoredPixels:ignored};
+  }
+
+  function detectStructuralEyeLine(data, w, h, anatomyBase, mask) {
+    const top=anatomyBase.minY, bottom=anatomyBase.maxY;
+    const height=Math.max(1,bottom-top+1), center=anatomyBase.centerX;
+    const cranial=Math.max(20,anatomyBase.cranialWidth||anatomyBase.width||anatomyBase.w);
+    const y0=Math.round(top+height*.43), y1=Math.round(top+height*.69);
+    const x0=Math.max(0,Math.round(center-cranial*.48)), x1=Math.min(w-1,Math.round(center+cranial*.48));
+    const centerGap=cranial*.085;
+    const rows=[];
+    let totalColored=0;
+    for(let y=y0;y<=y1;y++){
+      let dark=0, colored=0, spreadMin=w, spreadMax=-1;
+      for(let x=x0;x<=x1;x++){
+        if(Math.abs(x-center)<centerGap)continue;
+        const i=y*w+x;if(mask&&!mask[i])continue;
+        const o=i*4,r=data[o],g=data[o+1],b=data[o+2],a=data[o+3];
+        if(a<32)continue;
+        const lum=.299*r+.587*g+.114*b;
+        const mx=Math.max(r,g,b),mn=Math.min(r,g,b),chroma=mx-mn;
+        const isDark=lum<105;
+        // Íris coloridas são uma âncora muito melhor que sobrancelhas. A regra é
+        // propositalmente genérica (azul, roxo, vermelho, verde etc.) e exige
+        // saturação + luminosidade moderada, evitando a maior parte da pele.
+        const isColoredIris=chroma>32 && lum<190 && !(r>220&&g>175&&b>155&&r>g*1.06);
+        if(isDark||isColoredIris){
+          dark+=isDark?1:0;colored+=isColoredIris?1:0;
+          if(x<spreadMin)spreadMin=x;if(x>spreadMax)spreadMax=x;
+        }
+      }
+      totalColored+=colored;
+      const spread=spreadMax>=spreadMin?spreadMax-spreadMin+1:0;
+      const t=(y-y0)/Math.max(1,y1-y0);
+      const darkScore=dark*(1+.38*t)+spread*.12;
+      const colorScore=colored*2.4+spread*.05;
+      rows.push({y,dark,colored,spread,darkScore,colorScore});
+    }
+    if(!rows.length)return {y:null,confidence:0,method:'none'};
+
+    // Com íris visível (aberto/talk), usa a cor da íris e ignora a sobrancelha.
+    // No blink, onde a íris desaparece, cai para a linha escura dos cílios/olhos.
+    const useColor=totalColored>=10;
+    const scoreKey=useColor?'colorScore':'darkScore';
+    const sorted=[...rows].sort((a,b)=>b[scoreKey]-a[scoreKey]);
+    const peak=sorted[0];
+    if(!peak||peak[scoreKey]<3)return {y:null,confidence:0,method:'none'};
+    const near=rows.filter(r=>Math.abs(r.y-peak.y)<=2 && r[scoreKey]>=peak[scoreKey]*.50);
+    const eyeY=near.length?Math.round(mean(near.map(r=>r.y))):peak.y;
+    const base=Math.max(1,median(rows.map(r=>r[scoreKey])));
+    const confidence=clamp((peak[scoreKey]/base-1)/4.5,0,1);
+    return {y:eyeY,confidence,method:useColor?'iris-color':'blink-dark-line',peakScore:peak[scoreKey],spread:peak.spread};
+  }
+
+  function analyzeMainComponent(canvas, alphaThreshold = 24) {
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const w=canvas.width,h=canvas.height,data=ctx.getImageData(0,0,w,h).data;
+    const visualMask=new Uint8Array(w*h);
+    for(let i=0;i<w*h;i++)if(data[i*4+3]>alphaThreshold)visualMask[i]=1;
+
+    const visualComponents=components(visualMask,w,h)
+      .filter(c=>c.w>=Math.max(6,w*.08)&&c.h>=Math.max(10,h*.12))
+      .sort((a,b)=>b.area-a.area);
+    if(!visualComponents.length){
+      const b=findVisibleBounds(canvas,12);if(!b)return null;
+      return {area:countAlphaPixels(canvas),minX:b.minX,maxX:b.maxX,minY:b.minY,maxY:b.maxY,width:b.width,height:b.height,componentWidth:b.width,componentHeight:b.height,centerX:(b.minX+b.maxX)/2,neckCenterX:(b.minX+b.maxX)/2,top:b.minY,bottom:b.maxY,score:0,fallback:true,protectedZone:null,ignoredExpressivePixels:0,structuralOpeningRadius:0,eyeLineY:null,eyeConfidence:0,eyeToNeck:null};
+    }
+
+    // Constrói a máscara do maior componente visual. Componentes separados como
+    // sobrancelhas soltas continuam no PNG, mas já não entram na anatomia.
+    const primaryBox=visualComponents[0];
+    const primarySeed=new Uint8Array(w*h);
+    for(let y=primaryBox.y;y<primaryBox.y+primaryBox.h;y++)for(let x=primaryBox.x;x<primaryBox.x+primaryBox.w;x++){
+      const i=y*w+x;if(visualMask[i])primarySeed[i]=1;
+    }
+    const primary=largestMaskComponent(primarySeed,w,h);
+    if(!primary)return null;
+    const structural=buildStructuralMask(primary.mask,w,h,primary);
+    const sMask=structural.mask,sComp=structural.component;
+
+    // Medição estrutural: usa o maior trecho contínuo de cada linha. Assim uma
+    // sobrancelha que passa para fora não alarga a cabeça, mesmo se tocar nela.
+    const bh=sComp.h;
+    const yStart=Math.round(sComp.minY+bh*.10),yEnd=Math.round(sComp.minY+bh*.62);
+    const rows=[];
+    for(let y=yStart;y<=Math.min(sComp.maxY,yEnd);y++){
+      const run=longestRunInRow(sMask,w,y,sComp.minX,sComp.maxX);
+      if(run&&run.width>=3)rows.push({y,...run});
+    }
+    const rowWidths=rows.map(r=>r.width);
+    const wide=percentile(rowWidths,.78)||sComp.w;
+    const stableRows=rows.filter(r=>r.width>=wide*.70&&r.width<=wide*1.18);
+    const cranialWidth=Math.max(1,Math.round(median((stableRows.length?stableRows:rows).map(r=>r.width))||wide));
+    const centerX=(stableRows.length?median(stableRows.map(r=>r.center)):((sComp.minX+sComp.maxX)/2));
+
+    // Topo estrutural vem da massa principal limpa; base do pescoço usa a massa
+    // visual principal para preservar a âncora real mesmo após a abertura leve.
+    const top=sComp.minY,bottom=primary.maxY,anchorHeight=bottom-top+1;
+    const neckRows=[];
+    const neckStart=Math.round(primary.minY+primary.h*.84);
+    for(let y=neckStart;y<=primary.maxY;y++){
+      const run=longestRunInRow(primary.mask,w,y,primary.minX,primary.maxX);
+      if(run&&run.width>=2)neckRows.push(run);
+    }
+    // Dá mais peso às linhas realmente inferiores do pescoço.
+    const lowerNeck=neckRows.slice(Math.floor(neckRows.length*.45));
+    const neckCenterX=(lowerNeck.length?median(lowerNeck.map(r=>r.center)):centerX);
+    const neckWidth=(lowerNeck.length?median(lowerNeck.map(r=>r.width)):Math.max(1,cranialWidth*.34));
+    // Perfil estrutural da cabeça em várias faixas horizontais. É este perfil —
+    // não olhos/sobrancelhas/boca — que dirige a calibração de formato.
+    const headEndY=Math.max(top+8,Math.min(sComp.maxY,Math.round(primary.minY+primary.h*.84)));
+    const profileCount=32,headProfile=[];
+    for(let s=0;s<profileCount;s++){
+      const t=s/(profileCount-1), y=Math.round(top+(headEndY-top)*t);
+      const run=longestRunInRow(sMask,w,y,sComp.minX,sComp.maxX);
+      if(run&&run.width>=3){
+        headProfile.push({t,y,width:run.width,widthNorm:run.width/Math.max(1,cranialWidth),center:run.center,centerOffset:(run.center-neckCenterX)/Math.max(1,cranialWidth)});
+      }else headProfile.push(null);
+    }
+
+    return {
+      area:primary.area,minX:primary.minX,maxX:primary.maxX,minY:primary.minY,maxY:primary.maxY,
+      componentWidth:primary.w,componentHeight:primary.h,width:cranialWidth,height:anchorHeight,
+      centerX,neckCenterX,neckWidth,top,bottom,headEndY,headProfile,score:primary.area*Math.sqrt(primary.w*primary.h),
+      visualBounds:{minX:primary.minX,maxX:primary.maxX,minY:primary.minY,maxY:primary.maxY,width:primary.w,height:primary.h},
+      structuralBounds:{minX:sComp.minX,maxX:sComp.maxX,minY:sComp.minY,maxY:sComp.maxY,width:sComp.w,height:sComp.h},
+      ignoredExpressivePixels:structural.ignoredPixels,
+      structuralOpeningRadius:structural.openingRadius,
+      protectedZone:{yStart,yEnd,cranialWidth,stableRows:stableRows.length,mode:els.protectExpressive?.checked?'structural-mask':'visual-mask'}
+    };
+  }
+
+  function calculateNormalization(crops) {
+    const widths=crops.map(c=>c.anatomy.width),heights=crops.map(c=>c.anatomy.height);
+    const preMedW=median(widths),preMedH=median(heights),madW=mad(widths,preMedW),madH=mad(heights,preMedH);
+    const profileCount=32;
+    const prelim=crops.map((c,i)=>{
+      const zW=robustZ(c.anatomy.width,preMedW,madW,preMedW*.012);
+      const zH=robustZ(c.anatomy.height,preMedH,madH,preMedH*.012);
+      return {index:i,zW,zH,maxZ:Math.max(zW,zH),outlier:zW>3.5||zH>3.5};
+    });
+    const useOutlierFilter=els.excludeOutliers.checked;
+
+    const makeProfile=(indices)=>{
+      const result=[];
+      for(let j=0;j<profileCount;j++){
+        const rows=indices.map(i=>crops[i].anatomy.headProfile?.[j]).filter(Boolean);
+        result.push(rows.length?{
+          widthNorm:median(rows.map(r=>r.widthNorm)),
+          centerOffset:median(rows.map(r=>r.centerOffset))
+        }:null);
+      }
+      return result;
+    };
+    const blendProfile=(a,b,k)=>a.map((pa,j)=>{
+      const pb=b[j]; if(!pa)return pb; if(!pb)return pa;
+      return {widthNorm:pa.widthNorm+(pb.widthNorm-pa.widthNorm)*k,centerOffset:pa.centerOffset+(pb.centerOffset-pa.centerOffset)*k};
+    });
+
+    const trioTargets=[];
+    for(let col=0;col<7;col++){
+      const ids=[col,col+7,col+14];
+      let usable=ids.filter(i=>!useOutlierFilter||!prelim[i].outlier); if(!usable.length)usable=ids;
+      trioTargets.push({col,ids,width:median(usable.map(i=>widths[i])),height:median(usable.map(i=>heights[i])),profile:makeProfile(usable)});
+    }
+    let globalUsable=crops.map((_,i)=>i).filter(i=>!useOutlierFilter||!prelim[i].outlier); if(!globalUsable.length)globalUsable=crops.map((_,i)=>i);
+    const globalW=median(trioTargets.map(t=>t.width)),globalH=median(trioTargets.map(t=>t.height));
+    const globalProfile=makeProfile(globalUsable);
+    const trioStrength=Number(els.normalizationStrength.value)/100;
+    const globalStrength=Number(els.globalStrength.value)/100;
+    const requestedMax=Number(els.maxCorrection.value)/100;
+    const externalMax=Math.min(requestedMax,Number(els.maxExternalCorrection.value)/100);
+    const mode=els.normalizationMode.value;
+    const byTrio=els.normalizeByTrio.checked;
+    const shapeStrength=els.matchHeadShape.checked?Number(els.shapeStrength.value)/100:0;
+    const maxShapeWarp=(Number(els.maxShapeWarp.value)||0)/100;
+
+    const corrections=crops.map((c,i)=>{
+      const trio=trioTargets[i%7];
+      const trioW=byTrio?trio.width:globalW,trioH=byTrio?trio.height:globalH;
+      const targetW=trioW+(globalW-trioW)*globalStrength;
+      const targetH=trioH+(globalH-trioH)*globalStrength;
+      let rawX=targetW/Math.max(1,c.anatomy.width),rawY=targetH/Math.max(1,c.anatomy.height);
+      if(mode==='uniform'){const s=Math.sqrt(rawX*rawY);rawX=s;rawY=s;}
+      let scaleX=1,scaleY=1;
+      if(els.normalizeFaces.checked){
+        const limitedX=clamp(rawX,1-externalMax,1+externalMax),limitedY=clamp(rawY,1-externalMax,1+externalMax);
+        scaleX=1+(limitedX-1)*trioStrength;scaleY=1+(limitedY-1)*trioStrength;
+      }
+
+      const targetProfile=byTrio?blendProfile(trio.profile,globalProfile,globalStrength):globalProfile;
+      const shapeRows=[]; let errSum=0,centerErrSum=0,valid=0,maxShapeApplied=0;
+      for(let j=0;j<profileCount;j++){
+        const cur=c.anatomy.headProfile?.[j],tar=targetProfile?.[j];
+        if(!cur||!tar||cur.widthNorm<=0){shapeRows.push({scale:1,shift:0});continue;}
+        const raw=tar.widthNorm/cur.widthNorm;
+        const limited=clamp(raw,1-maxShapeWarp,1+maxShapeWarp);
+        const rowScale=1+(limited-1)*shapeStrength;
+        const rawShift=(tar.centerOffset-cur.centerOffset)*Math.max(1,c.anatomy.width);
+        const maxShift=Math.max(1,c.anatomy.width*maxShapeWarp);
+        const rowShift=clamp(rawShift,-maxShift,maxShift)*shapeStrength;
+        shapeRows.push({scale:rowScale,shift:rowShift});
+        maxShapeApplied=Math.max(maxShapeApplied,Math.abs(rowScale-1));
+        errSum+=Math.abs(Math.log(Math.max(.001,cur.widthNorm/tar.widthNorm)));
+        centerErrSum+=Math.abs(cur.centerOffset-tar.centerOffset);
+        valid++;
+      }
+      const shapeMismatch=valid?errSum/valid:0;
+      const centerMismatch=valid?centerErrSum/valid:0;
+      const shapeScore=clamp(100-shapeMismatch*780-centerMismatch*320-maxShapeApplied*260,0,100);
+      return {scaleX,scaleY,rawX,rawY,targetW,targetH,trioW,trioH,externalMax,shapeRows,shapeMismatch,centerMismatch,shapeScore,maxShapeApplied};
+    });
+
+    const metrics=crops.map((c,i)=>{
+      const p=prelim[i],corr=corrections[i];
+      const externalNeed=Math.max(Math.abs(corr.rawX-1),Math.abs(corr.rawY-1));
+      const externalScore=clamp(100-p.maxZ*7-externalNeed*190,0,100);
+      const shapeScore=Math.round(corr.shapeScore);
+      const score=Math.round(externalScore*.42+shapeScore*.58-(c.anatomy.fallback?30:0));
+      const shapeOutlier=corr.shapeMismatch>.055||corr.centerMismatch>.04;
+      const outlier=p.outlier||shapeOutlier;
+      const critical=!!c.anatomy.fallback||p.maxZ>5.2||corr.shapeMismatch>.09||externalNeed>Math.max(.06,externalMax*3)||score<60;
+      const warning=critical||outlier||externalNeed>externalMax||corr.maxShapeApplied>=Math.max(.025,maxShapeWarp*.9)||score<88;
+      return {...p,outlier,shapeOutlier,externalNeed,externalScore:Math.round(externalScore),shapeScore,shapeMismatch:corr.shapeMismatch,centerMismatch:corr.centerMismatch,score,critical,warning};
+    });
+
+    const candidates=metrics.filter(m=>!useOutlierFilter||!m.outlier);
+    const refPool=candidates.length?candidates:metrics;
+    let referenceIndex=refPool[0]?.index||0,bestDist=Infinity;
+    for(const m of refPool){
+      const i=m.index,a=crops[i].anatomy,corr=corrections[i];
+      const d=Math.abs(Math.log(Math.max(.001,a.width/globalW)))+Math.abs(Math.log(Math.max(.001,a.height/globalH)))+corr.shapeMismatch*1.8+corr.centerMismatch*.8+m.maxZ*.03;
+      if(d<bestDist){bestDist=d;referenceIndex=i;}
+    }
+    return {targetW:globalW,targetH:globalH,globalW,globalH,preMedW,preMedH,madW,madH,trioTargets,globalProfile,corrections,metrics,referenceIndex,outlierIndices:metrics.filter(m=>m.outlier).map(m=>m.index),externalMax,shapeStrength,maxShapeWarp};
+  }
+
+  function countAlphaPixels(canvas, threshold=12) {
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    const data=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let count=0;
+    for(let i=3;i<data.length;i+=4) if(data[i]>threshold) count++;
+    return count;
+  }
+
+  function fitWithoutScaling(canvas,targetW,targetH) {
+    if(canvas.width===targetW && canvas.height===targetH) return canvas;
+    const out=document.createElement('canvas');out.width=targetW;out.height=targetH;
+    const ctx=out.getContext('2d');
+
+    // Mantém a escala original. Diferenças pequenas são resolvidas apenas com
+    // transparência. A base é preservada para não deslocar o pescoço.
+    const sw=Math.min(canvas.width,targetW),sh=Math.min(canvas.height,targetH);
+    const sx=Math.max(0,Math.floor((canvas.width-targetW)/2));
+    const sy=Math.max(0,canvas.height-targetH);
+    const dx=Math.max(0,Math.floor((targetW-canvas.width)/2));
+    const dy=Math.max(0,targetH-canvas.height);
+    ctx.drawImage(canvas,sx,sy,sw,sh,dx,dy,sw,sh);
+    canvas.width=1;canvas.height=1;
+    return out;
+  }
+
+  function warpHeadShape(canvas, anatomy, normalization) {
+    const rows=normalization?.shapeRows;
+    if(!rows?.length||!Number.isFinite(anatomy?.headEndY)||!Number.isFinite(anatomy?.top))return canvas;
+    const hasWarp=rows.some(r=>Math.abs((r?.scale||1)-1)>.0005||Math.abs(r?.shift||0)>.05);
+    if(!hasWarp)return canvas;
+    const top=anatomy.top, end=anatomy.headEndY;
+    if(!(top<end))return canvas;
+    const out=document.createElement('canvas');out.width=canvas.width;out.height=canvas.height;
+    const ctx=out.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+    const n=rows.length,pivot=anatomy.neckCenterX??anatomy.centerX??canvas.width/2;
+    const sample=(t,key,def)=>{
+      const pos=clamp(t,0,1)*(n-1),i0=Math.floor(pos),i1=Math.min(n-1,i0+1),f=pos-i0;
+      const a=rows[i0]?.[key]??def,b=rows[i1]?.[key]??a;return a+(b-a)*f;
+    };
+    for(let y=0;y<canvas.height;y++){
+      if(y<top||y>end){ctx.drawImage(canvas,0,y,canvas.width,1,0,y,canvas.width,1);continue;}
+      const t=(y-top)/Math.max(1,end-top);
+      // A correção desaparece suavemente perto da mandíbula/pescoço para não
+      // deslocar a âncora neck-base nem criar uma quebra visual na transição.
+      const fade=t>.86?clamp((1-t)/.14,0,1):1;
+      const scale=1+(sample(t,'scale',1)-1)*fade;
+      const shift=sample(t,'shift',0)*fade;
+      const dw=canvas.width*scale,dx=pivot+shift-pivot*scale;
+      ctx.drawImage(canvas,0,y,canvas.width,1,dx,y,dw,1);
+    }
+    return out;
+  }
+
+  function placeOnFinalCanvas(canvas, anatomy, normalization, targetAnatomyHeight, manual=blankManualAdjustment()) {
+    const outW=clamp(Number(els.outWidth.value)||1920,64,8192);
+    const outH=clamp(Number(els.outHeight.value)||1080,64,8192);
+
+    // O canvas final é 1920×1080, mas isso NÃO define o tamanho do rosto.
+    // Em 100%, cada pixel do recorte continua valendo 1 pixel no PNG final.
+    // A normalização só aplica pequenas correções relativas entre os 21 rostos.
+    const working=warpHeadShape(canvas,anatomy,normalization);
+    const baseScale=clamp((Number(els.faceHeight.value)||100)/100,.25,3);
+    const uniform=manual?.scale||1;
+    const scaleX=baseScale*(normalization?.scaleX||1)*uniform*(manual?.scaleX||1);
+    const scaleY=baseScale*(normalization?.scaleY||1)*uniform*(manual?.scaleY||1);
+    const dw=Math.max(1,working.width*scaleX),dh=Math.max(1,working.height*scaleY);
+    const anchorX=(anatomy?.neckCenterX??anatomy?.centerX??working.width/2)*scaleX;
+    const anchorY=((anatomy?.bottom??working.height-1)+1)*scaleY;
+    const targetX=outW*(Number(els.centerX.value)/100)+(manual?.dx||0);
+    const targetY=outH*(Number(els.baseY.value)/100)+(manual?.dy||0);
+    const dx=targetX-anchorX,dy=targetY-anchorY;
+    const out=document.createElement('canvas');out.width=outW;out.height=outH;
+    const ctx=out.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(working,dx,dy,dw,dh);
+    if(working!==canvas){working.width=1;working.height=1;}
+    return {canvas:out,draw:{x:dx,y:dy,w:dw,h:dh},scaleX,scaleY,maxShapeApplied:normalization?.maxShapeApplied||0};
+  }
+
+  function canvasToBlob(canvas,type='image/png',quality) {
+    return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('Falha ao criar PNG.')),type,quality));
+  }
+
+  async function renderOutputFromCrop(index) {
+    const crop=state.processedCrops[index],norm=state.normalizationStats;
+    if(!crop||!norm)throw new Error('Dados de calibração não disponíveis.');
+    const corr=norm.corrections[index],metric=norm.metrics[index],manual=state.manualAdjustments[index]||blankManualAdjustment();
+    const placed=placeOnFinalCanvas(crop.canvas,crop.anatomy,corr,norm.targetH,manual);
+    const out=placed.canvas,blob=await canvasToBlob(out);
+    const result={name:filenameFor(index),blob,width:out.width,height:out.height,sourceWidth:crop.width,sourceHeight:crop.height,alphaPixels:crop.alphaPixels,draw:placed.draw,
+      anatomy:{width:crop.anatomy.width,height:crop.anatomy.height,componentWidth:crop.anatomy.componentWidth,componentHeight:crop.anatomy.componentHeight,centerX:crop.anatomy.centerX,neckCenterX:crop.anatomy.neckCenterX,neckWidth:crop.anatomy.neckWidth,top:crop.anatomy.top,bottom:crop.anatomy.bottom,protectedZone:crop.anatomy.protectedZone,visualBounds:crop.anatomy.visualBounds,structuralBounds:crop.anatomy.structuralBounds,ignoredExpressivePixels:crop.anatomy.ignoredExpressivePixels||0,structuralOpeningRadius:crop.anatomy.structuralOpeningRadius||0,headEndY:crop.anatomy.headEndY},
+      normalization:corr,manual:{...manual},score:metric.score,outlier:metric.outlier,critical:metric.critical,warning:metric.warning,trioIndex:index%7};
+    out.width=1;out.height=1;return result;
+  }
+
+  async function rerenderIndices(indices) {
+    if(state.busy||!state.processedCrops.length)return;
+    state.busy=true;updateExportGuard();
+    try{
+      for(const i of indices){
+        const o=await renderOutputFromCrop(i);
+        if(state.previewUrls[i])URL.revokeObjectURL(state.previewUrls[i]);
+        state.outputs[i]=o;state.previewUrls[i]=URL.createObjectURL(o.blob);
+      }
+      renderPreviewGrid();renderComparison(state.compareIndex);renderNormalizationSummary();updateExportGuard();
+    }finally{state.busy=false;updateExportGuard();renderManualEditor(state.compareIndex);}
+  }
+
+  async function applyManualAdjustment() {
+    if(!state.outputs.length)return;
+    const i=state.compareIndex; if(i>=TOTAL)return;
+    state.manualAdjustments[i]={
+      scale:clamp((Number(els.manualScale.value)||100)/100,.7,1.3),
+      scaleX:clamp((Number(els.manualScaleX.value)||100)/100,.7,1.3),
+      scaleY:clamp((Number(els.manualScaleY.value)||100)/100,.7,1.3),
+      dx:clamp(Number(els.manualX.value)||0,-500,500),dy:clamp(Number(els.manualY.value)||0,-500,500)
+    };
+    await rerenderIndices([i]);
+  }
+
+  async function resetManualAdjustment() {
+    if(!state.outputs.length)return;const i=state.compareIndex;if(i>=TOTAL)return;
+    state.manualAdjustments[i]=blankManualAdjustment();state.manualReviewed[i]=false;await rerenderIndices([i]);
+  }
+
+  async function copyManualToTrio() {
+    if(!state.outputs.length||state.compareIndex>=TOTAL)return;const source={...(state.manualAdjustments[state.compareIndex]||blankManualAdjustment())};
+    const ids=trioIndicesFor(state.compareIndex);for(const i of ids)state.manualAdjustments[i]={...source};await rerenderIndices(ids);
+  }
+
+  async function buildOutputs() {
+    if(!state.sourceImage||state.busy)return;
+    if(state.cells.length!==TOTAL){setMessage('É necessário ter exatamente 21 caixas antes de gerar.','error');return;}
+    let baseBuiltOk=false;
+    setBusy(true);stopComparePlayback();stopAnimationTest();state.outputs=[];state.processedCrops=[];state.previewUrls.forEach(URL.revokeObjectURL);state.previewUrls=[];renderPreviewGrid();
+    const currentBuild=++state.buildId;
+    try{
+      const crops=[];
+      for(let i=0;i<TOTAL;i++){
+        setProgress((i/TOTAL)*54,`Recortando e analisando anatomia: ${filenameFor(i)} (${i+1}/21)…`);await nextFrame();
+        if(currentBuild!==state.buildId)throw new Error('Geração cancelada por uma alteração nas configurações.');
+        const keyed=removeBackgroundInCrop(state.cells[i]);removeWhiteTemplateBorder(keyed);removeForeignEdgeFragments(keyed);
+        if(countAlphaPixels(keyed)<25){keyed.width=1;keyed.height=1;throw new Error(`${filenameFor(i)} ficou vazio após a remoção do fundo.`);}
+        let finalCrop=keyed,bounds=null;
+        if(els.autoTightCrop.checked){const r=cropToVisibleContent(keyed,Number(els.contentPadding.value),els.squareCrop.checked);finalCrop=r.canvas;bounds=r.bounds;if(finalCrop!==keyed){keyed.width=1;keyed.height=1;}}
+        const alpha=countAlphaPixels(finalCrop);if(alpha<25){finalCrop.width=1;finalCrop.height=1;throw new Error(`${filenameFor(i)} ficou vazio após o recorte automático.`);}
+        const anatomy=analyzeMainComponent(finalCrop);if(!anatomy)throw new Error(`${filenameFor(i)} não possui anatomia confiável.`);
+        crops.push({canvas:finalCrop,width:finalCrop.width,height:finalCrop.height,alphaPixels:alpha,bounds,anatomy});
+      }
+      state.processedCrops=crops;
+      const normalization=calculateNormalization(crops);state.normalizationStats=normalization;state.headMaster=buildHeadMasterFromBase();renderNormalizationSummary();renderHeadMasterUI();
+      const generated=[];
+      for(let i=0;i<TOTAL;i++){
+        setProgress(54+(i/TOTAL)*41,`Calibrando e criando PNG: ${filenameFor(i)} (${i+1}/21)…`);await nextFrame();
+        if(currentBuild!==state.buildId)throw new Error('Geração cancelada por uma alteração nas configurações.');
+        generated.push(await renderOutputFromCrop(i));
+      }
+      state.outputs=generated;state.previewUrls=generated.map(o=>URL.createObjectURL(o.blob));state.compareIndex=normalization.referenceIndex;
+      if(state.extra.sourceImage){els.extraStatus.textContent='21/21 · Head Master pronto';els.calibrateExtraBtn.disabled=false;}
+      renderPreviewGrid();updateSelectedUI();renderComparison(state.compareIndex);renderNormalizationSummary();
+      const critical=effectiveCriticalCount(),warnings=generated.filter((o,i)=>o.warning&&!o.critical).length,outliers=generated.filter(o=>o.outlier).length;
+      const ref=filenameFor(normalization.referenceIndex);
+      if(critical){
+        setMessage(`Calibração concluída, mas ${critical} rosto(s) ficaram críticos. A exportação está bloqueada. Use o comparador, o editor individual e marque “Revisado manualmente” apenas depois de conferir/corrigir cada caso. Referência automática: ${ref}.`, 'error');
+        setStatus(`${critical} crítico(s) · exportação bloqueada`,'error');
+      }else if(warnings||outliers){
+        setMessage(`21 PNGs calibrados em ${els.outWidth.value}×${els.outHeight.value}. Referência automática: ${ref}. ${outliers} outlier(s) foram excluídos da referência e ${warnings} item(ns) merecem revisão, mas não bloqueiam a exportação.`, 'warn');
+        setStatus(`Pronto · ${warnings} revisar`,'warn');
+      }else{
+        setMessage(`21 PNGs calibrados. Primeiro os trios aberto/blink/talk foram alinhados e depois os sete grupos foram aproximados da referência global. Referência automática: ${ref}. Nenhum caso crítico.`, 'ok');
+        setStatus(`Pronto · estabilidade alta`,'ok');
+      }
+      updateExportGuard();setProgress(100,'21 arquivos calibrados e avaliados.');
+      baseBuiltOk=true;
+    }catch(err){
+      console.error(err);state.outputs=[];state.processedCrops=[];state.normalizationStats=null;state.previewUrls.forEach(URL.revokeObjectURL);state.previewUrls=[];renderPreviewGrid();renderComparison();renderNormalizationSummary();
+      setMessage(`A geração foi interrompida: ${err.message} Nenhum ZIP parcial foi criado.`,'error');setStatus('Geração bloqueada','error');
+    }finally{
+      setTimeout(hideProgress,350);
+      setBusy(false);
+      if(baseBuiltOk && state.extra.sourceImage){
+        try{
+          els.extraStatus.textContent='Processando automaticamente…';
+          await buildExtraOutputs();
+        }catch(err){
+          console.error(err);
+        }
+      }
+    }
+  }
+
+  // Criador ZIP mínimo, sem bibliotecas externas. Usa o método STORE (sem compressão),
+  // adequado porque PNG já é comprimido.
+  const crcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+  function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=crcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0;}
+  function dosDateTime(date=new Date()){
+    const year=Math.max(1980,date.getFullYear());
+    return {time:(date.getHours()<<11)|(date.getMinutes()<<5)|(date.getSeconds()>>1),date:((year-1980)<<9)|((date.getMonth()+1)<<5)|date.getDate()};
+  }
+  function writeU16(view,offset,value){view.setUint16(offset,value,true);}
+  function writeU32(view,offset,value){view.setUint32(offset,value>>>0,true);}
+  async function makeZip(files){
+    const enc=new TextEncoder(),parts=[],central=[];let offset=0;
+    const dt=dosDateTime();
+    for(const file of files){
+      const nameBytes=enc.encode(file.name),data=file.data instanceof Uint8Array?file.data:new Uint8Array(await file.data.arrayBuffer());
+      const crc=crc32(data),local=new Uint8Array(30+nameBytes.length),v=new DataView(local.buffer);
+      writeU32(v,0,0x04034b50);writeU16(v,4,20);writeU16(v,6,0x0800);writeU16(v,8,0);writeU16(v,10,dt.time);writeU16(v,12,dt.date);
+      writeU32(v,14,crc);writeU32(v,18,data.length);writeU32(v,22,data.length);writeU16(v,26,nameBytes.length);writeU16(v,28,0);local.set(nameBytes,30);
+      parts.push(local,data);
+      const cen=new Uint8Array(46+nameBytes.length),cv=new DataView(cen.buffer);
+      writeU32(cv,0,0x02014b50);writeU16(cv,4,20);writeU16(cv,6,20);writeU16(cv,8,0x0800);writeU16(cv,10,0);writeU16(cv,12,dt.time);writeU16(cv,14,dt.date);
+      writeU32(cv,16,crc);writeU32(cv,20,data.length);writeU32(cv,24,data.length);writeU16(cv,28,nameBytes.length);writeU16(cv,30,0);writeU16(cv,32,0);writeU16(cv,34,0);writeU16(cv,36,0);writeU32(cv,38,0);writeU32(cv,42,offset);cen.set(nameBytes,46);
+      central.push(cen);offset+=local.length+data.length;
+    }
+    const centralSize=central.reduce((n,p)=>n+p.length,0),end=new Uint8Array(22),ev=new DataView(end.buffer);
+    writeU32(ev,0,0x06054b50);writeU16(ev,4,0);writeU16(ev,6,0);writeU16(ev,8,files.length);writeU16(ev,10,files.length);writeU32(ev,12,centralSize);writeU32(ev,16,offset);writeU16(ev,20,0);
+    return new Blob([...parts,...central,end],{type:'application/zip'});
+  }
+
+  function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1500);}
+
+  async function saveFolder() {
+    if(state.outputs.length!==TOTAL||state.busy)return;
+    if(state.extra.sourceImage && state.extra.outputs.length!==EXTRA_TOTAL){setMessage('A Folha 2 está carregada, mas ainda não foi calibrada contra o Head Master. Calibre os 21 rostos da Folha 2 ou remova a Folha 2 antes de salvar.','error');return;}
+    const blockers=effectiveCriticalCount(),extraBlockers=extraCriticalCount();
+    if(blockers||extraBlockers){setMessage(`Exportação bloqueada: ${blockers} rosto(s) base e ${extraBlockers} extra(s) estão críticos.`, 'error');return;}
+    if(!window.showDirectoryPicker){setMessage('Seu navegador não suporta salvar diretamente em pasta. Use Chrome ou Edge atualizados para esta função.', 'error');return;}
+    setBusy(true);setProgress(10,'Preparando os arquivos da pasta…');
+    try{
+      const folder=sanitizeFolderName(els.folderName.value);els.folderName.value=folder;
+      const finalWidth=Number(els.outWidth.value)||1920,finalHeight=Number(els.outHeight.value)||1080;
+      const anchorX=Math.round(finalWidth * (Number(els.centerX.value)/100));
+      const anchorY=Math.round(finalHeight * (Number(els.baseY.value)/100));
+      const metadata={
+        name:els.modelName.value.trim()||'modelo-7',
+        gender:els.gender.value,
+        type:'head-only',
+        anchor:'neck-base',
+        anchorX,
+        anchorY,
+        width:finalWidth,
+        height:finalHeight
+      };
+
+      const warnings=state.outputs.filter(o=>o.warning).map(o=>o.name);
+      const allOutputs=state.extra.outputs.length===EXTRA_TOTAL?[...state.outputs,...state.extra.outputs]:[...state.outputs];
+      const extraCount=state.extra.outputs.length===EXTRA_TOTAL?EXTRA_TOTAL:0;
+      const report=[
+        'RELATÓRIO DE IMPORTAÇÃO','',`Modelo: ${metadata.name}`,`Gênero: ${metadata.gender}`,`Origem: ${state.sourceFileName}`,
+        `Dimensão dos recortes: ${metadata.width}x${metadata.height}px`,`Fundo detectado/escolhido: ${els.bgColor.value}`,`Tolerância: ${els.tolerance.value}`,
+        `Método de detecção: ${state.detection.mode}`,`Confiança automática: ${(state.detection.confidence*100).toFixed(0)}%`,'',
+        'Validação:',`- ${TOTAL+extraCount} arquivos PNG gerados`,`- base: 21 · extras: ${extraCount}`,'- nomes únicos e mapeados',`- recortes para revisar: ${warnings.length ? warnings.join(', ') : 'nenhum'}`,'',
+        `Recorte automático do conteúdo: ${els.autoTightCrop.checked ? 'sim' : 'não'}`,
+        `Recorte quadrado: ${els.squareCrop.checked ? 'sim' : 'não'}`,
+        `Margem extra: ${els.contentPadding.value}px`,
+        `Normalização dos 21: ${els.normalizeFaces.checked ? 'sim' : 'não'}`,
+        `Primeiro por trio: ${els.normalizeByTrio.checked ? 'sim' : 'não'}`,
+        `Outliers excluídos da referência: ${els.excludeOutliers.checked ? 'sim' : 'não'}`,
+        `Detalhes expressivos ignorados na calibração: ${els.protectExpressive.checked ? 'sim' : 'não'}`,
+        `Modo: ${els.normalizationMode.value}`,
+        `Força do trio: ${els.normalizationStrength.value}%`,
+        `Correção global: ${els.globalStrength.value}%`,
+        `Limite por eixo: ${els.maxCorrection.value}%`,`Limite externo real: ${els.maxExternalCorrection.value}%`,`Alinhamento de silhueta: ${els.matchHeadShape.checked?'sim':'não'}`,`Força do formato: ${els.shapeStrength.value}%`,`Correção lateral máxima por faixa: ${els.maxShapeWarp.value}%`,
+        `Mediana anatômica: ${state.normalizationStats?.targetW||'-'}x${state.normalizationStats?.targetH||'-'} px`,
+        `Referência automática: ${state.normalizationStats?filenameFor(state.normalizationStats.referenceIndex):'-'}`,
+        `Head Master: ${state.headMaster?`${Math.round(state.headMaster.width)}x${Math.round(state.headMaster.height)} · melhor trio ${state.headMaster.bestTrioName}`:'-'}`,
+        `Folha 2: ${state.extra.sourceFileName||'não usada'}`,
+        `Compatibilidade extra: ${state.extra.compatibility?`${state.extra.compatibility.overall}% (${state.extra.compatibility.status})`:'-'}`,
+        `Transformação Folha 2 → Master: ${state.extra.compatibility?`X ${(state.extra.compatibility.globalScaleX*100).toFixed(2)}% · Y ${(state.extra.compatibility.globalScaleY*100).toFixed(2)}%`:'-'}`,
+        `anchorX: ${anchorX}`,
+        `anchorY: ${anchorY}`,
+        '',
+        'QUALIDADE POR ARQUIVO',
+        ...state.outputs.map((o,i)=>`${o.name}: score ${o.score}% | outlier ${o.outlier?'sim':'não'} | crítico ${o.critical?'sim':'não'} | revisado ${state.manualReviewed[i]?'sim':'não'} | manual escala ${(state.manualAdjustments[i].scale*100).toFixed(1)}% X ${(state.manualAdjustments[i].scaleX*100).toFixed(1)}% Y ${(state.manualAdjustments[i].scaleY*100).toFixed(1)}% dx ${state.manualAdjustments[i].dx}px dy ${state.manualAdjustments[i].dy}px`),
+        ...(extraCount?['','QUALIDADE DAS EXPRESSÕES EXTRAS',...state.extra.outputs.map(o=>`${o.name}: score ${o.score}% | crítico ${o.critical?'sim':'não'} | compatibilidade global ${state.extra.compatibility?.overall??'-'}%`)]:[]),
+        '',
+        'A ferramenta usou apenas a imagem selecionada. Os arquivos finais usam canvas 1920x1080 sem ampliar o rosto pela dimensão do canvas; a escala base padrão é 110% para o rosto ficar um pouco maior no app.',
+        'A seleção de pasta usa o navegador. Por segurança, não é possível forçar exatamente C:\Users\luiz\Downloads\MODELOS, mas a caixa abre em Downloads e pode lembrar a última pasta escolhida.'
+      ].join('\r\n');
+
+      setProgress(24,'Escolha a pasta MODELOS ou uma subpasta dentro dela…');
+      const baseDir = await window.showDirectoryPicker({mode:'readwrite', id:'modelos-folder', startIn:'downloads'});
+      const targetDir = await baseDir.getDirectoryHandle(folder, {create:true});
+
+      let done = 0;
+      const totalFiles = allOutputs.length + (els.includeJson.checked ? 1 : 0) + (els.includeReport.checked ? 1 : 0);
+      const writeFile = async (dirHandle, name, data) => {
+        const fileHandle = await dirHandle.getFileHandle(name, {create:true});
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+        done++;
+        setProgress(24 + (done / Math.max(1,totalFiles)) * 76, `Salvando ${name} (${done}/${totalFiles})…`);
+      };
+
+      for(const output of allOutputs){
+        await writeFile(targetDir, output.name, output.blob);
+      }
+      if(els.includeJson.checked){
+        await writeFile(targetDir, 'model.json', new Blob([JSON.stringify(metadata,null,2)], {type:'application/json'}));
+      }
+      if(els.includeReport.checked){
+        await writeFile(targetDir, 'import-report.txt', new Blob([report], {type:'text/plain;charset=utf-8'}));
+      }
+      setProgress(100,'Pasta salva com sucesso.');
+      setMessage(`Pasta "${folder}" salva com sucesso dentro do diretório escolhido. Na primeira vez, selecione a pasta C:/Users/luiz/Downloads/MODELOS (ou a pasta MODELOS dentro de Downloads). Depois disso, o navegador pode lembrar a última pasta usada.`, 'ok');
+    }catch(err){
+      if(err && err.name === 'AbortError'){
+        setMessage('Salvamento cancelado.', 'warn');
+      }else{
+        console.error(err);setMessage(`Não foi possível salvar a pasta: ${err.message}`,'error');
+      }
+    }finally{setTimeout(hideProgress,500);setBusy(false);}
+  }
+
+  // ========================= V10.1 · HEAD MASTER + FOLHA 2 7×3 =========================
+  function sanitizeExpressionName(value,index=0){
+    const cleaned=(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9_-]+/g,'_').replace(/_+/g,'_').replace(/^[_-]+|[_-]+$/g,'');
+    return cleaned || `extra_${index+1}`;
+  }
+  function extraFilename(index){
+    const row=Math.floor(index/7),col=index%7;
+    return `${sanitizeExpressionName(state.extra.names[col],col)}${ROW_SUFFIX[row]}.png`;
+  }
+
+  function invalidateExtraOutputs(clearSource=false){
+    stopExtraFlicker();
+    state.extra.outputs=[];state.extra.beforeOutputs=[];state.extra.crops=[];state.extra.calibration=null;state.extra.compatibility=null;
+    state.extra.urls.forEach(URL.revokeObjectURL);state.extra.beforeUrls.forEach(URL.revokeObjectURL);state.extra.urls=[];state.extra.beforeUrls=[];
+    state.extra.buildId++;
+    if(clearSource){state.extra.sourceImage=null;state.extra.sourceCanvas.width=1;state.extra.sourceCanvas.height=1;state.extra.cells=[];state.extra.detection=null;state.extra.sourceFileName='';}
+    renderExtraPreviewGrid();renderExtraComparison();renderHeadMasterUI();updateExportGuard();
+  }
+
+  function downscaledCanvasImageData(canvas,maxDim=1200){
+    const scale=Math.min(1,maxDim/Math.max(canvas.width,canvas.height));
+    const w=Math.max(1,Math.round(canvas.width*scale)),h=Math.max(1,Math.round(canvas.height*scale));
+    const c=document.createElement('canvas');c.width=w;c.height=h;
+    const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(canvas,0,0,w,h);
+    return {imageData:ctx.getImageData(0,0,w,h),w,h,scale};
+  }
+
+  function detectExtraSubjects(){
+    const {imageData,w,h,scale}=downscaledCanvasImageData(state.extra.sourceCanvas,1200);
+    const tol=Math.max(8,Number(els.tolerance.value));
+    const bgMask=connectedBackgroundMask(imageData,w,h,state.extra.bgRgb,tol);
+    let fg=new Uint8Array(w*h);for(let i=0;i<fg.length;i++)fg[i]=bgMask[i]?0:1;
+    fg=dilate(fg,w,h,1);
+    const comps=components(fg,w,h);
+    const selected=selectDetectedBoxes(comps,w,h);
+    if(!selected.ok)return {ok:false,reason:selected.reason||'Não foi possível separar os 21 rostos da Folha 2.'};
+
+    const padPct=Number(els.boxPadding.value)/100;
+    const rows=[selected.boxes.slice(0,7),selected.boxes.slice(7,14),selected.boxes.slice(14,21)];
+    const rowTops=rows.map(row=>median(row.map(b=>b.y)));
+    const rowBottoms=rows.map(row=>median(row.map(b=>b.y+b.h)));
+    const boundaries=[0,(rowBottoms[0]+rowTops[1])/2,(rowBottoms[1]+rowTops[2])/2,h];
+    const rowGuard=Math.max(2,Math.round(h*.0025));
+
+    const cells=selected.boxes.map((box,index)=>{
+      const rowIndex=Math.floor(index/7);
+      const px=box.w*(.035+padPct),pyTop=box.h*(.035+padPct),pyBottom=box.h*(.055+padPct);
+      const safeTop=rowIndex===0?0:boundaries[rowIndex]+rowGuard;
+      const safeBottom=rowIndex===2?h:boundaries[rowIndex+1]-rowGuard;
+      const x=clamp((box.x-px)/scale,0,state.extra.sourceCanvas.width-1);
+      const y=clamp(Math.max(box.y-pyTop,safeTop)/scale,0,state.extra.sourceCanvas.height-1);
+      const right=clamp((box.x+box.w+px)/scale,1,state.extra.sourceCanvas.width);
+      const bottom=clamp(Math.min(box.y+box.h+pyBottom,safeBottom)/scale,1,state.extra.sourceCanvas.height);
+      return {x,y,w:right-x,h:Math.max(1,bottom-y),source:'extra-rostos-7x3',rowBoundary:true};
+    });
+    const widths=cells.map(c=>c.w),heights=cells.map(c=>c.h);
+    return {ok:true,cells,confidence:selected.confidence,width:Math.round(median(widths)),height:Math.round(median(heights)),cvW:selected.cvW,cvH:selected.cvH,rowCounts:selected.rowCounts,details:`21 componentes · linhas ${selected.rowCounts.join('/')}`};
+  }
+
+  async function loadExtraFile(file){
+    if(!file||!file.type.startsWith('image/')){setMessage('A Folha 2 deve ser PNG, JPG ou WebP.','error');return;}
+    setBusy(true);setProgress(8,'Lendo a Folha 2…');
+    try{
+      const bitmap=await createImageBitmap(file);
+      state.extra.sourceCanvas.width=bitmap.width;state.extra.sourceCanvas.height=bitmap.height;
+      state.extra.sourceCtx.clearRect(0,0,bitmap.width,bitmap.height);state.extra.sourceCtx.drawImage(bitmap,0,0);bitmap.close?.();
+      state.extra.sourceImage=true;state.extra.sourceFileName=file.name;state.extra.bgRgb=estimateBackgroundFromCanvas(state.extra.sourceCanvas);
+      invalidateExtraOutputs(false);
+      setProgress(35,'Detectando os 21 rostos da Folha 2…');await nextFrame();
+      let det=detectExtraSubjects();
+      if(!det.ok){
+        // Fallback seguro 7×3. Mantém cada estado em sua própria célula.
+        const W=state.extra.sourceCanvas.width,H=state.extra.sourceCanvas.height;det={ok:true,confidence:.35,cells:Array.from({length:21},(_,i)=>{const row=Math.floor(i/7),col=i%7;return{x:col*W/7,y:row*H/3,w:W/7,h:H/3,source:'extra-grade-7x3'};}),fallback:true};
+      }
+      state.extra.cells=det.cells;state.extra.detection=det;els.extraStatus.textContent=`21/21 · ${(det.confidence*100).toFixed(0)}%${det.fallback?' · grade':''} · aguardando Gerar prévias`;
+      els.extraStatus.style.color=det.confidence>.7?'var(--ok)':'var(--warn)';
+      els.calibrateExtraBtn.disabled=!state.headMaster;
+      setMessage(state.headMaster?'Folha 2 detectada. O Head Master já está pronto; clique em “Recalibrar Folha 2”.':'Folha 2 detectada. Gere primeiro as 21 expressões principais para construir o Head Master.',det.confidence>.7?'ok':'warn');
+      renderHeadMasterUI();updateExportGuard();
+      setProgress(100,'21 rostos extras detectados.');
+    }catch(err){console.error(err);setMessage(`Não foi possível abrir a Folha 2: ${err.message}`,'error');els.extraStatus.textContent='Erro';}
+    finally{setTimeout(hideProgress,300);setBusy(false);}
+  }
+
+  function removeBackgroundFromCanvasCrop(sourceCanvas,bgRgb,cell){
+    const x=clamp(Math.floor(cell.x),0,sourceCanvas.width-1),y=clamp(Math.floor(cell.y),0,sourceCanvas.height-1);
+    const w=clamp(Math.ceil(cell.w),1,sourceCanvas.width-x),h=clamp(Math.ceil(cell.h),1,sourceCanvas.height-y);
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(sourceCanvas,x,y,w,h,0,0,w,h);
+    const img=ctx.getImageData(0,0,w,h),data=img.data,tol=Number(els.tolerance.value),bgMask=connectedBackgroundMask(img,w,h,bgRgb,tol);
+    const feather=Number(els.feather.value),despill=Number(els.despill.value)/100,edgeDepth=new Uint8Array(w*h);
+    if(feather>0){let frontier=[];for(let yy=1;yy<h-1;yy++)for(let xx=1;xx<w-1;xx++){const i=yy*w+xx;if(bgMask[i])continue;if(bgMask[i-1]||bgMask[i+1]||bgMask[i-w]||bgMask[i+w]){edgeDepth[i]=1;frontier.push(i);}}
+      for(let layer=2;layer<=feather;layer++){const next=[];for(const i of frontier){const x0=i%w,y0=(i/w)|0;if(x0<=0||x0>=w-1||y0<=0||y0>=h-1)continue;for(const n of [i-1,i+1,i-w,i+w])if(!bgMask[n]&&!edgeDepth[n]){edgeDepth[n]=layer;next.push(n);}}frontier=next;}}
+    const dominant=bgRgb.indexOf(Math.max(...bgRgb));
+    for(let i=0;i<w*h;i++){const o=i*4;if(bgMask[i]){data[o+3]=0;continue;}const depth=edgeDepth[i];if(depth){const alpha=clamp(depth/(feather+1),.10,1);data[o+3]=Math.round(data[o+3]*alpha);if(despill>0){const others=[0,1,2].filter(c=>c!==dominant),neutral=Math.max(data[o+others[0]],data[o+others[1]]),excess=Math.max(0,data[o+dominant]-neutral-8);data[o+dominant]=Math.round(data[o+dominant]-excess*despill*(1-alpha*.35));}}}
+    ctx.putImageData(img,0,0);return canvas;
+  }
+
+  function cleanupExtraEdgeResidue(canvas,bgRgb){
+    const ctx=canvas.getContext('2d',{willReadFrequently:true}),w=canvas.width,h=canvas.height,img=ctx.getImageData(0,0,w,h),d=img.data;
+    const band=clamp(Number(els.edgeBand.value),2,Math.max(2,Math.floor(Math.min(w,h)/3))),ycc=rgbToYCbCr(...bgRgb),tol=Number(els.tolerance.value)*1.18;
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(x>=band*2&&x<w-band*2&&y>=band*2&&y<h-band*2)continue;const o=(y*w+x)*4;if(d[o+3]&&chromaDistance(d[o],d[o+1],d[o+2],ycc)<=tol)d[o+3]=0;}
+    ctx.putImageData(img,0,0);removeForeignEdgeFragments(canvas);return canvas;
+  }
+
+  function medianProfile(crops,indices=null){
+    const ids=indices||crops.map((_,i)=>i),count=32,out=[];
+    for(let j=0;j<count;j++){const rows=ids.map(i=>crops[i]?.anatomy?.headProfile?.[j]).filter(Boolean);out.push(rows.length?{widthNorm:median(rows.map(r=>r.widthNorm)),centerOffset:median(rows.map(r=>r.centerOffset))}:null);}return out;
+  }
+  function profileError(a,b,start=0,end=1){
+    let s=0,c=0,cs=0;for(let j=0;j<Math.min(a?.length||0,b?.length||0);j++){const t=j/Math.max(1,a.length-1);if(t<start||t>end)continue;const x=a[j],y=b[j];if(!x||!y)continue;s+=Math.abs(Math.log(Math.max(.001,x.widthNorm/y.widthNorm)));cs+=Math.abs(x.centerOffset-y.centerOffset);c++;}return c?{width:s/c,center:cs/c,total:s/c+cs/c*.45}:{width:1,center:1,total:1};
+  }
+
+  function buildHeadMasterFromBase(){
+    if(!state.normalizationStats||state.processedCrops.length!==TOTAL)return null;
+    const norm=state.normalizationStats,usable=state.processedCrops.map((_,i)=>i).filter(i=>!norm.metrics[i]?.outlier);
+    const ids=usable.length?usable:state.processedCrops.map((_,i)=>i);
+    const profile=medianProfile(state.processedCrops,ids);
+    const neckWidth=median(ids.map(i=>state.processedCrops[i].anatomy.neckWidth||state.processedCrops[i].anatomy.width*.34));
+    let bestTrio=0,best=Infinity;
+    for(let col=0;col<7;col++){
+      const trio=[col,col+7,col+14],tw=trio.map(i=>state.processedCrops[i].anatomy.width),th=trio.map(i=>state.processedCrops[i].anatomy.height),tp=medianProfile(state.processedCrops,trio),pe=profileError(tp,profile);
+      const score=std(tw)/(mean(tw)||1)+std(th)/(mean(th)||1)+pe.total*1.5;
+      if(score<best){best=score;bestTrio=col;}
+    }
+    return {width:norm.globalW,height:norm.globalH,profile,neckWidth,referenceIndex:norm.referenceIndex,bestTrioCol:bestTrio,bestTrioName:EXPRESSIONS[bestTrio],usableCount:ids.length,stability:clamp(100-best*500,0,100)};
+  }
+
+  function renderHeadMasterUI(){
+    const m=state.headMaster;
+    if(!m){els.headMasterInfo.textContent='Aguardando os 21 rostos principais.';els.extraOverallScore.textContent='—';els.calibrateExtraBtn.disabled=true;return;}
+    els.headMasterInfo.textContent=`${Math.round(m.width)}×${Math.round(m.height)} px · melhor trio: ${m.bestTrioName} · ${m.usableCount}/21 usados · estabilidade ${m.stability.toFixed(0)}%`;
+    els.calibrateExtraBtn.disabled=state.busy||!state.extra.sourceImage;
+    if(!state.extra.compatibility)els.extraOverallScore.textContent='MASTER';
+  }
+
+  function calculateExtraCalibration(crops){
+    const master=state.headMaster;if(!master)throw new Error('Head Master ainda não foi construído.');
+    const widths=crops.map(c=>c.anatomy.width),heights=crops.map(c=>c.anatomy.height),neckWidths=crops.map(c=>c.anatomy.neckWidth||c.anatomy.width*.34);
+    const rawMedW=median(widths),rawMedH=median(heights),rawMadW=mad(widths,rawMedW),rawMadH=mad(heights,rawMedH);
+    let usable=crops.map((_,i)=>i).filter(i=>robustZ(widths[i],rawMedW,rawMadW,rawMedW*.012)<=3.5&&robustZ(heights[i],rawMedH,rawMadH,rawMedH*.012)<=3.5);
+    if(usable.length<12)usable=crops.map((_,i)=>i);
+    const medW=median(usable.map(i=>widths[i])),medH=median(usable.map(i=>heights[i])),medNeck=median(usable.map(i=>neckWidths[i])),extraProfile=medianProfile(crops,usable);
+    const trioTargets=Array.from({length:7},(_,col)=>{const ids=[col,col+7,col+14].filter(i=>usable.includes(i));const use=ids.length>=2?ids:[col,col+7,col+14];return{w:median(use.map(i=>widths[i])),h:median(use.map(i=>heights[i])),profile:medianProfile(crops,use)};});
+    const globalMax=Number(els.extraGlobalMax.value)/100,microMax=Number(els.extraMicroMax.value)/100;
+    const rawGX=master.width/Math.max(1,medW),rawGY=master.height/Math.max(1,medH);
+    const globalScaleX=clamp(rawGX,1-globalMax,1+globalMax),globalScaleY=clamp(rawGY,1-globalMax,1+globalMax);
+    const pAll=profileError(extraProfile,master.profile),pJaw=profileError(extraProfile,master.profile,.64,.90);
+    const sizeNeed=Math.max(Math.abs(Math.log(rawGX)),Math.abs(Math.log(rawGY)));
+    const propNeed=Math.abs(Math.log(Math.max(.001,(medW/medH)/(master.width/master.height))));
+    const neckNeed=Math.abs(Math.log(Math.max(.001,(medNeck/medW)/(master.neckWidth/master.width))));
+    const scores={
+      size:Math.round(clamp(100-sizeNeed*600,0,100)),
+      proportion:Math.round(clamp(100-propNeed*900,0,100)),
+      silhouette:Math.round(clamp(100-pAll.total*900,0,100)),
+      jaw:Math.round(clamp(100-pJaw.total*1000,0,100)),
+      neck:Math.round(clamp(100-neckNeed*900,0,100))
+    };
+    const overall=Math.round(scores.size*.18+scores.proportion*.18+scores.silhouette*.30+scores.jaw*.18+scores.neck*.16);
+    const status=overall>=95?'Excelente':overall>=90?'Muito bom':overall>=82?'Aceitável':overall>=70?'Revisar':'Incompatível';
+    const corrections=crops.map((c,i)=>{
+      const trio=trioTargets[i%7];
+      const microRawX=trio.w/Math.max(1,c.anatomy.width),microRawY=trio.h/Math.max(1,c.anatomy.height);
+      const microX=clamp(microRawX,1-microMax,1+microMax),microY=clamp(microRawY,1-microMax,1+microMax);
+      const scaleX=globalScaleX*microX,scaleY=globalScaleY*microY;
+      let err=0,centerErr=0,valid=0;
+      for(let j=0;j<32;j++){
+        const cur=c.anatomy.headProfile?.[j],tar=master.profile?.[j];
+        if(!cur||!tar) continue;
+        err+=Math.abs(Math.log(Math.max(.001,cur.widthNorm/tar.widthNorm)));
+        centerErr+=Math.abs(cur.centerOffset-tar.centerOffset);
+        valid++;
+      }
+      const shapeMismatch=valid?err/valid:1,centerMismatch=valid?centerErr/valid:1;
+      const indivMicro=Math.max(Math.abs(microRawX-1),Math.abs(microRawY-1));
+      const score=Math.round(clamp(overall-shapeMismatch*260-centerMismatch*90-indivMicro*400,0,100));
+      const critical=overall<70||score<60||indivMicro>Math.max(.06,microMax*3.2)||sizeNeed>globalMax*2.2;
+      return {scaleX,scaleY,rawX:rawGX*microRawX,rawY:rawGY*microRawY,shapeRows:[],maxShapeApplied:0,shapeMismatch,centerMismatch,microRawX,microRawY,score,critical,warning:critical||score<85};
+    });
+    const outlierIndices=crops.map((_,i)=>i).filter(i=>!usable.includes(i));
+    return {medW,medH,medNeck,extraProfile,trioTargets,rawGX,rawGY,globalScaleX,globalScaleY,globalMax,microMax,scores,overall,status,corrections,outlierIndices,usableCount:usable.length};
+  }
+
+  async function buildExtraOutputs(){
+    if(state.busy||!state.extra.sourceImage)return;
+    if(!state.headMaster){setMessage('Gere primeiro as 21 expressões principais para criar o Head Master.','warn');return;}
+    const names=state.extra.names.map((n,i)=>sanitizeExpressionName(n,i));
+    const baseNames=new Set(Array.from({length:TOTAL},(_,i)=>filenameFor(i).replace(/\.png$/,'')));
+    const dup=names.find((n,i)=>baseNames.has(n)||names.indexOf(n)!==i);
+    if(dup){setMessage(`Nome de expressão extra duplicado ou conflitante: ${dup}.`,'error');return;}
+    state.extra.names=names;
+    document.querySelectorAll('[data-extra-name]').forEach((input,i)=>input.value=names[i]);
+    {
+      const det=detectExtraSubjects();if(!det.ok){setMessage(det.reason,'error');return;}
+      state.extra.cells=det.cells;state.extra.detection=det;els.extraStatus.textContent=`21/21 · ${(det.confidence*100).toFixed(0)}%`;
+    }
+    setBusy(true);invalidateExtraOutputs(false);const build=++state.extra.buildId;
+    try{
+      const crops=[];
+      for(let i=0;i<EXTRA_TOTAL;i++){
+        setProgress((i/EXTRA_TOTAL)*45,`Preparando ${extraFilename(i)} (${i+1}/${EXTRA_TOTAL})…`);await nextFrame();if(build!==state.extra.buildId)throw new Error('Calibração extra cancelada.');
+        const keyed=removeBackgroundFromCanvasCrop(state.extra.sourceCanvas,state.extra.bgRgb,state.extra.cells[i]);cleanupExtraEdgeResidue(keyed,state.extra.bgRgb);
+        if(countAlphaPixels(keyed)<25)throw new Error(`${extraFilename(i)} ficou vazio após o chroma key.`);
+        let crop=keyed;if(els.autoTightCrop.checked){const r=cropToVisibleContent(keyed,Number(els.contentPadding.value),els.squareCrop.checked);crop=r.canvas;if(crop!==keyed){keyed.width=1;keyed.height=1;}}
+        const anatomy=analyzeMainComponent(crop);if(!anatomy)throw new Error(`${extraFilename(i)} não possui silhueta estrutural confiável.`);
+        crops.push({canvas:crop,width:crop.width,height:crop.height,alphaPixels:countAlphaPixels(crop),anatomy});
+      }
+      state.extra.crops=crops;
+      const cal=calculateExtraCalibration(crops);state.extra.calibration=cal;state.extra.compatibility=cal;
+      const after=[],before=[];
+      for(let i=0;i<EXTRA_TOTAL;i++){
+        setProgress(45+(i/EXTRA_TOTAL)*50,`Calibrando ${extraFilename(i)} (${i+1}/${EXTRA_TOTAL})…`);await nextFrame();
+        const rawPlaced=placeOnFinalCanvas(crops[i].canvas,crops[i].anatomy,{scaleX:1,scaleY:1,shapeRows:[]},crops[i].anatomy.height,blankManualAdjustment());
+        const beforeBlob=await canvasToBlob(rawPlaced.canvas);before.push({name:extraFilename(i),blob:beforeBlob,width:rawPlaced.canvas.width,height:rawPlaced.canvas.height});rawPlaced.canvas.width=1;rawPlaced.canvas.height=1;
+        const corr=cal.corrections[i],placed=placeOnFinalCanvas(crops[i].canvas,crops[i].anatomy,corr,state.headMaster.height,blankManualAdjustment()),blob=await canvasToBlob(placed.canvas);
+        after.push({name:extraFilename(i),blob,width:placed.canvas.width,height:placed.canvas.height,score:corr.score,critical:corr.critical,warning:corr.warning,normalization:corr,anatomy:crops[i].anatomy});placed.canvas.width=1;placed.canvas.height=1;
+      }
+      state.extra.beforeOutputs=before;state.extra.outputs=after;state.extra.beforeUrls=before.map(o=>URL.createObjectURL(o.blob));state.extra.urls=after.map(o=>URL.createObjectURL(o.blob));state.extra.selected=0;
+      renderPreviewGrid();renderExtraPreviewGrid();renderExtraComparison(0);renderCompatibilityGrid();renderHeadMasterUI();updateExportGuard();els.extraStatus.textContent=`21/21 · calibrados · ${cal.overall}%`;
+      const crit=extraCriticalCount();setProgress(100,'21 rostos extras calibrados.');
+      if(crit)setMessage(`Folha 2 calibrada, mas ${crit} rosto(s) ficaram críticos. Compatibilidade geral: ${cal.overall}% (${cal.status}). Ajuste a geração ou remova a Folha 2 antes de exportar.`,'error');
+      else setMessage(`Folha 2 calibrada contra o Head Master. Os sete trios aberto/blink/talk foram estabilizados internamente. Na V11.1, a Folha 2 usa apenas ajuste de largura (X) e altura (Y), sem distorção por silhueta. Compatibilidade: ${cal.overall}% (${cal.status}). Correção global X ${(cal.globalScaleX*100).toFixed(2)}% · Y ${(cal.globalScaleY*100).toFixed(2)}%.`,cal.overall>=90?'ok':'warn');
+    }catch(err){console.error(err);invalidateExtraOutputs(false);setMessage(`Falha ao calibrar a Folha 2: ${err.message}`,'error');}
+    finally{setTimeout(hideProgress,350);setBusy(false);}
+  }
+
+  function renderExtraPreviewGrid(){
+    if(!els.extraPreviewGrid)return;els.extraPreviewGrid.innerHTML='';
+    for(let i=0;i<EXTRA_TOTAL;i++){
+      const card=document.createElement('article');card.className='extra-preview-card'+(state.extra.selected===i?' selected':'');
+      const url=state.extra.urls[i],out=state.extra.outputs[i];card.innerHTML=url?`<img src="${url}" alt="${extraFilename(i)}"><div class="card-info"><div class="file-name">${extraFilename(i)}</div><div class="meta"><span>score ${out.score}%</span><span class="${out.critical?'tag-warn':'tag-ok'}">${out.critical?'crítico':'calibrado'}</span></div></div>`:`<div class="thumb"><span class="placeholder">${Math.floor(i/7)+1}×${i%7+1}</span></div><div class="card-info"><div class="file-name">${extraFilename(i)}</div></div>`;
+      card.addEventListener('click',()=>{stopExtraFlicker();renderExtraComparison(i);});els.extraPreviewGrid.appendChild(card);
+    }
+  }
+
+  function renderCompatibilityGrid(){
+    const c=state.extra.compatibility;if(!c){els.compatibilityGrid.innerHTML='<div class="compat-card"><b>Tamanho</b><span>—</span></div><div class="compat-card"><b>Proporção</b><span>—</span></div><div class="compat-card"><b>Silhueta</b><span>—</span></div><div class="compat-card"><b>Mandíbula</b><span>—</span></div><div class="compat-card"><b>Pescoço</b><span>—</span></div><div class="compat-card"><b>Status</b><span>—</span></div>';return;}
+    const items=[['Tamanho',c.scores.size],['Proporção',c.scores.proportion],['Silhueta',c.scores.silhouette],['Mandíbula',c.scores.jaw],['Pescoço',c.scores.neck]];
+    els.compatibilityGrid.innerHTML=items.map(([n,v])=>`<div class="compat-card"><b>${n}</b><span>${v}%</span><div class="compat-bar"><span style="width:${v}%"></span></div></div>`).join('')+`<div class="compat-card"><b>Status</b><span>${c.status}</span></div>`;
+    els.extraOverallScore.textContent=`${c.overall}%`;els.extraTransformInfo.textContent=`Folha 2 → Master: X ${(c.globalScaleX*100).toFixed(2)}% · Y ${(c.globalScaleY*100).toFixed(2)}% · limite global ±${(c.globalMax*100).toFixed(1)}% · micro ±${(c.microMax*100).toFixed(1)}% · ${c.usableCount}/21 usadas na média · ${c.outlierIndices.length} outlier(s)`;
+  }
+
+  async function drawExtraContours(index){
+    const master=state.outputs[state.headMaster?.referenceIndex??0],extra=state.extra.outputs[index];if(!master||!extra)return;
+    const [bm,be]=await Promise.all([createImageBitmap(master.blob),createImageBitmap(extra.blob)]);const c=els.extraContourCanvas,W=960,H=540;c.width=W;c.height=H;const ctx=c.getContext('2d',{willReadFrequently:true});
+    const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;const t=tmp.getContext('2d',{willReadFrequently:true});
+    const edge=(bitmap)=>{t.clearRect(0,0,W,H);t.drawImage(bitmap,0,0,W,H);const d=t.getImageData(0,0,W,H).data,m=new Uint8Array(W*H),e=new Uint8Array(W*H);for(let i=0;i<m.length;i++)m[i]=d[i*4+3]>30?1:0;for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;if(m[i]&&(!m[i-1]||!m[i+1]||!m[i-W]||!m[i+W]))e[i]=1;}return e;};
+    const a=edge(bm),b=edge(be);bm.close?.();be.close?.();ctx.clearRect(0,0,W,H);const img=ctx.createImageData(W,H);for(let i=0;i<a.length;i++){const o=i*4;if(a[i]){img.data[o]=255;img.data[o+1]=47;img.data[o+2]=146;img.data[o+3]=220;}if(b[i]){if(a[i]){img.data[o]=20;img.data[o+1]=20;img.data[o+2]=20;img.data[o+3]=255;}else{img.data[o]=0;img.data[o+1]=0;img.data[o+2]=0;img.data[o+3]=220;}}}ctx.putImageData(img,0,0);
+  }
+
+  function stopExtraFlicker(){if(state.extra.flickerTimer){clearInterval(state.extra.flickerTimer);state.extra.flickerTimer=null;}state.extra.flickerPhase=false;if(els.extraFlicker)els.extraFlicker.textContent='▶ Flicker';}
+  function toggleExtraFlicker(){
+    if(state.extra.flickerTimer){stopExtraFlicker();renderExtraComparison(state.extra.selected);return;}if(state.extra.outputs.length!==EXTRA_TOTAL)return;
+    els.extraCompareMode.value='ghost';els.extraFlicker.textContent='■ Parar';state.extra.flickerTimer=setInterval(()=>{state.extra.flickerPhase=!state.extra.flickerPhase;els.extraMasterImage.hidden=state.extra.flickerPhase;els.extraAfterImage.hidden=!state.extra.flickerPhase;},170);
+  }
+
+  function renderExtraComparison(index=state.extra.selected){
+    if(!els.extraStage)return;index=clamp(index,0,EXTRA_TOTAL-1);state.extra.selected=index;[...els.extraPreviewGrid.children].forEach((el,i)=>el.classList.toggle('selected',i===index));
+    stopExtraFlicker();const ready=state.extra.outputs.length===EXTRA_TOTAL&&state.headMaster;if(!ready){els.extraMasterImage.hidden=els.extraBeforeImage.hidden=els.extraAfterImage.hidden=els.extraContourCanvas.hidden=true;els.extraStageEmpty.hidden=false;renderCompatibilityGrid();return;}
+    els.extraStageEmpty.hidden=true;els.extraMasterImage.src=state.previewUrls[state.headMaster.referenceIndex]||'';els.extraBeforeImage.src=state.extra.beforeUrls[index]||'';els.extraAfterImage.src=state.extra.urls[index]||'';
+    els.extraMasterImage.hidden=els.extraBeforeImage.hidden=els.extraAfterImage.hidden=els.extraContourCanvas.hidden=true;
+    const mode=els.extraCompareMode.value;
+    if(mode==='before')els.extraBeforeImage.hidden=false;else if(mode==='after')els.extraAfterImage.hidden=false;else if(mode==='ghost'){els.extraMasterImage.hidden=false;els.extraAfterImage.hidden=false;}else if(mode==='contour'){els.extraContourCanvas.hidden=false;drawExtraContours(index);}
+    els.extraPrev.disabled=els.extraNext.disabled=els.extraFlicker.disabled=false;renderCompatibilityGrid();
+  }
+
+
+  function onConfigChanged(message='Configuração alterada. Gere novamente as prévias.') { if(state.sourceImage) invalidateOutputs(message); }
+
+  els.fileInput.addEventListener('change',e=>loadImageFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev=>els.dropZone.addEventListener(ev,e=>{e.preventDefault();els.dropZone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>els.dropZone.addEventListener(ev,e=>{e.preventDefault();els.dropZone.classList.remove('drag');}));
+  els.dropZone.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadImageFile(f);});
+  els.extraFileInput.addEventListener('change',e=>loadExtraFile(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev=>els.extraDropZone.addEventListener(ev,e=>{e.preventDefault();els.extraDropZone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>els.extraDropZone.addEventListener(ev,e=>{e.preventDefault();els.extraDropZone.classList.remove('drag');}));
+  els.extraDropZone.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)loadExtraFile(f);});
+  els.calibrateExtraBtn.addEventListener('click',buildExtraOutputs);
+  els.removeExtraBtn.addEventListener('click',()=>{invalidateExtraOutputs(true);els.extraStatus.textContent='Opcional';els.extraFileInput.value='';els.removeExtraBtn.disabled=true;setMessage('Folha 2 removida. A exportação voltou ao modelo base de 21 PNGs.','ok');});
+  els.detectBtn.addEventListener('click',autoDetect);els.gridBtn.addEventListener('click',applyGrid);els.resetBtn.addEventListener('click',restoreDetection);
+  els.buildBtn.addEventListener('click',buildOutputs);els.downloadBtn.addEventListener('click',saveFolder);
+  els.prevCellBtn.addEventListener('click',()=>selectCell(state.selected-1));els.nextCellBtn.addEventListener('click',()=>selectCell(state.selected+1));
+  els.pickBgBtn.addEventListener('click',()=>{if(!state.sourceImage)return;state.pickBackground=!state.pickBackground;els.pickBgBtn.textContent=state.pickBackground?'Cancelar seleção':'Selecionar cor na imagem';drawEditor();});
+  els.bgColor.addEventListener('input',()=>{state.bgRgb=hexToRgb(els.bgColor.value);els.autoBg.checked=false;onConfigChanged();});
+  els.autoBg.addEventListener('change',()=>{if(state.sourceImage&&els.autoBg.checked){state.bgRgb=estimateBackgroundFromCanvas(state.sourceCanvas);els.bgColor.value=rgbToHex(state.bgRgb);}onConfigChanged();});
+  [els.tolerance,els.feather,els.despill,els.edgeBand,els.contentPadding,els.faceHeight,els.centerX,els.baseY,els.normalizationStrength,els.globalStrength,els.maxCorrection,els.shapeStrength,els.maxShapeWarp,els.maxExternalCorrection].forEach(el=>el.addEventListener('input',()=>{updateRangeLabels();onConfigChanged();}));
+  [els.removeWhiteFrame,els.autoTightCrop,els.squareCrop,els.normalizeFaces,els.normalizeByTrio,els.excludeOutliers,els.protectExpressive,els.matchHeadShape,els.normalizationMode].forEach(el=>el.addEventListener('change',()=>onConfigChanged()));
+  [els.outWidth,els.outHeight].forEach(el=>el.addEventListener('change',()=>onConfigChanged()));
+  [els.extraGlobalMax,els.extraMicroMax].forEach(el=>el.addEventListener('input',()=>{updateRangeLabels();if(state.extra.sourceImage)invalidateExtraOutputs(false);}));
+  els.boxPadding.addEventListener('input',updateRangeLabels);
+  els.boxPadding.addEventListener('change',()=>{if(state.sourceImage&&state.detection.mode==='template-branco')autoDetect();});
+  els.folderName.addEventListener('blur',()=>els.folderName.value=sanitizeFolderName(els.folderName.value));
+  els.comparePrev.addEventListener('click',()=>{stopComparePlayback();stopAnimationTest();renderComparison(state.compareIndex-1);});
+  els.compareNext.addEventListener('click',()=>{stopComparePlayback();stopAnimationTest();renderComparison(state.compareIndex+1);});
+  els.comparePlay.addEventListener('click',()=>toggleComparePlayback('all'));
+  els.comparePlayBase.addEventListener('click',()=>toggleComparePlayback('base'));
+  els.comparePlayExtra.addEventListener('click',()=>toggleComparePlayback('extra'));
+  els.animationTest.addEventListener('click',toggleAnimationTest);
+  els.compareMode.addEventListener('change',()=>renderComparison(state.compareIndex));
+  els.ghostReference.addEventListener('change',()=>renderComparison(state.compareIndex));
+  els.compareSpeed.addEventListener('input',()=>{if(state.compareTimer){stopComparePlayback();toggleComparePlayback('all');}if(state.animationTimer){stopAnimationTest();toggleAnimationTest();}});
+  els.applyManual.addEventListener('click',applyManualAdjustment);
+  els.resetManual.addEventListener('click',resetManualAdjustment);
+  els.copyManualTrio.addEventListener('click',copyManualToTrio);
+  els.manualReviewed.addEventListener('change',()=>{if(!state.outputs.length||state.compareIndex>=TOTAL)return;state.manualReviewed[state.compareIndex]=els.manualReviewed.checked;renderPreviewGrid();renderQualityLine(state.outputs[state.compareIndex],state.compareIndex,'base');renderNormalizationSummary();updateExportGuard();});
+  els.extraPrev.addEventListener('click',()=>renderExtraComparison((state.extra.selected+EXTRA_TOTAL-1)%EXTRA_TOTAL));
+  els.extraNext.addEventListener('click',()=>renderExtraComparison((state.extra.selected+1)%EXTRA_TOTAL));
+  els.extraFlicker.addEventListener('click',toggleExtraFlicker);
+  els.extraCompareMode.addEventListener('change',()=>renderExtraComparison(state.extra.selected));
+  els.helpBtn.addEventListener('click',()=>els.helpModal.classList.add('show'));els.closeHelpBtn.addEventListener('click',()=>els.helpModal.classList.remove('show'));
+  els.helpModal.addEventListener('click',e=>{if(e.target===els.helpModal)els.helpModal.classList.remove('show');});
+  window.addEventListener('resize',()=>{clearTimeout(window.__resizeTimer);window.__resizeTimer=setTimeout(resizeEditorCanvas,100);});
+
+  updateRangeLabels();renderPreviewGrid();renderNormalizationSummary();renderManualEditor();renderExtraPreviewGrid();renderHeadMasterUI();renderCompatibilityGrid();
+})();
+</script>
+</body>
+</html>

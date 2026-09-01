@@ -693,6 +693,17 @@ async function route(request, response) {
     sendJson(response, request, 200, await discoverModels());
     return;
   }
+  const modelDeleteMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})$/i);
+  if (modelDeleteMatch && request.method === "DELETE") {
+    const gender = modelDeleteMatch[1].toLowerCase();
+    const modelId = safeId(modelDeleteMatch[2]);
+    const folder = join(MODELS_ROOT, gender, modelId);
+    if (!inside(join(MODELS_ROOT, gender), folder)) throw Object.assign(new Error("Modelo inválido."), { status: 400 });
+    try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
+    await rm(folder, { recursive: true, force: false });
+    sendJson(response, request, 200, { ok: true, gender, id: modelId });
+    return;
+  }
   if (request.method === "POST" && url.pathname === "/models/fabricator") {
     const body = await requestJson(request);
     const gender = body?.gender === "masculino" || body?.gender === "feminino" ? body.gender : null;

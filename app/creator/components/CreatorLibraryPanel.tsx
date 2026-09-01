@@ -18,9 +18,10 @@ type CreatorLibraryPanelProps = {
   onOpenCharacter: (character: Character) => void;
   onRemoveCharacter: (id: string) => void;
   onNewCharacter: () => void;
+  onRemoveModel: (modelId: string) => void;
 };
 
-export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, generatingPhoto, getPackName, onGeneratePhoto, onNameChange, onChangeModel, onMigrate, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
+export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, generatingPhoto, getPackName, onGeneratePhoto, onNameChange, onChangeModel, onMigrate, onOpenCharacter, onRemoveCharacter, onNewCharacter, onRemoveModel }: CreatorLibraryPanelProps) {
   return <aside className="sidebar left-panel">
     <div className="panel-heading">
       <div><span>MEUS PERSONAGENS</span><small>{characters.length} salvos</small></div>

@@ -138,6 +138,10 @@ export async function deleteExpressionPackFromPc(id: string) {
   await pcRequest(`/packs/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+export async function deleteBaseModelFromPc(gender: Model, id: string) {
+  await pcRequest(`/models/modelos/${encodeURIComponent(gender)}/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
 /**
  * Hydrates local assets without opening hundreds of image requests at once.
  * A small fixed concurrency keeps startup responsive and avoids a large
