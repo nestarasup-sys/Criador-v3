@@ -6,6 +6,13 @@ export type HeadMeasurement = {
   width: number;
   height: number;
   centerX: number;
+  contour?: HeadContourRow[];
+};
+
+export type HeadContourRow = {
+  y: number;
+  left: number;
+  right: number;
 };
 
 export type HeadFitResult = {
@@ -107,6 +114,11 @@ export function measureHeadSilhouette(
   }
   if (right < left || bottom < top) return null;
 
+  const contour = rows
+    .slice(0, neckIndex >= 0 ? neckIndex + 1 : rows.length)
+    .filter((row) => row.width > 0)
+    .map((row, index) => ({ y: contentTop + index, left: row.left, right: row.right }));
+
   return {
     left,
     right,
@@ -115,7 +127,24 @@ export function measureHeadSilhouette(
     width: Math.max(1, right - left + 1),
     height: Math.max(1, bottom - top + 1),
     centerX: (left + right) / 2,
+    contour,
   };
+}
+
+export function headContourPolygon(measurement: HeadMeasurement) {
+  const rows = measurement.contour?.filter((row) => row.right >= row.left) ?? [];
+  if (rows.length < 2) {
+    return [
+      { x: measurement.left, y: measurement.top },
+      { x: measurement.right, y: measurement.top },
+      { x: measurement.right, y: measurement.bottom },
+      { x: measurement.left, y: measurement.bottom },
+    ];
+  }
+  return [
+    ...rows.map((row) => ({ x: row.left, y: row.y })),
+    ...rows.slice().reverse().map((row) => ({ x: row.right, y: row.y })),
+  ];
 }
 
 function clamp(value: number, minimum: number, maximum: number) {
@@ -178,5 +207,10 @@ export function projectHeadMeasurement(
     width: Math.max(1, right - left),
     height: Math.max(1, Math.abs(projectY(source.bottom) - projectY(source.top))),
     centerX: (left + right) / 2,
+    contour: source.contour?.map((row) => ({
+      y: projectY(row.y),
+      left: Math.min(projectX(row.left), projectX(row.right)),
+      right: Math.max(projectX(row.left), projectX(row.right)),
+    })),
   };
 }

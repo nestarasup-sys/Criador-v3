@@ -21,6 +21,7 @@ export type MaskStroke = {
   mode: "erase" | "restore";
   size: number;
   points: MaskPoint[];
+  shape?: "polygon";
 };
 
 export type StoredLayerMasks = Partial<

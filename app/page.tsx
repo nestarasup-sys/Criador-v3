@@ -8,7 +8,7 @@ import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBou
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
-import { calculateHeadFit, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
+import { calculateHeadFit, headContourPolygon, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
 import type { HeadMeasurement } from "./creator/head-fit";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
@@ -710,11 +710,20 @@ async function prepareOutfitCatalogImages(
 function paintMaskStroke(context: CanvasRenderingContext2D, stroke: MaskStroke, color: string) {
   if (stroke.points.length === 0) return;
   context.save();
+  context.fillStyle = color;
+  if (stroke.shape === "polygon" && stroke.points.length >= 3) {
+    context.beginPath();
+    context.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (const point of stroke.points.slice(1)) context.lineTo(point.x, point.y);
+    context.closePath();
+    context.fill();
+    context.restore();
+    return;
+  }
   context.lineCap = "round";
   context.lineJoin = "round";
   context.lineWidth = stroke.size;
   context.strokeStyle = color;
-  context.fillStyle = color;
   context.beginPath();
   context.moveTo(stroke.points[0].x, stroke.points[0].y);
   for (const point of stroke.points.slice(1)) context.lineTo(point.x, point.y);
@@ -3064,6 +3073,88 @@ export default function Home() {
     }
   }
 
+  async function eraseSelectedOutfitHead() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    setIsProcessing(true);
+    setNotice("Delimitando a cabeça do modelo e preparando a borracha…");
+    try {
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
+      if (!baseImage) throw new Error("Modelo selecionado indisponível");
+
+      const referenceCanvas = document.createElement("canvas");
+      referenceCanvas.width = 1920;
+      referenceCanvas.height = 1080;
+      const referenceContext = referenceCanvas.getContext("2d", { willReadFrequently: true });
+      if (!referenceContext) throw new Error("Canvas do modelo indisponível");
+      const sourceWidth = baseImage.naturalWidth || referenceCanvas.width;
+      const sourceHeight = baseImage.naturalHeight || referenceCanvas.height;
+      const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
+      if (headOnly) {
+        const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
+        const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
+        const targetAnchorX = activeBasePack.anchorX ?? referenceCanvas.width / 2;
+        const targetAnchorY = activeBasePack.anchorY ?? referenceCanvas.height;
+        referenceContext.drawImage(baseImage, targetAnchorX - sourceAnchorX, targetAnchorY - sourceAnchorY, sourceWidth, sourceHeight);
+      } else {
+        referenceContext.drawImage(baseImage, 0, 0, referenceCanvas.width, referenceCanvas.height);
+      }
+      const referencePixels = referenceContext.getImageData(0, 0, referenceCanvas.width, referenceCanvas.height);
+      const targetHead = measureHeadSilhouette(
+        referencePixels.data,
+        referenceCanvas.width,
+        referenceCanvas.height,
+        headOnly ? 0.86 : 0.46,
+        false,
+      );
+      if (!targetHead?.contour?.length) {
+        throw new Error("Não foi possível identificar com segurança a linha entre a cabeça e o pescoço deste modelo.");
+      }
+
+      const automaticHeadMask: MaskStroke = {
+        id: crypto.randomUUID(),
+        mode: "erase",
+        size: 1,
+        points: headContourPolygon(targetHead),
+        shape: "polygon",
+      };
+      const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
+      const nextMask = [...layerMasks.outfit, automaticHeadMask];
+      setLayerMasks((current) => ({ ...current, outfit: [...current.outfit, automaticHeadMask] }));
+      setOutfitLayerMasksByBasePack((current) => ({ ...current, [stateKey]: nextMask }));
+      setMaskRedo((current) => ({ ...current, outfit: [] }));
+      setMaskTarget("outfit");
+      setShowEraseMask(true);
+      setEraserMode(true);
+      setFitMode(false);
+      setPreviewPanMode(false);
+      setExportFrameMode(false);
+      setChromaMode(false);
+      setBrushCursor((current) => ({ ...current, visible: false }));
+      setNotice("A cabeça da roupa foi apagada; o pescoço e o corpo foram preservados. Você ainda pode refinar com a borracha.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível apagar automaticamente a cabeça da roupa");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   async function autoFrameCharacter() {
     setNotice("Calculando o enquadramento final…");
     try {
@@ -4165,15 +4256,26 @@ export default function Home() {
           <div className="stage-toolbar">
             <div><strong>Pré-visualização</strong><span>1920 × 1080 · fundo transparente</span></div>
             {category === "roupas" && selectedOutfit && (
-              <button
-                type="button"
-                className="head-fit-button"
-                onClick={() => { void adjustSelectedOutfitByHead(); }}
-                disabled={isProcessing}
-                title="Ajustar somente esta roupa no personagem e modelo selecionados"
-              >
-                {isProcessing ? "Ajustando…" : "Ajustar roupa"}
-              </button>
+              <div className="outfit-head-actions">
+                <button
+                  type="button"
+                  className="head-fit-button"
+                  onClick={() => { void adjustSelectedOutfitByHead(); }}
+                  disabled={isProcessing}
+                  title="Ajustar somente esta roupa no personagem e modelo selecionados"
+                >
+                  {isProcessing ? "Ajustando…" : "Ajustar roupa"}
+                </button>
+                <button
+                  type="button"
+                  className="head-erase-button"
+                  onClick={() => { void eraseSelectedOutfitHead(); }}
+                  disabled={isProcessing}
+                  title="Apagar somente a cabeça incluída na roupa, preservando o pescoço"
+                >
+                  {isProcessing ? "Preparando…" : "Apagar cabeça"}
+                </button>
+              </div>
             )}
             <div className="character-history-controls" aria-label="Histórico do personagem atual">
               <button
