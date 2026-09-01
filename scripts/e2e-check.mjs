@@ -35,7 +35,7 @@ try {
   await page.waitForFunction(() => document.body.innerText.includes("21 sprites gerados"), undefined, { timeout: 30_000 });
   assert.equal(await page.getByText("21/21", { exact: true }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Folha 1 (21)", exact: true }).isEnabled(), true);
-  assert.equal(await page.getByRole("button", { name: "Animar trio", exact: true }).isEnabled(), true);
+  assert.equal(await page.getByRole("button", { name: "Testar animação", exact: true }).isEnabled(), true);
 
   // Direct route loads are intentional here: Vinext's development HMR can
   // emit an unrelated duplicate-React warning during client-side <Link>
