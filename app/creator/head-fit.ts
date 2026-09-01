@@ -6,6 +6,12 @@ export type HeadMeasurement = {
   width: number;
   height: number;
   centerX: number;
+  /** Medidas da faixa estável do pescoço, quando ela foi detectada. */
+  neckLeft?: number;
+  neckRight?: number;
+  neckWidth?: number;
+  neckCenterX?: number;
+  neckY?: number;
   contour?: HeadContourRow[];
 };
 
@@ -62,7 +68,7 @@ export function measureHeadSilhouette(
   // full-body clothing than treating an arbitrary percentage of the image as
   // the head. Small antialiased gaps are tolerated by looking at neighboring
   // rows while keeping the original pixel positions.
-  const rows: Array<{ left: number; right: number; width: number }> = [];
+  const rows: Array<{ y: number; left: number; right: number; width: number }> = [];
   for (let y = contentTop; y <= visibleLimit; y += 1) {
     let left = width;
     let right = -1;
@@ -71,7 +77,7 @@ export function measureHeadSilhouette(
       left = Math.min(left, x);
       right = Math.max(right, x);
     }
-    rows.push({ left, right, width: right >= left ? right - left + 1 : 0 });
+    rows.push({ y, left, right, width: right >= left ? right - left + 1 : 0 });
   }
   if (rows.every((row) => row.width <= 0)) return null;
   // Find the head's widest point before the shoulders can inflate the
@@ -150,6 +156,26 @@ export function measureHeadSilhouette(
     .filter((row) => row.width > 0)
     .map((row, index) => ({ y: contentTop + index, left: row.left, right: row.right }));
 
+  // A largura total da cabeça não é uma referência confiável para roupas:
+  // dois modelos podem ter o mesmo crânio, mas pescoços de larguras
+  // diferentes. Use a faixa estreita e estável encontrada após a curva do
+  // queixo. A mediana evita que uma linha antialiasada ou uma sombra isolada
+  // altere o scaleX.
+  const neckRows = neckIndex >= 0
+    ? rows.slice(neckIndex, Math.min(rows.length, neckIndex + 9)).filter((row) => row.width > 0)
+    : [];
+  const neckLeft = neckRows.length >= 3 ? median(neckRows.map((row) => row.left)) : undefined;
+  const neckRight = neckRows.length >= 3 ? median(neckRows.map((row) => row.right)) : undefined;
+  const neckWidth = neckLeft !== undefined && neckRight !== undefined
+    ? Math.max(1, neckRight - neckLeft + 1)
+    : undefined;
+  const neckCenterX = neckLeft !== undefined && neckRight !== undefined
+    ? (neckLeft + neckRight) / 2
+    : undefined;
+  const neckY = neckRows.length >= 3
+    ? median(neckRows.map((row) => row.y))
+    : undefined;
+
   return {
     left,
     right,
@@ -158,8 +184,20 @@ export function measureHeadSilhouette(
     width: Math.max(1, right - left + 1),
     height: Math.max(1, bottom - top + 1),
     centerX: (left + right) / 2,
+    ...(neckLeft !== undefined && neckRight !== undefined && neckWidth !== undefined && neckCenterX !== undefined
+      ? { neckLeft, neckRight, neckWidth, neckCenterX, neckY }
+      : {}),
     contour,
   };
+}
+
+function median(values: number[]) {
+  if (!values.length) return 0;
+  const sorted = values.slice().sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
 }
 
 export function headContourPolygon(measurement: HeadMeasurement) {
@@ -185,9 +223,9 @@ function clamp(value: number, minimum: number, maximum: number) {
 /**
  * Calculates the transform used by Creator's renderer. The target is in the
  * final 1920×1080 scene; the source point is in the item's native image.
- * The two horizontal sides and the uppermost head point are the anchors. The
- * lower head/neck point remains useful for measuring height and showing a
- * guide, but it is not used as a hard anchor because clothing necklines vary.
+ * The neck width/center and the uppermost head point are the anchors. The
+ * neck is the horizontal reference for scaleX; the upper point remains the
+ * vertical reference for scaleY and top alignment.
  */
 export function calculateHeadFit(
   source: HeadMeasurement,
@@ -195,11 +233,18 @@ export function calculateHeadFit(
   item: { width: number; height: number; defaultX?: number; defaultY?: number },
   targetAnchor?: { x?: number; y?: number },
 ): HeadFitResult {
-  const scaleX = clamp(target.width / source.width, 0.35, 2.4);
+  const scaleX = clamp(
+    target.neckWidth && source.neckWidth
+      ? target.neckWidth / source.neckWidth
+      : target.width / source.width,
+    0.35,
+    2.4,
+  );
   const scaleY = clamp(target.height / source.height, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
-  const targetCenterX = targetAnchor?.x ?? target.centerX;
+  const targetCenterX = targetAnchor?.x ?? target.neckCenterX ?? target.centerX;
+  const sourceCenterX = source.neckCenterX ?? source.centerX;
   const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.
@@ -209,7 +254,7 @@ export function calculateHeadFit(
     scaleY: +scaleY.toFixed(4),
     scale: 1,
     x: +(
-      targetCenterX - (centerX - item.width / 2 * scaleX + source.centerX * scaleX)
+      targetCenterX - (centerX - item.width / 2 * scaleX + sourceCenterX * scaleX)
     ).toFixed(2),
     y: +(
       targetTopY - (centerY - item.height / 2 * scaleY + source.top * scaleY)
@@ -230,6 +275,8 @@ export function projectHeadMeasurement(
   const projectY = (value: number) => centerY + transform.y + (value - item.height / 2) * scaleY;
   const left = Math.min(projectX(source.left), projectX(source.right));
   const right = Math.max(projectX(source.left), projectX(source.right));
+  const neckLeft = source.neckLeft === undefined ? undefined : projectX(source.neckLeft);
+  const neckRight = source.neckRight === undefined ? undefined : projectX(source.neckRight);
   return {
     left,
     right,
@@ -238,6 +285,15 @@ export function projectHeadMeasurement(
     width: Math.max(1, right - left),
     height: Math.max(1, Math.abs(projectY(source.bottom) - projectY(source.top))),
     centerX: (left + right) / 2,
+    ...(neckLeft !== undefined && neckRight !== undefined && source.neckY !== undefined
+      ? {
+          neckLeft: Math.min(neckLeft, neckRight),
+          neckRight: Math.max(neckLeft, neckRight),
+          neckWidth: Math.max(1, Math.abs(neckRight - neckLeft)),
+          neckCenterX: (neckLeft + neckRight) / 2,
+          neckY: projectY(source.neckY),
+        }
+      : {}),
     contour: source.contour?.map((row) => ({
       y: projectY(row.y),
       left: Math.min(projectX(row.left), projectX(row.right)),

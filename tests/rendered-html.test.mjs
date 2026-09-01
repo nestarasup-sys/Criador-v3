@@ -675,6 +675,10 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /outfitLayerMasksByBasePack/);
   assert.match(page, /outfitProtectionMasksByBasePack/);
   assert.match(page, /outfitStateKey\(item\.id, basePackId\)/);
+  const headFit = await readFile(new URL("../app/creator/head-fit.ts", import.meta.url), "utf8");
+  assert.match(headFit, /neckWidth/);
+  assert.match(headFit, /target\.neckWidth && source\.neckWidth/);
+  assert.match(headFit, /target\.neckCenterX \?\? target\.centerX/);
   assert.match(page, /function applyStandardOutfitAdjustment\(\)/);
   assert.match(page, /Ajustar para padrão/);
   assert.match(page, /standardItem\.id === selectedOutfit\.id/);

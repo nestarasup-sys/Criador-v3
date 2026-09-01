@@ -4707,8 +4707,8 @@ export default function Home() {
                 {category === "roupas" && selectedOutfit && headFitGuide && (
                   <>
                     <div className="head-fit-guide-summary">
-                      <span><i className="head-fit-swatch model" />Modelo: {Math.round(headFitGuide.target.width)} px · topo {Math.round(headFitTargetTopY ?? headFitGuide.target.top)} px</span>
-                      <span><i className="head-fit-swatch outfit" />Roupa: {Math.round(projectedHeadFit?.width ?? 0)} px · topo {Math.round(projectedHeadFit?.top ?? 0)} px</span>
+                      <span><i className="head-fit-swatch model" />Modelo: pescoço {Math.round(headFitGuide.target.neckWidth ?? headFitGuide.target.width)} px · topo {Math.round(headFitTargetTopY ?? headFitGuide.target.top)} px</span>
+                      <span><i className="head-fit-swatch outfit" />Roupa: pescoço {Math.round(projectedHeadFit?.neckWidth ?? projectedHeadFit?.width ?? 0)} px · topo {Math.round(projectedHeadFit?.top ?? 0)} px</span>
                     </div>
                     <div className="head-fit-fine-controls">
                       <span className="head-fit-control-title">Ajuste fino</span>
