@@ -22,6 +22,8 @@ try {
   await page.goto(`${baseURL}/Ferramentas/fabricador-de-modelo`, { waitUntil: "domcontentloaded", timeout: 30_000 });
   await waitForImages(page);
   await assertVisible(page.getByRole("heading", { name: "Fabricador de Modelo" }));
+  await assertVisible(page.getByRole("banner"));
+  await assertVisible(page.getByRole("banner").getByText("FERRAMENTAS", { exact: true }));
   await assertVisible(page.getByRole("button", { name: "Gerar prévias" }));
   assert.equal(await page.getByText("21 + 21", { exact: true }).count(), 1);
   assert.equal(await page.getByRole("button", { name: "Salvar modelo no catálogo" }).isDisabled(), true);

@@ -3,7 +3,7 @@ import { ToolsTopbar } from "./components/ToolsTopbar";
 import styles from "./ferramentas.module.css";
 
 export default function FerramentasPage() {
-  return <div className={styles.page}><ToolsTopbar title="Ferramentas" subtitle="Utilitários para o seu fluxo de criação" backHref="/" /><main className={`${styles.main} ${styles.dashboardMain}`}>
+  return <div className={styles.page}><ToolsTopbar title="Ferramentas" subtitle="Utilitários para o seu fluxo de criação" backHref="/" brandLabel="Voltar para Personagens" /><main className={`${styles.main} ${styles.dashboardMain}`}>
     <div className={styles.breadcrumb}><span>Workspace</span><b>/</b><strong>Ferramentas</strong></div>
     <section className={`${styles.hero} ${styles.dashboardHero}`}><div><span className={styles.eyebrow}>Área independente</span><h1>Ferramentas</h1><p>Um espaço organizado para preparar assets e acelerar a produção sem misturar as ferramentas ao fluxo principal.</p></div><div className={styles.heroStat}><strong>01</strong><span>ferramenta disponível</span></div></section>
     <section className={styles.sectionIntro}><div><span className={styles.sectionLabel}>Seu workspace</span><h2>Escolha uma ferramenta</h2><p>Entre direto no utilitário que você precisa agora.</p></div><span className={styles.availability}><i /> Operacional</span></section>

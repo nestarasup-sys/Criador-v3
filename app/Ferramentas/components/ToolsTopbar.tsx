@@ -2,10 +2,10 @@ import Link from "next/link";
 import { NymiBrand, NymiNavigation } from "../../shared/NymiShell";
 import styles from "../ferramentas.module.css";
 
-export function ToolsTopbar({ title, subtitle, backHref = "/Ferramentas" }: { title: string; subtitle: string; backHref?: string }) {
+export function ToolsTopbar({ title, subtitle, backHref = "/Ferramentas", brandLabel = "Voltar para Ferramentas" }: { title: string; subtitle: string; backHref?: string; brandLabel?: string }) {
   return <header className={styles.topbar}>
     <div className={styles.topbarIdentity}>
-      <Link className={styles.topbarBrandLink} href={backHref} aria-label="Voltar para Ferramentas">
+      <Link className={styles.topbarBrandLink} href={backHref} aria-label={brandLabel}>
         <NymiBrand />
       </Link>
       <span className={styles.topbarDivider} aria-hidden="true" />
