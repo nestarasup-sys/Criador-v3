@@ -10,6 +10,8 @@ Ferramenta nativa para transformar uma folha de rostos em um modelo `head-only` 
 4. Revise a grade, selecione um rosto, compare o trio de estados e faça ajustes manuais quando necessário.
 5. Clique em **Salvar modelo no catálogo**.
 
+O painel de calibração permite ajustar a intensidade e os limites da Folha 1, os limites global/micro da Folha 2, tolerância, suavidade, feather, despill, limpeza de borda, padding, recorte justo, recorte quadrado e a âncora final. Os valores seguros já vêm preenchidos; alterar as opções exige gerar as prévias novamente.
+
 O modelo é salvo em `public/models/modelos/{gênero}/{pasta}` pelo servidor local. A operação nunca sobrescreve uma pasta existente.
 
 ## Regras de processamento
@@ -22,7 +24,7 @@ O modelo é salvo em `public/models/modelos/{gênero}/{pasta}` pelo servidor loc
 - A Folha 1 constrói um Head Master robusto com mediana, MAD, outliers, perfil estrutural e pescoço.
 - A Folha 2 é comparada com esse Head Master, com correção global máxima de 8% e microajuste por rosto de 2%. Não há warp regional.
 - Qualidade é calculada por escala, posição, proporção, silhueta, mandíbula, pescoço e estabilidade do trio.
-- Estados críticos bloqueiam o salvamento; avisos apenas indicam revisão.
+- Estados críticos não revisados bloqueiam o salvamento; um crítico revisado pode ser salvo conscientemente e avisos apenas indicam revisão.
 
 ## Organização do código
 
