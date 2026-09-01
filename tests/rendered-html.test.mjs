@@ -246,7 +246,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /const outfitLayer = document\.createElement\("canvas"\)/);
   assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
-  assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fit\)/);
+  assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fitByBasePack\?\.\[basePackId\] \?\? linkedBackHair\?\.fit\)/);
   assert.doesNotMatch(page, /category === "cabelosTras" \? "cabelos" : category/);
   assert.match(page, /prepareHairPair/);
   assert.match(page, /detectHairSheetGrid/);
@@ -683,6 +683,11 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /nextMasks\[outfitStateKey\(item\.id, basePackId\)\] = cloneMaskStrokes\(standardMask\);/);
   assert.match(page, /setOutfitLayerMasksByBasePack\(nextMasks\)/);
   assert.match(page, /setMaskRedo\(\(current\) => \(\{ \.\.\.current, outfit: \[\] \}\)\)/);
+  assert.match(page, /fitByBasePack/);
+  assert.match(page, /layerMasksByBasePack/);
+  assert.match(page, /protectionMasksByBasePack/);
+  assert.match(page, /saveSelectedItemForModel/);
+  assert.match(page, /Salvar p\/Modelo/);
   assert.match(page, /Excluir o pack de expressões/);
   assert.match(page, /Excluir “\$\{item\.name\}” do catálogo/);
   assert.match(page, /Excluir o personagem “\$\{character\.name\}”/);

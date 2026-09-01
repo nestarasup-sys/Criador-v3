@@ -203,6 +203,7 @@ function cloneMaskStrokes(strokes: MaskStroke[]) {
   return strokes.map((stroke) => ({
     ...stroke,
     points: stroke.points.map((point) => ({ ...point })),
+    ...(stroke.paths ? { paths: stroke.paths.map((path) => path.map((point) => ({ ...point }))) } : {}),
   }));
 }
 
@@ -1210,6 +1211,7 @@ export default function Home() {
   const [outfitAdjustmentsByBasePack, setOutfitAdjustmentsByBasePack] = useState<Record<string, ItemTransform>>({});
   const [outfitLayerMasksByBasePack, setOutfitLayerMasksByBasePack] = useState<Record<string, MaskStroke[]>>({});
   const [outfitProtectionMasksByBasePack, setOutfitProtectionMasksByBasePack] = useState<Record<string, string>>({});
+  const [isSavingModelItem, setIsSavingModelItem] = useState(false);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [activeCharacter, setActiveCharacter] = useState<string | null>(null);
   const [draftStarted, setDraftStarted] = useState(false);
@@ -2563,8 +2565,8 @@ export default function Home() {
       const item = catalog.find((entry) => entry.id === id);
       setAdjustments((current) => ({
         ...current,
-        cabelos: normalizeTransform(item?.fit),
-        cabelosTras: normalizeTransform(linkedBackHair?.fit),
+        cabelos: normalizeTransform(item?.fitByBasePack?.[basePackId] ?? item?.fit),
+        cabelosTras: normalizeTransform(linkedBackHair?.fitByBasePack?.[basePackId] ?? linkedBackHair?.fit),
       }));
       setNotice(id && linkedBackHair
         ? "Cabelo frontal e sua parte traseira selecionados"
@@ -2596,7 +2598,7 @@ export default function Home() {
       setSelections((current) => ({ ...current, cabelosTras: id }));
       setAdjustments((current) => ({
         ...current,
-        cabelosTras: normalizeTransform(selectedBackHair?.fit),
+        cabelosTras: normalizeTransform(selectedBackHair?.fitByBasePack?.[basePackId] ?? selectedBackHair?.fit),
       }));
       setNotice(id
         ? "Parte traseira vinculada ao cabelo frontal selecionado"
@@ -2641,9 +2643,13 @@ export default function Home() {
       const targetStateKey = outfitStateKey(item.id, basePackId);
       const targetAdjustment = savedAdjustments[targetStateKey]
         ?? savedAdjustments[basePackId]
-        ?? normalizeTransform(item.fit);
-      const targetMask = savedMasks[targetStateKey] ?? savedMasks[basePackId] ?? [];
-      const targetProtection = savedProtections[targetStateKey] ?? savedProtections[basePackId];
+        ?? normalizeTransform(item.fitByBasePack?.[basePackId] ?? item.fit);
+      const targetMask = savedMasks[targetStateKey]
+        ?? savedMasks[basePackId]
+        ?? cloneMaskStrokes(item.layerMasksByBasePack?.[basePackId] ?? []);
+      const targetProtection = savedProtections[targetStateKey]
+        ?? savedProtections[basePackId]
+        ?? item.protectionMasksByBasePack?.[basePackId];
       setSelections((current) => ({ ...current, roupas: item.id }));
       setAdjustments((current) => ({ ...current, roupas: targetAdjustment }));
       setLayerMasks((current) => ({
@@ -3277,6 +3283,91 @@ export default function Home() {
       return entry;
     }));
     setNotice("Encaixe salvo como padrão deste item");
+  }
+
+  async function saveSelectedItemForModel() {
+    const isHair = category === "cabelos" || category === "cabelosTras";
+    const isOutfit = category === "roupas";
+    if ((!isHair && !isOutfit) || isSavingModelItem) return;
+
+    setIsSavingModelItem(true);
+    try {
+      let updates: CatalogItem[] = [];
+      if (isHair) {
+        const front = catalog.find((item) => item.id === selections.cabelos && item.category === "cabelos");
+        const back = catalog.find((item) => item.id === selections.cabelosTras && item.category === "cabelosTras");
+        const selectedItems: Array<CatalogItem | null> = [
+          front ? {
+            ...front,
+            fitByBasePack: {
+              ...front.fitByBasePack,
+              [basePackId]: normalizeTransform(adjustments.cabelos),
+            },
+          } : null,
+          back ? {
+            ...back,
+            fitByBasePack: {
+              ...back.fitByBasePack,
+              [basePackId]: normalizeTransform(adjustments.cabelosTras),
+            },
+          } : null,
+        ];
+        updates = selectedItems.filter((item): item is CatalogItem => Boolean(item));
+        if (!updates.length) return;
+      } else {
+        const selected = selectedOutfit;
+        if (!selected) return;
+        const groupItems = selected.outfitGroupId
+          ? catalog
+              .filter((item) => item.category === "roupas" && item.outfitGroupId === selected.outfitGroupId)
+              .sort((left, right) => (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
+          : [selected];
+        updates = groupItems.map((item) => {
+          const stateKey = outfitStateKey(item.id, basePackId);
+          const transform = item.id === selected.id
+            ? normalizeTransform(adjustments.roupas)
+            : normalizeTransform(
+                outfitAdjustmentsByBasePack[stateKey]
+                  ?? item.fitByBasePack?.[basePackId]
+                  ?? item.fit,
+              );
+          const masks = item.id === selected.id
+            ? layerMasks.outfit
+            : outfitLayerMasksByBasePack[stateKey]
+              ?? item.layerMasksByBasePack?.[basePackId]
+              ?? [];
+          const protection = item.id === selected.id
+            ? protectionMasks.roupas
+            : outfitProtectionMasksByBasePack[stateKey]
+              ?? item.protectionMasksByBasePack?.[basePackId];
+          const nextProtectionMasks = { ...item.protectionMasksByBasePack };
+          if (protection) nextProtectionMasks[basePackId] = protection;
+          else delete nextProtectionMasks[basePackId];
+          return {
+            ...item,
+            fitByBasePack: {
+              ...item.fitByBasePack,
+              [basePackId]: transform,
+            },
+            layerMasksByBasePack: {
+              ...item.layerMasksByBasePack,
+              [basePackId]: cloneMaskStrokes(masks),
+            },
+            protectionMasksByBasePack: Object.keys(nextProtectionMasks).length ? nextProtectionMasks : undefined,
+          };
+        });
+      }
+
+      await Promise.all(updates.map((item) => storeCatalogItem(item)));
+      setCatalog((current) => current.map((item) => updates.find((updated) => updated.id === item.id) ?? item));
+      setNotice(isOutfit && updates.length > 1
+        ? `Preset salvo para ${updates.length} versões desta roupa no modelo ${activeBasePack.name}`
+        : `Preset salvo para o modelo ${activeBasePack.name}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível salvar o preset para este modelo");
+    } finally {
+      setIsSavingModelItem(false);
+    }
   }
 
   function applyStandardOutfitAdjustment() {
@@ -4308,6 +4399,28 @@ export default function Home() {
                   title="Apagar somente a cabeça incluída na roupa, preservando o pescoço"
                 >
                   {isProcessing ? "Preparando…" : "Apagar cabeça"}
+                </button>
+                <button
+                  type="button"
+                  className="model-save-button"
+                  onClick={() => { void saveSelectedItemForModel(); }}
+                  disabled={isSavingModelItem || isProcessing}
+                  title="Salvar roupa, variantes e máscaras somente para o modelo selecionado"
+                >
+                  {isSavingModelItem ? "Salvando…" : "Salvar p/Modelo"}
+                </button>
+              </div>
+            )}
+            {(category === "cabelos" || category === "cabelosTras") && (selections.cabelos || selections.cabelosTras) && (
+              <div className="outfit-head-actions">
+                <button
+                  type="button"
+                  className="model-save-button"
+                  onClick={() => { void saveSelectedItemForModel(); }}
+                  disabled={isSavingModelItem || isProcessing}
+                  title="Salvar o ajuste do cabelo frontal e traseiro somente para o modelo selecionado"
+                >
+                  {isSavingModelItem ? "Salvando…" : "Salvar p/Modelo"}
                 </button>
               </div>
             )}

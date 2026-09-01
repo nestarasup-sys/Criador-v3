@@ -560,6 +560,9 @@ body { background: #f8f6f7; }
 .head-erase-button { border: 1px solid #e5bac6; border-radius: 9px; padding: 8px 13px; background: linear-gradient(135deg, #fff5f7, #ffe8ee); color: #b43d61; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 12px rgba(180,61,97,.1); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
 .head-erase-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #d88ba1; box-shadow: 0 7px 15px rgba(180,61,97,.17); }
 .head-erase-button:disabled { opacity: .58; cursor: wait; }
+.model-save-button { border: 1px solid #b8a6ee; border-radius: 9px; padding: 8px 13px; background: linear-gradient(135deg, #f2edff, #e6ddff); color: #5b40ad; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 12px rgba(91,64,173,.1); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.model-save-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #9174df; box-shadow: 0 7px 15px rgba(91,64,173,.17); }
+.model-save-button:disabled { opacity: .58; cursor: wait; }
 .canvas-with-tools { position: relative; width: min(100%, 980px); max-width: 100%; min-width: 0; margin: 0 auto; }
 .stage-tools {
   position: absolute; z-index: 7; top: 34px; left: 12px;

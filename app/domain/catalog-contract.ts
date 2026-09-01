@@ -1,4 +1,4 @@
-import type { BasePackId, Category, ItemTransform, Model } from "./character-primitives";
+import type { BasePackId, Category, ItemTransform, MaskStroke, Model } from "./character-primitives";
 import type { ExpressionKey } from "./expression-contract";
 
 export type NormalizedContentGeometry = {
@@ -20,6 +20,12 @@ export type CatalogItemMetadata = NormalizedContentGeometry & {
   defaultX?: number;
   defaultY?: number;
   fit?: ItemTransform;
+  /** Ajustes persistidos para este item quando usado em um modelo específico. */
+  fitByBasePack?: Partial<Record<BasePackId, ItemTransform>>;
+  /** Máscaras da roupa persistidas por modelo, incluindo a borracha automática. */
+  layerMasksByBasePack?: Partial<Record<BasePackId, MaskStroke[]>>;
+  /** Máscaras de proteção de pele/detalhes persistidas por modelo. */
+  protectionMasksByBasePack?: Partial<Record<BasePackId, string>>;
   linkedHairId?: string;
   outfitGroupId?: string;
   outfitGroupName?: string;
