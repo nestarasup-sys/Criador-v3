@@ -10,6 +10,7 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
   const [frame, setFrame] = useState<GeneratedSprite | undefined>();
   const [zoom, setZoom] = useState(1.35);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const panRef = useRef({ x: 0, y: 0 });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ pointerId: number; x: number; y: number; startX: number; startY: number } | null>(null);
   useEffect(() => {
@@ -25,24 +26,28 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
     }, Math.round((mode === "animation" ? 520 : 320) / speed));
     return () => window.clearInterval(timer);
   }, [animationFrames, animationScope, current, ghost, mode, speed, trio]);
-  useEffect(() => { setPan({ x: 0, y: 0 }); }, [current?.key]);
+  function updatePan(next: { x: number; y: number }) {
+    panRef.current = next;
+    setPan(next);
+  }
+  useEffect(() => { updatePan({ x: 0, y: 0 }); }, [current?.key]);
   function startDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (zoom <= 1) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, startX: pan.x, startY: pan.y };
+    dragRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, startX: panRef.current.x, startY: panRef.current.y };
   }
   function moveDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     const limitX = Math.max(0, (event.currentTarget.clientWidth * (zoom - 1)) / 2);
     const limitY = Math.max(0, (event.currentTarget.clientHeight * (zoom - 1)) / 2);
-    setPan({ x: Math.max(-limitX, Math.min(limitX, drag.startX + event.clientX - drag.x)), y: Math.max(-limitY, Math.min(limitY, drag.startY + event.clientY - drag.y)) });
+    updatePan({ x: Math.max(-limitX, Math.min(limitX, drag.startX + event.clientX - drag.x)), y: Math.max(-limitY, Math.min(limitY, drag.startY + event.clientY - drag.y)) });
   }
   function stopDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const drag = dragRef.current;
     if (drag?.pointerId === event.pointerId) {
-      const deltaX = pan.x - drag.startX;
-      const deltaY = pan.y - drag.startY;
+      const deltaX = panRef.current.x - drag.startX;
+      const deltaY = panRef.current.y - drag.startY;
       dragRef.current = null;
       if (Math.abs(deltaX) > 1 || Math.abs(deltaY) > 1) {
         const image = imageRef.current;
@@ -53,7 +58,7 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
         const contentWidth = Math.min(boxWidth, boxHeight * aspect);
         const contentHeight = contentWidth / aspect;
         onPanCommit(deltaX, deltaY, Math.max(1, contentWidth), Math.max(1, contentHeight));
-        setPan({ x: 0, y: 0 });
+        updatePan({ x: 0, y: 0 });
       }
     }
   }
@@ -70,7 +75,7 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
       <div className={styles.modeButtons}>
         {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} title={item === "animation" ? "Animar trio e todas as expressões" : undefined} disabled={item === "ghost" && !ghost || item === "animation" && animationFrames.length < 2} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Testar animação"}</button>)}
       </div>
-      {mode === "animation" && <label className={styles.speedControl}><span>Velocidade <strong>{speed.toFixed(1)}×</strong></span><input type="range" min="0.25" max="2.5" step="0.05" value={speed} onChange={(event) => onSpeed(Number(event.target.value))} /><small>Mais lento</small><small>Mais rápido</small></label>}
+      {mode === "animation" && <label className={styles.speedControl}><span>Velocidade <strong>{speed.toFixed(1)}×</strong></span><input type="range" min="0.25" max="10" step="0.05" value={speed} onChange={(event) => onSpeed(Number(event.target.value))} /><small>Mais lento</small><small>Mais rápido · 10×</small></label>}
       <label className={styles.speedControl}><span>Zoom e enquadramento <strong>{Math.round(zoom * 100)}%</strong></span><input type="range" min="0.8" max="2.2" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><small>Menor</small><small>Maior</small><em>Amplie e arraste a cabeça. Ao soltar, o enquadramento é aplicado a todas as expressões.</em></label>
       {mode === "animation" && <div className={styles.animationScope}><span>Sequência</span><button type="button" className={`${styles.chipButton} ${animationScope === "selected" ? styles.chipActive : ""}`} onClick={() => onAnimationScope("selected")}>Folha atual</button><button type="button" className={`${styles.chipButton} ${animationScope === "both" ? styles.chipActive : ""}`} disabled={animationFrames.every((item) => item.sourceSheet === current.sourceSheet)} onClick={() => onAnimationScope("both")}>Folha 1 + Folha 2</button></div>}
       </div>
