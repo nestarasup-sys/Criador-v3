@@ -8,16 +8,15 @@ export type PlaybackMode = "static" | "ghost" | "flicker" | "animation";
 
 export function ComparisonPlayer({ current, ghost, trio, mode, onMode }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void }) {
   const [frame, setFrame] = useState<GeneratedSprite | undefined>();
-  const [visible, setVisible] = useState(true);
   useEffect(() => {
     if (mode === "static" || mode === "ghost") return undefined;
-    const sequence = mode === "animation" ? trio : [current, ghost].filter((item): item is GeneratedSprite => Boolean(item));
+    const animationSequence = trio.length >= 3 ? [trio[0], trio[1], trio[0], trio[2], trio[0]] : trio;
+    const sequence = mode === "animation" ? animationSequence : [current, ghost].filter((item): item is GeneratedSprite => Boolean(item));
     if (sequence.length < 2) return undefined;
     let index = 0;
     const timer = window.setInterval(() => {
       index = (index + 1) % sequence.length;
-      if (mode === "flicker") setVisible((value) => !value);
-      else setFrame(sequence[index]);
+      setFrame(sequence[index]);
     }, mode === "animation" ? 520 : 320);
     return () => window.clearInterval(timer);
   }, [current, ghost, mode, trio]);
@@ -27,7 +26,6 @@ export function ComparisonPlayer({ current, ghost, trio, mode, onMode }: { curre
     <div className={styles.comparisonStage}>
       <img className={styles.comparisonImage} src={(mode === "static" || mode === "ghost" ? current : frame ?? current)?.dataUrl} alt={(mode === "static" || mode === "ghost" ? current : frame ?? current)?.key} />
       {isGhost && <img className={`${styles.comparisonImage} ${styles.ghostImage}`} src={ghost.dataUrl} alt={`${ghost.key} sobreposto`} />}
-      {mode === "flicker" && !visible && <div className={styles.flickerCover} aria-hidden="true" />}
       <span className={styles.stageBadge}>{mode === "ghost" ? "Ghost" : mode === "flicker" ? "Flicker" : mode === "animation" ? "Animação" : "Prévia"}</span>
     </div>
     <div className={styles.compareControls}>

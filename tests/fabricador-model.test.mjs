@@ -43,6 +43,8 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(page, /Folha 2 \(21\)/);
   assert.match(page, /Trio de expressão/);
   assert.match(comparison, /Animar trio/);
+  assert.match(comparison, /\[trio\[0\], trio\[1\], trio\[0\], trio\[2\], trio\[0\]\]/);
+  assert.match(comparison, /setFrame\(sequence\[index\]\)/);
 });
 
 test("salvamento mantém as proteções de tamanho e duplicidade", async () => {
