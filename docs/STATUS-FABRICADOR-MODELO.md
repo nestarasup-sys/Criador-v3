@@ -1,6 +1,6 @@
 # Status de continuidade — Fabricador de Modelo
 
-Atualizado em 31/08/2026. Branch atual: `app-v4`. Último commit da implementação: `10d7582`.
+Atualizado em 31/08/2026. Branch atual: `app-v4`. Último commit da implementação: `10d7582`; último commit do registro: `c37ce38`.
 
 Este documento registra o estado exato para retomar o trabalho depois. Nenhuma chamada de API externa foi feita nesta rodada.
 
@@ -103,24 +103,18 @@ O HTML experimental `app/Ferramentas/fabricador-de-modelo/assets/importador-folh
 
 ## Validações já executadas
 
-Última bateria completa antes do ajuste final do comparador:
+Após a retomada, a bateria foi executada novamente depois do ajuste final do comparador:
 
 - `npm run typecheck` — passou.
 - `npm run test:unit` — 125 testes passaram.
 - `npm run build` — passou.
 - `npm run test:e2e` — passou; o Playwright abriu a ferramenta, verificou a rolagem, enviou um PNG sintético e gerou 21 sprites.
 - `npx eslint app/Ferramentas/fabricador-de-modelo --quiet` — passou.
-- `node --test tests/fabricador-model.test.mjs` — passou antes do ajuste final e foi ampliado para cobrir Flicker/animação; essa última alteração ainda precisa ser revalidada na próxima retomada.
+- `node --test tests/fabricador-model.test.mjs` — 2 testes passaram, incluindo Flicker e a sequência `default → blink → default → talk → default`.
 
 ## O que falta fazer
 
-O trabalho foi pausado a pedido do usuário antes de uma nova bateria após o commit `10d7582`. O próximo passo deve ser somente validar o ajuste final:
-
-1. Rodar `node --test tests/fabricador-model.test.mjs`.
-2. Rodar `npm run typecheck`.
-3. Rodar `npm run test:unit` e `npm run build`.
-4. Rodar `npm run test:e2e`.
-5. Se tudo passar, fazer uma verificação manual no Chrome com uma Folha 1 e, se disponível, Folha 2 real.
+O ajuste final foi revalidado com sucesso. O próximo passo opcional é a validação visual com uma Folha 1 e uma Folha 2 reais no Chrome.
 
 Validações funcionais ainda não cobertas integralmente pelo Playwright:
 
@@ -140,4 +134,4 @@ Há alterações manuais do usuário que foram preservadas e não devem ser reve
 - pastas novas `modelo-10`, `modelo-11` e `modelo-12`;
 - HTML experimental citado acima.
 
-Para voltar com segurança ao estado completo desta implementação, use o commit `10d7582` como ponto de referência. Não use `git reset --hard` sem antes preservar os assets manuais listados acima.
+Para voltar com segurança ao estado completo desta implementação, use o commit `10d7582` como ponto de referência (ou `c37ce38` para incluir este registro). Não use `git reset --hard` sem antes preservar os assets manuais listados acima.
