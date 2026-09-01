@@ -42,7 +42,7 @@ export function calibratePrimary(anatomies: readonly FaceAnatomy[], master: Head
   return { adjustments, metrics, trioTargets, outlierIndices: master.outlierIndices };
 }
 
-export function calibrateExtension(anatomies: readonly FaceAnatomy[], master: HeadMaster, maximumCorrection = .08, microAdjustment = .02): { adjustments: SpriteAdjustment[]; metrics: QualityMetrics[]; compatibility: CompatibilityMetrics; trioTargets: Array<{ width: number; height: number }>; outlierIndices: number[] } {
+export function calibrateExtension(anatomies: readonly FaceAnatomy[], master: HeadMaster, maximumCorrection = .08, microAdjustment = .02, referenceAnatomies: readonly FaceAnatomy[] = []): { adjustments: SpriteAdjustment[]; metrics: QualityMetrics[]; compatibility: CompatibilityMetrics; trioTargets: Array<{ width: number; height: number }>; outlierIndices: number[] } {
   const widths = anatomies.map((anatomy) => anatomy.width); const heights = anatomies.map((anatomy) => anatomy.height);
   const sourceWidth = median(widths); const sourceHeight = median(heights);
   const rawGlobalX = master.width / Math.max(1, sourceWidth); const rawGlobalY = master.height / Math.max(1, sourceHeight);
@@ -52,7 +52,16 @@ export function calibrateExtension(anatomies: readonly FaceAnatomy[], master: He
     const usable = usableForTrio(anatomies, indices); const source = usable.length ? usable : indices;
     return { width: median(source.map((index) => anatomies[index].width)), height: median(source.map((index) => anatomies[index].height)) };
   });
-  const adjustments = anatomies.map((anatomy, index) => ({ scale: 1, scaleX: globalX * clamp(trioTargets[index % 7].width / Math.max(1, anatomy.width), 1 - microAdjustment, 1 + microAdjustment), scaleY: globalY * clamp(trioTargets[index % 7].height / Math.max(1, anatomy.height), 1 - microAdjustment, 1 + microAdjustment), dx: 0, dy: 0, reviewed: false }));
+  const adjustments = anatomies.map((anatomy, index) => {
+    const paired = referenceAnatomies[index];
+    const targetWidth = paired ? paired.width * .78 + master.width * .22 : trioTargets[index % 7].width;
+    const targetHeight = paired ? paired.height * .78 + master.height * .22 : trioTargets[index % 7].height;
+    const pairedX = clamp(targetWidth / Math.max(1, anatomy.width), 1 - maximumCorrection, 1 + maximumCorrection);
+    const pairedY = clamp(targetHeight / Math.max(1, anatomy.height), 1 - maximumCorrection, 1 + maximumCorrection);
+    const localX = clamp(pairedX / Math.max(.001, globalX), 1 - microAdjustment, 1 + microAdjustment);
+    const localY = clamp(pairedY / Math.max(.001, globalY), 1 - microAdjustment, 1 + microAdjustment);
+    return { scale: 1, scaleX: clamp(globalX * localX, 1 - maximumCorrection, 1 + maximumCorrection), scaleY: clamp(globalY * localY, 1 - maximumCorrection, 1 + maximumCorrection), dx: 0, dy: 0, reviewed: false };
+  });
   const rawMadW = mad(widths, sourceWidth); const rawMadH = mad(heights, sourceHeight);
   const usableIndices = anatomies.map((_, index) => index).filter((index) => robustZ(widths[index], sourceWidth, rawMadW, sourceWidth * .012) <= 3.5 && robustZ(heights[index], sourceHeight, rawMadH, sourceHeight * .012) <= 3.5);
   const usable = usableIndices.length >= 12 ? usableIndices : anatomies.map((_, index) => index);

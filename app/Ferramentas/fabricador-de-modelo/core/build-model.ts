@@ -27,7 +27,7 @@ function buildSprite(face: ReturnType<typeof cropFace>, anatomy: FaceAnatomy, ke
   return { key, sourceSheet: sheet, state, dataUrl: output.toDataURL("image/png"), width: output.width, height: output.height, anatomy, adjustment, quality: scoreFace(anatomy, master, adjustment, master.stabilityScore, compatibility) };
 }
 
-export type ProcessSheetOptions = { referenceMaster?: HeadMaster; settings?: Partial<CalibrationSettings>; manualAdjustments?: readonly Partial<SpriteAdjustment>[] };
+export type ProcessSheetOptions = { referenceMaster?: HeadMaster; referenceAnatomies?: readonly FaceAnatomy[]; settings?: Partial<CalibrationSettings>; manualAdjustments?: readonly Partial<SpriteAdjustment>[] };
 
 export async function processSheet(file: File, sheet: SheetId, options: ProcessSheetOptions = {}): Promise<SheetResult> {
   const settings: CalibrationSettings = { ...DEFAULT_CALIBRATION_SETTINGS, ...options.settings };
@@ -41,7 +41,7 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
   const validAnatomies = anatomies as FaceAnatomy[];
   const localMaster = buildHeadMaster(validAnatomies);
   const calibration = options.referenceMaster
-    ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment)
+    ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment, options.referenceAnatomies)
     : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
   const targetMaster = options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];

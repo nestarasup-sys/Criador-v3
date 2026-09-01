@@ -34,6 +34,14 @@ function manualArray(sheet: SheetId, edits: Record<string, Partial<SpriteAdjustm
   return Array.from({ length: 21 }, (_, index) => edits[`${sheet}:${spriteKey(sheet, index)}`]);
 }
 
+function anatomiesFromSheet(sheet: SheetResult) {
+  return [
+    ...sheet.expressions.map((expression) => expression.default.anatomy),
+    ...sheet.expressions.map((expression) => expression.blink.anatomy),
+    ...sheet.expressions.map((expression) => expression.talk.anatomy),
+  ];
+}
+
 export default function FabricadorDeModeloPage() {
   const [primary, setPrimary] = useState<File | null>(null);
   const [extension, setExtension] = useState<File | null>(null);
@@ -107,7 +115,7 @@ export default function FabricadorDeModeloPage() {
     setBusy(true); setTone(""); setMessage("Processando chroma, detecção, anatomia e calibração…");
     try {
       const base = await processSheet(primary, "primary", { settings, manualAdjustments: manualArray("primary", edits) });
-      const result = extension ? [base, await processSheet(extension, "extension", { referenceMaster: base.headMaster, settings, manualAdjustments: manualArray("extension", edits) })] : [base];
+      const result = extension ? [base, await processSheet(extension, "extension", { referenceMaster: base.headMaster, referenceAnatomies: anatomiesFromSheet(base), settings, manualAdjustments: manualArray("extension", edits) })] : [base];
       setSheets(result); setStep(3); setSelectedKey((current) => current && result.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk])).some((sprite) => keyOf(sprite) === current) ? current : keyOf(result[0].expressions[0].default)); setTone("ok"); setMessage(`${result.reduce((total, sheet) => total + sheet.expressions.length * 3, 0)} sprites gerados. Revise a qualidade antes de salvar.`);
     } catch (error) { setSheets([]); setTone("error"); setMessage(error instanceof Error ? error.message : "Não foi possível processar a folha."); }
     finally { setBusy(false); }
