@@ -9,7 +9,7 @@ import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/i
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
 import { calculateHeadFit, headContourPolygon, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
-import type { HeadMeasurement } from "./creator/head-fit";
+import type { HeadFitReference, HeadMeasurement } from "./creator/head-fit";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -2920,10 +2920,12 @@ export default function Home() {
     setNotice("Encaixe inicial aplicado; arraste e refine se necessário");
   }
 
-  async function adjustSelectedOutfitByHead() {
+  async function adjustSelectedOutfitByHead(reference: HeadFitReference = "head") {
     if (category !== "roupas" || !selectedOutfit?.url) return;
     setIsProcessing(true);
-    setNotice("Medindo a cabeça do modelo e ajustando a roupa…");
+    setNotice(reference === "neck"
+      ? "Medindo o pescoço do modelo e ajustando a roupa…"
+      : "Medindo a cabeça do modelo e ajustando a roupa…");
     try {
       const outfitWidth = selectedOutfit.width ?? 0;
       const outfitHeight = selectedOutfit.height ?? 0;
@@ -3011,6 +3013,7 @@ export default function Home() {
         headOnly
           ? { x: activeBasePack.anchorX }
         : undefined,
+        reference,
       );
       const nextTransform = normalizeTransform({
         ...fitted,
@@ -3072,6 +3075,7 @@ export default function Home() {
             defaultY: variant.defaultY,
           },
           headOnly ? { x: activeBasePack.anchorX } : undefined,
+          reference,
         );
         variantTransforms[variantKey] = normalizeTransform({
           ...variantFit,
@@ -3099,8 +3103,8 @@ export default function Home() {
         : "";
       setNotice(
         outfitVariants.length > 1
-          ? `${adjustedVariantCount} versões da roupa ajustadas pela cabeça do modelo; você ainda pode refinar manualmente.${skippedMessage}`
-          : "Roupa ajustada pela cabeça do modelo; você ainda pode refinar manualmente",
+          ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}; você ainda pode refinar manualmente.${skippedMessage}`
+          : `Roupa ajustada pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}; você ainda pode refinar manualmente`,
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");
@@ -4428,11 +4432,20 @@ export default function Home() {
                 <button
                   type="button"
                   className="head-fit-button"
-                  onClick={() => { void adjustSelectedOutfitByHead(); }}
+                  onClick={() => { void adjustSelectedOutfitByHead("head"); }}
                   disabled={isProcessing}
-                  title="Ajustar somente esta roupa no personagem e modelo selecionados"
+                  title="Ajustar a roupa pela cabeça do personagem selecionado"
                 >
                   {isProcessing ? "Ajustando…" : "Ajustar roupa"}
+                </button>
+                <button
+                  type="button"
+                  className="neck-fit-button"
+                  onClick={() => { void adjustSelectedOutfitByHead("neck"); }}
+                  disabled={isProcessing}
+                  title="Ajustar a roupa pela largura e pelo centro do pescoço"
+                >
+                  {isProcessing ? "Ajustando…" : "Ajustar pescoço"}
                 </button>
                 <button
                   type="button"

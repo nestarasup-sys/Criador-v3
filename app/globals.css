@@ -544,6 +544,9 @@ body { background: #f8f6f7; }
 .head-fit-button { border: 1px solid #cfc2f7; border-radius: 9px; padding: 8px 13px; background: linear-gradient(135deg, #7257d9, #8b68e9); color: white; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 12px rgba(114,87,217,.18); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
 .head-fit-button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 7px 15px rgba(114,87,217,.25); }
 .head-fit-button:disabled { opacity: .58; cursor: wait; }
+.neck-fit-button { border: 1px solid #b5d8d2; border-radius: 9px; padding: 8px 13px; background: linear-gradient(135deg, #eefaf7, #d9f1eb); color: #27796d; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 12px rgba(39,121,109,.1); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.neck-fit-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #83beb3; box-shadow: 0 7px 15px rgba(39,121,109,.17); }
+.neck-fit-button:disabled { opacity: .58; cursor: wait; }
 .outfit-head-actions { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
 .head-erase-button { border: 1px solid #e5bac6; border-radius: 9px; padding: 8px 13px; background: linear-gradient(135deg, #fff5f7, #ffe8ee); color: #b43d61; font-size: 11px; font-weight: 800; cursor: pointer; box-shadow: 0 5px 12px rgba(180,61,97,.1); transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
 .head-erase-button:hover:not(:disabled) { transform: translateY(-1px); border-color: #d88ba1; box-shadow: 0 7px 15px rgba(180,61,97,.17); }

@@ -31,6 +31,7 @@ export type HeadFitResult = {
 };
 
 export type HeadFitProjection = HeadMeasurement;
+export type HeadFitReference = "head" | "neck";
 
 // Pequena folga para a roupa cobrir completamente o pescoço, sem deixar
 // frestas nas bordas por causa do antialiasing dos dois assets.
@@ -239,19 +240,25 @@ function clamp(value: number, minimum: number, maximum: number) {
 /**
  * Calculates the transform used by Creator's renderer. The target is in the
  * final 1920×1080 scene; the source point is in the item's native image.
- * The neck width/center and the uppermost head point are the anchors. The
- * neck is the horizontal reference for scaleX; the upper point remains the
- * vertical reference for scaleY and top alignment.
+ * The default head reference uses the outer silhouette. The optional neck
+ * reference uses the stable neck band for horizontal scale and centering,
+ * while keeping the upper point as the vertical reference.
  */
 export function calculateHeadFit(
   source: HeadMeasurement,
   target: HeadMeasurement,
   item: { width: number; height: number; defaultX?: number; defaultY?: number },
   targetAnchor?: { x?: number; y?: number },
+  reference: HeadFitReference = "head",
 ): HeadFitResult {
+  const sourceNeckWidth = source.neckWidth;
+  const targetNeckWidth = target.neckWidth;
+  const useNeckReference = reference === "neck"
+    && sourceNeckWidth !== undefined
+    && targetNeckWidth !== undefined;
   const scaleX = clamp(
-    target.neckWidth && source.neckWidth
-      ? (target.neckWidth / source.neckWidth) * NECK_FIT_WIDTH_MARGIN
+    useNeckReference
+      ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
       : target.width / source.width,
     0.35,
     2.4,
@@ -259,8 +266,8 @@ export function calculateHeadFit(
   const scaleY = clamp(target.height / source.height, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
-  const targetCenterX = targetAnchor?.x ?? target.neckCenterX ?? target.centerX;
-  const sourceCenterX = source.neckCenterX ?? source.centerX;
+  const targetCenterX = targetAnchor?.x ?? (useNeckReference ? target.neckCenterX : undefined) ?? target.centerX;
+  const sourceCenterX = (useNeckReference ? source.neckCenterX : undefined) ?? source.centerX;
   const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.
