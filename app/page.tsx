@@ -4284,29 +4284,11 @@ export default function Home() {
                 style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom / 100})` }}
                 aria-label="Guias de alinhamento da cabeça e do pescoço"
               >
-                <rect
-                  className="head-fit-target-outline"
-                  x={headFitGuide.target.left}
-                  y={headFitGuide.target.top}
-                  width={headFitGuide.target.width}
-                  height={headFitGuide.target.height}
-                  rx="12"
-                />
-                <rect
-                  className="head-fit-source-outline"
-                  x={projectedHeadFit.left}
-                  y={projectedHeadFit.top}
-                  width={projectedHeadFit.width}
-                  height={projectedHeadFit.height}
-                  rx="12"
-                />
                 <line className="head-fit-target-neck" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetBaseY} y2={headFitTargetBaseY} />
                 <line className="head-fit-source-neck" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.bottom} y2={projectedHeadFit.bottom} />
                 <line className="head-fit-target-top" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetTopY} y2={headFitTargetTopY} />
                 <line className="head-fit-source-top" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.top} y2={projectedHeadFit.top} />
                 <line className="head-fit-center-line" x1={headFitTargetBaseX} x2={headFitTargetBaseX} y1={Math.min(headFitGuide.target.top, projectedHeadFit.top)} y2={Math.max(headFitTargetBaseY, projectedHeadFit.bottom)} />
-                <text className="head-fit-target-label" x={headFitGuide.target.left + 8} y={headFitGuide.target.top - 10}>modelo</text>
-                <text className="head-fit-source-label" x={projectedHeadFit.left + 8} y={projectedHeadFit.top - 10}>roupa</text>
               </svg>
             )}
             {chromaMode && (
