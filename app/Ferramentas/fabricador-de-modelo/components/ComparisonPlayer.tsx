@@ -31,7 +31,7 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
     <div className={styles.compareControls}>
       <div><strong>{current.key}</strong><small>{current.sourceSheet === "primary" ? "Folha 1" : "Folha 2"} · {current.state}</small></div>
       <div className={styles.modeButtons}>
-        {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} disabled={item === "ghost" && !ghost || item === "animation" && animationFrames.length < 2} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Testar animação"}</button>)}
+        {(["static", "ghost", "flicker", "animation"] as PlaybackMode[]).map((item) => <button key={item} type="button" className={`${styles.chipButton} ${mode === item ? styles.chipActive : ""}`} title={item === "animation" ? "Animar trio e todas as expressões" : undefined} disabled={item === "ghost" && !ghost || item === "animation" && animationFrames.length < 2} onClick={() => onMode(item)}>{item === "static" ? "Normal" : item === "ghost" ? "Ghost" : item === "flicker" ? "Flicker" : "Testar animação"}</button>)}
       </div>
       {mode === "animation" && <label className={styles.speedControl}><span>Velocidade <strong>{speed.toFixed(1)}×</strong></span><input type="range" min="0.25" max="2.5" step="0.05" value={speed} onChange={(event) => onSpeed(Number(event.target.value))} /><small>Mais lento</small><small>Mais rápido</small></label>}
       </div>
