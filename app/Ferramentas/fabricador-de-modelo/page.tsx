@@ -87,7 +87,7 @@ export default function FabricadorDeModeloPage() {
   const comparisonCurrent = comparisonExpression?.[compareState];
   const comparisonGhost = compareSheet === "primary" ? extensionSheet?.expressions[compareColumn]?.[compareState] : primarySheet?.expressions[compareColumn]?.[compareState];
   const comparisonTrio = comparisonExpression ? [comparisonExpression.default, comparisonExpression.blink, comparisonExpression.talk] : [];
-  const comparisonFrames = comparisonSourceSheet?.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk]) ?? [];
+  const comparisonFrames = sheets.flatMap((sheet) => sheet.expressions.flatMap((expression) => [expression.default, expression.blink, expression.talk]));
   const criticalSprites = allSprites.filter((sprite) => sprite.quality.critical);
   const unreviewedCriticalCount = criticalSprites.filter((sprite) => !reviewed.has(keyOf(sprite)) && !sprite.adjustment.reviewed).length;
   const expectedCount = extension ? 42 : 21;
