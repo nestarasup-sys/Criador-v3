@@ -8,7 +8,8 @@ import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBou
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
-import { calculateHeadFit, measureHeadSilhouette } from "./creator/head-fit";
+import { calculateHeadFit, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
+import type { HeadMeasurement } from "./creator/head-fit";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -100,6 +101,17 @@ type PendingOutfitPack = {
   source: Blob;
   padding: number;
   chromaBoost: number;
+};
+
+type HeadFitGuide = {
+  source: HeadMeasurement;
+  target: HeadMeasurement;
+  itemWidth: number;
+  itemHeight: number;
+  defaultX?: number;
+  defaultY?: number;
+  targetAnchorX?: number;
+  targetAnchorY?: number;
 };
 
 
@@ -1175,6 +1187,7 @@ export default function Home() {
   const [colorEditorRedo, setColorEditorRedo] = useState<string[]>([]);
   const [colorEditorRevision, setColorEditorRevision] = useState(0);
   const [colorPanelOpen, setColorPanelOpen] = useState(false);
+  const [headFitGuide, setHeadFitGuide] = useState<HeadFitGuide | null>(null);
   const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
   const historyActiveKeyRef = useRef<string | null>(null);
   const historyRestoreRef = useRef<string | null>(null);
@@ -1456,6 +1469,7 @@ export default function Home() {
     setBasePackId(snapshot.basePackId ?? "modelo-1");
     setSelections(normalizeSelections(snapshot.selections));
     setAdjustments(normalizeAdjustments(snapshot.adjustments));
+    setHeadFitGuide(null);
     setColorAdjustments(normalizeColorAdjustments(snapshot.colorAdjustments));
     setOutfitColorAdjustmentsByGroup(snapshot.outfitColorAdjustmentsByGroup ?? {});
     setProtectionMasks(snapshot.protectionMasks ?? {});
@@ -1965,6 +1979,7 @@ export default function Home() {
     setSelections({ ...EMPTY_SELECTIONS });
     setAdjustments(emptyAdjustments());
     setColorAdjustments(emptyColorAdjustments());
+    setHeadFitGuide(null);
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
     setHairAdjustmentsByBasePack({});
@@ -2038,6 +2053,7 @@ export default function Home() {
 
     setHairAdjustmentsByBasePack(savedHairAdjustments);
     setOutfitAdjustmentsByBasePack(savedOutfitAdjustments);
+    setHeadFitGuide(null);
     setOutfitLayerMasksByBasePack(savedOutfitMasks);
     setOutfitProtectionMasksByBasePack(savedOutfitProtections);
     setBasePackId(nextPackId);
@@ -2578,6 +2594,7 @@ export default function Home() {
     }
 
     if (category === "roupas") {
+      setHeadFitGuide(null);
       const currentOutfit = catalog.find((entry) => entry.id === selections.roupas);
       const currentStateKey = outfitStateKey(currentOutfit?.id, basePackId);
       const savedAdjustments = {
@@ -2695,6 +2712,21 @@ export default function Home() {
       ...current,
       [category]: { ...normalizeTransform(current[category]), ...patch },
     }));
+  }
+
+  function updateHeadFitScale(axis: "scaleX" | "scaleY", percentage: number) {
+    if (category !== "roupas" || !selectedOutfit) return;
+    const current = normalizeTransform(adjustments.roupas);
+    const next = +(current[axis] * (1 + percentage / 100)).toFixed(4);
+    setAdjustments((state) => ({ ...state, roupas: { ...current, [axis]: Math.max(.1, Math.min(4, next)) } }));
+    setFitMode(true);
+  }
+
+  function updateHeadFitOffset(axis: "x" | "y", delta: number) {
+    if (category !== "roupas" || !selectedOutfit) return;
+    const current = normalizeTransform(adjustments.roupas);
+    setAdjustments((state) => ({ ...state, roupas: { ...current, [axis]: current[axis] + delta } }));
+    setFitMode(true);
   }
 
   function sampleChromaColor(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -2863,7 +2895,9 @@ export default function Home() {
       outfitContext.drawImage(outfitImage, 0, 0, outfitWidth, outfitHeight);
       const outfitPixels = outfitContext.getImageData(0, 0, outfitWidth, outfitHeight);
       const sourceHead = measureHeadSilhouette(outfitPixels.data, outfitWidth, outfitHeight, 0.46);
-      if (!sourceHead) throw new Error("Não foi possível localizar a cabeça da roupa");
+      if (!sourceHead) {
+        throw new Error("Esta roupa não possui uma cabeça detectável; ajuste manualmente pelo decote e pelo pescoço. O corpo não será deformado.");
+      }
 
       // Use a expressão normal do modelo atual como referência estável. A
       // roupa continua sendo ajustada apenas no personagem/modelo selecionado;
@@ -2938,6 +2972,16 @@ export default function Home() {
         ...fitted,
         rotation: adjustments.roupas.rotation,
         flipX: adjustments.roupas.flipX,
+      });
+      setHeadFitGuide({
+        source: sourceHead,
+        target: targetHead,
+        itemWidth: outfitWidth,
+        itemHeight: outfitHeight,
+        defaultX: selectedOutfit.defaultX,
+        defaultY: selectedOutfit.defaultY,
+        targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
+        targetAnchorY: headOnly ? activeBasePack.anchorY : undefined,
       });
       const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
       setOutfitAdjustmentsByBasePack((current) => ({ ...current, [stateKey]: nextTransform }));
@@ -3460,6 +3504,7 @@ export default function Home() {
       setBasePackId(openedBasePackId);
       setSelections(normalizeSelections(character.selections));
       setAdjustments(normalizeAdjustments(character.adjustments));
+      setHeadFitGuide(null);
       setColorAdjustments(normalizeColorAdjustments(character.colorAdjustments));
       setOutfitColorAdjustmentsByGroup(character.outfitColorAdjustmentsByGroup ?? {});
       setProtectionMasks(character.protectionMasks ?? {});
@@ -3504,6 +3549,7 @@ export default function Home() {
     setBasePackId(getBasePack(basePacks, model).id);
     setSelections({ ...EMPTY_SELECTIONS });
     setAdjustments(emptyAdjustments());
+    setHeadFitGuide(null);
     setColorAdjustments(emptyColorAdjustments());
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
@@ -3681,6 +3727,20 @@ export default function Home() {
       );
   const activeAdjustmentCategory = category;
   const activeTransform = normalizeTransform(adjustments[activeAdjustmentCategory]);
+  const projectedHeadFit = headFitGuide && selectedOutfit
+    ? projectHeadMeasurement(
+        headFitGuide.source,
+        {
+          width: headFitGuide.itemWidth,
+          height: headFitGuide.itemHeight,
+          defaultX: headFitGuide.defaultX,
+          defaultY: headFitGuide.defaultY,
+        },
+        adjustments.roupas,
+      )
+    : null;
+  const headFitTargetBaseY = headFitGuide?.targetAnchorY ?? headFitGuide?.target.bottom ?? null;
+  const headFitTargetBaseX = headFitGuide?.targetAnchorX ?? headFitGuide?.target.centerX ?? null;
   const usesBuiltInBase = faceMode === "base";
   const hasActiveItem = category === "rostos" && faceMode === "base"
     ? false
@@ -4217,6 +4277,37 @@ export default function Home() {
               onPointerEnter={(event) => eraserMode && updateBrushCursor(event)}
               onPointerLeave={(event) => eraserMode && updateBrushCursor(event, false)}
             />
+            {headFitGuide && projectedHeadFit && headFitTargetBaseY !== null && headFitTargetBaseX !== null && (
+              <svg
+                className="head-fit-overlay"
+                viewBox="0 0 1920 1080"
+                preserveAspectRatio="none"
+                style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom / 100})` }}
+                aria-label="Guias de alinhamento da cabeça e do pescoço"
+              >
+                <rect
+                  className="head-fit-target-outline"
+                  x={headFitGuide.target.left}
+                  y={headFitGuide.target.top}
+                  width={headFitGuide.target.width}
+                  height={headFitGuide.target.height}
+                  rx="12"
+                />
+                <rect
+                  className="head-fit-source-outline"
+                  x={projectedHeadFit.left}
+                  y={projectedHeadFit.top}
+                  width={projectedHeadFit.width}
+                  height={projectedHeadFit.height}
+                  rx="12"
+                />
+                <line className="head-fit-target-neck" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetBaseY} y2={headFitTargetBaseY} />
+                <line className="head-fit-source-neck" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.bottom} y2={projectedHeadFit.bottom} />
+                <line className="head-fit-center-line" x1={headFitTargetBaseX} x2={headFitTargetBaseX} y1={Math.min(headFitGuide.target.top, projectedHeadFit.top)} y2={Math.max(headFitTargetBaseY, projectedHeadFit.bottom)} />
+                <text className="head-fit-target-label" x={headFitGuide.target.left + 8} y={headFitGuide.target.top - 10}>modelo</text>
+                <text className="head-fit-source-label" x={projectedHeadFit.left + 8} y={projectedHeadFit.top - 10}>roupa</text>
+              </svg>
+            )}
             {chromaMode && (
               <canvas
                 ref={chromaCanvasRef}
@@ -4270,6 +4361,34 @@ export default function Home() {
                   <input type="range" min="15" max="100" value={fitOpacity} onChange={(event) => setFitOpacity(Number(event.target.value))} />
                   <strong>{fitOpacity}%</strong>
                 </label>
+                {category === "roupas" && selectedOutfit && headFitGuide && (
+                  <>
+                    <div className="head-fit-guide-summary">
+                      <span><i className="head-fit-swatch model" />Modelo: {Math.round(headFitGuide.target.width)} px · base {Math.round(headFitTargetBaseY ?? headFitGuide.target.bottom)} px</span>
+                      <span><i className="head-fit-swatch outfit" />Roupa: {Math.round(projectedHeadFit?.width ?? 0)} px · base {Math.round(projectedHeadFit?.bottom ?? 0)} px</span>
+                    </div>
+                    <div className="head-fit-fine-controls">
+                      <span className="head-fit-control-title">Ajuste fino</span>
+                      <div className="head-fit-control-row">
+                        <span>Largura</span>
+                        <button type="button" onClick={() => updateHeadFitScale("scaleX", -1)}>−1%</button>
+                        <button type="button" onClick={() => updateHeadFitScale("scaleX", 1)}>+1%</button>
+                        <span>Altura</span>
+                        <button type="button" onClick={() => updateHeadFitScale("scaleY", -1)}>−1%</button>
+                        <button type="button" onClick={() => updateHeadFitScale("scaleY", 1)}>+1%</button>
+                      </div>
+                      <div className="head-fit-control-row">
+                        <span>Horizontal</span>
+                        <button type="button" onClick={() => updateHeadFitOffset("x", -1)}>← 1 px</button>
+                        <button type="button" onClick={() => updateHeadFitOffset("x", 1)}>1 px →</button>
+                        <span>Vertical</span>
+                        <button type="button" onClick={() => updateHeadFitOffset("y", -1)}>↑ 1 px</button>
+                        <button type="button" onClick={() => updateHeadFitOffset("y", 1)}>1 px ↓</button>
+                      </div>
+                      <button type="button" className="head-fit-recalculate" onClick={() => { void adjustSelectedOutfitByHead(); }}>Recalcular</button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
             <div className="adjust-grid">

@@ -14,7 +14,10 @@ export type HeadFitResult = {
   scaleY: number;
   x: number;
   y: number;
+  flipX?: boolean;
 };
+
+export type HeadFitProjection = HeadMeasurement;
 
 /**
  * Measures the upper silhouette of a transparent character image.
@@ -151,5 +154,29 @@ export function calculateHeadFit(
     y: +(
       targetBaseY - (centerY - item.height / 2 * scaleY + source.bottom * scaleY)
     ).toFixed(2),
+  };
+}
+
+export function projectHeadMeasurement(
+  source: HeadMeasurement,
+  item: { width: number; height: number; defaultX?: number; defaultY?: number },
+  transform: HeadFitResult,
+): HeadFitProjection {
+  const scaleX = transform.scale * transform.scaleX * (transform.flipX ? -1 : 1);
+  const scaleY = transform.scale * transform.scaleY;
+  const centerX = item.defaultX ?? item.width / 2;
+  const centerY = item.defaultY ?? item.height / 2;
+  const projectX = (value: number) => centerX + transform.x + (value - item.width / 2) * scaleX;
+  const projectY = (value: number) => centerY + transform.y + (value - item.height / 2) * scaleY;
+  const left = Math.min(projectX(source.left), projectX(source.right));
+  const right = Math.max(projectX(source.left), projectX(source.right));
+  return {
+    left,
+    right,
+    top: projectY(source.top),
+    bottom: projectY(source.bottom),
+    width: Math.max(1, right - left),
+    height: Math.max(1, Math.abs(projectY(source.bottom) - projectY(source.top))),
+    centerX: (left + right) / 2,
   };
 }
