@@ -4707,34 +4707,6 @@ export default function Home() {
                   <input type="range" min="15" max="100" value={fitOpacity} onChange={(event) => setFitOpacity(Number(event.target.value))} />
                   <strong>{fitOpacity}%</strong>
                 </label>
-                {category === "roupas" && selectedOutfit && headFitGuide && (
-                  <>
-                    <div className="head-fit-guide-summary">
-                      <span><i className="head-fit-swatch model" />Modelo: pescoço {Math.round(headFitGuide.target.neckWidth ?? headFitGuide.target.width)} px · topo {Math.round(headFitTargetTopY ?? headFitGuide.target.top)} px</span>
-                      <span><i className="head-fit-swatch outfit" />Roupa: pescoço {Math.round(projectedHeadFit?.neckWidth ?? projectedHeadFit?.width ?? 0)} px · topo {Math.round(projectedHeadFit?.top ?? 0)} px</span>
-                    </div>
-                    <div className="head-fit-fine-controls">
-                      <span className="head-fit-control-title">Ajuste fino</span>
-                      <div className="head-fit-control-row">
-                        <span>Largura</span>
-                        <button type="button" onClick={() => updateHeadFitScale("scaleX", -1)}>−1%</button>
-                        <button type="button" onClick={() => updateHeadFitScale("scaleX", 1)}>+1%</button>
-                        <span>Altura</span>
-                        <button type="button" onClick={() => updateHeadFitScale("scaleY", -1)}>−1%</button>
-                        <button type="button" onClick={() => updateHeadFitScale("scaleY", 1)}>+1%</button>
-                      </div>
-                      <div className="head-fit-control-row">
-                        <span>Horizontal</span>
-                        <button type="button" onClick={() => updateHeadFitOffset("x", -1)}>← 1 px</button>
-                        <button type="button" onClick={() => updateHeadFitOffset("x", 1)}>1 px →</button>
-                        <span>Vertical</span>
-                        <button type="button" onClick={() => updateHeadFitOffset("y", -1)}>↑ 1 px</button>
-                        <button type="button" onClick={() => updateHeadFitOffset("y", 1)}>1 px ↓</button>
-                      </div>
-                      <button type="button" className="head-fit-recalculate" onClick={() => { void adjustSelectedOutfitByHead(); }}>Recalcular</button>
-                    </div>
-                  </>
-                )}
               </div>
             )}
             <div className="adjust-grid">

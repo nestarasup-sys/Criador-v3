@@ -684,6 +684,8 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(headFit, /measurement\.neckY - 2/);
   assert.match(headFit, /target\.neckCenterX \?\? target\.centerX/);
   assert.match(page, /AUTOMATIC_HEAD_ERASE_SIDE_MARGIN/);
+  assert.doesNotMatch(page, /head-fit-fine-controls/);
+  assert.doesNotMatch(page, /Ajuste fino/);
   assert.match(page, /function applyStandardOutfitAdjustment\(\)/);
   assert.match(page, /Ajustar para padrão/);
   assert.match(page, /standardItem\.id === selectedOutfit\.id/);
