@@ -1,4 +1,4 @@
-import type { ColorAdjustment, ModelColorAdjustments, ModelColorScope } from "./character-contract";
+import type { ModelColorAdjustments, ModelColorScope } from "./character-contract";
 
 export const DEFAULT_MODEL_COLOR_SCOPE: ModelColorScope;
 export function emptyModelColorAdjustments(): ModelColorAdjustments;

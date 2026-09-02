@@ -1,6 +1,6 @@
-import type { ColorAdjustment, ModelColorAdjustments, ModelColorScope } from "./character-contract";
-import { colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./color-rendering";
-import { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
+import type { ColorAdjustment, ModelColorScope } from "./character-contract";
+import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
+import { isModelColorPixel } from "./model-color-selection.mjs";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
