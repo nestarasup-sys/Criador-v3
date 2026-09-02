@@ -32,7 +32,16 @@ export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: 
   const effectiveScaleY = uniform * adjustment.scaleY;
   const dx = adjustment.dx ?? 0;
   const dy = adjustment.dy ?? 0;
-  const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, effectiveScaleX))), Math.abs(Math.log(Math.max(.001, effectiveScaleY))));
+  // The magnitude of the correction is not a quality failure by itself. A
+  // sprite from the extension sheet can legitimately start 8% smaller and
+  // still be perfectly aligned after calibration. Score the residual size
+  // error of the transformed result instead of punishing the correction that
+  // fixed it.
+  const adjustedStructuralWidth = anatomy.structuralBounds.width * effectiveScaleX;
+  const adjustedStructuralHeight = anatomy.height * effectiveScaleY;
+  const widthResidual = Math.abs(Math.log(Math.max(.001, adjustedStructuralWidth / Math.max(1, master.structuralWidth))));
+  const heightResidual = Math.abs(Math.log(Math.max(.001, adjustedStructuralHeight / Math.max(1, master.height))));
+  const scaleError = Math.max(widthResidual, heightResidual);
   const sourceLeft = (anatomy.structuralBounds.x - anatomy.neckCenterX) * effectiveScaleX + dx;
   const sourceRight = (anatomy.structuralBounds.x + anatomy.structuralBounds.width - 1 - anatomy.neckCenterX) * effectiveScaleX + dx;
   const sourceBottom = (anatomy.structuralBottom - anatomy.neckBaseY) * effectiveScaleY + dy;
