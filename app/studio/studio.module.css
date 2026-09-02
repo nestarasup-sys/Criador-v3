@@ -215,10 +215,6 @@
 .textFieldActions { display: inline-flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px; }
 .textFieldActions .aiTextButton { background: linear-gradient(135deg, #ffe0ee, #f7d5ff); border-color: #e6add0; color: #9b3f71; }
 .textFieldActions button:disabled { opacity: .42; cursor: default; }
-.inspectorEmpty { padding: 28px 8px; display: flex; flex-direction: column; align-items: center; text-align: center; color: #8b8495; }
-.inspectorEmpty span { color: var(--purple); font-size: 35px; }
-.inspectorEmpty strong { margin-top: 10px; color: #4f4759; }
-.inspectorEmpty p { margin: 5px 0; font-size: 15.625px; line-height: 1.45; }
 .roster { padding: 11px; display: flex; flex-direction: column; overflow: hidden; }
 .rosterHeading { min-height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 5px 8px; gap:5px; }
 .rosterHeading span { color: #7e7689; font-size: 12.5px; letter-spacing: .16em; font-weight: 900; }
@@ -671,11 +667,6 @@
   background: #ffe7f0;
   color: #a34268;
 }
-.inspectorEmpty span {
-  color: #e26593;
-  filter: drop-shadow(0 4px 8px rgba(218,84,135,.2));
-}
-.inspectorEmpty strong { color: #674653; }
 .rosterHeading span { color: #a45b78; }
 .rosterHeading button {
   border: 1px solid #efbdd0;

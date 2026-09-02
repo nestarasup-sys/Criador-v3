@@ -480,6 +480,16 @@ test("posiciona o inspetor no lado oposto ao personagem selecionado", async () =
   assert.match(page, /\}, \[activeStudioId, storedCharacterPositionsLocked, storedBackgroundCollapsed, storedRosterCompact, storedInspectorDockSide\]\)/);
 });
 
+test("não exibe aviso vazio no inspetor do Studio", async () => {
+  const [inspector, css] = await Promise.all([
+    readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.doesNotMatch(inspector, /Selecione algo/);
+  assert.doesNotMatch(inspector, /inspectorEmpty/);
+  assert.doesNotMatch(css, /\.inspectorEmpty/);
+});
+
 test("protege o palco contra os docks e mantém o arraste selecionável", async () => {
   const [page, canvas, roster, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
