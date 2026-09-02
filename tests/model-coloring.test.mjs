@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import sharp from "sharp";
 import {
   emptyModelColorAdjustments,
   isModelColorPixel,
@@ -53,4 +54,53 @@ test("normaliza escopos e mantém quatro ajustes independentes", () => {
   assert.equal(normalized.pupils.tintStrength, 0);
   assert.equal(normalized.skin.tintStrength, 0);
   assert.equal(normalized.all.tintStrength, 0);
+});
+
+test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", async () => {
+  for (const file of ["normal.png", "corado.png"]) {
+    const { data, info } = await sharp(`public/models/modelos/feminino/modelo-13/${file}`)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const bounds = { minX: info.width, minY: info.height, maxX: -1, maxY: -1 };
+    for (let y = 0; y < info.height; y += 1) {
+      for (let x = 0; x < info.width; x += 1) {
+        if (data[(y * info.width + x) * 4 + 3] > 8) {
+          bounds.minX = Math.min(bounds.minX, x);
+          bounds.maxX = Math.max(bounds.maxX, x);
+          bounds.minY = Math.min(bounds.minY, y);
+          bounds.maxY = Math.max(bounds.maxY, y);
+        }
+      }
+    }
+    let pupilCount = 0;
+    let detailsCount = 0;
+    let blushPupilCount = 0;
+    let blushDetailsCount = 0;
+    let mouthPupilCount = 0;
+    let mouthDetailsCount = 0;
+    for (let y = bounds.minY; y <= bounds.maxY; y += 1) {
+      for (let x = bounds.minX; x <= bounds.maxX; x += 1) {
+        const offset = (y * info.width + x) * 4;
+        const position = { x, y, bounds };
+        const pupil = isModelColorPixel("pupils", data[offset], data[offset + 1], data[offset + 2], data[offset + 3], position);
+        const details = isModelColorPixel("details", data[offset], data[offset + 1], data[offset + 2], data[offset + 3], position);
+        pupilCount += pupil ? 1 : 0;
+        detailsCount += details ? 1 : 0;
+        if (x >= 900 && x <= 1020 && y >= 320 && y <= 370) {
+          blushPupilCount += pupil ? 1 : 0;
+          blushDetailsCount += details ? 1 : 0;
+        }
+        if (x >= 940 && x <= 1030 && y >= 370 && y <= 410) {
+          mouthPupilCount += pupil ? 1 : 0;
+          mouthDetailsCount += details ? 1 : 0;
+        }
+      }
+    }
+    assert.ok(pupilCount > 500, `${file}: pigmento dos olhos deveria ser detectável`);
+    assert.ok(detailsCount > 500, `${file}: detalhes faciais deveriam ser detectáveis`);
+    assert.equal(blushPupilCount, 0, `${file}: blush não pode entrar na máscara de pupilas`);
+    assert.equal(blushDetailsCount, 0, `${file}: blush não pode entrar na máscara de detalhes`);
+    assert.equal(mouthPupilCount, 0, `${file}: boca não pode entrar na máscara de pupilas`);
+    assert.equal(mouthDetailsCount, 0, `${file}: boca não pode entrar na máscara de detalhes`);
+  }
 });
