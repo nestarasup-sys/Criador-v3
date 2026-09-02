@@ -11,7 +11,7 @@ import { processChromaPixels } from "../creator/chroma-worker-client";
 import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
-import { colorAdjustmentIsActive, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
+import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
 import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
@@ -22,6 +22,8 @@ const HEIGHT = 1080;
 const PADDING = { x: 520, y: 360 };
 const chromaCache = new Map<string, Promise<HTMLCanvasElement>>();
 const MAX_CHROMA_CACHE = 48;
+const colorLayerCache = new Map<string, Promise<CanvasImageSource>>();
+const MAX_COLOR_CACHE = 160;
 
 function transparentChroma(src: string) {
   if (!chromaCache.has(src)) {
@@ -248,7 +250,23 @@ export async function renderStudioCharacter(
       : layerCategory ? character.protectionMasks?.[layerCategory] : undefined;
     let renderImage: CanvasImageSource = image;
     if (colorAdjustmentIsActive(color)) {
-      renderImage = await renderColorLayer(image, width, height, color, protectionMask, loadStudioImage);
+      const cacheKey = colorRenderCacheKey(`${layerCategory ?? "layer"}:${item.fileUrl}:${width}x${height}`, color, protectionMask ?? "");
+      let pending = colorLayerCache.get(cacheKey);
+      if (!pending) {
+        pending = renderColorLayer(image, width, height, color, protectionMask, loadStudioImage);
+        colorLayerCache.set(cacheKey, pending);
+        while (colorLayerCache.size > MAX_COLOR_CACHE) {
+          const oldest = colorLayerCache.keys().next().value as string | undefined;
+          if (!oldest || oldest === cacheKey) break;
+          colorLayerCache.delete(oldest);
+        }
+      }
+      try {
+        renderImage = await pending;
+      } catch (error) {
+        colorLayerCache.delete(cacheKey);
+        throw error;
+      }
     }
     renderImage = colorizeRenderDebugLayer(renderImage, width, height, layerCategory ?? "");
     if (layer) {
