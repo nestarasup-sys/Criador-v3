@@ -298,6 +298,11 @@ export default function StudioPage() {
   }
 
   const studio = studios.find((item) => item.id === currentId) ?? null;
+  const activeStudioId = studio?.id;
+  const storedCharacterPositionsLocked = studio?.uiPreferences?.characterPositionsLocked;
+  const storedBackgroundCollapsed = studio?.uiPreferences?.backgroundCollapsed;
+  const storedRosterCompact = studio?.uiPreferences?.rosterCompact;
+  const storedInspectorDockSide = studio?.uiPreferences?.inspectorDockSide;
   const charactersById = useMemo(() => new Map(data.characters.map((character) => [character.id, character])), [data.characters]);
   const backgroundAssets = useMemo(() => {
     const backgroundIds = new Set(studios.map((item) => item.background?.assetId).filter(Boolean));
@@ -319,13 +324,12 @@ export default function StudioPage() {
   }, [currentId, pushHistory]);
 
   useEffect(() => {
-    if (!studio) return;
-    const preferences = studio.uiPreferences;
-    setCharacterPositionsLocked(preferences?.characterPositionsLocked === true);
-    setBackgroundCollapsed(preferences?.backgroundCollapsed === true);
-    setRosterCompact(preferences?.rosterCompact === true);
-    setDockSide(preferences?.inspectorDockSide === "left" ? "left" : "right");
-  }, [studio, studio?.id, studio?.uiPreferences?.characterPositionsLocked, studio?.uiPreferences?.backgroundCollapsed, studio?.uiPreferences?.rosterCompact, studio?.uiPreferences?.inspectorDockSide]);
+    if (!activeStudioId) return;
+    setCharacterPositionsLocked(storedCharacterPositionsLocked === true);
+    setBackgroundCollapsed(storedBackgroundCollapsed === true);
+    setRosterCompact(storedRosterCompact === true);
+    setDockSide(storedInspectorDockSide === "left" ? "left" : "right");
+  }, [activeStudioId, storedCharacterPositionsLocked, storedBackgroundCollapsed, storedRosterCompact, storedInspectorDockSide]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
   function updateStudioUi(patch: Partial<Studio["uiPreferences"]>) {

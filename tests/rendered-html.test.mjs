@@ -476,6 +476,8 @@ test("posiciona o inspetor no lado oposto ao personagem selecionado", async () =
   assert.match(page, /setDockSide\(inspectorSideForCharacter\(existing\.x\)\)/);
   assert.match(page, /setDockSide\(inspectorSideForCharacter\(instance\.x\)\)/);
   assert.match(page, /if \(kind === "character"\) \{[\s\S]*?setDockSide\(inspectorSideForCharacter\(x\)\)/);
+  assert.doesNotMatch(page, /\}, \[studio, studio\?\.id, studio\?\.uiPreferences/);
+  assert.match(page, /\}, \[activeStudioId, storedCharacterPositionsLocked, storedBackgroundCollapsed, storedRosterCompact, storedInspectorDockSide\]\)/);
 });
 
 test("protege o palco contra os docks e mantém o arraste selecionável", async () => {
