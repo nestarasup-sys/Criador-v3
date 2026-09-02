@@ -9,3 +9,5 @@ essa integração seja planejada explicitamente.
 ## Ferramentas
 
 - `fabricador-de-modelo/` — estrutura reservada para o Fabricador de Modelo.
+- `public/Ferramentas/green-bg-pro/index.html` — Green BG PRO, ferramenta integrada em modo legado.
+- `public/Ferramentas/alinhador-profissa/index.html` — Alinhador Profissa, ferramenta integrada em modo legado.
