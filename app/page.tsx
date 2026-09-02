@@ -139,6 +139,16 @@ const DEFAULT_TRANSFORM: ItemTransform = {
 
 const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = { ...SHARED_DEFAULT_COLOR_ADJUSTMENT };
 
+const QUICK_COLOR_PRESETS = [
+  ["Violeta", "#8c70d8"], ["Lavanda", "#b59be8"], ["Lilás", "#c79bd6"], ["Roxo", "#6e3fc1"], ["Ameixa", "#7a315c"], ["Uva", "#59358c"], ["Magenta", "#c43f9e"], ["Fúcsia", "#e557b4"],
+  ["Coral", "#ef756d"], ["Salmão", "#f38f86"], ["Vermelho", "#d83a48"], ["Carmim", "#a91f3e"], ["Cereja", "#b92c58"], ["Rubi", "#8f193e"], ["Rosa", "#db65a6"], ["Rosa-choque", "#ee3f83"], ["Rosa antigo", "#bf708a"], ["Blush", "#e89aa8"],
+  ["Pêssego", "#f3ae86"], ["Laranja", "#e77837"], ["Tangerina", "#f2994a"], ["Terracota", "#c45a3f"], ["Âmbar", "#d7952d"], ["Dourado", "#e4bb58"], ["Mostarda", "#b7962f"], ["Canário", "#ebd34d"], ["Açafrão", "#dca72d"],
+  ["Menta", "#82d5b4"], ["Verde", "#55b988"], ["Esmeralda", "#199c74"], ["Jade", "#39bca5"], ["Turquesa", "#3bbfc2"], ["Oliva", "#8a9a43"], ["Pistache", "#a7c96b"], ["Musgo", "#5d7b42"], ["Floresta", "#2f684d"],
+  ["Ciano", "#50c4dc"], ["Azul céu", "#6ca8e5"], ["Azul", "#519ec9"], ["Azul royal", "#4661c9"], ["Índigo", "#5550c7"], ["Marinho", "#27366f"], ["Petróleo", "#2f7184"], ["Azul noite", "#38445c"], ["Pervinca", "#8294d9"],
+  ["Creme", "#f1ddc0"], ["Bege", "#dec4a1"], ["Areia", "#c9ad86"], ["Caramelo", "#bd8055"], ["Chocolate", "#80523b"], ["Café", "#55362e"], ["Malva", "#9b718f"], ["Cinza azulado", "#78869f"], ["Grafite", "#454857"],
+  ["Branco suave", "#f7f7f7"], ["Prata suave", "#c6cbd3"], ["Cinza médio", "#777b82"], ["Preto suave", "#111216"],
+] as const;
+
 const DEFAULT_PREVIEW_PAN: PreviewPan = { x: 0, y: 0 };
 const DEFAULT_EXPORT_FRAME: ExportFrame = { x: 0, y: 0, scale: 1 };
 const SCENE_PADDING = { x: 960, y: 540 };
@@ -4925,9 +4935,7 @@ export default function Home() {
                 <div className="color-group-scope"><span>✦ Conjunto vinculado</span><strong>{activeOutfitVariantCount} versões ao mesmo tempo</strong></div>
               )}
               <div className="color-swatches" aria-label="Cores rápidas">
-                {[
-                  ["Violeta", "#8c70d8"], ["Coral", "#ef756d"], ["Dourado", "#e4bb58"], ["Verde", "#55b988"], ["Azul", "#519ec9"], ["Índigo", "#5550c7"], ["Rosa", "#db65a6"],
-                ].map(([label, color]) => (
+                {QUICK_COLOR_PRESETS.map(([label, color]) => (
                   <button key={color} style={{ background: color }} aria-label={`Recolorir para ${label}`} title={label} onClick={() => applyTargetColor(color)} />
                 ))}
               </div>

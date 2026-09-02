@@ -614,8 +614,8 @@ body { background: #f8f6f7; }
 .color-group-scope { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 9px; padding: 7px 9px; border: 1px solid #e2d8ff; border-radius: 9px; background: linear-gradient(135deg, #f8f4ff, #fff8fc); color: #7157bd; font-size: 9.5px; }
 .color-group-scope span { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
 .color-group-scope strong { color: #514b65; font-size: 10px; }
-.color-swatches { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
-.color-swatches button { width: 22px; height: 22px; padding: 0; border: 2px solid white; border-radius: 50%; outline: 1px solid #e7e1e7; cursor: pointer; }
+.color-swatches { display: flex; align-items: center; gap: 10px; min-width: 0; margin-bottom: 8px; padding: 3px 3px 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #c7b5ef transparent; }
+.color-swatches button { flex: 0 0 22px; width: 22px; height: 22px; padding: 0; border: 2px solid white; border-radius: 50%; outline: 1px solid #e7e1e7; cursor: pointer; }
 .color-swatches button:hover, .color-neutral-presets button:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(59,44,83,.12); }
 .color-neutral-presets { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; margin: -1px 0 8px; }
 .color-neutral-presets button { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #e5dff0; border-radius: 7px; padding: 5px 3px; background: #fbfaff; color: #666276; font-size: 8.5px; font-weight: 750; cursor: pointer; transition: .16s ease; }
