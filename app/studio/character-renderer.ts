@@ -69,6 +69,19 @@ function transparentChroma(src: string) {
 function paintStroke(context: CanvasRenderingContext2D, stroke: MaskStroke, color: string) {
   if (!stroke.points.length) return;
   context.save();
+  context.fillStyle = color;
+  if (stroke.shape === "polygon" && stroke.points.length >= 3) {
+    const paths = [stroke.points, ...(stroke.paths ?? [])].filter((path) => path.length >= 3);
+    context.beginPath();
+    for (const path of paths) {
+      context.moveTo(path[0].x, path[0].y);
+      for (const point of path.slice(1)) context.lineTo(point.x, point.y);
+      context.closePath();
+    }
+    context.fill();
+    context.restore();
+    return;
+  }
   context.lineCap = "round";
   context.lineJoin = "round";
   context.lineWidth = stroke.size;

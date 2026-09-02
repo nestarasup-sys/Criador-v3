@@ -37,6 +37,8 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(compositor, /context\.restore\(\)/);
   assert.match(renderer, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
   assert.match(renderer, /const outfitLayer = document\.createElement\("canvas"\)/);
+  assert.match(renderer, /stroke\.shape === "polygon"/);
+  assert.match(renderer, /stroke\.paths \?\? \[\]/);
   assert.match(renderer, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
   assert.match(renderer, /character\.adjustments\.cabelosTras \?\? packAdjustments\?\.cabelosTras/);
   assert.match(renderer, /character\.adjustments\.cabelos \?\? packAdjustments\?\.cabelos/);
