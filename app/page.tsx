@@ -20,6 +20,7 @@ import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
+import { createModelColorAdjustedCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
@@ -58,6 +59,8 @@ import type {
   CharacterSnapshot,
   ColorAdjustment,
   ColorAdjustments,
+  ModelColorAdjustments,
+  ModelColorScope,
   ExportFrame,
   OutfitColorAdjustmentsByGroup,
   PreviewPan,
@@ -1187,6 +1190,8 @@ export default function Home() {
   const [selections, setSelections] = useState<Record<Category, string | null>>({ ...EMPTY_SELECTIONS });
   const [adjustments, setAdjustments] = useState<Record<Category, ItemTransform>>(emptyAdjustments);
   const [colorAdjustments, setColorAdjustments] = useState<ColorAdjustments>(emptyColorAdjustments);
+  const [modelColorAdjustments, setModelColorAdjustments] = useState<ModelColorAdjustments>(emptyModelColorAdjustments);
+  const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("details");
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
   const [syncHairColor, setSyncHairColor] = useState(true);
@@ -1378,6 +1383,8 @@ export default function Home() {
     selections,
     adjustments,
     colorAdjustments,
+    modelColorAdjustments,
+    modelColorScope,
     outfitColorAdjustmentsByGroup,
     protectionMasks,
     faceMode,
@@ -1414,6 +1421,8 @@ export default function Home() {
     selections,
     adjustments,
     colorAdjustments,
+    modelColorAdjustments,
+    modelColorScope,
     outfitColorAdjustmentsByGroup,
     protectionMasks,
     faceMode,
@@ -1434,6 +1443,7 @@ export default function Home() {
     || Boolean(activePackId)
     || Object.values(layerMasks).some((strokes) => strokes.length > 0)
     || Object.values(colorAdjustments).some((adjustment) => colorAdjustmentIsActive(adjustment))
+    || Object.values(modelColorAdjustments).some((adjustment) => colorAdjustmentIsActive(adjustment))
     || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => colorAdjustmentIsActive(adjustment))
     || Object.keys(protectionMasks).length > 0
     || Object.keys(outfitProtectionMasksByBasePack).length > 0;
@@ -1487,6 +1497,8 @@ export default function Home() {
     setAdjustments(normalizeAdjustments(snapshot.adjustments));
     setHeadFitGuide(null);
     setColorAdjustments(normalizeColorAdjustments(snapshot.colorAdjustments));
+    setModelColorAdjustments(normalizeModelColorAdjustments(snapshot.modelColorAdjustments));
+    setModelColorScope(normalizeModelColorScope(snapshot.modelColorScope));
     setOutfitColorAdjustmentsByGroup(snapshot.outfitColorAdjustmentsByGroup ?? {});
     setProtectionMasks(snapshot.protectionMasks ?? {});
     setHairAdjustmentsByBasePack(snapshot.hairAdjustmentsByBasePack ?? {});
@@ -1744,14 +1756,22 @@ export default function Home() {
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
       configureHighQualityContext(bodyContext);
-      const debugBody = colorizeRenderDebugLayer(baseImage, baseImage.naturalWidth || canvas.width, baseImage.naturalHeight || canvas.height, "corpo");
+      const sourceWidth = baseImage.naturalWidth || canvas.width;
+      const sourceHeight = baseImage.naturalHeight || canvas.height;
+      const modelColor = normalizeModelColorAdjustments(modelColorAdjustments);
+      const adjustedBase = createModelColorAdjustedCanvas(
+        baseImage,
+        sourceWidth,
+        sourceHeight,
+        modelColor[modelColorScope],
+        modelColorScope,
+      );
+      const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
       const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
       if (headOnly) {
         // The anchor is expressed in the model's original 1920×1080 canvas.
         // Keep the native canvas and translate only when a future model uses
         // a different source size; this avoids bottom-centering a head-only PNG.
-        const sourceWidth = baseImage.naturalWidth || canvas.width;
-        const sourceHeight = baseImage.naturalHeight || canvas.height;
         const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
         const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
         const targetAnchorX = activeBasePack.anchorX ?? canvas.width / 2;
@@ -1853,7 +1873,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -1913,6 +1933,8 @@ export default function Home() {
     selections,
     adjustments,
     colorAdjustments,
+    modelColorAdjustments,
+    modelColorScope,
     protectionMasks,
     faceMode,
     activePackId,
@@ -3838,6 +3860,8 @@ export default function Home() {
       setAdjustments(normalizeAdjustments(character.adjustments));
       setHeadFitGuide(null);
       setColorAdjustments(normalizeColorAdjustments(character.colorAdjustments));
+      setModelColorAdjustments(normalizeModelColorAdjustments(character.modelColorAdjustments));
+      setModelColorScope(normalizeModelColorScope(character.modelColorScope));
       setOutfitColorAdjustmentsByGroup(character.outfitColorAdjustmentsByGroup ?? {});
       setProtectionMasks(character.protectionMasks ?? {});
       setHairAdjustmentsByBasePack(character.hairAdjustmentsByBasePack ?? {});
@@ -3883,6 +3907,8 @@ export default function Home() {
     setAdjustments(emptyAdjustments());
     setHeadFitGuide(null);
     setColorAdjustments(emptyColorAdjustments());
+    setModelColorAdjustments(emptyModelColorAdjustments());
+    setModelColorScope("details");
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
     setHairAdjustmentsByBasePack({});
@@ -4091,12 +4117,23 @@ export default function Home() {
   const activeOutfitVariantCount = activeOutfitColorGroupKey
     ? modelOutfits.filter((item) => outfitColorGroupKey(item) === activeOutfitColorGroupKey).length
     : 0;
-  const activeColor = normalizeColorAdjustment(category === "roupas" && activeOutfitColorGroupKey
-    ? outfitColorAdjustmentsByGroup[activeOutfitColorGroupKey] ?? colorAdjustments.roupas
-    : colorAdjustments[category]);
-  const colorEligible = Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas");
+  const modelColorEditorActive = category === "rostos" && faceMode === "base";
+  const activeColor = modelColorEditorActive
+    ? normalizeColorAdjustment(modelColorAdjustments[modelColorScope])
+    : normalizeColorAdjustment(category === "roupas" && activeOutfitColorGroupKey
+      ? outfitColorAdjustmentsByGroup[activeOutfitColorGroupKey] ?? colorAdjustments.roupas
+      : colorAdjustments[category]);
+  const colorEligible = modelColorEditorActive
+    || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas"));
 
   function updateColorAdjustment(patch: Partial<ColorAdjustment>) {
+    if (modelColorEditorActive) {
+      setModelColorAdjustments((current) => ({
+        ...current,
+        [modelColorScope]: { ...current[modelColorScope], ...patch },
+      }));
+      return;
+    }
     if (category === "roupas" && activeOutfitColorGroupKey) {
       setOutfitColorAdjustmentsByGroup((current) => ({
         ...current,
@@ -4119,7 +4156,9 @@ export default function Home() {
 
   function resetActiveColor() {
     updateColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT });
-    setNotice(category === "roupas" && activeOutfitVariantCount > 1
+    setNotice(modelColorEditorActive
+      ? `Cor restaurada em ${modelColorScope === "details" ? "olhos e detalhes" : modelColorScope === "skin" ? "pele" : "todo o modelo"}`
+      : category === "roupas" && activeOutfitVariantCount > 1
       ? `Cor original restaurada nas ${activeOutfitVariantCount} versões da roupa`
       : syncHairColor && (category === "cabelos" || category === "cabelosTras")
       ? "Cor original restaurada no par de cabelo"
@@ -4865,9 +4904,21 @@ export default function Home() {
           )}
 
           {colorEligible && (
-            <section className="color-panel" aria-label="Ajustes de cor">
-              <div className="color-heading"><strong>Cor do item</strong><button onClick={resetActiveColor}>Restaurar</button></div>
+            <section className={`color-panel ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
+              <div className="color-heading"><strong>{modelColorEditorActive ? "Cores do modelo" : "Cor do item"}</strong><button onClick={resetActiveColor}>Restaurar</button></div>
               {colorPanelOpen && <div className="color-panel-body">
+              {modelColorEditorActive && (
+                <>
+                  <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
+                    {([[
+                      "details", "Olhos e detalhes",
+                    ], ["skin", "Pele"], ["all", "Modelo inteiro"]] as const).map(([scope, label]) => (
+                      <button key={scope} type="button" className={modelColorScope === scope ? "active" : ""} onClick={() => setModelColorScope(scope)}>{label}</button>
+                    ))}
+                  </div>
+                  <p className="model-color-help">Escolha a área antes da cor. “Olhos e detalhes” preserva a pele e muda os pigmentos coloridos; “Pele” deixa olhos e linhas intactos.</p>
+                </>
+              )}
               {category === "roupas" && activeOutfitVariantCount > 1 && (
                 <div className="color-group-scope"><span>✦ Conjunto vinculado</span><strong>{activeOutfitVariantCount} versões ao mesmo tempo</strong></div>
               )}

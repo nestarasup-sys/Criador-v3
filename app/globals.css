@@ -605,6 +605,12 @@ body { background: #f8f6f7; }
 .color-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .color-heading strong { font-size: 12.5px; }
 .color-heading button { border: 0; background: transparent; color: var(--accent); font-size: 10px; font-weight: 750; cursor: pointer; }
+.model-color-panel { border-color: #ddd4fb !important; background: linear-gradient(145deg,#fff,#fbf9ff) !important; }
+.model-color-scope { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; margin: 0 0 8px; }
+.model-color-scope button { min-width: 0; border: 1px solid #e5dff2; border-radius: 8px; padding: 7px 5px; background: #fbfaff; color: #726b82; font-size: 9px; font-weight: 800; cursor: pointer; }
+.model-color-scope button:hover { border-color: #cfc1f4; background: #f7f2ff; }
+.model-color-scope button.active { border-color: var(--accent); background: var(--accent); color: white; box-shadow: 0 3px 9px rgba(114,87,217,.2); }
+.model-color-help { margin: 0 0 9px; padding: 7px 8px; border-left: 3px solid var(--accent); border-radius: 6px; background: #f5f1ff; color: #6d6680; font-size: 8.75px; line-height: 1.4; }
 .color-group-scope { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 9px; padding: 7px 9px; border: 1px solid #e2d8ff; border-radius: 9px; background: linear-gradient(135deg, #f8f4ff, #fff8fc); color: #7157bd; font-size: 9.5px; }
 .color-group-scope span { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
 .color-group-scope strong { color: #514b65; font-size: 10px; }
