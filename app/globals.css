@@ -611,6 +611,19 @@ body { background: #f8f6f7; }
 .back-hair-help .import-format-help, .back-hair-help .hair-sheet-layout { display: none; }
 .catalog-panel > .color-panel { order: 7; margin: 0 4px 8px; padding: 10px 11px; border: 1px solid #ece7ec; border-radius: 11px; background: #fff; }
 .catalog-panel > .color-panel.is-collapsed { padding-bottom: 8px; }
+.catalog-panel.color-editing { overflow: hidden; }
+.catalog-panel.color-editing > *:not(.color-editor-dedicated) { display: none !important; }
+.catalog-panel.color-editing > .color-editor-dedicated { order: 1; display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; overflow-y: auto; margin: 0; padding: 13px 12px 18px; border: 0; border-radius: 0; background: linear-gradient(180deg,#fff,#fcfaff); scrollbar-width: thin; scrollbar-color: #c9b8ed transparent; }
+.color-editor-topbar { display: grid; gap: 10px; flex: 0 0 auto; margin: -4px -2px 12px; padding-bottom: 12px; border-bottom: 1px solid #eee8f1; }
+.color-editor-back { justify-self: start; border: 1px solid #e2d8f8; border-radius: 8px; padding: 7px 10px; background: #f8f5ff; color: var(--accent-dark); font-size: 10px; font-weight: 800; cursor: pointer; }
+.color-editor-back:hover { border-color: var(--accent); background: #f0eaff; transform: translateX(-1px); }
+.color-editor-context { display: grid; gap: 3px; padding: 10px 11px; border: 1px solid #e3d9f7; border-radius: 11px; background: linear-gradient(135deg,#f7f2ff,#fff4f8); }
+.color-editor-context span { color: var(--accent); font-size: 8px; font-weight: 900; letter-spacing: .12em; }
+.color-editor-context strong { overflow: hidden; color: #302848; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+.color-editor-context small { color: #777087; font-size: 9.5px; }
+.catalog-panel.color-editing .color-heading { flex: 0 0 auto; }
+.catalog-panel.color-editing .color-panel-body { flex: 0 0 auto; }
+.catalog-panel.color-editing .color-collapse-button { display: none; }
 .color-panel-body { display: block; }
 .color-section { margin: 8px 0; border: 1px solid #ebe5f3; border-radius: 10px; background: rgba(255,255,255,.78); overflow: hidden; }
 .color-section-heading { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 8px 10px; background: #faf8ff; color: #51456e; font-size: 10px; font-weight: 850; text-align: left; cursor: pointer; }

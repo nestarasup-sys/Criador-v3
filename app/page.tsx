@@ -4301,6 +4301,12 @@ export default function Home() {
     || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas"));
   const colorIsChanged = colorAdjustmentIsActive(activeColor);
   const colorStatusLabel = !activeColor.enabled ? "Desligada" : colorIsChanged ? "Aplicada" : "Original";
+  const selectedColorItem = catalog.find((entry) => entry.id === selections[category]);
+  const colorEditingTitle = modelColorEditorActive
+    ? activeBasePack.name
+    : category === "roupas"
+      ? selectedOutfit?.name ?? "Roupa selecionada"
+      : selectedColorItem?.name ?? "Item selecionado";
 
   useEffect(() => {
     if (!modelColorEditorActive && colorPreviewMode === "mask") setColorPreviewMode("after");
@@ -5063,7 +5069,7 @@ export default function Home() {
           </div>
         </section>
 
-        <aside className="sidebar catalog-panel">
+        <aside className={`sidebar catalog-panel ${colorPanelOpen && colorEligible ? "color-editing" : ""}`}>
           <CreatorCatalogHeader
             category={category}
             faceMode={faceMode}
@@ -5156,7 +5162,11 @@ export default function Home() {
           )}
 
           {colorEligible && (
-            <section className={`color-panel ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
+            <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
+              {colorPanelOpen && <div className="color-editor-topbar">
+                <button type="button" className="color-editor-back" onClick={() => setColorPanelOpen(false)}>← Voltar ao catálogo</button>
+                <div className="color-editor-context"><span>EDITANDO AGORA</span><strong>{colorEditingTitle}</strong><small>{modelColorEditorActive ? `${model} · ${activeBasePack.expressionKeys.length} expressões` : `${category === "cabelos" ? "cabelo frontal" : category === "cabelosTras" ? "cabelo traseiro" : category}`}{category === "roupas" && activeOutfitVariantCount > 1 ? ` · ${activeOutfitVariantCount} versões vinculadas` : ""}</small></div>
+              </div>}
               <div className="color-heading">
                 <div className="color-title"><span className="color-current-swatch" style={{ background: activeColor.tint }} aria-hidden="true" /><strong>{modelColorEditorActive ? "Cores do modelo" : "Cor do item"}</strong><span className={`color-status color-status-${colorStatusLabel.toLowerCase()}`}>{colorStatusLabel}</span></div>
                 <div className="color-heading-actions"><button type="button" className="color-power-button" onClick={toggleActiveColor}>{activeColor.enabled ? "Desligar" : "Ativar"}</button><button type="button" onClick={resetActiveColor}>Restaurar</button></div>
