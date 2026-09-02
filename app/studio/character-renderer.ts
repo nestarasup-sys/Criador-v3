@@ -315,12 +315,13 @@ export async function renderStudioCharacter(
   if (bodyContext) configureHighQualityContext(bodyContext);
   if (bodyContext) {
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
+    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as "details" | "skin" | "all";
     const adjustedBase = createModelColorAdjustedCanvas(
       base,
       base.width,
       base.height,
-      modelColors[normalizeModelColorScope(character.modelColorScope)],
-      normalizeModelColorScope(character.modelColorScope),
+      modelColors[modelColorScope],
+      modelColorScope,
     );
     bodyContext.drawImage(colorizeRenderDebugLayer(adjustedBase, WIDTH, HEIGHT, "corpo"), PADDING.x, PADDING.y, WIDTH, HEIGHT);
   }
