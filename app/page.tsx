@@ -4562,7 +4562,6 @@ export default function Home() {
           onMigrate={() => { void migrateBrowserDataToPc(); }}
           onOpenCharacter={openCharacter}
           onRemoveCharacter={removeCharacter}
-          onRemoveModel={removeBaseModel}
           onNewCharacter={() => newCharacter()}
         />
 
