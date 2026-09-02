@@ -8,7 +8,7 @@ export type PlaybackMode = "static" | "ghost" | "flicker" | "animation";
 
 export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio, mode, onMode, speed, onSpeed, animationScope, onAnimationScope, onPanCommit, reference, anchorX = 960, anchorY = 346, baseScale = 1.1 }: { current?: GeneratedSprite; ghost?: GeneratedSprite; trio: GeneratedSprite[]; animationFrames?: GeneratedSprite[]; mode: PlaybackMode; onMode: (mode: PlaybackMode) => void; speed: number; onSpeed: (speed: number) => void; animationScope: "selected" | "both"; onAnimationScope: (scope: "selected" | "both") => void; onPanCommit: (x: number, y: number, width: number, height: number) => void; reference?: HeadMaster; anchorX?: number; anchorY?: number; baseScale?: number }) {
   const [frame, setFrame] = useState<GeneratedSprite | undefined>();
-  const [zoom, setZoom] = useState(1.35);
+  const [zoom, setZoom] = useState(1.6);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [showGuide, setShowGuide] = useState(true);
   const panRef = useRef({ x: 0, y: 0 });
@@ -62,7 +62,11 @@ export function ComparisonPlayer({ current, ghost, trio, animationFrames = trio,
         const boxHeight = image?.clientHeight ?? stage.clientHeight;
         const contentWidth = Math.min(boxWidth, boxHeight * aspect);
         const contentHeight = contentWidth / aspect;
-        onPanCommit(deltaX, deltaY, Math.max(1, contentWidth), Math.max(1, contentHeight));
+        // deltaX/deltaY are measured after the preview zoom. Convert them
+        // back to the unzoomed canvas before applying the same framing to all
+        // sprites; otherwise a 2x preview would move the exported head twice
+        // as far as the pointer moved.
+        onPanCommit(deltaX / Math.max(1, zoom), deltaY / Math.max(1, zoom), Math.max(1, contentWidth), Math.max(1, contentHeight));
         updatePan({ x: 0, y: 0 });
       }
     }

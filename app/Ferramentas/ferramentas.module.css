@@ -238,8 +238,8 @@
 .fabricatorMain .button:hover { background: #893f68; }
 .fabricatorMain .button.secondary { color: #8e426d; background: #f9e8f1; box-shadow: none; }
 .fabricatorMain .filterButton:hover, .fabricatorMain .chipButton:hover, .fabricatorMain .filterActive, .fabricatorMain .chipActive { border-color: #9b4f78; background: #9b4f78; }
-.fabricatorMain .comparisonStage { min-height: 190px; }
-.fabricatorMain .comparisonImage { height: 250px; }
+.fabricatorMain .comparisonStage { min-height: 340px; height: min(46vw, 460px); }
+.fabricatorMain .comparisonImage { width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 32%; }
 .fabricatorMain .stageBadge { background: rgba(79, 42, 70, .84); }
 .fabricatorMain .status { border: 1px solid #eee2e9; }
 @container fabricator-layout (max-width: 980px) { .fabricatorMain .layout { grid-template-columns: 1fr; } .fabricatorMain .layout > aside { position: static; } }

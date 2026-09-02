@@ -64,9 +64,13 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(comparison, /Animar trio/);
   assert.match(comparison, /max="10"/);
   assert.match(comparison, /onPanCommit/);
+  assert.match(comparison, /deltaX \/ Math\.max\(1, zoom)/);
+  assert.match(comparison, /useState\(1\.6\)/);
   assert.match(comparison, /Guias estruturais/);
   assert.match(comparison, /\[trio\[0\], trio\[1\], trio\[0\], trio\[2\], trio\[0\]\]/);
   assert.match(comparison, /setFrame\(sequence\[index\]\)/);
+  assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonStage \{ min-height: 340px/);
+  assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonImage \{ width: 100%; height: 100%; object-fit: contain/);
 });
 
 test("salvamento mantém as proteções de tamanho e duplicidade", async () => {
