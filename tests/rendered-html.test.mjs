@@ -485,6 +485,7 @@ test("não exibe aviso vazio no inspetor do Studio", async () => {
     readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
+  assert.match(inspector, /if \(!selection && !studio\.background\) return null/);
   assert.doesNotMatch(inspector, /Selecione algo/);
   assert.doesNotMatch(inspector, /inspectorEmpty/);
   assert.doesNotMatch(css, /\.inspectorEmpty/);

@@ -70,6 +70,7 @@ type StudioInspectorProps = {
 
 export function StudioInspector({ studio, selection, selectedCharacter, selectedCharacterSource, selectedObject, selectedBubble, selectedNarrator, emotions, translatingBubbleId, onToggleBackgroundFit, backgroundCollapsed, onToggleBackgroundCollapsed, onRemoveBackground, onUpdate, onCopyBubble, onPasteBubble, onGenerateEnglish, onLayer, onRemove, onDuplicate, onPrint, isPrinting, onPose, poseLabel, poseDisabled, onNudgeOutfit, outfitAdjustDisabled }: StudioInspectorProps) {
   const update = <T extends object>(kind: NonNullable<Selection>["kind"], id: string, patch: Partial<T>) => onUpdate(kind, id, patch as Record<string, unknown>);
+  if (!selection && !studio.background) return null;
   if (studio.background && !selection && backgroundCollapsed) return null;
   return <section className={styles.inspector}>
     {studio.background && !selection && <>{backgroundCollapsed ? <div className={styles.backgroundCollapsed}><strong>Fundo</strong><button onClick={onToggleBackgroundCollapsed}>Mostrar controles</button></div> : <><div className={styles.backgroundPanelHeading}><h3>Fundo</h3><button aria-label="Recolher painel Fundo" title="Recolher painel Fundo" onClick={onToggleBackgroundCollapsed}>▴</button></div><button onClick={onToggleBackgroundFit}>{studio.background.fit === "cover" ? "Mostrar inteiro" : "Preencher tela"}</button><button className={styles.dangerButton} onClick={onRemoveBackground}>Remover fundo</button></>}</>}
