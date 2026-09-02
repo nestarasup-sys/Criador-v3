@@ -22,6 +22,39 @@ function visibleBounds(data: Uint8ClampedArray, width: number, height: number) {
   return { minX, minY, maxX, maxY };
 }
 
+/** Builds the exact semantic mask used by the model recolor pipeline. */
+export function createModelColorMaskCanvas(
+  image: CanvasImageSource,
+  width: number,
+  height: number,
+  scope: ModelColorScope,
+) {
+  const source = document.createElement("canvas");
+  source.width = width;
+  source.height = height;
+  const sourceContext = source.getContext("2d", { willReadFrequently: true });
+  if (!sourceContext) throw new Error("Canvas de máscara de cor indisponível");
+  sourceContext.drawImage(image, 0, 0, width, height);
+  const original = sourceContext.getImageData(0, 0, width, height);
+  const selected = new Uint8ClampedArray(original.data);
+  const bounds = visibleBounds(original.data, width, height);
+  let selectedPixels = 0;
+  for (let index = 0; index < selected.length; index += 4) {
+    const pixel = index / 4;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    if (scope === "all" || isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds })) {
+      selectedPixels += 1;
+    } else {
+      selected[index + 3] = 0;
+    }
+  }
+  if (!selectedPixels) return null;
+  sourceContext.clearRect(0, 0, width, height);
+  sourceContext.putImageData(new ImageData(selected, width, height), 0, 0);
+  return source;
+}
+
 /**
  * Applies model colors in the source coordinate system. Details and skin are
  * selected from the decoded pixels before the tonal recolor, so changing an
@@ -39,31 +72,8 @@ export function createModelColorAdjustedCanvas(
   if (!colorAdjustmentIsActive(color)) return image;
   if (scope === "all") return createColorAdjustedCanvas(image, width, height, color);
 
-  const source = document.createElement("canvas");
-  source.width = width;
-  source.height = height;
-  const sourceContext = source.getContext("2d", { willReadFrequently: true });
-  if (!sourceContext) throw new Error("Canvas de cor do modelo indisponível");
-  sourceContext.drawImage(image, 0, 0, width, height);
-  const original = sourceContext.getImageData(0, 0, width, height);
-  const selected = new Uint8ClampedArray(original.data);
-  const bounds = visibleBounds(original.data, width, height);
-  let selectedPixels = 0;
-  for (let index = 0; index < selected.length; index += 4) {
-    const pixel = index / 4;
-    const x = pixel % width;
-    const y = Math.floor(pixel / width);
-    if (isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds })) {
-      selectedPixels += 1;
-    } else {
-      selected[index + 3] = 0;
-    }
-  }
-  if (!selectedPixels) return image;
-
-  const selectedCanvas = document.createElement("canvas");
-  selectedCanvas.width = width;
-  selectedCanvas.height = height;
+  const selectedCanvas = createModelColorMaskCanvas(image, width, height, scope);
+  if (!selectedCanvas) return image;
   const selectedContext = selectedCanvas.getContext("2d", { willReadFrequently: true });
   if (!selectedContext) throw new Error("Canvas de seleção do modelo indisponível");
   selectedContext.putImageData(new ImageData(selected, width, height), 0, 0);
