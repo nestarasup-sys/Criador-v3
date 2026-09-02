@@ -27,6 +27,8 @@ export type ColorAdjustment = {
 
 export type ColorAdjustments = Record<Category, ColorAdjustment>;
 export type OutfitColorAdjustmentsByGroup = Record<string, ColorAdjustment>;
+export type ModelColorScope = "details" | "skin" | "all";
+export type ModelColorAdjustments = Record<ModelColorScope, ColorAdjustment>;
 export type ProtectionMasks = Partial<Record<Category, string>>;
 export type PreviewPan = { x: number; y: number };
 export type ExportFrame = { x: number; y: number; scale: number };
@@ -42,6 +44,9 @@ export type Character = {
   selections: Record<Category, string | null>;
   adjustments: Record<Category, ItemTransform>;
   colorAdjustments?: Partial<ColorAdjustments>;
+  /** Recoloração não destrutiva da base do modelo, por área semântica. */
+  modelColorAdjustments?: Partial<ModelColorAdjustments>;
+  modelColorScope?: ModelColorScope;
   outfitColorAdjustmentsByGroup?: OutfitColorAdjustmentsByGroup;
   protectionMasks?: ProtectionMasks;
   faceMode?: FaceMode;
