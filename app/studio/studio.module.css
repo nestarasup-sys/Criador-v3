@@ -76,7 +76,7 @@
 .rosterActions .studioGlyph { width: 16px; height: 16px; }
 .emptyStudio > .studioGlyph,
 .backgroundLibraryEmpty > .studioGlyph { width: 40px; height: 40px; }
-.stageViewport { position: absolute; top: 0; right: var(--studio-safe-right,0px); bottom: 0; left: var(--studio-safe-left,0px); width: auto; height: 100%; display: grid; place-items: start center; overflow: hidden; touch-action: none; }
+.stageViewport { position: absolute; top: 0; right: var(--studio-safe-right,0px); bottom: 0; left: var(--studio-safe-left,0px); width: auto; height: auto; display: grid; place-items: start center; overflow: hidden; touch-action: none; }
 .stage { position: relative; flex: 0 0 auto; width: 1920px; height: 1080px; overflow: hidden; touch-action: none; transform: scale(var(--studio-preview-scale,0)); transform-origin: top center; background: #f3f0f8; }
 .background { position: absolute; left:50%; top:50%; width:100%; height:100%; object-fit: cover; pointer-events: none; transform: translate(calc(-50% + var(--background-offset-x,0px) + var(--background-drag-x,0px)),calc(-50% + var(--background-offset-y,0px) + var(--background-drag-y,0px))) scale(var(--background-scale,1)); transform-origin:center; }
 .background.contain { object-fit: contain; }
