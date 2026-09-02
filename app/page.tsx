@@ -20,7 +20,7 @@ import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
-import { createModelColorAdjustedCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
+import { createModelColorAdjustedCanvas, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
@@ -85,6 +85,8 @@ function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId)
 }
 
 type ColorEditorTool = "brush" | "bucket" | "eyedropper" | "erase";
+type ColorPreviewMode = "after" | "before" | "split" | "mask";
+type ColorPreviewBackground = "transparent" | "white" | "black";
 type OutfitCatalogMode = "standard" | "variants";
 
 type PreparedOutfitPose = NormalizedContentGeometry & {
@@ -1143,6 +1145,7 @@ export default function Home() {
   const hairPairSheetInputRef = useRef<HTMLInputElement>(null);
   const expressionPackInputRef = useRef<HTMLInputElement>(null);
   const colorEditorCanvasRef = useRef<HTMLCanvasElement>(null);
+  const colorBeforeCanvasRef = useRef<HTMLCanvasElement>(null);
   const colorEditorImageRef = useRef<HTMLImageElement | null>(null);
   const protectionMaskCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorEditorPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
@@ -1221,6 +1224,9 @@ export default function Home() {
   const [colorEditorRedo, setColorEditorRedo] = useState<string[]>([]);
   const [colorEditorRevision, setColorEditorRevision] = useState(0);
   const [colorPanelOpen, setColorPanelOpen] = useState(false);
+  const [colorPreviewMode, setColorPreviewMode] = useState<ColorPreviewMode>("after");
+  const [colorPreviewBackground, setColorPreviewBackground] = useState<ColorPreviewBackground>("transparent");
+  const [colorPreviewZoom, setColorPreviewZoom] = useState(100);
   const [headFitGuide, setHeadFitGuide] = useState<HeadFitGuide | null>(null);
   const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
   const historyActiveKeyRef = useRef<string | null>(null);
@@ -1609,6 +1615,7 @@ export default function Home() {
     includeExpression = true,
     editingPreview = false,
     variantOutfitId?: string,
+    previewMode: ColorPreviewMode = "after",
   ) => {
     const renderId = `creator-${crypto.randomUUID()}`;
     const target = variantOutfitId ? "creator-variant" : editingPreview ? "preview" : "single-export";
@@ -1673,7 +1680,7 @@ export default function Home() {
         ? outfitColorAdjustmentsByGroup[itemColorGroupKey] ?? colorAdjustments.roupas
         : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT);
       const protectionMask = layerCategory ? renderProtectionMasks[layerCategory] : undefined;
-      if (colorAdjustmentIsActive(color)) {
+      if (previewMode !== "before" && previewMode !== "mask" && colorAdjustmentIsActive(color)) {
         const cacheKey = colorRenderCacheKey(item.url, color, protectionMask ?? "");
         const cached = colorLayerCacheRef.current.get(cacheKey);
         if (cached) {
@@ -1783,13 +1790,32 @@ export default function Home() {
       const sourceWidth = baseImage.naturalWidth || canvas.width;
       const sourceHeight = baseImage.naturalHeight || canvas.height;
       const modelColor = normalizeModelColorAdjustments(modelColorAdjustments);
-      const adjustedBase = createModelColorAdjustedCanvas(
-        baseImage,
-        sourceWidth,
-        sourceHeight,
-        modelColor[modelColorScope],
-        modelColorScope,
-      );
+      let adjustedBase: CanvasImageSource = createModelColorAdjustedCanvas(
+          baseImage,
+          sourceWidth,
+          sourceHeight,
+          modelColor[modelColorScope],
+          modelColorScope,
+        );
+      if (previewMode === "before") adjustedBase = baseImage;
+      if (previewMode === "mask" && category === "rostos" && faceMode === "base") {
+        const selectedMask = createModelColorMaskCanvas(baseImage, sourceWidth, sourceHeight, modelColorScope);
+        if (selectedMask) {
+          const maskCanvas = document.createElement("canvas");
+          maskCanvas.width = sourceWidth;
+          maskCanvas.height = sourceHeight;
+          const maskContext = maskCanvas.getContext("2d");
+          if (!maskContext) throw new Error("Prévia da máscara indisponível");
+          maskContext.drawImage(selectedMask, 0, 0);
+          maskContext.globalCompositeOperation = "source-in";
+          maskContext.fillStyle = "#ef4f8f";
+          maskContext.fillRect(0, 0, sourceWidth, sourceHeight);
+          maskContext.globalCompositeOperation = "source-over";
+          adjustedBase = maskCanvas;
+        } else {
+          adjustedBase = baseImage;
+        }
+      }
       const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
       const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
       if (headOnly) {
@@ -1897,13 +1923,13 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, colorPreviewMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
     if (!visibleCanvas) return;
     const version = ++renderVersionRef.current;
-    const composition = await composeCharacter(activeExpressionKey, true, true);
+    const composition = await composeCharacter(activeExpressionKey, true, true, undefined, colorPreviewMode);
     if (version !== renderVersionRef.current) return;
     setExportTouchesEdge(canvasTouchesEdge(composition));
     visibleCanvas.width = composition.width;
@@ -1912,7 +1938,18 @@ export default function Home() {
     if (!context) return;
     context.clearRect(0, 0, visibleCanvas.width, visibleCanvas.height);
     context.drawImage(composition, 0, 0);
-  }, [activeExpressionKey, composeCharacter]);
+    const beforeCanvas = colorBeforeCanvasRef.current;
+    if (beforeCanvas && colorPreviewMode === "split") {
+      const before = await composeCharacter(activeExpressionKey, true, true, undefined, "before");
+      beforeCanvas.width = before.width;
+      beforeCanvas.height = before.height;
+      const beforeContext = beforeCanvas.getContext("2d");
+      if (beforeContext) {
+        beforeContext.clearRect(0, 0, before.width, before.height);
+        beforeContext.drawImage(before, 0, 0);
+      }
+    }
+  }, [activeExpressionKey, colorPreviewMode, composeCharacter]);
 
   useEffect(() => {
     renderCharacter().catch(() => setNotice("Não foi possível renderizar uma das imagens"));
