@@ -16,6 +16,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/components/ComparisonPlayer.tsx"),
   ]);
+  const quality = await read("app/Ferramentas/fabricador-de-modelo/core/quality.ts");
   const manualAdjustment = await read("app/Ferramentas/fabricador-de-modelo/components/ManualAdjustmentPanel.tsx");
   assert.match(constants, /PRIMARY_COUNT = 21/);
   assert.match(constants, /EXTENSION_COUNT = 21/);
@@ -72,6 +73,10 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(comparison, /setFrame\(sequence\[index\]\)/);
   assert.match(manualAdjustment, /useEffect/);
   assert.match(manualAdjustment, /setDraft\(sprite\?\.adjustment \?\? blank\)/);
+  assert.match(quality, /function adjustedProfile/);
+  assert.match(quality, /\+ dx/);
+  assert.match(quality, /adjustedWidth = anatomy\.width \* effectiveScaleX/);
+  assert.match(quality, /compareProfiles\(adjustedProfile\(anatomy, master, effectiveScaleX, dx\)/);
   assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonStage \{ min-height: 340px/);
   assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonImage \{ width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 6%/);
 });

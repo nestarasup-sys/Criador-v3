@@ -2,18 +2,32 @@ import type { FaceAnatomy, HeadMaster, QualityMetrics } from "../types/face-mode
 import { clamp } from "../utils/statistics";
 import { compareProfiles } from "./head-master";
 
-export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scale?: number; scaleX: number; scaleY: number }, stability: number, compatibility?: number): QualityMetrics {
+function adjustedProfile(anatomy: FaceAnatomy, master: HeadMaster, scaleX: number, dx: number) {
+  const sourceToMaster = scaleX * anatomy.cranialWidth / Math.max(1, master.width);
+  const offsetToMaster = dx / Math.max(1, master.width);
+  return anatomy.profile.map((point) => ({
+    ...point,
+    widthNorm: point.widthNorm * sourceToMaster,
+    centerOffset: point.centerOffset * sourceToMaster + offsetToMaster,
+  }));
+}
+
+export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scale?: number; scaleX: number; scaleY: number; dx?: number; dy?: number }, stability: number, compatibility?: number): QualityMetrics {
   const uniform = adjustment.scale ?? 1;
   const effectiveScaleX = uniform * adjustment.scaleX;
   const effectiveScaleY = uniform * adjustment.scaleY;
+  const dx = adjustment.dx ?? 0;
+  const dy = adjustment.dy ?? 0;
   const scaleError = Math.max(Math.abs(Math.log(Math.max(.001, effectiveScaleX))), Math.abs(Math.log(Math.max(.001, effectiveScaleY))));
-  const sourceLeft = (anatomy.structuralBounds.x - anatomy.neckCenterX) * effectiveScaleX;
-  const sourceRight = (anatomy.structuralBounds.x + anatomy.structuralBounds.width - 1 - anatomy.neckCenterX) * effectiveScaleX;
-  const sourceBottom = (anatomy.structuralBottom - anatomy.neckBaseY) * effectiveScaleY;
+  const sourceLeft = (anatomy.structuralBounds.x - anatomy.neckCenterX) * effectiveScaleX + dx;
+  const sourceRight = (anatomy.structuralBounds.x + anatomy.structuralBounds.width - 1 - anatomy.neckCenterX) * effectiveScaleX + dx;
+  const sourceBottom = (anatomy.structuralBottom - anatomy.neckBaseY) * effectiveScaleY + dy;
   const positionError = Math.max(Math.abs(sourceLeft - master.structuralLeft), Math.abs(sourceRight - master.structuralRight)) / Math.max(1, master.structuralWidth)
     + Math.abs(sourceBottom - master.structuralBottom) / Math.max(1, master.height) * .5;
-  const proportionError = Math.abs(Math.log(Math.max(.001, (anatomy.width / Math.max(1, anatomy.height)) / (master.width / Math.max(1, master.height)))));
-  const profile = compareProfiles(anatomy.profile, master.profile);
+  const adjustedWidth = anatomy.width * effectiveScaleX;
+  const adjustedHeight = anatomy.height * effectiveScaleY;
+  const proportionError = Math.abs(Math.log(Math.max(.001, (adjustedWidth / Math.max(1, adjustedHeight)) / (master.width / Math.max(1, master.height)))));
+  const profile = compareProfiles(adjustedProfile(anatomy, master, effectiveScaleX, dx), master.profile);
   const shape = clamp(100 - profile.total * 900, 0, 100);
   const metrics = {
     stability: clamp(stability, 0, 100),
@@ -21,7 +35,7 @@ export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: 
     position: clamp(100 - positionError * 400, 0, 100),
     proportion: clamp(100 - proportionError * 900, 0, 100),
     shape,
-    neck: clamp(100 - Math.abs(Math.log(Math.max(.001, (anatomy.neckWidth / Math.max(1, anatomy.width)) / (master.neckWidth / Math.max(1, master.width))))) * 800, 0, 100),
+    neck: clamp(100 - Math.abs(Math.log(Math.max(.001, (anatomy.neckWidth * effectiveScaleX / Math.max(1, adjustedWidth)) / (master.neckWidth / Math.max(1, master.width))))) * 800, 0, 100),
   };
   const overall = Math.round(metrics.stability * .18 + metrics.scale * .18 + metrics.position * .12 + metrics.proportion * .14 + metrics.shape * .23 + metrics.neck * .15);
   const reasons: string[] = [];
