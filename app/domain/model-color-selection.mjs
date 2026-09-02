@@ -66,6 +66,17 @@ function rgbToHsv(red, green, blue) {
 
 function isModelDetail(red, green, blue, alpha, position) {
   if (alpha <= 8) return false;
+  // Details are deliberately restricted to the inner eye/brow band. The
+  // source model PNGs may contain antialiased chroma residue around the
+  // silhouette and a pink mouth cavity lower in the face; both are valid
+  // pixels, but neither is an eye/detail color target.
+  if (!position?.bounds) return false;
+  const { minX, minY, maxX, maxY } = position.bounds;
+  const spanX = Math.max(1, maxX - minX);
+  const spanY = Math.max(1, maxY - minY);
+  const relativeX = (position.x - minX) / spanX;
+  const relativeY = (position.y - minY) / spanY;
+  if (relativeX < 0.12 || relativeX > 0.88 || relativeY < 0.24 || relativeY > 0.68) return false;
   const { saturation, value } = rgbToHsv(red, green, blue);
   const channels = [red, green, blue].sort((left, right) => right - left);
   const dominantRatio = channels[0] / Math.max(1, channels[1]);
@@ -73,13 +84,7 @@ function isModelDetail(red, green, blue, alpha, position) {
   // Some models use nearly black/brown eyes and brows. Their color has low
   // saturation, so use the face's relative geometry to avoid recoloring the
   // outer jaw/neck outline along with those details.
-  if (!position?.bounds || value > 0.38) return false;
-  const { minX, minY, maxX, maxY } = position.bounds;
-  const spanX = Math.max(1, maxX - minX);
-  const spanY = Math.max(1, maxY - minY);
-  const relativeX = (position.x - minX) / spanX;
-  const relativeY = (position.y - minY) / spanY;
-  return relativeX >= 0.1 && relativeX <= 0.9 && relativeY >= 0.26 && relativeY <= 0.72;
+  return value <= 0.38;
 }
 
 function isSkinTone(red, green, blue, alpha) {
