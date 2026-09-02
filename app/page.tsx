@@ -1160,6 +1160,11 @@ export default function Home() {
   const brushStrokeRef = useRef<string | null>(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveBaselineRef = useRef<string | null>(null);
+  const pendingEditorSnapshotRef = useRef<{
+    snapshot: string | null;
+    activeCharacter: string | null;
+    hasRealCustomization: boolean;
+  }>({ snapshot: null, activeCharacter: null, hasRealCustomization: false });
   const suspendAutoSaveRef = useRef(false);
   const charactersRef = useRef<Character[]>([]);
   const characterSwitchRef = useRef(false);
@@ -1470,6 +1475,41 @@ export default function Home() {
     || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => colorAdjustmentIsActive(adjustment))
     || Object.keys(protectionMasks).length > 0
     || Object.keys(outfitProtectionMasksByBasePack).length > 0;
+
+  useEffect(() => {
+    pendingEditorSnapshotRef.current = { snapshot: editorSnapshot, activeCharacter, hasRealCustomization };
+  }, [activeCharacter, editorSnapshot, hasRealCustomization]);
+
+  function flushEditorSnapshotOnExit() {
+    const pending = pendingEditorSnapshotRef.current;
+    if (!pending.snapshot || (!pending.activeCharacter && !pending.hasRealCustomization)) return;
+    if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = null;
+    try {
+      const snapshot = JSON.parse(pending.snapshot) as CharacterSnapshot;
+      const id = pending.activeCharacter ?? crypto.randomUUID();
+      const character: Character = {
+        ...(charactersRef.current.find((entry) => entry.id === id) ?? {}),
+        ...snapshot,
+        id,
+        updatedAt: new Date().toISOString(),
+      };
+      const nextCharacters = charactersRef.current.some((entry) => entry.id === id)
+        ? charactersRef.current.map((entry) => entry.id === id ? character : entry)
+        : [character, ...charactersRef.current];
+      charactersRef.current = nextCharacters;
+      saveCharactersToBrowser(nextCharacters);
+      if (pcSyncReadyRef.current) {
+        void saveCharactersToPc(nextCharacters).catch((error) => {
+          console.error("[creator] Falha ao persistir personagem ao sair", error);
+        });
+      }
+    } catch (error) {
+      console.error("[creator] Falha ao preparar o personagem ao sair", error);
+    }
+  }
+
+  useEffect(() => () => flushEditorSnapshotOnExit(), []);
 
   useEffect(() => {
     const key = activeCharacter ?? "draft";

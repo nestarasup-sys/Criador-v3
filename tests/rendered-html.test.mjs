@@ -327,6 +327,8 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
   assert.doesNotMatch(page, /\.\.\.\(current\.find\(/);
   assert.match(page, /flushCurrentCharacterBeforeSwitch/);
   assert.match(page, /saveCharactersToBrowser/);
+  assert.match(page, /pendingEditorSnapshotRef/);
+  assert.match(page, /flushEditorSnapshotOnExit/);
   assert.match(page, /undoCharacterChange/);
   assert.match(page, /redoCharacterChange/);
   assert.match(page, /Histórico do personagem atual/);
