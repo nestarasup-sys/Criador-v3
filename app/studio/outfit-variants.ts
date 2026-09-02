@@ -23,6 +23,10 @@ function outfitStateKey(itemId: string, packId: string) {
   return `${itemId}:${packId}`;
 }
 
+function hasOwnValue<T extends object>(value: T | undefined, key: PropertyKey) {
+  return Boolean(value && Object.prototype.hasOwnProperty.call(value, key));
+}
+
 export function outfitVariantsForCharacter(character: Character, instance: SceneCharacter | undefined, catalog: PcCatalogItem[]) {
   const selected = catalog.find((item) => item.id === character.selections.roupas && item.category === "roupas");
   const groupId = selected?.outfitGroupId ?? null;
@@ -79,11 +83,27 @@ export function characterForSceneOutfit(character: Character, instance: SceneCha
     ?? character.outfitLayerMasksByBasePack?.[packId];
   const savedProtection = character.outfitProtectionMasksByBasePack?.[exactKey]
     ?? character.outfitProtectionMasksByBasePack?.[packId];
-  const baseTransform = character.adjustments.roupas ?? { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
-  const resolvedTransform = savedTransform ?? baseTransform;
   const currentVariant = pose.variant.id === character.selections.roupas;
+  const baseTransform = character.adjustments.roupas ?? { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
+  // O Criador carrega estes presets do próprio item quando a roupa é
+  // selecionada. O Studio precisa aplicar a mesma regra, ou a prévia do
+  // Criador fica correta enquanto a cena perde o encaixe e a borracha.
+  const itemTransform = pose.variant.fitByBasePack?.[packId] ?? pose.variant.fit;
+  const itemMask = pose.variant.layerMasksByBasePack?.[packId] ?? [];
+  const itemProtection = pose.variant.protectionMasksByBasePack?.[packId];
+  const hasCharacterMask = hasOwnValue(character.outfitLayerMasksByBasePack, exactKey)
+    || hasOwnValue(character.outfitLayerMasksByBasePack, packId);
+  const hasCharacterProtection = hasOwnValue(character.outfitProtectionMasksByBasePack, exactKey)
+    || hasOwnValue(character.outfitProtectionMasksByBasePack, packId);
+  const resolvedMask = savedMask ?? (currentVariant && !hasCharacterMask && character.layerMasks?.outfit?.length
+    ? character.layerMasks.outfit
+    : itemMask);
+  const resolvedProtection = savedProtection ?? (currentVariant && !hasCharacterProtection
+    ? character.protectionMasks?.roupas
+    : itemProtection);
+  const resolvedTransform = savedTransform ?? itemTransform ?? baseTransform;
   const hasOffset = offset.x !== 0 || offset.y !== 0;
-  const hasVariantState = Boolean(savedTransform || savedMask || savedProtection);
+  const hasVariantState = Boolean(savedTransform || savedMask || savedProtection || itemTransform || itemMask.length || itemProtection);
   if (currentVariant && !hasOffset && !hasVariantState) return character;
   return {
     ...character,
@@ -98,12 +118,12 @@ export function characterForSceneOutfit(character: Character, instance: SceneCha
     },
     layerMasks: {
       ...(character.layerMasks ?? {}),
-      outfit: savedMask ?? (currentVariant ? character.layerMasks?.outfit ?? [] : []),
+      outfit: resolvedMask,
     },
     protectionMasks: {
       ...(character.protectionMasks ?? {}),
-      ...(savedProtection || (currentVariant && character.protectionMasks?.roupas)
-        ? { roupas: savedProtection ?? character.protectionMasks?.roupas }
+      ...(resolvedProtection
+        ? { roupas: resolvedProtection }
         : {}),
     },
   };
