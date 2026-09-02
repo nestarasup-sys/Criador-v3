@@ -1,5 +1,9 @@
+import { converter } from "culori";
+
 const clamp01 = (value) => Math.max(0, Math.min(1, Number(value) || 0));
 const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+const toOklch = converter("oklch");
+const fromOklch = converter("rgb");
 
 function parseHex(value) {
   const match = /^#([0-9a-f]{6})$/i.exec(String(value || ""));
@@ -88,6 +92,16 @@ export function recolorPixels(data, options = {}) {
   targetHue = ((targetHue + finite(options.hue, 0) / 360) % 1 + 1) % 1;
   targetSaturation = clamp01(targetSaturation * Math.max(0, finite(options.saturation, 100)) / 100);
   targetLightness = clamp01(targetLightness + (finite(options.brightness, 100) - 100) / 200);
+  const useOklch = options.colorSpace !== "hsl";
+  let oklchTargetColor = null;
+  if (useOklch) {
+    const target = toOklch({ mode: "rgb", r: targetRed, g: targetGreen, b: targetBlue });
+    oklchTargetColor = {
+      hue: Number.isFinite(target?.h) ? target.h : 0,
+      chroma: Math.max(0, Number(target?.c) || 0) * Math.max(0, finite(options.saturation, 100) / 100),
+      lightness: clamp01((Number(target?.l) || targetLightness) + (finite(options.brightness, 100) - 100) / 200),
+    };
+  }
 
   const detail = clamp01(finite(options.detailPreservation, 78) / 100);
   const contrast = Math.max(0, Math.min(2.5, finite(options.contrast, 100) / 100));
@@ -106,6 +120,15 @@ export function recolorPixels(data, options = {}) {
     bandHigh = Math.min(1, targetLightness + tonalRange / 2);
   }
 
+  const oklchBand = oklchTargetColor
+    ? (() => {
+        const lightness = oklchTargetColor.lightness;
+        if (lightness >= .7) return { low: Math.max(0, lightness - tonalRange), high: lightness };
+        if (lightness <= .3) return { low: lightness, high: Math.min(1, lightness + tonalRange) };
+        return { low: Math.max(0, lightness - tonalRange / 2), high: Math.min(1, lightness + tonalRange / 2) };
+      })()
+    : null;
+
   for (let index = 0; index < data.length; index += 4) {
     if (data[index + 3] <= 8) continue;
     const sourceRed = data[index] / 255;
@@ -122,7 +145,13 @@ export function recolorPixels(data, options = {}) {
     // A soft S-curve keeps midtone texture without crushing either extreme.
     tone = tone * tone * (3 - 2 * tone);
     const targetTone = bandLow + (bandHigh - bandLow) * tone;
-    const desired = hslToRgb(targetHue, targetSaturation, targetTone);
+    const desired = useOklch
+      ? (() => {
+          const l = oklchBand.low + (oklchBand.high - oklchBand.low) * targetTone;
+          const rgb = fromOklch({ mode: "oklch", l: clamp01(l), c: oklchTargetColor.chroma, h: oklchTargetColor.hue + finite(options.hue, 0) });
+          return [clamp01(rgb?.r), clamp01(rgb?.g), clamp01(rgb?.b)];
+        })()
+      : hslToRgb(targetHue, targetSaturation, targetTone);
 
     output[index] = Math.round((sourceRed + (desired[0] - sourceRed) * strength) * 255);
     output[index + 1] = Math.round((sourceGreen + (desired[1] - sourceGreen) * strength) * 255);

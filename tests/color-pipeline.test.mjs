@@ -60,3 +60,11 @@ test("preserva transparência e não toca em pixels invisíveis", () => {
   assert.deepEqual([...result.slice(0, 4)], [12, 34, 56, 0]);
   assert.equal(result[7], 255);
 });
+
+test("mantém um caminho OKLCH opt-in sem alterar pixels invisíveis", () => {
+  const source = new Uint8ClampedArray([18, 24, 32, 0, 48, 52, 64, 255, 120, 130, 145, 255]);
+  const result = recolorPixels(source, { ...base, colorSpace: "oklch", tint: "#d83a48" });
+  assert.deepEqual([...result.slice(0, 4)], [...source.slice(0, 4)]);
+  assert.equal(result.length, source.length);
+  assert.notDeepEqual([...result.slice(4, 7)], [...source.slice(4, 7)]);
+});

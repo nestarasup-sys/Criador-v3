@@ -10,6 +10,7 @@ export const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
   tintStrength: 0,
   contrast: 100,
   detailPreservation: 78,
+  colorSpace: "hsl",
 };
 
 function finite(value: unknown, fallback: number) {
@@ -35,6 +36,7 @@ export function normalizeColorAdjustment(value?: Partial<ColorAdjustment> | null
     tintStrength: clamp(value?.tintStrength, 0, 100, DEFAULT_COLOR_ADJUSTMENT.tintStrength),
     contrast: clamp(value?.contrast, 0, 250, DEFAULT_COLOR_ADJUSTMENT.contrast),
     detailPreservation: clamp(value?.detailPreservation, 0, 100, DEFAULT_COLOR_ADJUSTMENT.detailPreservation),
+    colorSpace: value?.colorSpace === "oklch" ? "oklch" : "hsl",
   };
 }
 
@@ -51,7 +53,7 @@ export function colorAdjustmentIsActive(value?: Partial<ColorAdjustment> | null)
 
 export function colorAdjustmentSignature(value?: Partial<ColorAdjustment> | null) {
   const color = normalizeColorAdjustment(value);
-  return [color.enabled, color.hue, color.saturation, color.brightness, color.tint.toLowerCase(), color.tintStrength, color.contrast, color.detailPreservation].join("|");
+  return [color.enabled, color.hue, color.saturation, color.brightness, color.tint.toLowerCase(), color.tintStrength, color.contrast, color.detailPreservation, color.colorSpace].join("|");
 }
 
 export function colorRenderCacheKey(sourceKey: string, value?: Partial<ColorAdjustment> | null, protectionKey = "") {
