@@ -491,6 +491,17 @@ test("não exibe aviso vazio no inspetor do Studio", async () => {
   assert.doesNotMatch(css, /\.inspectorEmpty/);
 });
 
+test("desativa o dock invisível quando não há conteúdo no inspetor", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /const inspectorHasContent = Boolean\(/);
+  assert.match(page, /styles\.inspectorDockEmpty/);
+  assert.match(page, /aria-hidden=\{!inspectorHasContent\}/);
+  assert.match(css, /\.inspectorDockEmpty \{[^}]*pointer-events: none/);
+});
+
 test("protege o palco contra os docks e mantém o arraste selecionável", async () => {
   const [page, canvas, roster, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),

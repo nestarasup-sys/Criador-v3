@@ -941,6 +941,13 @@ export default function StudioPage() {
   const selectedBubble = (selection?.kind === "bubble" ? studio.bubbles.find((item) => item.id === selection.id) : null) ?? null;
   const selectedNarrator = (selection?.kind === "narrator" ? studio.narrators.find((item) => item.id === selection.id) : null) ?? null;
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
+  const inspectorHasContent = Boolean(
+    (selectedCharacter && selectedCharacterSource)
+    || selectedObject
+    || selectedBubble
+    || selectedNarrator
+    || (studio.background && !selection && !backgroundCollapsed),
+  );
   const selectedPose = selectedCharacter && selectedCharacterSource
     ? sceneOutfitPose(selectedCharacterSource, selectedCharacter, data.catalog)
     : { groupId: null, variants: [], variant: null, index: 0 };
@@ -986,7 +993,7 @@ export default function StudioPage() {
 
       <aside className={`${styles.rightArea} ${dockSide === "left" ? styles.dockLeft : ""} ${rosterCompact ? styles.rosterAreaCompact : ""}`}>
           {backgroundLibraryOpen && <StudioBackgroundLibrary assets={backgroundAssets} background={studio.background} busy={backgroundBusy} onClose={() => setBackgroundLibraryOpen(false)} onSelect={selectBackground} onAdd={(file) => { void chooseBackground(file); }} onRemove={(asset) => { void removeBackgroundAsset(asset); }} onUpdate={updateBackground} onBeginAdjust={pushHistory} onCenter={centerBackground} onReset={resetBackground} />}
-          <div className={styles.inspectorDock}><StudioInspector
+          <div className={`${styles.inspectorDock} ${inspectorHasContent ? "" : styles.inspectorDockEmpty}`} aria-hidden={!inspectorHasContent}><StudioInspector
             studio={studio}
             selection={selection}
             selectedCharacter={selectedCharacter}
