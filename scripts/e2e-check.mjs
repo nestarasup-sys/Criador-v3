@@ -37,6 +37,21 @@ try {
   assert.equal(await page.getByRole("button", { name: "Folha 1 (21)", exact: true }).isEnabled(), true);
   assert.equal(await page.getByRole("button", { name: "Testar animação", exact: true }).isEnabled(), true);
 
+  const scaleXInput = page.locator("label").filter({ hasText: "Escala X" }).locator("input");
+  const extensionlessDragInput = page.locator("label").filter({ hasText: "Deslocamento X" }).locator("input");
+  assert.equal(await scaleXInput.inputValue(), "1", "A referência normal deve começar sem correção manual");
+  const comparisonStage = page.locator('[class*="comparisonStage"]');
+  await comparisonStage.scrollIntoViewIfNeeded();
+  const stageBox = await comparisonStage.boundingBox();
+  assert.ok(stageBox, "O palco de comparação precisa aceitar arraste");
+  const dragBefore = await extensionlessDragInput.inputValue();
+  await page.mouse.move(stageBox.x + stageBox.width / 2, stageBox.y + stageBox.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(stageBox.x + stageBox.width / 2 + 64, stageBox.y + stageBox.height / 2 + 24, { steps: 4 });
+  await page.mouse.up();
+  await page.waitForTimeout(800);
+  assert.notEqual(await extensionlessDragInput.inputValue(), dragBefore, "O arraste deve refletir no ajuste aplicado ao conjunto");
+
   // Direct route loads are intentional here: Vinext's development HMR can
   // emit an unrelated duplicate-React warning during client-side <Link>
   // transitions, while the production build uses the same route contracts.
