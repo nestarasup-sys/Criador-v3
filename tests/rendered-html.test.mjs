@@ -522,6 +522,8 @@ test("mantém cores do modelo no cache do Studio e oferece controle reversível"
   assert.match(studio, /modelColorAdjustments/);
   assert.match(studio, /modelColorScope/);
   assert.match(rendering, /color\.enabled &&/);
+  assert.match(rendering, /colorRenderCacheKey/);
+  assert.match(rendering, /renderColorLayer/);
   assert.match(css, /\.color-power-button/);
   assert.match(css, /\.color-swatches button\.selected/);
 });

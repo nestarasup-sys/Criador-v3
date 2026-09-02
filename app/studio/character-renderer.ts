@@ -11,7 +11,7 @@ import { processChromaPixels } from "../creator/chroma-worker-client";
 import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
-import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
+import { colorAdjustmentIsActive, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
 import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
@@ -248,9 +248,7 @@ export async function renderStudioCharacter(
       : layerCategory ? character.protectionMasks?.[layerCategory] : undefined;
     let renderImage: CanvasImageSource = image;
     if (colorAdjustmentIsActive(color)) {
-      const adjusted = createColorAdjustedCanvas(image, width, height, color);
-      await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadStudioImage);
-      renderImage = adjusted;
+      renderImage = await renderColorLayer(image, width, height, color, protectionMask, loadStudioImage);
     }
     renderImage = colorizeRenderDebugLayer(renderImage, width, height, layerCategory ?? "");
     if (layer) {

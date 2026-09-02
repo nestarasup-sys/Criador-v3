@@ -49,6 +49,15 @@ export function colorAdjustmentIsActive(value?: Partial<ColorAdjustment> | null)
   );
 }
 
+export function colorAdjustmentSignature(value?: Partial<ColorAdjustment> | null) {
+  const color = normalizeColorAdjustment(value);
+  return [color.enabled, color.hue, color.saturation, color.brightness, color.tint.toLowerCase(), color.tintStrength, color.contrast, color.detailPreservation].join("|");
+}
+
+export function colorRenderCacheKey(sourceKey: string, value?: Partial<ColorAdjustment> | null, protectionKey = "") {
+  return `${sourceKey}|${colorAdjustmentSignature(value)}|${protectionKey}`;
+}
+
 /**
  * Creates a local color-adjusted canvas. Keeping this operation in the
  * source-image coordinate system ensures that protection and eraser masks
@@ -108,4 +117,19 @@ export async function applyProtectedOriginal(
   protectedContext.globalCompositeOperation = "source-over";
   adjustedContext.drawImage(protectedOriginal, 0, 0);
   return adjusted;
+}
+
+/** Shared color pipeline used by Creator and Studio before compositing. */
+export async function renderColorLayer(
+  image: CanvasImageSource,
+  width: number,
+  height: number,
+  value: Partial<ColorAdjustment> | null | undefined,
+  protectionMask: string | undefined,
+  loadImage: (src: string) => Promise<HTMLImageElement>,
+) {
+  const color = normalizeColorAdjustment(value);
+  if (!colorAdjustmentIsActive(color)) return image;
+  const adjusted = createColorAdjustedCanvas(image, width, height, color);
+  return applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadImage);
 }

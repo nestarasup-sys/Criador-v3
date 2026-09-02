@@ -19,7 +19,7 @@ import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
-import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "./domain/color-rendering";
+import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
 import { createModelColorAdjustedCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -1146,6 +1146,7 @@ export default function Home() {
   const colorEditorImageRef = useRef<HTMLImageElement | null>(null);
   const protectionMaskCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorEditorPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const colorLayerCacheRef = useRef(new Map<string, CanvasImageSource>());
   const processedBases = useRef<Partial<Record<Model, HTMLImageElement>>>({});
   const processedBaseExpressions = useRef<Record<string, Partial<Record<ExpressionKey, HTMLImageElement>>>>({});
   const renderVersionRef = useRef(0);
@@ -1673,9 +1674,19 @@ export default function Home() {
         : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT);
       const protectionMask = layerCategory ? renderProtectionMasks[layerCategory] : undefined;
       if (colorAdjustmentIsActive(color)) {
-        const adjusted = createColorAdjustedCanvas(image, width, height, color);
-        await applyProtectedOriginal(adjusted, image, protectionMask, width, height, loadImage);
-        renderSource = adjusted;
+        const cacheKey = colorRenderCacheKey(item.url, color, protectionMask ?? "");
+        const cached = colorLayerCacheRef.current.get(cacheKey);
+        if (cached) {
+          renderSource = cached;
+        } else {
+          renderSource = await renderColorLayer(image, width, height, color, protectionMask, loadImage);
+          colorLayerCacheRef.current.set(cacheKey, renderSource);
+          while (colorLayerCacheRef.current.size > 160) {
+            const oldest = colorLayerCacheRef.current.keys().next().value;
+            if (!oldest) break;
+            colorLayerCacheRef.current.delete(oldest);
+          }
+        }
       }
       renderSource = colorizeRenderDebugLayer(renderSource, width, height, layerCategory ?? "");
       const layerCanvas = mask.length > 0 ? document.createElement("canvas") : null;
