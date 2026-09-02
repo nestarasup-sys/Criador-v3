@@ -21,7 +21,7 @@ import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
 import { createModelColorAdjustedCanvas, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
-import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
+import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseModelColorDefaults, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
@@ -1684,7 +1684,7 @@ export default function Home() {
         : layerCategory ? colorAdjustments[layerCategory] : DEFAULT_COLOR_ADJUSTMENT);
       const protectionMask = layerCategory ? renderProtectionMasks[layerCategory] : undefined;
       if (previewMode !== "before" && previewMode !== "mask" && colorAdjustmentIsActive(color)) {
-        const cacheKey = colorRenderCacheKey(item.url, color, protectionMask ?? "");
+        const cacheKey = colorRenderCacheKey(`${layerCategory ?? "layer"}:${item.url}:${width}x${height}`, color, protectionMask ?? "");
         const cached = colorLayerCacheRef.current.get(cacheKey);
         if (cached) {
           renderSource = cached;
@@ -4302,6 +4302,10 @@ export default function Home() {
   const colorIsChanged = colorAdjustmentIsActive(activeColor);
   const colorStatusLabel = !activeColor.enabled ? "Desligada" : colorIsChanged ? "Aplicada" : "Original";
 
+  useEffect(() => {
+    if (!modelColorEditorActive && colorPreviewMode === "mask") setColorPreviewMode("after");
+  }, [colorPreviewMode, modelColorEditorActive]);
+
   function updateColorAdjustment(patch: Partial<ColorAdjustment>) {
     const colorPatch = patch.enabled === undefined && Object.keys(patch).some((key) => key !== "enabled")
       ? { ...patch, enabled: true }
@@ -4388,7 +4392,7 @@ export default function Home() {
   function saveModelColorDefault() {
     if (!modelColorEditorActive) return;
     const storageKey = modelColorDefaultKey(model, basePackId, modelColorScope);
-    const current = JSON.parse(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY) || "{}");
+    const current = parseModelColorDefaults(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY));
     current[storageKey] = activeColor;
     window.localStorage.setItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY, JSON.stringify(current));
     setNotice(`Padrão salvo para ${activeBasePack.name}`);
@@ -4397,17 +4401,13 @@ export default function Home() {
   function applyModelColorDefault() {
     if (!modelColorEditorActive) return;
     const storageKey = modelColorDefaultKey(model, basePackId, modelColorScope);
-    try {
-      const stored = JSON.parse(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY) || "{}");
-      const value = stored?.[storageKey];
-      if (value) {
-        updateColorAdjustment(normalizeColorAdjustment(value));
+    const stored = parseModelColorDefaults(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY));
+    const value = stored[storageKey];
+    if (value) {
+        updateColorAdjustment(value);
         setNotice(`Padrão de ${activeBasePack.name} aplicado`);
-      } else {
-        setNotice("Ainda não há padrão salvo para este modelo e área");
-      }
-    } catch {
-      setNotice("Não foi possível ler o padrão salvo");
+    } else {
+      setNotice("Ainda não há padrão salvo para este modelo e área");
     }
   }
 

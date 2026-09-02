@@ -37,3 +37,14 @@ export function parseSavedColorPresets(raw: string | null): SavedColorPreset[] {
 export function modelColorDefaultKey(model: string, basePackId: string, scope: string) {
   return `${model}:${basePackId}:${scope}`;
 }
+
+export function parseModelColorDefaults(raw: string | null): Record<string, ColorAdjustment> {
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+    return Object.fromEntries(Object.entries(parsed).map(([key, value]) => [key, normalizeColorAdjustment(value as Partial<ColorAdjustment>)]));
+  } catch {
+    return {};
+  }
+}
