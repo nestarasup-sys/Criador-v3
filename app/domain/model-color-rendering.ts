@@ -71,19 +71,22 @@ export function createModelColorAdjustedCanvas(
   const adjustedContext = adjusted instanceof HTMLCanvasElement ? adjusted.getContext("2d", { willReadFrequently: true }) : null;
   if (!adjustedContext) throw new Error("Canvas ajustado do modelo indisponível");
   const adjustedData = adjustedContext.getImageData(0, 0, width, height).data;
-  const result = new Uint8ClampedArray(original.data);
-  for (let index = 0; index < result.length; index += 4) {
-    if (selected[index + 3] <= 8) continue;
-    result[index] = adjustedData[index];
-    result[index + 1] = adjustedData[index + 1];
-    result[index + 2] = adjustedData[index + 2];
-    result[index + 3] = adjustedData[index + 3];
-  }
   const output = document.createElement("canvas");
   output.width = width;
   output.height = height;
   const outputContext = output.getContext("2d");
   if (!outputContext) throw new Error("Canvas final de cor do modelo indisponível");
-  outputContext.putImageData(new ImageData(result, width, height), 0, 0);
+  // Keep every non-selected pixel on the original drawImage path. Rebuilding
+  // the whole image with putImageData changes premultiplied-alpha edge pixels
+  // (the model outline/chroma fringe) even when those pixels were not part of
+  // the recolor mask. Only the selected details are drawn as an overlay.
+  outputContext.drawImage(image, 0, 0, width, height);
+  const adjustedLayer = document.createElement("canvas");
+  adjustedLayer.width = width;
+  adjustedLayer.height = height;
+  const adjustedLayerContext = adjustedLayer.getContext("2d");
+  if (!adjustedLayerContext) throw new Error("Camada ajustada do modelo indisponível");
+  adjustedLayerContext.putImageData(new ImageData(adjustedData, width, height), 0, 0);
+  outputContext.drawImage(adjustedLayer, 0, 0);
   return output;
 }
