@@ -5087,30 +5087,34 @@ export default function Home() {
                 <small>Modelos são carregados da pasta local; roupas e cabelos são compartilhados pelo gênero.</small>
               </div>
               <div className="base-pack-selector" role="group" aria-label={`Modelos ${model}`}>
-                {availableBasePacks.map((pack) => (
-                  (() => {
-                    const selectedForDelete = assetDeleteMode && selectedBaseModelIds.includes(pack.id);
-                    return (
-                  <div
-                    key={pack.id}
-                    className={`${basePackId === pack.id ? "active " : ""}${selectedForDelete ? "delete-selected" : ""}`}
-                    onClick={() => assetDeleteMode ? toggleBaseModelSelection(pack.id) : changeBasePack(pack.id)}
-                    onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); assetDeleteMode ? toggleBaseModelSelection(pack.id) : changeBasePack(pack.id); } }}
-                    role="button"
-                    tabIndex={0}
-                    aria-pressed={assetDeleteMode ? selectedForDelete : undefined}
-                    title={assetDeleteMode ? `Selecionar ${pack.name} para apagar` : `Selecionar ${pack.name}`}
-                  >
-                    {/* Static local base preview. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={baseExpressionSource(pack, "normal")} alt="" />
-                    <span>{pack.name}</span>
-                    <small>{pack.expressionKeys.length} expressões</small>
-                    {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}
-                  </div>
-                    );
-                  })()
-                ))}
+                {availableBasePacks.map((pack) => {
+                  const selectedForDelete = assetDeleteMode && selectedBaseModelIds.includes(pack.id);
+                  return (
+                    <div
+                      key={pack.id}
+                      className={`${basePackId === pack.id ? "active " : ""}${selectedForDelete ? "delete-selected" : ""}`}
+                      onClick={() => assetDeleteMode ? toggleBaseModelSelection(pack.id) : changeBasePack(pack.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          if (assetDeleteMode) toggleBaseModelSelection(pack.id);
+                          else changeBasePack(pack.id);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      aria-pressed={assetDeleteMode ? selectedForDelete : undefined}
+                      title={assetDeleteMode ? `Selecionar ${pack.name} para apagar` : `Selecionar ${pack.name}`}
+                    >
+                      {/* Static local base preview. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={baseExpressionSource(pack, "normal")} alt="" />
+                      <span>{pack.name}</span>
+                      <small>{pack.expressionKeys.length} expressões</small>
+                      {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="pack-summary">
