@@ -61,6 +61,64 @@ function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: numbe
   return (leftCorrection + rightCorrection) / 2;
 }
 
+function structuralHeight(anatomy: FaceAnatomy) {
+  return Math.max(1, anatomy.structuralBottom - anatomy.structuralTop + 1);
+}
+
+/**
+ * Aligns every extracted face to one concrete canonical face instead of to a
+ * statistical average. The first default expression of the primary sheet is
+ * the canonical face used by the Fabricador, including for the extension
+ * sheet. This preserves a sheet that was already aligned manually and makes
+ * every output share the same left/right/bottom frame.
+ */
+export function calibrateToCanonical(
+  anatomies: readonly FaceAnatomy[],
+  canonical: FaceAnatomy,
+  compatibility?: number,
+): CalibrationOutput {
+  const targetFrame = frameOf(canonical);
+  const targetHeight = structuralHeight(canonical);
+  const canonicalMaster: HeadMaster = {
+    width: canonical.width,
+    height: canonical.height,
+    centerX: canonical.centerX,
+    neckCenterX: canonical.neckCenterX,
+    neckWidth: canonical.neckWidth,
+    neckBaseY: canonical.neckBaseY,
+    structuralLeft: targetFrame.left,
+    structuralRight: targetFrame.right,
+    structuralBottom: targetFrame.bottom,
+    structuralWidth: Math.max(1, targetFrame.right - targetFrame.left + 1),
+    profile: canonical.profile,
+    usableIndices: [],
+    outlierIndices: [],
+    referenceIndex: 0,
+    bestTrioColumn: 0,
+    stabilityScore: 100,
+  };
+  const adjustments = anatomies.map((anatomy) => {
+    const sourceFrame = frameOf(anatomy);
+    const scaleX = sideScale(sourceFrame, targetFrame);
+    const scaleY = targetHeight / structuralHeight(anatomy);
+    return {
+      scale: 1,
+      scaleX,
+      scaleY,
+      dx: Math.round(sideOffset(sourceFrame, targetFrame, scaleX)),
+      dy: Math.round(targetFrame.bottom - sourceFrame.bottom * scaleY),
+      reviewed: false,
+    };
+  });
+  const metrics = anatomies.map((anatomy, index) => scoreFace(anatomy, canonicalMaster, adjustments[index], 100, compatibility));
+  return {
+    adjustments,
+    metrics,
+    trioTargets: Array.from({ length: 7 }, () => ({ width: canonical.width, height: canonical.height })),
+    outlierIndices: [],
+  };
+}
+
 export function calibratePrimary(anatomies: readonly FaceAnatomy[], master: HeadMaster, maximumCorrection = .07, strength = .75): CalibrationOutput {
   const globalUsable = master.usableIndices.length ? master.usableIndices : anatomies.map((_, index) => index);
   const globalWidth = median(globalUsable.map((index) => anatomies[index].width));

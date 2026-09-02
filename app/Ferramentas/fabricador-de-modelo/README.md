@@ -23,6 +23,7 @@ O modelo é salvo em `public/models/modelos/{gênero}/{pasta}` pelo servidor loc
 - A máscara visual preserva todos os detalhes exportados; a máscara estrutural é usada somente para calibração.
 - A Folha 1 constrói um Head Master robusto com mediana, MAD, outliers, perfil estrutural e pescoço.
 - A Folha 2 é comparada com esse Head Master, com correção global máxima de 8% e microajuste por rosto de 2%. Não há warp regional.
+- Na geração, a primeira expressão `normal` da Folha 1 é o molde canônico: todas as expressões da Folha 1 e da Folha 2 são posicionadas sobre a mesma referência estrutural, usando laterais, centro e base do pescoço. O Head Master continua sendo usado para diagnóstico e qualidade.
 - Qualidade é calculada por escala, posição, proporção, silhueta, mandíbula, pescoço e estabilidade do trio.
 - Estados críticos não revisados bloqueiam o salvamento; um crítico revisado pode ser salvo conscientemente e avisos apenas indicam revisão.
 

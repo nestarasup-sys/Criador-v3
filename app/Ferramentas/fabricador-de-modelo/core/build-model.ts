@@ -6,7 +6,7 @@ import { canvasFromPixels, placeFace } from "./compositor";
 import { analyzeFaceAnatomy } from "./anatomy";
 import { buildHeadMaster } from "./head-master";
 import { scoreFace } from "./quality";
-import { calibrateExtension, calibratePrimary } from "./normalization";
+import { calibrateExtension, calibratePrimary, calibrateToCanonical } from "./normalization";
 import type { CalibrationSettings, FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult, SpriteAdjustment } from "../types/face-model";
 
 async function imageDataFromFile(file: File) {
@@ -40,9 +40,17 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
   if (anatomies.some((anatomy) => !anatomy)) throw new Error("Não foi possível analisar a anatomia de um ou mais rostos.");
   const validAnatomies = anatomies as FaceAnatomy[];
   const localMaster = buildHeadMaster(validAnatomies);
-  const calibration = options.referenceMaster
+  const canonical = sheet === "primary" ? validAnatomies[0] : options.referenceAnatomies?.[0];
+  const diagnosticCalibration = options.referenceMaster
     ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment, options.referenceAnatomies)
-    : calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
+    : null;
+  const calibration = canonical
+    ? {
+        ...calibrateToCanonical(validAnatomies, canonical, diagnosticCalibration?.compatibility.overall),
+        ...(diagnosticCalibration?.compatibility ? { compatibility: diagnosticCalibration.compatibility } : {}),
+      }
+    : diagnosticCalibration
+      ?? calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
   const targetMaster = options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
   const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility?.overall : undefined));

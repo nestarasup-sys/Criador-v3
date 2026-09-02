@@ -31,6 +31,9 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(types, /tightCrop: boolean/);
   assert.match(buildModel, /referenceMaster\?: HeadMaster/);
   assert.match(buildModel, /calibrateExtension/);
+  assert.match(buildModel, /calibrateToCanonical/);
+  assert.match(buildModel, /const canonical = sheet === "primary" \? validAnatomies\[0\]/);
+  assert.match(buildModel, /options\.referenceAnatomies\?\.\[0\]/);
   assert.match(buildModel, /manualAdjustments/);
   assert.match(buildModel, /settings\.contentPadding, settings\.squareCrop, settings\.tightCrop/);
   assert.match(compositor, /OUTPUT_WIDTH/);
