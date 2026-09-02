@@ -42,6 +42,8 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);
+  assert.match(studioPage, /JSON\.stringify\(item\.layerMasks \?\? \{\}\)/);
+  assert.match(studioPage, /JSON\.stringify\(character\.layerMasks \?\? \{\}\)/);
   assert.match(studioPage, /dynamicEmotionOptions/);
   assert.match(renderer, /encodeURIComponent\(key\)/);
 });
