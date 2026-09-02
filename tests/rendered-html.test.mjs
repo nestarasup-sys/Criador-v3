@@ -524,6 +524,19 @@ test("protege o palco contra os docks e mantém o arraste selecionável", async 
   assert.match(css, /\.rightArea\.dockLeft \.inspectorDock > \.inspector \{[^}]*pointer-events: auto/);
 });
 
+test("enquadra a cena entre os painéis laterais sem alterar o canvas lógico", async () => {
+  const [canvas, css] = await Promise.all([
+    readFile(new URL("../app/studio/components/StudioCanvas.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(canvas, /safeFrame/);
+  assert.match(canvas, /styles\.leftTools\}, \.\$\{styles\.inspector\}, \.\$\{styles\.roster\}/);
+  assert.match(canvas, /--studio-safe-left/);
+  assert.match(canvas, /data-logical-size=\{`\$\{STUDIO_SCENE_WIDTH\}x\$\{STUDIO_SCENE_HEIGHT\}`\}/);
+  assert.match(css, /\.stageViewport \{[^}]*right: var\(--studio-safe-right/);
+  assert.match(css, /left: var\(--studio-safe-left/);
+});
+
 test("ships premium color controls and non-destructive protection masks", async () => {
   const [page, characterContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

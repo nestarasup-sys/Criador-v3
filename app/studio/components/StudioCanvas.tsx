@@ -83,6 +83,7 @@ type StudioCanvasProps = {
 export function StudioCanvas({ stageRef, studio, charactersById, rendered, renderedFallback, selection, renderCacheKey, onStagePointerDown, onBeginDrag, characterPositionsLocked, backgroundEditing, onBeginBackgroundDrag }: StudioCanvasProps) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [previewScale, setPreviewScale] = useState(0);
+  const [safeFrame, setSafeFrame] = useState({ left: 0, right: 0 });
   const [visibleBoundsByInstance, setVisibleBoundsByInstance] = useState<Record<string, { source: string; bounds: VisibleBounds }>>({});
   const sceneElements: SceneCanvasElement[] = [
     ...studio.objects.map((item) => ({ kind: "object" as const, item })),
@@ -97,15 +98,45 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, rende
   const isEmpty = !studio.background && !characters.length && !objects.length && !bubbles.length && !narrators.length;
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
-    if (!viewport) return;
+    const editor = viewport?.closest<HTMLElement>(`.${styles.editor}`);
+    if (!viewport || !editor) return;
+    let frameRequest = 0;
     const updateScale = () => {
-      const bounds = viewport.getBoundingClientRect();
-      setPreviewScale(Math.min(bounds.width / STUDIO_SCENE_WIDTH, bounds.height / STUDIO_SCENE_HEIGHT));
+      if (frameRequest) return;
+      frameRequest = window.requestAnimationFrame(() => {
+        frameRequest = 0;
+        const editorBounds = editor.getBoundingClientRect();
+        const panelSelector = `.${styles.leftTools}, .${styles.inspector}, .${styles.roster}`;
+        let left = 0;
+        let right = 0;
+        for (const panel of editor.querySelectorAll<HTMLElement>(panelSelector)) {
+          const panelStyle = window.getComputedStyle(panel);
+          if (panelStyle.display === "none" || panelStyle.visibility === "hidden" || panelStyle.pointerEvents === "none") continue;
+          const panelBounds = panel.getBoundingClientRect();
+          if (panelBounds.width <= 0 || panelBounds.height <= 0) continue;
+          const editorCenter = editorBounds.left + editorBounds.width / 2;
+          if (panelBounds.right <= editorCenter) left = Math.max(left, panelBounds.right - editorBounds.left);
+          if (panelBounds.left >= editorCenter) right = Math.max(right, editorBounds.right - panelBounds.left);
+        }
+        const nextFrame = { left: Math.max(0, Math.ceil(left)), right: Math.max(0, Math.ceil(right)) };
+        setSafeFrame((current) => current.left === nextFrame.left && current.right === nextFrame.right ? current : nextFrame);
+        const bounds = viewport.getBoundingClientRect();
+        setPreviewScale(Math.min(bounds.width / STUDIO_SCENE_WIDTH, bounds.height / STUDIO_SCENE_HEIGHT));
+      });
     };
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(viewport);
-    return () => observer.disconnect();
+    observer.observe(editor);
+    const panelSelector = `.${styles.leftTools}, .${styles.inspector}, .${styles.roster}`;
+    for (const panel of editor.querySelectorAll<HTMLElement>(panelSelector)) observer.observe(panel);
+    const mutationObserver = new MutationObserver(updateScale);
+    mutationObserver.observe(editor, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "aria-hidden"] });
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+      if (frameRequest) window.cancelAnimationFrame(frameRequest);
+    };
   }, []);
 
   function handleCharacterImageLoad(instanceId: string, source: string, image: HTMLImageElement) {
@@ -118,7 +149,7 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, rende
     });
   }
 
-  return <div ref={viewportRef} className={styles.stageViewport} onPointerDown={onStagePointerDown}>
+  return <div ref={viewportRef} className={styles.stageViewport} style={{ "--studio-safe-left": `${safeFrame.left}px`, "--studio-safe-right": `${safeFrame.right}px` } as CSSProperties} onPointerDown={onStagePointerDown}>
     <div ref={stageRef} className={styles.stage} data-logical-size={`${STUDIO_SCENE_WIDTH}x${STUDIO_SCENE_HEIGHT}`} style={{ "--studio-preview-scale": previewScale } as CSSProperties}>
     {studio.background && <img className={`${styles.background} ${studio.background.fit === "contain" ? styles.contain : ""} ${backgroundEditing ? styles.backgroundEditing : ""}`} style={{ "--background-offset-x": `${studio.background.offsetX ?? 0}px`, "--background-offset-y": `${studio.background.offsetY ?? 0}px`, "--background-scale": studio.background.scale ?? 1 } as CSSProperties} src={studio.background.src} alt="" aria-hidden="true" onPointerDown={backgroundEditing ? onBeginBackgroundDrag : undefined} />}
     {isEmpty && <div className={styles.emptyStageMessage}>Sua cena começa aqui</div>}
