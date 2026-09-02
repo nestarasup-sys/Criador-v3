@@ -159,6 +159,7 @@ async function findVideoReferenceFile(video, scriptId, tiktokId) {
 }
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
+const EXPLORER_PATH = join(process.env.WINDIR ?? process.env.SystemRoot ?? "C:\\Windows", "explorer.exe");
 const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
 const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
@@ -362,6 +363,19 @@ async function ensureFolders() {
     mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
     mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
   ]);
+}
+
+function openWindowsFolder(folder) {
+  return new Promise((resolvePromise, reject) => {
+    const explorer = spawn(EXPLORER_PATH, [folder], { detached: true, stdio: "ignore", windowsHide: false });
+    explorer.once("error", (error) => {
+      reject(Object.assign(new Error("Não foi possível iniciar o Explorador de Arquivos."), { code: "EXPLORER_UNAVAILABLE", cause: error }));
+    });
+    explorer.once("spawn", () => {
+      explorer.unref();
+      resolvePromise();
+    });
+  });
 }
 
 async function readOptionalJson(filePath) {
@@ -807,9 +821,7 @@ async function route(request, response) {
   }
   if (request.method === "POST" && url.pathname === "/prints/open") {
     await mkdir(PRINTS_ROOT, { recursive: true });
-    const explorer = spawn("explorer.exe", [PRINTS_ROOT], { detached: true, stdio: "ignore", windowsHide: true });
-    explorer.on("error", () => undefined);
-    explorer.unref();
+    await openWindowsFolder(PRINTS_ROOT);
     sendJson(response, request, 200, { ok: true, folder: PRINTS_ROOT });
     return;
   }

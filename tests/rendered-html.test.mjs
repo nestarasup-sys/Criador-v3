@@ -410,6 +410,8 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(server, /url\.pathname === "\/prints"/);
   assert.match(server, /url\.pathname === "\/prints\/open"/);
   assert.match(server, /await mkdir\(PRINTS_ROOT, \{ recursive: true \}\)/);
+  assert.match(server, /const EXPLORER_PATH = join\(process\.env\.WINDIR \?\? process\.env\.SystemRoot/);
+  assert.match(server, /await openWindowsFolder\(PRINTS_ROOT\)/);
   assert.match(storage, /saveStudioPrint/);
   assert.match(storage, /openStudioPrintsFolder/);
   assert.match(page, /renderStudioSceneToCanvas/);
