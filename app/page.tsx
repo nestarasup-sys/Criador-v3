@@ -1377,12 +1377,6 @@ export default function Home() {
     return () => window.clearInterval(interval);
   }, [animationMode]);
 
-  useEffect(() => {
-    setAssetDeleteMode(false);
-    setSelectedCatalogAssetIds([]);
-    setSelectedBaseModelIds([]);
-  }, [category, model, faceMode, outfitCatalogMode, outfitGroupViewId]);
-
   const activeExpressionPack = expressionPacks.find((pack) =>
     pack.id === activePackId
     && pack.model === model
@@ -2031,6 +2025,7 @@ export default function Home() {
   function changeModel(nextModel: Model) {
     if (nextModel === model) return;
     persistEditorSnapshot("Salvo automaticamente");
+    resetAssetDeleteMode();
     setModel(nextModel);
     setBasePackId(getBasePack(basePacks, nextModel).id);
     setSelections({ ...EMPTY_SELECTIONS });
@@ -3968,6 +3963,12 @@ export default function Home() {
     setNotice("Personagem excluído");
   }
 
+  function resetAssetDeleteMode() {
+    setAssetDeleteMode(false);
+    setSelectedCatalogAssetIds([]);
+    setSelectedBaseModelIds([]);
+  }
+
   function toggleAssetDeleteMode() {
     setAssetDeleteMode((current) => {
       const next = !current;
@@ -3977,6 +3978,23 @@ export default function Home() {
       }
       return next;
     });
+  }
+
+  function changeCatalogCategory(nextCategory: Category) {
+    resetAssetDeleteMode();
+    setCategory(nextCategory);
+    setChromaMode(false);
+  }
+
+  function changeFaceMode(nextFaceMode: FaceMode) {
+    resetAssetDeleteMode();
+    setFaceMode(nextFaceMode);
+    setAnimationMode(null);
+  }
+
+  function changeOutfitCatalogMode(nextMode: OutfitCatalogMode) {
+    resetAssetDeleteMode();
+    setOutfitCatalogMode(nextMode);
   }
 
   function toggleCatalogAssetSelection(id: string) {
@@ -4943,13 +4961,13 @@ export default function Home() {
 
           {category === "rostos" && (
             <div className="face-mode-switch" role="group" aria-label="Modo de rosto">
-              <button className={faceMode === "base" ? "active" : ""} onClick={() => { setFaceMode("base"); setAnimationMode(null); }}>
+              <button className={faceMode === "base" ? "active" : ""} onClick={() => changeFaceMode("base")}>
                 Base pronta
               </button>
-              <button className={faceMode === "single" ? "active" : ""} onClick={() => { setFaceMode("single"); setAnimationMode(null); }} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
+              <button className={faceMode === "single" ? "active" : ""} onClick={() => changeFaceMode("single")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
                 Rosto avulso
               </button>
-              <button className={faceMode === "pack" ? "active" : ""} onClick={() => setFaceMode("pack")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
+              <button className={faceMode === "pack" ? "active" : ""} onClick={() => changeFaceMode("pack")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
                 Pack de expressões
               </button>
             </div>
@@ -4957,7 +4975,7 @@ export default function Home() {
 
           <div className="tabs" role="tablist" aria-label="Categorias do catálogo">
             {(["cabelos", "rostos", "roupas"] as Category[]).map((tab) => (
-              <button key={tab} role="tab" aria-selected={category === tab || (tab === "cabelos" && category === "cabelosTras")} className={category === tab || (tab === "cabelos" && category === "cabelosTras") ? "active" : ""} onClick={() => { setCategory(tab); setChromaMode(false); }}>
+              <button key={tab} role="tab" aria-selected={category === tab || (tab === "cabelos" && category === "cabelosTras")} className={category === tab || (tab === "cabelos" && category === "cabelosTras") ? "active" : ""} onClick={() => changeCatalogCategory(tab)}>
                 <span aria-hidden="true">{tab === "cabelos" ? "♟" : tab === "rostos" ? "☺" : "♜"}</span>
                 {tab === "cabelos" ? "Cabelo" : tab === "rostos" ? "Rosto" : "Roupas"}
               </button>
@@ -4966,16 +4984,16 @@ export default function Home() {
 
           {(category === "cabelos" || category === "cabelosTras") && (
             <div className="hair-side-tabs" role="tablist" aria-label="Parte do cabelo">
-              <button className={category === "cabelos" ? "active" : ""} onClick={() => setCategory("cabelos")}>Frente</button>
-              <button className={category === "cabelosTras" ? "active" : ""} onClick={() => setCategory("cabelosTras")}>Trás</button>
+              <button className={category === "cabelos" ? "active" : ""} onClick={() => changeCatalogCategory("cabelos")}>Frente</button>
+              <button className={category === "cabelosTras" ? "active" : ""} onClick={() => changeCatalogCategory("cabelosTras")}>Trás</button>
             </div>
           )}
 
           {category === "roupas" && (
             <>
               <div className="outfit-mode-switch" role="tablist" aria-label="Visualização das roupas">
-                <button role="tab" aria-selected={outfitCatalogMode === "standard"} className={outfitCatalogMode === "standard" ? "active" : ""} onClick={() => setOutfitCatalogMode("standard")}>Padrão</button>
-                <button role="tab" aria-selected={outfitCatalogMode === "variants"} className={outfitCatalogMode === "variants" ? "active" : ""} onClick={() => setOutfitCatalogMode("variants")}>Variantes</button>
+                <button role="tab" aria-selected={outfitCatalogMode === "standard"} className={outfitCatalogMode === "standard" ? "active" : ""} onClick={() => changeOutfitCatalogMode("standard")}>Padrão</button>
+                <button role="tab" aria-selected={outfitCatalogMode === "variants"} className={outfitCatalogMode === "variants" ? "active" : ""} onClick={() => changeOutfitCatalogMode("variants")}>Variantes</button>
               </div>
             </>
           )}
