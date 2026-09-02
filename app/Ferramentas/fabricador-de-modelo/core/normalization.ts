@@ -71,6 +71,35 @@ function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: numbe
   return (leftCorrection + rightCorrection) / 2;
 }
 
+type ProfileAlignment = { scaleX: number; dx: number };
+
+/**
+ * Measures the silhouette at several normalized heights. A single bounding
+ * box can be identical while the forehead, cheek and jaw still drift by a few
+ * pixels. This keeps the correction affine (scaleX + translation only), but
+ * makes those measurements participate in the same robust fit.
+ */
+function profileAlignment(source: FaceAnatomy, target: FaceAnatomy): ProfileAlignment | null {
+  const samples = source.profile.map((point, index) => {
+    const counterpart = target.profile[index];
+    if (!counterpart || point.widthNorm <= 0 || counterpart.widthNorm <= 0) return null;
+    const sourceWidth = point.widthNorm * Math.max(1, source.cranialWidth);
+    const targetWidth = counterpart.widthNorm * Math.max(1, target.cranialWidth);
+    return {
+      scale: targetWidth / Math.max(1, sourceWidth),
+      sourceCenter: point.centerOffset * Math.max(1, source.cranialWidth),
+      targetCenter: counterpart.centerOffset * Math.max(1, target.cranialWidth),
+      sourceWidth,
+      targetWidth,
+    };
+  }).filter((sample): sample is NonNullable<typeof sample> => Boolean(sample) && Number.isFinite(sample.scale) && sample.scale > 0);
+  if (samples.length < 4) return null;
+  const scaleX = medianScale(samples.map((sample) => sample.scale));
+  const offsets = samples.map((sample) => sample.targetCenter - sample.sourceCenter * scaleX);
+  const dx = median(offsets);
+  return { scaleX, dx };
+}
+
 function structuralHeight(anatomy: FaceAnatomy) {
   return Math.max(1, anatomy.structuralBottom - anatomy.structuralTop + 1);
 }
@@ -90,20 +119,23 @@ function subpixelOffset(value: number) {
 export function canonicalAdjustment(source: FaceAnatomy, canonical: FaceAnatomy): SpriteAdjustment {
   const sourceFrame = frameOf(source);
   const targetFrame = frameOf(canonical);
+  const profile = profileAlignment(source, canonical);
   const scaleX = medianScale([
     sideScale(sourceFrame, targetFrame),
     canonical.cranialWidth / Math.max(1, source.cranialWidth),
     canonical.neckWidth / Math.max(1, source.neckWidth),
+    ...(profile ? [profile.scaleX] : []),
   ]);
   const scaleY = (targetFrame.bottom - targetFrame.top) / Math.max(1, sourceFrame.bottom - sourceFrame.top);
   const sideCorrection = sideOffset(sourceFrame, targetFrame, scaleX);
+  const horizontalCorrection = profile ? median([sideCorrection, sideCorrection, profile.dx]) : sideCorrection;
   const topCorrection = targetFrame.top - sourceFrame.top * scaleY;
   const bottomCorrection = targetFrame.bottom - sourceFrame.bottom * scaleY;
   return {
     scale: 1,
     scaleX,
     scaleY,
-    dx: subpixelOffset(sideCorrection),
+    dx: subpixelOffset(horizontalCorrection),
     dy: subpixelOffset(topCorrection * .65 + bottomCorrection * .35),
     reviewed: false,
   };
