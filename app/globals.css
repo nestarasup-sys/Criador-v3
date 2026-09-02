@@ -657,6 +657,13 @@ body { background: #f8f6f7; }
 .color-neutral-presets button { min-width: 0; display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px solid #e5dff0; border-radius: 7px; padding: 5px 3px; background: #fbfaff; color: #666276; font-size: 8.5px; font-weight: 750; cursor: pointer; transition: .16s ease; }
 .color-neutral-presets button.selected { border-color: var(--accent); background: #f1ecff; color: var(--accent-dark); box-shadow: 0 0 0 2px rgba(114,87,217,.12); }
 .color-neutral-presets i { width: 10px; height: 10px; flex: 0 0 auto; border: 1px solid rgba(46,42,55,.18); border-radius: 50%; }
+.color-presets-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 5px; color: #625a73; font-size: 9.5px; }
+.color-presets-toolbar button { border: 1px solid #ded3fa; border-radius: 7px; padding: 5px 7px; background: #f6f1ff; color: var(--accent-dark); font-size: 8.75px; font-weight: 800; cursor: pointer; }
+.saved-color-presets { display: flex; gap: 5px; margin: 0 0 8px; overflow-x: auto; padding: 2px 1px 5px; scrollbar-width: thin; }
+.saved-color-preset { display: flex; flex: 0 0 auto; align-items: stretch; border: 1px solid #e5dff0; border-radius: 7px; overflow: hidden; background: #fbfaff; }
+.saved-color-preset > button:first-child { display: flex; align-items: center; gap: 4px; border: 0; padding: 5px 6px; background: transparent; color: #665d78; font-size: 8.5px; font-weight: 750; cursor: pointer; }
+.saved-color-preset i { width: 10px; height: 10px; border: 1px solid rgba(46,42,55,.18); border-radius: 50%; }
+.saved-color-preset-remove { border: 0; border-left: 1px solid #e8e2f0; padding: 0 5px; background: #fff5f7; color: #c06070; cursor: pointer; }
 .color-custom-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 3px 0 7px; }
 .color-custom-row label { display: flex; align-items: center; gap: 7px; color: #66677b; font-size: 10px; font-weight: 700; }
 .color-custom-row input[type="color"] { width: 32px; height: 25px; padding: 2px; border: 1px solid #dcd2fa; border-radius: 7px; background: #fff; cursor: pointer; }

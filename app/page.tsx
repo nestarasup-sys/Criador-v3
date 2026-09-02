@@ -21,6 +21,7 @@ import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
 import { createModelColorAdjustedCanvas, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
+import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
@@ -1228,6 +1229,7 @@ export default function Home() {
   const [colorPreviewBackground, setColorPreviewBackground] = useState<ColorPreviewBackground>("transparent");
   const [colorPreviewZoom, setColorPreviewZoom] = useState(100);
   const [colorSectionsOpen, setColorSectionsOpen] = useState({ color: true, area: true, preview: true, protection: false });
+  const [savedColorPresets, setSavedColorPresets] = useState<SavedColorPreset[]>(() => typeof window === "undefined" ? [] : parseSavedColorPresets(window.localStorage.getItem(COLOR_PRESETS_STORAGE_KEY)));
   const [headFitGuide, setHeadFitGuide] = useState<HeadFitGuide | null>(null);
   const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
   const historyActiveKeyRef = useRef<string | null>(null);
@@ -4356,6 +4358,59 @@ export default function Home() {
     });
   }
 
+  function saveCurrentColorPreset() {
+    const name = window.prompt("Nome do preset de cor", `${modelColorEditorActive ? "Modelo" : category} · ${activeColor.tint}`);
+    if (!name?.trim()) return;
+    const preset = normalizeSavedColorPreset({
+      id: crypto.randomUUID(),
+      name,
+      adjustment: activeColor,
+      createdAt: new Date().toISOString(),
+    });
+    if (!preset) return;
+    setSavedColorPresets((current) => [preset, ...current.filter((entry) => entry.name.toLowerCase() !== preset.name.toLowerCase())].slice(0, 80));
+    setNotice(`Preset “${preset.name}” salvo`);
+  }
+
+  function applySavedColorPreset(preset: SavedColorPreset) {
+    updateColorAdjustment(preset.adjustment);
+    setNotice(`Preset “${preset.name}” aplicado${syncHairColor && (category === "cabelos" || category === "cabelosTras") ? " ao par" : ""}`);
+  }
+
+  function removeSavedColorPreset(id: string) {
+    setSavedColorPresets((current) => current.filter((entry) => entry.id !== id));
+  }
+
+  useEffect(() => {
+    window.localStorage.setItem(COLOR_PRESETS_STORAGE_KEY, JSON.stringify(savedColorPresets));
+  }, [savedColorPresets]);
+
+  function saveModelColorDefault() {
+    if (!modelColorEditorActive) return;
+    const storageKey = modelColorDefaultKey(model, basePackId, modelColorScope);
+    const current = JSON.parse(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY) || "{}");
+    current[storageKey] = activeColor;
+    window.localStorage.setItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY, JSON.stringify(current));
+    setNotice(`Padrão salvo para ${activeBasePack.name}`);
+  }
+
+  function applyModelColorDefault() {
+    if (!modelColorEditorActive) return;
+    const storageKey = modelColorDefaultKey(model, basePackId, modelColorScope);
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(MODEL_COLOR_DEFAULTS_STORAGE_KEY) || "{}");
+      const value = stored?.[storageKey];
+      if (value) {
+        updateColorAdjustment(normalizeColorAdjustment(value));
+        setNotice(`Padrão de ${activeBasePack.name} aplicado`);
+      } else {
+        setNotice("Ainda não há padrão salvo para este modelo e área");
+      }
+    } catch {
+      setNotice("Não foi possível ler o padrão salvo");
+    }
+  }
+
   function toggleActiveColor() {
     const nextEnabled = !activeColor.enabled;
     updateColorAdjustment({ enabled: nextEnabled });
@@ -5147,6 +5202,13 @@ export default function Home() {
               <div className="color-neutral-presets" aria-label="Cores neutras">
                 {[["Branco", "#f7f7f7"], ["Prata", "#c6cbd3"], ["Cinza", "#777b82"], ["Preto", "#111216"]].map(([label, color]) => <button key={color} type="button" className={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase() ? "selected" : ""} aria-pressed={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase()} onClick={() => applyTargetColor(color)}><i style={{ background: color }} />{label}</button>)}
               </div>
+              <div className="color-presets-toolbar">
+                <strong>Meus presets</strong>
+                <button type="button" onClick={saveCurrentColorPreset}>＋ Salvar atual</button>
+              </div>
+              {savedColorPresets.length > 0 && <div className="saved-color-presets" aria-label="Presets personalizados">
+                {savedColorPresets.map((preset) => <div key={preset.id} className="saved-color-preset"><button type="button" onClick={() => applySavedColorPreset(preset)} title={`Aplicar ${preset.name}`}><i style={{ background: preset.adjustment.tint }} />{preset.name}</button><button type="button" className="saved-color-preset-remove" aria-label={`Excluir preset ${preset.name}`} onClick={() => removeSavedColorPreset(preset.id)}>×</button></div>)}
+              </div>}
               <div className="color-custom-row">
                 <label><span>Cor desejada</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, hue: 0, tintStrength: 100 })} /></label>
                 <span className="color-custom-hint">Ajuste preservado ao desligar</span>
@@ -5164,6 +5226,7 @@ export default function Home() {
                   <button className="protect-color-button" onClick={openColorProtectionEditor}>{(selectedOutfit && outfitProtectionMasksByBasePack[outfitStateKey(selectedOutfit.id, basePackId)]) || protectionMasks.roupas ? `Editar áreas protegidas · ${selectedOutfit?.outfitVariantIndex === 0 ? "padrão" : `variante ${selectedOutfit?.outfitVariantIndex ?? 1}`}` : "Proteger pele e detalhes"}</button>
                   {selectedOutfit?.outfitGroupId && activeOutfitVariantCount > 1 && <button className="protect-color-button" onClick={applyStandardOutfitAdjustment}>Ajustar para padrão</button>}
                 </>}
+                {modelColorEditorActive && <><button className="protect-color-button" onClick={saveModelColorDefault}>Salvar padrão do modelo</button><button className="protect-color-button" onClick={applyModelColorDefault}>Usar padrão</button></>}
               </div></div>}
               <button className="color-collapse-button" type="button" aria-expanded={colorPanelOpen} onClick={() => setColorPanelOpen((open) => !open)}>
                 <span aria-hidden="true">{colorPanelOpen ? "⌃" : "⌄"}</span>
