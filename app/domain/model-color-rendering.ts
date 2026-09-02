@@ -74,9 +74,6 @@ export function createModelColorAdjustedCanvas(
 
   const selectedCanvas = createModelColorMaskCanvas(image, width, height, scope);
   if (!selectedCanvas) return image;
-  const selectedContext = selectedCanvas.getContext("2d", { willReadFrequently: true });
-  if (!selectedContext) throw new Error("Canvas de seleção do modelo indisponível");
-  selectedContext.putImageData(new ImageData(selected, width, height), 0, 0);
   const adjusted = createColorAdjustedCanvas(selectedCanvas, width, height, color);
   const adjustedContext = adjusted instanceof HTMLCanvasElement ? adjusted.getContext("2d", { willReadFrequently: true }) : null;
   if (!adjustedContext) throw new Error("Canvas ajustado do modelo indisponível");
