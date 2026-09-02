@@ -126,6 +126,10 @@ type DiscoveredModelPack = {
   id: string;
   source?: string;
   version?: string;
+  type?: "full-body" | "head-only";
+  anchor?: "neck-base";
+  anchorX?: number;
+  anchorY?: number;
 };
 
 function expressionSource(
@@ -343,6 +347,7 @@ export async function renderStudioCharacter(
   const bodyContext = bodyLayer.getContext("2d");
   if (bodyContext) configureHighQualityContext(bodyContext);
   if (bodyContext) {
+    const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
     const modelColorScope = normalizeModelColorScope(character.modelColorScope) as "pupils" | "details" | "skin" | "all";
     const adjustedBase = createModelColorAdjustedCanvas(
@@ -352,7 +357,24 @@ export async function renderStudioCharacter(
       modelColors[modelColorScope],
       modelColorScope,
     );
-    bodyContext.drawImage(colorizeRenderDebugLayer(adjustedBase, WIDTH, HEIGHT, "corpo"), PADDING.x, PADDING.y, WIDTH, HEIGHT);
+    const sourceWidth = base.width || WIDTH;
+    const sourceHeight = base.height || HEIGHT;
+    const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
+    if (discoveredPack?.type === "head-only" && discoveredPack.anchor === "neck-base") {
+      const sourceAnchorX = discoveredPack.anchorX ?? sourceWidth / 2;
+      const sourceAnchorY = discoveredPack.anchorY ?? sourceHeight;
+      const targetAnchorX = discoveredPack.anchorX ?? WIDTH / 2;
+      const targetAnchorY = discoveredPack.anchorY ?? HEIGHT;
+      bodyContext.drawImage(
+        debugBody,
+        PADDING.x + targetAnchorX - sourceAnchorX,
+        PADDING.y + targetAnchorY - sourceAnchorY,
+        sourceWidth,
+        sourceHeight,
+      );
+    } else {
+      bodyContext.drawImage(debugBody, PADDING.x, PADDING.y, WIDTH, HEIGHT);
+    }
   }
   if (bodyContext && masks.body.length) {
     bodyContext.globalCompositeOperation = "destination-in";

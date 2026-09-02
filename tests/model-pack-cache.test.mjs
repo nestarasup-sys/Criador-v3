@@ -42,6 +42,9 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
   assert.match(renderer, /character\.adjustments\.cabelosTras \?\? packAdjustments\?\.cabelosTras/);
   assert.match(renderer, /character\.adjustments\.cabelos \?\? packAdjustments\?\.cabelos/);
+  assert.match(renderer, /discoveredPack\?\.type === "head-only"/);
+  assert.match(renderer, /discoveredPack\.anchorX \?\? sourceWidth \/ 2/);
+  assert.match(renderer, /discoveredPack\.anchorY \?\? sourceHeight/);
   assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);

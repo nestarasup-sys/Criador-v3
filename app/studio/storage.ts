@@ -15,6 +15,10 @@ export type LoadedAppData = AppData & {
     expressionKeys: string[];
     source: string;
     version?: string;
+    type?: "full-body" | "head-only";
+    anchor?: "neck-base";
+    anchorX?: number;
+    anchorY?: number;
   }>>;
   pcStorageAvailable: boolean;
   migrationAvailable: boolean;
@@ -145,6 +149,10 @@ export async function loadAppData(): Promise<LoadedAppData> {
         expressionKeys: string[];
         source: string;
         version?: string;
+        type?: "full-body" | "head-only";
+        anchor?: "neck-base";
+        anchorX?: number;
+        anchorY?: number;
       }>>
       : {};
     const pcStudios = data.studios ?? [];

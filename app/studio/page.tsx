@@ -45,6 +45,10 @@ type StudioModelPacks = Record<string, Array<{
   expressionKeys: string[];
   source: string;
   version?: string;
+  type?: "full-body" | "head-only";
+  anchor?: "neck-base";
+  anchorX?: number;
+  anchorY?: number;
 }>>;
 function emotionOptionsForCharacter(character: Character, expressionPacks: PcExpressionPack[], modelPacks: StudioModelPacks): ReadonlyArray<readonly [Emotion, string]> {
   if (character.faceMode === "pack" && character.expressionPackId) {
