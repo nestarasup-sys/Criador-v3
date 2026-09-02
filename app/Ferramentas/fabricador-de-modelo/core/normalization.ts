@@ -101,10 +101,6 @@ function profileAlignment(source: FaceAnatomy, target: FaceAnatomy): ProfileAlig
   return { scaleX, dx };
 }
 
-function structuralHeight(anatomy: FaceAnatomy) {
-  return Math.max(1, anatomy.structuralBottom - anatomy.structuralTop + 1);
-}
-
 function subpixelOffset(value: number) {
   return Number(value.toFixed(2));
 }
