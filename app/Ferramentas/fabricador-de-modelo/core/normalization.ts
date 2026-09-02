@@ -23,12 +23,13 @@ function usableForTrio(anatomies: readonly FaceAnatomy[], indices: number[]) {
   return indices.filter((index) => robustZ(anatomies[index].width, widthCenter, widthMad, widthCenter * .012) <= 3.5 && robustZ(anatomies[index].height, heightCenter, heightMad, heightCenter * .012) <= 3.5);
 }
 
-type AlignmentFrame = { left: number; right: number; bottom: number };
+type AlignmentFrame = { left: number; right: number; top: number; bottom: number };
 
 function frameOf(anatomy: FaceAnatomy): AlignmentFrame {
   return {
     left: anatomy.structuralBounds.x - anatomy.neckCenterX,
     right: anatomy.structuralBounds.x + anatomy.structuralBounds.width - 1 - anatomy.neckCenterX,
+    top: anatomy.structuralTop - anatomy.neckBaseY,
     bottom: anatomy.structuralBottom - anatomy.neckBaseY,
   };
 }
@@ -38,8 +39,9 @@ function medianFrame(anatomies: readonly FaceAnatomy[], indices: readonly number
   return frames.length ? {
     left: median(frames.map((frame) => frame.left)),
     right: median(frames.map((frame) => frame.right)),
+    top: median(frames.map((frame) => frame.top)),
     bottom: median(frames.map((frame) => frame.bottom)),
-  } : { left: -1, right: 1, bottom: 0 };
+  } : { left: -1, right: 1, top: -1, bottom: 0 };
 }
 
 function blendFrame(local: AlignmentFrame, master: HeadMaster, localWeight: number): AlignmentFrame {
@@ -47,12 +49,20 @@ function blendFrame(local: AlignmentFrame, master: HeadMaster, localWeight: numb
   return {
     left: local.left * weight + master.structuralLeft * (1 - weight),
     right: local.right * weight + master.structuralRight * (1 - weight),
+    // The legacy statistical calibrators do not have a reliable global top;
+    // they only consume the side and neck-base coordinates below.
+    top: local.top,
     bottom: local.bottom * weight + master.structuralBottom * (1 - weight),
   };
 }
 
 function sideScale(frame: AlignmentFrame, target: AlignmentFrame) {
   return target.right - target.left > 0 ? (target.right - target.left) / Math.max(1, frame.right - frame.left) : 1;
+}
+
+function medianScale(values: number[]) {
+  const usable = values.filter((value) => Number.isFinite(value) && value > 0);
+  return usable.length ? median(usable) : 1;
 }
 
 function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: number) {
@@ -63,6 +73,40 @@ function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: numbe
 
 function structuralHeight(anatomy: FaceAnatomy) {
   return Math.max(1, anatomy.structuralBottom - anatomy.structuralTop + 1);
+}
+
+function subpixelOffset(value: number) {
+  return Number(value.toFixed(2));
+}
+
+/**
+ * Produces the automatic adjustment for one face against the canonical face.
+ *
+ * The side frame is the primary measurement. Cranial and neck widths are
+ * independent checks, so a noisy silhouette measurement cannot move the whole
+ * sheet by itself. Vertical placement matches the structural top first and
+ * uses the neck-base frame as a softer secondary constraint.
+ */
+export function canonicalAdjustment(source: FaceAnatomy, canonical: FaceAnatomy): SpriteAdjustment {
+  const sourceFrame = frameOf(source);
+  const targetFrame = frameOf(canonical);
+  const scaleX = medianScale([
+    sideScale(sourceFrame, targetFrame),
+    canonical.cranialWidth / Math.max(1, source.cranialWidth),
+    canonical.neckWidth / Math.max(1, source.neckWidth),
+  ]);
+  const scaleY = (targetFrame.bottom - targetFrame.top) / Math.max(1, sourceFrame.bottom - sourceFrame.top);
+  const sideCorrection = sideOffset(sourceFrame, targetFrame, scaleX);
+  const topCorrection = targetFrame.top - sourceFrame.top * scaleY;
+  const bottomCorrection = targetFrame.bottom - sourceFrame.bottom * scaleY;
+  return {
+    scale: 1,
+    scaleX,
+    scaleY,
+    dx: subpixelOffset(sideCorrection),
+    dy: subpixelOffset(topCorrection * .65 + bottomCorrection * .35),
+    reviewed: false,
+  };
 }
 
 /**
@@ -78,7 +122,6 @@ export function calibrateToCanonical(
   compatibility?: number,
 ): CalibrationOutput {
   const targetFrame = frameOf(canonical);
-  const targetHeight = structuralHeight(canonical);
   const canonicalMaster: HeadMaster = {
     width: canonical.width,
     height: canonical.height,
@@ -98,17 +141,7 @@ export function calibrateToCanonical(
     stabilityScore: 100,
   };
   const adjustments = anatomies.map((anatomy) => {
-    const sourceFrame = frameOf(anatomy);
-    const scaleX = sideScale(sourceFrame, targetFrame);
-    const scaleY = targetHeight / structuralHeight(anatomy);
-    return {
-      scale: 1,
-      scaleX,
-      scaleY,
-      dx: Math.round(sideOffset(sourceFrame, targetFrame, scaleX)),
-      dy: Math.round(targetFrame.bottom - sourceFrame.bottom * scaleY),
-      reviewed: false,
-    };
+    return canonicalAdjustment(anatomy, canonical);
   });
   const metrics = anatomies.map((anatomy, index) => scoreFace(anatomy, canonicalMaster, adjustments[index], 100, compatibility));
   return {
