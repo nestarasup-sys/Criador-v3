@@ -39,6 +39,11 @@ import {
 } from "./types";
 
 const EMPTY_DATA: AppData = { characters: [], catalog: [], expressionPacks: [], studios: [], studioAssets: [] };
+
+function inspectorSideForCharacter(x: number): "left" | "right" {
+  return x >= 0.5 ? "left" : "right";
+}
+
 type StudioModelPacks = Record<string, Array<{
   id: string;
   name: string;
@@ -477,7 +482,7 @@ export default function StudioPage() {
     const existing = studio.characters.find((item) => item.characterId === characterId);
     if (existing) {
       setSelection({ kind: "character", id: existing.id });
-      setDockSide(existing.x > .7 ? "left" : "right");
+      setDockSide(inspectorSideForCharacter(existing.x));
       return;
     }
     const character = charactersById.get(characterId);
@@ -492,7 +497,7 @@ export default function StudioPage() {
     };
     updateStudio((item) => ({ ...item, characters: [...item.characters, instance] }));
     setSelection({ kind: "character", id: instance.id });
-    setDockSide("right");
+    setDockSide(inspectorSideForCharacter(instance.x));
   }
 
   function cycleSelectedPose() {
@@ -540,7 +545,13 @@ export default function StudioPage() {
     setSelection({ kind, id } as Selection);
     // O lado do inspetor deve reagir ao clique mesmo quando o personagem
     // está bloqueado; o bloqueio impede apenas o arraste.
-    setDockSide((current) => x > .7 ? "left" : x < .45 ? "right" : current);
+    if (kind === "character") {
+      // O centro da cena é o divisor mais seguro: o inspetor fica no lado
+      // oposto ao personagem, inclusive quando ele ocupa uma faixa larga.
+      setDockSide(inspectorSideForCharacter(x));
+    } else {
+      setDockSide((current) => x > .7 ? "left" : x < .45 ? "right" : current);
+    }
     if (kind === "character" && characterPositionsLocked) return;
     const bounds = stageRef.current?.getBoundingClientRect();
     if (!bounds) return;

@@ -469,6 +469,15 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(css, /\.characterHitArea[^}]*pointer-events: auto/);
 });
 
+test("posiciona o inspetor no lado oposto ao personagem selecionado", async () => {
+  const page = await readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /function inspectorSideForCharacter\(x: number\)/);
+  assert.match(page, /return x >= 0\.5 \? "left" : "right"/);
+  assert.match(page, /setDockSide\(inspectorSideForCharacter\(existing\.x\)\)/);
+  assert.match(page, /setDockSide\(inspectorSideForCharacter\(instance\.x\)\)/);
+  assert.match(page, /if \(kind === "character"\) \{[\s\S]*?setDockSide\(inspectorSideForCharacter\(x\)\)/);
+});
+
 test("protege o palco contra os docks e mantém o arraste selecionável", async () => {
   const [page, canvas, roster, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
