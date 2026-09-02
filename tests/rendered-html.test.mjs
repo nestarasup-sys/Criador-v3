@@ -445,7 +445,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(characterRenderer, /processChromaPixels/);
   assert.match(characterRenderer, /processChromaPixels\([\s\S]+?false,[\s\S]+?cleanEdges: true[\s\S]+?despill: 72/);
   assert.match(characterRenderer, /colorAdjustmentIsActive/);
-  assert.match(characterRenderer, /applyProtectedOriginal/);
+  assert.match(characterRenderer, /renderColorLayer/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
   assert.match(printRenderer, /studioCanvasToPng/);
   assert.match(page, /cycleSelectedPose/);
