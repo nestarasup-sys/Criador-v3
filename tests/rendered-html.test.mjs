@@ -487,6 +487,7 @@ test("protege o palco contra os docks e mantém o arraste selecionável", async 
   ]);
   assert.match(page, /setPointerCapture\(event\.pointerId\)/);
   assert.match(page, /pointercancel/);
+  assert.match(page, /kind === "character" \? event\.currentTarget\.parentElement : event\.currentTarget/);
   assert.doesNotMatch(page, /if \(nextX > \.7\) setDockSide\("left"\)/);
   assert.match(canvas, /sceneElements/);
   assert.match(canvas, /\.sort\(\(a, b\) => a\.item\.z - b\.item\.z\)/);

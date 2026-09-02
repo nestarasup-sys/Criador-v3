@@ -558,7 +558,11 @@ export default function StudioPage() {
     pushHistory();
     const startX = event.clientX;
     const startY = event.clientY;
-    const element = event.currentTarget as HTMLElement;
+    // Personagens são arrastados pela hitbox interna, mas a transformação
+    // temporária vive no contêiner que carrega a imagem inteira. Sem separar
+    // esses dois elementos, o estado só aparecia depois do pointerup.
+    const element = (kind === "character" ? event.currentTarget.parentElement : event.currentTarget) as HTMLElement | null;
+    if (!element) return;
     let nextX = x;
     let nextY = y;
     let animationFrame = 0;
