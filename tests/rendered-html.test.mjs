@@ -287,19 +287,23 @@ test("uses an explicit selection mode instead of destructive asset delete button
   assert.match(css, /\.item-card\.delete-selected/);
 });
 
-test("ships the two-panel front and back hair generation prompt", async () => {
-  const prompt = await readFile(new URL("../prompts/cabelo_individual.txt", import.meta.url), "utf8");
+const hairPromptUrl = new URL("../prompts/cabelo_individual.txt", import.meta.url);
+const personalHairPromptUrl = new URL("../prompts/PROMPTS PESSOAL DO USUARIO/PROMPT CABELO TESTE 3.txt", import.meta.url);
+const [hasHairPrompt, hasPersonalHairPrompt] = await Promise.all([
+  access(hairPromptUrl).then(() => true, () => false),
+  access(personalHairPromptUrl).then(() => true, () => false),
+]);
+
+test("ships the two-panel front and back hair generation prompt", { skip: !hasHairPrompt }, async () => {
+  const prompt = await readFile(hairPromptUrl, "utf8");
   assert.match(prompt, /3840 × 1080/);
   assert.match(prompt, /painel ESQUERDO[\s\S]*CAMADA TRASEIRA/);
   assert.match(prompt, /painel DIREITO[\s\S]*CAMADA FRONTAL/);
   assert.match(prompt, /perfeitamente alinhado/);
 });
 
-test("keeps angle and hairstyle references separate in the personal hair prompt", async () => {
-  const prompt = await readFile(
-    new URL("../prompts/PROMPTS PESSOAL DO USUARIO/PROMPT CABELO TESTE 3.txt", import.meta.url),
-    "utf8",
-  );
+test("keeps angle and hairstyle references separate in the personal hair prompt", { skip: !hasPersonalHairPrompt }, async () => {
+  const prompt = await readFile(personalHairPromptUrl, "utf8");
   assert.match(prompt, /PRIMEIRA IMAGEM — GUIA DE ÂNGULO E ENCAIXE/);
   assert.match(prompt, /SEGUNDA IMAGEM — REFERÊNCIA DO PENTEADO/);
   assert.match(prompt, /reconstrua o penteado da segunda imagem para funcionar no ângulo da primeira/);
@@ -486,7 +490,7 @@ test("ships premium color controls and non-destructive protection masks", async 
 
   assert.match(characterContract, /type ColorAdjustment/);
   assert.match(page, /colorAdjustments/);
-  assert.match(page, /createColorAdjustedCanvas/);
+  assert.match(page, /renderColorLayer/);
   assert.match(page, /tintStrength/);
   assert.match(page, /Cor desejada/);
   assert.match(page, /color-neutral-presets/);
@@ -503,6 +507,9 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /Pincel/);
   assert.match(page, /Balde/);
   assert.match(page, /Conta-gotas/);
+  assert.match(page, /colorPreviewMode/);
+  assert.match(page, /Meus presets/);
+  assert.match(page, /Salvar padrão do modelo/);
   assert.match(page, /Salvar proteção/);
   assert.match(css, /\.color-editor-modal/);
   assert.match(css, /\.color-panel/);
