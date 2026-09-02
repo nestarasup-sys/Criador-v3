@@ -616,6 +616,10 @@ body { background: #f8f6f7; }
 .color-section-heading { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 0; padding: 8px 10px; background: #faf8ff; color: #51456e; font-size: 10px; font-weight: 850; text-align: left; cursor: pointer; }
 .color-section-heading b { display: inline-grid; place-items: center; width: 17px; height: 17px; margin-right: 5px; border-radius: 5px; background: #eee7ff; color: var(--accent); font-size: 10px; }
 .color-section-heading i { font-style: normal; color: #8b7ca7; }
+.color-section-label { display: flex; align-items: center; gap: 5px; padding: 7px 9px 5px; color: #625878; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .04em; }
+.color-section-label b { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 5px; background: #f0eaff; color: var(--accent); font-size: 9px; }
+.color-area-section, .color-tone-section, .color-protection-section { padding-bottom: 7px; }
+.color-area-section > :not(.color-section-label), .color-tone-section > :not(.color-section-label), .color-protection-section > :not(.color-section-label) { margin-left: 8px; margin-right: 8px; }
 .color-preview-controls { display: grid; gap: 7px; padding: 8px 9px 9px; }
 .color-preview-modes, .color-preview-backgrounds { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 4px; }
 .color-preview-backgrounds { grid-template-columns: repeat(3, minmax(0,1fr)); }

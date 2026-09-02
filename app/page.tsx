@@ -5179,6 +5179,8 @@ export default function Home() {
                   <small className="color-preview-hint">Dividir mostra o original à esquerda e o resultado à direita. A máscara destaca a área sem alterar o arquivo exportado.</small>
                 </div>}
               </div>
+              <div className="color-section color-area-section">
+                <div className="color-section-label"><b aria-hidden="true">✦</b> Área afetada</div>
               {modelColorEditorActive && (
                 <>
                   <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
@@ -5194,6 +5196,9 @@ export default function Home() {
               {category === "roupas" && activeOutfitVariantCount > 1 && (
                 <div className="color-group-scope"><span>✦ Conjunto vinculado</span><strong>{activeOutfitVariantCount} versões ao mesmo tempo</strong></div>
               )}
+              </div>
+              <div className="color-section color-tone-section">
+                <div className="color-section-label"><b aria-hidden="true">◐</b> Cor e tonalidade</div>
               <div className="color-swatches" aria-label="Cores rápidas">
                 {QUICK_COLOR_PRESETS.map(([label, color]) => (
                   <button key={color} type="button" className={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase() ? "selected" : ""} style={{ background: color }} aria-pressed={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase()} aria-label={`Recolorir para ${label}`} title={label} onClick={() => applyTargetColor(color)} />
@@ -5220,6 +5225,9 @@ export default function Home() {
               <label className="color-range"><span>Textura</span><input type="range" min="0" max="100" value={activeColor.detailPreservation} onChange={(event) => updateColorAdjustment({ detailPreservation: Number(event.target.value) })} /><strong>{activeColor.detailPreservation}%</strong></label>
               <label className="color-range"><span>Força</span><input type="range" min="0" max="100" value={activeColor.tintStrength} onChange={(event) => updateColorAdjustment({ tintStrength: Number(event.target.value) })} /><strong>{activeColor.tintStrength}%</strong></label>
               <p className="color-help">A recoloração tonal usa as sombras e luzes originais para alcançar cores claras, escuras e neutras sem achatar o desenho.</p>
+              </div>
+              <div className="color-section color-protection-section">
+                <div className="color-section-label"><b aria-hidden="true">◈</b> Proteção e reaproveitamento</div>
               <div className="color-options">
                 {(category === "cabelos" || category === "cabelosTras") && <label><input type="checkbox" checked={syncHairColor} onChange={(event) => setSyncHairColor(event.target.checked)} /> Aplicar ao par</label>}
                 {category === "roupas" && <>
@@ -5227,6 +5235,7 @@ export default function Home() {
                   {selectedOutfit?.outfitGroupId && activeOutfitVariantCount > 1 && <button className="protect-color-button" onClick={applyStandardOutfitAdjustment}>Ajustar para padrão</button>}
                 </>}
                 {modelColorEditorActive && <><button className="protect-color-button" onClick={saveModelColorDefault}>Salvar padrão do modelo</button><button className="protect-color-button" onClick={applyModelColorDefault}>Usar padrão</button></>}
+              </div>
               </div></div>}
               <button className="color-collapse-button" type="button" aria-expanded={colorPanelOpen} onClick={() => setColorPanelOpen((open) => !open)}>
                 <span aria-hidden="true">{colorPanelOpen ? "⌃" : "⌄"}</span>
