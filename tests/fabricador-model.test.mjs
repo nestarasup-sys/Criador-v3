@@ -46,6 +46,11 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(normalization, /microAdjustment/);
   assert.match(normalization, /sideScale\(sourceFrame, targetFrame\)/);
   assert.match(normalization, /targetFrame\.bottom - sourceFrame\.bottom \* scaleY/);
+  assert.match(normalization, /export function canonicalAdjustment/);
+  assert.match(normalization, /canonical\.cranialWidth \/ Math\.max\(1, source\.cranialWidth\)/);
+  assert.match(normalization, /canonical\.neckWidth \/ Math\.max\(1, source\.neckWidth\)/);
+  assert.match(normalization, /targetFrame\.top - sourceFrame\.top \* scaleY/);
+  assert.match(normalization, /subpixelOffset\(sideCorrection\)/);
   assert.match(page, /Alternar \$\{expectedCount\}/);
   assert.match(page, /Folha 1 \(21\)/);
   assert.match(page, /Folha 2 \(21\)/);
