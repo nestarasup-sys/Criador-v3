@@ -1,15 +1,29 @@
 import type { FaceAnatomy, HeadMaster, QualityMetrics } from "../types/face-model";
 import { clamp } from "../utils/statistics";
-import { compareProfiles } from "./head-master";
 
-function adjustedProfile(anatomy: FaceAnatomy, master: HeadMaster, scaleX: number, dx: number) {
-  const sourceToMaster = scaleX * anatomy.cranialWidth / Math.max(1, master.width);
-  const offsetToMaster = dx / Math.max(1, master.width);
+type TransformedProfilePoint = { width: number; center: number };
+
+function adjustedProfile(anatomy: FaceAnatomy, scaleX: number, dx: number): TransformedProfilePoint[] {
   return anatomy.profile.map((point) => ({
-    ...point,
-    widthNorm: point.widthNorm * sourceToMaster,
-    centerOffset: point.centerOffset * sourceToMaster + offsetToMaster,
+    width: point.widthNorm * anatomy.cranialWidth * scaleX,
+    center: point.centerOffset * anatomy.cranialWidth * scaleX + dx,
   }));
+}
+
+function adjustedProfileError(profile: readonly TransformedProfilePoint[], master: HeadMaster) {
+  let widthError = 0;
+  let centerError = 0;
+  let count = 0;
+  for (let index = 0; index < Math.min(profile.length, master.profile.length); index += 1) {
+    const source = profile[index];
+    const target = master.profile[index];
+    const targetWidth = target.widthNorm * Math.max(1, master.width);
+    if (!source.width || !targetWidth) continue;
+    widthError += Math.abs(Math.log(Math.max(.001, source.width / targetWidth)));
+    centerError += Math.abs(source.center - target.centerOffset * Math.max(1, master.width)) / Math.max(1, master.width);
+    count += 1;
+  }
+  return count ? widthError / count + centerError / count * .45 : 1;
 }
 
 export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: { scale?: number; scaleX: number; scaleY: number; dx?: number; dy?: number }, stability: number, compatibility?: number): QualityMetrics {
@@ -27,8 +41,8 @@ export function scoreFace(anatomy: FaceAnatomy, master: HeadMaster, adjustment: 
   const adjustedWidth = anatomy.width * effectiveScaleX;
   const adjustedHeight = anatomy.height * effectiveScaleY;
   const proportionError = Math.abs(Math.log(Math.max(.001, (adjustedWidth / Math.max(1, adjustedHeight)) / (master.width / Math.max(1, master.height)))));
-  const profile = compareProfiles(adjustedProfile(anatomy, master, effectiveScaleX, dx), master.profile);
-  const shape = clamp(100 - profile.total * 900, 0, 100);
+  const profileError = adjustedProfileError(adjustedProfile(anatomy, effectiveScaleX, dx), master);
+  const shape = clamp(100 - profileError * 900, 0, 100);
   const metrics = {
     stability: clamp(stability, 0, 100),
     scale: clamp(100 - scaleError * 700, 0, 100),
