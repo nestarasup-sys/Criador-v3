@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { GeneratedSprite, SpriteAdjustment } from "../types/face-model";
 import styles from "../../ferramentas.module.css";
 
 const blank: SpriteAdjustment = { scale: 1, scaleX: 1, scaleY: 1, dx: 0, dy: 0, reviewed: false };
 
 export function ManualAdjustmentPanel({ sprite, onApply, onReview, onCopyTrio, onCopyColumn, onReset }: { sprite?: GeneratedSprite; onApply: (adjustment: SpriteAdjustment) => void; onReview: () => void; onCopyTrio: () => void; onCopyColumn: () => void; onReset: () => void }) {
-  const [draft, setDraft] = useState<SpriteAdjustment>(() => sprite?.adjustment ?? blank);
-  useEffect(() => {
-    setDraft(sprite?.adjustment ?? blank);
-  }, [sprite?.key, sprite?.adjustment?.scale, sprite?.adjustment?.scaleX, sprite?.adjustment?.scaleY, sprite?.adjustment?.dx, sprite?.adjustment?.dy, sprite?.adjustment?.reviewed]);
-  const update = (key: keyof SpriteAdjustment, value: string | boolean) => setDraft((current) => ({ ...current, [key]: typeof value === "boolean" ? value : Number(value) }));
+  const signature = sprite ? [sprite.key, sprite.adjustment.scale, sprite.adjustment.scaleX, sprite.adjustment.scaleY, sprite.adjustment.dx, sprite.adjustment.dy, sprite.adjustment.reviewed].join(":") : "empty";
+  const [draftState, setDraftState] = useState<{ signature: string; value: SpriteAdjustment }>(() => ({ signature, value: sprite?.adjustment ?? blank }));
+  if (draftState.signature !== signature) setDraftState({ signature, value: sprite?.adjustment ?? blank });
+  const draft = draftState.value;
+  const update = (key: keyof SpriteAdjustment, value: string | boolean) => setDraftState((current) => ({ ...current, value: { ...current.value, [key]: typeof value === "boolean" ? value : Number(value) } }));
   if (!sprite) return <div className={styles.emptyState}>Selecione uma prévia para editar.</div>;
   return <div className={styles.controls}>
     <div className={styles.sectionLabel}>Ajuste de {sprite.key}</div>

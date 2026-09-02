@@ -71,8 +71,9 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(comparison, /Guias estruturais/);
   assert.match(comparison, /\[trio\[0\], trio\[1\], trio\[0\], trio\[2\], trio\[0\]\]/);
   assert.match(comparison, /setFrame\(sequence\[index\]\)/);
-  assert.match(manualAdjustment, /useEffect/);
-  assert.match(manualAdjustment, /setDraft\(sprite\?\.adjustment \?\? blank\)/);
+  assert.match(manualAdjustment, /const signature = sprite \?/);
+  assert.match(manualAdjustment, /draftState\.signature !== signature/);
+  assert.match(manualAdjustment, /setDraftState\(\{ signature, value: sprite\?\.adjustment \?\? blank \}\)/);
   assert.match(quality, /function adjustedProfile/);
   assert.match(quality, /\+ dx/);
   assert.match(quality, /adjustedWidth = anatomy\.width \* effectiveScaleX/);
