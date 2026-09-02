@@ -462,6 +462,11 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(outfitVariants, /outfitOffsetForVariant/);
   assert.match(outfitVariants, /outfitGroupId/);
   assert.match(canvas, /renderCacheKey\(character, instance\.expressionEmotion, instance\.expressionState, instance\)/);
+  assert.match(canvas, /measureVisibleBounds/);
+  assert.match(canvas, /characterHitArea/);
+  assert.match(canvas, /onLoad=\{\(event\) => handleCharacterImageLoad/);
+  assert.match(css, /\.sceneCharacter[^}]*pointer-events: none/);
+  assert.match(css, /\.characterHitArea[^}]*pointer-events: auto/);
 });
 
 test("protege o palco contra os docks e mantém o arraste selecionável", async () => {

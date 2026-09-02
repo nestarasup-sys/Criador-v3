@@ -125,10 +125,12 @@
 .backgroundZoomButtons, .backgroundTransformActions { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:8px 0 12px; }
 .backgroundZoomButtons button, .backgroundTransformActions button { border:1px solid #e3c9d7; border-radius:8px; padding:8px 5px; background:#fff; color:#8b4c68; font-size:11px; font-weight:800; cursor:pointer; }
 .backgroundDragHint { display:block; margin-top:10px; color:#907b88; font-size:10px; line-height:1.35; }
-.sceneCharacter { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: max-content; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); contain: layout style; }
+.sceneCharacter { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; width: max-content; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); contain: layout style; pointer-events: none; }
 .sceneCharacter img { display: block; width: auto; max-width: none; height: 100%; image-rendering: auto; pointer-events: none; }
 .sceneCharacter span { display: grid; place-items: center; width: 120px; height: 180px; border-radius: 20px; color: white; background: rgba(52,39,72,.5); font-size: 12.5px; }
 .sceneCharacter.characterLocked { cursor: not-allowed; }
+.characterHitArea { position: absolute; padding: 0; border: 0; border-radius: 4px; background: transparent; cursor: grab; pointer-events: auto; touch-action: none; }
+.characterHitArea.characterLocked { cursor: not-allowed; }
 .sceneObject { --drag-x: 0px; --drag-y: 0px; --scene-scale: 1; --scene-flip: 1; position: absolute; height: auto; image-rendering: auto; cursor: grab; touch-action: none; transform-origin: center; transform: translate(var(--drag-x),var(--drag-y)) translate(-50%,-50%) scale(var(--scene-scale)) scaleX(var(--scene-flip)); }
 .selected { outline: 2px dashed rgba(112,70,217,.85); outline-offset: 6px; }
 .dragging { cursor: grabbing !important; filter: none !important; transition: none !important; will-change: transform; }
