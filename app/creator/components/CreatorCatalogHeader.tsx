@@ -11,11 +11,16 @@ type CreatorCatalogHeaderProps = {
   singleHairInputRef: RefObject<HTMLInputElement | null>;
   hairPairSheetInputRef: RefObject<HTMLInputElement | null>;
   expressionPackInputRef: RefObject<HTMLInputElement | null>;
+  deleteMode: boolean;
+  selectedCount: number;
+  canDeleteAssets: boolean;
   onImportItem: ChangeEventHandler<HTMLInputElement>;
   onImportSheet: ChangeEventHandler<HTMLInputElement>;
   onImportFrontHair: ChangeEventHandler<HTMLInputElement>;
   onImportHairPairSheet: ChangeEventHandler<HTMLInputElement>;
   onImportExpressionPack: ChangeEventHandler<HTMLInputElement>;
+  onToggleDeleteMode: () => void;
+  onDeleteSelected: () => void;
 };
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -25,7 +30,9 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack }: CreatorCatalogHeaderProps) {
+export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected }: CreatorCatalogHeaderProps) {
+  const supportsAssetDelete = category !== "rostos" || faceMode !== "pack";
+
   return <div className="catalog-header">
     <div>
       <span>CATÁLOGO</span>
@@ -63,6 +70,31 @@ export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFron
           >
             {isProcessing ? "Processando…" : "＋ Item"}
           </button>
+        </>
+      )}
+      {supportsAssetDelete && (
+        <>
+          <button
+            type="button"
+            className={`asset-delete-mode-button ${deleteMode ? "active" : ""}`}
+            onClick={onToggleDeleteMode}
+            disabled={isProcessing || !canDeleteAssets}
+            aria-pressed={deleteMode}
+            title={deleteMode ? "Sair do modo de seleção" : "Selecionar itens para apagar"}
+          >
+            {deleteMode ? "Cancelar" : "Excluir"}
+          </button>
+          {deleteMode && (
+            <button
+              type="button"
+              className="asset-delete-selected-button"
+              onClick={onDeleteSelected}
+              disabled={isProcessing || selectedCount === 0}
+              title={selectedCount === 0 ? "Selecione pelo menos um item" : `Apagar ${selectedCount} selecionado(s)`}
+            >
+              Apagar{selectedCount > 0 ? ` · ${selectedCount}` : ""}
+            </button>
+          )}
         </>
       )}
     </div>

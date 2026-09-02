@@ -1195,6 +1195,9 @@ export default function Home() {
   const [outfitCatalogMode, setOutfitCatalogMode] = useState<OutfitCatalogMode>("standard");
   const [outfitGroupViewId, setOutfitGroupViewId] = useState<string | null>(null);
   const [pendingOutfitPack, setPendingOutfitPack] = useState<PendingOutfitPack | null>(null);
+  const [assetDeleteMode, setAssetDeleteMode] = useState(false);
+  const [selectedCatalogAssetIds, setSelectedCatalogAssetIds] = useState<string[]>([]);
+  const [selectedBaseModelIds, setSelectedBaseModelIds] = useState<string[]>([]);
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [expressionPacks, setExpressionPacks] = useState<ExpressionPack[]>([]);
   const [selections, setSelections] = useState<Record<Category, string | null>>({ ...EMPTY_SELECTIONS });
@@ -1373,6 +1376,12 @@ export default function Home() {
     }, animationMode === "blink" ? 650 : 260);
     return () => window.clearInterval(interval);
   }, [animationMode]);
+
+  useEffect(() => {
+    setAssetDeleteMode(false);
+    setSelectedCatalogAssetIds([]);
+    setSelectedBaseModelIds([]);
+  }, [category, model, faceMode, outfitCatalogMode, outfitGroupViewId]);
 
   const activeExpressionPack = expressionPacks.find((pack) =>
     pack.id === activePackId
@@ -3735,11 +3744,11 @@ export default function Home() {
     setAnimationMode((current) => current === mode ? null : mode);
   }
 
-  async function removeOutfitGroup(groupId: string) {
+  async function removeOutfitGroup(groupId: string, options: { skipConfirm?: boolean } = {}) {
     const items = catalog.filter((item) => item.category === "roupas" && item.outfitGroupId === groupId);
     if (!items.length) return;
     const groupName = items[0].outfitGroupName ?? items[0].name;
-    if (!window.confirm(`Excluir “${groupName}” e todas as suas variantes?`)) return;
+    if (!options.skipConfirm && !window.confirm(`Excluir “${groupName}” e todas as suas variantes?`)) return;
     await Promise.all(items.map((item) => deleteCatalogItem(item.id)));
     items.forEach((item) => {
       if (item.url) URL.revokeObjectURL(item.url);
@@ -3766,11 +3775,11 @@ export default function Home() {
     setNotice(`${groupName} e suas variantes foram removidas`);
   }
 
-  async function removeItem(item: CatalogItem) {
+  async function removeItem(item: CatalogItem, options: { skipConfirm?: boolean } = {}) {
     const extraMessage = item.category === "cabelos"
       ? " O vínculo com o cabelo traseiro também será removido."
       : "";
-    if (!window.confirm(`Excluir “${item.name}” do catálogo?${extraMessage}`)) return;
+    if (!options.skipConfirm && !window.confirm(`Excluir “${item.name}” do catálogo?${extraMessage}`)) return;
     await deleteCatalogItem(item.id);
     const unlinkedBackHairs = item.category === "cabelos"
       ? catalog
@@ -3959,20 +3968,96 @@ export default function Home() {
     setNotice("Personagem excluído");
   }
 
-  async function removeBaseModel(packId: string) {
-    const pack = availableBasePacks.find((item) => item.id === packId);
-    if (!pack || !pcStorageAvailable) return;
-    const users = characters.filter((character) => character.model === model && normalizeBasePackId(character.basePackId) === packId).length;
-    const warning = users ? ` ${users} personagem(ns) usam este modelo e poderão ficar sem a referência visual.` : "";
-    if (!window.confirm(`Excluir “${pack.name}” do catálogo local?${warning} Esta ação remove a pasta do modelo e não pode ser desfeita.`)) return;
-    try {
-      await deleteBaseModelFromPc(model, packId);
-      setBasePacks((current) => ({ ...current, [model]: current[model].filter((item) => item.id !== packId) }));
-      if (basePackId === packId) setBasePackId((availableBasePacks.find((item) => item.id !== packId) ?? DEFAULT_BASE_PACKS[model][0]).id);
-      setNotice(`${pack.name} excluído do catálogo`);
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Não foi possível excluir o modelo");
+  function toggleAssetDeleteMode() {
+    setAssetDeleteMode((current) => {
+      const next = !current;
+      if (!next) {
+        setSelectedCatalogAssetIds([]);
+        setSelectedBaseModelIds([]);
+      }
+      return next;
+    });
+  }
+
+  function toggleCatalogAssetSelection(id: string) {
+    if (!assetDeleteMode) return;
+    setSelectedCatalogAssetIds((current) => current.includes(id)
+      ? current.filter((entry) => entry !== id)
+      : [...current, id]);
+  }
+
+  function toggleBaseModelSelection(id: string) {
+    if (!assetDeleteMode) return;
+    setSelectedBaseModelIds((current) => current.includes(id)
+      ? current.filter((entry) => entry !== id)
+      : [...current, id]);
+  }
+
+  async function removeSelectedBaseModels() {
+    if (!pcStorageAvailable) {
+      setNotice("A exclusão de modelos só está disponível com o armazenamento local ativo");
+      return;
     }
+    const selectedPacks = availableBasePacks.filter((pack) => selectedBaseModelIds.includes(pack.id));
+    if (!selectedPacks.length) return;
+    const users = characters.filter((character) => character.model === model && selectedPacks.some((pack) => normalizeBasePackId(character.basePackId) === pack.id)).length;
+    const warning = users ? ` ${users} personagem(ns) usam esses modelos e poderão ficar sem a referência visual.` : "";
+    if (!window.confirm(`Apagar ${selectedPacks.length} modelo(s) do catálogo local?${warning} Esta ação remove as pastas dos modelos e não pode ser desfeita.`)) return;
+
+    setIsProcessing(true);
+    const deletedIds: string[] = [];
+    try {
+      for (const pack of selectedPacks) {
+        try {
+          await deleteBaseModelFromPc(model, pack.id);
+          deletedIds.push(pack.id);
+        } catch (error) {
+          setNotice(error instanceof Error ? error.message : `Não foi possível apagar ${pack.name}`);
+        }
+      }
+      if (deletedIds.length) {
+        setBasePacks((current) => ({ ...current, [model]: current[model].filter((item) => !deletedIds.includes(item.id)) }));
+        if (deletedIds.includes(basePackId)) {
+          const nextPack = availableBasePacks.find((pack) => !deletedIds.includes(pack.id));
+          setBasePackId((nextPack ?? DEFAULT_BASE_PACKS[model][0]).id);
+        }
+        setNotice(`${deletedIds.length} modelo(s) apagado(s) do catálogo`);
+      }
+      setSelectedBaseModelIds([]);
+      setAssetDeleteMode(false);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function removeSelectedCatalogAssets() {
+    const selectedItems = catalog.filter((item) => selectedCatalogAssetIds.includes(item.id));
+    if (!selectedItems.length) return;
+    const groupIds = category === "roupas" && outfitCatalogMode === "standard"
+      ? Array.from(new Set(selectedItems.flatMap((item) => item.outfitGroupId ? [item.outfitGroupId] : [])))
+      : [];
+    const individualItems = selectedItems.filter((item) => !groupIds.includes(item.outfitGroupId ?? ""));
+    const targetCount = groupIds.length + individualItems.length;
+    if (!window.confirm(`Apagar ${targetCount} seleção(ões) do catálogo?${groupIds.length ? " Roupas com variantes apagarão o conjunto inteiro." : ""}`)) return;
+
+    setIsProcessing(true);
+    try {
+      for (const groupId of groupIds) await removeOutfitGroup(groupId, { skipConfirm: true });
+      for (const item of individualItems) await removeItem(item, { skipConfirm: true });
+      setSelectedCatalogAssetIds([]);
+      setAssetDeleteMode(false);
+      setNotice(`${targetCount} seleção(ões) apagada(s) do catálogo`);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function removeSelectedAssets() {
+    if (category === "rostos" && faceMode === "base") {
+      await removeSelectedBaseModels();
+      return;
+    }
+    await removeSelectedCatalogAssets();
   }
 
   async function exportPng() {
@@ -4095,6 +4180,12 @@ export default function Home() {
           || item.category === "cabelosTras"
           || normalizeBasePackId(item.basePackId) === basePackId),
       );
+  const selectedAssetCount = category === "rostos" && faceMode === "base"
+    ? selectedBaseModelIds.length
+    : selectedCatalogAssetIds.length;
+  const canDeleteAssets = category === "rostos" && faceMode === "base"
+    ? pcStorageAvailable && availableBasePacks.length > 0
+    : visibleItems.length > 0;
   const activeAdjustmentCategory = category;
   const activeTransform = normalizeTransform(adjustments[activeAdjustmentCategory]);
   const projectedHeadFit = headFitGuide && selectedOutfit
@@ -4839,11 +4930,16 @@ export default function Home() {
             singleHairInputRef={singleHairInputRef}
             hairPairSheetInputRef={hairPairSheetInputRef}
             expressionPackInputRef={expressionPackInputRef}
+            deleteMode={assetDeleteMode}
+            selectedCount={selectedAssetCount}
+            canDeleteAssets={canDeleteAssets}
             onImportItem={importItem}
             onImportSheet={importSheet}
             onImportFrontHair={importFrontHairItem}
             onImportHairPairSheet={importHairPairSheet}
             onImportExpressionPack={importExpressionPack}
+            onToggleDeleteMode={toggleAssetDeleteMode}
+            onDeleteSelected={() => void removeSelectedAssets()}
           />
 
           {category === "rostos" && (
@@ -4975,22 +5071,28 @@ export default function Home() {
               </div>
               <div className="base-pack-selector" role="group" aria-label={`Modelos ${model}`}>
                 {availableBasePacks.map((pack) => (
+                  (() => {
+                    const selectedForDelete = assetDeleteMode && selectedBaseModelIds.includes(pack.id);
+                    return (
                   <div
                     key={pack.id}
-                    className={basePackId === pack.id ? "active" : ""}
-                    onClick={() => changeBasePack(pack.id)}
-                    onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") changeBasePack(pack.id); }}
+                    className={`${basePackId === pack.id ? "active " : ""}${selectedForDelete ? "delete-selected" : ""}`}
+                    onClick={() => assetDeleteMode ? toggleBaseModelSelection(pack.id) : changeBasePack(pack.id)}
+                    onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); assetDeleteMode ? toggleBaseModelSelection(pack.id) : changeBasePack(pack.id); } }}
                     role="button"
                     tabIndex={0}
-                    title={`Selecionar ${pack.name}`}
+                    aria-pressed={assetDeleteMode ? selectedForDelete : undefined}
+                    title={assetDeleteMode ? `Selecionar ${pack.name} para apagar` : `Selecionar ${pack.name}`}
                   >
                     {/* Static local base preview. */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={baseExpressionSource(pack, "normal")} alt="" />
                     <span>{pack.name}</span>
                     <small>{pack.expressionKeys.length} expressões</small>
-                    <span className="base-pack-actions"><button type="button" className="base-pack-delete" title={`Excluir ${pack.name}`} aria-label={`Excluir ${pack.name}`} onClick={(event) => { event.stopPropagation(); void removeBaseModel(pack.id); }}>Excluir</button></span>
+                    {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}
                   </div>
+                    );
+                  })()
                 ))}
               </div>
 
@@ -5094,6 +5196,7 @@ export default function Home() {
                 <button
                   className={`item-card none-card ${selections[category] === null ? "selected" : ""}`}
                   onClick={() => selectCatalogItem(null)}
+                  disabled={assetDeleteMode}
                 >
                   <span>∅</span>
                   <strong>Nenhum</strong>
@@ -5105,21 +5208,18 @@ export default function Home() {
                   const itemSelected = category === "roupas" && item.outfitGroupId
                     ? outfitCatalogMode === "standard" ? groupedOutfitSelected : selections.roupas === item.id
                     : selections[category] === item.id;
+                  const selectedForDelete = assetDeleteMode && selectedCatalogAssetIds.includes(item.id);
                   const variantIndex = item.outfitVariantIndex ?? 0;
                   return (
-                    <div className={`item-card ${item.outfitGroupId ? "outfit-pack-card" : ""} ${itemSelected ? "selected" : ""}`} key={item.id}>
-                      <button className="item-select" aria-label={item.name || `${CATEGORY_LABELS[category]} ${index + 1}`} onClick={() => category === "roupas" ? void selectOutfitCard(item) : void selectCatalogItem(item.id)}>
+                    <div className={`item-card ${item.outfitGroupId ? "outfit-pack-card" : ""} ${itemSelected ? "selected" : ""} ${selectedForDelete ? "delete-selected" : ""}`} key={item.id}>
+                      <button className="item-select" aria-label={item.name || `${CATEGORY_LABELS[category]} ${index + 1}`} aria-pressed={assetDeleteMode ? selectedForDelete : undefined} onClick={() => assetDeleteMode ? toggleCatalogAssetSelection(item.id) : category === "roupas" ? void selectOutfitCard(item) : void selectCatalogItem(item.id)}>
                         {/* Catalog images are local Blob URLs and cannot use next/image. */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         {item.url && <img src={item.url} alt="" />}
                         {item.outfitGroupId && outfitCatalogMode === "standard" && <span className="outfit-count-badge">{Math.max(0, (outfitVariantCounts.get(item.outfitGroupId) ?? 1) - 1)} variantes</span>}
                         {item.outfitGroupId && outfitCatalogMode === "variants" && <span className="outfit-pose-badge">{variantIndex === 0 ? "Padrão" : `Variante ${variantIndex}`}</span>}
                       </button>
-                      <button
-                        className="remove-item"
-                        title={item.outfitGroupId && outfitCatalogMode === "standard" ? "Remover esta roupa e todas as variantes" : "Remover do catálogo"}
-                        onClick={() => item.outfitGroupId && outfitCatalogMode === "standard" ? void removeOutfitGroup(item.outfitGroupId) : void removeItem(item)}
-                      >×</button>
+                      {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}
                     </div>
                   );
                 })}

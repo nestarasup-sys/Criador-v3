@@ -266,6 +266,27 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(css, /\.hair-sheet-layout/);
 });
 
+test("uses an explicit selection mode instead of destructive asset delete buttons", async () => {
+  const [page, catalogHeader, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/CreatorCatalogHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(catalogHeader, /asset-delete-mode-button/);
+  assert.match(catalogHeader, /asset-delete-selected-button/);
+  assert.match(catalogHeader, /Cancelar/);
+  assert.match(catalogHeader, /Apagar/);
+  assert.match(page, /selectedCatalogAssetIds/);
+  assert.match(page, /selectedBaseModelIds/);
+  assert.match(page, /removeSelectedAssets/);
+  assert.match(page, /toggleCatalogAssetSelection/);
+  assert.match(page, /toggleBaseModelSelection/);
+  assert.doesNotMatch(page, /className="base-pack-delete"/);
+  assert.doesNotMatch(page, /className="remove-item"/);
+  assert.match(css, /\.asset-selection-indicator/);
+  assert.match(css, /\.item-card\.delete-selected/);
+});
+
 test("ships the two-panel front and back hair generation prompt", async () => {
   const prompt = await readFile(new URL("../prompts/cabelo_individual.txt", import.meta.url), "utf8");
   assert.match(prompt, /3840 × 1080/);
