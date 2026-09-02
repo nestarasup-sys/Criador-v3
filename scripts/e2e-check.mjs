@@ -42,12 +42,12 @@ try {
   assert.equal(await scaleXInput.inputValue(), "1", "A referência normal deve começar sem correção manual");
   const comparisonStage = page.locator('[class*="comparisonStage"]');
   await comparisonStage.scrollIntoViewIfNeeded();
-  const stageBox = await comparisonStage.boundingBox();
-  assert.ok(stageBox, "O palco de comparação precisa aceitar arraste");
+  const fabricatorStageBox = await comparisonStage.boundingBox();
+  assert.ok(fabricatorStageBox, "O palco de comparação precisa aceitar arraste");
   const dragBefore = await extensionlessDragInput.inputValue();
-  await page.mouse.move(stageBox.x + stageBox.width / 2, stageBox.y + stageBox.height / 2);
+  await page.mouse.move(fabricatorStageBox.x + fabricatorStageBox.width / 2, fabricatorStageBox.y + fabricatorStageBox.height / 2);
   await page.mouse.down();
-  await page.mouse.move(stageBox.x + stageBox.width / 2 + 64, stageBox.y + stageBox.height / 2 + 24, { steps: 4 });
+  await page.mouse.move(fabricatorStageBox.x + fabricatorStageBox.width / 2 + 64, fabricatorStageBox.y + fabricatorStageBox.height / 2 + 24, { steps: 4 });
   await page.mouse.up();
   await page.waitForTimeout(800);
   assert.notEqual(await extensionlessDragInput.inputValue(), dragBefore, "O arraste deve refletir no ajuste aplicado ao conjunto");
