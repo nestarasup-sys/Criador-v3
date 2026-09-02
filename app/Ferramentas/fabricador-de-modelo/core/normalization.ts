@@ -72,6 +72,7 @@ function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: numbe
 }
 
 type ProfileAlignment = { scaleX: number; dx: number };
+type ProfileSample = { scale: number; sourceCenter: number; targetCenter: number };
 
 /**
  * Measures the silhouette at several normalized heights. A single bounding
@@ -80,19 +81,19 @@ type ProfileAlignment = { scaleX: number; dx: number };
  * makes those measurements participate in the same robust fit.
  */
 function profileAlignment(source: FaceAnatomy, target: FaceAnatomy): ProfileAlignment | null {
-  const samples = source.profile.map((point, index) => {
+  const samples: ProfileSample[] = [];
+  source.profile.forEach((point, index) => {
     const counterpart = target.profile[index];
-    if (!counterpart || point.widthNorm <= 0 || counterpart.widthNorm <= 0) return null;
+    if (!counterpart || point.widthNorm <= 0 || counterpart.widthNorm <= 0) return;
     const sourceWidth = point.widthNorm * Math.max(1, source.cranialWidth);
     const targetWidth = counterpart.widthNorm * Math.max(1, target.cranialWidth);
-    return {
+    const sample = {
       scale: targetWidth / Math.max(1, sourceWidth),
       sourceCenter: point.centerOffset * Math.max(1, source.cranialWidth),
       targetCenter: counterpart.centerOffset * Math.max(1, target.cranialWidth),
-      sourceWidth,
-      targetWidth,
     };
-  }).filter((sample): sample is NonNullable<typeof sample> => Boolean(sample) && Number.isFinite(sample.scale) && sample.scale > 0);
+    if (Number.isFinite(sample.scale) && sample.scale > 0) samples.push(sample);
+  });
   if (samples.length < 4) return null;
   const scaleX = medianScale(samples.map((sample) => sample.scale));
   const offsets = samples.map((sample) => sample.targetCenter - sample.sourceCenter * scaleX);

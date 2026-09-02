@@ -53,7 +53,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(normalization, /profile\.scaleX/);
   assert.match(normalization, /median\(\[sideCorrection, sideCorrection, profile\.dx\]\)/);
   assert.match(normalization, /targetFrame\.top - sourceFrame\.top \* scaleY/);
-  assert.match(normalization, /subpixelOffset\(sideCorrection\)/);
+  assert.match(normalization, /subpixelOffset\(horizontalCorrection\)/);
   assert.match(page, /Alternar \$\{expectedCount\}/);
   assert.match(page, /Folha 1 \(21\)/);
   assert.match(page, /Folha 2 \(21\)/);
