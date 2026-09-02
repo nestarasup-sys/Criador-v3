@@ -2017,6 +2017,8 @@ export default function Home() {
     setSelections({ ...EMPTY_SELECTIONS });
     setAdjustments(emptyAdjustments());
     setColorAdjustments(emptyColorAdjustments());
+    setModelColorAdjustments(emptyModelColorAdjustments());
+    setModelColorScope("details");
     setHeadFitGuide(null);
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
