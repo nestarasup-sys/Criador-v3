@@ -1227,6 +1227,7 @@ export default function Home() {
   const [colorPreviewMode, setColorPreviewMode] = useState<ColorPreviewMode>("after");
   const [colorPreviewBackground, setColorPreviewBackground] = useState<ColorPreviewBackground>("transparent");
   const [colorPreviewZoom, setColorPreviewZoom] = useState(100);
+  const [colorSectionsOpen, setColorSectionsOpen] = useState({ color: true, area: true, preview: true, protection: false });
   const [headFitGuide, setHeadFitGuide] = useState<HeadFitGuide | null>(null);
   const characterHistoryRef = useRef(new Map<string, CharacterHistory>());
   const historyActiveKeyRef = useRef<string | null>(null);
@@ -4860,12 +4861,12 @@ export default function Home() {
               onToggleExportFrame={() => { setExportFrameMode((current) => !current); setFitMode(false); setEraserMode(false); setPreviewPanMode(false); setChromaMode(false); setBrushCursor((current) => ({ ...current, visible: false })); }}
               onReset={() => { setPreviewPan({ ...DEFAULT_PREVIEW_PAN }); setExportFrame({ ...DEFAULT_EXPORT_FRAME }); setPreviewZoom(100); setPreviewPanMode(false); setExportFrameMode(false); }}
             />
-            <div className={`canvas-frame ${fitMode && hasActiveItem ? "fitting" : ""} ${eraserMode ? "erasing" : ""} ${previewPanMode ? "panning" : ""} ${exportFrameMode ? "framing" : ""} ${chromaMode ? "chroma-keying" : ""} ${exportTouchesEdge ? "export-clipped" : ""}`}>
+            <div className={`canvas-frame color-preview-bg-${colorPreviewBackground} ${colorPreviewMode !== "after" ? "color-preview-active" : ""} ${fitMode && hasActiveItem ? "fitting" : ""} ${eraserMode ? "erasing" : ""} ${previewPanMode ? "panning" : ""} ${exportFrameMode ? "framing" : ""} ${chromaMode ? "chroma-keying" : ""} ${exportTouchesEdge ? "export-clipped" : ""}`}>
             <canvas
               ref={canvasRef}
               className={chromaMode ? "chroma-base-hidden" : ""}
               aria-label="Pré-visualização do personagem"
-              style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom / 100})` }}
+              style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom * colorPreviewZoom / 10000})` }}
               onPointerDown={startCanvasDrag}
               onPointerMove={moveCanvasDrag}
               onPointerUp={stopCanvasDrag}
@@ -4873,6 +4874,15 @@ export default function Home() {
               onPointerEnter={(event) => eraserMode && updateBrushCursor(event)}
               onPointerLeave={(event) => eraserMode && updateBrushCursor(event, false)}
             />
+            {colorPreviewMode === "split" && (
+              <div className="color-before-preview" aria-label="Original à esquerda da comparação">
+                <canvas
+                  ref={colorBeforeCanvasRef}
+                  aria-hidden="true"
+                  style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom * colorPreviewZoom / 10000})` }}
+                />
+              </div>
+            )}
             {headFitGuide && projectedHeadFit && headFitTargetTopY !== null && headFitTargetBaseY !== null && headFitTargetBaseX !== null && (
               <svg
                 className="head-fit-overlay"
@@ -5097,6 +5107,23 @@ export default function Home() {
                 <div className="color-heading-actions"><button type="button" className="color-power-button" onClick={toggleActiveColor}>{activeColor.enabled ? "Desligar" : "Ativar"}</button><button type="button" onClick={resetActiveColor}>Restaurar</button></div>
               </div>
               {colorPanelOpen && <div className={`color-panel-body ${!activeColor.enabled ? "color-disabled" : ""}`}>
+              <div className="color-section color-preview-section">
+                <button type="button" className="color-section-heading" aria-expanded={colorSectionsOpen.preview} onClick={() => setColorSectionsOpen((current) => ({ ...current, preview: !current.preview }))}>
+                  <span><b aria-hidden="true">◉</b> Prévia da cor</span><i aria-hidden="true">{colorSectionsOpen.preview ? "⌃" : "⌄"}</i>
+                </button>
+                {colorSectionsOpen.preview && <div className="color-preview-controls">
+                  <div className="color-preview-modes" role="group" aria-label="Modo de prévia">
+                    {([ ["after", "Resultado"], ["before", "Original"], ["split", "Dividir"], ["mask", "Máscara"] ] as const).map(([mode, label]) => (
+                      <button key={mode} type="button" className={colorPreviewMode === mode ? "active" : ""} disabled={mode === "mask" && !modelColorEditorActive} onClick={() => setColorPreviewMode(mode)}>{label}</button>
+                    ))}
+                  </div>
+                  <div className="color-preview-backgrounds" role="group" aria-label="Fundo da prévia">
+                    {([ ["transparent", "Quadriculado"], ["white", "Branco"], ["black", "Preto"] ] as const).map(([background, label]) => <button key={background} type="button" className={colorPreviewBackground === background ? "active" : ""} onClick={() => setColorPreviewBackground(background)}>{label}</button>)}
+                  </div>
+                  <div className="color-preview-zoom"><span>Zoom da prévia</span><button type="button" onClick={() => setColorPreviewZoom((value) => Math.max(75, value - 10))}>−</button><strong>{colorPreviewZoom}%</strong><button type="button" onClick={() => setColorPreviewZoom((value) => Math.min(180, value + 10))}>+</button><button type="button" onClick={() => setColorPreviewZoom(100)}>Redefinir</button></div>
+                  <small className="color-preview-hint">Dividir mostra o original à esquerda e o resultado à direita. A máscara destaca a área sem alterar o arquivo exportado.</small>
+                </div>}
+              </div>
               {modelColorEditorActive && (
                 <>
                   <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
