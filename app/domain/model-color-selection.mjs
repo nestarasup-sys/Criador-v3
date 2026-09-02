@@ -105,7 +105,7 @@ function isModelDetail(red, green, blue, alpha, position) {
 }
 
 function isModelPupil(red, green, blue, alpha, position) {
-  if (alpha <= 8 || !position?.bounds) return false;
+  if (alpha < 160 || !position?.bounds) return false;
   const relative = relativeFacePosition(position);
   if (!relative) return false;
 
@@ -116,7 +116,7 @@ function isModelPupil(red, green, blue, alpha, position) {
   const eyeHeight = 0.085;
   const eyeLanes = [0.49, 0.86];
   const insideEyeCore = eyeLanes.some((eyeX) => {
-    const dx = (relative.x - eyeX) / 0.145;
+    const dx = (relative.x - eyeX) / 0.09;
     const dy = (relative.y - eyeY) / eyeHeight;
     return (dx * dx) + (dy * dy) <= 1;
   });
@@ -125,10 +125,8 @@ function isModelPupil(red, green, blue, alpha, position) {
   // Only pigment is selected. Neutral eye whites, outlines and lashes stay
   // intact, and an asymmetric asset keeps a missing/unpainted eye untouched.
   const { saturation, value } = rgbToHsv(red, green, blue);
-  const channels = [red, green, blue].sort((left, right) => right - left);
-  const dominantRatio = channels[0] / Math.max(1, channels[1]);
   if (isLightWarmWash(red, green, blue, saturation, value)) return false;
-  return saturation >= 0.2 && value >= 0.1 && dominantRatio >= 1.18;
+  return saturation >= 0.3 && value >= 0.25;
 }
 
 function isSkinTone(red, green, blue, alpha) {
