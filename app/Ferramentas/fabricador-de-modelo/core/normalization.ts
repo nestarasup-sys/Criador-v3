@@ -5,6 +5,25 @@ import { scoreFace } from "./quality";
 
 export type CalibrationOutput = { adjustments: SpriteAdjustment[]; metrics: QualityMetrics[]; trioTargets: Array<{ width: number; height: number }>; outlierIndices: number[]; compatibility?: CompatibilityMetrics };
 
+export function compatibilityFromMetrics(metrics: readonly QualityMetrics[]): CompatibilityMetrics {
+  const average = (key: keyof Pick<QualityMetrics, "scale" | "proportion" | "shape" | "neck">) => metrics.length
+    ? Math.round(metrics.reduce((total, metric) => total + metric[key], 0) / metrics.length)
+    : 0;
+  const scores = {
+    size: average("scale"),
+    proportion: average("proportion"),
+    silhouette: average("shape"),
+    // The current anatomy model does not expose a separate jaw contour. The
+    // structural profile is the safe proxy because it includes the jaw band
+    // while ignoring eyes, mouth and eyebrows.
+    jaw: average("shape"),
+    neck: average("neck"),
+  };
+  const overall = Math.round(scores.size * .18 + scores.proportion * .18 + scores.silhouette * .3 + scores.jaw * .18 + scores.neck * .16);
+  const status = overall >= 95 ? "Excelente" : overall >= 90 ? "Muito bom" : overall >= 82 ? "Aceitável" : overall >= 70 ? "Revisar" : "Incompatível";
+  return { ...scores, overall, status };
+}
+
 function medianProfile(anatomies: readonly FaceAnatomy[], indices: readonly number[]) {
   return Array.from({ length: 32 }, (_, pointIndex) => {
     const points = indices.map((index) => anatomies[index]?.profile[pointIndex]).filter((point) => Boolean(point && point.widthNorm > 0));

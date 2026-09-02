@@ -6,7 +6,7 @@ import { canvasFromPixels, placeFace } from "./compositor";
 import { analyzeFaceAnatomy } from "./anatomy";
 import { buildHeadMaster } from "./head-master";
 import { scoreFace } from "./quality";
-import { calibrateExtension, calibratePrimary, calibrateToCanonical, headMasterFromAnatomy } from "./normalization";
+import { calibrateExtension, calibratePrimary, calibrateToCanonical, compatibilityFromMetrics, headMasterFromAnatomy } from "./normalization";
 import type { CalibrationSettings, FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult, SpriteAdjustment } from "../types/face-model";
 
 async function imageDataFromFile(file: File) {
@@ -44,10 +44,11 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
   const diagnosticCalibration = options.referenceMaster
     ? calibrateExtension(validAnatomies, options.referenceMaster, settings.extensionMaxCorrection, settings.extensionMicroAdjustment, options.referenceAnatomies)
     : null;
-  const calibration = canonical
+  const canonicalCalibration = canonical ? calibrateToCanonical(validAnatomies, canonical) : null;
+  const calibration = canonicalCalibration
     ? {
-        ...calibrateToCanonical(validAnatomies, canonical, diagnosticCalibration?.compatibility.overall),
-        ...(diagnosticCalibration?.compatibility ? { compatibility: diagnosticCalibration.compatibility } : {}),
+        ...canonicalCalibration,
+        ...(options.referenceMaster ? { compatibility: compatibilityFromMetrics(canonicalCalibration.metrics) } : {}),
       }
     : diagnosticCalibration
       ?? calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
