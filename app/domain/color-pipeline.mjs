@@ -92,7 +92,7 @@ export function recolorPixels(data, options = {}) {
   targetHue = ((targetHue + finite(options.hue, 0) / 360) % 1 + 1) % 1;
   targetSaturation = clamp01(targetSaturation * Math.max(0, finite(options.saturation, 100)) / 100);
   targetLightness = clamp01(targetLightness + (finite(options.brightness, 100) - 100) / 200);
-  const useOklch = options.colorSpace !== "hsl";
+  const useOklch = options.colorSpace === "oklch";
   let oklchTargetColor = null;
   if (useOklch) {
     const target = toOklch({ mode: "rgb", r: targetRed, g: targetGreen, b: targetBlue });
