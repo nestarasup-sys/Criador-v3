@@ -76,6 +76,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(manualAdjustment, /setDraftState\(\{ signature, value: sprite\?\.adjustment \?\? blank \}\)/);
   assert.match(quality, /function adjustedProfile/);
   assert.match(quality, /\+ dx/);
+  assert.match(quality, /reliableWidthFloor/);
   assert.match(quality, /adjustedWidth = anatomy\.width \* effectiveScaleX/);
   assert.match(quality, /function adjustedProfileError/);
 assert.match(quality, /adjustedProfile\(anatomy, effectiveScaleX, dx\)/);

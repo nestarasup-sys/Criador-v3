@@ -11,14 +11,19 @@ function adjustedProfile(anatomy: FaceAnatomy, scaleX: number, dx: number): Tran
 }
 
 function adjustedProfileError(profile: readonly TransformedProfilePoint[], master: HeadMaster) {
+  const targetProfileWidths = master.profile.map((point) => point.widthNorm * Math.max(1, master.width));
+  const reliableWidthFloor = Math.max(...targetProfileWidths, 1) * .18;
   let widthError = 0;
   let centerError = 0;
   let count = 0;
   for (let index = 0; index < Math.min(profile.length, master.profile.length); index += 1) {
     const source = profile[index];
     const target = master.profile[index];
-    const targetWidth = target.widthNorm * Math.max(1, master.width);
-    if (!source.width || !targetWidth) continue;
+    const targetWidth = targetProfileWidths[index];
+    // The top of a rounded head can land on a single anti-aliased row. It is
+    // not a stable anatomical width and must not outweigh the reliable
+    // forehead, jaw and neck profile below.
+    if (source.width < reliableWidthFloor || targetWidth < reliableWidthFloor) continue;
     widthError += Math.abs(Math.log(Math.max(.001, source.width / targetWidth)));
     centerError += Math.abs(source.center - target.centerOffset * Math.max(1, master.width)) / Math.max(1, master.width);
     count += 1;
