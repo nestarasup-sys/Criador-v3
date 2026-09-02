@@ -74,6 +74,28 @@ function sideOffset(frame: AlignmentFrame, target: AlignmentFrame, scaleX: numbe
 type ProfileAlignment = { scaleX: number; dx: number };
 type ProfileSample = { scale: number; sourceCenter: number; targetCenter: number };
 
+export function headMasterFromAnatomy(anatomy: FaceAnatomy): HeadMaster {
+  const targetFrame = frameOf(anatomy);
+  return {
+    width: anatomy.width,
+    height: anatomy.height,
+    centerX: anatomy.centerX,
+    neckCenterX: anatomy.neckCenterX,
+    neckWidth: anatomy.neckWidth,
+    neckBaseY: anatomy.neckBaseY,
+    structuralLeft: targetFrame.left,
+    structuralRight: targetFrame.right,
+    structuralBottom: targetFrame.bottom,
+    structuralWidth: Math.max(1, targetFrame.right - targetFrame.left + 1),
+    profile: anatomy.profile,
+    usableIndices: [],
+    outlierIndices: [],
+    referenceIndex: 0,
+    bestTrioColumn: 0,
+    stabilityScore: 100,
+  };
+}
+
 /**
  * Measures the silhouette at several normalized heights. A single bounding
  * box can be identical while the forehead, cheek and jaw still drift by a few
@@ -150,25 +172,7 @@ export function calibrateToCanonical(
   canonical: FaceAnatomy,
   compatibility?: number,
 ): CalibrationOutput {
-  const targetFrame = frameOf(canonical);
-  const canonicalMaster: HeadMaster = {
-    width: canonical.width,
-    height: canonical.height,
-    centerX: canonical.centerX,
-    neckCenterX: canonical.neckCenterX,
-    neckWidth: canonical.neckWidth,
-    neckBaseY: canonical.neckBaseY,
-    structuralLeft: targetFrame.left,
-    structuralRight: targetFrame.right,
-    structuralBottom: targetFrame.bottom,
-    structuralWidth: Math.max(1, targetFrame.right - targetFrame.left + 1),
-    profile: canonical.profile,
-    usableIndices: [],
-    outlierIndices: [],
-    referenceIndex: 0,
-    bestTrioColumn: 0,
-    stabilityScore: 100,
-  };
+  const canonicalMaster = headMasterFromAnatomy(canonical);
   const adjustments = anatomies.map((anatomy) => {
     return canonicalAdjustment(anatomy, canonical);
   });

@@ -6,7 +6,7 @@ import { canvasFromPixels, placeFace } from "./compositor";
 import { analyzeFaceAnatomy } from "./anatomy";
 import { buildHeadMaster } from "./head-master";
 import { scoreFace } from "./quality";
-import { calibrateExtension, calibratePrimary, calibrateToCanonical } from "./normalization";
+import { calibrateExtension, calibratePrimary, calibrateToCanonical, headMasterFromAnatomy } from "./normalization";
 import type { CalibrationSettings, FaceAnatomy, GeneratedSprite, HeadMaster, ModelExpression, SheetId, SheetResult, SpriteAdjustment } from "../types/face-model";
 
 async function imageDataFromFile(file: File) {
@@ -51,7 +51,10 @@ export async function processSheet(file: File, sheet: SheetId, options: ProcessS
       }
     : diagnosticCalibration
       ?? calibratePrimary(validAnatomies, localMaster, settings.primaryMaxCorrection, settings.primaryStrength);
-  const targetMaster = options.referenceMaster ?? localMaster;
+  // The quality report must evaluate against the same canonical head used by
+  // the affine calibration. Comparing a canonicalized sprite against the
+  // sheet median makes already aligned faces appear to have a bad silhouette.
+  const targetMaster = canonical ? headMasterFromAnatomy(canonical) : options.referenceMaster ?? localMaster;
   const states: GeneratedSprite["state"][] = ["default", "blink", "talk"];
   const sprites = crops.map((crop, index) => buildSprite(crop, validAnatomies[index], spriteKey(sheet, index), sheet, targetMaster, { ...calibration.adjustments[index], ...options.manualAdjustments?.[index] }, states[Math.floor(index / 7)], settings, options.referenceMaster ? calibration.compatibility?.overall : undefined));
   const expressions: ModelExpression[] = expressionsFor(sheet).map((key, column) => ({ key, sourceSheet: sheet, default: sprites[column], blink: sprites[column + 7], talk: sprites[column + 14] }));

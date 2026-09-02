@@ -78,7 +78,8 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   assert.match(quality, /\+ dx/);
   assert.match(quality, /adjustedWidth = anatomy\.width \* effectiveScaleX/);
   assert.match(quality, /function adjustedProfileError/);
-  assert.match(quality, /adjustedProfile\(anatomy, effectiveScaleX, dx\)/);
+assert.match(quality, /adjustedProfile\(anatomy, effectiveScaleX, dx\)/);
+assert.match(normalization, /headMasterFromAnatomy/);
   assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonStage \{ min-height: 340px/);
   assert.match(await read("app/Ferramentas/ferramentas.module.css"), /\.fabricatorMain \.comparisonImage \{ width: 100%; height: 100%; object-fit: contain; transform-origin: 50% 6%/);
 });
