@@ -510,6 +510,22 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(css, /\.color-collapse-button/);
 });
 
+test("mantém cores do modelo no cache do Studio e oferece controle reversível", async () => {
+  const [page, studio, rendering, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/color-rendering.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /toggleActiveColor/);
+  assert.match(page, /enabled: true/);
+  assert.match(studio, /modelColorAdjustments/);
+  assert.match(studio, /modelColorScope/);
+  assert.match(rendering, /color\.enabled &&/);
+  assert.match(css, /\.color-power-button/);
+  assert.match(css, /\.color-swatches button\.selected/);
+});
+
 test("oferece desfazer e refazer isolados para o personagem atual", async () => {
   const [page, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

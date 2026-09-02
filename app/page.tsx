@@ -4248,12 +4248,17 @@ export default function Home() {
       : colorAdjustments[category]);
   const colorEligible = modelColorEditorActive
     || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas"));
+  const colorIsChanged = colorAdjustmentIsActive(activeColor);
+  const colorStatusLabel = !activeColor.enabled ? "Desligada" : colorIsChanged ? "Aplicada" : "Original";
 
   function updateColorAdjustment(patch: Partial<ColorAdjustment>) {
+    const colorPatch = patch.enabled === undefined && Object.keys(patch).some((key) => key !== "enabled")
+      ? { ...patch, enabled: true }
+      : patch;
     if (modelColorEditorActive) {
       setModelColorAdjustments((current) => ({
         ...current,
-        [modelColorScope]: { ...current[modelColorScope], ...patch },
+        [modelColorScope]: { ...current[modelColorScope], ...colorPatch },
       }));
       return;
     }
@@ -4262,16 +4267,16 @@ export default function Home() {
         ...current,
         [activeOutfitColorGroupKey]: {
           ...(current[activeOutfitColorGroupKey] ?? colorAdjustments.roupas),
-          ...patch,
+          ...colorPatch,
         },
       }));
       return;
     }
     setColorAdjustments((current) => {
-      const next = { ...current, [category]: { ...current[category], ...patch } };
+      const next = { ...current, [category]: { ...current[category], ...colorPatch } };
       if (syncHairColor && (category === "cabelos" || category === "cabelosTras")) {
         const pairCategory: Category = category === "cabelos" ? "cabelosTras" : "cabelos";
-        next[pairCategory] = { ...current[pairCategory], ...patch };
+        next[pairCategory] = { ...current[pairCategory], ...colorPatch };
       }
       return next;
     });
@@ -4290,6 +4295,7 @@ export default function Home() {
 
   function applyTargetColor(tint: string, patch: Partial<ColorAdjustment> = {}) {
     updateColorAdjustment({
+      enabled: true,
       hue: 0,
       saturation: 100,
       brightness: 100,
@@ -4299,6 +4305,12 @@ export default function Home() {
       tintStrength: 100,
       ...patch,
     });
+  }
+
+  function toggleActiveColor() {
+    const nextEnabled = !activeColor.enabled;
+    updateColorAdjustment({ enabled: nextEnabled });
+    setNotice(nextEnabled ? "Recoloração ativada" : "Recoloração desligada; ajuste preservado");
   }
 
   function drawColorEditorCanvas() {
@@ -5032,8 +5044,11 @@ export default function Home() {
 
           {colorEligible && (
             <section className={`color-panel ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
-              <div className="color-heading"><strong>{modelColorEditorActive ? "Cores do modelo" : "Cor do item"}</strong><button onClick={resetActiveColor}>Restaurar</button></div>
-              {colorPanelOpen && <div className="color-panel-body">
+              <div className="color-heading">
+                <div className="color-title"><span className="color-current-swatch" style={{ background: activeColor.tint }} aria-hidden="true" /><strong>{modelColorEditorActive ? "Cores do modelo" : "Cor do item"}</strong><span className={`color-status color-status-${colorStatusLabel.toLowerCase()}`}>{colorStatusLabel}</span></div>
+                <div className="color-heading-actions"><button type="button" className="color-power-button" onClick={toggleActiveColor}>{activeColor.enabled ? "Desligar" : "Ativar"}</button><button type="button" onClick={resetActiveColor}>Restaurar</button></div>
+              </div>
+              {colorPanelOpen && <div className={`color-panel-body ${!activeColor.enabled ? "color-disabled" : ""}`}>
               {modelColorEditorActive && (
                 <>
                   <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
@@ -5051,15 +5066,15 @@ export default function Home() {
               )}
               <div className="color-swatches" aria-label="Cores rápidas">
                 {QUICK_COLOR_PRESETS.map(([label, color]) => (
-                  <button key={color} style={{ background: color }} aria-label={`Recolorir para ${label}`} title={label} onClick={() => applyTargetColor(color)} />
+                  <button key={color} type="button" className={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase() ? "selected" : ""} style={{ background: color }} aria-pressed={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase()} aria-label={`Recolorir para ${label}`} title={label} onClick={() => applyTargetColor(color)} />
                 ))}
               </div>
               <div className="color-neutral-presets" aria-label="Cores neutras">
-                {[["Branco", "#f7f7f7"], ["Prata", "#c6cbd3"], ["Cinza", "#777b82"], ["Preto", "#111216"]].map(([label, color]) => <button key={color} onClick={() => applyTargetColor(color)}><i style={{ background: color }} />{label}</button>)}
+                {[["Branco", "#f7f7f7"], ["Prata", "#c6cbd3"], ["Cinza", "#777b82"], ["Preto", "#111216"]].map(([label, color]) => <button key={color} type="button" className={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase() ? "selected" : ""} aria-pressed={activeColor.enabled && activeColor.tintStrength > 0 && activeColor.tint.toLowerCase() === color.toLowerCase()} onClick={() => applyTargetColor(color)}><i style={{ background: color }} />{label}</button>)}
               </div>
               <div className="color-custom-row">
                 <label><span>Cor desejada</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, hue: 0, tintStrength: 100 })} /></label>
-                <button type="button" onClick={() => updateColorAdjustment({ tintStrength: 0 })}>Desligar recoloração</button>
+                <span className="color-custom-hint">Ajuste preservado ao desligar</span>
               </div>
               <label className="color-range"><span>Matiz fina</span><input type="range" min="0" max="360" value={activeColor.hue} onChange={(event) => updateColorAdjustment({ hue: Number(event.target.value) })} /><strong>{activeColor.hue}°</strong></label>
               <label className="color-range"><span>Saturação</span><input type="range" min="0" max="250" value={activeColor.saturation} onChange={(event) => updateColorAdjustment({ saturation: Number(event.target.value) })} /><strong>{activeColor.saturation}%</strong></label>

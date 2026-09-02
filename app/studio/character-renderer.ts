@@ -315,7 +315,7 @@ export async function renderStudioCharacter(
   if (bodyContext) configureHighQualityContext(bodyContext);
   if (bodyContext) {
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
-    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as "details" | "skin" | "all";
+    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as "pupils" | "details" | "skin" | "all";
     const adjustedBase = createModelColorAdjustedCanvas(
       base,
       base.width,

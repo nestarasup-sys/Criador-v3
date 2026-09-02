@@ -54,6 +54,7 @@ test("normaliza escopos e mantém quatro ajustes independentes", () => {
   assert.equal(normalized.pupils.tintStrength, 0);
   assert.equal(normalized.skin.tintStrength, 0);
   assert.equal(normalized.all.tintStrength, 0);
+  assert.equal(normalizeModelColorAdjustments({ pupils: { enabled: false } }).pupils.enabled, false);
 });
 
 test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", async () => {

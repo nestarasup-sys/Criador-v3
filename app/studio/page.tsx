@@ -358,11 +358,11 @@ export default function StudioPage() {
   });
 
   const characterRenderSignature = studio
-    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}:${JSON.stringify(item.outfitVariantOffsets ?? {})}`).join(",")}|${[...charactersById.values()].map((item) => `${item.id}:${item.updatedAt}:${JSON.stringify(item.colorAdjustments ?? {})}:${JSON.stringify(item.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(item.protectionMasks ?? {})}:${JSON.stringify(item.outfitProtectionMasksByBasePack ?? {})}`).join(",")}`
+    ? `${studio.rosterIds.join(",")}|${studio.characters.map((item) => `${item.characterId}:${item.expressionEmotion}:${item.expressionState}:${item.outfitGroupId ?? ""}:${item.outfitVariantIndex ?? ""}:${JSON.stringify(item.outfitVariantOffsets ?? {})}`).join(",")}|${[...charactersById.values()].map((item) => `${item.id}:${item.updatedAt}:${JSON.stringify(item.colorAdjustments ?? {})}:${JSON.stringify(item.modelColorAdjustments ?? {})}:${item.modelColorScope ?? "details"}:${JSON.stringify(item.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(item.protectionMasks ?? {})}:${JSON.stringify(item.outfitProtectionMasksByBasePack ?? {})}`).join(",")}`
     : "";
 
   const renderCacheKey = useCallback((character: Character, emotion: string, state: string, instance?: SceneCharacter) =>
-    `${character.id}:${character.updatedAt}:${emotion}:${state}:${JSON.stringify(character.colorAdjustments ?? {})}:${JSON.stringify(character.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(character.protectionMasks ?? {})}:${JSON.stringify(character.outfitProtectionMasksByBasePack ?? {})}:${sceneOutfitCacheKey(character, instance, data.catalog)}`, [data.catalog]);
+    `${character.id}:${character.updatedAt}:${emotion}:${state}:${JSON.stringify(character.colorAdjustments ?? {})}:${JSON.stringify(character.modelColorAdjustments ?? {})}:${character.modelColorScope ?? "details"}:${JSON.stringify(character.outfitColorAdjustmentsByGroup ?? {})}:${JSON.stringify(character.protectionMasks ?? {})}:${JSON.stringify(character.outfitProtectionMasksByBasePack ?? {})}:${sceneOutfitCacheKey(character, instance, data.catalog)}`, [data.catalog]);
 
   useEffect(() => {
     const activeStudio = studiosRef.current.find((item) => item.id === currentId);

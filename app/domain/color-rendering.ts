@@ -66,6 +66,10 @@ export function createColorAdjustedCanvas(
   output.height = height;
   const context = output.getContext("2d", { willReadFrequently: color.tintStrength > 0 });
   if (!context) throw new Error("Canvas de cor indisponível");
+  if (!colorAdjustmentIsActive(color)) {
+    context.drawImage(image, 0, 0, width, height);
+    return output;
+  }
   if (color.tintStrength <= 0) {
     // Preserve the historical hue/saturation/brightness behavior whenever a
     // target color is not active, keeping existing characters compatible.
