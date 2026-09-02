@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { GeneratedSprite, SpriteAdjustment } from "../types/face-model";
 import styles from "../../ferramentas.module.css";
 
@@ -8,6 +8,9 @@ const blank: SpriteAdjustment = { scale: 1, scaleX: 1, scaleY: 1, dx: 0, dy: 0, 
 
 export function ManualAdjustmentPanel({ sprite, onApply, onReview, onCopyTrio, onCopyColumn, onReset }: { sprite?: GeneratedSprite; onApply: (adjustment: SpriteAdjustment) => void; onReview: () => void; onCopyTrio: () => void; onCopyColumn: () => void; onReset: () => void }) {
   const [draft, setDraft] = useState<SpriteAdjustment>(() => sprite?.adjustment ?? blank);
+  useEffect(() => {
+    setDraft(sprite?.adjustment ?? blank);
+  }, [sprite?.key, sprite?.adjustment?.scale, sprite?.adjustment?.scaleX, sprite?.adjustment?.scaleY, sprite?.adjustment?.dx, sprite?.adjustment?.dy, sprite?.adjustment?.reviewed]);
   const update = (key: keyof SpriteAdjustment, value: string | boolean) => setDraft((current) => ({ ...current, [key]: typeof value === "boolean" ? value : Number(value) }));
   if (!sprite) return <div className={styles.emptyState}>Selecione uma prévia para editar.</div>;
   return <div className={styles.controls}>
