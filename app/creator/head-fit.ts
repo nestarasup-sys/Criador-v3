@@ -86,9 +86,11 @@ export function measureHeadSilhouette(
   }
   if (rows.every((row) => row.width <= 0)) return null;
   // Find the head's widest point before the shoulders can inflate the
-  // profile. For a full-body outfit this usually covers the upper 45% of the
-  // inspected region; for a head-only model it still contains the cranium.
-  const peakSearchEnd = Math.max(1, Math.ceil(rows.length * 0.45));
+  // profile. A 45% window was still too generous for tall outfits: some
+  // shoulders entered the window and became the "head". Keep the peak in the
+  // upper 40%, where every supported sheet has already reached the cranium
+  // plateau but has not reached the torso yet.
+  const peakSearchEnd = Math.max(1, Math.ceil(rows.length * 0.4));
   const widestRow = rows.slice(0, peakSearchEnd).reduce<{ left: number; right: number; width: number; index: number }>(
     (best, row, index) => row.width > best.width ? { ...row, index } : best,
     { ...rows[0], index: 0 },
@@ -134,11 +136,47 @@ export function measureHeadSilhouette(
       }
     }
   }
+
+  // Some clothes have a high collar or a scarf directly under the chin. In
+  // those images there is no nine-row stable neck band: the profile narrows
+  // until the last jaw row and then expands abruptly into the collar/torso.
+  // That turning point is still a reliable head boundary. It is deliberately
+  // stricter than "first narrow row" so a normal cheek curve cannot terminate
+  // the head too early.
+  let jawTurnIndex = -1;
+  if (neckIndex < 0) {
+    const smoothedWidths = rows.map((_, index) => median(
+      rows
+        .slice(Math.max(widestRow.index, index - 2), Math.min(rows.length, index + 3))
+        .map((row) => row.width)
+        .filter((width) => width > 0),
+    ));
+    for (let index = widestRow.index + 8; index < rows.length - 2; index += 1) {
+      const currentWidth = smoothedWidths[index];
+      if (currentWidth <= 0 || currentWidth > widestRow.width * 0.82) continue;
+      const previous = smoothedWidths.slice(Math.max(widestRow.index, index - 12), index);
+      const descendingRows = previous.filter((width, previousIndex) => (
+        previousIndex === 0 || width <= previous[previousIndex - 1] * 1.04
+      )).length;
+      if (previous.length < 7 || descendingRows < previous.length * 0.72) continue;
+
+      const localWindow = smoothedWidths.slice(Math.max(widestRow.index, index - 2), index + 3);
+      if (currentWidth > Math.min(...localWindow) + 3) continue;
+      const after = smoothedWidths.slice(index + 1, Math.min(rows.length, index + 8));
+      const rebound = Math.max(...after, 0) >= Math.max(currentWidth + 12, currentWidth * 1.18);
+      if (rebound) {
+        jawTurnIndex = index;
+        break;
+      }
+    }
+  }
+
   // A full-body clothing asset without its own head starts at the shoulders
   // and has no head-to-neck transition. Refusing that case is safer than
   // stretching the torso as if it were a head.
-  if (requireNeckTransition && neckIndex < 0) return null;
-  const headEnd = neckIndex >= 0 ? contentTop + neckIndex : visibleLimit;
+  const headBoundaryIndex = neckIndex >= 0 ? neckIndex : jawTurnIndex;
+  if (requireNeckTransition && headBoundaryIndex < 0) return null;
+  const headEnd = headBoundaryIndex >= 0 ? rows[headBoundaryIndex].y : visibleLimit;
   let left = width;
   let right = -1;
   let top = height;
@@ -157,9 +195,9 @@ export function measureHeadSilhouette(
   if (right < left || bottom < top) return null;
 
   const contour = rows
-    .slice(0, neckIndex >= 0 ? neckIndex + 1 : rows.length)
+    .slice(0, headBoundaryIndex >= 0 ? headBoundaryIndex + 1 : rows.length)
     .filter((row) => row.width > 0)
-    .map((row, index) => ({ y: contentTop + index, left: row.left, right: row.right }));
+    .map((row) => ({ y: row.y, left: row.left, right: row.right }));
 
   // A largura total da cabeça não é uma referência confiável para roupas:
   // dois modelos podem ter o mesmo crânio, mas pescoços de larguras
@@ -179,7 +217,7 @@ export function measureHeadSilhouette(
     : undefined;
   const neckY = neckRows.length >= 3
     ? median(neckRows.map((row) => row.y))
-    : undefined;
+    : jawTurnIndex >= 0 ? rows[jawTurnIndex].y : undefined;
 
   return {
     left,
@@ -191,7 +229,7 @@ export function measureHeadSilhouette(
     centerX: (left + right) / 2,
     ...(neckLeft !== undefined && neckRight !== undefined && neckWidth !== undefined && neckCenterX !== undefined
       ? { neckLeft, neckRight, neckWidth, neckCenterX, neckY }
-      : {}),
+      : neckY !== undefined ? { neckY } : {}),
     contour,
   };
 }
