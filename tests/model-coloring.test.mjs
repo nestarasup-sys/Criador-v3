@@ -8,7 +8,7 @@ import {
 } from "../app/domain/model-color-selection.mjs";
 
 test("seleciona detalhes coloridos sem pintar pele, branco dos olhos ou contornos neutros", () => {
-  assert.equal(isModelColorPixel("details", 190, 30, 45, 255), true, "vermelho dos olhos/sobrancelhas");
+  assert.equal(isModelColorPixel("details", 190, 30, 45, 255), false, "sem posição não há como validar a faixa facial");
   const faceBounds = { minX: 0, minY: 0, maxX: 100, maxY: 100 };
   assert.equal(isModelColorPixel("details", 190, 30, 45, 255, { x: 50, y: 50, bounds: faceBounds }), true, "detalhe colorido dentro da faixa facial");
   assert.equal(isModelColorPixel("details", 40, 210, 110, 255, { x: 1, y: 50, bounds: faceBounds }), false, "resíduo verde na borda");
