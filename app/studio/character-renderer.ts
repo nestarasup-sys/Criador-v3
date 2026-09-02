@@ -12,6 +12,7 @@ import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { applyProtectedOriginal, colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "../domain/color-rendering";
+import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
@@ -313,9 +314,15 @@ export async function renderStudioCharacter(
   const bodyContext = bodyLayer.getContext("2d");
   if (bodyContext) configureHighQualityContext(bodyContext);
   if (bodyContext) {
-    // Legacy Studio rendering remains unchanged; Creator applies model
-    // metadata before the character is saved.
-    bodyContext.drawImage(colorizeRenderDebugLayer(base, WIDTH, HEIGHT, "corpo"), PADDING.x, PADDING.y, WIDTH, HEIGHT);
+    const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
+    const adjustedBase = createModelColorAdjustedCanvas(
+      base,
+      base.width,
+      base.height,
+      modelColors[normalizeModelColorScope(character.modelColorScope)],
+      normalizeModelColorScope(character.modelColorScope),
+    );
+    bodyContext.drawImage(colorizeRenderDebugLayer(adjustedBase, WIDTH, HEIGHT, "corpo"), PADDING.x, PADDING.y, WIDTH, HEIGHT);
   }
   if (bodyContext && masks.body.length) {
     bodyContext.globalCompositeOperation = "destination-in";
