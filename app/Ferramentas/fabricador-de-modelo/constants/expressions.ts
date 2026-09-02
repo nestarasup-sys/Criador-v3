@@ -1,5 +1,7 @@
 export const PRIMARY_EXPRESSIONS = ["normal", "sorriso_canto", "serio", "raiva", "assustado", "corado", "surpreso"] as const;
-export const EXTENSION_EXPRESSIONS = ["envergonhado_panico", "emburrado", "sonolento", "confuso", "flertando", "sorriso_maligno", "chocado"] as const;
+// Folha 2, da esquerda para a direita. Os nomes também viram os nomes dos
+// PNGs exportados e permanecem alinhados com as sete colunas da folha.
+export const EXTENSION_EXPRESSIONS = ["feliz", "triste", "confuso", "emburrado", "flertando", "sorriso_maligno", "chocado"] as const;
 export const EXPRESSION_STATES = ["default", "blink", "talk"] as const;
 export const OUTPUT_WIDTH = 1920;
 export const OUTPUT_HEIGHT = 1080;

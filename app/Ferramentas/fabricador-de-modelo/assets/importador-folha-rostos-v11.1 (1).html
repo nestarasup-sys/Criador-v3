@@ -513,10 +513,10 @@
             <div class="label-row"><span>Status</span><span class="value" id="extraStatus">Opcional</span></div>
           </div>
           <div class="extra-names" id="extraNames">
-            <input data-extra-name="0" value="envergonhado_panico" aria-label="Expressão extra 1 — Envergonhado/Pânico" readonly>
-            <input data-extra-name="1" value="emburrado" aria-label="Expressão extra 2 — Emburrado" readonly>
-            <input data-extra-name="2" value="sonolento" aria-label="Expressão extra 3 — Sonolento" readonly>
-            <input data-extra-name="3" value="confuso" aria-label="Expressão extra 4 — Confuso" readonly>
+            <input data-extra-name="0" value="feliz" aria-label="Expressão extra 1 — Feliz" readonly>
+            <input data-extra-name="1" value="triste" aria-label="Expressão extra 2 — Triste" readonly>
+            <input data-extra-name="2" value="confuso" aria-label="Expressão extra 3 — Confuso" readonly>
+            <input data-extra-name="3" value="emburrado" aria-label="Expressão extra 4 — Emburrado" readonly>
             <input data-extra-name="4" value="flertando" aria-label="Expressão extra 5 — Flertando" readonly>
             <input data-extra-name="5" value="sorriso_maligno" aria-label="Expressão extra 6 — Sorriso maligno" readonly>
             <input data-extra-name="6" value="chocado" aria-label="Expressão extra 7 — Chocado" readonly>
@@ -838,7 +838,7 @@
         <li>Extraia a pasta gerada manualmente em <code>public/models/modelos/feminino</code> ou <code>masculino</code>.</li>
       </ol>
       <h3>Mapeamento</h3>
-      <p>Colunas base: normal, sorriso_canto, serio, raiva, assustado, corado, surpreso. Linhas: aberto, blink e talk. A Folha 2 usa as colunas: envergonhado_panico, emburrado, sonolento, confuso, flertando, sorriso_maligno e chocado; as linhas continuam aberto, blink e talk.</p>
+      <p>Colunas base: normal, sorriso_canto, serio, raiva, assustado, corado, surpreso. Linhas: aberto, blink e talk. A Folha 2 usa as colunas: feliz, triste, confuso, emburrado, flertando, sorriso_maligno e chocado; as linhas continuam aberto, blink e talk.</p>
       <h3>Calibração e controle de qualidade</h3>
       <p>Os três estados de cada expressão são normalizados primeiro entre si. Depois, a ferramenta compara o formato externo da cabeça em várias faixas horizontais, usando crânio, laterais, mandíbula e pescoço. Olhos, boca e sobrancelhas ficam livres e não influenciam a calibração.</p>
       <p>Use o fantasma, a comparação do trio e o teste de animação para localizar tremores. Rostos críticos bloqueiam a exportação até serem corrigidos ou revisados manualmente.</p>
@@ -856,7 +856,7 @@
   const ROW_LABELS = ['Olhos abertos', 'Blink', 'Talk'];
   const ROW_SUFFIX = ['', '_blink', '_talk'];
   const TOTAL = 21;
-  const EXTRA_EXPRESSIONS = ['envergonhado_panico','emburrado','sonolento','confuso','flertando','sorriso_maligno','chocado'];
+  const EXTRA_EXPRESSIONS = ['feliz','triste','confuso','emburrado','flertando','sorriso_maligno','chocado'];
   const EXTRA_TOTAL = 21;
 
   const $ = (id) => document.getElementById(id);

@@ -18,6 +18,7 @@ test("mantém o contrato de folhas, expressões e saída do Fabricador", async (
   ]);
   assert.match(constants, /PRIMARY_COUNT = 21/);
   assert.match(constants, /EXTENSION_COUNT = 21/);
+  assert.match(constants, /\["feliz", "triste", "confuso", "emburrado", "flertando", "sorriso_maligno", "chocado"\]/);
   assert.match(constants, /baseScale: 1\.1/);
   assert.match(constants, /extensionMaxCorrection: \.08/);
   assert.match(constants, /extensionMicroAdjustment: \.02/);
