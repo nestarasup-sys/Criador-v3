@@ -294,14 +294,23 @@ export function calculateHeadFit(
   const useNeckReference = reference === "neck"
     && sourceNeckWidth !== undefined
     && targetNeckWidth !== undefined;
+  // The renderer maps the actual edge coordinates (left/right and top/bottom),
+  // not the number of covered pixels. Using `width`/`height` here adds one
+  // pixel to both boxes and leaves a small but visible residual on different
+  // sized heads. Keep the inclusive pixel counts for display, but fit by the
+  // geometric span that projectHeadMeasurement uses.
+  const sourceHeadWidth = Math.max(1, source.right - source.left);
+  const targetHeadWidth = Math.max(1, target.right - target.left);
+  const sourceHeadHeight = Math.max(1, source.bottom - source.top);
+  const targetHeadHeight = Math.max(1, target.bottom - target.top);
   const scaleX = clamp(
     useNeckReference
       ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
-      : target.width / source.width,
+      : targetHeadWidth / sourceHeadWidth,
     0.35,
     2.4,
   );
-  const scaleY = clamp(target.height / source.height, 0.35, 2.4);
+  const scaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
   const targetCenterX = targetAnchor?.x ?? (useNeckReference ? target.neckCenterX : undefined) ?? target.centerX;

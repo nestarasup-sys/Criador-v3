@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
 import test from "node:test";
-import { measureHeadSilhouette } from "../app/creator/head-fit.ts";
+import { calculateHeadFit, measureHeadSilhouette, projectHeadMeasurement } from "../app/creator/head-fit.ts";
 
 function profileImage({ width = 320, height = 560, top = 20, profile }) {
   const pixels = new Uint8ClampedArray(width * height * 4);
@@ -48,6 +48,19 @@ test("recusa roupa sem cabeça em vez de medir o tronco como se fosse cabeça", 
     },
   });
   assert.equal(measureHeadSilhouette(image.pixels, image.width, image.height, 0.46, true), null);
+});
+
+test("mapeia exatamente as quatro bordas da cabeça ao calcular o encaixe", () => {
+  const source = { left: 10, right: 110, top: 20, bottom: 120, width: 101, height: 101, centerX: 60 };
+  const target = { left: 400, right: 601, top: 50, bottom: 250, width: 202, height: 201, centerX: 500.5 };
+  const item = { width: 240, height: 360, defaultX: 120, defaultY: 180 };
+  const fit = calculateHeadFit(source, target, item);
+  const projected = projectHeadMeasurement(source, item, fit);
+  const close = (actual, expected) => assert.ok(Math.abs(actual - expected) < 0.1, `${actual} !== ${expected}`);
+  close(projected.left, target.left);
+  close(projected.right, target.right);
+  close(projected.top, target.top);
+  close(projected.bottom, target.bottom);
 });
 
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
