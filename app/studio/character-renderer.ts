@@ -161,41 +161,6 @@ function normalizedTransform(transform?: Partial<ItemTransform>): ItemTransform 
   };
 }
 
-function trimCanvas(source: HTMLCanvasElement) {
-  const context = source.getContext("2d", { willReadFrequently: true });
-  if (!context) return source;
-  const data = context.getImageData(0, 0, source.width, source.height).data;
-  let minX = source.width;
-  let minY = source.height;
-  let maxX = -1;
-  let maxY = -1;
-  for (let y = 0; y < source.height; y += 1) {
-    for (let x = 0; x < source.width; x += 1) {
-      if (data[(y * source.width + x) * 4 + 3] > 12) {
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      }
-    }
-  }
-  if (maxX < minX) return source;
-  const pad = 12;
-  minX = Math.max(0, minX - pad);
-  minY = Math.max(0, minY - pad);
-  maxX = Math.min(source.width - 1, maxX + pad);
-  maxY = Math.min(source.height - 1, maxY + pad);
-  const output = document.createElement("canvas");
-  output.width = maxX - minX + 1;
-  output.height = maxY - minY + 1;
-  const outputContext = output.getContext("2d");
-  if (outputContext) {
-    configureHighQualityContext(outputContext);
-    outputContext.drawImage(source, minX, minY, output.width, output.height, 0, 0, output.width, output.height);
-  }
-  return output;
-}
-
 export function expressionKey(emotion: string, state: string) {
   return (state === "default" ? emotion : `${emotion}_${state}`) as ExpressionKey;
 }
@@ -437,8 +402,11 @@ export async function renderStudioCharacter(
   finalContext.translate(-WIDTH / 2, -HEIGHT / 2);
   finalContext.drawImage(scene, -PADDING.x, -PADDING.y);
   finalContext.restore();
-  captureRenderDebug("snapshot:before-trim", final, { renderId, target: "studio-render", layer: "final-canvas" });
-  const output = trimCanvas(final).toDataURL("image/png");
+  // O Criador exporta o canvas lógico completo. Manter a mesma área aqui
+  // evita que o Studio redimensione e reposicione o personagem ao aparar
+  // apenas a caixa de pixels visíveis.
+  captureRenderDebug("snapshot:before-export", final, { renderId, target: "studio-render", layer: "final-canvas" });
+  const output = final.toDataURL("image/png");
   markRenderDebug("render:complete", { renderId, target: "studio-render" });
   return output;
 }

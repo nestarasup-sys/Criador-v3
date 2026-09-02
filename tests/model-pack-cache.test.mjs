@@ -45,6 +45,9 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /discoveredPack\?\.type === "head-only"/);
   assert.match(renderer, /discoveredPack\.anchorX \?\? sourceWidth \/ 2/);
   assert.match(renderer, /discoveredPack\.anchorY \?\? sourceHeight/);
+  assert.doesNotMatch(renderer, /trimCanvas\(final\)/);
+  assert.match(renderer, /captureRenderDebug\("snapshot:before-export"/);
+  assert.match(renderer, /const output = final\.toDataURL\("image\/png"\)/);
   assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);
