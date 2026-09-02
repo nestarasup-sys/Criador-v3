@@ -4035,12 +4035,14 @@ export default function Home() {
 
   function changeCatalogCategory(nextCategory: Category) {
     resetAssetDeleteMode();
+    setColorPanelOpen(false);
     setCategory(nextCategory);
     setChromaMode(false);
   }
 
   function changeFaceMode(nextFaceMode: FaceMode) {
     resetAssetDeleteMode();
+    setColorPanelOpen(false);
     setFaceMode(nextFaceMode);
     setAnimationMode(null);
   }
