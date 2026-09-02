@@ -3862,6 +3862,7 @@ export default function Home() {
     characterSwitchRef.current = true;
     try {
       if (!await flushCurrentCharacterBeforeSwitch()) return;
+      resetAssetDeleteMode();
       suspendAutoSaveRef.current = true;
       setDraftStarted(false);
       const openedBasePack = getBasePack(basePacks, character.model, character.basePackId);
@@ -3910,6 +3911,7 @@ export default function Home() {
 
   function newCharacter(saveCurrent = true) {
     if (saveCurrent) persistEditorSnapshot("Salvo automaticamente");
+    resetAssetDeleteMode();
     characterHistoryRef.current.delete("draft");
     historyRestoreRef.current = null;
     setHistoryAvailability({ undo: false, redo: false });
