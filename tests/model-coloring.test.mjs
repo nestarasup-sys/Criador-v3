@@ -29,15 +29,28 @@ test("seleciona tons quentes de pele e não confunde detalhe vermelho com pele",
   assert.equal(isModelColorPixel("skin", 250, 250, 250, 255), false, "branco dos olhos");
 });
 
-test("normaliza escopos e mantém três ajustes independentes", () => {
+test("seleciona somente o pigmento das pupilas sem levar sobrancelha, blush ou boca", () => {
+  const faceBounds = { minX: 0, minY: 0, maxX: 100, maxY: 100 };
+  assert.equal(isModelColorPixel("pupils", 190, 30, 45, 255, { x: 49, y: 56, bounds: faceBounds }), true, "pigmento do olho esquerdo");
+  assert.equal(isModelColorPixel("pupils", 30, 100, 210, 255, { x: 86, y: 56, bounds: faceBounds }), true, "pigmento do olho direito");
+  assert.equal(isModelColorPixel("pupils", 35, 35, 38, 255, { x: 49, y: 46, bounds: faceBounds }), false, "sobrancelha");
+  assert.equal(isModelColorPixel("pupils", 250, 194, 190, 255, { x: 50, y: 64, bounds: faceBounds }), false, "blush na borda da faixa dos olhos");
+  assert.equal(isModelColorPixel("pupils", 250, 194, 190, 255, { x: 50, y: 66, bounds: faceBounds }), false, "blush");
+  assert.equal(isModelColorPixel("pupils", 220, 80, 110, 255, { x: 50, y: 82, bounds: faceBounds }), false, "boca aberta");
+  assert.equal(isModelColorPixel("pupils", 190, 30, 45, 0, { x: 49, y: 56, bounds: faceBounds }), false, "transparência");
+});
+
+test("normaliza escopos e mantém quatro ajustes independentes", () => {
   const defaults = emptyModelColorAdjustments();
-  assert.deepEqual(Object.keys(defaults), ["details", "skin", "all"]);
+  assert.deepEqual(Object.keys(defaults), ["pupils", "details", "skin", "all"]);
+  assert.equal(normalizeModelColorScope("pupils"), "pupils");
   assert.equal(normalizeModelColorScope("skin"), "skin");
   assert.equal(normalizeModelColorScope("all"), "all");
   assert.equal(normalizeModelColorScope("desconhecido"), "details");
   const normalized = normalizeModelColorAdjustments({ details: { tint: "#123456", tintStrength: 80 } });
   assert.equal(normalized.details.tint, "#123456");
   assert.equal(normalized.details.tintStrength, 80);
+  assert.equal(normalized.pupils.tintStrength, 0);
   assert.equal(normalized.skin.tintStrength, 0);
   assert.equal(normalized.all.tintStrength, 0);
 });

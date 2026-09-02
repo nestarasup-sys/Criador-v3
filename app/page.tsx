@@ -4159,7 +4159,7 @@ export default function Home() {
   function resetActiveColor() {
     updateColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT });
     setNotice(modelColorEditorActive
-      ? `Cor restaurada em ${modelColorScope === "details" ? "olhos e detalhes" : modelColorScope === "skin" ? "pele" : "todo o modelo"}`
+      ? `Cor restaurada em ${modelColorScope === "pupils" ? "pupilas" : modelColorScope === "details" ? "olhos e detalhes" : modelColorScope === "skin" ? "pele" : "todo o modelo"}`
       : category === "roupas" && activeOutfitVariantCount > 1
       ? `Cor original restaurada nas ${activeOutfitVariantCount} versões da roupa`
       : syncHairColor && (category === "cabelos" || category === "cabelosTras")
@@ -4913,12 +4913,12 @@ export default function Home() {
                 <>
                   <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
                     {([[
-                      "details", "Olhos e detalhes",
-                    ], ["skin", "Pele"], ["all", "Modelo inteiro"]] as const).map(([scope, label]) => (
+                      "pupils", "Somente pupilas",
+                    ], ["details", "Olhos e detalhes"], ["skin", "Pele"], ["all", "Modelo inteiro"]] as const).map(([scope, label]) => (
                       <button key={scope} type="button" className={modelColorScope === scope ? "active" : ""} onClick={() => setModelColorScope(scope)}>{label}</button>
                     ))}
                   </div>
-                  <p className="model-color-help">Escolha a área antes da cor. “Olhos e detalhes” preserva a pele e muda os pigmentos coloridos; “Pele” deixa olhos e linhas intactos.</p>
+                  <p className="model-color-help">Escolha a área antes da cor. “Somente pupilas” pinta só o pigmento central dos olhos; “Olhos e detalhes” também alcança sobrancelhas, mas preserva pele, blush, boca e contornos.</p>
                 </>
               )}
               {category === "roupas" && activeOutfitVariantCount > 1 && (

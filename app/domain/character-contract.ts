@@ -27,7 +27,7 @@ export type ColorAdjustment = {
 
 export type ColorAdjustments = Record<Category, ColorAdjustment>;
 export type OutfitColorAdjustmentsByGroup = Record<string, ColorAdjustment>;
-export type ModelColorScope = "details" | "skin" | "all";
+export type ModelColorScope = "pupils" | "details" | "skin" | "all";
 export type ModelColorAdjustments = Record<ModelColorScope, ColorAdjustment>;
 export type ProtectionMasks = Partial<Record<Category, string>>;
 export type PreviewPan = { x: number; y: number };
