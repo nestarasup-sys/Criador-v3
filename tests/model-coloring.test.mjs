@@ -12,6 +12,8 @@ test("seleciona detalhes coloridos sem pintar pele, branco dos olhos ou contorno
   assert.equal(isModelColorPixel("details", 235, 199, 184, 255), false, "pele clara");
   assert.equal(isModelColorPixel("details", 250, 250, 250, 255), false, "branco dos olhos");
   assert.equal(isModelColorPixel("details", 35, 35, 38, 255), false, "contorno neutro");
+  assert.equal(isModelColorPixel("details", 35, 35, 38, 255, { x: 50, y: 50, bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 } }), true, "olho/sobrancelha escuro no centro do rosto");
+  assert.equal(isModelColorPixel("details", 35, 35, 38, 255, { x: 50, y: 82, bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 } }), false, "contorno inferior/pescoço");
   assert.equal(isModelColorPixel("details", 190, 30, 45, 0), false, "transparência");
 });
 

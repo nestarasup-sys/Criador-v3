@@ -4,6 +4,24 @@ import { isModelColorPixel } from "./model-color-selection.mjs";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
+function visibleBounds(data: Uint8ClampedArray, width: number, height: number) {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let index = 0; index < data.length; index += 4) {
+    if (data[index + 3] <= 8) continue;
+    const pixel = index / 4;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+  }
+  return { minX, minY, maxX, maxY };
+}
+
 /**
  * Applies model colors in the source coordinate system. Details and skin are
  * selected from the decoded pixels before the tonal recolor, so changing an
@@ -29,9 +47,13 @@ export function createModelColorAdjustedCanvas(
   sourceContext.drawImage(image, 0, 0, width, height);
   const original = sourceContext.getImageData(0, 0, width, height);
   const selected = new Uint8ClampedArray(original.data);
+  const bounds = visibleBounds(original.data, width, height);
   let selectedPixels = 0;
   for (let index = 0; index < selected.length; index += 4) {
-    if (isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3])) {
+    const pixel = index / 4;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    if (isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds })) {
       selectedPixels += 1;
     } else {
       selected[index + 3] = 0;

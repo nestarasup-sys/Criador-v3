@@ -64,12 +64,22 @@ function rgbToHsv(red, green, blue) {
   return { hue, saturation: max <= 0 ? 0 : delta / max, value: max };
 }
 
-function isModelDetail(red, green, blue, alpha) {
+function isModelDetail(red, green, blue, alpha, position) {
   if (alpha <= 8) return false;
   const { saturation, value } = rgbToHsv(red, green, blue);
   const channels = [red, green, blue].sort((left, right) => right - left);
   const dominantRatio = channels[0] / Math.max(1, channels[1]);
-  return saturation >= 0.12 && value >= 0.06 && dominantRatio >= 1.32;
+  if (saturation >= 0.12 && value >= 0.06 && dominantRatio >= 1.32) return true;
+  // Some models use nearly black/brown eyes and brows. Their color has low
+  // saturation, so use the face's relative geometry to avoid recoloring the
+  // outer jaw/neck outline along with those details.
+  if (!position?.bounds || value > 0.38) return false;
+  const { minX, minY, maxX, maxY } = position.bounds;
+  const spanX = Math.max(1, maxX - minX);
+  const spanY = Math.max(1, maxY - minY);
+  const relativeX = (position.x - minX) / spanX;
+  const relativeY = (position.y - minY) / spanY;
+  return relativeX >= 0.1 && relativeX <= 0.9 && relativeY >= 0.26 && relativeY <= 0.72;
 }
 
 function isSkinTone(red, green, blue, alpha) {
@@ -80,8 +90,8 @@ function isSkinTone(red, green, blue, alpha) {
   return warmHue && warmBalance && saturation <= 0.52 && value >= 0.18;
 }
 
-export function isModelColorPixel(scope, red, green, blue, alpha) {
-  if (scope === "details") return isModelDetail(red, green, blue, alpha);
+export function isModelColorPixel(scope, red, green, blue, alpha, position) {
+  if (scope === "details") return isModelDetail(red, green, blue, alpha, position);
   if (scope === "skin") return isSkinTone(red, green, blue, alpha);
   return alpha > 8;
 }
