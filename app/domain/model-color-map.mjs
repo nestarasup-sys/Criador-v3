@@ -10,6 +10,8 @@ export const MODEL_COLOR_MAP_CHANNELS = Object.freeze({
   skin: 2,
 });
 
+import { buildCalibratedModelColorSelectionMask } from "./model-color-calibration.mjs";
+
 export function modelColorMapChannel(scope) {
   if (scope === "pupils" || scope === "brows" || scope === "skin") return MODEL_COLOR_MAP_CHANNELS[scope];
   return null;
@@ -47,4 +49,18 @@ export function modelColorMapSource(packSource, expressionKey, metadata) {
   const normalized = normalizeModelColorMapMetadata(metadata);
   if (!normalized || !normalized.expressions.includes(expressionKey)) return null;
   return `${packSource}/${normalized.directory}/${encodeURIComponent(expressionKey)}.png`;
+}
+
+/** Creates a lossless RGB-weight map from the approved semantic calibration. */
+export function buildModelColorMapData(data, width, height, visibleBounds, profile) {
+  const map = new Uint8ClampedArray(width * height * 4);
+  for (const [scope, channel] of Object.entries(MODEL_COLOR_MAP_CHANNELS)) {
+    const mask = buildCalibratedModelColorSelectionMask(scope, data, width, height, visibleBounds, profile);
+    for (let pixel = 0; pixel < mask.length; pixel += 1) {
+      if (!mask[pixel]) continue;
+      map[pixel * 4 + channel] = data[pixel * 4 + 3];
+      map[pixel * 4 + 3] = 255;
+    }
+  }
+  return map;
 }

@@ -12,3 +12,4 @@ export function modelColorMapChannel(scope: "pupils" | "brows" | "skin"): 0 | 1 
 export function modelColorMapHasChannel(data: Uint8ClampedArray, width: number, height: number, scope: "pupils" | "brows" | "skin", minimum?: number): boolean;
 export function normalizeModelColorMapMetadata(value?: unknown): ModelColorMapMetadata | null;
 export function modelColorMapSource(packSource: string, expressionKey: string, metadata?: unknown): string | null;
+export function buildModelColorMapData(data: Uint8ClampedArray, width: number, height: number, visibleBounds: { minX: number; minY: number; maxX: number; maxY: number }, profile: unknown): Uint8ClampedArray;

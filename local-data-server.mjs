@@ -761,6 +761,42 @@ async function route(request, response) {
     sendJson(response, request, 200, await discoverModels());
     return;
   }
+  const modelColorMapMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})\/color-map\/([a-zA-Z0-9_-]{1,120})$/i);
+  if (modelColorMapMatch && request.method === "POST") {
+    const gender = modelColorMapMatch[1].toLowerCase();
+    const modelId = safeId(modelColorMapMatch[2]);
+    const expressionKey = safeId(modelColorMapMatch[3]);
+    const folder = join(MODELS_ROOT, gender, modelId);
+    if (!inside(join(MODELS_ROOT, gender), folder)) throw new Error("Modelo inválido.");
+    try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
+    assertMimeType(contentTypeOf(request), new Set(["image/png"]), "O mapa de cores precisa ser PNG.");
+    const body = await requestBody(request, BODY_LIMITS.image);
+    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+    if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) throw new Error("O mapa de cores precisa ser um PNG válido.");
+    const imageMetadata = await sharp(body).metadata();
+    if (imageMetadata.width !== 1920 || imageMetadata.height !== 1080) throw new Error("O mapa de cores precisa ter exatamente 1920×1080 pixels.");
+    const mapFolder = join(folder, "_color-maps");
+    const filePath = join(mapFolder, `${expressionKey}.png`);
+    if (!inside(folder, mapFolder) || !inside(mapFolder, filePath)) throw new Error("Destino do mapa de cores inválido.");
+    await mkdir(mapFolder, { recursive: true });
+    await writeFile(filePath, body);
+    const modelJsonPath = join(folder, "model.json");
+    const existingConfig = await readOptionalJson(modelJsonPath) ?? await readOptionalJson(join(folder, "modelo.json")) ?? {};
+    const previousMap = normalizeModelColorMapMetadata(existingConfig.colorMap);
+    const expressions = [...new Set([...(previousMap?.expressions ?? []), expressionKey])].sort();
+    await writeJsonAtomic(modelJsonPath, {
+      ...existingConfig,
+      colorMap: {
+        version: 1,
+        format: "rgb-weights",
+        directory: "_color-maps",
+        channels: { red: "pupils", green: "brows", blue: "skin" },
+        expressions,
+      },
+    });
+    sendJson(response, request, 200, { ok: true, gender, id: modelId, expressionKey, bytes: body.length, path: filePath });
+    return;
+  }
   const modelDeleteMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})$/i);
   if (modelDeleteMatch && request.method === "DELETE") {
     const gender = modelDeleteMatch[1].toLowerCase();

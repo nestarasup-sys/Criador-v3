@@ -142,6 +142,14 @@ export async function deleteBaseModelFromPc(gender: Model, id: string) {
   await pcRequest(`/models/modelos/${encodeURIComponent(gender)}/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
+export async function saveModelColorMapToPc(gender: Model, modelId: string, expressionKey: string, blob: Blob) {
+  await pcRequest(`/models/modelos/${encodeURIComponent(gender)}/${encodeURIComponent(modelId)}/color-map/${encodeURIComponent(expressionKey)}`, {
+    method: "POST",
+    headers: { "Content-Type": "image/png" },
+    body: blob,
+  });
+}
+
 /**
  * Hydrates local assets without opening hundreds of image requests at once.
  * A small fixed concurrency keeps startup responsive and avoids a large
