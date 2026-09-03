@@ -63,6 +63,18 @@ test("mapeia exatamente as quatro bordas da cabeça ao calcular o encaixe", () =
   close(projected.bottom, target.bottom);
 });
 
+test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
+  const contour = (leftOffset, rightOffset) => Array.from({ length: 101 }, (_, y) => ({
+    y,
+    left: 60 - Math.round(35 * Math.sin((y / 100) * Math.PI)) + leftOffset(y),
+    right: 260 + Math.round(35 * Math.sin((y / 100) * Math.PI)) + rightOffset(y),
+  }));
+  const source = { left: 25, right: 295, top: 0, bottom: 100, width: 271, height: 101, centerX: 160, contour: contour(() => 0, () => 0) };
+  const target = { left: 38, right: 362, top: 0, bottom: 100, width: 325, height: 101, centerX: 200, contour: contour(() => 0, () => 0).map((row) => ({ ...row, left: 200 + (row.left - 160) * 1.2, right: 200 + (row.right - 160) * 1.2 })) };
+  const fit = calculateHeadFit(source, target, { width: 360, height: 520, defaultX: 180, defaultY: 260 });
+  assert.ok(Math.abs(fit.scaleX - 1.2) < 0.03, `scaleX inesperado: ${fit.scaleX}`);
+});
+
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
   const root = join(process.cwd(), "dados-locais-premium", "arquivos", "catalogo");
   const cases = [

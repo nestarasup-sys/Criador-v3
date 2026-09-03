@@ -275,6 +275,47 @@ function clamp(value: number, minimum: number, maximum: number) {
   return Math.max(minimum, Math.min(maximum, value));
 }
 
+function contourAt(measurement: HeadMeasurement, normalizedY: number) {
+  const rows = measurement.contour?.filter((row) => row.right >= row.left) ?? [];
+  if (rows.length < 2 || measurement.bottom <= measurement.top) return null;
+  const y = measurement.top + (measurement.bottom - measurement.top) * clamp(normalizedY, 0, 1);
+  let lower = rows[0];
+  let upper = rows[rows.length - 1];
+  for (const row of rows) {
+    if (row.y <= y) lower = row;
+    if (row.y >= y) {
+      upper = row;
+      break;
+    }
+  }
+  const range = upper.y - lower.y;
+  const ratio = range > 0 ? (y - lower.y) / range : 0;
+  const left = lower.left + (upper.left - lower.left) * ratio;
+  const right = lower.right + (upper.right - lower.right) * ratio;
+  return { left, right, center: (left + right) / 2, width: Math.max(1, right - left) };
+}
+
+function robustContourReference(source: HeadMeasurement, target: HeadMeasurement) {
+  // The legacy aligner stabilizes several normalized scanlines instead of
+  // trusting one bounding-box row. Use the same principle here: one affine
+  // transform is estimated from the median of multiple head-profile samples.
+  const samples = [0.08, 0.2, 0.34, 0.5, 0.66, 0.8, 0.92]
+    .map((normalizedY) => ({ source: contourAt(source, normalizedY), target: contourAt(target, normalizedY) }))
+    .filter((sample): sample is { source: NonNullable<ReturnType<typeof contourAt>>; target: NonNullable<ReturnType<typeof contourAt>> } => Boolean(sample.source && sample.target));
+  if (samples.length < 4) return null;
+  const scaleCandidates = samples
+    .filter((sample) => sample.source.width > 2)
+    .map((sample) => sample.target.width / sample.source.width);
+  if (scaleCandidates.length < 4) return null;
+  const scaleX = median(scaleCandidates);
+  const mappedCenterOffsets = samples.map((sample) => sample.target.center - sample.source.center * scaleX);
+  return {
+    scaleX,
+    sourceCenterX: median(samples.map((sample) => sample.source.center)),
+    targetCenterX: median(mappedCenterOffsets) + median(samples.map((sample) => sample.source.center)) * scaleX,
+  };
+}
+
 /**
  * Calculates the transform used by Creator's renderer. The target is in the
  * final 1920×1080 scene; the source point is in the item's native image.
@@ -303,18 +344,24 @@ export function calculateHeadFit(
   const targetHeadWidth = Math.max(1, target.right - target.left);
   const sourceHeadHeight = Math.max(1, source.bottom - source.top);
   const targetHeadHeight = Math.max(1, target.bottom - target.top);
+  const contourReference = !useNeckReference ? robustContourReference(source, target) : null;
   const scaleX = clamp(
     useNeckReference
       ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
-      : targetHeadWidth / sourceHeadWidth,
+      : contourReference?.scaleX ?? targetHeadWidth / sourceHeadWidth,
     0.35,
     2.4,
   );
   const scaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
-  const targetCenterX = targetAnchor?.x ?? (useNeckReference ? target.neckCenterX : undefined) ?? target.centerX;
-  const sourceCenterX = (useNeckReference ? source.neckCenterX : undefined) ?? source.centerX;
+  const targetCenterX = targetAnchor?.x
+    ?? (useNeckReference ? target.neckCenterX : undefined)
+    ?? contourReference?.targetCenterX
+    ?? target.centerX;
+  const sourceCenterX = (useNeckReference ? source.neckCenterX : undefined)
+    ?? contourReference?.sourceCenterX
+    ?? source.centerX;
   const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.

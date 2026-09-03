@@ -5,6 +5,7 @@ import { createReadStream } from "node:fs";
 import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import JSZip from "jszip";
+import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
@@ -387,6 +388,51 @@ async function readOptionalJson(filePath) {
   }
 }
 
+/**
+ * Imported head-only models are allowed to omit model.json. Infer that layout
+ * from the real alpha bounds instead of silently treating a 1920x1080 head
+ * sheet as a full-body model. The inferred anchor is the last visible row,
+ * which is the neck base used by the creator and Studio.
+ */
+async function inferHeadOnlyLayout(folder, pngFiles) {
+  const normalFile = pngFiles.find((name) => name.toLowerCase() === "normal.png");
+  if (!normalFile) return null;
+  try {
+    const { data, info } = await sharp(join(folder, normalFile))
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    let minX = info.width;
+    let maxX = -1;
+    let minY = info.height;
+    let maxY = -1;
+    for (let index = 3; index < data.length; index += 4) {
+      if (data[index] <= 12) continue;
+      const pixel = (index - 3) / 4;
+      const x = pixel % info.width;
+      const y = Math.floor(pixel / info.width);
+      minX = Math.min(minX, x);
+      maxX = Math.max(maxX, x);
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+    if (maxX < minX || maxY < minY) return null;
+    const isCanvasHeadOnly = info.width >= 1000
+      && info.height >= 700
+      && maxY - minY + 1 <= info.height * 0.55
+      && maxY <= info.height * 0.65;
+    if (!isCanvasHeadOnly) return null;
+    return {
+      type: "head-only",
+      anchor: "neck-base",
+      anchorX: Math.round(info.width / 2),
+      anchorY: maxY,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function discoverModels() {
   const result = { feminino: [], masculino: [] };
   for (const gender of Object.keys(result)) {
@@ -402,6 +448,9 @@ async function discoverModels() {
       if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));
+      const inferredLayout = config?.type === "head-only"
+        ? null
+        : await inferHeadOnlyLayout(folder, pngFiles);
       const versionParts = await Promise.all(pngFiles.map(async (name) => {
         const metadata = await stat(join(folder, name));
         return `${name}:${metadata.size}:${metadata.mtimeMs}`;
@@ -421,11 +470,13 @@ async function discoverModels() {
         expressionKeys,
         source: `/models/modelos/${gender}/${entry.name}`,
         version,
-        ...(config?.type === "head-only" ? {
+        ...((config?.type === "head-only" || inferredLayout) ? {
           type: "head-only",
-          ...(config?.anchor === "neck-base" ? { anchor: "neck-base" } : {}),
-          ...(Number.isFinite(config?.anchorX) ? { anchorX: Number(config.anchorX) } : {}),
-          ...(Number.isFinite(config?.anchorY) ? { anchorY: Number(config.anchorY) } : {}),
+          anchor: config?.anchor === "neck-base" || inferredLayout?.anchor === "neck-base"
+            ? "neck-base"
+            : undefined,
+          anchorX: Number.isFinite(config?.anchorX) ? Number(config.anchorX) : inferredLayout?.anchorX,
+          anchorY: Number.isFinite(config?.anchorY) ? Number(config.anchorY) : inferredLayout?.anchorY,
         } : {}),
       });
     }

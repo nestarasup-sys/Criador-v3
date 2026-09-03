@@ -12,6 +12,34 @@ export type ItemTransform = {
   scaleY: number;
   rotation: number;
   flipX: boolean;
+  /**
+   * Ajuste localizado da cabeça embutida em uma roupa. O corpo continua
+   * usando o transform principal; apenas o recorte da cabeça usa este
+   * segundo transform.
+   */
+  headFit?: HeadFitCorrection;
+};
+
+export type HeadFitCorrection = {
+  source: {
+    left: number;
+    right: number;
+    top: number;
+    bottom: number;
+    width: number;
+    height: number;
+    centerX: number;
+    contour: Array<{ y: number; left: number; right: number }>;
+  };
+  transform: {
+    x: number;
+    y: number;
+    scale: number;
+    scaleX: number;
+    scaleY: number;
+    rotation: number;
+    flipX: boolean;
+  };
 };
 
 export type MaskPoint = { x: number; y: number };
