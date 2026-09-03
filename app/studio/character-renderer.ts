@@ -16,6 +16,7 @@ import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normali
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
+import type { ModelColorScope } from "../domain/character-contract";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -314,7 +315,7 @@ export async function renderStudioCharacter(
   if (bodyContext) {
     const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
-    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as "pupils" | "details" | "skin" | "all";
+    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as ModelColorScope;
     const adjustedBase = createModelColorAdjustedCanvas(
       base,
       base.width,

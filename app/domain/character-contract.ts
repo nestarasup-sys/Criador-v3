@@ -29,8 +29,16 @@ export type ColorAdjustment = {
 
 export type ColorAdjustments = Record<Category, ColorAdjustment>;
 export type OutfitColorAdjustmentsByGroup = Record<string, ColorAdjustment>;
-export type ModelColorScope = "pupils" | "details" | "skin" | "all";
-export type ModelColorAdjustments = Record<ModelColorScope, ColorAdjustment>;
+/** Áreas semânticas da cabeça que podem receber recoloração. */
+export type ModelColorScope = "pupils" | "pupilsBrows" | "skin" | "brows";
+/**
+ * Os campos legados são aceitos somente na leitura para personagens antigos.
+ * A escrita normalizada usa exclusivamente os quatro alvos semânticos acima.
+ */
+export type ModelColorAdjustments = Record<ModelColorScope, ColorAdjustment> & {
+  details?: ColorAdjustment;
+  all?: ColorAdjustment;
+};
 export type ProtectionMasks = Partial<Record<Category, string>>;
 export type PreviewPan = { x: number; y: number };
 export type ExportFrame = { x: number; y: number; scale: number };

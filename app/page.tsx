@@ -1215,7 +1215,7 @@ export default function Home() {
   const [adjustments, setAdjustments] = useState<Record<Category, ItemTransform>>(emptyAdjustments);
   const [colorAdjustments, setColorAdjustments] = useState<ColorAdjustments>(emptyColorAdjustments);
   const [modelColorAdjustments, setModelColorAdjustments] = useState<ModelColorAdjustments>(emptyModelColorAdjustments);
-  const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("details");
+  const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("pupilsBrows");
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
   const [syncHairColor, setSyncHairColor] = useState(true);
@@ -2124,7 +2124,7 @@ export default function Home() {
     setAdjustments(emptyAdjustments());
     setColorAdjustments(emptyColorAdjustments());
     setModelColorAdjustments(emptyModelColorAdjustments());
-    setModelColorScope("details");
+    setModelColorScope("pupilsBrows");
     setHeadFitGuide(null);
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
@@ -4160,7 +4160,7 @@ export default function Home() {
     setHeadFitGuide(null);
     setColorAdjustments(emptyColorAdjustments());
     setModelColorAdjustments(emptyModelColorAdjustments());
-    setModelColorScope("details");
+    setModelColorScope("pupilsBrows");
     setOutfitColorAdjustmentsByGroup({});
     setProtectionMasks({});
     setHairAdjustmentsByBasePack({});
@@ -4531,7 +4531,7 @@ export default function Home() {
   function resetActiveColor() {
     updateColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT });
     setNotice(modelColorEditorActive
-      ? `Cor restaurada em ${modelColorScope === "pupils" ? "pupilas" : modelColorScope === "details" ? "olhos e detalhes" : modelColorScope === "skin" ? "pele" : "todo o modelo"}`
+      ? `Cor restaurada em ${modelColorScope === "pupils" ? "pupilas" : modelColorScope === "pupilsBrows" ? "pupilas e sobrancelhas" : modelColorScope === "skin" ? "pele" : "sobrancelhas"}`
       : category === "roupas" && activeOutfitVariantCount > 1
       ? `Cor original restaurada nas ${activeOutfitVariantCount} versões da roupa`
       : syncHairColor && (category === "cabelos" || category === "cabelosTras")
@@ -5390,11 +5390,11 @@ export default function Home() {
                   <div className="model-color-scope" role="group" aria-label="Área do modelo para recolorir">
                     {([[
                       "pupils", "Somente pupilas",
-                    ], ["details", "Olhos e detalhes"], ["skin", "Pele"], ["all", "Modelo inteiro"]] as const).map(([scope, label]) => (
+                    ], ["pupilsBrows", "Pupilas + sobrancelhas"], ["skin", "Somente pele"], ["brows", "Somente sobrancelhas"]] as const).map(([scope, label]) => (
                       <button key={scope} type="button" className={modelColorScope === scope ? "active" : ""} onClick={() => setModelColorScope(scope)}>{label}</button>
                     ))}
                   </div>
-                  <p className="model-color-help">Escolha a área antes da cor. “Somente pupilas” pinta só o pigmento central dos olhos; “Olhos e detalhes” também alcança sobrancelhas, mas preserva pele, blush, boca e contornos.</p>
+                  <p className="model-color-help">Escolha a área antes da cor. As máscaras preservam transparência, contornos, branco dos olhos, blush e boca. Se o modelo for diferente, a aplicação fica restrita à área estrutural reconhecida.</p>
                 </>
               )}
               {category === "roupas" && activeOutfitVariantCount > 1 && (

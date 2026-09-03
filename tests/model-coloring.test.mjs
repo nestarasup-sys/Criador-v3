@@ -8,19 +8,19 @@ import {
   normalizeModelColorScope,
 } from "../app/domain/model-color-selection.mjs";
 
-test("seleciona detalhes coloridos sem pintar pele, branco dos olhos ou contornos neutros", () => {
-  assert.equal(isModelColorPixel("details", 190, 30, 45, 255), false, "sem posição não há como validar a faixa facial");
+test("seleciona pupilas e sobrancelhas sem pintar pele, branco dos olhos ou contornos neutros", () => {
+  assert.equal(isModelColorPixel("pupilsBrows", 190, 30, 45, 255), false, "sem posição não há como validar a faixa facial");
   const faceBounds = { minX: 0, minY: 0, maxX: 100, maxY: 100 };
-  assert.equal(isModelColorPixel("details", 190, 30, 45, 255, { x: 50, y: 50, bounds: faceBounds }), true, "detalhe colorido dentro da faixa facial");
-  assert.equal(isModelColorPixel("details", 40, 210, 110, 255, { x: 1, y: 50, bounds: faceBounds }), false, "resíduo verde na borda");
-  assert.equal(isModelColorPixel("details", 220, 80, 110, 255, { x: 50, y: 82, bounds: faceBounds }), false, "interior rosa da boca aberta");
-  assert.equal(isModelColorPixel("details", 235, 199, 184, 255), false, "pele clara");
-  assert.equal(isModelColorPixel("details", 250, 250, 250, 255), false, "branco dos olhos");
-  assert.equal(isModelColorPixel("details", 35, 35, 38, 255), false, "contorno neutro");
-  assert.equal(isModelColorPixel("details", 35, 35, 38, 255, { x: 50, y: 50, bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 } }), true, "olho/sobrancelha escuro no centro do rosto");
-  assert.equal(isModelColorPixel("details", 35, 35, 38, 255, { x: 5, y: 50, bounds: faceBounds }), false, "contorno lateral");
-  assert.equal(isModelColorPixel("details", 35, 35, 38, 255, { x: 50, y: 82, bounds: { minX: 0, minY: 0, maxX: 100, maxY: 100 } }), false, "contorno inferior/pescoço");
-  assert.equal(isModelColorPixel("details", 190, 30, 45, 0), false, "transparência");
+  assert.equal(isModelColorPixel("pupilsBrows", 190, 30, 45, 255, { x: 50, y: 56, bounds: faceBounds }), true, "pigmento de pupila");
+  assert.equal(isModelColorPixel("pupilsBrows", 40, 210, 110, 255, { x: 1, y: 50, bounds: faceBounds }), false, "resíduo verde na borda");
+  assert.equal(isModelColorPixel("pupilsBrows", 220, 80, 110, 255, { x: 50, y: 82, bounds: faceBounds }), false, "interior rosa da boca aberta");
+  assert.equal(isModelColorPixel("pupilsBrows", 235, 199, 184, 255), false, "pele clara");
+  assert.equal(isModelColorPixel("pupilsBrows", 250, 250, 250, 255), false, "branco dos olhos");
+  assert.equal(isModelColorPixel("pupilsBrows", 35, 35, 38, 255), false, "contorno neutro");
+  assert.equal(isModelColorPixel("brows", 35, 35, 38, 255, { x: 49, y: 46, bounds: faceBounds }), true, "sobrancelha escura na faixa estrutural");
+  assert.equal(isModelColorPixel("brows", 5, 5, 5, 255, { x: 5, y: 50, bounds: faceBounds }), false, "contorno lateral");
+  assert.equal(isModelColorPixel("brows", 35, 35, 38, 255, { x: 50, y: 82, bounds: faceBounds }), false, "contorno inferior/pescoço");
+  assert.equal(isModelColorPixel("pupilsBrows", 190, 30, 45, 0), false, "transparência");
 });
 
 test("seleciona tons quentes de pele e não confunde detalhe vermelho com pele", () => {
@@ -43,17 +43,22 @@ test("seleciona somente o pigmento das pupilas sem levar sobrancelha, blush ou b
 
 test("normaliza escopos e mantém quatro ajustes independentes", () => {
   const defaults = emptyModelColorAdjustments();
-  assert.deepEqual(Object.keys(defaults), ["pupils", "details", "skin", "all"]);
+  assert.deepEqual(Object.keys(defaults), ["pupils", "pupilsBrows", "skin", "brows"]);
   assert.equal(normalizeModelColorScope("pupils"), "pupils");
+  assert.equal(normalizeModelColorScope("pupilsBrows"), "pupilsBrows");
   assert.equal(normalizeModelColorScope("skin"), "skin");
-  assert.equal(normalizeModelColorScope("all"), "all");
-  assert.equal(normalizeModelColorScope("desconhecido"), "details");
+  assert.equal(normalizeModelColorScope("brows"), "brows");
+  assert.equal(normalizeModelColorScope("details"), "pupilsBrows");
+  assert.equal(normalizeModelColorScope("all"), "brows");
+  assert.equal(normalizeModelColorScope("desconhecido"), "pupilsBrows");
   const normalized = normalizeModelColorAdjustments({ details: { tint: "#123456", tintStrength: 80 } });
-  assert.equal(normalized.details.tint, "#123456");
-  assert.equal(normalized.details.tintStrength, 80);
+  assert.equal(normalized.pupilsBrows.tint, "#123456");
+  assert.equal(normalized.pupilsBrows.tintStrength, 80);
   assert.equal(normalized.pupils.tintStrength, 0);
   assert.equal(normalized.skin.tintStrength, 0);
-  assert.equal(normalized.all.tintStrength, 0);
+  assert.equal(normalized.brows.tintStrength, 0);
+  const migratedAll = normalizeModelColorAdjustments({ all: { tint: "#234567", tintStrength: 50 } });
+  assert.equal(migratedAll.brows.tint, "#234567");
   assert.equal(normalizeModelColorAdjustments({ pupils: { enabled: false } }).pupils.enabled, false);
 });
 
@@ -84,7 +89,7 @@ test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", async 
         const offset = (y * info.width + x) * 4;
         const position = { x, y, bounds };
         const pupil = isModelColorPixel("pupils", data[offset], data[offset + 1], data[offset + 2], data[offset + 3], position);
-        const details = isModelColorPixel("details", data[offset], data[offset + 1], data[offset + 2], data[offset + 3], position);
+        const details = isModelColorPixel("pupilsBrows", data[offset], data[offset + 1], data[offset + 2], data[offset + 3], position);
         pupilCount += pupil ? 1 : 0;
         detailsCount += details ? 1 : 0;
         if (x >= 900 && x <= 1020 && y >= 320 && y <= 370) {

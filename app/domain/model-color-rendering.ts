@@ -1,6 +1,6 @@
 import type { ColorAdjustment, ModelColorScope } from "./character-contract";
 import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
-import { isModelColorPixel } from "./model-color-selection.mjs";
+import { inferModelEyeLanes, isModelColorPixel } from "./model-color-selection.mjs";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
@@ -38,12 +38,13 @@ export function createModelColorMaskCanvas(
   const original = sourceContext.getImageData(0, 0, width, height);
   const selected = new Uint8ClampedArray(original.data);
   const bounds = visibleBounds(original.data, width, height);
+  const eyeLanes = inferModelEyeLanes(original.data, width, height, bounds);
   let selectedPixels = 0;
   for (let index = 0; index < selected.length; index += 4) {
     const pixel = index / 4;
     const x = pixel % width;
     const y = Math.floor(pixel / width);
-    if (scope === "all" || isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds })) {
+    if (isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds, eyeLanes })) {
       selectedPixels += 1;
     } else {
       selected[index + 3] = 0;
@@ -70,8 +71,6 @@ export function createModelColorAdjustedCanvas(
 ): CanvasImageSource {
   const color = normalizeColorAdjustment(adjustment);
   if (!colorAdjustmentIsActive(color)) return image;
-  if (scope === "all") return createColorAdjustedCanvas(image, width, height, color);
-
   const selectedCanvas = createModelColorMaskCanvas(image, width, height, scope);
   if (!selectedCanvas) return image;
   const adjusted = createColorAdjustedCanvas(selectedCanvas, width, height, color);
@@ -86,7 +85,7 @@ export function createModelColorAdjustedCanvas(
   // Keep every non-selected pixel on the original drawImage path. Rebuilding
   // the whole image with putImageData changes premultiplied-alpha edge pixels
   // (the model outline/chroma fringe) even when those pixels were not part of
-  // the recolor mask. Only the selected details are drawn as an overlay.
+  // the recolor mask. Only the selected semantic area is drawn as an overlay.
   outputContext.drawImage(image, 0, 0, width, height);
   const adjustedLayer = document.createElement("canvas");
   adjustedLayer.width = width;

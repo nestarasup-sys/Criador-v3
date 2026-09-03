@@ -25,24 +25,31 @@ function normalizeAdjustment(value) {
   };
 }
 
-export const DEFAULT_MODEL_COLOR_SCOPE = "details";
+export const DEFAULT_MODEL_COLOR_SCOPE = "pupilsBrows";
 
 export function emptyModelColorAdjustments() {
   return {
     pupils: { ...DEFAULT_COLOR_ADJUSTMENT },
-    details: { ...DEFAULT_COLOR_ADJUSTMENT },
+    pupilsBrows: { ...DEFAULT_COLOR_ADJUSTMENT },
     skin: { ...DEFAULT_COLOR_ADJUSTMENT },
-    all: { ...DEFAULT_COLOR_ADJUSTMENT },
+    brows: { ...DEFAULT_COLOR_ADJUSTMENT },
   };
 }
 
 export function normalizeModelColorScope(value) {
-  return value === "pupils" || value === "skin" || value === "all" ? value : DEFAULT_MODEL_COLOR_SCOPE;
+  if (value === "pupils" || value === "pupilsBrows" || value === "skin" || value === "brows") return value;
+  // Compatibilidade com personagens salvos antes da separação semântica.
+  if (value === "details") return "pupilsBrows";
+  if (value === "all") return "brows";
+  return DEFAULT_MODEL_COLOR_SCOPE;
 }
 
 export function normalizeModelColorAdjustments(value) {
   const defaults = emptyModelColorAdjustments();
-  for (const scope of ["pupils", "details", "skin", "all"]) defaults[scope] = normalizeAdjustment(value?.[scope]);
+  defaults.pupils = normalizeAdjustment(value?.pupils);
+  defaults.pupilsBrows = normalizeAdjustment(value?.pupilsBrows ?? value?.details);
+  defaults.skin = normalizeAdjustment(value?.skin);
+  defaults.brows = normalizeAdjustment(value?.brows ?? value?.all);
   return defaults;
 }
 
@@ -78,12 +85,40 @@ function isLightWarmWash(red, green, blue, saturation, value) {
   return value >= 0.8 && red >= green * 1.15 && red >= blue * 1.08 && saturation <= 0.38;
 }
 
-function isModelDetail(red, green, blue, alpha, position) {
+function eyeCenters(position) {
+  return position?.eyeLanes?.length ? position.eyeLanes : [0.49, 0.86];
+}
+
+function isInsideEyeCore(relative, eyeX) {
+  const dx = (relative.x - eyeX) / 0.09;
+  const dy = (relative.y - 0.56) / 0.085;
+  return (dx * dx) + (dy * dy) <= 1;
+}
+
+function isInsideBrowBand(relative, eyeX) {
+  const dx = (relative.x - eyeX) / 0.18;
+  const dy = (relative.y - 0.425) / 0.065;
+  return (dx * dx) + (dy * dy) <= 1;
+}
+
+function hasPigment(red, green, blue) {
+  const { saturation, value } = rgbToHsv(red, green, blue);
+  if (isLightWarmWash(red, green, blue, saturation, value)) return false;
+  // Dark strokes are valid eyebrows, while pale skin and eye whites are not.
+  return (saturation >= 0.12 && value >= 0.06) || value <= 0.38;
+}
+
+function isModelBrow(red, green, blue, alpha, position) {
+  if (alpha <= 8 || !position?.bounds) return false;
+  const relative = relativeFacePosition(position);
+  if (!relative || relative.x < 0.16 || relative.x > 0.98 || relative.y < 0.29 || relative.y > 0.52) return false;
+  if (eyeCenters(position).some((eyeX) => isInsideEyeCore(relative, eyeX))) return false;
+  if (!eyeCenters(position).some((eyeX) => isInsideBrowBand(relative, eyeX))) return false;
+  return hasPigment(red, green, blue);
+}
+
+function isLegacyModelDetail(red, green, blue, alpha, position) {
   if (alpha <= 8) return false;
-  // Details are deliberately restricted to the inner eye/brow band. The
-  // source model PNGs may contain antialiased chroma residue around the
-  // silhouette and a pink mouth cavity lower in the face; both are valid
-  // pixels, but neither is an eye/detail color target.
   if (!position?.bounds) return false;
   const { minX, minY, maxX, maxY } = position.bounds;
   const spanX = Math.max(1, maxX - minX);
@@ -94,14 +129,50 @@ function isModelDetail(red, green, blue, alpha, position) {
   const { saturation, value } = rgbToHsv(red, green, blue);
   const channels = [red, green, blue].sort((left, right) => right - left);
   const dominantRatio = channels[0] / Math.max(1, channels[1]);
-  // Blush is a light, warm red wash. It can be saturated on some
-  // expressions, so chroma alone must not make it follow the eye color.
   if (isLightWarmWash(red, green, blue, saturation, value)) return false;
   if (saturation >= 0.12 && value >= 0.06 && dominantRatio >= 1.32) return true;
-  // Some models use nearly black/brown eyes and brows. Their color has low
-  // saturation, so use the face's relative geometry to avoid recoloring the
-  // outer jaw/neck outline along with those details.
   return value <= 0.38;
+}
+
+/**
+ * Finds the most likely colored eye-pigment lanes in the actual decoded head.
+ * Fixed coordinates remain only as a conservative fallback for monochrome
+ * models. This keeps a new model with a different head width from inheriting
+ * the coordinates of an older model.
+ */
+export function inferModelEyeLanes(data, width, height, bounds) {
+  const spanX = Math.max(1, bounds.maxX - bounds.minX);
+  const spanY = Math.max(1, bounds.maxY - bounds.minY);
+  const binSize = Math.max(2, Math.round(spanX / 72));
+  const binCount = Math.max(8, Math.ceil((bounds.maxX - bounds.minX + 1) / binSize));
+  const scores = new Array(binCount).fill(0);
+  const minY = Math.max(0, Math.floor(bounds.minY + spanY * 0.43));
+  const maxY = Math.min(height - 1, Math.ceil(bounds.minY + spanY * 0.69));
+  const minX = Math.max(0, Math.floor(bounds.minX + spanX * 0.16));
+  const maxX = Math.min(width - 1, Math.ceil(bounds.maxX - spanX * 0.02));
+  for (let y = minY; y <= maxY; y += 1) {
+    for (let x = minX; x <= maxX; x += 1) {
+      const offset = (y * width + x) * 4;
+      const alpha = data[offset + 3];
+      if (alpha < 160) continue;
+      const { saturation, value } = rgbToHsv(data[offset], data[offset + 1], data[offset + 2]);
+      if (saturation < 0.22 || value < 0.18 || isLightWarmWash(data[offset], data[offset + 1], data[offset + 2], saturation, value)) continue;
+      const bin = Math.max(0, Math.min(binCount - 1, Math.floor((x - bounds.minX) / binSize)));
+      scores[bin] += 1;
+    }
+  }
+  const peaks = [];
+  for (let index = 1; index < binCount - 1; index += 1) {
+    const score = scores[index];
+    if (score >= 3 && score >= scores[index - 1] && score >= scores[index + 1]) peaks.push({ index, score });
+  }
+  const selected = [];
+  for (const peak of peaks.sort((left, right) => right.score - left.score)) {
+    if (selected.every((item) => Math.abs(item.index - peak.index) >= Math.max(3, Math.round(binCount * 0.12)))) selected.push(peak);
+    if (selected.length === 2) break;
+  }
+  const lanes = selected.sort((left, right) => left.index - right.index).map((peak) => ((peak.index + 0.5) * binSize) / spanX);
+  return lanes.length ? lanes : [0.49, 0.86];
 }
 
 function isModelPupil(red, green, blue, alpha, position) {
@@ -112,14 +183,7 @@ function isModelPupil(red, green, blue, alpha, position) {
   // The supported model heads are framed consistently: the two eye/iris
   // centers stay in these lanes, including three-quarter faces. The narrow
   // vertical ellipse excludes brows, blush and mouth.
-  const eyeY = 0.56;
-  const eyeHeight = 0.085;
-  const eyeLanes = [0.49, 0.86];
-  const insideEyeCore = eyeLanes.some((eyeX) => {
-    const dx = (relative.x - eyeX) / 0.09;
-    const dy = (relative.y - eyeY) / eyeHeight;
-    return (dx * dx) + (dy * dy) <= 1;
-  });
+  const insideEyeCore = eyeCenters(position).some((eyeX) => isInsideEyeCore(relative, eyeX));
   if (!insideEyeCore) return false;
 
   // Only pigment is selected. Neutral eye whites, outlines and lashes stay
@@ -138,8 +202,11 @@ function isSkinTone(red, green, blue, alpha) {
 }
 
 export function isModelColorPixel(scope, red, green, blue, alpha, position) {
-  if (scope === "pupils") return isModelPupil(red, green, blue, alpha, position);
-  if (scope === "details") return isModelDetail(red, green, blue, alpha, position);
-  if (scope === "skin") return isSkinTone(red, green, blue, alpha);
-  return alpha > 8;
+  if (scope === "details") return isLegacyModelDetail(red, green, blue, alpha, position);
+  const normalizedScope = normalizeModelColorScope(scope);
+  if (normalizedScope === "pupils") return isModelPupil(red, green, blue, alpha, position);
+  if (normalizedScope === "brows") return isModelBrow(red, green, blue, alpha, position);
+  if (normalizedScope === "pupilsBrows") return isModelPupil(red, green, blue, alpha, position)
+    || isModelBrow(red, green, blue, alpha, position);
+  return isSkinTone(red, green, blue, alpha);
 }
