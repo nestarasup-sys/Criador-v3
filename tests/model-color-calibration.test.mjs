@@ -4,6 +4,7 @@ import test from "node:test";
 import sharp from "sharp";
 import { buildCalibratedModelColorSelectionMask, normalizeModelColorCalibration } from "../app/domain/model-color-calibration.mjs";
 import { buildModelColorSelectionMask } from "../app/domain/model-color-selection.mjs";
+import { buildModelColorMapData, modelColorMapChannel } from "../app/domain/model-color-map.mjs";
 
 function syntheticFace() {
   const width = 100;
@@ -72,6 +73,21 @@ test("o modo combinado une apenas as regiões calibradas", () => {
   assert.equal(mask[45 * face.width + 40], 1);
   assert.equal(mask[35 * face.width + 40], 1);
   assert.equal(mask[71 * face.width + 50], 0);
+});
+
+test("mapa semântico mantém canais de pupila, sobrancelha e pele independentes", () => {
+  const face = syntheticFace();
+  const map = buildModelColorMapData(face.data, face.width, face.height, face.bounds, profile);
+  const at = (x, y, channel) => map[(y * face.width + x) * 4 + channel];
+  assert.equal(modelColorMapChannel("pupils"), 0);
+  assert.equal(modelColorMapChannel("brows"), 1);
+  assert.equal(modelColorMapChannel("skin"), 2);
+  assert.ok(at(40, 45, 0) > 0, "pupila deve ocupar o canal vermelho");
+  assert.equal(at(40, 45, 1), 0, "pupila não deve ocupar sobrancelha");
+  assert.ok(at(40, 35, 1) > 0, "sobrancelha deve ocupar o canal verde");
+  assert.equal(at(40, 35, 0), 0, "sobrancelha não deve ocupar pupila");
+  assert.ok(at(50, 25, 2) > 0, "pele deve ocupar o canal azul");
+  assert.equal(at(50, 25, 0), 0, "pele não deve ocupar pupila");
 });
 
 test("asset real da Iris aceita calibração sem espalhar a máscara pela cabeça", async (context) => {
