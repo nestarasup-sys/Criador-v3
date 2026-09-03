@@ -135,6 +135,23 @@ test("centraliza o perfil usando as duas laterais mesmo quando a cabeça é assi
   assert.ok(Math.abs(projected.right - target.right) < 2, `lateral direita inesperada: ${projected.right}`);
 });
 
+test("refina a altura usando o perfil inteiro quando as extremidades não representam a proporção visual", () => {
+  const sourceContour = Array.from({ length: 181 }, (_, y) => {
+    const width = y < 70 ? 40 + y : y < 150 ? 110 : 90;
+    return { y, left: 250 - width, right: 250 + width };
+  });
+  const targetContour = Array.from({ length: 181 }, (_, y) => {
+    const sourceY = Math.min(180, Math.round(y / 0.8));
+    const sourceWidth = sourceY < 70 ? 40 + sourceY : sourceY < 150 ? 110 : 90;
+    const width = sourceWidth * 1.25;
+    return { y, left: 500 - width, right: 500 + width };
+  });
+  const source = { left: 110, right: 390, top: 0, bottom: 180, neckY: 180, width: 281, height: 181, centerX: 250, contour: sourceContour };
+  const target = { left: 325, right: 675, top: 0, bottom: 180, neckY: 180, width: 351, height: 181, centerX: 500, contour: targetContour };
+  const fit = calculateHeadFit(source, target, { width: 520, height: 520, defaultX: 260, defaultY: 260 });
+  assert.ok(Math.abs(fit.scaleY - 0.8) < 0.08, `escala vertical refinada inesperada: ${fit.scaleY}`);
+});
+
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
   const root = join(process.cwd(), "dados-locais-premium", "arquivos", "catalogo");
   const cases = [

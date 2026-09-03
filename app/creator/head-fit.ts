@@ -279,6 +279,12 @@ function contourAt(measurement: HeadMeasurement, normalizedY: number) {
   const rows = measurement.contour?.filter((row) => row.right >= row.left) ?? [];
   if (rows.length < 2 || measurement.bottom <= measurement.top) return null;
   const y = measurement.top + (measurement.bottom - measurement.top) * clamp(normalizedY, 0, 1);
+  return contourAtY(measurement, y, rows);
+}
+
+function contourAtY(measurement: HeadMeasurement, y: number, knownRows?: HeadContourRow[]) {
+  const rows = knownRows ?? measurement.contour?.filter((row) => row.right >= row.left) ?? [];
+  if (rows.length < 2) return null;
   let lower = rows[0];
   let upper = rows[rows.length - 1];
   for (const row of rows) {
@@ -293,6 +299,66 @@ function contourAt(measurement: HeadMeasurement, normalizedY: number) {
   const left = lower.left + (upper.left - lower.left) * ratio;
   const right = lower.right + (upper.right - lower.right) * ratio;
   return { left, right, center: (left + right) / 2, width: Math.max(1, right - left) };
+}
+
+function profileScaleY(
+  source: HeadMeasurement,
+  target: HeadMeasurement,
+  initialScaleX: number,
+  sourceCenterX: number,
+  targetCenterX: number,
+  initialScaleY: number,
+) {
+  const sourceRows = source.contour?.filter((row) => row.right >= row.left) ?? [];
+  const targetRows = target.contour?.filter((row) => row.right >= row.left) ?? [];
+  if (sourceRows.length < 8 || targetRows.length < 8) return initialScaleY;
+
+  const sourceBottom = structuralBottom(source);
+  const targetBottom = structuralBottom(target);
+  const sourceSpan = sourceBottom - source.top;
+  const targetSpan = targetBottom - target.top;
+  if (sourceSpan < 8 || targetSpan < 8) return initialScaleY;
+
+  const xOffset = targetCenterX - sourceCenterX * initialScaleX;
+  const candidates: Array<{ scale: number; score: number }> = [];
+  // Search around the endpoint estimate. A bounded search is intentional:
+  // this is a refinement for heads with different curvature, not permission
+  // to stretch an outfit into an unrelated size.
+  const minimum = clamp(initialScaleY * 0.65, 0.35, 2.4);
+  const maximum = clamp(initialScaleY * 1.35, 0.35, 2.4);
+  for (let step = 0; step <= 40; step += 1) {
+    const scaleY = minimum + (maximum - minimum) * (step / 40);
+    let score = 0;
+    let samples = 0;
+    for (let sample = 0.08; sample <= 0.92; sample += 0.14) {
+      const targetY = target.top + targetSpan * sample;
+      const sourceY = source.top + (targetY - target.top) / scaleY;
+      if (sourceY < source.top || sourceY > sourceBottom) continue;
+      const sourceRow = contourAtY(source, sourceY, sourceRows);
+      const targetRow = contourAtY(target, targetY, targetRows);
+      if (!sourceRow || !targetRow) continue;
+      const projectedLeft = sourceRow.left * initialScaleX + xOffset;
+      const projectedRight = sourceRow.right * initialScaleX + xOffset;
+      const targetWidth = Math.max(1, targetRow.right - targetRow.left);
+      score += (
+        Math.abs(projectedLeft - targetRow.left)
+        + Math.abs(projectedRight - targetRow.right)
+      ) / targetWidth;
+      samples += 1;
+    }
+    if (samples >= 5) candidates.push({ scale: scaleY, score: score / samples });
+  }
+  if (!candidates.length) return initialScaleY;
+  candidates.sort((left, right) => left.score - right.score);
+  const best = candidates[0];
+  // Do not let a nearly tied profile score cause a surprising jump from the
+  // simpler endpoint solution. Only accept a meaningful improvement.
+  const initial = candidates.reduce((bestCandidate, candidate) => (
+    Math.abs(candidate.scale - initialScaleY) < Math.abs(bestCandidate.scale - initialScaleY)
+      ? candidate
+      : bestCandidate
+  ));
+  return best.score + 0.015 < initial.score ? best.scale : initialScaleY;
 }
 
 function robustContourReference(source: HeadMeasurement, target: HeadMeasurement) {
@@ -375,7 +441,6 @@ export function calculateHeadFit(
     0.35,
     2.4,
   );
-  const scaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
   const targetCenterX = targetAnchor?.x
@@ -385,6 +450,15 @@ export function calculateHeadFit(
   const sourceCenterX = (useNeckReference ? source.neckCenterX : undefined)
     ?? contourReference?.sourceCenterX
     ?? source.centerX;
+  const endpointScaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);
+  const scaleY = profileScaleY(
+    source,
+    target,
+    scaleX,
+    sourceCenterX,
+    targetCenterX,
+    endpointScaleY,
+  );
   const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.
