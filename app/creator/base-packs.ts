@@ -2,6 +2,7 @@ import type { BasePackId, Model } from "../domain/character-primitives";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import type { ExpressionKey } from "../domain/expression-contract";
 import { NEW_BASE_EXPRESSION_KEYS, STANDARD_BASE_EXPRESSION_KEYS } from "../domain/expression-contract";
+import type { ModelColorMapMetadata } from "../domain/model-color-map.mjs";
 
 export type BasePackDefinition = {
   id: BasePackId;
@@ -14,6 +15,7 @@ export type BasePackDefinition = {
   anchor?: "neck-base";
   anchorX?: number;
   anchorY?: number;
+  colorMap?: ModelColorMapMetadata;
 };
 
 export type BasePackCollection = Record<Model, readonly BasePackDefinition[]>;
