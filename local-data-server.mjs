@@ -453,10 +453,20 @@ async function discoverModels() {
       const inferredLayout = config?.type === "head-only"
         ? null
         : await inferHeadOnlyLayout(folder, pngFiles);
-      const versionParts = await Promise.all(pngFiles.map(async (name) => {
+      const colorMapFiles = colorMap
+        ? (await readdir(join(folder, colorMap.directory)).catch(() => []))
+          .filter((name) => name.toLowerCase().endsWith(".png"))
+        : [];
+      const versionParts = await Promise.all([
+        ...pngFiles.map(async (name) => {
         const metadata = await stat(join(folder, name));
         return `${name}:${metadata.size}:${metadata.mtimeMs}`;
-      }));
+        }),
+        ...colorMapFiles.map(async (name) => {
+          const metadata = await stat(join(folder, colorMap.directory, name));
+          return `color-map/${name}:${metadata.size}:${metadata.mtimeMs}`;
+        }),
+      ]);
       const version = createHash("sha1")
         .update(versionParts.sort().join("|"))
         .digest("hex")
@@ -781,10 +791,13 @@ async function route(request, response) {
     await mkdir(mapFolder, { recursive: true });
     await writeFile(filePath, body);
     const modelJsonPath = join(folder, "model.json");
-    const existingConfig = await readOptionalJson(modelJsonPath) ?? await readOptionalJson(join(folder, "modelo.json")) ?? {};
+    const legacyModelJsonPath = join(folder, "modelo.json");
+    const modelConfig = await readOptionalJson(modelJsonPath);
+    const legacyModelConfig = modelConfig ? null : await readOptionalJson(legacyModelJsonPath);
+    const existingConfig = modelConfig ?? legacyModelConfig ?? {};
     const previousMap = normalizeModelColorMapMetadata(existingConfig.colorMap);
     const expressions = [...new Set([...(previousMap?.expressions ?? []), expressionKey])].sort();
-    await writeJsonAtomic(modelJsonPath, {
+    await writeJsonAtomic(modelConfig ? modelJsonPath : legacyModelConfig ? legacyModelJsonPath : modelJsonPath, {
       ...existingConfig,
       colorMap: {
         version: 1,
