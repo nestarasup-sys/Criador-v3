@@ -332,73 +332,6 @@ function semanticBoundsFor(scope, visibleBounds, data, width, height) {
   return scope === "skin" ? visibleBounds : inferModelFaceBounds(data, width, height, visibleBounds);
 }
 
-function pupilCandidate(red, green, blue, alpha, position) {
-  if (alpha < 128 || !position?.bounds) return false;
-  const relative = relativeFacePosition(position);
-  if (!relative || relative.x < 0.1 || relative.x > 0.99 || relative.y < 0.43 || relative.y > 0.7) return false;
-  const { saturation, value } = rgbToHsv(red, green, blue);
-  if (isLightWarmWash(red, green, blue, saturation, value)) return false;
-  // Saturated pigment catches colored irises. The dark branch keeps models
-  // with gray/black pupils supported without admitting the pale eye white.
-  return (saturation >= 0.22 && value >= 0.16 && !isSkinTone(red, green, blue, alpha)) || value <= 0.32;
-}
-
-function browCandidate(red, green, blue, alpha, position) {
-  if (alpha <= 8 || !position?.bounds) return false;
-  const relative = relativeFacePosition(position);
-  // Stop before the eye line. This prevents a brow joined to lashes by
-  // antialiasing from becoming one component with the eye itself.
-  if (!relative || relative.x < 0.1 || relative.x > 0.99 || relative.y < 0.25 || relative.y > 0.49) return false;
-  return hasPigment(red, green, blue);
-}
-
-function collectComponents(candidate, width, height) {
-  const visited = new Uint8Array(candidate.length);
-  const components = [];
-  for (let start = 0; start < candidate.length; start += 1) {
-    if (!candidate[start] || visited[start]) continue;
-    const queue = [start];
-    visited[start] = 1;
-    let area = 0;
-    let minX = width;
-    let minY = height;
-    let maxX = -1;
-    let maxY = -1;
-    let cursor = 0;
-    while (cursor < queue.length) {
-      const current = queue[cursor++];
-      const x = current % width;
-      const y = Math.floor(current / width);
-      area += 1;
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-      for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
-        for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
-          if (!offsetX && !offsetY) continue;
-          const nextX = x + offsetX;
-          const nextY = y + offsetY;
-          if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height) continue;
-          const next = nextY * width + nextX;
-          if (candidate[next] && !visited[next]) {
-            visited[next] = 1;
-            queue.push(next);
-          }
-        }
-      }
-    }
-    components.push({ pixels: queue, area, minX, minY, maxX, maxY });
-  }
-  return components;
-}
-
-function isEyePigment(red, green, blue) {
-  const { saturation, value } = rgbToHsv(red, green, blue);
-  if (isLightWarmWash(red, green, blue, saturation, value)) return false;
-  return (saturation >= 0.2 && value >= 0.12) || value <= 0.3;
-}
-
 /**
  * Derives a small region for each eye from the decoded pixels. The lane is
  * only the horizontal anchor; the vertical center is found from the strongest
@@ -533,25 +466,6 @@ function buildBrowMask(data, width, height, bounds) {
     }
   }
   return mask;
-}
-
-function componentBelongsToScope(component, scope, bounds) {
-  const spanX = Math.max(1, bounds.maxX - bounds.minX);
-  const spanY = Math.max(1, bounds.maxY - bounds.minY);
-  const componentWidth = component.maxX - component.minX + 1;
-  const componentHeight = component.maxY - component.minY + 1;
-  const relativeY = (component.minY - bounds.minY) / spanY;
-  const relativeBottom = (component.maxY - bounds.minY) / spanY;
-  const relativeWidth = componentWidth / spanX;
-  const aspect = componentWidth / Math.max(1, componentHeight);
-  if (component.area < 3 || relativeY < 0.2 || relativeBottom > 0.74) return false;
-  if (scope === "pupils") {
-    // A pupil/iris is compact. Long horizontal components are usually
-    // eyelashes or the eye outline and must not be recolored.
-    return relativeY >= 0.42 && relativeBottom <= 0.73 && relativeWidth <= 0.34 && aspect <= 11;
-  }
-  // A brow is a short elongated stroke above the eye, not a full face edge.
-  return relativeY >= 0.25 && relativeBottom <= 0.56 && relativeWidth >= 0.018 && relativeWidth <= 0.38 && aspect >= 1.15 && aspect <= 18;
 }
 
 /**

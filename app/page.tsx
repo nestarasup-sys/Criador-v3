@@ -1225,7 +1225,7 @@ export default function Home() {
   const [colorAdjustments, setColorAdjustments] = useState<ColorAdjustments>(emptyColorAdjustments);
   const [modelColorAdjustments, setModelColorAdjustments] = useState<ModelColorAdjustments>(emptyModelColorAdjustments);
   const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("pupilsBrows");
-  const [modelColorCalibration, setModelColorCalibration] = useState<ModelColorCalibration | null>(null);
+  const [modelColorCalibrationRevision, setModelColorCalibrationRevision] = useState(0);
   const [modelColorCalibrationMode, setModelColorCalibrationMode] = useState<ModelColorCalibrationTarget | null>(null);
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
@@ -1416,12 +1416,15 @@ export default function Home() {
     ? expressionEmotion
     : `${expressionEmotion}_${expressionState}`) as ExpressionKey;
   const activeOutfitStateKey = outfitStateKey(selections.roupas, basePackId);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const modelColorCalibration = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    // The revision is bumped after a calibration is written to localStorage;
+    // reading it here makes the memo invalidate without a state-sync effect.
+    const storageRevision = modelColorCalibrationRevision;
+    if (storageRevision < 0) return null;
     const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
-    setModelColorCalibration(stored[modelColorCalibrationKey(model, basePackId)] ?? null);
-    setModelColorCalibrationMode(null);
-  }, [model, basePackId]);
+    return stored[modelColorCalibrationKey(model, basePackId)] ?? null;
+  }, [model, basePackId, modelColorCalibrationRevision]);
   const editorSnapshot = useMemo(() => JSON.stringify({
     name: characterName.trim() || "Sem nome",
     model,
@@ -1988,7 +1991,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorPreviewMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeBasePack, activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, colorPreviewMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -2139,6 +2142,7 @@ export default function Home() {
     if (nextModel === model) return;
     persistEditorSnapshot("Salvo automaticamente");
     resetAssetDeleteMode();
+    setModelColorCalibrationMode(null);
     setModel(nextModel);
     setBasePackId(getBasePack(basePacks, nextModel).id);
     setSelections({ ...EMPTY_SELECTIONS });
@@ -2176,6 +2180,7 @@ export default function Home() {
 
   function changeBasePack(nextPackId: BasePackId) {
     if (nextPackId === basePackId) return;
+    setModelColorCalibrationMode(null);
     const outfit = catalog.find((item) => item.id === selections.roupas);
 
     const savedHairAdjustments = {
@@ -4122,6 +4127,7 @@ export default function Home() {
     try {
       if (!await flushCurrentCharacterBeforeSwitch()) return;
       resetAssetDeleteMode();
+      setModelColorCalibrationMode(null);
       suspendAutoSaveRef.current = true;
       setDraftStarted(false);
       const openedBasePack = getBasePack(basePacks, character.model, character.basePackId);
@@ -4171,6 +4177,7 @@ export default function Home() {
   function newCharacter(saveCurrent = true) {
     if (saveCurrent) persistEditorSnapshot("Salvo automaticamente");
     resetAssetDeleteMode();
+    setModelColorCalibrationMode(null);
     characterHistoryRef.current.delete("draft");
     historyRestoreRef.current = null;
     setHistoryAvailability({ undo: false, redo: false });
@@ -4548,7 +4555,7 @@ export default function Home() {
     const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
     delete stored[modelColorCalibrationKey(model, basePackId)];
     window.localStorage.setItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, JSON.stringify(stored));
-    setModelColorCalibration(null);
+    setModelColorCalibrationRevision((revision) => revision + 1);
     setModelColorCalibrationMode(null);
     setNotice("Calibração apagada; o modo automático voltou a ser usado");
   }
@@ -4579,7 +4586,7 @@ export default function Home() {
       updatedAt: new Date().toISOString(),
     };
     persistModelColorCalibration(next);
-    setModelColorCalibration(next);
+    setModelColorCalibrationRevision((revision) => revision + 1);
     const currentIndex = MODEL_COLOR_CALIBRATION_STEPS.findIndex((step) => step.target === modelColorCalibrationMode);
     const nextStep = MODEL_COLOR_CALIBRATION_STEPS[currentIndex + 1];
     if (nextStep) {

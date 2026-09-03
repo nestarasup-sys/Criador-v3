@@ -127,19 +127,6 @@ function insideBounds(x, y, bounds) {
     && y >= Math.max(0, bounds.minY) && y <= Math.min(bounds.maxY, Infinity);
 }
 
-function hasTransparentNeighbor(data, width, height, x, y) {
-  for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
-    for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
-      if (!offsetX && !offsetY) continue;
-      const nextX = x + offsetX;
-      const nextY = y + offsetY;
-      if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height) return true;
-      if (data[(nextY * width + nextX) * 4 + 3] <= 8) return true;
-    }
-  }
-  return false;
-}
-
 function isBlushLike(red, green, blue) {
   const { saturation, value } = hsv(red, green, blue);
   // Keep warm skin (often around 235/199/184) while rejecting the stronger
@@ -231,7 +218,7 @@ function growSeedRegion(data, width, height, visibleBounds, scope, normalizedSee
   return selected.length >= 4 ? selected : [];
 }
 
-function faceBounds(visibleBounds, data, width, height) {
+function faceBounds(visibleBounds) {
   // Calibration is normally performed on a head-only/transparent model. For
   // old full-body assets, constrain skin to the upper visible region while
   // keeping all calibrated eye/brow seeds independent from body geometry.
@@ -260,7 +247,7 @@ export function buildCalibratedModelColorSelectionMask(scope, data, width, heigh
   const normalizedScope = scope === "pupilsBrows" ? "pupilsBrows" : scope;
   const seeds = scopeSeeds(profile, normalizedScope);
   if (!seeds.length) return mask;
-  const bounds = normalizedScope === "skin" ? faceBounds(visibleBounds, data, width, height) : visibleBounds;
+  const bounds = normalizedScope === "skin" ? faceBounds(visibleBounds) : visibleBounds;
   const scopes = normalizedScope === "pupilsBrows" ? ["pupils", "brows"] : [normalizedScope];
   for (const activeScope of scopes) {
     const activeSeeds = activeScope === "pupils" ? normalizeModelColorCalibration(profile)?.seeds.pupils ?? [] : activeScope === "brows" ? normalizeModelColorCalibration(profile)?.seeds.brows ?? [] : seeds;
