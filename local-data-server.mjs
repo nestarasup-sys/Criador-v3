@@ -718,37 +718,6 @@ async function route(request, response) {
     sendJson(response, request, 200, { ok: true, gender, id: modelId });
     return;
   }
-  if (request.method === "POST" && url.pathname === "/models/fabricator") {
-    const body = await requestJson(request);
-    const gender = body?.gender === "masculino" || body?.gender === "feminino" ? body.gender : null;
-    const folderName = safeExportFolderName(body?.folderName, "").toLowerCase();
-    if (!gender || !/^modelo-[a-z0-9-]{1,112}$/.test(folderName)) throw Object.assign(new Error("Nome ou gênero do modelo inválido."), { status: 400 });
-    const folder = join(MODELS_ROOT, gender, folderName);
-    if (!inside(MODELS_ROOT, folder)) throw Object.assign(new Error("Destino do modelo inválido."), { status: 400 });
-    try { await stat(folder); throw Object.assign(new Error("Já existe um modelo com esse nome."), { status: 409 }); } catch (error) { if (error?.status === 409) throw error; if (error?.code !== "ENOENT") throw error; }
-    const sprites = Array.isArray(body?.sprites) ? body.sprites : [];
-    if (sprites.length !== 21 && sprites.length !== 42) throw Object.assign(new Error("O modelo precisa conter 21 ou 42 sprites."), { status: 400 });
-    const spriteNames = sprites.map((sprite) => String(sprite?.fileName ?? ""));
-    if (new Set(spriteNames).size !== spriteNames.length) throw Object.assign(new Error("O pacote contém sprites duplicados."), { status: 400 });
-    const config = body?.config && typeof body.config === "object" ? body.config : {};
-    const anchorX = Number.isFinite(Number(config.anchorX)) ? Math.max(0, Math.min(1920, Number(config.anchorX))) : 960;
-    const anchorY = Number.isFinite(Number(config.anchorY)) ? Math.max(0, Math.min(1080, Number(config.anchorY))) : 346;
-    const baseScale = Number.isFinite(Number(config.baseScale)) ? Math.max(.1, Math.min(4, Number(config.baseScale))) : 1.1;
-    const expressionKeys = [...new Set(sprites.map((sprite) => String(sprite?.fileName ?? "").replace(/\.png$/i, "").replace(/_(blink|talk)$/i, "")))];
-    await mkdir(folder, { recursive: true });
-    try {
-      for (const sprite of sprites) {
-        if (!/^[a-zA-Z0-9_-]{1,120}\.png$/.test(String(sprite?.fileName ?? ""))) throw Object.assign(new Error("Nome de sprite inválido."), { status: 400 });
-        await writeFile(join(folder, sprite.fileName), decodeFabricatorPng(sprite.dataUrl));
-      }
-      await writeFile(join(folder, "model.json"), JSON.stringify({ name: body.name || folderName, gender, type: "head-only", anchor: "neck-base", anchorX, anchorY, baseScale, width: 1920, height: 1080, expressionKeys }, null, 2));
-    } catch (error) {
-      await rm(folder, { recursive: true, force: true });
-      throw error;
-    }
-    sendJson(response, request, 201, { ok: true, model: (await discoverModels())[gender].find((item) => item.id === folderName) });
-    return;
-  }
   const characterPhotoMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})\/photo$/);
   if (characterPhotoMatch && request.method === "POST") {
     const characterId = safeId(characterPhotoMatch[1]);
@@ -1460,16 +1429,6 @@ async function loadLocalEnvironment() {
       if (error?.code !== "ENOENT") throw error;
     }
   }
-}
-
-function decodeFabricatorPng(value) {
-  if (typeof value !== "string") throw Object.assign(new Error("PNG do modelo inválido."), { status: 400 });
-  const match = value.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
-  if (!match) throw Object.assign(new Error("O Fabricador deve enviar PNGs válidos."), { status: 400 });
-  const body = Buffer.from(match[1], "base64");
-  const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-  if (body.length < signature.length || !body.subarray(0, signature.length).equals(signature)) throw Object.assign(new Error("Um dos sprites não é um PNG válido."), { status: 400 });
-  return body;
 }
 
 await loadLocalEnvironment();

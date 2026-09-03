@@ -19,39 +19,6 @@ try {
   await seedCreatorAutosaveFixture(page);
   await seedStudioQualityFixture(page);
 
-  await page.goto(`${baseURL}/Ferramentas/fabricador-de-modelo`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await waitForImages(page);
-  await assertVisible(page.getByRole("heading", { name: "Fabricador de Modelo" }));
-  await assertVisible(page.getByRole("banner"));
-  await assertVisible(page.getByRole("banner").getByText("FERRAMENTAS", { exact: true }));
-  await assertVisible(page.getByRole("button", { name: "Gerar prévias" }));
-  assert.equal(await page.getByText("21 + 21", { exact: true }).count(), 1);
-  assert.equal(await page.getByRole("button", { name: "Salvar modelo no catálogo" }).isDisabled(), true);
-  const fabricatorLayout = await page.evaluate(() => ({ scrollHeight: document.documentElement.scrollHeight, clientHeight: document.documentElement.clientHeight }));
-  assert.ok(fabricatorLayout.scrollHeight >= fabricatorLayout.clientHeight, "A página do Fabricador precisa permitir rolagem vertical");
-  const syntheticSheet = await createSyntheticFaceSheet(page);
-  await page.locator('input[type="file"]').nth(0).setInputFiles({ name: "folha-1-e2e.png", mimeType: "image/png", buffer: syntheticSheet });
-  await page.getByRole("button", { name: "Gerar prévias" }).click();
-  await page.waitForFunction(() => document.body.innerText.includes("21 sprites gerados"), undefined, { timeout: 30_000 });
-  assert.equal(await page.getByText("21/21", { exact: true }).count(), 1);
-  assert.equal(await page.getByRole("button", { name: "Folha 1 (21)", exact: true }).isEnabled(), true);
-  assert.equal(await page.getByRole("button", { name: "Testar animação", exact: true }).isEnabled(), true);
-
-  const scaleXInput = page.locator("label").filter({ hasText: "Escala X" }).locator("input");
-  const extensionlessDragInput = page.locator("label").filter({ hasText: "Deslocamento X" }).locator("input");
-  assert.equal(await scaleXInput.inputValue(), "1", "A referência normal deve começar sem correção manual");
-  const comparisonStage = page.locator('[class*="comparisonStage"]');
-  await comparisonStage.scrollIntoViewIfNeeded();
-  const fabricatorStageBox = await comparisonStage.boundingBox();
-  assert.ok(fabricatorStageBox, "O palco de comparação precisa aceitar arraste");
-  const dragBefore = await extensionlessDragInput.inputValue();
-  await page.mouse.move(fabricatorStageBox.x + fabricatorStageBox.width / 2, fabricatorStageBox.y + fabricatorStageBox.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(fabricatorStageBox.x + fabricatorStageBox.width / 2 + 64, fabricatorStageBox.y + fabricatorStageBox.height / 2 + 24, { steps: 4 });
-  await page.mouse.up();
-  await page.waitForTimeout(800);
-  assert.notEqual(await extensionlessDragInput.inputValue(), dragBefore, "O arraste deve refletir no ajuste aplicado ao conjunto");
-
   // Direct route loads are intentional here: Vinext's development HMR can
   // emit an unrelated duplicate-React warning during client-side <Link>
   // transitions, while the production build uses the same route contracts.
@@ -180,33 +147,6 @@ async function seedStudioQualityFixture(currentPage) {
     characterIds: [character.id],
     studioIds: [studio.id],
   });
-}
-
-async function createSyntheticFaceSheet(currentPage) {
-  const dataUrl = await currentPage.evaluate(async () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 896;
-    canvas.height = 384;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Canvas 2D indisponível no teste do Fabricador.");
-    context.fillStyle = "rgb(0, 255, 0)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    for (let row = 0; row < 3; row += 1) {
-      for (let column = 0; column < 7; column += 1) {
-        const centerX = column * 128 + 64;
-        const centerY = row * 128 + 64;
-        context.fillStyle = "rgb(235, 235, 235)";
-        context.beginPath();
-        context.ellipse(centerX, centerY, 42, 50, 0, 0, Math.PI * 2);
-        context.fill();
-        context.fillStyle = "rgb(60, 60, 60)";
-        context.fillRect(centerX - 18, centerY - 4, 8, 4);
-        context.fillRect(centerX + 10, centerY - 4, 8, 4);
-      }
-    }
-    return canvas.toDataURL("image/png");
-  });
-  return Buffer.from(dataUrl.slice(dataUrl.indexOf(",") + 1), "base64");
 }
 
 async function seedCreatorAutosaveFixture(currentPage) {

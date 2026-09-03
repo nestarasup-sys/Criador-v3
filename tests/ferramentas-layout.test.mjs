@@ -13,3 +13,14 @@ test("dashboard de Ferramentas ocupa a largura disponível e usa duas colunas", 
   assert.match(styles, /\.dashboardMain \.flowPanel\s*\{[^}]*max-width:\s*none;/s);
   assert.match(styles, /@media\s*\(max-width:\s*720px\)[^{]*\{[^}]*\.dashboardMain \.grid\s*\{[^}]*grid-template-columns:\s*1fr;/s);
 });
+
+test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async () => {
+  const [page, server] = await Promise.all([
+    read("app/Ferramentas/page.tsx"),
+    read("local-data-server.mjs"),
+  ]);
+
+  assert.match(page, /<strong>02<\/strong>/);
+  assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
+  assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
+});
