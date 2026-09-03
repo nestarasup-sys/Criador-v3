@@ -320,7 +320,7 @@ export async function renderStudioCharacter(
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
     const modelColorCalibration = getStoredModelColorCalibration(character.model, activePackId);
     const mapKey = discoveredPack?.expressionKeys?.includes?.(key) ? key : "normal";
-    const mapSource = discoveredPack ? baseExpressionColorMapSource(discoveredPack as Parameters<typeof baseExpressionColorMapSource>[0], mapKey) : null;
+    const mapSource = discoveredPack ? baseExpressionColorMapSource(discoveredPack as unknown as Parameters<typeof baseExpressionColorMapSource>[0], mapKey) : null;
     const modelColorMap = mapSource ? await loadStudioImage(mapSource).catch(() => null) : null;
     const adjustedBase = createModelColorAdjustedCanvasForScopes(
       base,

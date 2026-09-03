@@ -2,8 +2,15 @@ import type { BasePackId, Model } from "../domain/character-primitives";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import type { ExpressionKey } from "../domain/expression-contract";
 import { NEW_BASE_EXPRESSION_KEYS, STANDARD_BASE_EXPRESSION_KEYS } from "../domain/expression-contract";
-import type { ModelColorMapMetadata } from "../domain/model-color-map.mjs";
 import { modelColorMapSource } from "../domain/model-color-map.mjs";
+
+export type ModelColorMapMetadata = {
+  version: 1;
+  format: "rgb-weights";
+  directory: string;
+  channels: { red: "pupils"; green: "brows"; blue: "skin" };
+  expressions: string[];
+};
 
 export type BasePackDefinition = {
   id: BasePackId;
