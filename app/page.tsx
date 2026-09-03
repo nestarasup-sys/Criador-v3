@@ -24,6 +24,7 @@ import { createModelColorAdjustedCanvasForScopes, createModelColorMaskCanvas, em
 import { MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, emptyModelColorCalibration, modelColorCalibrationKey, parseModelColorCalibrations, type ModelColorCalibration, type ModelColorCalibrationSeed } from "./domain/model-color-calibration-storage";
 import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseModelColorDefaults, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
 import { basePackCacheKey, baseExpressionColorMapSource, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
+import { buildModelColorMapData } from "./domain/model-color-map.mjs";
 import {
   deleteCatalogItem,
   deleteBaseModelFromPc,
@@ -37,6 +38,7 @@ import {
   saveCatalogItemToPc,
   saveCharactersToPc,
   saveExpressionPackToPc,
+  saveModelColorMapToPc,
   storeCatalogItem,
   storeExpressionPack,
   uploadCharacterPhotoToPc,
@@ -1227,6 +1229,7 @@ export default function Home() {
   const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("pupilsBrows");
   const [modelColorCalibrationRevision, setModelColorCalibrationRevision] = useState(0);
   const [modelColorCalibrationMode, setModelColorCalibrationMode] = useState<ModelColorCalibrationTarget | null>(null);
+  const [modelColorMapStatus, setModelColorMapStatus] = useState<string | null>(null);
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
   const [syncHairColor, setSyncHairColor] = useState(true);
@@ -4545,6 +4548,61 @@ export default function Home() {
     window.localStorage.setItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, JSON.stringify(stored));
   }
 
+  async function generateModelColorMaps(profile: ModelColorCalibration) {
+    if (!modelColorEditorActive) return;
+    setModelColorMapStatus("Gerando mapas semânticos…");
+    try {
+      const expressionKeys = activeBasePack.expressionKeys;
+      let saved = 0;
+      for (const expressionKey of expressionKeys) {
+        const image = await loadImage(baseExpressionSource(activeBasePack, expressionKey));
+        const width = 1920;
+        const height = 1080;
+        const sourceCanvas = document.createElement("canvas");
+        sourceCanvas.width = width;
+        sourceCanvas.height = height;
+        const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+        if (!sourceContext) throw new Error("Canvas da expressão indisponível");
+        sourceContext.drawImage(image, 0, 0, width, height);
+        const imageData = sourceContext.getImageData(0, 0, width, height);
+        const bounds = findVisibleBounds(imageData.data, width, height, { alphaThreshold: 8, padding: 0 });
+        if (!bounds) continue;
+        const mapData = buildModelColorMapData(imageData.data, width, height, {
+          minX: bounds.x,
+          minY: bounds.y,
+          maxX: bounds.x + bounds.width - 1,
+          maxY: bounds.y + bounds.height - 1,
+        }, profile);
+        const mapCanvas = document.createElement("canvas");
+        mapCanvas.width = width;
+        mapCanvas.height = height;
+        const mapContext = mapCanvas.getContext("2d");
+        if (!mapContext) throw new Error("Canvas do mapa semântico indisponível");
+        mapContext.putImageData(new ImageData(mapData, width, height), 0, 0);
+        await saveModelColorMapToPc(model, basePackId, expressionKey, await canvasBlob(mapCanvas));
+        saved += 1;
+      }
+      setBasePacks((current) => ({
+        ...current,
+        [model]: current[model].map((pack) => pack.id === basePackId
+          ? {
+            ...pack,
+            colorMap: {
+              version: 1,
+              format: "rgb-weights",
+              directory: "_color-maps",
+              channels: { red: "pupils", green: "brows", blue: "skin" },
+              expressions: [...expressionKeys],
+            },
+          }
+          : pack),
+      }));
+      setModelColorMapStatus(`${saved} mapas salvos no modelo; as cores agora usam áreas exatas por expressão.`);
+    } catch (error) {
+      setModelColorMapStatus(error instanceof Error ? error.message : "Não foi possível salvar os mapas semânticos");
+    }
+  }
+
   function beginModelColorCalibration() {
     if (!modelColorEditorActive) return;
     setAnimationMode(null);
@@ -4600,7 +4658,8 @@ export default function Home() {
       setNotice(`Ponto salvo. Agora clique na ${nextStep.label}`);
     } else {
       setModelColorCalibrationMode(null);
-      setNotice("Calibração concluída para este modelo; as expressões usarão essas âncoras");
+      void generateModelColorMaps(next);
+      setNotice("Calibração concluída; gerando um mapa exato para cada expressão");
     }
   }
 
@@ -5529,9 +5588,11 @@ export default function Home() {
                     </div>
                     <div className="model-color-calibration-actions">
                       <button type="button" className="protect-color-button" onClick={beginModelColorCalibration}>{modelColorCalibration ? "Recalibrar áreas" : "Calibrar áreas"}</button>
+                      {calibrationComplete && <button type="button" className="protect-color-button" onClick={() => modelColorCalibration && void generateModelColorMaps(modelColorCalibration)}>Gerar mapas</button>}
                       {modelColorCalibration && <button type="button" className="text-danger-button" onClick={clearModelColorCalibration}>Limpar</button>}
                     </div>
                     {activeCalibrationStep && <p className="model-color-calibration-status">Calibrando: <strong>{activeCalibrationStep.label}</strong> · clique diretamente na prévia.</p>}
+                    {(activeBasePack.colorMap || modelColorMapStatus) && <p className="model-color-calibration-status">{modelColorMapStatus ?? `Mapa semântico salvo para ${activeBasePack.colorMap?.expressions.length ?? 0} expressões.`}</p>}
                   </div>
                   <p className="model-color-help">As máscaras calibradas começam no ponto real da imagem e ficam limitadas à região selecionada. Sem calibração, o modo automático continua disponível para modelos antigos.</p>
                 </>
