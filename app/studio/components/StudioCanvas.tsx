@@ -106,32 +106,43 @@ export function StudioCanvas({ stageRef, studio, charactersById, rendered, rende
       frameRequest = window.requestAnimationFrame(() => {
         frameRequest = 0;
         const editorBounds = editor.getBoundingClientRect();
-        const panelSelector = `.${styles.leftTools}, .${styles.inspector}, .${styles.roster}`;
+        // Only the two permanent vertical rails define the usable stage. The
+        // inspector is an overlay and must never shrink or move the canvas.
+        const panelSelector = `.${styles.leftTools}, .${styles.roster}`;
         let left = 0;
         let right = 0;
+        const editorCenter = editorBounds.left + editorBounds.width / 2;
         for (const panel of editor.querySelectorAll<HTMLElement>(panelSelector)) {
           const panelStyle = window.getComputedStyle(panel);
           if (panelStyle.display === "none" || panelStyle.visibility === "hidden" || panelStyle.pointerEvents === "none") continue;
           const panelBounds = panel.getBoundingClientRect();
           if (panelBounds.width <= 0 || panelBounds.height <= 0) continue;
-          const editorCenter = editorBounds.left + editorBounds.width / 2;
-          if (panelBounds.right <= editorCenter) left = Math.max(left, panelBounds.right - editorBounds.left);
-          if (panelBounds.left >= editorCenter) right = Math.max(right, editorBounds.right - panelBounds.left);
+          const panelCenter = panelBounds.left + panelBounds.width / 2;
+          if (panelCenter <= editorCenter) left = Math.max(left, panelBounds.right - editorBounds.left);
+          if (panelCenter > editorCenter) right = Math.max(right, editorBounds.right - panelBounds.left);
         }
         const nextFrame = { left: Math.max(0, Math.ceil(left)), right: Math.max(0, Math.ceil(right)) };
         setSafeFrame((current) => current.left === nextFrame.left && current.right === nextFrame.right ? current : nextFrame);
-        const bounds = viewport.getBoundingClientRect();
-        setPreviewScale(Math.min(bounds.width / STUDIO_SCENE_WIDTH, bounds.height / STUDIO_SCENE_HEIGHT));
+        // Use the measured frame directly instead of the previous viewport
+        // rect. This avoids a one-frame stale scale when Chrome changes zoom,
+        // the window is restored, or the inspector/roster changes size.
+        editor.style.setProperty("--studio-safe-left", `${nextFrame.left}px`);
+        editor.style.setProperty("--studio-safe-right", `${nextFrame.right}px`);
+        const availableWidth = Math.max(0, editorBounds.width - nextFrame.left - nextFrame.right);
+        const availableHeight = Math.max(0, editorBounds.height);
+        setPreviewScale(Math.min(availableWidth / STUDIO_SCENE_WIDTH, availableHeight / STUDIO_SCENE_HEIGHT));
       });
     };
     updateScale();
     const observer = new ResizeObserver(updateScale);
     observer.observe(viewport);
     observer.observe(editor);
-    const panelSelector = `.${styles.leftTools}, .${styles.inspector}, .${styles.roster}`;
+    const panelSelector = `.${styles.leftTools}, .${styles.roster}`;
     for (const panel of editor.querySelectorAll<HTMLElement>(panelSelector)) observer.observe(panel);
     const mutationObserver = new MutationObserver(updateScale);
-    mutationObserver.observe(editor, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "style", "aria-hidden"] });
+    // The safe-frame variables are written to the editor itself. Do not watch
+    // its style attribute or that write would schedule a measurement loop.
+    mutationObserver.observe(editor, { subtree: true, childList: true, attributes: true, attributeFilter: ["class", "aria-hidden"] });
     return () => {
       observer.disconnect();
       mutationObserver.disconnect();

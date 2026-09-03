@@ -519,7 +519,7 @@ test("protege o palco contra os docks e mantém o arraste selecionável", async 
   assert.match(canvas, /\.sort\(\(a, b\) => a\.item\.z - b\.item\.z\)/);
   assert.match(roster, /Selecionar \$\{character\.name\} no elenco/);
   assert.match(css, /\.stageViewport \{[^}]*place-items: start center/);
-  assert.match(css, /\.stage \{[^}]*transform-origin: top center/);
+  assert.match(css, /\.stage \{[^}]*transform-origin: top left/);
   assert.match(css, /\.rightArea\.dockLeft \.inspectorDock \{[^}]*pointer-events: none/);
   assert.match(css, /\.rightArea\.dockLeft \.inspectorDock > \.inspector \{[^}]*pointer-events: auto/);
 });
@@ -530,11 +530,14 @@ test("enquadra a cena entre os painéis laterais sem alterar o canvas lógico", 
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(canvas, /safeFrame/);
-  assert.match(canvas, /styles\.leftTools\}, \.\$\{styles\.inspector\}, \.\$\{styles\.roster\}/);
+  assert.match(canvas, /styles\.leftTools\}, \.\$\{styles\.roster\}/);
+  assert.doesNotMatch(canvas, /styles\.leftTools\}, \.\$\{styles\.inspector\}/);
   assert.match(canvas, /--studio-safe-left/);
   assert.match(canvas, /data-logical-size=\{`\$\{STUDIO_SCENE_WIDTH\}x\$\{STUDIO_SCENE_HEIGHT\}`\}/);
   assert.match(css, /\.stageViewport \{[^}]*right: var\(--studio-safe-right/);
   assert.match(css, /left: var\(--studio-safe-left/);
+  assert.match(css, /\.inspectorDock \{[\s\S]*position: fixed/);
+  assert.match(css, /\.inspectorDock > \.inspector \{[\s\S]*pointer-events: auto/);
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {
