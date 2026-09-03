@@ -1,6 +1,6 @@
 import type { ColorAdjustment, ModelColorScope } from "./character-contract";
 import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
-import { inferModelEyeLanes, isModelColorPixel } from "./model-color-selection.mjs";
+import { buildModelColorSelectionMask } from "./model-color-selection.mjs";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
@@ -38,13 +38,13 @@ export function createModelColorMaskCanvas(
   const original = sourceContext.getImageData(0, 0, width, height);
   const selected = new Uint8ClampedArray(original.data);
   const bounds = visibleBounds(original.data, width, height);
-  const eyeLanes = inferModelEyeLanes(original.data, width, height, bounds);
+  const semanticMask = buildModelColorSelectionMask(scope, original.data, width, height, bounds);
   let selectedPixels = 0;
   for (let index = 0; index < selected.length; index += 4) {
     const pixel = index / 4;
     const x = pixel % width;
     const y = Math.floor(pixel / width);
-    if (isModelColorPixel(scope, selected[index], selected[index + 1], selected[index + 2], selected[index + 3], { x, y, bounds, eyeLanes })) {
+    if (semanticMask[pixel]) {
       selectedPixels += 1;
     } else {
       selected[index + 3] = 0;
