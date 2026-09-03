@@ -2,7 +2,7 @@ import type { ColorAdjustment, ModelColorScope } from "./character-contract";
 import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
 import { buildModelColorSelectionMask } from "./model-color-selection.mjs";
 import { modelColorCalibrationSignature } from "./model-color-calibration.mjs";
-import type { ModelColorCalibration } from "./model-color-calibration";
+import type { ModelColorCalibration } from "./model-color-calibration-storage";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 

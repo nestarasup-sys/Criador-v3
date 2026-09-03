@@ -13,7 +13,7 @@ import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
 import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
-import { getStoredModelColorCalibration } from "../domain/model-color-calibration";
+import { getStoredModelColorCalibration } from "../domain/model-color-calibration-storage";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
