@@ -3,6 +3,7 @@ import { normalizeBasePackId } from "../domain/base-model.mjs";
 import type { ExpressionKey } from "../domain/expression-contract";
 import { NEW_BASE_EXPRESSION_KEYS, STANDARD_BASE_EXPRESSION_KEYS } from "../domain/expression-contract";
 import type { ModelColorMapMetadata } from "../domain/model-color-map.mjs";
+import { modelColorMapSource } from "../domain/model-color-map.mjs";
 
 export type BasePackDefinition = {
   id: BasePackId;
@@ -42,6 +43,12 @@ export function getBasePack(packs: BasePackCollection, model: Model, packId?: Ba
 
 export function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
   const source = `${pack.source}/${encodeURIComponent(key)}.png`;
+  return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
+}
+
+export function baseExpressionColorMapSource(pack: BasePackDefinition, key: ExpressionKey) {
+  const source = modelColorMapSource(pack.source, key, pack.colorMap);
+  if (!source) return null;
   return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
 }
 

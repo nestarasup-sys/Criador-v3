@@ -12,12 +12,12 @@ import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
-import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
+import { createModelColorAdjustedCanvasForScopes, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
 import { getStoredModelColorCalibration } from "../domain/model-color-calibration-storage";
+import { baseExpressionColorMapSource } from "../creator/base-packs";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
-import type { ModelColorScope } from "../domain/character-contract";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -126,12 +126,14 @@ function createMask(strokes: MaskStroke[], width: number, height: number) {
 
 type DiscoveredModelPack = {
   id: string;
+  expressionKeys?: string[];
   source?: string;
   version?: string;
   type?: "full-body" | "head-only";
   anchor?: "neck-base";
   anchorX?: number;
   anchorY?: number;
+  colorMap?: { version: 1; format: "rgb-weights"; directory: string; channels: { red: "pupils"; green: "brows"; blue: "skin" }; expressions: string[] };
 };
 
 function expressionSource(
@@ -316,14 +318,16 @@ export async function renderStudioCharacter(
   if (bodyContext) {
     const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
-    const modelColorScope = normalizeModelColorScope(character.modelColorScope) as ModelColorScope;
     const modelColorCalibration = getStoredModelColorCalibration(character.model, activePackId);
-    const adjustedBase = createModelColorAdjustedCanvas(
+    const mapKey = discoveredPack?.expressionKeys?.includes?.(key) ? key : "normal";
+    const mapSource = discoveredPack ? baseExpressionColorMapSource(discoveredPack as Parameters<typeof baseExpressionColorMapSource>[0], mapKey) : null;
+    const modelColorMap = mapSource ? await loadStudioImage(mapSource).catch(() => null) : null;
+    const adjustedBase = createModelColorAdjustedCanvasForScopes(
       base,
       base.width,
       base.height,
-      modelColors[modelColorScope],
-      modelColorScope,
+      modelColors,
+      modelColorMap,
       modelColorCalibration,
       baseSource,
     );

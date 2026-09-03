@@ -13,6 +13,7 @@ import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
 import { collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
+import { normalizeModelColorMapMetadata } from "./app/domain/model-color-map.mjs";
 import {
   BODY_LIMITS,
   IMAGE_MIME_TYPES,
@@ -448,6 +449,7 @@ async function discoverModels() {
       if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));
+      const colorMap = normalizeModelColorMapMetadata(config?.colorMap);
       const inferredLayout = config?.type === "head-only"
         ? null
         : await inferHeadOnlyLayout(folder, pngFiles);
@@ -478,6 +480,7 @@ async function discoverModels() {
           anchorX: Number.isFinite(config?.anchorX) ? Number(config.anchorX) : inferredLayout?.anchorX,
           anchorY: Number.isFinite(config?.anchorY) ? Number(config.anchorY) : inferredLayout?.anchorY,
         } : {}),
+        ...(colorMap ? { colorMap } : {}),
       });
     }
   }

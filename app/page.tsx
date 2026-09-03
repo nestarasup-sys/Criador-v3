@@ -20,10 +20,10 @@ import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
-import { createModelColorAdjustedCanvas, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
+import { createModelColorAdjustedCanvasForScopes, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
 import { MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, emptyModelColorCalibration, modelColorCalibrationKey, parseModelColorCalibrations, type ModelColorCalibration, type ModelColorCalibrationSeed } from "./domain/model-color-calibration-storage";
 import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseModelColorDefaults, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
-import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
+import { basePackCacheKey, baseExpressionColorMapSource, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
   deleteCatalogItem,
   deleteBaseModelFromPc,
@@ -1701,6 +1701,8 @@ export default function Home() {
     const renderBasePackIsHeadOnly = renderBasePack.type === "head-only" && renderBasePack.anchor === "neck-base";
     const renderBasePackAnchorX = renderBasePack.anchorX;
     const renderBasePackAnchorY = renderBasePack.anchorY;
+    const renderModelColorMapSource = baseExpressionColorMapSource(renderBasePack, renderModelColorExpressionKey);
+    const renderModelColorMap = renderModelColorMapSource ? await loadImage(renderModelColorMapSource).catch(() => null) : null;
     const canvas = document.createElement("canvas");
     canvas.width = 1920;
     canvas.height = 1080;
@@ -1860,12 +1862,12 @@ export default function Home() {
       const sourceWidth = baseImage.naturalWidth || canvas.width;
       const sourceHeight = baseImage.naturalHeight || canvas.height;
       const modelColor = normalizeModelColorAdjustments(modelColorAdjustments);
-      let adjustedBase: CanvasImageSource = createModelColorAdjustedCanvas(
+      let adjustedBase: CanvasImageSource = createModelColorAdjustedCanvasForScopes(
           baseImage,
           sourceWidth,
           sourceHeight,
-          modelColor[modelColorScope],
-          modelColorScope,
+          modelColor,
+          renderModelColorMap,
           modelColorCalibration,
           renderModelColorSourceKey,
         );
