@@ -148,7 +148,10 @@ function regionOfInterest(scope, seed, bounds, width, height, x, y) {
   const dx = (x - seed.x) / width;
   const dy = (y - seed.y) / height;
   if (scope === "pupils") {
-    return (dx / .035) ** 2 + (dy / .04) ** 2 <= 1;
+    // Keep the pupil ROI deliberately tighter than the complete eye. The
+    // click is placed inside the pigment, so there is no reason to include
+    // the long lash line or the eye contour around it.
+    return (dx / .013) ** 2 + (dy / .018) ** 2 <= 1;
   }
   if (scope === "brows") {
     return (dx / .09) ** 2 + (dy / .042) ** 2 <= 1;
