@@ -1,6 +1,8 @@
 import type { ColorAdjustment, ModelColorScope } from "./character-contract";
 import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
 import { buildModelColorSelectionMask } from "./model-color-selection.mjs";
+import { modelColorCalibrationSignature } from "./model-color-calibration.mjs";
+import type { ModelColorCalibration } from "./model-color-calibration.mjs";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
@@ -22,13 +24,25 @@ function visibleBounds(data: Uint8ClampedArray, width: number, height: number) {
   return { minX, minY, maxX, maxY };
 }
 
+const modelMaskCache = new Map<string, HTMLCanvasElement | null>();
+const MAX_MODEL_MASK_CACHE = 96;
+
+function modelMaskCacheKey(sourceKey: string | undefined, width: number, height: number, scope: ModelColorScope, calibration: ModelColorCalibration | null | undefined) {
+  if (!sourceKey) return null;
+  return `${sourceKey}|${width}x${height}|${scope}|${modelColorCalibrationSignature(calibration)}`;
+}
+
 /** Builds the exact semantic mask used by the model recolor pipeline. */
 export function createModelColorMaskCanvas(
   image: CanvasImageSource,
   width: number,
   height: number,
   scope: ModelColorScope,
+  calibration: ModelColorCalibration | null = null,
+  sourceKey?: string,
 ) {
+  const cacheKey = modelMaskCacheKey(sourceKey, width, height, scope, calibration);
+  if (cacheKey && modelMaskCache.has(cacheKey)) return modelMaskCache.get(cacheKey) ?? null;
   const source = document.createElement("canvas");
   source.width = width;
   source.height = height;
@@ -38,21 +52,26 @@ export function createModelColorMaskCanvas(
   const original = sourceContext.getImageData(0, 0, width, height);
   const selected = new Uint8ClampedArray(original.data);
   const bounds = visibleBounds(original.data, width, height);
-  const semanticMask = buildModelColorSelectionMask(scope, original.data, width, height, bounds);
+  const semanticMask = buildModelColorSelectionMask(scope, original.data, width, height, bounds, calibration);
   let selectedPixels = 0;
   for (let index = 0; index < selected.length; index += 4) {
     const pixel = index / 4;
-    const x = pixel % width;
-    const y = Math.floor(pixel / width);
     if (semanticMask[pixel]) {
       selectedPixels += 1;
     } else {
       selected[index + 3] = 0;
     }
   }
-  if (!selectedPixels) return null;
+  if (!selectedPixels) {
+    if (cacheKey) modelMaskCache.set(cacheKey, null);
+    return null;
+  }
   sourceContext.clearRect(0, 0, width, height);
   sourceContext.putImageData(new ImageData(selected, width, height), 0, 0);
+  if (cacheKey) {
+    modelMaskCache.set(cacheKey, source);
+    while (modelMaskCache.size > MAX_MODEL_MASK_CACHE) modelMaskCache.delete(modelMaskCache.keys().next().value!);
+  }
   return source;
 }
 
@@ -68,10 +87,12 @@ export function createModelColorAdjustedCanvas(
   height: number,
   adjustment: Partial<ColorAdjustment> | null | undefined,
   scope: ModelColorScope,
+  calibration: ModelColorCalibration | null = null,
+  sourceKey?: string,
 ): CanvasImageSource {
   const color = normalizeColorAdjustment(adjustment);
   if (!colorAdjustmentIsActive(color)) return image;
-  const selectedCanvas = createModelColorMaskCanvas(image, width, height, scope);
+  const selectedCanvas = createModelColorMaskCanvas(image, width, height, scope, calibration, sourceKey);
   if (!selectedCanvas) return image;
   const adjusted = createColorAdjustedCanvas(selectedCanvas, width, height, color);
   const adjustedContext = adjusted instanceof HTMLCanvasElement ? adjusted.getContext("2d", { willReadFrequently: true }) : null;

@@ -9,6 +9,8 @@ const DEFAULT_COLOR_ADJUSTMENT = {
   detailPreservation: 78,
 };
 
+import { buildCalibratedModelColorSelectionMask, modelColorCalibrationHasScope } from "./model-color-calibration.mjs";
+
 const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 const clamp = (value, min, max, fallback) => Math.max(min, Math.min(max, finite(value, fallback)));
 
@@ -558,10 +560,13 @@ function componentBelongsToScope(component, scope, bounds) {
  * and brows form coherent regions, while outlines and facial washes have a
  * different shape and are discarded before recoloring.
  */
-export function buildModelColorSelectionMask(scope, data, width, height, visibleBounds) {
+export function buildModelColorSelectionMask(scope, data, width, height, visibleBounds, calibration = null) {
   const normalizedScope = normalizeModelColorScope(scope);
   const mask = new Uint8Array(width * height);
   if (visibleBounds.maxX < visibleBounds.minX || visibleBounds.maxY < visibleBounds.minY) return mask;
+  if (modelColorCalibrationHasScope(calibration, normalizedScope)) {
+    return buildCalibratedModelColorSelectionMask(normalizedScope, data, width, height, visibleBounds, calibration);
+  }
   const bounds = semanticBoundsFor(normalizedScope, visibleBounds, data, width, height);
   if (normalizedScope === "skin") {
     for (let y = bounds.minY; y <= Math.min(height - 1, bounds.maxY); y += 1) {
