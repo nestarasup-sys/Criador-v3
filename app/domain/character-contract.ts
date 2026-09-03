@@ -23,7 +23,7 @@ export type ColorAdjustment = {
   contrast: number;
   /** Amount of source shading and texture retained by tonal recoloring. */
   detailPreservation: number;
-  /** Espaço perceptual usado pela tonalização direta; dados antigos usam OKLCH após normalização. */
+  /** Espaço usado pela tonalização direta; novos ajustes usam OKLCH. */
   colorSpace?: "hsl" | "oklch";
 };
 

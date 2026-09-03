@@ -10,7 +10,7 @@ export const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = {
   tintStrength: 0,
   contrast: 100,
   detailPreservation: 78,
-  colorSpace: "hsl",
+  colorSpace: "oklch",
 };
 
 function finite(value: unknown, fallback: number) {
@@ -36,7 +36,9 @@ export function normalizeColorAdjustment(value?: Partial<ColorAdjustment> | null
     tintStrength: clamp(value?.tintStrength, 0, 100, DEFAULT_COLOR_ADJUSTMENT.tintStrength),
     contrast: clamp(value?.contrast, 0, 250, DEFAULT_COLOR_ADJUSTMENT.contrast),
     detailPreservation: clamp(value?.detailPreservation, 0, 100, DEFAULT_COLOR_ADJUSTMENT.detailPreservation),
-    colorSpace: value?.colorSpace === "oklch" ? "oklch" : "hsl",
+    // New adjustments use the perceptual path. Explicit legacy HSL values
+    // remain supported so existing characters do not lose their saved mode.
+    colorSpace: value?.colorSpace === "hsl" ? "hsl" : "oklch",
   };
 }
 
