@@ -537,6 +537,8 @@ test("enquadra a cena entre os painéis laterais sem alterar o canvas lógico", 
   assert.match(css, /\.stageViewport \{[^}]*right: var\(--studio-safe-right/);
   assert.match(css, /left: var\(--studio-safe-left/);
   assert.match(css, /\.inspectorDock \{[\s\S]*position: fixed/);
+  assert.match(css, /\.inspectorDock \{[\s\S]*justify-content: flex-end/);
+  assert.match(css, /\.rightArea\.dockLeft \.inspectorDock \{[\s\S]*justify-content: flex-start/);
   assert.match(css, /\.inspectorDock > \.inspector \{[\s\S]*pointer-events: auto/);
 });
 

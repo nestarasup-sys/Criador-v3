@@ -716,7 +716,7 @@
   left: calc(var(--studio-safe-left, 0px) + 14px);
   width: auto;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: flex-start;
   pointer-events: none;
   transform: none;
@@ -735,6 +735,7 @@
   bottom: auto;
   left: calc(var(--studio-safe-left, 0px) + 14px);
   width: auto;
+  justify-content: flex-start;
   transform: none;
   pointer-events: none;
 }
