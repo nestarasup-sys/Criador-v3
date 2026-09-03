@@ -342,8 +342,15 @@ export function calculateHeadFit(
   // geometric span that projectHeadMeasurement uses.
   const sourceHeadWidth = Math.max(1, source.right - source.left);
   const targetHeadWidth = Math.max(1, target.right - target.left);
-  const sourceHeadHeight = Math.max(1, source.bottom - source.top);
-  const targetHeadHeight = Math.max(1, target.bottom - target.top);
+  // A roupa inteira recebe este transform.  Para a altura, a referência
+  // correta é o intervalo estrutural topo → base do pescoço, não o último
+  // pixel detectado do recorte.  Alguns assets têm gola, sombra ou um
+  // fragmento do tronco abaixo da cabeça; usar `bottom` nesses casos faz o
+  // topo coincidir, mas deixa o pescoço divergente conforme a roupa desce.
+  const sourceStructuralBottom = source.neckY ?? source.bottom;
+  const targetStructuralBottom = target.neckY ?? target.bottom;
+  const sourceHeadHeight = Math.max(1, sourceStructuralBottom - source.top);
+  const targetHeadHeight = Math.max(1, targetStructuralBottom - target.top);
   const contourReference = !useNeckReference ? robustContourReference(source, target) : null;
   const scaleX = clamp(
     useNeckReference

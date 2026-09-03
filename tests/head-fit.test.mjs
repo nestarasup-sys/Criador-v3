@@ -63,6 +63,31 @@ test("mapeia exatamente as quatro bordas da cabeça ao calcular o encaixe", () =
   close(projected.bottom, target.bottom);
 });
 
+test("calcula a altura global pelo topo até a base estrutural do pescoço", () => {
+  const source = {
+    left: 20,
+    right: 120,
+    top: 40,
+    bottom: 240,
+    neckY: 140,
+    width: 101,
+    height: 221,
+    centerX: 70,
+  };
+  const target = {
+    left: 100,
+    right: 200,
+    top: 40,
+    bottom: 260,
+    neckY: 240,
+    width: 101,
+    height: 221,
+    centerX: 150,
+  };
+  const fit = calculateHeadFit(source, target, { width: 320, height: 560, defaultX: 160, defaultY: 280 });
+  assert.equal(fit.scaleY, 2, "a escala deve considerar topo→pescoço, não o fragmento abaixo do pescoço");
+});
+
 test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
   const contour = (leftOffset, rightOffset) => Array.from({ length: 101 }, (_, y) => ({
     y,
