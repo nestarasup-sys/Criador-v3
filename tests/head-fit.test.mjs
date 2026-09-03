@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
 import test from "node:test";
-import { calculateHeadFit, measureHeadSilhouette, projectHeadMeasurement } from "../app/creator/head-fit.ts";
+import { calculateHeadFit, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "../app/creator/head-fit.ts";
 
 function profileImage({ width = 320, height = 560, top = 20, profile }) {
   const pixels = new Uint8ClampedArray(width * height * 4);
@@ -48,6 +48,26 @@ test("recusa roupa sem cabeça em vez de medir o tronco como se fosse cabeça", 
     },
   });
   assert.equal(measureHeadSilhouette(image.pixels, image.width, image.height, 0.46, true), null);
+});
+
+test("mede a abertura interna do cabelo em vez da silhueta externa", () => {
+  const width = 320;
+  const height = 240;
+  const pixels = new Uint8ClampedArray(width * height * 4);
+  for (let y = 0; y < height; y += 1) {
+    const runs = y < 34 ? [[32, 288]] : [[18, 104], [216, 302]];
+    for (const [left, right] of runs) {
+      for (let x = left; x <= right; x += 1) pixels[(y * width + x) * 4 + 3] = 255;
+    }
+  }
+
+  const result = measureHairOpening(pixels, width, height);
+  assert.ok(result, "a abertura interna deveria ser detectada");
+  assert.equal(result.kind, "hair-opening");
+  assert.equal(result.top, 34, "o topo deve começar abaixo da franja sólida");
+  assert.equal(result.left, 105, "a lateral esquerda deve vir da borda interna");
+  assert.equal(result.right, 215, "a lateral direita deve vir da borda interna");
+  assert.ok(result.width < 130, "o volume externo não pode definir a largura");
 });
 
 test("mapeia exatamente as quatro bordas da cabeça ao calcular o encaixe", () => {

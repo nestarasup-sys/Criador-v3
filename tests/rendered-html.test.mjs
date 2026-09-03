@@ -797,6 +797,8 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(headFit, /HeadFitReference/);
   assert.match(headFit, /useNeckReference/);
   assert.match(headFit, /target\.centerX/);
+  assert.match(headFit, /measureHairOpening/);
+  assert.match(headFit, /abertura interna/);
   assert.match(page, /AUTOMATIC_HEAD_ERASE_SIDE_MARGIN/);
   assert.match(page, /adjustSelectedOutfitByHead\("head"\)/);
   assert.match(page, /adjustSelectedOutfitByHead\("neck"\)/);

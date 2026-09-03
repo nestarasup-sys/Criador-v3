@@ -33,6 +33,14 @@ export type HeadFitResult = {
 export type HeadFitProjection = HeadMeasurement;
 export type HeadFitReference = "head" | "neck";
 
+/**
+ * Medição da abertura interna de um cabelo frontal. Diferente da silhueta
+ * externa, esta referência representa o espaço vazio onde a cabeça entra.
+ */
+export type HairOpeningMeasurement = HeadMeasurement & {
+  kind: "hair-opening";
+};
+
 // Pequena folga para a roupa cobrir completamente o pescoço, sem deixar
 // frestas nas bordas por causa do antialiasing dos dois assets.
 const NECK_FIT_WIDTH_MARGIN = 1.02;
@@ -269,6 +277,138 @@ export function headContourPolygon(measurement: HeadMeasurement, horizontalMargi
     ...rows.map((row) => ({ x: row.left - sideMarginFor(row.y), y: row.y })),
     ...rows.slice().reverse().map((row) => ({ x: row.right + sideMarginFor(row.y), y: row.y })),
   ];
+}
+
+type AlphaRun = { left: number; right: number };
+type OpeningCandidate = { left: number; right: number; width: number; center: number };
+
+function alphaRunsAtRow(pixels: Uint8ClampedArray, width: number, y: number) {
+  const runs: AlphaRun[] = [];
+  let start = -1;
+  for (let x = 0; x < width; x += 1) {
+    const visible = pixels[(y * width + x) * 4 + 3] > 12;
+    if (visible && start < 0) start = x;
+    if ((!visible || x === width - 1) && start >= 0) {
+      const right = visible && x === width - 1 ? x : x - 1;
+      runs.push({ left: start, right });
+      start = -1;
+    }
+  }
+  return runs;
+}
+
+function openingCandidatesAtRow(runs: AlphaRun[], width: number) {
+  const minimumGap = Math.max(8, Math.round(width * 0.07));
+  const candidates: OpeningCandidate[] = [];
+  for (let index = 0; index < runs.length - 1; index += 1) {
+    const left = runs[index].right + 1;
+    const right = runs[index + 1].left - 1;
+    const gapWidth = right - left + 1;
+    if (gapWidth < minimumGap) continue;
+    // A gap touching the image edge is the transparent background, not the
+    // opening between the two sides of the hairstyle.
+    const edgeMargin = Math.max(2, Math.round(width * 0.04));
+    if (left <= edgeMargin || right >= width - 1 - edgeMargin) continue;
+    candidates.push({ left, right, width: gapWidth, center: (left + right) / 2 });
+  }
+  return candidates;
+}
+
+function chooseOpeningCandidate(candidates: OpeningCandidate[], previousCenter?: number) {
+  if (!candidates.length) return null;
+  const pool = previousCenter === undefined
+    ? candidates
+    : candidates.filter((candidate) => Math.abs(candidate.center - previousCenter) <= Math.max(24, candidate.width * 0.9));
+  const usable = pool.length ? pool : candidates;
+  return usable.slice().sort((left, right) => {
+    if (previousCenter !== undefined) {
+      const distance = Math.abs(left.center - previousCenter) - Math.abs(right.center - previousCenter);
+      if (Math.abs(distance) > 2) return distance;
+    }
+    return right.width - left.width;
+  })[0];
+}
+
+/**
+ * Finds the transparent opening inside a frontal hairstyle.
+ *
+ * The opening must be bounded by visible hair on both sides and persist for
+ * several rows. This avoids treating the transparent page background, tiny
+ * holes between strands, or the outer silhouette as the head reference.
+ */
+export function measureHairOpening(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+): HairOpeningMeasurement | null {
+  if (width <= 0 || height <= 0 || pixels.length < width * height * 4) return null;
+
+  let contentTop = height;
+  let contentBottom = -1;
+  for (let index = 3; index < pixels.length; index += 4) {
+    if (pixels[index] <= 12) continue;
+    const pixel = (index - 3) / 4;
+    const y = Math.floor(pixel / width);
+    contentTop = Math.min(contentTop, y);
+    contentBottom = Math.max(contentBottom, y);
+  }
+  if (contentBottom < contentTop) return null;
+
+  const rows: Array<{ y: number; candidates: OpeningCandidate[] }> = [];
+  for (let y = contentTop; y <= contentBottom; y += 1) {
+    const candidates = openingCandidatesAtRow(alphaRunsAtRow(pixels, width, y), width);
+    rows.push({ y, candidates });
+  }
+
+  // The first valid gap must be sustained. This prevents a small triangular
+  // hole below a fringe from becoming the top of the head opening.
+  let startIndex = -1;
+  for (let index = 0; index < rows.length - 10; index += 1) {
+    const current = chooseOpeningCandidate(rows[index].candidates);
+    if (!current) continue;
+    let sustained = 0;
+    for (let offset = 0; offset < 12; offset += 1) {
+      const candidate = chooseOpeningCandidate(rows[index + offset].candidates, current.center);
+      if (candidate && Math.abs(candidate.center - current.center) <= Math.max(32, width * 0.16)) sustained += 1;
+    }
+    if (sustained >= 7) {
+      startIndex = index;
+      break;
+    }
+  }
+  if (startIndex < 0) return null;
+
+  const openingRows: HeadContourRow[] = [];
+  let previousCenter: number | undefined;
+  let missedRows = 0;
+  for (let index = startIndex; index < rows.length; index += 1) {
+    const candidate = chooseOpeningCandidate(rows[index].candidates, previousCenter);
+    if (!candidate) {
+      missedRows += 1;
+      if (missedRows > 5) break;
+      continue;
+    }
+    missedRows = 0;
+    previousCenter = candidate.center;
+    openingRows.push({ y: rows[index].y, left: candidate.left, right: candidate.right });
+  }
+  if (openingRows.length < 12) return null;
+
+  const top = openingRows[0].y;
+  const bottom = openingRows[openingRows.length - 1].y;
+  const left = Math.min(...openingRows.map((row) => row.left));
+  const right = Math.max(...openingRows.map((row) => row.right));
+  return {
+    kind: "hair-opening",
+    left,
+    right,
+    top,
+    bottom,
+    width: Math.max(1, right - left + 1),
+    height: Math.max(1, bottom - top + 1),
+    centerX: (left + right) / 2,
+    contour: openingRows,
+  };
 }
 
 function clamp(value: number, minimum: number, maximum: number) {

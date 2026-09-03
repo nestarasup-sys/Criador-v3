@@ -8,7 +8,7 @@ import { contentBounds, detectSheetRegions, mergeSceneBounds, transformedItemBou
 import type { DetectedOutfitRegion, ImageRegion, SceneBounds } from "./creator/image-processing";
 import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCanvasSet } from "./creator/canvas-processing";
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
-import { calculateHeadFit, headContourPolygon, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
+import { calculateHeadFit, headContourPolygon, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
 import type { HeadFitReference, HeadMeasurement } from "./creator/head-fit";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
@@ -3248,13 +3248,19 @@ export default function Home() {
     const hairId = selections[hairCategory];
     const hair = catalog.find((entry) => entry.id === hairId && entry.category === hairCategory);
     if (!hair?.url) return;
+    const pairedFrontHair = hairCategory === "cabelosTras"
+      ? catalog.find((entry) => entry.id === hair.linkedHairId && entry.category === "cabelos")
+      : hair;
+    const fitCategory: Category = pairedFrontHair ? "cabelos" : hairCategory;
+    const fitHair = pairedFrontHair ?? hair;
+    if (!fitHair.url) return;
     setIsProcessing(true);
     setNotice("Medindo o encaixe do cabelo no modelo…");
     try {
-      const hairWidth = hair.width ?? 0;
-      const hairHeight = hair.height ?? 0;
+      const hairWidth = fitHair.width ?? 0;
+      const hairHeight = fitHair.height ?? 0;
       if (!hairWidth || !hairHeight) throw new Error("Dimensões do cabelo indisponíveis");
-      const hairImage = await loadImage(hair.url);
+      const hairImage = await loadImage(fitHair.url);
       const hairCanvas = document.createElement("canvas");
       hairCanvas.width = hairWidth;
       hairCanvas.height = hairHeight;
@@ -3262,13 +3268,15 @@ export default function Home() {
       if (!hairContext) throw new Error("Canvas do cabelo indisponível");
       hairContext.clearRect(0, 0, hairWidth, hairHeight);
       hairContext.drawImage(hairImage, 0, 0, hairWidth, hairHeight);
-      const sourceHead = measureHeadSilhouette(
-        hairContext.getImageData(0, 0, hairWidth, hairHeight).data,
-        hairWidth,
-        hairHeight,
-        0.46,
-        false,
-      );
+      const hairPixels = hairContext.getImageData(0, 0, hairWidth, hairHeight).data;
+      const sourceHead = measureHairOpening(hairPixels, hairWidth, hairHeight)
+        ?? measureHeadSilhouette(
+          hairPixels,
+          hairWidth,
+          hairHeight,
+          0.46,
+          false,
+        );
       if (!sourceHead) throw new Error("Não foi possível identificar a área de encaixe deste cabelo");
 
       if (!processedBases.current[model]) {
@@ -3317,20 +3325,20 @@ export default function Home() {
       );
       if (!targetHead) throw new Error("Não foi possível localizar a cabeça do modelo");
 
-      const currentTransform = normalizeTransform(adjustments[hairCategory]);
+      const currentTransform = normalizeTransform(adjustments[fitCategory]);
       const fitted = normalizeTransform({
         ...calculateHeadFit(
           sourceHead,
           targetHead,
-          { width: hairWidth, height: hairHeight, defaultX: hair.defaultX, defaultY: hair.defaultY },
+          { width: hairWidth, height: hairHeight, defaultX: fitHair.defaultX, defaultY: fitHair.defaultY },
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           "head",
         ),
         rotation: currentTransform.rotation,
         flipX: currentTransform.flipX,
       });
-      const nextAdjustments = { ...adjustments, [hairCategory]: fitted };
-      const pairCategory: Category = hairCategory === "cabelos" ? "cabelosTras" : "cabelos";
+      const nextAdjustments = { ...adjustments, [fitCategory]: fitted };
+      const pairCategory: Category = fitCategory === "cabelos" ? "cabelosTras" : "cabelos";
       const pairId = selections[pairCategory];
       const pair = pairId ? catalog.find((entry) => entry.id === pairId && entry.category === pairCategory) : null;
       if (pair) {
@@ -3355,19 +3363,21 @@ export default function Home() {
         },
       }));
       setHeadFitGuide({
-        category: hairCategory,
+        category: fitCategory,
         source: sourceHead,
         target: targetHead,
         itemWidth: hairWidth,
         itemHeight: hairHeight,
-        defaultX: hair.defaultX,
-        defaultY: hair.defaultY,
+        defaultX: fitHair.defaultX,
+        defaultY: fitHair.defaultY,
         targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
       });
       setFitMode(true);
       setNotice(pair
-        ? "Cabelo ajustado pela cabeça; o par foi reposicionado junto e você ainda pode refinar manualmente."
-        : "Cabelo ajustado pela cabeça; você ainda pode refinar manualmente.");
+        ? "Cabelo ajustado pela abertura interna da cabeça; o par foi reposicionado junto e você ainda pode refinar manualmente."
+        : "kind" in sourceHead && sourceHead.kind === "hair-opening"
+          ? "Cabelo ajustado pela abertura interna da cabeça; você ainda pode refinar manualmente."
+          : "Abertura interna não detectada; cabelo ajustado pela silhueta externa. Você ainda pode refinar manualmente.");
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar o cabelo pela cabeça");
     } finally {
