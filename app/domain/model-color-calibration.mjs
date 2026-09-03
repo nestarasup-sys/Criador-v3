@@ -142,7 +142,9 @@ function hasTransparentNeighbor(data, width, height, x, y) {
 
 function isBlushLike(red, green, blue) {
   const { saturation, value } = hsv(red, green, blue);
-  return red > green * 1.16 && red > blue * 1.12 && saturation > .16 && value > .55;
+  // Keep warm skin (often around 235/199/184) while rejecting the stronger
+  // pink/red wash used by blush (typically much more red than green).
+  return red > green * 1.23 && red > blue * 1.16 && saturation > .2 && value > .55;
 }
 
 function isSkinLike(red, green, blue, alpha, sample) {
@@ -269,4 +271,3 @@ export function buildCalibratedModelColorSelectionMask(scope, data, width, heigh
   }
   return mask;
 }
-
