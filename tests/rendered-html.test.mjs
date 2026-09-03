@@ -253,6 +253,9 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /const \[back, front\] = await Promise\.all/);
   assert.match(page, /async function swapSelectedHairPair/);
   assert.match(page, /Inverter lados do par/);
+  assert.match(page, /async function adjustSelectedHairByHead/);
+  assert.match(page, /Ajustar cabelo/);
+  assert.match(page, /preservando o volume externo/);
   assert.match(page, /async function prepareHairPairSheet/);
   assert.match(page, /async function importFrontHairItem/);
   assert.match(page, /async function importHairPairSheet/);
