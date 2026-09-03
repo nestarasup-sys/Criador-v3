@@ -17,7 +17,6 @@ import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader"
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
-import { drawImageWithHeadFit } from "./creator/head-fit-render";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
@@ -159,10 +158,6 @@ const SCENE_PADDING = { x: 960, y: 540 };
 
 function normalizeTransform(transform?: Partial<ItemTransform>): ItemTransform {
   return { ...DEFAULT_TRANSFORM, ...transform };
-}
-
-function headFitSource(measurement: HeadMeasurement) {
-  return { ...measurement, contour: measurement.contour ?? [] };
 }
 
 function emptyAdjustments(): Record<Category, ItemTransform> {
@@ -1754,14 +1749,14 @@ export default function Home() {
       layerContext.save();
       layerContext.globalCompositeOperation = "source-over";
       layerContext.globalAlpha = 1;
-      if (editingPreview && fitMode && editable) layerContext.globalAlpha = fitOpacity / 100;
-      drawImageWithHeadFit(
-        layerContext,
-        renderSource,
-        { width, height, defaultX: centerX, defaultY: centerY },
-        transform,
-        SCENE_PADDING,
+      layerContext.translate(SCENE_PADDING.x + centerX + transform.x, SCENE_PADDING.y + centerY + transform.y);
+      layerContext.rotate((transform.rotation * Math.PI) / 180);
+      layerContext.scale(
+        transform.scale * (transform.scaleX ?? 1) * (transform.flipX ? -1 : 1),
+        transform.scale * (transform.scaleY ?? 1),
       );
+      if (editingPreview && fitMode && editable) layerContext.globalAlpha = fitOpacity / 100;
+      layerContext.drawImage(renderSource, -width / 2, -height / 2, width, height);
       if (editingPreview && fitMode && editable) {
         layerContext.globalAlpha = 1;
         layerContext.strokeStyle = "#7257d9";
@@ -3078,9 +3073,6 @@ export default function Home() {
       if (!sourceHead) {
         throw new Error("Esta roupa não possui uma cabeça detectável; ajuste manualmente pelo decote e pelo pescoço. O corpo não será deformado.");
       }
-      if (!sourceHead.contour?.length) {
-        throw new Error("Não foi possível identificar o contorno completo da cabeça da roupa; ajuste manualmente.");
-      }
 
       // Use a expressão normal do modelo atual como referência estável. A
       // roupa continua sendo ajustada apenas no personagem/modelo selecionado;
@@ -3152,40 +3144,10 @@ export default function Home() {
         : undefined,
         reference,
       );
-      const currentOutfitTransform = normalizeTransform(adjustments.roupas);
-      const { headFit: _previousHeadFit, ...bodyTransform } = currentOutfitTransform;
-      void _previousHeadFit;
-      const currentBodyHead = projectHeadMeasurement(
-        sourceHead,
-        {
-          width: outfitWidth,
-          height: outfitHeight,
-          defaultX: selectedOutfit.defaultX,
-          defaultY: selectedOutfit.defaultY,
-        },
-        bodyTransform,
-      );
-      const targetReferenceX = reference === "neck"
-        ? targetHead.neckCenterX ?? targetHead.centerX
-        : targetHead.centerX;
-      const sourceReferenceX = reference === "neck"
-        ? currentBodyHead.neckCenterX ?? currentBodyHead.centerX
-        : currentBodyHead.centerX;
-      const alignedBodyTransform = {
-        ...bodyTransform,
-        x: +(bodyTransform.x + targetReferenceX - sourceReferenceX).toFixed(2),
-        y: +(bodyTransform.y + targetHead.top - currentBodyHead.top).toFixed(2),
-      };
       const nextTransform = normalizeTransform({
-        ...alignedBodyTransform,
-        headFit: {
-          source: headFitSource(sourceHead),
-          transform: {
-            ...fitted,
-            rotation: currentOutfitTransform.rotation,
-            flipX: currentOutfitTransform.flipX,
-          },
-        },
+        ...fitted,
+        rotation: adjustments.roupas.rotation,
+        flipX: adjustments.roupas.flipX,
       });
       const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
       const skippedVariants: string[] = [];
@@ -3223,11 +3185,6 @@ export default function Home() {
           skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
           continue;
         }
-        if (!variantHead.contour?.length) {
-          skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
-          continue;
-        }
-
         const variantKey = outfitStateKey(variant.id, basePackId);
         const existingVariantTransform = variant.id === selectedOutfit.id
           ? adjustments.roupas
@@ -3248,39 +3205,10 @@ export default function Home() {
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           reference,
         );
-        const { headFit: _variantHeadFit, ...variantBodyTransform } = existingVariantTransform;
-        void _variantHeadFit;
-        const currentVariantHead = projectHeadMeasurement(
-          variantHead,
-          {
-            width: variantWidth,
-            height: variantHeight,
-            defaultX: variant.defaultX,
-            defaultY: variant.defaultY,
-          },
-          variantBodyTransform,
-        );
-        const variantTargetReferenceX = reference === "neck"
-          ? targetHead.neckCenterX ?? targetHead.centerX
-          : targetHead.centerX;
-        const variantSourceReferenceX = reference === "neck"
-          ? currentVariantHead.neckCenterX ?? currentVariantHead.centerX
-          : currentVariantHead.centerX;
-        const alignedVariantBodyTransform = {
-          ...variantBodyTransform,
-          x: +(variantBodyTransform.x + variantTargetReferenceX - variantSourceReferenceX).toFixed(2),
-          y: +(variantBodyTransform.y + targetHead.top - currentVariantHead.top).toFixed(2),
-        };
         variantTransforms[variantKey] = normalizeTransform({
-          ...alignedVariantBodyTransform,
-          headFit: {
-            source: headFitSource(variantHead),
-            transform: {
-              ...variantFit,
-              rotation: existingVariantTransform.rotation,
-              flipX: existingVariantTransform.flipX,
-            },
-          },
+          ...variantFit,
+          rotation: existingVariantTransform.rotation,
+          flipX: existingVariantTransform.flipX,
         });
       }
       setHeadFitGuide({

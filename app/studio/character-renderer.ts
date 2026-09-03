@@ -16,7 +16,6 @@ import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normali
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
-import { drawImageWithHeadFit } from "../creator/head-fit-render";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -159,7 +158,6 @@ function normalizedTransform(transform?: Partial<ItemTransform>): ItemTransform 
     scaleY: transform?.scaleY ?? 1,
     rotation: transform?.rotation ?? 0,
     flipX: transform?.flipX ?? false,
-    ...(transform?.headFit ? { headFit: transform.headFit } : {}),
   };
 }
 
@@ -263,13 +261,11 @@ export async function renderStudioCharacter(
     target.save();
     target.globalCompositeOperation = "source-over";
     target.globalAlpha = 1;
-    drawImageWithHeadFit(
-      target,
-      renderImage,
-      { width, height, defaultX: centerX, defaultY: centerY },
-      transform,
-      PADDING,
-    );
+    target.translate(PADDING.x + centerX + transform.x, PADDING.y + centerY + transform.y);
+    target.rotate(transform.rotation * Math.PI / 180);
+    target.scale(transform.scale * transform.scaleX * (transform.flipX ? -1 : 1), transform.scale * transform.scaleY);
+    target.drawImage(renderImage, -width / 2, -height / 2, width, height);
+    target.restore();
     if (layer) {
       target.save();
       target.globalCompositeOperation = "destination-in";
