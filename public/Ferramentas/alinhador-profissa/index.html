@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V5.3.3.2 Canonical Head — Alinhador de Expressões</title>
+<title>V5.3.3.3 Canonical Head — Alinhador de Expressões</title>
 
 <style>
 :root{
@@ -436,7 +436,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 <body>
 <div class="app">
 <aside class="sidebar">
-  <h1>V5.3.3.2 Canonical Head</h1>
+  <h1>V5.3.3.3 Canonical Head</h1>
   <div class="small">Formato mediano + preservação forte do rosto interno. Agora com modo opcional para imagem já sem fundo.</div>
 
   <div class="card">
@@ -538,7 +538,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 Pasta: modelo-13
 JSON: modelo-13.json
 42 PNGs separados
-Set B atualizado: deboche_sonso / desacreditado
+Set B: deboche / provocando / desacreditado / impressionado_v2 / corado / impressionado / culpado
     </div>
 
     <button id="chooseModelsDir">Escolher / trocar pasta de modelos</button>
@@ -1508,13 +1508,13 @@ const MODEL_EXPORT={
       "irritado"
     ],
     B:[
-      "deboche_sonso",
+      "deboche",
       "provocando",
       "desacreditado",
-      "coracao_partido",
+      "impressionado_v2",
       "corado",
-      "chocado_com_revelacao",
-      "culpado_escondendo_algo"
+      "impressionado",
+      "culpado"
     ]
   },
   variants:["","_blink","_talk"]
@@ -1908,7 +1908,7 @@ function init(){
 
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});
   window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V5.3.3.2 iniciada. Visual modernizado; lógica preservada da V5.3.3.");
+  log("V5.3.3.3 iniciada. Visual modernizado; lógica preservada da V5.3.3.");
 }
 init();
 </script>
