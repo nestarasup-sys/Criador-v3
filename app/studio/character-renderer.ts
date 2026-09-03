@@ -12,7 +12,7 @@ import { estimateChromaKey } from "../chroma-processing.mjs";
 import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
-import { createModelColorAdjustedCanvasForScopes, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
+import { createModelColorAdjustedCanvasForScopes, normalizeModelColorAdjustments } from "../domain/model-color-rendering";
 import { getStoredModelColorCalibration } from "../domain/model-color-calibration-storage";
 import { baseExpressionColorMapSource } from "../creator/base-packs";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
