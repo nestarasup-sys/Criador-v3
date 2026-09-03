@@ -3155,8 +3155,29 @@ export default function Home() {
       const currentOutfitTransform = normalizeTransform(adjustments.roupas);
       const { headFit: _previousHeadFit, ...bodyTransform } = currentOutfitTransform;
       void _previousHeadFit;
-      const nextTransform = normalizeTransform({
+      const currentBodyHead = projectHeadMeasurement(
+        sourceHead,
+        {
+          width: outfitWidth,
+          height: outfitHeight,
+          defaultX: selectedOutfit.defaultX,
+          defaultY: selectedOutfit.defaultY,
+        },
+        bodyTransform,
+      );
+      const targetReferenceX = reference === "neck"
+        ? targetHead.neckCenterX ?? targetHead.centerX
+        : targetHead.centerX;
+      const sourceReferenceX = reference === "neck"
+        ? currentBodyHead.neckCenterX ?? currentBodyHead.centerX
+        : currentBodyHead.centerX;
+      const alignedBodyTransform = {
         ...bodyTransform,
+        x: +(bodyTransform.x + targetReferenceX - sourceReferenceX).toFixed(2),
+        y: +(bodyTransform.y + targetHead.top - currentBodyHead.top).toFixed(2),
+      };
+      const nextTransform = normalizeTransform({
+        ...alignedBodyTransform,
         headFit: {
           source: headFitSource(sourceHead),
           transform: {
@@ -3229,8 +3250,29 @@ export default function Home() {
         );
         const { headFit: _variantHeadFit, ...variantBodyTransform } = existingVariantTransform;
         void _variantHeadFit;
-        variantTransforms[variantKey] = normalizeTransform({
+        const currentVariantHead = projectHeadMeasurement(
+          variantHead,
+          {
+            width: variantWidth,
+            height: variantHeight,
+            defaultX: variant.defaultX,
+            defaultY: variant.defaultY,
+          },
+          variantBodyTransform,
+        );
+        const variantTargetReferenceX = reference === "neck"
+          ? targetHead.neckCenterX ?? targetHead.centerX
+          : targetHead.centerX;
+        const variantSourceReferenceX = reference === "neck"
+          ? currentVariantHead.neckCenterX ?? currentVariantHead.centerX
+          : currentVariantHead.centerX;
+        const alignedVariantBodyTransform = {
           ...variantBodyTransform,
+          x: +(variantBodyTransform.x + variantTargetReferenceX - variantSourceReferenceX).toFixed(2),
+          y: +(variantBodyTransform.y + targetHead.top - currentVariantHead.top).toFixed(2),
+        };
+        variantTransforms[variantKey] = normalizeTransform({
+          ...alignedVariantBodyTransform,
           headFit: {
             source: headFitSource(variantHead),
             transform: {
