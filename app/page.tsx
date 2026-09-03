@@ -1415,11 +1415,6 @@ export default function Home() {
   const activeExpressionKey = (expressionState === "default"
     ? expressionEmotion
     : `${expressionEmotion}_${expressionState}`) as ExpressionKey;
-  const activeModelColorExpressionKey = activeBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
-  const activeModelColorSourceKey = baseExpressionSource(activeBasePack, activeModelColorExpressionKey);
-  const activeBasePackIsHeadOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
-  const activeBasePackAnchorXValue = activeBasePack.anchorX;
-  const activeBasePackAnchorYValue = activeBasePack.anchorY;
   const activeOutfitStateKey = outfitStateKey(selections.roupas, basePackId);
   const modelColorCalibration = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -1700,6 +1695,12 @@ export default function Home() {
     const renderProtectionMasks = variantStateKey && outfitProtectionMasksByBasePack[variantStateKey]
       ? { ...protectionMasks, roupas: outfitProtectionMasksByBasePack[variantStateKey] }
       : protectionMasks;
+    const renderBasePack = getBasePack(basePacks, model, basePackId);
+    const renderModelColorExpressionKey = renderBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
+    const renderModelColorSourceKey = baseExpressionSource(renderBasePack, renderModelColorExpressionKey);
+    const renderBasePackIsHeadOnly = renderBasePack.type === "head-only" && renderBasePack.anchor === "neck-base";
+    const renderBasePackAnchorX = renderBasePack.anchorX;
+    const renderBasePackAnchorY = renderBasePack.anchorY;
     const canvas = document.createElement("canvas");
     canvas.width = 1920;
     canvas.height = 1080;
@@ -1866,11 +1867,11 @@ export default function Home() {
           modelColor[modelColorScope],
           modelColorScope,
           modelColorCalibration,
-          activeModelColorSourceKey,
+          renderModelColorSourceKey,
         );
       if (previewMode === "before") adjustedBase = baseImage;
       if (previewMode === "mask" && category === "rostos" && faceMode === "base") {
-        const selectedMask = createModelColorMaskCanvas(baseImage, sourceWidth, sourceHeight, modelColorScope, modelColorCalibration, activeModelColorSourceKey);
+        const selectedMask = createModelColorMaskCanvas(baseImage, sourceWidth, sourceHeight, modelColorScope, modelColorCalibration, renderModelColorSourceKey);
         if (selectedMask) {
           const maskCanvas = document.createElement("canvas");
           maskCanvas.width = sourceWidth;
@@ -1888,15 +1889,15 @@ export default function Home() {
         }
       }
       const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
-      const headOnly = activeBasePackIsHeadOnly;
+      const headOnly = renderBasePackIsHeadOnly;
       if (headOnly) {
         // The anchor is expressed in the model's original 1920×1080 canvas.
         // Keep the native canvas and translate only when a future model uses
         // a different source size; this avoids bottom-centering a head-only PNG.
-        const sourceAnchorX = activeBasePackAnchorXValue ?? sourceWidth / 2;
-        const sourceAnchorY = activeBasePackAnchorYValue ?? sourceHeight;
-        const targetAnchorX = activeBasePackAnchorXValue ?? canvas.width / 2;
-        const targetAnchorY = activeBasePackAnchorYValue ?? canvas.height;
+        const sourceAnchorX = renderBasePackAnchorX ?? sourceWidth / 2;
+        const sourceAnchorY = renderBasePackAnchorY ?? sourceHeight;
+        const targetAnchorX = renderBasePackAnchorX ?? canvas.width / 2;
+        const targetAnchorY = renderBasePackAnchorY ?? canvas.height;
         bodyContext.drawImage(debugBody,
           SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
           SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
@@ -1994,7 +1995,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePackAnchorXValue, activeBasePackAnchorYValue, activeBasePackIsHeadOnly, activeExpressionKey, activeExpressionPack, activeModelColorSourceKey, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -3335,7 +3336,7 @@ export default function Home() {
       if (!referenceContext) throw new Error("Canvas do modelo indisponível");
       const sourceWidth = baseImage.naturalWidth || referenceCanvas.width;
       const sourceHeight = baseImage.naturalHeight || referenceCanvas.height;
-      const headOnly = activeBasePackIsHeadOnly;
+      const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
       if (headOnly) {
         const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
         const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
