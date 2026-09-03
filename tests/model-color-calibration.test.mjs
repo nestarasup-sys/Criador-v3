@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import test from "node:test";
+import sharp from "sharp";
 import { buildCalibratedModelColorSelectionMask, normalizeModelColorCalibration } from "../app/domain/model-color-calibration.mjs";
 import { buildModelColorSelectionMask } from "../app/domain/model-color-selection.mjs";
 
@@ -70,4 +72,36 @@ test("o modo combinado une apenas as regiões calibradas", () => {
   assert.equal(mask[45 * face.width + 40], 1);
   assert.equal(mask[35 * face.width + 40], 1);
   assert.equal(mask[71 * face.width + 50], 0);
+});
+
+test("asset real da Iris aceita calibração sem espalhar a máscara pela cabeça", async (context) => {
+  const file = "public/models/modelos/feminino/modelo-13/normal.png";
+  if (!existsSync(file)) {
+    context.skip("asset manual da Iris não está disponível neste checkout");
+    return;
+  }
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const realProfile = {
+    ...profile,
+    seeds: {
+      pupils: [{ x: 962 / info.width, y: 294 / info.height }, { x: 1035 / info.width, y: 294 / info.height }],
+      brows: [{ x: 950 / info.width, y: 260 / info.height }, { x: 1050 / info.width, y: 265 / info.height }],
+      skin: [{ x: 1000 / info.width, y: 180 / info.height }],
+    },
+  };
+  const bounds = { minX: 862, minY: 115, maxX: 1081, maxY: 430 };
+  const mask = buildCalibratedModelColorSelectionMask("pupils", new Uint8ClampedArray(data), info.width, info.height, bounds, realProfile);
+  let count = 0;
+  let minY = info.height;
+  let maxY = -1;
+  for (let y = 0; y < info.height; y += 1) {
+    for (let x = 0; x < info.width; x += 1) {
+      if (!mask[y * info.width + x]) continue;
+      count += 1;
+      minY = Math.min(minY, y);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  assert.ok(count > 100, `a máscara real deveria encontrar pigmento, encontrou ${count}`);
+  assert.ok(minY >= 270 && maxY <= 330, `máscara real saiu da faixa dos olhos: ${minY}..${maxY}`);
 });
