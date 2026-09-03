@@ -110,6 +110,7 @@ type PendingOutfitPack = {
 };
 
 type HeadFitGuide = {
+  category: Category;
   source: HeadMeasurement;
   target: HeadMeasurement;
   itemWidth: number;
@@ -3212,6 +3213,7 @@ export default function Home() {
         });
       }
       setHeadFitGuide({
+        category: "roupas",
         source: sourceHead,
         target: targetHead,
         itemWidth: outfitWidth,
@@ -3236,6 +3238,138 @@ export default function Home() {
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function adjustSelectedHairByHead() {
+    const hairCategory: Category = category === "cabelosTras" ? "cabelosTras" : "cabelos";
+    const hairId = selections[hairCategory];
+    const hair = catalog.find((entry) => entry.id === hairId && entry.category === hairCategory);
+    if (!hair?.url) return;
+    setIsProcessing(true);
+    setNotice("Medindo o encaixe do cabelo no modelo…");
+    try {
+      const hairWidth = hair.width ?? 0;
+      const hairHeight = hair.height ?? 0;
+      if (!hairWidth || !hairHeight) throw new Error("Dimensões do cabelo indisponíveis");
+      const hairImage = await loadImage(hair.url);
+      const hairCanvas = document.createElement("canvas");
+      hairCanvas.width = hairWidth;
+      hairCanvas.height = hairHeight;
+      const hairContext = hairCanvas.getContext("2d", { willReadFrequently: true });
+      if (!hairContext) throw new Error("Canvas do cabelo indisponível");
+      hairContext.clearRect(0, 0, hairWidth, hairHeight);
+      hairContext.drawImage(hairImage, 0, 0, hairWidth, hairHeight);
+      const sourceHead = measureHeadSilhouette(
+        hairContext.getImageData(0, 0, hairWidth, hairHeight).data,
+        hairWidth,
+        hairHeight,
+        0.46,
+        false,
+      );
+      if (!sourceHead) throw new Error("Não foi possível identificar a área de encaixe deste cabelo");
+
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
+      if (!baseImage) throw new Error("Modelo selecionado indisponível");
+
+      const referenceCanvas = document.createElement("canvas");
+      referenceCanvas.width = 1920;
+      referenceCanvas.height = 1080;
+      const referenceContext = referenceCanvas.getContext("2d", { willReadFrequently: true });
+      if (!referenceContext) throw new Error("Canvas do modelo indisponível");
+      const sourceWidth = baseImage.naturalWidth || referenceCanvas.width;
+      const sourceHeight = baseImage.naturalHeight || referenceCanvas.height;
+      const headOnly = activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base";
+      if (headOnly) {
+        const sourceAnchorX = activeBasePack.anchorX ?? sourceWidth / 2;
+        const sourceAnchorY = activeBasePack.anchorY ?? sourceHeight;
+        const targetAnchorX = activeBasePack.anchorX ?? referenceCanvas.width / 2;
+        const targetAnchorY = activeBasePack.anchorY ?? referenceCanvas.height;
+        referenceContext.drawImage(baseImage, targetAnchorX - sourceAnchorX, targetAnchorY - sourceAnchorY, sourceWidth, sourceHeight);
+      } else {
+        referenceContext.drawImage(baseImage, 0, 0, referenceCanvas.width, referenceCanvas.height);
+      }
+      const targetHead = measureHeadSilhouette(
+        referenceContext.getImageData(0, 0, referenceCanvas.width, referenceCanvas.height).data,
+        referenceCanvas.width,
+        referenceCanvas.height,
+        headOnly ? 1 : 0.46,
+        false,
+      );
+      if (!targetHead) throw new Error("Não foi possível localizar a cabeça do modelo");
+
+      const currentTransform = normalizeTransform(adjustments[hairCategory]);
+      const fitted = normalizeTransform({
+        ...calculateHeadFit(
+          sourceHead,
+          targetHead,
+          { width: hairWidth, height: hairHeight, defaultX: hair.defaultX, defaultY: hair.defaultY },
+          headOnly ? { x: activeBasePack.anchorX } : undefined,
+          "head",
+        ),
+        rotation: currentTransform.rotation,
+        flipX: currentTransform.flipX,
+      });
+      const nextAdjustments = { ...adjustments, [hairCategory]: fitted };
+      const pairCategory: Category = hairCategory === "cabelos" ? "cabelosTras" : "cabelos";
+      const pairId = selections[pairCategory];
+      const pair = pairId ? catalog.find((entry) => entry.id === pairId && entry.category === pairCategory) : null;
+      if (pair) {
+        const pairCurrent = normalizeTransform(adjustments[pairCategory]);
+        const scaleRatioX = fitted.scaleX / Math.max(0.01, currentTransform.scaleX);
+        const scaleRatioY = fitted.scaleY / Math.max(0.01, currentTransform.scaleY);
+        nextAdjustments[pairCategory] = normalizeTransform({
+          ...pairCurrent,
+          scale: pairCurrent.scale * (fitted.scale / Math.max(0.01, currentTransform.scale)),
+          scaleX: pairCurrent.scaleX * scaleRatioX,
+          scaleY: pairCurrent.scaleY * scaleRatioY,
+          x: pairCurrent.x + fitted.x - currentTransform.x,
+          y: pairCurrent.y + fitted.y - currentTransform.y,
+        });
+      }
+      setAdjustments(nextAdjustments);
+      setHairAdjustmentsByBasePack((current) => ({
+        ...current,
+        [basePackId]: {
+          cabelos: normalizeTransform(nextAdjustments.cabelos),
+          cabelosTras: normalizeTransform(nextAdjustments.cabelosTras),
+        },
+      }));
+      setHeadFitGuide({
+        category: hairCategory,
+        source: sourceHead,
+        target: targetHead,
+        itemWidth: hairWidth,
+        itemHeight: hairHeight,
+        defaultX: hair.defaultX,
+        defaultY: hair.defaultY,
+        targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
+      });
+      setFitMode(true);
+      setNotice(pair
+        ? "Cabelo ajustado pela cabeça; o par foi reposicionado junto e você ainda pode refinar manualmente."
+        : "Cabelo ajustado pela cabeça; você ainda pode refinar manualmente.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível ajustar o cabelo pela cabeça");
     } finally {
       setIsProcessing(false);
     }
@@ -4300,7 +4434,7 @@ export default function Home() {
     : visibleItems.length > 0;
   const activeAdjustmentCategory = category;
   const activeTransform = normalizeTransform(adjustments[activeAdjustmentCategory]);
-  const projectedHeadFit = headFitGuide && selectedOutfit
+  const projectedHeadFit = headFitGuide
     ? projectHeadMeasurement(
         headFitGuide.source,
         {
@@ -4309,7 +4443,7 @@ export default function Home() {
           defaultX: headFitGuide.defaultX,
           defaultY: headFitGuide.defaultY,
         },
-        adjustments.roupas,
+        adjustments[headFitGuide.category],
       )
     : null;
   const headFitTargetTopY = headFitGuide?.target.top ?? null;
@@ -4793,6 +4927,15 @@ export default function Home() {
             )}
             {(category === "cabelos" || category === "cabelosTras") && (selections.cabelos || selections.cabelosTras) && (
               <div className="outfit-head-actions">
+                <button
+                  type="button"
+                  className="head-fit-button"
+                  onClick={() => { void adjustSelectedHairByHead(); }}
+                  disabled={isProcessing}
+                  title="Ajustar o cabelo pela cabeça do modelo, preservando o volume externo"
+                >
+                  {isProcessing ? "Ajustando…" : "Ajustar cabelo"}
+                </button>
                 <button
                   type="button"
                   className="model-save-button"
