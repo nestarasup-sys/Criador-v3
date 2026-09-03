@@ -722,7 +722,7 @@
   transform: none;
 }
 .inspectorDock > .inspector {
-  width: min(340px, 100%);
+  width: min(204px, 100%);
   max-height: calc(100dvh - 28px);
   box-sizing: border-box;
   pointer-events: auto;
@@ -744,7 +744,7 @@
   left: auto;
   top: auto;
   bottom: auto;
-  width: min(340px, 100%);
+  width: min(204px, 100%);
   max-height: calc(100dvh - 28px);
   pointer-events: auto;
 }
@@ -765,7 +765,7 @@
   }
   .inspectorDock > .inspector,
   .rightArea.dockLeft .inspectorDock > .inspector {
-    width: min(280px, 100%);
+    width: min(168px, 100%);
     max-height: calc(100dvh - 96px);
   }
 }

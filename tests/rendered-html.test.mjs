@@ -540,6 +540,7 @@ test("enquadra a cena entre os painéis laterais sem alterar o canvas lógico", 
   assert.match(css, /\.inspectorDock \{[\s\S]*justify-content: flex-end/);
   assert.match(css, /\.rightArea\.dockLeft \.inspectorDock \{[\s\S]*justify-content: flex-start/);
   assert.match(css, /\.inspectorDock > \.inspector \{[\s\S]*pointer-events: auto/);
+  assert.match(css, /\.inspectorDock > \.inspector \{[\s\S]*width: min\(204px, 100%\)/);
 });
 
 test("ships premium color controls and non-destructive protection masks", async () => {
