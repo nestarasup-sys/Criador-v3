@@ -1,8 +1,19 @@
 import type { Model } from "./character-primitives";
 import { normalizeModelColorCalibration } from "./model-color-calibration.mjs";
-import type { ModelColorCalibration, ModelColorCalibrationSeed } from "./model-color-calibration.mjs";
 
-export type { ModelColorCalibration, ModelColorCalibrationSeed };
+export type ModelColorCalibrationSeed = { x: number; y: number };
+export type ModelColorCalibration = {
+  version: 1;
+  model: string;
+  basePackId: string;
+  sourceKey: string;
+  seeds: {
+    pupils: ModelColorCalibrationSeed[];
+    brows: ModelColorCalibrationSeed[];
+    skin: ModelColorCalibrationSeed[];
+  };
+  updatedAt: string;
+};
 
 export const MODEL_COLOR_CALIBRATIONS_STORAGE_KEY = "nymi-model-color-calibrations-v1";
 
@@ -32,4 +43,10 @@ export function parseModelColorCalibrations(raw: string | null): Record<string, 
   } catch {
     return {};
   }
+}
+
+export function getStoredModelColorCalibration(model: Model, basePackId: string): ModelColorCalibration | null {
+  if (typeof window === "undefined") return null;
+  const key = modelColorCalibrationKey(model, basePackId);
+  return parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY))[key] ?? null;
 }

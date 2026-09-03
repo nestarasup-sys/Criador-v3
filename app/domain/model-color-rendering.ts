@@ -2,7 +2,7 @@ import type { ColorAdjustment, ModelColorScope } from "./character-contract";
 import { colorAdjustmentIsActive, createColorAdjustedCanvas, normalizeColorAdjustment } from "./color-rendering";
 import { buildModelColorSelectionMask } from "./model-color-selection.mjs";
 import { modelColorCalibrationSignature } from "./model-color-calibration.mjs";
-import type { ModelColorCalibration } from "./model-color-calibration.mjs";
+import type { ModelColorCalibration } from "./model-color-calibration";
 
 export { emptyModelColorAdjustments, isModelColorPixel, normalizeModelColorAdjustments, normalizeModelColorScope } from "./model-color-selection.mjs";
 
@@ -52,7 +52,14 @@ export function createModelColorMaskCanvas(
   const original = sourceContext.getImageData(0, 0, width, height);
   const selected = new Uint8ClampedArray(original.data);
   const bounds = visibleBounds(original.data, width, height);
-  const semanticMask = buildModelColorSelectionMask(scope, original.data, width, height, bounds, calibration);
+  const semanticMask = (buildModelColorSelectionMask as unknown as (
+    scope: ModelColorScope,
+    data: Uint8ClampedArray,
+    width: number,
+    height: number,
+    bounds: { minX: number; minY: number; maxX: number; maxY: number },
+    calibration: ModelColorCalibration | null,
+  ) => Uint8Array)(scope, original.data, width, height, bounds, calibration);
   let selectedPixels = 0;
   for (let index = 0; index < selected.length; index += 4) {
     const pixel = index / 4;

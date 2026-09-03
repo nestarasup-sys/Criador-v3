@@ -13,6 +13,7 @@ import { loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
 import { createModelColorAdjustedCanvas, normalizeModelColorAdjustments, normalizeModelColorScope } from "../domain/model-color-rendering";
+import { getStoredModelColorCalibration } from "../domain/model-color-calibration";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
@@ -316,12 +317,15 @@ export async function renderStudioCharacter(
     const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
     const modelColorScope = normalizeModelColorScope(character.modelColorScope) as ModelColorScope;
+    const modelColorCalibration = getStoredModelColorCalibration(character.model, activePackId);
     const adjustedBase = createModelColorAdjustedCanvas(
       base,
       base.width,
       base.height,
       modelColors[modelColorScope],
       modelColorScope,
+      modelColorCalibration,
+      baseSource,
     );
     const sourceWidth = base.width || WIDTH;
     const sourceHeight = base.height || HEIGHT;

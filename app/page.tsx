@@ -21,6 +21,7 @@ import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
 import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
 import { createModelColorAdjustedCanvas, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
+import { MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, emptyModelColorCalibration, modelColorCalibrationKey, parseModelColorCalibrations, type ModelColorCalibration, type ModelColorCalibrationSeed } from "./domain/model-color-calibration";
 import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseModelColorDefaults, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
 import { basePackCacheKey, baseExpressionSource, DEFAULT_BASE_PACKS, getBasePack } from "./creator/base-packs";
 import {
@@ -88,6 +89,14 @@ function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId)
 type ColorEditorTool = "brush" | "bucket" | "eyedropper" | "erase";
 type ColorPreviewMode = "after" | "before" | "split" | "mask";
 type ColorPreviewBackground = "transparent" | "white" | "black";
+type ModelColorCalibrationTarget = "pupil-left" | "pupil-right" | "brow-left" | "brow-right" | "skin";
+const MODEL_COLOR_CALIBRATION_STEPS: readonly { target: ModelColorCalibrationTarget; label: string; scope: "pupils" | "brows" | "skin" }[] = [
+  { target: "pupil-left", label: "pupila esquerda", scope: "pupils" },
+  { target: "pupil-right", label: "pupila direita", scope: "pupils" },
+  { target: "brow-left", label: "sobrancelha esquerda", scope: "brows" },
+  { target: "brow-right", label: "sobrancelha direita", scope: "brows" },
+  { target: "skin", label: "pele sem blush", scope: "skin" },
+];
 type OutfitCatalogMode = "standard" | "variants";
 
 type PreparedOutfitPose = NormalizedContentGeometry & {
@@ -1216,6 +1225,8 @@ export default function Home() {
   const [colorAdjustments, setColorAdjustments] = useState<ColorAdjustments>(emptyColorAdjustments);
   const [modelColorAdjustments, setModelColorAdjustments] = useState<ModelColorAdjustments>(emptyModelColorAdjustments);
   const [modelColorScope, setModelColorScope] = useState<ModelColorScope>("pupilsBrows");
+  const [modelColorCalibration, setModelColorCalibration] = useState<ModelColorCalibration | null>(null);
+  const [modelColorCalibrationMode, setModelColorCalibrationMode] = useState<ModelColorCalibrationTarget | null>(null);
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
   const [syncHairColor, setSyncHairColor] = useState(true);
@@ -1405,6 +1416,12 @@ export default function Home() {
     ? expressionEmotion
     : `${expressionEmotion}_${expressionState}`) as ExpressionKey;
   const activeOutfitStateKey = outfitStateKey(selections.roupas, basePackId);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
+    setModelColorCalibration(stored[modelColorCalibrationKey(model, basePackId)] ?? null);
+    setModelColorCalibrationMode(null);
+  }, [model, basePackId]);
   const editorSnapshot = useMemo(() => JSON.stringify({
     name: characterName.trim() || "Sem nome",
     model,
@@ -1834,16 +1851,20 @@ export default function Home() {
       const sourceWidth = baseImage.naturalWidth || canvas.width;
       const sourceHeight = baseImage.naturalHeight || canvas.height;
       const modelColor = normalizeModelColorAdjustments(modelColorAdjustments);
+      const sourceExpressionKey = activeBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
+      const modelColorSourceKey = baseExpressionSource(activeBasePack, sourceExpressionKey);
       let adjustedBase: CanvasImageSource = createModelColorAdjustedCanvas(
           baseImage,
           sourceWidth,
           sourceHeight,
           modelColor[modelColorScope],
           modelColorScope,
+          modelColorCalibration,
+          modelColorSourceKey,
         );
       if (previewMode === "before") adjustedBase = baseImage;
       if (previewMode === "mask" && category === "rostos" && faceMode === "base") {
-        const selectedMask = createModelColorMaskCanvas(baseImage, sourceWidth, sourceHeight, modelColorScope);
+        const selectedMask = createModelColorMaskCanvas(baseImage, sourceWidth, sourceHeight, modelColorScope, modelColorCalibration, modelColorSourceKey);
         if (selectedMask) {
           const maskCanvas = document.createElement("canvas");
           maskCanvas.width = sourceWidth;
@@ -1967,7 +1988,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, colorPreviewMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeBasePack.anchor, activeBasePack.anchorX, activeBasePack.anchorY, activeBasePack.type, activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorPreviewMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -3760,6 +3781,10 @@ export default function Home() {
   }
 
   function startCanvasDrag(event: ReactPointerEvent<HTMLCanvasElement>) {
+    if (modelColorCalibrationMode && modelColorEditorActive) {
+      saveModelColorCalibrationPoint(canvasPoint(event));
+      return;
+    }
     if (exportFrameMode) {
       exportFrameDragRef.current = {
         pointerId: event.pointerId,
@@ -4493,9 +4518,78 @@ export default function Home() {
       ? selectedOutfit?.name ?? "Roupa selecionada"
       : selectedColorItem?.name ?? "Item selecionado";
 
-  useEffect(() => {
-    if (!modelColorEditorActive && colorPreviewMode === "mask") setColorPreviewMode("after");
-  }, [colorPreviewMode, modelColorEditorActive]);
+  const activeCalibrationStep = modelColorCalibrationMode
+    ? MODEL_COLOR_CALIBRATION_STEPS.find((step) => step.target === modelColorCalibrationMode) ?? null
+    : null;
+  const calibrationComplete = Boolean(modelColorCalibration
+    && modelColorCalibration.seeds.pupils.length >= 2
+    && modelColorCalibration.seeds.brows.length >= 2
+    && modelColorCalibration.seeds.skin.length >= 1);
+
+  function persistModelColorCalibration(profile: ModelColorCalibration) {
+    const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
+    stored[modelColorCalibrationKey(model, basePackId)] = profile;
+    window.localStorage.setItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, JSON.stringify(stored));
+  }
+
+  function beginModelColorCalibration() {
+    if (!modelColorEditorActive) return;
+    setAnimationMode(null);
+    setExpressionEmotion("normal");
+    setExpressionState("default");
+    setColorPreviewMode("after");
+    setPreviewZoom(100);
+    setPreviewPan({ ...DEFAULT_PREVIEW_PAN });
+    setModelColorCalibrationMode("pupil-left");
+    setNotice("Calibração iniciada: clique no centro da pupila esquerda");
+  }
+
+  function clearModelColorCalibration() {
+    const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
+    delete stored[modelColorCalibrationKey(model, basePackId)];
+    window.localStorage.setItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, JSON.stringify(stored));
+    setModelColorCalibration(null);
+    setModelColorCalibrationMode(null);
+    setNotice("Calibração apagada; o modo automático voltou a ser usado");
+  }
+
+  function saveModelColorCalibrationPoint(point: { x: number; y: number }) {
+    if (!modelColorCalibrationMode) return;
+    const current = modelColorCalibration ?? emptyModelColorCalibration(model, basePackId, baseExpressionSource(activeBasePack, "normal"));
+    const nextSeeds = {
+      pupils: [...current.seeds.pupils],
+      brows: [...current.seeds.brows],
+      skin: [...current.seeds.skin],
+    } satisfies ModelColorCalibration["seeds"];
+    const seed: ModelColorCalibrationSeed = {
+      x: Math.max(0, Math.min(1, point.x / 1920)),
+      y: Math.max(0, Math.min(1, point.y / 1080)),
+    };
+    const targetIndex = modelColorCalibrationMode.endsWith("right") ? 1 : 0;
+    const targetScope: "pupils" | "brows" | "skin" = modelColorCalibrationMode.startsWith("pupil") ? "pupils" : modelColorCalibrationMode.startsWith("brow") ? "brows" : "skin";
+    if (targetScope === "skin") nextSeeds.skin = [seed];
+    else {
+      while (nextSeeds[targetScope].length <= targetIndex) nextSeeds[targetScope].push(seed);
+      nextSeeds[targetScope][targetIndex] = seed;
+    }
+    const next: ModelColorCalibration = {
+      ...current,
+      sourceKey: baseExpressionSource(activeBasePack, "normal"),
+      seeds: nextSeeds,
+      updatedAt: new Date().toISOString(),
+    };
+    persistModelColorCalibration(next);
+    setModelColorCalibration(next);
+    const currentIndex = MODEL_COLOR_CALIBRATION_STEPS.findIndex((step) => step.target === modelColorCalibrationMode);
+    const nextStep = MODEL_COLOR_CALIBRATION_STEPS[currentIndex + 1];
+    if (nextStep) {
+      setModelColorCalibrationMode(nextStep.target);
+      setNotice(`Ponto salvo. Agora clique na ${nextStep.label}`);
+    } else {
+      setModelColorCalibrationMode(null);
+      setNotice("Calibração concluída para este modelo; as expressões usarão essas âncoras");
+    }
+  }
 
   function updateColorAdjustment(patch: Partial<ColorAdjustment>) {
     const colorPatch = patch.enabled === undefined && Object.keys(patch).some((key) => key !== "enabled")
@@ -5151,6 +5245,27 @@ export default function Home() {
                 <line className="head-fit-target-top" x1={headFitGuide.target.left} x2={headFitGuide.target.right} y1={headFitTargetTopY} y2={headFitTargetTopY} />
                 <line className="head-fit-source-top" x1={projectedHeadFit.left} x2={projectedHeadFit.right} y1={projectedHeadFit.top} y2={projectedHeadFit.top} />
                 <line className="head-fit-center-line" x1={headFitTargetBaseX} x2={headFitTargetBaseX} y1={Math.min(headFitGuide.target.top, projectedHeadFit.top)} y2={Math.max(headFitTargetBaseY, projectedHeadFit.bottom)} />
+                </svg>
+            )}
+            {(modelColorCalibration || modelColorCalibrationMode) && (
+              <svg
+                className="model-color-calibration-overlay"
+                viewBox="0 0 1920 1080"
+                preserveAspectRatio="none"
+                style={{ transform: `translate(${previewPan.x}%, ${previewPan.y}%) scale(${previewZoom / 100})` }}
+                aria-label="Pontos de calibração das áreas de cor"
+              >
+                {[
+                  ...(modelColorCalibration?.seeds.pupils ?? []).map((seed, index) => ({ seed, label: `P${index + 1}`, className: "pupil" })),
+                  ...(modelColorCalibration?.seeds.brows ?? []).map((seed, index) => ({ seed, label: `S${index + 1}`, className: "brow" })),
+                  ...(modelColorCalibration?.seeds.skin ?? []).map((seed) => ({ seed, label: "Pele", className: "skin" })),
+                ].map(({ seed, label, className }) => (
+                  <g key={`${label}-${seed.x}-${seed.y}`} className={`calibration-marker ${className}`}>
+                    <circle cx={seed.x * 1920} cy={seed.y * 1080} r="13" />
+                    <text x={seed.x * 1920 + 18} y={seed.y * 1080 - 14}>{label}</text>
+                  </g>
+                ))}
+                {activeCalibrationStep && <text className="calibration-instruction" x="960" y="70">Clique no centro da {activeCalibrationStep.label}</text>}
               </svg>
             )}
             {chromaMode && (
@@ -5394,7 +5509,18 @@ export default function Home() {
                       <button key={scope} type="button" className={modelColorScope === scope ? "active" : ""} onClick={() => setModelColorScope(scope)}>{label}</button>
                     ))}
                   </div>
-                  <p className="model-color-help">Escolha a área antes da cor. As máscaras preservam transparência, contornos, branco dos olhos, blush e boca. Se o modelo for diferente, a aplicação fica restrita à área estrutural reconhecida.</p>
+                  <div className="model-color-calibration-card">
+                    <div>
+                      <strong>{calibrationComplete ? "✓ Áreas calibradas" : "Calibração recomendada"}</strong>
+                      <small>{calibrationComplete ? "Máscaras semânticas salvas para este modelo e reutilizadas nas expressões." : "Clique uma vez em cada região para impedir que cílios, boca, blush e contorno sejam confundidos."}</small>
+                    </div>
+                    <div className="model-color-calibration-actions">
+                      <button type="button" className="protect-color-button" onClick={beginModelColorCalibration}>{modelColorCalibration ? "Recalibrar áreas" : "Calibrar áreas"}</button>
+                      {modelColorCalibration && <button type="button" className="text-danger-button" onClick={clearModelColorCalibration}>Limpar</button>}
+                    </div>
+                    {activeCalibrationStep && <p className="model-color-calibration-status">Calibrando: <strong>{activeCalibrationStep.label}</strong> · clique diretamente na prévia.</p>}
+                  </div>
+                  <p className="model-color-help">As máscaras calibradas começam no ponto real da imagem e ficam limitadas à região selecionada. Sem calibração, o modo automático continua disponível para modelos antigos.</p>
                 </>
               )}
               {category === "roupas" && activeOutfitVariantCount > 1 && (
@@ -5428,6 +5554,11 @@ export default function Home() {
               <label className="color-range"><span>Contraste</span><input type="range" min="0" max="200" value={activeColor.contrast} onChange={(event) => updateColorAdjustment({ contrast: Number(event.target.value) })} /><strong>{activeColor.contrast}%</strong></label>
               <label className="color-range"><span>Textura</span><input type="range" min="0" max="100" value={activeColor.detailPreservation} onChange={(event) => updateColorAdjustment({ detailPreservation: Number(event.target.value) })} /><strong>{activeColor.detailPreservation}%</strong></label>
               <label className="color-range"><span>Força</span><input type="range" min="0" max="100" value={activeColor.tintStrength} onChange={(event) => updateColorAdjustment({ tintStrength: Number(event.target.value) })} /><strong>{activeColor.tintStrength}%</strong></label>
+              <div className="color-space-control">
+                <span>Modo de cor</span>
+                <button type="button" onClick={() => updateColorAdjustment({ colorSpace: activeColor.colorSpace === "oklch" ? "hsl" : "oklch" })}>{activeColor.colorSpace === "oklch" ? "Natural · OKLCH" : "Compatibilidade · HSL"}</button>
+                <small>OKLCH preserva melhor luz, sombra e textura em mudanças fortes de cor.</small>
+              </div>
               <p className="color-help">A recoloração tonal usa as sombras e luzes originais para alcançar cores claras, escuras e neutras sem achatar o desenho.</p>
               </div>
               <div className="color-section color-protection-section">
