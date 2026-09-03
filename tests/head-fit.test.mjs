@@ -100,6 +100,41 @@ test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído n
   assert.ok(Math.abs(fit.scaleX - 1.2) < 0.03, `scaleX inesperado: ${fit.scaleX}`);
 });
 
+test("centraliza o perfil usando as duas laterais mesmo quando a cabeça é assimétrica", () => {
+  const source = {
+    left: 30,
+    right: 130,
+    top: 20,
+    bottom: 120,
+    width: 101,
+    height: 101,
+    centerX: 80,
+    contour: Array.from({ length: 101 }, (_, y) => ({
+      y,
+      left: 30 + (y > 50 ? 4 : 0),
+      right: 130 + (y > 50 ? 10 : 0),
+    })),
+  };
+  const target = {
+    left: 500,
+    right: 700,
+    top: 40,
+    bottom: 240,
+    width: 201,
+    height: 201,
+    centerX: 600,
+    contour: Array.from({ length: 201 }, (_, y) => ({
+      y,
+      left: 500 + (y > 100 ? 8 : 0),
+      right: 700 + (y > 100 ? 20 : 0),
+    })),
+  };
+  const fit = calculateHeadFit(source, target, { width: 320, height: 560, defaultX: 160, defaultY: 280 });
+  const projected = projectHeadMeasurement(source, { width: 320, height: 560, defaultX: 160, defaultY: 280 }, fit);
+  assert.ok(Math.abs(projected.left - target.left) < 2, `lateral esquerda inesperada: ${projected.left}`);
+  assert.ok(Math.abs(projected.right - target.right) < 2, `lateral direita inesperada: ${projected.right}`);
+});
+
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
   const root = join(process.cwd(), "dados-locais-premium", "arquivos", "catalogo");
   const cases = [

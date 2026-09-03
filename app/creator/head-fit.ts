@@ -308,12 +308,28 @@ function robustContourReference(source: HeadMeasurement, target: HeadMeasurement
     .map((sample) => sample.target.width / sample.source.width);
   if (scaleCandidates.length < 4) return null;
   const scaleX = median(scaleCandidates);
+  // Estimate the translation from both edges, not just the center. This
+  // prevents an asymmetric head (common in three-quarter poses) from being
+  // centered correctly while one side still misses the model's silhouette.
+  const mappedEdgeOffsets = samples.flatMap((sample) => [
+    sample.target.left - sample.source.left * scaleX,
+    sample.target.right - sample.source.right * scaleX,
+  ]);
   const mappedCenterOffsets = samples.map((sample) => sample.target.center - sample.source.center * scaleX);
+  const mappedOffset = median(mappedEdgeOffsets.length >= 8 ? mappedEdgeOffsets : mappedCenterOffsets);
+  const sourceCenterX = median(samples.map((sample) => sample.source.center));
   return {
     scaleX,
-    sourceCenterX: median(samples.map((sample) => sample.source.center)),
-    targetCenterX: median(mappedCenterOffsets) + median(samples.map((sample) => sample.source.center)) * scaleX,
+    sourceCenterX,
+    targetCenterX: mappedOffset + sourceCenterX * scaleX,
   };
+}
+
+function structuralBottom(measurement: HeadMeasurement) {
+  // `bottom` is the last visible pixel in the detected head region. When the
+  // detector found a real neck band, `neckY` is the more stable boundary and
+  // ignores a collar/shoulder fragment that may sit below it.
+  return measurement.neckY ?? measurement.bottom;
 }
 
 /**
@@ -347,8 +363,8 @@ export function calculateHeadFit(
   // pixel detectado do recorte.  Alguns assets têm gola, sombra ou um
   // fragmento do tronco abaixo da cabeça; usar `bottom` nesses casos faz o
   // topo coincidir, mas deixa o pescoço divergente conforme a roupa desce.
-  const sourceStructuralBottom = source.neckY ?? source.bottom;
-  const targetStructuralBottom = target.neckY ?? target.bottom;
+  const sourceStructuralBottom = structuralBottom(source);
+  const targetStructuralBottom = structuralBottom(target);
   const sourceHeadHeight = Math.max(1, sourceStructuralBottom - source.top);
   const targetHeadHeight = Math.max(1, targetStructuralBottom - target.top);
   const contourReference = !useNeckReference ? robustContourReference(source, target) : null;
