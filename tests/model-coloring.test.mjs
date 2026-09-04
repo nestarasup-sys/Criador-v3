@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import test from "node:test";
 import sharp from "sharp";
 import {
@@ -62,7 +63,9 @@ test("normaliza escopos e mantém quatro ajustes independentes", () => {
   assert.equal(normalizeModelColorAdjustments({ pupils: { enabled: false } }).pupils.enabled, false);
 });
 
-test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", async () => {
+test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", {
+  skip: !existsSync("public/models/modelos/feminino/modelo-13/normal.png"),
+}, async () => {
   for (const file of ["normal.png", "corado.png"]) {
     const { data, info } = await sharp(`public/models/modelos/feminino/modelo-13/${file}`)
       .raw()
