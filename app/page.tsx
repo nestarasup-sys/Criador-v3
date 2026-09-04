@@ -91,6 +91,7 @@ function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId)
 type ColorEditorTool = "brush" | "bucket" | "eyedropper" | "erase";
 type ColorPreviewMode = "after" | "before" | "split" | "mask";
 type ColorPreviewBackground = "transparent" | "white" | "black";
+type ManualModelColorScope = "pupils";
 type ModelColorCalibrationTarget = "pupil-left" | "pupil-right" | "brow-left" | "brow-right" | "skin";
 const MODEL_COLOR_CALIBRATION_STEPS: readonly { target: ModelColorCalibrationTarget; label: string; scope: "pupils" | "brows" | "skin" }[] = [
   { target: "pupil-left", label: "pupila esquerda", scope: "pupils" },
@@ -100,6 +101,11 @@ const MODEL_COLOR_CALIBRATION_STEPS: readonly { target: ModelColorCalibrationTar
   { target: "skin", label: "pele sem blush", scope: "skin" },
 ];
 type OutfitCatalogMode = "standard" | "variants";
+
+const MANUAL_MODEL_COLOR_MASKS_STORAGE_KEY = "nymi-manual-model-color-masks-v1";
+function manualModelColorMaskKey(model: Model, packId: BasePackId, expressionKey: string, scope: ManualModelColorScope) {
+  return `${model}:${packId}:${expressionKey}:${scope}`;
+}
 
 type PreparedOutfitPose = NormalizedContentGeometry & {
   blob: Blob;
