@@ -5945,11 +5945,11 @@ export default function Home() {
         </div>
       )}
       {colorEditorOpen && (
-        <div className="color-editor-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setColorEditorOpen(false); }}>
+        <div className="color-editor-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { setColorEditorOpen(false); setColorEditorModelScope(null); } }}>
           <section className="color-editor-modal" role="dialog" aria-modal="true" aria-labelledby="color-editor-title">
             <header>
-              <div><span>MINI EDITOR DE PROTEÇÃO</span><h2 id="color-editor-title">Preservar pele e detalhes</h2></div>
-              <button className="modal-close" onClick={() => setColorEditorOpen(false)} aria-label="Fechar">×</button>
+              <div><span>{colorEditorModelScope ? "MÁSCARA SEMÂNTICA DO MODELO" : "MINI EDITOR DE PROTEÇÃO"}</span><h2 id="color-editor-title">{colorEditorModelScope ? "Marcar somente as pupilas" : "Preservar pele e detalhes"}</h2></div>
+              <button className="modal-close" onClick={() => { setColorEditorOpen(false); setColorEditorModelScope(null); }} aria-label="Fechar">×</button>
             </header>
             <div className="color-editor-toolbar">
               <div className="editor-tools" role="group" aria-label="Ferramentas">
@@ -5968,9 +5968,9 @@ export default function Home() {
             <div className="color-editor-body">
               <aside>
                 <strong>Como funciona</strong>
-                <p>A área vermelha ficará com a cor original quando você mudar a matiz da roupa.</p>
+                <p>{colorEditorModelScope ? "Pinte somente as pupilas. O balde respeita a tolerância e a máscara ficará salva para esta expressão do modelo." : "A área vermelha ficará com a cor original quando você mudar a matiz da roupa."}</p>
                 {category === "roupas" && activeOutfitVariantCount > 1 && <div className="protection-group-note">✦ A proteção será salva somente nesta variante da roupa.</div>}
-                <ol><li>Use o conta-gotas na pele ou detalhe.</li><li>Proteja cores semelhantes nesta variante.</li><li>Use pincel, balde ou borracha para refinar a máscara.</li></ol>
+                <ol>{colorEditorModelScope ? <><li>Use o balde dentro de cada pupila.</li><li>Use pincel para preencher bordas e reflexos.</li><li>Troque de expressão e repita somente quando a pupila mudar de lugar.</li></> : <><li>Use o conta-gotas na pele ou detalhe.</li><li>Proteja cores semelhantes nesta variante.</li><li>Use pincel, balde ou borracha para refinar a máscara.</li></>}</ol>
                 {colorEditorSample && (
                   <div className="sampled-color">
                     <i style={{ background: `rgb(${colorEditorSample[0]}, ${colorEditorSample[1]}, ${colorEditorSample[2]})` }} />
@@ -5993,7 +5993,7 @@ export default function Home() {
             </div>
             <footer>
               <div className="editor-zoom"><button onClick={() => setColorEditorZoom((zoom) => Math.max(40, zoom - 10))}>−</button><strong>{colorEditorZoom}%</strong><button onClick={() => setColorEditorZoom((zoom) => Math.min(300, zoom + 10))}>＋</button></div>
-              <div><button className="button secondary" onClick={() => setColorEditorOpen(false)}>Cancelar</button><button className="button primary" onClick={saveColorProtection}>Salvar proteção</button></div>
+              <div><button className="button secondary" onClick={() => { setColorEditorOpen(false); setColorEditorModelScope(null); }}>Cancelar</button><button className="button primary" onClick={saveColorProtection}>{colorEditorModelScope ? "Salvar máscara das pupilas" : "Salvar proteção"}</button></div>
             </footer>
           </section>
         </div>
