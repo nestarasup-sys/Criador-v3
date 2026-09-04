@@ -5655,6 +5655,7 @@ export default function Home() {
                     </div>
                     <div className="model-color-calibration-actions">
                       <button type="button" className="protect-color-button" onClick={beginModelColorCalibration}>{modelColorCalibration ? "Recalibrar áreas" : "Calibrar áreas"}</button>
+                      <button type="button" className="protect-color-button" onClick={() => void openModelPupilMaskEditor()}>Editar máscara das pupilas</button>
                       {calibrationComplete && <button type="button" className="protect-color-button" onClick={() => modelColorCalibration && void generateModelColorMaps(modelColorCalibration)}>Gerar mapas</button>}
                       {modelColorCalibration && <button type="button" className="text-danger-button" onClick={clearModelColorCalibration}>Limpar</button>}
                     </div>
