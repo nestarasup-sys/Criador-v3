@@ -4993,6 +4993,13 @@ export default function Home() {
   function clearColorProtection() {
     const mask = protectionMaskCanvasRef.current;
     mask?.getContext("2d")?.clearRect(0, 0, mask.width, mask.height);
+    if (colorEditorModelScope) {
+      const expressionKey = activeBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
+      const key = manualModelColorMaskKey(model, basePackId, expressionKey, colorEditorModelScope);
+      setManualModelColorMasks((current) => Object.fromEntries(Object.entries(current).filter(([entryKey]) => entryKey !== key)));
+      commitColorEditorHistory();
+      return;
+    }
     if (category === "roupas" && selectedOutfit) {
       const selectedKey = outfitStateKey(selectedOutfit.id, basePackId);
       setOutfitProtectionMasksByBasePack((current) => Object.fromEntries(
@@ -5006,6 +5013,20 @@ export default function Home() {
     const mask = protectionMaskCanvasRef.current;
     if (!mask) return;
     const savedMask = canvasHasVisibleAlpha(mask) ? mask.toDataURL("image/png") : null;
+    if (colorEditorModelScope) {
+      const expressionKey = activeBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
+      const key = manualModelColorMaskKey(model, basePackId, expressionKey, colorEditorModelScope);
+      setManualModelColorMasks((current) => {
+        const next = { ...current };
+        if (savedMask) next[key] = savedMask;
+        else delete next[key];
+        return next;
+      });
+      setColorEditorOpen(false);
+      setColorEditorModelScope(null);
+      setNotice(savedMask ? `Máscara manual das pupilas salva em ${expressionKey}` : "Máscara manual das pupilas removida");
+      return;
+    }
     setProtectionMasks((current) => {
       const next = { ...current };
       if (savedMask) next[category] = savedMask;
