@@ -1236,6 +1236,15 @@ export default function Home() {
   const [modelColorCalibrationRevision, setModelColorCalibrationRevision] = useState(0);
   const [modelColorCalibrationMode, setModelColorCalibrationMode] = useState<ModelColorCalibrationTarget | null>(null);
   const [modelColorMapStatus, setModelColorMapStatus] = useState<string | null>(null);
+  const [manualModelColorMasks, setManualModelColorMasks] = useState<Record<string, string>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(MANUAL_MODEL_COLOR_MASKS_STORAGE_KEY) ?? "{}");
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, string> : {};
+    } catch {
+      return {};
+    }
+  });
   const [outfitColorAdjustmentsByGroup, setOutfitColorAdjustmentsByGroup] = useState<OutfitColorAdjustmentsByGroup>({});
   const [protectionMasks, setProtectionMasks] = useState<ProtectionMasks>({});
   const [syncHairColor, setSyncHairColor] = useState(true);
@@ -1269,6 +1278,10 @@ export default function Home() {
   const [outfitLayerMasksByBasePack, setOutfitLayerMasksByBasePack] = useState<Record<string, MaskStroke[]>>({});
   const [outfitProtectionMasksByBasePack, setOutfitProtectionMasksByBasePack] = useState<Record<string, string>>({});
   const [isSavingModelItem, setIsSavingModelItem] = useState(false);
+
+  useEffect(() => {
+    window.localStorage.setItem(MANUAL_MODEL_COLOR_MASKS_STORAGE_KEY, JSON.stringify(manualModelColorMasks));
+  }, [manualModelColorMasks]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [activeCharacter, setActiveCharacter] = useState<string | null>(null);
   const [draftStarted, setDraftStarted] = useState(false);
