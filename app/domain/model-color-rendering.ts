@@ -175,6 +175,7 @@ export function createModelColorAdjustedCanvasForScopes(
   modelColorMap: CanvasImageSource | null | undefined,
   calibration: ModelColorCalibration | null = null,
   sourceKey?: string,
+  manualMasks: Partial<Record<"pupils" | "brows" | "skin", CanvasImageSource>> = {},
 ): CanvasImageSource {
   const normalized = normalizeModelColorAdjustments(adjustments);
   const scopes = ["skin", "brows", "pupils"] as const;
@@ -209,9 +210,10 @@ export function createModelColorAdjustedCanvasForScopes(
   for (const scope of scopes) {
     const adjustment = activeAdjustmentForScope(normalized, scope);
     if (!colorAdjustmentIsActive(adjustment)) continue;
-    const selected = mapData
+    const selected = manualMasks[scope]
+      ?? (mapData
       ? semanticChannelCanvas(sourceData, mapData, width, height, scope)
-      : createModelColorMaskCanvas(image, width, height, scope, calibration, sourceKey);
+      : createModelColorMaskCanvas(image, width, height, scope, calibration, sourceKey));
     if (!selected) continue;
     const adjusted = createColorAdjustedCanvas(selected, width, height, adjustment);
     outputContext.drawImage(adjusted, 0, 0);
