@@ -1250,6 +1250,7 @@ export default function Home() {
   const [syncHairColor, setSyncHairColor] = useState(true);
   const [advancedAdjustmentsOpen, setAdvancedAdjustmentsOpen] = useState(false);
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
+  const [colorEditorModelScope, setColorEditorModelScope] = useState<ManualModelColorScope | null>(null);
   const [colorEditorTool, setColorEditorTool] = useState<ColorEditorTool>("brush");
   const [colorEditorBrushSize, setColorEditorBrushSize] = useState(42);
   const [colorEditorTolerance, setColorEditorTolerance] = useState(32);
