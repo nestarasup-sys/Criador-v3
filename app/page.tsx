@@ -1725,6 +1725,8 @@ export default function Home() {
     const renderBasePackAnchorY = renderBasePack.anchorY;
     const renderModelColorMapSource = baseExpressionColorMapSource(renderBasePack, renderModelColorExpressionKey);
     const renderModelColorMap = renderModelColorMapSource ? await loadImage(renderModelColorMapSource).catch(() => null) : null;
+    const manualPupilMaskUrl = manualModelColorMasks[manualModelColorMaskKey(model, basePackId, renderModelColorExpressionKey, "pupils")];
+    const manualPupilMask = manualPupilMaskUrl ? await loadImage(manualPupilMaskUrl).catch(() => null) : null;
     const canvas = document.createElement("canvas");
     canvas.width = 1920;
     canvas.height = 1080;
@@ -1892,6 +1894,7 @@ export default function Home() {
           renderModelColorMap,
           modelColorCalibration,
           renderModelColorSourceKey,
+          manualPupilMask ? { pupils: manualPupilMask } : undefined,
         );
       if (previewMode === "before") adjustedBase = baseImage;
       if (previewMode === "mask" && category === "rostos" && faceMode === "base") {
@@ -2019,7 +2022,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
