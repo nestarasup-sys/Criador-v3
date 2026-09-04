@@ -4871,6 +4871,29 @@ export default function Home() {
     setColorEditorRevision((revision) => revision + 1);
   }
 
+  async function openModelPupilMaskEditor() {
+    const expressionKey = activeBasePack.expressionKeys.includes(activeExpressionKey) ? activeExpressionKey : "normal";
+    const image = await loadImage(baseExpressionSource(activeBasePack, expressionKey));
+    const mask = document.createElement("canvas");
+    mask.width = image.naturalWidth;
+    mask.height = image.naturalHeight;
+    const savedMask = manualModelColorMasks[manualModelColorMaskKey(model, basePackId, expressionKey, "pupils")];
+    if (savedMask) {
+      const savedImage = await loadImage(savedMask);
+      mask.getContext("2d")?.drawImage(savedImage, 0, 0, mask.width, mask.height);
+    }
+    colorEditorImageRef.current = image;
+    protectionMaskCanvasRef.current = mask;
+    setColorEditorModelScope("pupils");
+    setColorEditorHistory([mask.toDataURL("image/png")]);
+    setColorEditorRedo([]);
+    setColorEditorSample(null);
+    setColorEditorSamplePoint(null);
+    setColorEditorZoom(100);
+    setColorEditorOpen(true);
+    setColorEditorRevision((revision) => revision + 1);
+  }
+
   function colorEditorPoint(event: ReactPointerEvent<HTMLCanvasElement>) {
     const canvas = event.currentTarget;
     const bounds = canvas.getBoundingClientRect();
