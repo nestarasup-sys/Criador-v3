@@ -392,29 +392,6 @@ function inferModelEyeRegions(data, width, height, bounds) {
   });
 }
 
-function buildPupilMask(data, width, height, bounds) {
-  const mask = new Uint8Array(width * height);
-  const regions = inferModelEyeRegions(data, width, height, bounds);
-  for (const region of regions) {
-    for (let y = Math.max(bounds.minY, Math.floor(region.centerY - region.radiusY)); y <= Math.min(bounds.maxY, Math.ceil(region.centerY + region.radiusY)); y += 1) {
-      for (let x = Math.max(bounds.minX, Math.floor(region.centerX - region.radiusX)); x <= Math.min(bounds.maxX, Math.ceil(region.centerX + region.radiusX)); x += 1) {
-        const dx = (x - region.centerX) / region.radiusX;
-        const dy = (y - region.centerY) / region.radiusY;
-        if ((dx * dx) + (dy * dy) > 1) continue;
-        const pixel = y * width + x;
-        const offset = pixel * 4;
-        if (data[offset + 3] < 128) continue;
-        const { saturation, value } = rgbToHsv(data[offset], data[offset + 1], data[offset + 2]);
-        if (isLightWarmWash(data[offset], data[offset + 1], data[offset + 2], saturation, value)) continue;
-        const colored = Math.abs(dx) <= 0.78 && Math.abs(dy) <= 0.52
-          && isEyePigmentPixel(data[offset], data[offset + 1], data[offset + 2], data[offset + 3]);
-        const darkInner = value <= 0.3 && Math.abs(dx) <= 0.5 && Math.abs(dy) <= 0.55;
-        if (colored || darkInner) mask[pixel] = 1;
-      }
-    }
-  }
-  return mask;
-}
 
 function buildBrowMask(data, width, height, bounds) {
   const mask = new Uint8Array(width * height);
