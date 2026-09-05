@@ -10,6 +10,7 @@ const DEFAULT_COLOR_ADJUSTMENT = {
 };
 
 import { buildCalibratedModelColorSelectionMask, modelColorCalibrationHasScope } from "./model-color-calibration.mjs";
+import { detectAutomaticPupils } from "./automatic-pupils.mjs";
 
 const finite = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback;
 const clamp = (value, min, max, fallback) => Math.max(min, Math.min(max, finite(value, fallback)));
@@ -492,7 +493,7 @@ export function buildModelColorSelectionMask(scope, data, width, height, visible
     }
     return mask;
   }
-  const pupils = buildPupilMask(data, width, height, bounds);
+  const pupils = detectAutomaticPupils(data, width, height, bounds);
   if (normalizedScope === "pupils" || normalizedScope === "pupilsBrows") {
     for (let pixel = 0; pixel < mask.length; pixel += 1) if (pupils[pixel]) mask[pixel] = 1;
   }
