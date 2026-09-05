@@ -21,6 +21,9 @@ export function detectAutomaticPupils(data, width, height, bounds) {
     if (lo >= 160 && delta <= 28 && b >= r - 18) { kind[p] = 3; continue; }
     // Exclude pale warm skin/blush; require distinct pigment for the seeds.
     if (hi < 90 && saturation < .3) { kind[p] = 2; continue; }
+    // Keep gray iris shading separate from black lashes. Joining both at
+    // detection time turns an otherwise valid gray eye into a wide contour.
+    if (hi < 180 && saturation < .20 && b >= r - 12) { kind[p] = 4; continue; }
     if (saturation < .28 || hi < 35 || (hi >= 165 && r >= g && r >= b && saturation < .42)) continue;
     kind[p] = 1;
     hue[p] = ((hi === r ? (g - b) / delta : hi === g ? 2 + (b - r) / delta : 4 + (r - g) / delta) * 60 + 360) % 360;
@@ -46,7 +49,7 @@ export function detectAutomaticPupils(data, width, height, bounds) {
   }
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const start = y * width + x;
-    if (seen[start] || (kind[start] !== 1 && kind[start] !== 2)) continue;
+    if (seen[start] || ![1, 2, 4].includes(kind[start])) continue;
     const pixels = [start];
     seen[start] = 1;
     let left = x, right = x, top = y, bottom = y;
@@ -65,7 +68,7 @@ export function detectAutomaticPupils(data, width, height, bounds) {
     }
     const cw = right - left + 1, ch = bottom - top + 1;
     if (pixels.length < Math.max(4, w * h * .00009) || cw > w * .20 || ch > h * .18
-      || ch < Math.max(3, h * .013) || cw / ch > 2.8 || cw / ch < .18) continue;
+      || ch < Math.max(2, h * .010) || cw / ch > 2.8 || cw / ch < .18) continue;
     const rows = new Map();
     for (const p of pixels) {
       const yy = Math.floor(p / width), xx = p % width;
@@ -79,20 +82,25 @@ export function detectAutomaticPupils(data, width, height, bounds) {
       cy: (top + bottom) / 2, score: supportedRows * Math.sqrt(pixels.length), rows });
   }
   candidates.sort((a, b) => b.score - a.score);
-  const eyes = [];
-  for (const c of candidates) {
-    if (eyes.some(e => Math.abs(e.cx - c.cx) < w * .16)) continue;
-    if (eyes.length && Math.abs(eyes[0].cy - c.cy) > h * .12) continue;
-    eyes.push(c);
-    if (eyes.length === 2) break;
+  // Rank pairs together: a strong isolated patch must not determine which
+  // small second eye can be accepted. No requirement for equal size or hue.
+  const shortlist = candidates.slice(0, 64);
+  let bestPair = null;
+  for (let i = 0; i < shortlist.length; i++) for (let j = i + 1; j < shortlist.length; j++) {
+    const a = shortlist[i], b = shortlist[j];
+    const dx = Math.abs(a.cx - b.cx) / w, dy = Math.abs(a.cy - b.cy) / h;
+    if (dx < .18 || dx > .72 || dy > .12) continue;
+    const score = Math.sqrt(a.score * b.score) / (1 + dy * 16);
+    if (!bestPair || score > bestPair.score) bestPair = { score, eyes: [a, b] };
   }
+  const eyes = bestPair?.eyes ?? shortlist.slice(0, 1);
   for (const eye of eyes) {
     for (const p of eye.pixels) mask[p] = 1;
     // Include the dark central pupil only when enclosed horizontally by iris
     // pigment. White highlights and the external lash remain original.
     for (const [y, [l, r]] of eye.rows) for (let x = l + 1; x < r; x++) {
       const p = y * width + x;
-      if (kind[p] === 2) mask[p] = 1;
+      if (kind[p] === 2 || kind[p] === 4) mask[p] = 1;
     }
   }
   return mask;
