@@ -17,6 +17,72 @@ function percentile(values, position) {
   return sorted[Math.round((sorted.length - 1) * clamp(position, 0, 1))];
 }
 
+function foregroundClassifier(image) {
+  const { data, width, height } = image;
+  const offsets = [0, (width - 1) * 4, (height - 1) * width * 4, (width * height - 1) * 4];
+  const backgrounds = offsets.map((offset) => rgbToOklab(data[offset], data[offset + 1], data[offset + 2]));
+  return (pixel) => {
+    const offset = pixel * 4;
+    if (data[offset + 3] < 10) return false;
+    if (data[offset + 3] < 250) return true;
+    const lab = pixelLab(data, pixel);
+    return !backgrounds.some((background) => delta(lab, background) <= 0.075);
+  };
+}
+
+export function headBounds(image) {
+  const subject = subjectBounds(image, { step: 1, minimumAlpha: 10, backgroundTolerance: 0.075 });
+  if (!subject) return null;
+  const { width, height } = image;
+  const isForeground = foregroundClassifier(image);
+  const subjectHeight = subject.maxY - subject.minY + 1;
+  const scanBottom = Math.min(subject.maxY, Math.round(subject.minY + subjectHeight * 0.55), subject.minY + 520);
+  const rows = [];
+  let trackedCenter = (subject.minX + subject.maxX) / 2;
+  for (let y = subject.minY; y <= scanBottom; y += 1) {
+    const spans = [];
+    let start = -1;
+    for (let x = subject.minX; x <= subject.maxX; x += 1) {
+      const foreground = isForeground(y * width + x);
+      if (foreground && start < 0) start = x;
+      if ((!foreground || x === subject.maxX) && start >= 0) {
+        const end = foreground && x === subject.maxX ? x : x - 1;
+        if (end - start >= 2) spans.push({ left: start, right: end, width: end - start + 1, center: (start + end) / 2 });
+        start = -1;
+      }
+    }
+    const span = spans.toSorted((left, right) =>
+      (Math.abs(left.center - trackedCenter) - left.width * 0.12) - (Math.abs(right.center - trackedCenter) - right.width * 0.12))[0];
+    if (span) {
+      trackedCenter = trackedCenter * 0.82 + span.center * 0.18;
+      rows.push({ y, ...span });
+    }
+  }
+  if (!rows.length) return subject;
+  const warmupEnd = subject.minY + Math.min(subjectHeight * 0.32, 300);
+  const widest = rows.filter((row) => row.y <= warmupEnd).reduce((best, row) => row.width > best.width ? row : best, rows[0]);
+  // Sprites novos já contêm somente cabeça e pescoço. Só procuramos a constrição
+  // quando a silhueta é alta o bastante para ser um corpo inteiro; isso evita
+  // confundir a lateral inclinada do rosto com o pescoço.
+  if (subjectHeight <= widest.width * 1.8) return subject;
+  const peakIndex = rows.indexOf(widest);
+  let neckIndex = -1;
+  for (let index = peakIndex + 1; index < rows.length - 3; index += 1) {
+    const sample = rows.slice(index, index + 4);
+    if (rows[index].y >= subject.minY + widest.width * 0.72
+      && sample.every((row) => row.width <= widest.width * 0.62)) { neckIndex = index; break; }
+  }
+  const bottom = neckIndex >= 0 ? rows[neckIndex].y + 2 : Math.min(subject.maxY, scanBottom);
+  let minX = width;
+  let maxX = -1;
+  for (const row of rows) {
+    if (row.y > bottom) break;
+    minX = Math.min(minX, row.left);
+    maxX = Math.max(maxX, row.right);
+  }
+  return minX <= maxX ? { minX, minY: subject.minY, maxX, maxY: Math.min(height - 1, bottom), count: 0 } : subject;
+}
+
 function estimateSkin(image, bounds) {
   const { data, width } = image;
   const headWidth = bounds.maxX - bounds.minX + 1;
@@ -292,29 +358,35 @@ function detectPupils(image, bounds, skin, eyes) {
   const { data, width, height } = image;
   const headWidth = bounds.maxX - bounds.minX + 1;
   const headHeight = bounds.maxY - bounds.minY + 1;
-  const binary = new Uint8Array(width * height);
   const roi = {
     left: Math.max(0, Math.round(bounds.minX + headWidth * 0.08)),
     right: Math.min(width - 1, Math.round(bounds.maxX - headWidth * 0.05)),
     top: Math.max(0, Math.round(bounds.minY + headHeight * 0.39)),
     bottom: Math.min(height - 1, Math.round(bounds.minY + headHeight * 0.68)),
   };
-  for (let y = roi.top; y <= roi.bottom; y += 1) {
-    for (let x = roi.left; x <= roi.right; x += 1) {
-      const pixel = y * width + x;
-      const offset = pixel * 4;
-      if (data[offset + 3] < 70) continue;
-      const lab = pixelLab(data, pixel);
-      const chroma = Math.hypot(lab.a, lab.b);
-      const skinDistance = delta(lab, skin);
-      if (chroma > 0.048 && skinDistance > 0.07 && lab.l < 0.82) binary[pixel] = 1;
+  const candidatesFor = (mode) => {
+    const binary = new Uint8Array(width * height);
+    for (let y = roi.top; y <= roi.bottom; y += 1) {
+      for (let x = roi.left; x <= roi.right; x += 1) {
+        const pixel = y * width + x;
+        const offset = pixel * 4;
+        if (data[offset + 3] < 70) continue;
+        const lab = pixelLab(data, pixel);
+        const chroma = Math.hypot(lab.a, lab.b);
+        const skinDistance = delta(lab, skin);
+        const accepted = mode === "chroma"
+          ? chroma > 0.048 && skinDistance > 0.07
+          : lab.l < skin.l - 0.34 && skinDistance > 0.27;
+        if (accepted) binary[pixel] = 1;
+      }
     }
-  }
-  const candidates = colorComponents(image, binary, roi, 0.052).filter((item) =>
-    item.width >= Math.max(3, headWidth * 0.022) && item.height >= Math.max(3, headHeight * 0.014)
-    && item.width <= headWidth * 0.15 && item.height <= headHeight * 0.12
-    && item.width / item.height <= 1.9 && item.height / item.width <= 2.8);
-  const pair = featurePair(candidates, bounds.minY + headHeight * 0.60, headWidth, headHeight);
+    return colorComponents(image, binary, roi, mode === "chroma" ? 0.052 : 0.025).filter((item) =>
+      item.width >= Math.max(3, headWidth * 0.022) && item.height >= Math.max(3, headHeight * 0.014)
+      && item.width <= headWidth * 0.15 && item.height <= headHeight * 0.12
+      && item.width / item.height <= 1.9 && item.height / item.width <= 2.8);
+  };
+  let pair = featurePair(candidatesFor("chroma"), bounds.minY + headHeight * 0.60, headWidth, headHeight);
+  if (!pair || pair.score < 0.26) pair = featurePair(candidatesFor("dark"), bounds.minY + headHeight * 0.60, headWidth, headHeight);
   if (!pair || pair.score < 0.26) return { mask: emptyMask(width, height), confidence: 0.12, pair: null };
   const eyeBonus = eyes ? 0.08 : 0;
   return { mask: expandedFeatureMask(image, pair, skin, 2), confidence: clamp(0.43 + pair.score * 0.46 + eyeBonus, 0, 0.97), pair };
@@ -351,7 +423,7 @@ function detectBrows(image, bounds, skin, eyes) {
 }
 
 export function detectColorAnatomy(image) {
-  const bounds = subjectBounds(image, { step: 1, minimumAlpha: 10, backgroundTolerance: 0.075 });
+  const bounds = headBounds(image);
   if (!bounds) return {
     pupils: emptyMask(image.width, image.height), brows: emptyMask(image.width, image.height),
     confidence: { pupils: 0, brows: 0 }, warnings: ["Nenhum rosto transparente foi encontrado."], diagnostics: null,
