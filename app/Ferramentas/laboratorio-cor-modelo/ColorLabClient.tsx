@@ -101,6 +101,7 @@ export function ColorLabClient() {
   const [analyzing, setAnalyzing] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [storageStatus, setStorageStatus] = useState("Máscaras ficam salvas neste navegador.");
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const engine = useCallback(() => {
     engineRef.current ??= new ClassicColorAnalysisEngine();
@@ -386,6 +387,41 @@ export function ColorLabClient() {
     }, "image/png");
   };
 
+  const exportCalibration = () => {
+    if (!selectedModel) return;
+    const prefix = `${gender}:${selectedModel.id}:`;
+    const records = Object.entries(maskStore).filter(([key]) => key.startsWith(prefix)).map(([key, value]) => ({
+      key,
+      pupils: Array.from(value.pupils),
+      brows: Array.from(value.brows),
+    }));
+    const payload = JSON.stringify({ version: 1, gender, modelId: selectedModel.id, modelSource: selectedModel.source, records }, null, 2);
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+    link.download = `${selectedModel.id}-calibracao-cor.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    setStorageStatus(`${records.length} máscara(s) exportada(s).`);
+  };
+
+  const importCalibration = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !selectedModel) return;
+    try {
+      const payload = JSON.parse(await file.text()) as { version?: number; gender?: string; modelId?: string; records?: Array<{ key: string; pupils: number[]; brows: number[] }> };
+      if (payload.version !== 1 || payload.gender !== gender || payload.modelId !== selectedModel.id || !Array.isArray(payload.records)) throw new Error("Arquivo não pertence ao modelo selecionado.");
+      const prefix = `${gender}:${selectedModel.id}:`;
+      const valid = payload.records.filter((record) => record.key.startsWith(prefix) && selectedModel.expressionKeys.includes(record.key.slice(prefix.length)) && record.pupils.length === record.brows.length);
+      if (!valid.length) throw new Error("Nenhuma expressão compatível foi encontrada.");
+      const imported = Object.fromEntries(valid.map((record) => [record.key, { pupils: new Uint8ClampedArray(record.pupils), brows: new Uint8ClampedArray(record.brows) }]));
+      setMaskStore((current) => ({ ...current, ...imported }));
+      setStorageStatus(`${valid.length} máscara(s) importada(s) e salva(s) localmente.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Não foi possível importar a calibração.");
+    }
+  };
+
   const activeBounds = frame && masks[target].length === frame.width * frame.height ? maskBounds(masks[target], frame.width, frame.height) : null;
   const activeAnalysis = activeKey ? analysisStore[activeKey] : undefined;
   const confidence = activeAnalysis?.confidence[target] ?? 0;
@@ -446,6 +482,7 @@ export function ColorLabClient() {
           <button className={styles.autoButton} disabled={!frame || analyzing} onClick={() => frame && void runAutomatic(frame, activeKey)}>Reanalisar expressão</button>
           <button className={styles.batchButton} disabled={!selectedModel || analyzing} onClick={() => void analyzeAll()}>Analisar modelo inteiro</button>
           {analyzing && <button className={styles.cancelButton} onClick={cancelAnalysis}>Cancelar análise</button>}
+          <div className={styles.fileActions}><button onClick={exportCalibration} disabled={!selectedModel}>Exportar calibração</button><button onClick={() => importInputRef.current?.click()} disabled={!selectedModel}>Importar calibração</button><input ref={importInputRef} type="file" accept="application/json" hidden onChange={(event) => void importCalibration(event)} /></div>
           <small className={styles.batchStatus}>{batchProgress ? `${batchProgress.current}/${batchProgress.total} processadas` : `${analyzedCount}/${selectedModel?.expressionKeys.length ?? 0} analisadas`}</small>
           <small className={styles.storageStatus}>{storageStatus}</small>
         </div>

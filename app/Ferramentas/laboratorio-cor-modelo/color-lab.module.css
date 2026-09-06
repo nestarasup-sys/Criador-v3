@@ -17,6 +17,9 @@
 .block label { display:grid; grid-template-columns:1fr auto; gap:5px 8px; color:#6c596a; font-size:10px; font-weight:800; }
 .block select { grid-column:1/-1; min-width:0; width:100%; padding:9px 10px; border:1px solid #e7d7e1; border-radius:9px; background:#fff; color:#443543; font:inherit; }
 .autoButton,.batchButton,.cancelButton { width:100%; border:1px solid #d8bfd0; border-radius:10px; padding:10px; color:#7d3e61; background:#fbf0f6; font:inherit; font-size:10px; font-weight:900; cursor:pointer; }
+.fileActions { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.fileActions button { border:1px solid #e2d1dc; border-radius:8px; padding:7px 5px; color:#76556c; background:#fff; font:inherit; font-size:8px; font-weight:850; cursor:pointer; }
+.fileActions button:disabled { opacity:.45; cursor:not-allowed; }
 .batchButton { border-color:#8f3f6a; color:#fff; background:linear-gradient(120deg,#8f3f6a,#b45483); box-shadow:0 6px 14px rgba(143,63,106,.18); }
 .cancelButton { border-color:#e4a0a9; color:#a43c4b; background:#fff1f2; }
 .autoButton:disabled,.batchButton:disabled { cursor:wait; opacity:.48; }
