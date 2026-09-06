@@ -21,6 +21,16 @@
 .cancelButton { border-color:#e4a0a9; color:#a43c4b; background:#fff1f2; }
 .autoButton:disabled,.batchButton:disabled { cursor:wait; opacity:.48; }
 .batchStatus { color:#8e7484; font-size:9px; text-align:center; }
+.storageStatus { color:#6c8b78; font-size:8px; text-align:center; line-height:1.35; }
+.reportSummary { padding:8px 9px; border-radius:9px; color:#806d7b; background:#fbf7fa; font-size:9px; }
+.reportSummary b { color:#8f416a; }
+.expressionReport { display:grid; grid-template-columns:1fr 1fr; gap:4px; max-height:145px; overflow:auto; padding-right:2px; }
+.expressionReport button { display:flex; align-items:center; justify-content:space-between; gap:5px; min-width:0; padding:7px 6px; border:1px solid #eadfe7; border-radius:7px; background:#fff; color:#6d5868; font:inherit; font-size:8px; cursor:pointer; }
+.expressionReport button span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.expressionReport button small { flex:none; font-size:8px; font-weight:900; }
+.expressionReport .reportReady { border-color:#b9e5cc; background:#f0fbf4; color:#286b45; }
+.expressionReport .reportReview { border-color:#f0d690; background:#fff9e9; color:#806019; }
+.expressionReport .reportPending { border-color:#e7dfe5; color:#95828f; }
 .block input[type=range] { grid-column:1/-1; width:100%; accent-color:#a34e7c; }
 .block output { color:#a14e79; font-weight:900; }
 .segmented,.toolGrid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }

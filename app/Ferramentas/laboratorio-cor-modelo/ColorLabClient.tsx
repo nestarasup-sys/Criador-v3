@@ -12,6 +12,8 @@ import {
   selectConnectedColor,
   subjectBounds,
 } from "./core/mask-engine.mjs";
+import { summarizeMask } from "./core/quality-engine.mjs";
+import { loadMaskRecords, saveMaskRecord } from "./core/mask-storage";
 import { ClassicColorAnalysisEngine } from "./engines/classic-engine";
 import type { AutomaticAnalysis } from "./engines/engine-contract";
 import type { ColorLabMasks, ColorLabModel, ColorLabTarget, ColorLabTool, ColorLabView } from "./types";
@@ -98,6 +100,7 @@ export function ColorLabClient() {
   const [status, setStatus] = useState("Carregando catálogo de modelos…");
   const [analyzing, setAnalyzing] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [storageStatus, setStorageStatus] = useState("Máscaras ficam salvas neste navegador.");
 
   const engine = useCallback(() => {
     engineRef.current ??= new ClassicColorAnalysisEngine();
@@ -126,6 +129,18 @@ export function ColorLabClient() {
 
   const availableModels = useMemo(() => models[gender] ?? [], [models, gender]);
   const selectedModel = useMemo(() => availableModels.find((model) => model.id === modelId) ?? availableModels[0], [availableModels, modelId]);
+
+  useEffect(() => {
+    if (!selectedModel) return;
+    let active = true;
+    const prefix = `${gender}:${selectedModel.id}:`;
+    loadMaskRecords(prefix).then((records) => {
+      if (!active || !Object.keys(records).length) return;
+      setMaskStore((current) => ({ ...current, ...records }));
+      setStorageStatus(`${Object.keys(records).length} máscara(s) recuperada(s) deste navegador.`);
+    }).catch(() => active && setStorageStatus("Armazenamento local indisponível; as alterações ficam apenas nesta sessão."));
+    return () => { active = false; };
+  }, [gender, selectedModel]);
 
   useEffect(() => {
     if (!availableModels.length) {
@@ -213,7 +228,10 @@ export function ColorLabClient() {
     });
     setAnalysisStore((current) => {
       const existing = current[activeKey];
-      if (!existing) return current;
+      if (!existing) return {
+        ...current,
+        [activeKey]: { automatic: false, confidence: { pupils: 0, brows: 0 }, warnings: [`${TARGET_LABELS[target]} ajustadas manualmente.`] },
+      };
       return {
         ...current,
         [activeKey]: {
@@ -372,6 +390,25 @@ export function ColorLabClient() {
   const activeAnalysis = activeKey ? analysisStore[activeKey] : undefined;
   const confidence = activeAnalysis?.confidence[target] ?? 0;
   const analyzedCount = selectedModel ? selectedModel.expressionKeys.filter((key) => analysisStore[frameKey(gender, selectedModel.id, key)]).length : 0;
+  const expressionReport = useMemo(() => selectedModel?.expressionKeys.map((key) => {
+    const keyValue = frameKey(gender, selectedModel.id, key);
+    const entry = maskStore[keyValue];
+    const analysis = analysisStore[keyValue];
+    const width = frame?.width ?? 1;
+    const height = frame?.height ?? 1;
+    const pupilPixels = entry ? summarizeMask(entry.pupils, width, height).pixels : 0;
+    const browPixels = entry ? summarizeMask(entry.brows, width, height).pixels : 0;
+    const confidenceValue = analysis ? Math.min(analysis.confidence.pupils, analysis.confidence.brows) : 0;
+    return { key, confidence: confidenceValue, pupilPixels, browPixels, analyzed: Boolean(analysis), review: Boolean(analysis?.warnings.length) || (Boolean(analysis) && confidenceValue < 0.72) };
+  }) ?? [], [analysisStore, frame?.height, frame?.width, gender, maskStore, selectedModel]);
+
+  useEffect(() => {
+    if (!activeKey || !maskStore[activeKey]) return;
+    const timer = window.setTimeout(() => {
+      saveMaskRecord(activeKey, maskStore[activeKey]).then(() => setStorageStatus("Alteração salva automaticamente neste navegador.")).catch(() => setStorageStatus("Não foi possível salvar a máscara localmente."));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [activeKey, maskStore]);
 
   const focusHead = useCallback(() => {
     const stage = stageRef.current;
@@ -410,6 +447,12 @@ export function ColorLabClient() {
           <button className={styles.batchButton} disabled={!selectedModel || analyzing} onClick={() => void analyzeAll()}>Analisar modelo inteiro</button>
           {analyzing && <button className={styles.cancelButton} onClick={cancelAnalysis}>Cancelar análise</button>}
           <small className={styles.batchStatus}>{batchProgress ? `${batchProgress.current}/${batchProgress.total} processadas` : `${analyzedCount}/${selectedModel?.expressionKeys.length ?? 0} analisadas`}</small>
+          <small className={styles.storageStatus}>{storageStatus}</small>
+        </div>
+
+        <div className={styles.block}><span className={styles.blockLabel}>Mapa do modelo</span>
+          <div className={styles.reportSummary}><b>{expressionReport.filter((item) => item.analyzed && !item.review).length}</b> prontas · <b>{expressionReport.filter((item) => item.review).length}</b> revisar</div>
+          <div className={styles.expressionReport}>{expressionReport.map((item) => <button key={item.key} className={item.review ? styles.reportReview : item.analyzed ? styles.reportReady : styles.reportPending} onClick={() => setExpressionKey(item.key)}><span>{item.key}</span><small>{item.analyzed ? `${Math.round(item.confidence * 100)}%` : "pendente"}</small></button>)}</div>
         </div>
 
         <div className={styles.block}><span className={styles.blockLabel}>Área que você está preparando</span>
