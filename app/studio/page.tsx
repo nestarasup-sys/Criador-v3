@@ -478,7 +478,26 @@ export default function StudioPage() {
 
   function deleteStudio(id: string) {
     recordStudioDeletion(id);
-    setStudios((current) => current.filter((entry) => entry.id !== id));
+    const nextStudios = studiosRef.current.filter((entry) => entry.id !== id);
+    studiosRef.current = nextStudios;
+    mirrorStudios(nextStudios);
+    setStudios(nextStudios);
+    // Exclusão precisa chegar ao armazenamento do PC imediatamente. Se ficar
+    // apenas no localStorage, a cópia antiga pode reaparecer na próxima carga.
+    if (loadedRef.current) {
+      setSaveStatus("Salvando exclusão no PC…");
+      void saveStudios(nextStudios).then((synchronized) => {
+        pcStudiosRef.current = synchronized;
+        studiosRef.current = synchronized;
+        setStudios(synchronized);
+        setPcStorageAvailable(true);
+        setMigrationAvailable(false);
+        setSaveStatus("Exclusão salva no PC");
+      }).catch(() => {
+        setSaveStatus("Exclusão protegida neste navegador; aguardando o PC");
+        setNotice("A exclusão foi mantida localmente e será sincronizada quando o PC voltar.");
+      });
+    }
   }
 
   function addOrSelectCharacter(characterId: string) {

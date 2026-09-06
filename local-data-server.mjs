@@ -576,7 +576,38 @@ async function reconcileMissingLocalAssets() {
     else if (packId) changed = true;
   }
 
-  if (changed) state = { ...state, catalog, expressionPacks };
+  // Cenas podem sobreviver aos arquivos quando um fundo/objeto é removido
+  // manualmente ou depois de uma restauração. Remova apenas a referência
+  // quebrada; o Studio e os demais personagens continuam intactos.
+  const validStudioAssets = new Set();
+  const studioAssets = [];
+  for (const asset of state.studioAssets ?? []) {
+    const id = String(asset?.id ?? "");
+    const filePath = join(STUDIO_ASSETS_ROOT, safeId(id));
+    if (id && inside(STUDIO_ASSETS_ROOT, filePath) && await localFileExists(filePath)) {
+      studioAssets.push(asset);
+      validStudioAssets.add(id);
+    } else {
+      changed = true;
+    }
+  }
+
+  const studios = (state.studios ?? []).map((studio) => {
+    let studioChanged = false;
+    const background = studio?.background?.assetId && !validStudioAssets.has(String(studio.background.assetId))
+      ? (studioChanged = true, null)
+      : studio.background;
+    const objects = (Array.isArray(studio?.objects) ? studio.objects : []).filter((object) => {
+      const valid = !object?.assetId || validStudioAssets.has(String(object.assetId));
+      if (!valid) studioChanged = true;
+      return valid;
+    });
+    if (!studioChanged) return studio;
+    changed = true;
+    return { ...studio, background, objects };
+  });
+
+  if (changed) state = { ...state, catalog, expressionPacks, studios, studioAssets };
   return changed;
 }
 
