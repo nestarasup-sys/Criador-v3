@@ -186,7 +186,7 @@ export function ColorLabClient() {
       if (announce && activeSelectionRef.current === key) {
         setView("overlay");
         setStatus(result.warnings.length
-          ? `Análise concluída com ${result.warnings.length} aviso(s). Confira as áreas amarelas no diagnóstico.`
+          ? `Análise concluída com ${result.warnings.length} aviso(s). Confira as máscaras coloridas no diagnóstico.`
           : "Análise automática concluída com alta confiança.");
       }
       return result;
@@ -210,6 +210,19 @@ export function ColorLabClient() {
         brows: emptyMask(frame.width, frame.height),
       };
       return { ...current, [activeKey]: { ...existing, [target]: next } };
+    });
+    setAnalysisStore((current) => {
+      const existing = current[activeKey];
+      if (!existing) return current;
+      return {
+        ...current,
+        [activeKey]: {
+          ...existing,
+          automatic: false,
+          confidence: { ...existing.confidence, [target]: 0 },
+          warnings: [`${TARGET_LABELS[target]} ajustadas manualmente.`],
+        },
+      };
     });
   }, [activeKey, frame, target]);
 
