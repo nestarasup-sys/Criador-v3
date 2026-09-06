@@ -13,6 +13,7 @@ export type LoadedAppData = AppData & {
     id: string;
     name: string;
     expressionKeys: string[];
+    expressionAliases?: Record<string, string>;
     source: string;
     version?: string;
     type?: "full-body" | "head-only";

@@ -41,7 +41,7 @@ function normalizedPackId(value?: string) {
 export function expressionKeysForCharacter(
   character: Character,
   packs: PcExpressionPack[] = [],
-  modelPacks: Record<string, Array<{ id: string; expressionKeys: string[] }>> = {},
+  modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; expressionAliases?: Record<string, string> }>> = {},
 ): readonly ExpressionKey[] {
   if (character.faceMode === "single" || character.faceMode === "pack") {
     const pack = packs.find((item) => item.id === character.expressionPackId);

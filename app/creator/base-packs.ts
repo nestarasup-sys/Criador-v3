@@ -16,6 +16,7 @@ export type BasePackDefinition = {
   id: BasePackId;
   name: string;
   expressionKeys: readonly ExpressionKey[];
+  expressionAliases?: Readonly<Record<string, string>>;
   source: string;
   /** Changes whenever a file in the discovered folder changes. */
   version?: string;
@@ -49,12 +50,14 @@ export function getBasePack(packs: BasePackCollection, model: Model, packId?: Ba
 }
 
 export function baseExpressionSource(pack: BasePackDefinition, key: ExpressionKey) {
-  const source = `${pack.source}/${encodeURIComponent(key)}.png`;
+  const resolvedKey = pack.expressionAliases?.[key] ?? key;
+  const source = `${pack.source}/${encodeURIComponent(resolvedKey)}.png`;
   return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
 }
 
 export function baseExpressionColorMapSource(pack: BasePackDefinition, key: ExpressionKey) {
-  const source = modelColorMapSource(pack.source, key, pack.colorMap);
+  const resolvedKey = pack.expressionAliases?.[key] ?? key;
+  const source = modelColorMapSource(pack.source, resolvedKey, pack.colorMap);
   if (!source) return null;
   return pack.version ? `${source}?v=${encodeURIComponent(pack.version)}` : source;
 }

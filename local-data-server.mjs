@@ -12,7 +12,7 @@ import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
-import { collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
+import { baseExpressionKeys, collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
 import { normalizeModelColorMapMetadata } from "./app/domain/model-color-map.mjs";
 import {
   BODY_LIMITS,
@@ -446,9 +446,26 @@ async function discoverModels() {
       const files = await readdir(folder);
       const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
       const expressionKeys = collectModelExpressionKeys(pngFiles);
-      if (!expressionKeys.includes("normal")) continue;
       const config = await readOptionalJson(join(folder, "model.json"))
         ?? await readOptionalJson(join(folder, "modelo.json"));
+      const availableBaseExpressions = baseExpressionKeys(expressionKeys);
+      if (availableBaseExpressions.length === 0) continue;
+      const configuredDefault = typeof config?.defaultExpression === "string"
+        ? config.defaultExpression.trim()
+        : "";
+      const defaultExpressionKey = expressionKeys.includes(configuredDefault)
+        ? configuredDefault
+        : expressionKeys.includes("normal")
+        ? "normal"
+        : availableBaseExpressions.includes("neutra")
+        ? "neutra"
+        : availableBaseExpressions[0];
+      const resolvedExpressionKeys = expressionKeys.includes("normal")
+        ? expressionKeys
+        : ["normal", ...expressionKeys];
+      const expressionAliases = defaultExpressionKey === "normal"
+        ? undefined
+        : { normal: defaultExpressionKey };
       const colorMap = normalizeModelColorMapMetadata(config?.colorMap);
       const inferredLayout = config?.type === "head-only"
         ? null
@@ -479,7 +496,8 @@ async function discoverModels() {
           : typeof config?.name === "string" && config.name.trim()
           ? config.name.trim()
           : `Modelo ${index + 1}`,
-        expressionKeys,
+        expressionKeys: resolvedExpressionKeys,
+        ...(expressionAliases ? { expressionAliases } : {}),
         source: `/models/modelos/${gender}/${entry.name}`,
         version,
         ...((config?.type === "head-only" || inferredLayout) ? {

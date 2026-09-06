@@ -127,6 +127,7 @@ function createMask(strokes: MaskStroke[], width: number, height: number) {
 type DiscoveredModelPack = {
   id: string;
   expressionKeys?: string[];
+  expressionAliases?: Record<string, string>;
   source?: string;
   version?: string;
   type?: "full-body" | "head-only";
@@ -147,7 +148,8 @@ function expressionSource(
     : legacyPack.replace(/^pack-(\d+)$/, (_, index) => `modelo-${Number(index) + 1}`);
   const discovered = modelPacks[character.model]?.find((item) => item.id === pack);
   const source = discovered?.source ?? `/models/modelos/${character.model}/${pack}`;
-  const encodedKey = encodeURIComponent(key);
+  const resolvedKey = discovered?.expressionAliases?.[key] ?? key;
+  const encodedKey = encodeURIComponent(resolvedKey);
   return discovered?.version
     ? `${source}/${encodedKey}.png?v=${encodeURIComponent(discovered.version)}`
     : `${source}/${encodedKey}.png`;

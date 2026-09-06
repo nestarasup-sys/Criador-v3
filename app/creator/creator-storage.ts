@@ -29,6 +29,7 @@ type PcBasePackDefinition = {
   id: string;
   name: string;
   expressionKeys: string[];
+  expressionAliases?: Record<string, string>;
   source: string;
   version?: string;
 };
