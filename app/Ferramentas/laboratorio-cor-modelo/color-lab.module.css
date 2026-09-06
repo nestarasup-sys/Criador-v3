@@ -16,6 +16,11 @@
 .blockLabel,.inspectorHead>span { color:#a04e7a; font-size:9px; font-weight:950; letter-spacing:.13em; }
 .block label { display:grid; grid-template-columns:1fr auto; gap:5px 8px; color:#6c596a; font-size:10px; font-weight:800; }
 .block select { grid-column:1/-1; min-width:0; width:100%; padding:9px 10px; border:1px solid #e7d7e1; border-radius:9px; background:#fff; color:#443543; font:inherit; }
+.autoButton,.batchButton,.cancelButton { width:100%; border:1px solid #d8bfd0; border-radius:10px; padding:10px; color:#7d3e61; background:#fbf0f6; font:inherit; font-size:10px; font-weight:900; cursor:pointer; }
+.batchButton { border-color:#8f3f6a; color:#fff; background:linear-gradient(120deg,#8f3f6a,#b45483); box-shadow:0 6px 14px rgba(143,63,106,.18); }
+.cancelButton { border-color:#e4a0a9; color:#a43c4b; background:#fff1f2; }
+.autoButton:disabled,.batchButton:disabled { cursor:wait; opacity:.48; }
+.batchStatus { color:#8e7484; font-size:9px; text-align:center; }
 .block input[type=range] { grid-column:1/-1; width:100%; accent-color:#a34e7c; }
 .block output { color:#a14e79; font-weight:900; }
 .segmented,.toolGrid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
@@ -44,6 +49,8 @@
 .inspectorHead small { color:#96818f; font-size:9px; overflow-wrap:anywhere; }
 .metric { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:10px; border:1px solid #eee2e9; border-radius:10px; background:#fcf8fb; }
 .metric span { color:#8d7787; font-size:9px; }.metric strong { color:#674056; font-size:11px; }
+.confidence { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:11px; border:1px solid; border-radius:11px; font-size:10px; }
+.confidence strong { font-size:16px; }.good { border-color:#b9e5cc; color:#246840; background:#eefbf3; }.warning { border-color:#f0d690; color:#806019; background:#fff9e9; }.critical { border-color:#efb2bb; color:#963d4c; background:#fff1f3; }
 .note { padding:11px; border-radius:11px; background:#f8eef4; }
 .note b { color:#7f4264; font-size:10px; }.note p { margin:5px 0 0; color:#826d7c; font-size:9px; line-height:1.5; }
 .actions { display:grid; gap:7px; margin-top:auto; }

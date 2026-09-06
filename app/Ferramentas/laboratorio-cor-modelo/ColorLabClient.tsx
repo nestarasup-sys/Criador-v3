@@ -12,11 +12,14 @@ import {
   selectConnectedColor,
   subjectBounds,
 } from "./core/mask-engine.mjs";
+import { ClassicColorAnalysisEngine } from "./engines/classic-engine";
+import type { AutomaticAnalysis } from "./engines/engine-contract";
 import type { ColorLabMasks, ColorLabModel, ColorLabTarget, ColorLabTool, ColorLabView } from "./types";
 import styles from "./color-lab.module.css";
 
 type ModelResponse = Record<"feminino" | "masculino", ColorLabModel[]>;
 type LoadedFrame = { image: HTMLImageElement; imageData: ImageData; width: number; height: number; source: string };
+type AnalysisNote = Pick<AutomaticAnalysis, "confidence" | "warnings"> & { automatic: boolean };
 
 const TARGET_LABELS: Record<ColorLabTarget, string> = { pupils: "Pupilas", brows: "Sobrancelhas" };
 const TOOL_LABELS: Record<ColorLabTool, string> = {
@@ -58,16 +61,35 @@ function combinedMask(masks: ColorLabMasks) {
   return result;
 }
 
+function loadFrame(source: string) {
+  return new Promise<LoadedFrame>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return reject(new Error("Canvas de análise indisponível."));
+      context.drawImage(image, 0, 0);
+      resolve({ image, imageData: context.getImageData(0, 0, canvas.width, canvas.height), width: canvas.width, height: canvas.height, source });
+    };
+    image.onerror = () => reject(new Error(`Não foi possível abrir ${source}.`));
+    image.src = source;
+  });
+}
+
 export function ColorLabClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
+  const engineRef = useRef<ClassicColorAnalysisEngine | null>(null);
   const [models, setModels] = useState<ModelResponse>({ feminino: [], masculino: [] });
   const [gender, setGender] = useState<"feminino" | "masculino">("feminino");
   const [modelId, setModelId] = useState("");
   const [expressionKey, setExpressionKey] = useState("normal");
   const [frame, setFrame] = useState<LoadedFrame | null>(null);
   const [maskStore, setMaskStore] = useState<Record<string, ColorLabMasks>>({});
+  const [analysisStore, setAnalysisStore] = useState<Record<string, AnalysisNote>>({});
   const [target, setTarget] = useState<ColorLabTarget>("pupils");
   const [tool, setTool] = useState<ColorLabTool>("magic-add");
   const [view, setView] = useState<ColorLabView>("overlay");
@@ -79,6 +101,15 @@ export function ColorLabClient() {
   const [browColor, setBrowColor] = useState("#6c3a2d");
   const [strength, setStrength] = useState(100);
   const [status, setStatus] = useState("Carregando catálogo de modelos…");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const engine = useCallback(() => {
+    engineRef.current ??= new ClassicColorAnalysisEngine();
+    return engineRef.current;
+  }, []);
+
+  useEffect(() => () => engineRef.current?.dispose(), []);
 
   useEffect(() => {
     let active = true;
@@ -117,22 +148,11 @@ export function ColorLabClient() {
   useEffect(() => {
     if (!selectedModel || !expressionKey) return;
     let active = true;
-    const image = new Image();
     const source = sourceFor(selectedModel, expressionKey);
     setStatus(`Carregando ${selectedModel.name} · ${expressionKey}…`);
-    image.onload = () => {
-      if (!active) return;
-      const canvas = document.createElement("canvas");
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      if (!context) return setStatus("Canvas de análise indisponível.");
-      context.drawImage(image, 0, 0);
-      setFrame({ image, imageData: context.getImageData(0, 0, canvas.width, canvas.height), width: canvas.width, height: canvas.height, source });
-      setStatus("Pronto. Clique numa pupila ou sobrancelha para criar a máscara.");
-    };
-    image.onerror = () => active && setStatus(`Não foi possível abrir ${expressionKey}.png.`);
-    image.src = source;
+    loadFrame(source).then((loaded) => {
+      if (active) setFrame(loaded);
+    }).catch((error) => active && setStatus(error instanceof Error ? error.message : `Não foi possível abrir ${expressionKey}.png.`));
     return () => { active = false; };
   }, [selectedModel, expressionKey]);
 
@@ -142,6 +162,35 @@ export function ColorLabClient() {
     const size = frame ? frame.width * frame.height : 0;
     return { pupils: emptyMask(size, 1), brows: emptyMask(size, 1) };
   }, [activeKey, maskStore, frame]);
+
+  const runAutomatic = useCallback(async (loaded: LoadedFrame, key: string, announce = true) => {
+    if (announce) {
+      setAnalyzing(true);
+      setStatus("Analisando olhos e sobrancelhas automaticamente…");
+    }
+    try {
+      const result = await engine().analyze(loaded.imageData);
+      setMaskStore((current) => ({ ...current, [key]: result.masks }));
+      setAnalysisStore((current) => ({
+        ...current,
+        [key]: { confidence: result.confidence, warnings: result.warnings, automatic: true },
+      }));
+      if (announce) {
+        setView("overlay");
+        setStatus(result.warnings.length
+          ? `Análise concluída com ${result.warnings.length} aviso(s). Confira as áreas amarelas no diagnóstico.`
+          : "Análise automática concluída com alta confiança.");
+      }
+      return result;
+    } finally {
+      if (announce) setAnalyzing(false);
+    }
+  }, [engine]);
+
+  useEffect(() => {
+    if (!frame || !activeKey || analysisStore[activeKey] || analyzing || batchProgress) return;
+    void runAutomatic(frame, activeKey).catch((error) => setStatus(error instanceof Error ? error.message : "Falha na análise automática."));
+  }, [frame, activeKey, analysisStore, analyzing, batchProgress, runAutomatic]);
 
   const updateActiveMask = useCallback((next: Uint8ClampedArray) => {
     if (!frame || !activeKey) return;
@@ -231,6 +280,38 @@ export function ColorLabClient() {
     setStatus(`Máscara de ${TARGET_LABELS[target].toLowerCase()} limpa.`);
   };
 
+  const analyzeAll = async () => {
+    if (!selectedModel || analyzing) return;
+    setAnalyzing(true);
+    const keys = selectedModel.expressionKeys;
+    setBatchProgress({ current: 0, total: keys.length });
+    let warnings = 0;
+    try {
+      for (let index = 0; index < keys.length; index += 1) {
+        const key = keys[index];
+        setBatchProgress({ current: index + 1, total: keys.length });
+        setStatus(`Analisando ${key} (${index + 1}/${keys.length})…`);
+        const loaded = key === expressionKey && frame ? frame : await loadFrame(sourceFor(selectedModel, key));
+        const result = await runAutomatic(loaded, frameKey(gender, selectedModel.id, key), false);
+        warnings += result.warnings.length;
+      }
+      setView("overlay");
+      setStatus(`Modelo analisado: ${keys.length} expressões · ${warnings} aviso(s) para revisão.`);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "A análise em lote falhou.");
+    } finally {
+      setAnalyzing(false);
+      setBatchProgress(null);
+    }
+  };
+
+  const cancelAnalysis = () => {
+    engineRef.current?.cancel();
+    setAnalyzing(false);
+    setBatchProgress(null);
+    setStatus("Análise cancelada. As expressões já concluídas foram mantidas.");
+  };
+
   const downloadMask = () => {
     if (!frame || !selectedModel) return;
     const mask = masks[target];
@@ -257,6 +338,9 @@ export function ColorLabClient() {
   };
 
   const activeBounds = frame && masks[target].length === frame.width * frame.height ? maskBounds(masks[target], frame.width, frame.height) : null;
+  const activeAnalysis = activeKey ? analysisStore[activeKey] : undefined;
+  const confidence = activeAnalysis?.confidence[target] ?? 0;
+  const analyzedCount = selectedModel ? selectedModel.expressionKeys.filter((key) => analysisStore[frameKey(gender, selectedModel.id, key)]).length : 0;
 
   const focusHead = useCallback(() => {
     const stage = stageRef.current;
@@ -281,8 +365,8 @@ export function ColorLabClient() {
 
   return <main className={styles.main}>
     <section className={styles.intro}>
-      <div><span>FERRAMENTA EXPERIMENTAL ISOLADA</span><h1>Laboratório de máscaras de cor</h1><p>Prepare áreas exatas para recolorir pupilas e sobrancelhas. Nada salvo aqui altera o Criador ou o Studio.</p></div>
-      <div className={styles.pipeline}><b>1</b><span>Escolher</span><i>→</i><b>2</b><span>Marcar</span><i>→</i><b>3</b><span>Testar</span></div>
+      <div><span>DETECTOR AUTOMÁTICO ISOLADO</span><h1>Laboratório de máscaras de cor</h1><p>Detecta pupilas e sobrancelhas automaticamente; você só revisa os casos duvidosos. Nada salvo aqui altera o Criador ou o Studio.</p></div>
+      <div className={styles.pipeline}><b>1</b><span>Escolher</span><i>→</i><b>2</b><span>Detectar</span><i>→</i><b>3</b><span>Revisar</span></div>
     </section>
 
     <section className={styles.workspace}>
@@ -291,6 +375,10 @@ export function ColorLabClient() {
           <label>Gênero<select value={gender} onChange={(event) => setGender(event.target.value as "feminino" | "masculino")}><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></label>
           <label>Modelo<select value={selectedModel?.id ?? ""} onChange={(event) => setModelId(event.target.value)}>{availableModels.map((model) => <option key={model.id} value={model.id}>{model.name}</option>)}</select></label>
           <label>Expressão<select value={expressionKey} onChange={(event) => setExpressionKey(event.target.value)}>{selectedModel?.expressionKeys.map((key) => <option key={key} value={key}>{key}</option>)}</select></label>
+          <button className={styles.autoButton} disabled={!frame || analyzing} onClick={() => frame && void runAutomatic(frame, activeKey)}>Reanalisar expressão</button>
+          <button className={styles.batchButton} disabled={!selectedModel || analyzing} onClick={() => void analyzeAll()}>Analisar modelo inteiro</button>
+          {analyzing && <button className={styles.cancelButton} onClick={cancelAnalysis}>Cancelar análise</button>}
+          <small className={styles.batchStatus}>{batchProgress ? `${batchProgress.current}/${batchProgress.total} processadas` : `${analyzedCount}/${selectedModel?.expressionKeys.length ?? 0} analisadas`}</small>
         </div>
 
         <div className={styles.block}><span className={styles.blockLabel}>Área que você está preparando</span>
@@ -331,10 +419,11 @@ export function ColorLabClient() {
       </div>
 
       <aside className={styles.inspector}>
-        <div className={styles.inspectorHead}><span>DIAGNÓSTICO</span><strong>{TARGET_LABELS[target]}</strong><small>{selectedModel?.name ?? "Nenhum modelo"} · {expressionKey}</small></div>
+        <div className={styles.inspectorHead}><span>DIAGNÓSTICO AUTOMÁTICO</span><strong>{TARGET_LABELS[target]}</strong><small>{selectedModel?.name ?? "Nenhum modelo"} · {expressionKey}</small></div>
+        <div className={`${styles.confidence} ${confidence >= 0.72 ? styles.good : confidence >= 0.5 ? styles.warning : styles.critical}`}><span>Confiança</span><strong>{activeAnalysis ? `${Math.round(confidence * 100)}%` : "Analisando…"}</strong></div>
         <div className={styles.metric}><span>Pixels marcados</span><strong>{activeBounds?.count.toLocaleString("pt-BR") ?? "0"}</strong></div>
         <div className={styles.metric}><span>Área ocupada</span><strong>{activeBounds ? `${activeBounds.maxX - activeBounds.minX + 1} × ${activeBounds.maxY - activeBounds.minY + 1}` : "Vazia"}</strong></div>
-        <div className={styles.note}><b>Como usar agora</b><p>Escolha Pupilas ou Sobrancelhas, use “Seleção assistida +” e clique dentro de cada região. Corrija excessos com a borracha.</p></div>
+        <div className={styles.note}><b>{activeAnalysis?.warnings.length ? "Revisão recomendada" : "Resultado automático"}</b><p>{activeAnalysis?.warnings.length ? activeAnalysis.warnings.join(" ") : "O detector encontrou um par simétrico. Use as ferramentas manuais somente se a máscara visual estiver incorreta."}</p></div>
         <div className={styles.note}><b>Segurança</b><p>As duas máscaras são independentes e esta ferramenta ainda não escreve na pasta do modelo.</p></div>
         <div className={styles.actions}><button onClick={clearTarget}>Limpar máscara</button><button className={styles.primary} disabled={!activeBounds} onClick={downloadMask}>Baixar máscara PNG</button></div>
       </aside>
