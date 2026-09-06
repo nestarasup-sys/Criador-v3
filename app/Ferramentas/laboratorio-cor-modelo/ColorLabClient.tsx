@@ -212,11 +212,13 @@ export function ColorLabClient() {
   }, [engine]);
 
   useEffect(() => {
-    if (!frame || frame.source !== activeSource || !activeKey || analysisStore[activeKey] || analyzing || batchProgress) return;
+    // Máscaras importadas/recuperadas são trabalho do usuário; não substituí-las
+    // automaticamente antes que ele escolha reanalisar a expressão.
+    if (!frame || frame.source !== activeSource || !activeKey || analysisStore[activeKey] || maskStore[activeKey] || analyzing || batchProgress) return;
     // A análise é uma sincronização assíncrona com o Worker.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void runAutomatic(frame, activeKey).catch((error) => setStatus(error instanceof Error ? error.message : "Falha na análise automática."));
-  }, [frame, activeKey, activeSource, analysisStore, analyzing, batchProgress, runAutomatic]);
+  }, [frame, activeKey, activeSource, analysisStore, analyzing, batchProgress, maskStore, runAutomatic]);
 
   const updateActiveMask = useCallback((next: Uint8ClampedArray) => {
     if (!frame || !activeKey) return;
