@@ -85,6 +85,84 @@ function components(binary, width, height, roi) {
   return found;
 }
 
+function colorComponents(image, binary, roi, localTolerance = 0.032) {
+  const { data, width } = image;
+  const visited = new Uint8Array(binary.length);
+  const found = [];
+  const queue = new Int32Array(binary.length);
+  for (let y = roi.top; y <= roi.bottom; y += 1) {
+    for (let x = roi.left; x <= roi.right; x += 1) {
+      const start = y * width + x;
+      if (!binary[start] || visited[start]) continue;
+      let head = 0;
+      let tail = 1;
+      queue[0] = start;
+      visited[start] = 1;
+      const pixels = [];
+      let sumL = 0;
+      let sumA = 0;
+      let sumB = 0;
+      let minX = x;
+      let maxX = x;
+      let minY = y;
+      let maxY = y;
+      while (head < tail) {
+        const pixel = queue[head++];
+        pixels.push(pixel);
+        const px = pixel % width;
+        const py = Math.floor(pixel / width);
+        minX = Math.min(minX, px);
+        maxX = Math.max(maxX, px);
+        minY = Math.min(minY, py);
+        maxY = Math.max(maxY, py);
+        const currentColor = pixelLab(data, pixel);
+        sumL += currentColor.l;
+        sumA += currentColor.a;
+        sumB += currentColor.b;
+        for (const neighbour of [pixel - 1, pixel + 1, pixel - width, pixel + width]) {
+          if (neighbour < 0 || neighbour >= binary.length || visited[neighbour] || !binary[neighbour]) continue;
+          const nx = neighbour % width;
+          const ny = Math.floor(neighbour / width);
+          if (nx < roi.left || nx > roi.right || ny < roi.top || ny > roi.bottom) continue;
+          if (Math.abs(nx - px) + Math.abs(ny - py) !== 1 || delta(currentColor, pixelLab(data, neighbour)) > localTolerance) continue;
+          visited[neighbour] = 1;
+          queue[tail++] = neighbour;
+        }
+      }
+      found.push({
+        pixels, minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1,
+        lab: { l: sumL / pixels.length, a: sumA / pixels.length, b: sumB / pixels.length },
+      });
+    }
+  }
+  return found;
+}
+
+function featurePair(items, expectedY, headWidth, headHeight) {
+  let best = null;
+  for (let firstIndex = 0; firstIndex < items.length; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < items.length; secondIndex += 1) {
+      const ordered = [(items[firstIndex]), (items[secondIndex])].toSorted((a, b) => a.minX - b.minX);
+      const [left, right] = ordered;
+      const leftX = (left.minX + left.maxX) / 2;
+      const rightX = (right.minX + right.maxX) / 2;
+      const separation = (rightX - leftX) / headWidth;
+      if (separation < 0.17 || separation > 0.62) continue;
+      const leftY = (left.minY + left.maxY) / 2;
+      const rightY = (right.minY + right.maxY) / 2;
+      const vertical = Math.abs(leftY - rightY) / headHeight;
+      const size = Math.abs(left.width - right.width) / Math.max(left.width, right.width)
+        + Math.abs(left.height - right.height) / Math.max(left.height, right.height);
+      const color = left.lab && right.lab ? delta(left.lab, right.lab) : 0;
+      const yDistance = Math.abs((leftY + rightY) / 2 - expectedY) / headHeight;
+      const smallFeaturePenalty = clamp(18 / Math.max(1, Math.min(left.pixels.length, right.pixels.length)) - 0.18, 0, 0.38);
+      const score = 1 - clamp(vertical * 5.5 + size * 0.24 + color * 1.8 + yDistance * 1.35 + smallFeaturePenalty, 0, 1);
+      if (!best || score > best.score) best = { left, right, score };
+    }
+  }
+  return best;
+}
+
 function dilate(mask, width, height, radius = 1) {
   const result = new Uint8Array(mask.length);
   for (let y = 0; y < height; y += 1) {
@@ -133,6 +211,8 @@ function mirroredPair(items, centerX, expectedY, headWidth, headHeight) {
       const right = items[rightIndex];
       const rightX = (right.minX + right.maxX) / 2;
       if (rightX <= centerX) continue;
+      if (centerX - leftX < headWidth * 0.08 || rightX - centerX < headWidth * 0.08) continue;
+      if (rightX - leftX < headWidth * 0.28) continue;
       const leftY = (left.minY + left.maxY) / 2;
       const rightY = (right.minY + right.maxY) / 2;
       const symmetry = Math.abs((centerX - leftX) - (rightX - centerX)) / headWidth;
@@ -156,6 +236,25 @@ function componentMask(image, selected, soften = true) {
   const grown = dilate(Uint8Array.from(mask, (value) => value > 0 ? 1 : 0), image.width, image.height, 1);
   for (let pixel = 0; pixel < grown.length; pixel += 1) {
     if (grown[pixel] && !mask[pixel]) mask[pixel] = Math.min(96, image.data[pixel * 4 + 3]);
+  }
+  return mask;
+}
+
+function expandedFeatureMask(image, selected, skin, padding = 2) {
+  const mask = emptyMask(image.width, image.height);
+  if (!selected) return mask;
+  for (const component of [selected.left, selected.right]) {
+    for (let y = Math.max(0, component.minY - padding); y <= Math.min(image.height - 1, component.maxY + padding); y += 1) {
+      for (let x = Math.max(0, component.minX - padding); x <= Math.min(image.width - 1, component.maxX + padding); x += 1) {
+        const pixel = y * image.width + x;
+        const offset = pixel * 4;
+        if (image.data[offset + 3] < 24) continue;
+        const lab = pixelLab(image.data, pixel);
+        if (delta(lab, skin) > 0.035 && (Math.hypot(lab.a, lab.b) > 0.022 || lab.l < skin.l - 0.16)) {
+          mask[pixel] = Math.max(72, image.data[offset + 3]);
+        }
+      }
+    }
   }
   return mask;
 }
@@ -190,59 +289,47 @@ function detectEyePair(image, bounds, skin) {
 }
 
 function detectPupils(image, bounds, skin, eyes) {
-  if (!eyes) return { mask: emptyMask(image.width, image.height), confidence: 0, pair: null };
   const { data, width, height } = image;
   const headWidth = bounds.maxX - bounds.minX + 1;
   const headHeight = bounds.maxY - bounds.minY + 1;
   const binary = new Uint8Array(width * height);
-  const eyeBoxes = [eyes.left, eyes.right].map((eye) => ({
-    left: Math.max(0, eye.minX - Math.round(headWidth * 0.03)),
-    right: Math.min(width - 1, eye.maxX + Math.round(headWidth * 0.03)),
-    top: Math.max(0, eye.minY - Math.round(headHeight * 0.025)),
-    bottom: Math.min(height - 1, eye.maxY + Math.round(headHeight * 0.04)),
-  }));
-  const pupilComponents = [];
-  for (const roi of eyeBoxes) {
-    for (let y = roi.top; y <= roi.bottom; y += 1) {
-      for (let x = roi.left; x <= roi.right; x += 1) {
-        const pixel = y * width + x;
-        const offset = pixel * 4;
-        if (data[offset + 3] < 80) continue;
-        const lab = pixelLab(data, pixel);
-        const chroma = Math.hypot(lab.a, lab.b);
-        const skinDistance = delta(lab, skin);
-        if ((chroma > 0.045 && skinDistance > 0.055) || (lab.l < skin.l - 0.30 && skinDistance > 0.22)) binary[pixel] = 1;
-      }
+  const roi = {
+    left: Math.max(0, Math.round(bounds.minX + headWidth * 0.08)),
+    right: Math.min(width - 1, Math.round(bounds.maxX - headWidth * 0.05)),
+    top: Math.max(0, Math.round(bounds.minY + headHeight * 0.39)),
+    bottom: Math.min(height - 1, Math.round(bounds.minY + headHeight * 0.68)),
+  };
+  for (let y = roi.top; y <= roi.bottom; y += 1) {
+    for (let x = roi.left; x <= roi.right; x += 1) {
+      const pixel = y * width + x;
+      const offset = pixel * 4;
+      if (data[offset + 3] < 70) continue;
+      const lab = pixelLab(data, pixel);
+      const chroma = Math.hypot(lab.a, lab.b);
+      const skinDistance = delta(lab, skin);
+      if (chroma > 0.048 && skinDistance > 0.07 && lab.l < 0.82) binary[pixel] = 1;
     }
-    const items = components(close(binary, width, height), width, height, roi).filter((item) =>
-      item.width >= 2 && item.height >= 2
-      && item.width <= headWidth * 0.16 && item.height <= headHeight * 0.11
-      && item.width / item.height < 2.4);
-    const eyeCenterX = (roi.left + roi.right) / 2;
-    const eyeCenterY = (roi.top + roi.bottom) / 2;
-    items.sort((a, b) => {
-      const score = (item) => Math.abs((item.minX + item.maxX) / 2 - eyeCenterX) / headWidth
-        + Math.abs((item.minY + item.maxY) / 2 - eyeCenterY) / headHeight
-        - item.pixels.length / (headWidth * headHeight) * 2;
-      return score(a) - score(b);
-    });
-    if (items[0]) pupilComponents.push(items[0]);
   }
-  if (pupilComponents.length !== 2) return { mask: emptyMask(width, height), confidence: 0.15, pair: null };
-  const pair = { left: pupilComponents[0], right: pupilComponents[1], score: eyes.score };
-  return { mask: componentMask(image, pair), confidence: clamp(0.42 + eyes.score * 0.5, 0, 0.96), pair };
+  const candidates = colorComponents(image, binary, roi, 0.052).filter((item) =>
+    item.width >= Math.max(3, headWidth * 0.022) && item.height >= Math.max(3, headHeight * 0.014)
+    && item.width <= headWidth * 0.15 && item.height <= headHeight * 0.12
+    && item.width / item.height <= 1.9 && item.height / item.width <= 2.8);
+  const pair = featurePair(candidates, bounds.minY + headHeight * 0.60, headWidth, headHeight);
+  if (!pair || pair.score < 0.26) return { mask: emptyMask(width, height), confidence: 0.12, pair: null };
+  const eyeBonus = eyes ? 0.08 : 0;
+  return { mask: expandedFeatureMask(image, pair, skin, 2), confidence: clamp(0.43 + pair.score * 0.46 + eyeBonus, 0, 0.97), pair };
 }
 
 function detectBrows(image, bounds, skin, eyes) {
   const { data, width, height } = image;
   const headWidth = bounds.maxX - bounds.minX + 1;
   const headHeight = bounds.maxY - bounds.minY + 1;
-  const eyeY = eyes ? Math.min(eyes.left.minY, eyes.right.minY) : Math.round(bounds.minY + headHeight * 0.52);
+  const eyeY = Math.round(bounds.minY + headHeight * 0.55);
   const roi = {
     left: Math.max(0, Math.round(bounds.minX + headWidth * 0.10)),
     right: Math.min(width - 1, Math.round(bounds.maxX - headWidth * 0.07)),
-    top: Math.max(0, Math.round(bounds.minY + headHeight * 0.27)),
-    bottom: Math.min(height - 1, eyeY - Math.max(2, Math.round(headHeight * 0.018))),
+    top: Math.max(0, Math.round(bounds.minY + headHeight * 0.34)),
+    bottom: Math.min(height - 1, Math.round(bounds.minY + headHeight * 0.56)),
   };
   if (roi.bottom <= roi.top) return { mask: emptyMask(width, height), confidence: 0, pair: null };
   const binary = new Uint8Array(width * height);
@@ -252,15 +339,15 @@ function detectBrows(image, bounds, skin, eyes) {
       const offset = pixel * 4;
       if (data[offset + 3] < 100) continue;
       const lab = pixelLab(data, pixel);
-      if (delta(lab, skin) > 0.055 && lab.l < skin.l - 0.035) binary[pixel] = 1;
+      if (delta(lab, skin) > 0.038 && lab.l < skin.l - 0.025) binary[pixel] = 1;
     }
   }
-  const candidates = components(close(binary, width, height), width, height, roi).filter((item) =>
+  const candidates = colorComponents(image, binary, roi, 0.025).filter((item) =>
     item.width >= headWidth * 0.045 && item.width <= headWidth * 0.34
-    && item.height >= 1 && item.height <= headHeight * 0.075
+    && item.height >= 1 && item.height <= headHeight * 0.085
     && item.width / Math.max(1, item.height) >= 1.45);
-  const pair = mirroredPair(candidates, (bounds.minX + bounds.maxX) / 2, eyeY - headHeight * 0.075, headWidth, headHeight);
-  return { mask: componentMask(image, pair), confidence: pair ? clamp(0.35 + pair.score * 0.58, 0, 0.95) : 0, pair };
+  const pair = featurePair(candidates, bounds.minY + headHeight * 0.48, headWidth, headHeight);
+  return { mask: pair ? expandedFeatureMask(image, pair, skin, 1) : emptyMask(width, height), confidence: pair ? clamp(0.35 + pair.score * 0.58, 0, 0.95) : 0, pair };
 }
 
 export function detectColorAnatomy(image) {
