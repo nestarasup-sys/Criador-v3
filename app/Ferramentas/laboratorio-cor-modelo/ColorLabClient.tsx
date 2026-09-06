@@ -55,12 +55,6 @@ function frameKey(gender: string, modelId: string, expressionKey: string) {
   return `${gender}:${modelId}:${expressionKey}`;
 }
 
-function combinedMask(masks: ColorLabMasks) {
-  const result = new Uint8ClampedArray(masks.pupils.length);
-  for (let index = 0; index < result.length; index += 1) result[index] = Math.max(masks.pupils[index], masks.brows[index]);
-  return result;
-}
-
 function loadFrame(source: string) {
   return new Promise<LoadedFrame>((resolve, reject) => {
     const image = new Image();
@@ -83,6 +77,7 @@ export function ColorLabClient() {
   const stageRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
   const engineRef = useRef<ClassicColorAnalysisEngine | null>(null);
+  const activeSelectionRef = useRef("");
   const [models, setModels] = useState<ModelResponse>({ feminino: [], masculino: [] });
   const [gender, setGender] = useState<"feminino" | "masculino">("feminino");
   const [modelId, setModelId] = useState("");
@@ -129,11 +124,13 @@ export function ColorLabClient() {
     return () => { active = false; };
   }, []);
 
-  const availableModels = models[gender] ?? [];
+  const availableModels = useMemo(() => models[gender] ?? [], [models, gender]);
   const selectedModel = useMemo(() => availableModels.find((model) => model.id === modelId) ?? availableModels[0], [availableModels, modelId]);
 
   useEffect(() => {
     if (!availableModels.length) {
+      // A lista vem de uma API externa; limpar a seleção é a sincronização necessária.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setModelId("");
       return;
     }
@@ -142,13 +139,20 @@ export function ColorLabClient() {
 
   useEffect(() => {
     if (!selectedModel) return;
-    if (!selectedModel.expressionKeys.includes(expressionKey)) setExpressionKey(selectedModel.expressionKeys.includes("normal") ? "normal" : selectedModel.expressionKeys[0]);
+    if (!selectedModel.expressionKeys.includes(expressionKey)) {
+      // O modelo pode possuir um conjunto de expressões diferente.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExpressionKey(selectedModel.expressionKeys.includes("normal") ? "normal" : selectedModel.expressionKeys[0]);
+    }
   }, [selectedModel, expressionKey]);
 
   useEffect(() => {
     if (!selectedModel || !expressionKey) return;
     let active = true;
     const source = sourceFor(selectedModel, expressionKey);
+    // Não exibir/analisar o frame anterior enquanto a nova imagem chega.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFrame(null);
     setStatus(`Carregando ${selectedModel.name} · ${expressionKey}…`);
     loadFrame(source).then((loaded) => {
       if (active) setFrame(loaded);
@@ -157,6 +161,10 @@ export function ColorLabClient() {
   }, [selectedModel, expressionKey]);
 
   const activeKey = selectedModel ? frameKey(gender, selectedModel.id, expressionKey) : "";
+  const activeSource = selectedModel ? sourceFor(selectedModel, expressionKey) : "";
+  useEffect(() => {
+    activeSelectionRef.current = activeKey;
+  }, [activeKey]);
   const masks = useMemo<ColorLabMasks>(() => {
     if (activeKey && maskStore[activeKey]) return maskStore[activeKey];
     const size = frame ? frame.width * frame.height : 0;
@@ -175,7 +183,7 @@ export function ColorLabClient() {
         ...current,
         [key]: { confidence: result.confidence, warnings: result.warnings, automatic: true },
       }));
-      if (announce) {
+      if (announce && activeSelectionRef.current === key) {
         setView("overlay");
         setStatus(result.warnings.length
           ? `Análise concluída com ${result.warnings.length} aviso(s). Confira as áreas amarelas no diagnóstico.`
@@ -188,9 +196,11 @@ export function ColorLabClient() {
   }, [engine]);
 
   useEffect(() => {
-    if (!frame || !activeKey || analysisStore[activeKey] || analyzing || batchProgress) return;
+    if (!frame || frame.source !== activeSource || !activeKey || analysisStore[activeKey] || analyzing || batchProgress) return;
+    // A análise é uma sincronização assíncrona com o Worker.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void runAutomatic(frame, activeKey).catch((error) => setStatus(error instanceof Error ? error.message : "Falha na análise automática."));
-  }, [frame, activeKey, analysisStore, analyzing, batchProgress, runAutomatic]);
+  }, [frame, activeKey, activeSource, analysisStore, analyzing, batchProgress, runAutomatic]);
 
   const updateActiveMask = useCallback((next: Uint8ClampedArray) => {
     if (!frame || !activeKey) return;
@@ -205,7 +215,13 @@ export function ColorLabClient() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !frame) return;
+    if (!canvas) return;
+    if (!frame) {
+      canvas.width = 1;
+      canvas.height = 1;
+      canvas.getContext("2d")?.clearRect(0, 0, 1, 1);
+      return;
+    }
     canvas.width = frame.width;
     canvas.height = frame.height;
     const context = canvas.getContext("2d");
@@ -282,12 +298,14 @@ export function ColorLabClient() {
 
   const analyzeAll = async () => {
     if (!selectedModel || analyzing) return;
+    const batchKey = frameKey(gender, selectedModel.id, expressionKey);
     setAnalyzing(true);
     const keys = selectedModel.expressionKeys;
     setBatchProgress({ current: 0, total: keys.length });
     let warnings = 0;
     try {
       for (let index = 0; index < keys.length; index += 1) {
+        if (activeSelectionRef.current !== batchKey) throw new Error("A seleção mudou; análise em lote cancelada.");
         const key = keys[index];
         setBatchProgress({ current: index + 1, total: keys.length });
         setStatus(`Analisando ${key} (${index + 1}/${keys.length})…`);
@@ -298,7 +316,7 @@ export function ColorLabClient() {
       setView("overlay");
       setStatus(`Modelo analisado: ${keys.length} expressões · ${warnings} aviso(s) para revisão.`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "A análise em lote falhou.");
+      if (activeSelectionRef.current === batchKey) setStatus(error instanceof Error ? error.message : "A análise em lote falhou.");
     } finally {
       setAnalyzing(false);
       setBatchProgress(null);

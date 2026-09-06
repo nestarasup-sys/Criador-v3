@@ -293,19 +293,6 @@ function mirroredPair(items, centerX, expectedY, headWidth, headHeight) {
   return best;
 }
 
-function componentMask(image, selected, soften = true) {
-  const mask = emptyMask(image.width, image.height);
-  if (!selected) return mask;
-  const selectedPixels = [...selected.left.pixels, ...selected.right.pixels];
-  for (const pixel of selectedPixels) mask[pixel] = Math.max(96, image.data[pixel * 4 + 3]);
-  if (!soften) return mask;
-  const grown = dilate(Uint8Array.from(mask, (value) => value > 0 ? 1 : 0), image.width, image.height, 1);
-  for (let pixel = 0; pixel < grown.length; pixel += 1) {
-    if (grown[pixel] && !mask[pixel]) mask[pixel] = Math.min(96, image.data[pixel * 4 + 3]);
-  }
-  return mask;
-}
-
 function expandedFeatureMask(image, selected, skin, padding = 2) {
   const mask = emptyMask(image.width, image.height);
   if (!selected) return mask;
@@ -472,11 +459,10 @@ function detectPupils(image, bounds, skin, eyes) {
   return { mask: expandedFeatureMask(image, pair, skin, 2), confidence: clamp(0.43 + pair.score * 0.46 + eyeBonus, 0, 0.97), pair };
 }
 
-function detectBrows(image, bounds, skin, eyes) {
+function detectBrows(image, bounds, skin) {
   const { data, width, height } = image;
   const headWidth = bounds.maxX - bounds.minX + 1;
   const headHeight = bounds.maxY - bounds.minY + 1;
-  const eyeY = Math.round(bounds.minY + headHeight * 0.55);
   const roi = {
     left: Math.max(0, Math.round(bounds.minX + headWidth * 0.10)),
     right: Math.min(width - 1, Math.round(bounds.maxX - headWidth * 0.07)),
@@ -511,7 +497,7 @@ export function detectColorAnatomy(image) {
   const skin = estimateSkin(image, bounds);
   const eyes = detectEyePair(image, bounds, skin);
   const pupils = detectPupils(image, bounds, skin, eyes);
-  const brows = detectBrows(image, bounds, skin, eyes);
+  const brows = detectBrows(image, bounds, skin);
   const warnings = [];
   if (!eyes) warnings.push("Os dois olhos não foram localizados com segurança.");
   if (pupils.confidence < 0.55) warnings.push("Pupilas precisam de revisão manual.");
