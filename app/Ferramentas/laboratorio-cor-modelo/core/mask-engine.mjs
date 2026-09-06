@@ -68,6 +68,37 @@ export function maskBounds(mask, width, height) {
   return count ? { minX, minY, maxX, maxY, count } : null;
 }
 
+export function subjectBounds(image, options = {}) {
+  const { data, width, height } = image;
+  if (!data || width < 1 || height < 1) return null;
+  const cornerOffsets = [0, (width - 1) * 4, (height - 1) * width * 4, (width * height - 1) * 4];
+  const background = cornerOffsets.map((offset) => rgbToOklab(data[offset], data[offset + 1], data[offset + 2]));
+  const alphaMinimum = options.minimumAlpha ?? 12;
+  const backgroundTolerance = options.backgroundTolerance ?? 0.09;
+  const step = Math.max(1, options.step ?? 2);
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  let count = 0;
+  for (let y = 0; y < height; y += step) {
+    for (let x = 0; x < width; x += step) {
+      const offset = (y * width + x) * 4;
+      if (data[offset + 3] < alphaMinimum) continue;
+      const color = rgbToOklab(data[offset], data[offset + 1], data[offset + 2]);
+      const isBackground = data[offset + 3] === 255
+        && background.some((sample) => colorDistance(color, sample) <= backgroundTolerance);
+      if (isBackground) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+      count += 1;
+    }
+  }
+  return count ? { minX, minY, maxX, maxY, count: count * step * step } : null;
+}
+
 export function selectConnectedColor(image, seedX, seedY, options = {}) {
   const { data, width, height } = image;
   const x0 = clamp(Math.round(seedX), 0, width - 1);

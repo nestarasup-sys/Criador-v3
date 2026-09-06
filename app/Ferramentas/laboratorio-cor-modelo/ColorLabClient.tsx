@@ -10,6 +10,7 @@ import {
   paintMask,
   recolorMaskedPixels,
   selectConnectedColor,
+  subjectBounds,
 } from "./core/mask-engine.mjs";
 import type { ColorLabMasks, ColorLabModel, ColorLabTarget, ColorLabTool, ColorLabView } from "./types";
 import styles from "./color-lab.module.css";
@@ -59,6 +60,7 @@ function combinedMask(masks: ColorLabMasks) {
 
 export function ColorLabClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
   const [models, setModels] = useState<ModelResponse>({ feminino: [], masculino: [] });
   const [gender, setGender] = useState<"feminino" | "masculino">("feminino");
@@ -72,7 +74,7 @@ export function ColorLabClient() {
   const [tolerance, setTolerance] = useState(0.075);
   const [maximumDistance, setMaximumDistance] = useState(110);
   const [brushRadius, setBrushRadius] = useState(14);
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(220);
   const [pupilColor, setPupilColor] = useState("#477dff");
   const [browColor, setBrowColor] = useState("#6c3a2d");
   const [strength, setStrength] = useState(100);
@@ -256,6 +258,27 @@ export function ColorLabClient() {
 
   const activeBounds = frame && masks[target].length === frame.width * frame.height ? maskBounds(masks[target], frame.width, frame.height) : null;
 
+  const focusHead = useCallback(() => {
+    const stage = stageRef.current;
+    const canvas = canvasRef.current;
+    if (!stage || !canvas || !frame) return;
+    const subject = subjectBounds(frame.imageData, { step: 2 });
+    const focusX = subject ? (subject.minX + subject.maxX) / 2 : frame.width / 2;
+    const focusY = subject ? subject.minY + (subject.maxY - subject.minY) * 0.16 : frame.height * 0.2;
+    const scale = canvas.getBoundingClientRect().width / frame.width;
+    stage.scrollTo({
+      left: Math.max(0, focusX * scale - stage.clientWidth / 2),
+      top: Math.max(0, focusY * scale - stage.clientHeight * 0.28),
+      behavior: "smooth",
+    });
+  }, [frame]);
+
+  useEffect(() => {
+    if (!frame) return;
+    const timer = window.setTimeout(focusHead, 80);
+    return () => window.clearTimeout(timer);
+  }, [frame, focusHead]);
+
   return <main className={styles.main}>
     <section className={styles.intro}>
       <div><span>FERRAMENTA EXPERIMENTAL ISOLADA</span><h1>Laboratório de máscaras de cor</h1><p>Prepare áreas exatas para recolorir pupilas e sobrancelhas. Nada salvo aqui altera o Criador ou o Studio.</p></div>
@@ -292,9 +315,9 @@ export function ColorLabClient() {
       <div className={styles.center}>
         <div className={styles.canvasToolbar}>
           <div>{(Object.keys(VIEW_LABELS) as ColorLabView[]).map((item) => <button key={item} className={view === item ? styles.active : ""} onClick={() => setView(item)}>{VIEW_LABELS[item]}</button>)}</div>
-          <label>Zoom <input type="range" min="35" max="300" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><output>{zoom}%</output></label>
+          <span className={styles.zoomTools}><button onClick={focusHead}>Enquadrar cabeça</button><label>Zoom <input type="range" min="35" max="400" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><output>{zoom}%</output></label></span>
         </div>
-        <div className={styles.canvasStage}>
+        <div ref={stageRef} className={styles.canvasStage}>
           {frame ? <canvas
             ref={canvasRef}
             style={{ width: `${zoom}%` }}

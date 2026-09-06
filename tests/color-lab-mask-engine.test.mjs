@@ -7,6 +7,7 @@ import {
   paintMask,
   recolorMaskedPixels,
   selectConnectedColor,
+  subjectBounds,
 } from "../app/Ferramentas/laboratorio-cor-modelo/core/mask-engine.mjs";
 
 function image(width, height, color = [245, 230, 224, 255]) {
@@ -57,6 +58,13 @@ test("recoloração OKLab mantém alpha e pixels fora da máscara intactos", () 
   assert.equal(result[3], 190);
   assert.deepEqual([...result.slice(4, 8)], [30, 40, 50, 77]);
   assert.notDeepEqual([...result.slice(0, 3)], [120, 45, 40]);
+});
+
+test("enquadramento ignora o fundo uniforme e localiza o personagem", () => {
+  const frame = image(30, 20, [0, 195, 102, 255]);
+  paintRect(frame, 9, 2, 20, 17, [242, 211, 201, 255]);
+  const bounds = subjectBounds(frame, { step: 1 });
+  assert.deepEqual(bounds, { minX: 9, minY: 2, maxX: 20, maxY: 17, count: 192 });
 });
 
 test("a rota anuncia isolamento e os dois alvos sem integrar ao Criador", async () => {
