@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V5.3.3.4 Canonical Head — Alinhador de Expressões</title>
+<title>V6.3.5 Experimental — Canonical SmartLock + Face Rig 2</title>
 
 <style>
 :root{
@@ -417,6 +417,9 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
   .app{grid-template-columns:350px minmax(0,1fr)}
   .previewGrid{grid-template-columns:1fr}
 }
+
+.v6box{margin:12px 0 14px;padding:12px;border-radius:16px;border:1px solid rgba(76,29,149,.18);background:linear-gradient(145deg,rgba(91,33,182,.075),rgba(255,255,255,.8));box-shadow:inset 0 1px 0 rgba(255,255,255,.85)}
+.v6head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}.v6head>div{display:flex;align-items:center;gap:8px}.v6head b{font-size:13px;color:#2e1065}.v6head span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;padding:3px 6px;border-radius:999px;background:#2e1065;color:#fff}.switchline{margin:0!important;font-weight:750!important;color:#2e1065!important}
 @media(max-width:980px){
   .app{display:block}
   .sidebar{height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding:18px}
@@ -436,8 +439,8 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 <body>
 <div class="app">
 <aside class="sidebar">
-  <h1>V5.3.3.4 Canonical Head</h1>
-  <div class="small">Formato mediano + preservação forte do rosto interno. Agora com modo opcional para imagem já sem fundo.</div>
+  <h1>V6.3.5 Experimental · SmartLock + Face Rig 2</h1>
+  <div class="small">Motor experimental focado em estabilidade: o Face Rig 2 usa referências separadas para normal, blink e talk e desloca somente o miolo do rosto, sem arrastar o contorno da cabeça.</div>
 
   <div class="card">
     <h2>1. Carregar e detectar</h2>
@@ -453,7 +456,43 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <label><input id="autoThr" type="checkbox" checked style="width:auto"> Encontrar sensibilidade automaticamente</label>
     <label><input id="alreadyTransparent" type="checkbox" style="width:auto"> Imagem ja sem fundo</label>
     <div id="bgModeHint" class="small">Desativado: usa chroma key verde. Ativado: ignora chroma key e detecta pelas áreas opacas/alpha.</div>
+    <label><input id="smallestHorizontalBase" type="checkbox" checked disabled style="width:auto"> Molde horizontal = menor cabeça detectada</label>
+    <div class="small">Modo fixo: a menor cabeça detectada sempre é usada como referência da <b>largura</b> do molde, para evitar que uma cabeça muito gorda deixe todas as outras largas demais. A altura continua sendo calculada normalmente.</div>
+
+    <div class="v6box" style="margin-top:10px">
+      <div class="v6head">
+        <div><b>Face Rig 2 experimental</b><span>neutra / blink / talk separados</span></div>
+      </div>
+      <div class="small">Cada linha usa a sua própria referência da expressão <b>Neutra / observando</b> da Folha A. O olho esquerdo mede o deslocamento; o olho direito acompanha automaticamente porque o miolo é movido como bloco. O contorno da cabeça não recebe esse deslocamento.</div>
+      <label><input id="faceRigEnable" type="checkbox" style="width:auto"> Ativar Face Rig 2</label>
+      <label><input id="faceRigEye" type="checkbox" style="width:auto"> Olho esquerdo = âncora principal</label>
+      <label><input id="faceRigMouth" type="checkbox" style="width:auto"> Boca = somente verificação</label>
+      <label><input id="faceRigConfidence" type="checkbox" style="width:auto"> Só corrigir quando a detecção for confiável</label>
+
+      <label>Força do Face Rig <span class="value" id="faceRigStrengthV">64%</span></label>
+      <input id="faceRigStrength" type="range" min="0" max="100" step="1" value="64">
+
+      <label>Zona morta facial <span class="value" id="faceRigDeadV">0.5%</span></label>
+      <input id="faceRigDead" type="range" min="0" max="2" step="0.05" value="0.5">
+
+      <label>Correção máxima <span class="value" id="faceRigMaxV">3.0%</span></label>
+      <input id="faceRigMax" type="range" min="0.5" max="6" step="0.1" value="3">
+
+      <label>Transição lateral <span class="value" id="faceRigFeatherV">14%</span></label>
+      <input id="faceRigFeather" type="range" min="4" max="30" step="1" value="14">
+
+      <div class="small">O centro do rosto recebe a mesma translação vertical. As laterais fazem uma transição suave até 0%, mantendo testa, orelha, mandíbula e contorno no alinhamento canônico original.</div>
+    </div>
+
     <button id="detect" class="primary">Detectar cabeças</button>
+
+    <div class="row" style="margin-top:8px">
+      <button id="canonicalExtra" class="good">Construir molde e alinhar tudo</button>
+      <button id="playExtra">▶ Play</button>
+    </div>
+    <button id="redoCurrent" style="margin-top:8px">↻ Refazer expressão selecionada (corrigir queixo)</button>
+    <div class="small" style="margin-top:5px">Mantém <b>TOPO</b> e <b>FIM DO PESCOÇO</b> exatamente onde estavam e recalcula somente a divisão <b>rosto / queixo / pescoço</b> usando o consenso das outras cabeças. É o modo mais seguro contra cabeça espremida ou esticada verticalmente.</div>
+
     <div id="detectStatus" class="status" style="margin-top:8px">Carregue as folhas.</div>
   </div>
 
@@ -464,8 +503,34 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <label><input id="largestScale" type="checkbox" checked style="width:auto"> Escala/resolução = maior cabeça detectada</label>
     <label><input id="splitNeck" type="checkbox" checked style="width:auto"> Alinhar cabeça e pescoço separadamente</label>
 
-    <label>Força do remapeamento <span class="value" id="warpV">100%</span></label>
-    <input id="warpStrength" type="range" min="0" max="100" value="100">
+    <div class="v6box">
+      <div class="v6head">
+        <div><b>V6 SmartLock</b><span>experimental</span></div>
+        <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
+      </div>
+      <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
+      <div class="small" style="margin-top:5px">V6.3.3: Face Rig 2 desativado por padrão; refazer manual agora corrige o queixo/face ratio mantendo topo e fim do pescoço fixos.</div>
+
+      <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
+      <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
+      <label><input id="v61BestBase" type="checkbox" checked style="width:auto"> Cabeça-base automática = usar a cabeça mais limpa</label>
+      <label><input id="v61DropBad" type="checkbox" checked style="width:auto"> Tirar do consenso cabeças com contorno ruim / emoji / saliência externa</label>
+
+      <label>Influência da cabeça-base <span class="value" id="v61BlendV">32%</span></label>
+      <input id="v61Blend" type="range" min="0" max="70" step="1" value="32">
+
+      <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
+      <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
+
+      <label>Limite de correção V6 <span class="value" id="v6CapV">3.0%</span></label>
+      <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
+
+      <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
+      <input id="v6Snap" type="range" min="1" max="16" step="1" value="8">
+    </div>
+
+    <label>Força do remapeamento <span class="value" id="warpV">6%</span></label>
+    <input id="warpStrength" type="range" min="0" max="100" value="6">
 
     <label>Suavização do contorno <span class="value" id="smoothV">11</span></label>
     <input id="smooth" type="range" min="3" max="31" step="2" value="11">
@@ -538,7 +603,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 Pasta: modelo-13
 JSON: modelo-13.json
 42 PNGs separados
-Set B: deboche_sonso / provocando / desacreditado / coracao_partido / corado / chocado_com_revelacao / culpado
+Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / aliviada
     </div>
 
     <button id="chooseModelsDir">Escolher / trocar pasta de modelos</button>
@@ -582,6 +647,8 @@ Set B: deboche_sonso / provocando / desacreditado / coracao_partido / corado / c
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
+    <span class="tag">V6 SmartLock</span>
+    <span class="tag">deadzone + subpixel</span>
   </div>
 
   <div class="kpis">
@@ -609,6 +676,11 @@ const S={
   canonical:null,
   currentIndex:0,
   largestIndex:0,
+  smallestHorizIndex:0,
+  bestBaseIndex:0,
+  v61Meta:null,
+  faceAlign:null,
+  referenceNormalIndex:-1,
   playing:false,
   timer:null,
   detectionScaleMax:1000
@@ -642,7 +714,15 @@ function updateLabels(){
   $("maxLocalXV").textContent=Number($("maxLocalX").value).toFixed(1)+"%";
   $("edgeBandV").textContent=$("edgeBand").value+"%";
   $("innerRigidityV").textContent=$("innerRigidity").value+"%";
+  if($("v61BlendV"))$("v61BlendV").textContent=$("v61Blend").value+"%";
+  if($("faceRigStrengthV"))$("faceRigStrengthV").textContent=$("faceRigStrength").value+"%";
+  if($("faceRigDeadV"))$("faceRigDeadV").textContent=Number($("faceRigDead").value).toFixed(2).replace(/0$/,'').replace(/\.$/,'')+"%";
+  if($("faceRigMaxV"))$("faceRigMaxV").textContent=Number($("faceRigMax").value).toFixed(1)+"%";
+  if($("faceRigFeatherV"))$("faceRigFeatherV").textContent=$("faceRigFeather").value+"%";
   $("fpsV").textContent=$("fps").value+" fps";
+  if($("v6DeadV"))$("v6DeadV").textContent=Number($("v6Dead").value).toFixed(1)+" px";
+  if($("v6CapV"))$("v6CapV").textContent=Number($("v6Cap").value).toFixed(1)+"%";
+  if($("v6SnapV"))$("v6SnapV").textContent="1/"+$("v6Snap").value+" px";
 }
 
 /* =========================================================
@@ -840,7 +920,7 @@ function cropHead(sheet,b,index){
   return {
     sheet:sheet.name,order:index+1,label:`${sheet.name}-${String(index+1).padStart(2,"0")}`,
     original,transparent,mask:mainMask,w,h,geom,profile,
-    warped:null,warpStats:null
+    warped:null,warpStats:null,manualRedo:false
   };
 }
 function floodMain(mask,w,h,comp){
@@ -999,6 +1079,22 @@ function largestHeadIndex(){
   });
   return best;
 }
+function smallestHorizontalHeadIndex(heads=S.heads){
+  let best=0,bestV=Infinity;
+  heads.forEach((h,i)=>{
+    const v=h.geom.skullWidth;
+    if(v<bestV){bestV=v;best=i}
+  });
+  return best;
+}
+function v634SafeSmallestWidth(smallest,heads){
+  const rawW=smallest.geom.skullWidth;
+  if(!($("v6Smart")?.checked && $("v6SafeScale")?.checked))return {w:rawW,clipped:false};
+  const ws=heads.map(h=>h.geom.skullWidth);
+  const p10w=percentile(ws,.10);
+  const minW=p10w*0.94;
+  return {w:Math.max(rawW,minW),clipped:rawW<minW};
+}
 function normalizedProfileSamples(h,nHead,nNeck){
   const left=[],right=[];
   for(let i=0;i<nHead;i++){
@@ -1021,13 +1117,294 @@ function smoothNumeric(a,window=5){
   }
   return out;
 }
+function v6RobustConsensus(values){
+  if(!values.length)return 0;
+  const m=median(values);
+  if(!($("v6Smart")?.checked && $("v6Robust")?.checked))return m;
+  const dev=values.map(v=>Math.abs(v-m));
+  const mad=Math.max(0.0005,median(dev));
+  const lim=mad*3.2;
+  const inliers=values.filter(v=>Math.abs(v-m)<=lim);
+  if(inliers.length<Math.max(3,Math.ceil(values.length*.45)))return m;
+  const mean=inliers.reduce((a,b)=>a+b,0)/inliers.length;
+  return lerp(m,mean,.28);
+}
+function v6SafeLargestTarget(largest,heads){
+  const rawW=largest.geom.skullWidth,rawH=largest.geom.totalHeight;
+  if(!($("v6Smart")?.checked && $("v6SafeScale")?.checked))return {w:rawW,h:rawH,clipped:false};
+  const ws=heads.map(h=>h.geom.skullWidth),hs=heads.map(h=>h.geom.totalHeight);
+  const p90w=percentile(ws,.90),p90h=percentile(hs,.90);
+  const maxW=p90w*1.075,maxH=p90h*1.075;
+  return {w:Math.min(rawW,maxW),h:Math.min(rawH,maxH),clipped:rawW>maxW||rawH>maxH};
+}
+function v6Deadzone(delta){
+  if(!$("v6Smart")?.checked)return delta;
+  const dead=Number($("v6Dead").value||0);
+  const a=Math.abs(delta);
+  if(a<=dead)return 0;
+  return Math.sign(delta)*(a-dead);
+}
+function v6CapCorrection(delta,fit){
+  if(!$("v6Smart")?.checked)return delta;
+  const pct=Number($("v6Cap").value||3)/100;
+  const cap=S.canonical.targetSkull*fit*pct;
+  return clamp(delta,-cap,cap);
+}
+function v6SnapPx(v){
+  if(!$("v6Smart")?.checked)return v;
+  const div=Math.max(1,Number($("v6Snap").value||8));
+  return Math.round(v*div)/div;
+}
+function v61RowMedianSamples(samples){
+  if(!samples.length)return {left:[],right:[]};
+  const N=samples[0].left.length,left=[],right=[];
+  for(let i=0;i<N;i++){
+    left.push(v6RobustConsensus(samples.map(s=>s.left[i])));
+    right.push(v6RobustConsensus(samples.map(s=>s.right[i])));
+  }
+  return {left,right};
+}
+function v61Roughness(arr,end){
+  let acc=0,c=0;
+  for(let i=1;i<end-1;i++){
+    acc+=Math.abs(arr[i-1]-2*arr[i]+arr[i+1]);
+    c++;
+  }
+  return c?acc/c:0;
+}
+function v61HeadScore(sample,med,nHead){
+  let dev=0,asym=0,spike=0,emoji=0,edge=0;
+  for(let i=0;i<nHead;i++){
+    const dl=Math.abs(sample.left[i]-med.left[i]);
+    const dr=Math.abs(sample.right[i]-med.right[i]);
+    dev+=dl+dr;
+    asym+=Math.abs(Math.abs(sample.left[i])-Math.abs(sample.right[i]));
+    const dL=sample.left[i]-med.left[i], dR=sample.right[i]-med.right[i];
+    if(dl>.055) edge+=Math.max(0,dl-.055)*1.2;
+    if(dr>.055) edge+=Math.max(0,dr-.055)*1.2;
+    // penaliza saliência externa mais forte no lado direito da cabeça (caso emoji/grude)
+    if(i>Math.floor(nHead*.10) && i<Math.floor(nHead*.72)){
+      if(dR>.075) emoji+=dR*2.8;
+      if(-dL>.075) emoji+=(-dL)*1.9;
+    }
+  }
+  const rough=v61Roughness(sample.left,nHead)+v61Roughness(sample.right,nHead);
+  for(let i=1;i<nHead-1;i++){
+    const sl=Math.abs(sample.left[i-1]-2*sample.left[i]+sample.left[i+1]);
+    const sr=Math.abs(sample.right[i-1]-2*sample.right[i]+sample.right[i+1]);
+    if(sl>.02)spike+=sl-.02;
+    if(sr>.02)spike+=sr-.02;
+  }
+  const norm=Math.max(1,nHead);
+  return {
+    score:(dev/norm)*1.0 + (asym/norm)*0.55 + rough*2.4 + spike*0.85 + (emoji/norm)*2.9 + (edge/norm)*0.9,
+    dev:dev/norm,asym:asym/norm,rough,spike:spike/norm,emoji:emoji/norm,edge:edge/norm
+  };
+}
+function v61ChooseBestBase(samples,nHead){
+  const med=v61RowMedianSamples(samples);
+  const scores=samples.map((s,i)=>({i,...v61HeadScore(s,med,nHead)}));
+  scores.sort((a,b)=>a.score-b.score);
+  return {bestIndex:scores[0]?.i||0,scores,medianShape:med};
+}
+function v61ConsensusIndices(samples,nHead){
+  const info=v61ChooseBestBase(samples,nHead);
+  const rawScores=info.scores.map(s=>s.score), m=median(rawScores);
+  const mad=Math.max(1e-6,median(rawScores.map(v=>Math.abs(v-m))));
+  const limit=m+mad*2.7;
+  let keep=info.scores.filter(s=>s.score<=limit).map(s=>s.i);
+  if(!$("v6Smart")?.checked || !$("v61DropBad")?.checked)keep=samples.map((_,i)=>i);
+  if(keep.length<Math.max(6,Math.ceil(samples.length*.55)))keep=samples.map((_,i)=>i);
+  return {...info,keep,limit,medianScore:m,mad};
+}
+function v61BlendShape(medianShape,baseShape,blend){
+  const left=[],right=[],N=medianShape.left.length;
+  for(let i=0;i<N;i++){
+    left.push(lerp(medianShape.left[i],baseShape.left[i],blend));
+    right.push(lerp(medianShape.right[i],baseShape.right[i],blend));
+  }
+  return {left,right};
+}
+function v612GeomRefStats(heads){
+  const faceFrac=heads.map(h=>h.geom.faceHeight/Math.max(1,h.geom.totalHeight));
+  const neckFrac=heads.map(h=>h.geom.neckHeight/Math.max(1,h.geom.totalHeight));
+  const facePerSkull=heads.map(h=>h.geom.faceHeight/Math.max(1,h.geom.skullWidth));
+  const neckPerSkull=heads.map(h=>h.geom.neckHeight/Math.max(1,h.geom.skullWidth));
+  const totalPerSkull=heads.map(h=>h.geom.totalHeight/Math.max(1,h.geom.skullWidth));
+  return {
+    faceFrac:median(faceFrac),
+    neckFrac:median(neckFrac),
+    facePerSkull:median(facePerSkull),
+    neckPerSkull:median(neckPerSkull),
+    totalPerSkull:median(totalPerSkull)
+  };
+}
+function v612PrepareWarpGeometries(){
+  const ref=v612GeomRefStats(S.heads);
+  let fixed=0;
+  for(const h of S.heads){
+    const g=h.geom;
+    const total=g.totalHeight, skull=Math.max(1,g.skullWidth);
+    const faceFrac=g.faceHeight/Math.max(1,total);
+    const neckFrac=g.neckHeight/Math.max(1,total);
+    const totalPerSkull=total/skull;
+    const faceExpected=(total*ref.faceFrac + skull*ref.facePerSkull)*0.5;
+    const neckExpected=(total*ref.neckFrac + skull*ref.neckPerSkull)*0.5;
+    const totalExpected=skull*ref.totalPerSkull;
+
+    const badFace=(faceFrac<ref.faceFrac*0.88 || faceFrac>ref.faceFrac*1.12 || Math.abs(g.faceHeight-faceExpected)>Math.max(6,faceExpected*0.11));
+    const badNeck=(neckFrac<ref.neckFrac*0.75 || neckFrac>ref.neckFrac*1.30 || Math.abs(g.neckHeight-neckExpected)>Math.max(5,neckExpected*0.22));
+    const badTotal=(totalPerSkull<ref.totalPerSkull*0.88 || totalPerSkull>ref.totalPerSkull*1.15);
+
+    let faceH=g.faceHeight, neckH=g.neckHeight;
+    let changed=false;
+
+    if(badFace){
+      faceH=lerp(faceH,faceExpected,0.85);
+      faceH=clamp(faceH,faceExpected*0.92,faceExpected*1.08);
+      changed=true;
+    }
+    if(badNeck){
+      neckH=lerp(neckH,neckExpected,0.80);
+      neckH=clamp(neckH,neckExpected*0.80,neckExpected*1.20);
+      changed=true;
+    }
+    if(badTotal){
+      const desiredTotal=clamp(lerp(faceH+neckH,totalExpected,0.45),totalExpected*0.92,totalExpected*1.08);
+      const sum=Math.max(1,faceH+neckH);
+      const k=desiredTotal/sum;
+      faceH*=k; neckH*=k;
+      changed=true;
+    }
+
+    // caso raro: cabeça achatada para baixo. Expande a parte do rosto e diminui a chance de jawY subir demais.
+    const yHeadRatio=S.canonical ? (S.canonical.targetFace/Math.max(1,faceH)) : 1;
+    if(yHeadRatio>1.18){
+      faceH*=Math.min(yHeadRatio/1.08,1.14);
+      changed=true;
+    }
+
+    if(changed){
+      const jawY=g.topY+faceH;
+      const neckBottomY=jawY+neckH;
+      h.geomWarp={...g,jawY,faceHeight:faceH,neckBottomY,neckHeight:neckH,totalHeight:faceH+neckH,source:'guarded'};
+      h.geomFixInfo={badFace,badNeck,badTotal};
+      fixed++;
+    }else{
+      h.geomWarp=g;
+      h.geomFixInfo=null;
+    }
+  }
+  return fixed;
+}
+function activeGeom(h){
+  return h.geomWarp||h.geom;
+}
+function v613ConsensusGeomForHead(h){
+  const others=S.heads.filter(x=>x!==h);
+  const pool=others.length>=3?others:S.heads;
+  const facePerSkull=median(pool.map(x=>x.geom.faceHeight/Math.max(1,x.geom.skullWidth)));
+  const neckPerSkull=median(pool.map(x=>x.geom.neckHeight/Math.max(1,x.geom.skullWidth)));
+  const totalPerSkull=median(pool.map(x=>x.geom.totalHeight/Math.max(1,x.geom.skullWidth)));
+  const faceFrac=median(pool.map(x=>x.geom.faceHeight/Math.max(1,x.geom.totalHeight)));
+
+  const g=h.geom, skull=Math.max(1,g.skullWidth);
+  let totalH=skull*totalPerSkull;
+  let faceH=skull*facePerSkull;
+  let neckH=skull*neckPerSkull;
+  const faceFromTotal=totalH*faceFrac;
+  faceH=lerp(faceH,faceFromTotal,.65);
+  neckH=Math.max(1,totalH-faceH);
+  const jawY=g.topY+faceH;
+  const neckBottomY=jawY+neckH;
+  return {...g,jawY,faceHeight:faceH,neckBottomY,neckHeight:neckH,totalHeight:faceH+neckH,source:'manual-consensus'};
+}
+function v633ConsensusJawGeom(h){
+  const others=S.heads.filter(x=>x!==h);
+  const pool=others.length>=3?others:S.heads;
+  const g=h.geom;
+  const rawTotal=Math.max(1,g.neckBottomY-g.topY);
+
+  // A estatística mais importante: onde o queixo fica dentro da altura útil total.
+  const faceRatios=pool
+    .map(x=>x.geom.faceHeight/Math.max(1,x.geom.totalHeight))
+    .filter(v=>Number.isFinite(v) && v>.45 && v<.95);
+  const medFaceRatio=median(faceRatios);
+  const q25=percentile(faceRatios,.25), q75=percentile(faceRatios,.75);
+
+  // Também usa largura do crânio como segunda referência para não confiar só na altura do recorte.
+  const facePerSkull=median(pool.map(x=>x.geom.faceHeight/Math.max(1,x.geom.skullWidth)));
+  const skull=Math.max(1,g.skullWidth);
+  const faceByRatio=rawTotal*medFaceRatio;
+  const faceBySkull=skull*facePerSkull;
+
+  // Combina as duas, mas preserva integralmente topo e fim do pescoço originais.
+  let faceH=lerp(faceByRatio,faceBySkull,.28);
+  const lo=rawTotal*Math.max(.50,q25-.035);
+  const hi=rawTotal*Math.min(.92,q75+.035);
+  faceH=clamp(faceH,lo,hi);
+
+  // Se a detecção original já estiver perto do consenso, evita mudança grande.
+  const originalRatio=g.faceHeight/Math.max(1,g.totalHeight);
+  const err=originalRatio-medFaceRatio;
+  const severity=clamp(Math.abs(err)/.10,0,1);
+  faceH=lerp(g.faceHeight,faceH,.72+.25*severity);
+
+  const topY=g.topY;
+  const neckBottomY=g.neckBottomY;
+  const jawY=clamp(topY+faceH,topY+rawTotal*.50,neckBottomY-rawTotal*.06);
+  const finalFaceH=jawY-topY;
+  const neckH=Math.max(1,neckBottomY-jawY);
+
+  return {
+    geom:{...g,topY,jawY,faceHeight:finalFaceH,neckBottomY,neckHeight:neckH,totalHeight:rawTotal,source:'manual-jaw-consensus'},
+    debug:{medFaceRatio,originalRatio,correctedRatio:finalFaceH/rawTotal,severity}
+  };
+}
+async function redoCurrentExpression(){
+  stopPlayer();
+  if(!S.canonical||!S.heads.length){
+    status("canonicalStatus","Construa o molde antes de refazer uma expressão.","bad");
+    return;
+  }
+  const h=current();
+  if(!h)return;
+
+  const btn=$("redoCurrent");
+  btn.disabled=true;
+  try{
+    // Desliga influência temporária do Face Rig para a reparação geométrica ser previsível.
+    const oldFaceAlign=S.faceAlign;
+    S.faceAlign=null;
+
+    const repaired=v633ConsensusJawGeom(h);
+    h.geomWarp=repaired.geom;
+    h.geomFixInfo={manual:true,mode:'jaw',...repaired.debug};
+    h.manualRedo=true;
+    h.warpStats=computeWarpStats(h);
+    h.warped=makeWarpedCanvas(h,720);
+
+    // Restaura configuração do Face Rig para as demais expressões, sem reaplicar na atual reparada.
+    S.faceAlign=oldFaceAlign;
+
+    drawPreview();renderThumbs();updateDiagnostics();
+    status("canonicalStatus",`Refiz ${h.label}: topo e fim do pescoço preservados; queixo corrigido por consenso.`,"ok");
+    log(`V6.3.3: ${h.label} corrigida por jaw-consensus. face ratio ${repaired.debug.originalRatio.toFixed(3)} → ${repaired.debug.correctedRatio.toFixed(3)}; alvo ${repaired.debug.medFaceRatio.toFixed(3)}.`);
+  }catch(e){
+    console.error(e);
+    status("canonicalStatus","Erro ao corrigir queixo da expressão: "+e.message,"bad");
+  }finally{
+    btn.disabled=false;
+  }
+}
 async function buildCanonical(){
   stopPlayer();
   if(!S.heads.length){status("canonicalStatus","Primeiro detecte as cabeças.","bad");return}
   $("canonical").disabled=true;
+  if($("canonicalExtra"))$("canonicalExtra").disabled=true;
   try{
-    // Recalcula perfis com os parâmetros atuais.
     status("canonicalStatus","Recalculando contornos robustos…","warn");
+    for(const h of S.heads)h.manualRedo=false;
     for(let i=0;i<S.heads.length;i++){
       S.heads[i].profile=makeRobustProfile(S.heads[i].original,S.heads[i].mask,S.heads[i].geom);
       if(i%5===4)await sleep(0);
@@ -1036,36 +1413,81 @@ async function buildCanonical(){
     S.largestIndex=largestHeadIndex();
     const largest=S.heads[S.largestIndex],nHead=170,nNeck=46;
     const samples=S.heads.map(h=>normalizedProfileSamples(h,nHead,nNeck));
-    const N=samples[0].left.length;
+    const consensus=v61ConsensusIndices(samples,nHead);
+    const keepSamples=consensus.keep.map(i=>samples[i]);
+    const keepHeads=consensus.keep.map(i=>S.heads[i]);
+
+    S.bestBaseIndex=$("v61BestBase")?.checked ? consensus.bestIndex : S.largestIndex;
+    const baseHead=S.heads[S.bestBaseIndex];
+    const baseSample=samples[S.bestBaseIndex];
+
+    const scalePool=(keepHeads.length && $("v61DropBad")?.checked && $("v6Smart")?.checked)?keepHeads:S.heads;
+    const smallestPoolHead=scalePool.reduce((a,b)=>b.geom.skullWidth<a.geom.skullWidth?b:a, scalePool[0]);
+    S.smallestHorizIndex=S.heads.indexOf(smallestPoolHead);
+    const smallestSample=samples[S.smallestHorizIndex];
+
+    const medAll=v61RowMedianSamples(keepSamples.length?keepSamples:samples);
     let left=[],right=[];
 
     if($("medianShape").checked){
-      for(let i=0;i<N;i++){
-        left.push(median(samples.map(s=>s.left[i])));
-        right.push(median(samples.map(s=>s.right[i])));
+      left=[...medAll.left]; right=[...medAll.right];
+      if($("smallestHorizontalBase")?.checked){
+        const blendSmall=.20;
+        const mixed=v61BlendShape({left,right},smallestSample,blendSmall);
+        left=mixed.left; right=mixed.right;
+      }
+      if($("v6Smart")?.checked && $("v61BestBase")?.checked){
+        const blend=Number($("v61Blend").value||32)/100;
+        const mixed=v61BlendShape({left,right},baseSample,blend);
+        left=mixed.left; right=mixed.right;
       }
     }else{
-      left=[...samples[S.largestIndex].left];right=[...samples[S.largestIndex].right];
+      const shapeSample=$("smallestHorizontalBase")?.checked
+        ? smallestSample
+        : ($("v61BestBase")?.checked ? baseSample : samples[S.largestIndex]);
+      left=[...shapeSample.left]; right=[...shapeSample.right];
     }
 
-    left=smoothNumeric(left,5);right=smoothNumeric(right,5);
+    const canonSmooth=$("v6Smart")?.checked?7:5;
+    left=smoothNumeric(left,canonSmooth);right=smoothNumeric(right,canonSmooth);
 
-    const targetSkull=$("largestScale").checked
-      ? largest.geom.skullWidth
-      : median(S.heads.map(h=>h.geom.skullWidth));
+    const scaleRef=$("v61BestBase")?.checked ? baseHead : largest;
+    const v6Scale=v6SafeLargestTarget(scaleRef,scalePool);
+    const smallScale=v634SafeSmallestWidth(smallestPoolHead,scalePool);
+    const targetSkull=$("smallestHorizontalBase")?.checked
+      ? smallScale.w
+      : ($("largestScale").checked
+          ? v6Scale.w
+          : median(scalePool.map(h=>h.geom.skullWidth)));
     const targetTotal=$("largestScale").checked
-      ? largest.geom.totalHeight
-      : median(S.heads.map(h=>h.geom.totalHeight));
+      ? v6Scale.h
+      : median(scalePool.map(h=>h.geom.totalHeight));
 
-    // Proporção vertical vem da mediana, para a maior cabeça não impor um pescoço/cabeça atípico.
-    const faceRatio=median(S.heads.map(h=>h.geom.faceHeight/h.geom.totalHeight));
+    const faceRatio=median(scalePool.map(h=>h.geom.faceHeight/h.geom.totalHeight));
     const targetFace=targetTotal*faceRatio,targetNeck=targetTotal-targetFace;
 
-    S.canonical={left,right,nHead,nNeck,targetSkull,targetTotal,targetFace,targetNeck,largestIndex:S.largestIndex};
+    S.canonical={left,right,nHead,nNeck,targetSkull,targetTotal,targetFace,targetNeck,largestIndex:S.largestIndex,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex};
+    S.v61Meta={
+      bestLabel:baseHead.label,
+      kept:consensus.keep.length,
+      total:S.heads.length,
+      dropped:S.heads.length-consensus.keep.length,
+      score:consensus.scores.find(x=>x.i===S.bestBaseIndex)?.score||0,
+      medianScore:consensus.medianScore,
+      limit:consensus.limit,
+      horizMode: $("smallestHorizontalBase")?.checked ? "menor cabeça" : ($("largestScale").checked ? "maior cabeça" : "mediana"),
+      horizLabel: smallestPoolHead?.label || "—",
+      smallClipped: smallScale.clipped,
+      largeClipped: v6Scale.clipped
+    };
 
+    prepareExperimentalFaceAlign();
     drawCanonicalDebug();
-    status("canonicalStatus",`Molde criado. Escala: ${largest.label}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`Molde: formato mediano de ${S.heads.length} cabeças; escala de ${largest.label}.`);
+    const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
+    status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
+    log(`V6.3.5 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V6.1.1 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V6.1.1 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -1074,12 +1496,15 @@ async function buildCanonical(){
       if(i%2===1){status("canonicalStatus",`Renderizando… ${i+1}/${S.heads.length}`,"warn");await sleep(0)}
     }
 
-    status("canonicalStatus","Pronto. V5.3 aplicada: alinhamento pronto para exportar o pacote modelo-N.","ok");
+    status("canonicalStatus",`V6.3.5 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%`,"ok");
     refreshSelectors();renderThumbs();drawPreview();updateKPIs();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
     status("canonicalStatus","Erro: "+e.message,"bad");
-  }finally{$("canonical").disabled=false}
+  }finally{
+    $("canonical").disabled=false;
+    if($("canonicalExtra"))$("canonicalExtra").disabled=false;
+  }
 }
 function canonicalAtIndex(idx){
   const c=S.canonical,N=c.left.length,x=clamp(idx,0,N-1),i0=Math.floor(x),i1=Math.min(N-1,i0+1),t=x-i0;
@@ -1096,18 +1521,30 @@ function canonicalLocalAtY(localY){
   return {...canonicalAtIndex(idx),segment:"neck",t};
 }
 function sourceYForCanonical(h,localY){
-  const c=S.canonical;
+  const c=S.canonical,g=activeGeom(h),raw=h.geom;
+  let src;
   if(!$("splitNeck").checked){
-    return h.geom.topY+clamp(localY/c.targetTotal,0,1)*h.geom.totalHeight;
+    src = g.topY+clamp(localY/c.targetTotal,0,1)*g.totalHeight;
+  }else if(localY<=c.targetFace){
+    const srcFaceLocal=S.faceAlign ? faceLocalSourceExperimental(h,localY) : clamp(localY/c.targetFace,0,1)*g.faceHeight;
+    src = g.topY+srcFaceLocal;
+  }else{
+    src = g.jawY+clamp((localY-c.targetFace)/Math.max(1,c.targetNeck),0,1)*g.neckHeight;
   }
-  if(localY<=c.targetFace){
-    return h.geom.topY+clamp(localY/c.targetFace,0,1)*h.geom.faceHeight;
-  }
-  return h.geom.jawY+clamp((localY-c.targetFace)/Math.max(1,c.targetNeck),0,1)*h.geom.neckHeight;
+  return clamp(src, raw.topY, raw.neckBottomY);
+}
+function sourceYForCanonicalInner(h,localY){
+  const c=S.canonical,g=activeGeom(h);
+  if(localY>c.targetFace)return sourceYForCanonical(h,localY);
+  const linear=clamp(localY/c.targetFace,0,1)*g.faceHeight;
+  const cfg=S.faceAlign,rig=h.faceRig;
+  if(!cfg || !rig || !cfg.enabled || !rig.enabled || !rig.delta)return g.topY+linear;
+  const shift=rig.delta*faceRigVerticalEnvelope(localY,cfg);
+  return g.topY+clamp(linear+shift,0,g.faceHeight);
 }
 function computeWarpStats(h){
-  const c=S.canonical,scales=[];
-  const global=c.targetSkull/h.geom.skullWidth;
+  const c=S.canonical,scales=[],g=activeGeom(h);
+  const global=c.targetSkull/g.skullWidth;
   for(let i=0;i<90;i++){
     const localY=c.targetTotal*i/89,can=canonicalLocalAtY(localY),sy=sourceYForCanonical(h,localY),p=sampleProfile(h,sy);
     const sw=Math.max(1,p.r-p.l),tw=Math.max(1,(can.r-can.l)*c.targetSkull);
@@ -1116,19 +1553,21 @@ function computeWarpStats(h){
   const med=median(scales),min=Math.min(...scales),max=Math.max(...scales);
   return {
     xMedian:med,xMin:min,xMax:max,
-    yHead:c.targetFace/h.geom.faceHeight,
-    yNeck:c.targetNeck/h.geom.neckHeight,
-    yTotal:c.targetTotal/h.geom.totalHeight,
+    yHead:c.targetFace/g.faceHeight,
+    yNeck:c.targetNeck/g.neckHeight,
+    yTotal:c.targetTotal/g.totalHeight,
     localVariation:Math.max(Math.abs(min/med-1),Math.abs(max/med-1)),
-    globalX:global
+    globalX:global,
+    geomSource:g.source||'raw'
   };
 }
 
 
 function faceRegionProtection(h,srcY){
+  const g=activeGeom(h);
   if(!$("adaptiveFace").checked)return 1;
-  if(srcY>h.geom.jawY)return 1;
-  const rel=(srcY-h.geom.topY)/Math.max(1,h.geom.faceHeight);
+  if(srcY>g.jawY)return 1;
+  const rel=(srcY-g.topY)/Math.max(1,g.faceHeight);
   if(rel>=.28 && rel<=.60) return .34; // olhos
   if(rel>=.66 && rel<=.92) return .55; // boca/nariz
   if(rel<.14) return .72;              // topo da cabeça
@@ -1139,13 +1578,25 @@ function clampLocalScale(globalScale,localScale){
   return clamp(localScale, globalScale*(1-maxDev), globalScale*(1+maxDev));
 }
 function drawRowSegment(ctx,img,srcY,sx0,sx1,dx0,dx1,destY){
-  const sw=Math.max(0.001,sx1-sx0),dw=Math.max(0.001,dx1-dx0);
-  ctx.drawImage(img,sx0,srcY,sw,1.12,dx0,destY,dw,1.18);
+  // V6.1.1: "seamless warp".
+  // As antigas faixas se tocavam exatamente em coordenadas fracionárias e o
+  // antialias do canvas podia deixar uma linha fina visível entre elas.
+  // Agora cada faixa recebe um pequeno overscan, criando sobreposição subpixel
+  // sem alterar os pontos/força do alinhamento.
+  const srcW=Math.max(0.001,sx1-sx0), dstW=Math.max(0.001,dx1-dx0);
+  const srcPad=Math.min(0.34,srcW*.08);
+  const dstPad=Math.min(0.72,dstW*.08);
+  const srcL=Math.max(0,sx0-srcPad), srcR=Math.min(img.width,sx1+srcPad);
+  const dstL=dx0-dstPad, dstR=dx1+dstPad;
+  const sw=Math.max(0.001,srcR-srcL), dw=Math.max(0.001,dstR-dstL);
+
+  ctx.drawImage(img,srcL,srcY,sw,1.20,dstL,destY-.08,dw,1.34);
 }
 
 function edgeBandBounds(h,p){
   const srcW=Math.max(1,p.r-p.l);
-  const band=Number($("edgeBand").value)/100;
+  let band=Number($("edgeBand").value)/100;
+  if(S.faceAlign && h.faceRig)band=Math.max(band,S.faceAlign.featherFrac||0);
   const edgeW=srcW*band;
   const innerL=p.l+edgeW;
   const innerR=p.r-edgeW;
@@ -1193,6 +1644,7 @@ function safeCoreBounds(h,p){
 function makeWarpedCanvas(h,size=720){
   const c=S.canonical,out=canvas(size,size),ctx=out.getContext("2d");
   ctx.imageSmoothingEnabled=true;
+  if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
   const fit=(size*.78)/c.targetTotal,top=size*.10,center=size/2;
   const bottom=top+c.targetTotal*fit;
   const strength=Number($("warpStrength").value)/100;
@@ -1203,6 +1655,7 @@ function makeWarpedCanvas(h,size=720){
   for(let y=Math.floor(top);y<=Math.ceil(bottom);y++){
     const localY=clamp((y-top)/fit,0,c.targetTotal);
     const srcY=sourceYForCanonical(h,localY);
+    const srcYInner=sourceYForCanonicalInner(h,localY);
     const p=sampleProfile(h,srcY),can=canonicalLocalAtY(localY);
     const srcW=Math.max(1,p.r-p.l);
 
@@ -1213,8 +1666,14 @@ function makeWarpedCanvas(h,size=720){
     const globalScale=(globalR-globalL)/srcW;
 
     const rowStrength=strength*faceRegionProtection(h,srcY);
-    const desiredL=lerp(globalL,canL,rowStrength);
-    const desiredR=lerp(globalR,canR,rowStrength);
+    let corrL=(canL-globalL)*rowStrength;
+    let corrR=(canR-globalR)*rowStrength;
+    if($("v6Smart")?.checked){
+      corrL=v6CapCorrection(v6Deadzone(corrL),fit);
+      corrR=v6CapCorrection(v6Deadzone(corrR),fit);
+    }
+    const desiredL=globalL+corrL;
+    const desiredR=globalR+corrR;
     const desiredCenter=(desiredL+desiredR)/2;
 
     const wantedScale=(desiredR-desiredL)/srcW;
@@ -1224,13 +1683,17 @@ function makeWarpedCanvas(h,size=720){
     const maxShift=srcW*globalScale*.10;
     const shift=clamp(desiredCenter-globalCenter,-maxShift,maxShift);
 
-    const finalL=globalCenter-finalScale*srcW/2+shift;
-    const finalR=globalCenter+finalScale*srcW/2+shift;
+    let finalL=globalCenter-finalScale*srcW/2+shift;
+    let finalR=globalCenter+finalScale*srcW/2+shift;
 
-    const leftOuter=gmap(0)+shift*.22;
-    const rightOuter=gmap(h.w)+shift*.22;
+    let leftOuter=gmap(0)+shift*.22;
+    let rightOuter=gmap(h.w)+shift*.22;
+    if($("v6Smart")?.checked){
+      finalL=v6SnapPx(finalL); finalR=v6SnapPx(finalR);
+      leftOuter=v6SnapPx(leftOuter); rightOuter=v6SnapPx(rightOuter);
+    }
 
-    if(preserveInner && srcY<=h.geom.jawY){
+    if(preserveInner && srcY<=activeGeom(h).jawY){
       // Nova lógica V5.2:
       // Miolo interno quase rígido; a maior parte da adaptação ocorre nas duas faixas laterais.
       const eb=edgeBandBounds(h,p);
@@ -1252,16 +1715,39 @@ function makeWarpedCanvas(h,size=720){
       }
       innerDL=clamp(innerDL, finalL+srcW*globalScale*.03, finalR-srcW*globalScale*.20);
       innerDR=clamp(innerDR, innerDL+srcW*globalScale*.12, finalR-srcW*globalScale*.03);
+      if($("v6Smart")?.checked){innerDL=v6SnapPx(innerDL);innerDR=v6SnapPx(innerDR)}
 
       const srcAnch=[0,p.l,innerL,innerR,p.r,h.w];
       const dstAnch=[leftOuter,finalL,innerDL,innerDR,finalR,rightOuter];
+      const rigActive=!!(S.faceAlign && h.faceRig && h.faceRig.delta && localY<=c.targetFace);
 
-      for(let i=0;i<srcAnch.length-1;i++){
-        const sx0=srcAnch[i],sx1=srcAnch[i+1],dx0=dstAnch[i],dx1=dstAnch[i+1];
-        if(sx1-sx0>.001 && dx1-dx0>.001){
-          drawRowSegment(ctx,h.transparent,srcY,sx0,sx1,dx0,dx1,y);
+      function drawBlendSegment(sx0,sx1,dx0,dx1,b0,b1,steps){
+        if(sx1-sx0<=.001||dx1-dx0<=.001)return;
+        const N=Math.max(1,steps|0);
+        for(let k=0;k<N;k++){
+          const t0=k/N,t1=(k+1)/N,tm=(t0+t1)*.5;
+          const a0=lerp(sx0,sx1,t0),a1=lerp(sx0,sx1,t1);
+          const d0=lerp(dx0,dx1,t0),d1=lerp(dx0,dx1,t1);
+          const blend=lerp(b0,b1,tm);
+          const sy=lerp(srcY,srcYInner,blend);
+          drawRowSegment(ctx,h.transparent,sy,a0,a1,d0,d1,y);
         }
       }
+
+      // Fora da cabeça e contorno: nunca recebe Face Rig vertical.
+      drawBlendSegment(srcAnch[0],srcAnch[1],dstAnch[0],dstAnch[1],0,0,1);
+      if(rigActive){
+        // Faixas laterais fazem o feather horizontal; miolo recebe translação rígida 100%.
+        const transSteps=3;
+        drawBlendSegment(srcAnch[1],srcAnch[2],dstAnch[1],dstAnch[2],0,1,transSteps);
+        drawBlendSegment(srcAnch[2],srcAnch[3],dstAnch[2],dstAnch[3],1,1,1);
+        drawBlendSegment(srcAnch[3],srcAnch[4],dstAnch[3],dstAnch[4],1,0,transSteps);
+      }else{
+        drawBlendSegment(srcAnch[1],srcAnch[2],dstAnch[1],dstAnch[2],0,0,1);
+        drawBlendSegment(srcAnch[2],srcAnch[3],dstAnch[2],dstAnch[3],0,0,1);
+        drawBlendSegment(srcAnch[3],srcAnch[4],dstAnch[3],dstAnch[4],0,0,1);
+      }
+      drawBlendSegment(srcAnch[4],srcAnch[5],dstAnch[4],dstAnch[5],0,0,1);
       continue;
     }
 
@@ -1280,7 +1766,8 @@ function makeWarpedCanvas(h,size=720){
       halfCore=Math.max(1,(finalR-finalL)*.18);
       coreCenter=(finalL+finalR)/2;
     }
-    const coreDL=coreCenter-halfCore, coreDR=coreCenter+halfCore;
+    let coreDL=coreCenter-halfCore, coreDR=coreCenter+halfCore;
+    if($("v6Smart")?.checked){coreDL=v6SnapPx(coreDL);coreDR=v6SnapPx(coreDR)}
 
     const srcAnch=[0,p.l,coreL,coreR,p.r,h.w];
     const dstAnch=[leftOuter,finalL,coreDL,coreDR,finalR,rightOuter];
@@ -1329,7 +1816,8 @@ function drawCanonicalDebug(){
   ctx.strokeStyle="rgba(255,130,130,.7)";
   ctx.beginPath();ctx.moveTo(cx-80,bottom);ctx.lineTo(cx+80,bottom);ctx.stroke();
   ctx.setLineDash([]);
-  $("canonicalTxt").textContent=`largura ${c.targetSkull.toFixed(1)} · altura ${c.targetTotal.toFixed(1)} · cabeça ${c.targetFace.toFixed(1)} · pescoço ${c.targetNeck.toFixed(1)}`;
+  const meta=S.v61Meta;
+  $("canonicalTxt").textContent=`largura ${c.targetSkull.toFixed(1)} · altura ${c.targetTotal.toFixed(1)} · cabeça ${c.targetFace.toFixed(1)} · pescoço ${c.targetNeck.toFixed(1)}${meta?` · base ${meta.bestLabel} · consenso ${meta.kept}/${meta.total} · largura ${meta.horizMode}${meta.horizMode==='menor cabeça'?` (${meta.horizLabel})`:''} · geom-fix ${meta.geomFixed||0}`:""}`;
 }
 function drawPreview(){
   const c=$("preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);
@@ -1387,6 +1875,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
+    `V6 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
 }
 
@@ -1415,12 +1904,16 @@ function step(dir){
 }
 function startPlayer(){
   stopPlayer();if(!S.heads.length)return;
-  S.playing=true;$("play").textContent="⏸ Pause";
+  S.playing=true;
+  $("play").textContent="⏸ Pause";
+  if($("playExtra"))$("playExtra").textContent="⏸ Pause";
   S.timer=setInterval(()=>step(1),1000/Number($("fps").value));
 }
 function stopPlayer(){
-  S.playing=false;$("play").textContent="▶ Play";
   if(S.timer){clearInterval(S.timer);S.timer=null}
+  S.playing=false;
+  if($("play"))$("play").textContent="▶ Play";
+  if($("playExtra"))$("playExtra").textContent="▶ Play";
 }
 function renderThumbs(){
   const wrap=$("heads");wrap.innerHTML="";
@@ -1434,7 +1927,7 @@ function renderThumbs(){
     }
     d.appendChild(c);
     const t=document.createElement("div");t.textContent=h.label;d.appendChild(t);
-    if(h.warpStats){const b=document.createElement("span");b.className="badge";b.textContent=`Y ${h.warpStats.yHead.toFixed(2)} · X ${h.warpStats.xMedian.toFixed(2)}`;d.appendChild(b)}
+    if(h.warpStats){const b=document.createElement("span");b.className="badge";b.textContent=`Y ${h.warpStats.yHead.toFixed(2)} · X ${h.warpStats.xMedian.toFixed(2)}${h.manualRedo?" · REF":""}${h.warpStats.geomSource==="guarded"?" · guard":""}`;d.appendChild(b)}
     d.onclick=()=>{S.currentIndex=i;$("currentSel").value=String(i);drawPreview();renderThumbs()};
     wrap.appendChild(d);
   });
@@ -1471,7 +1964,7 @@ async function detectAll(){
       }
     }
 
-    S.currentIndex=0;S.largestIndex=largestHeadIndex();
+    S.currentIndex=0;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
     refreshSelectors();renderThumbs();drawPreview();updateKPIs();
     const expected=Number($("expected").value),problems=[];
     if(S.sheets.A&&S.sheets.A.count!==expected)problems.push(`A=${S.sheets.A.count}`);
@@ -1499,22 +1992,22 @@ const MODEL_EXPORT={
   baseScale:1.1,
   emotions:{
     A:[
-      "impressionado",
-      "normal",
-      "envergonhado",
-      "ciumes",
-      "desconfianca",
-      "ofendido",
-      "irritado"
+      "neutra",
+      "sorrindo_de_canto",
+      "surpresa",
+      "envergonhada",
+      "impressionada",
+      "indignada",
+      "desconfiada"
     ],
     B:[
-      "deboche_sonso",
-      "provocando",
-      "desacreditado",
-      "coracao_partido",
-      "corado",
-      "chocado_com_revelacao",
-      "culpado"
+      "sorriso_maligno",
+      "nojo",
+      "orgulhosa",
+      "cansada",
+      "animada",
+      "ciumenta",
+      "aliviada"
     ]
   },
   variants:["","_blink","_talk"]
@@ -1536,6 +2029,169 @@ function expressionFilename(h){
   const emotion=list[col]||`expressao_${col+1}`;
   const suffix=MODEL_EXPORT.variants[row]??`_${row}`;
   return `${emotion}${suffix}.png`;
+}
+function expressionMeta(h){
+  const list=MODEL_EXPORT.emotions[h.sheet]||[];
+  const zero=Math.max(0,h.order-1);
+  const row=Math.floor(zero/7);
+  const col=zero%7;
+  return {
+    row,
+    col,
+    emotion:list[col]||`expressao_${col+1}`,
+    suffix:MODEL_EXPORT.variants[row]??`_${row}`
+  };
+}
+function findNormalReferenceForVariant(row){
+  // Nova referência neutra: primeira expressão da Folha A.
+  let idx=S.heads.findIndex(h=>{
+    const m=expressionMeta(h);
+    return h.sheet==="A" && m.emotion==="neutra" && m.row===row;
+  });
+  if(idx>=0)return idx;
+  idx=S.heads.findIndex(h=>{
+    const m=expressionMeta(h);
+    return m.col===0 && m.row===row;
+  });
+  if(idx>=0)return idx;
+  return Number.isInteger(S.bestBaseIndex)?S.bestBaseIndex:0;
+}
+function featureInkProfile(head,kind,n=72){
+  const c=head.transparent,ctx=c.getContext("2d",{willReadFrequently:true});
+  const data=ctx.getImageData(0,0,c.width,c.height).data;
+  const g=activeGeom(head),w=c.width,h=c.height,cx=g.skullCenterX,sw=g.skullWidth,top=g.topY,fh=Math.max(1,g.faceHeight);
+  let rel0,rel1,x0,x1;
+  if(kind==="eye"){
+    rel0=.34; rel1=.58;
+    x0=cx-sw*.43; x1=cx-sw*.015;
+  }else{
+    rel0=.69; rel1=.94;
+    x0=cx-sw*.20; x1=cx+sw*.24;
+  }
+  x0=clamp(Math.floor(x0),0,w-1);x1=clamp(Math.ceil(x1),x0+1,w-1);
+  const out=[];
+  for(let k=0;k<n;k++){
+    const rel=lerp(rel0,rel1,k/(n-1));
+    const y=clamp(Math.round(top+rel*fh),0,h-1);
+    let sum=0,count=0;
+    for(let x=x0;x<=x1;x++){
+      const i=(y*w+x)*4,a=data[i+3]/255;
+      if(a<.08)continue;
+      const r=data[i],gg=data[i+1],b=data[i+2];
+      const mx=Math.max(r,gg,b),mn=Math.min(r,gg,b);
+      const lum=.299*r+.587*gg+.114*b;
+      const dark=clamp((225-lum)/225,0,1);
+      const sat=mx>0?(mx-mn)/mx:0;
+      if(kind==="eye"){
+        // favorece cílio/pálpebra escuros e reduz sobrancelha/íris muito saturadas
+        sum+=a*Math.pow(dark,2.15)*(1-.58*sat);
+      }else{
+        const red=clamp((r-(gg+b)*.5)/145,0,1);
+        sum+=a*(Math.pow(dark,1.75)*.72+red*.72);
+      }
+      count++;
+    }
+    out.push(count?sum/count:0);
+  }
+  const sm=smoothNumeric(out,kind==="eye"?3:5);
+  const mean=sm.reduce((a,b)=>a+b,0)/Math.max(1,sm.length);
+  const centered=sm.map(v=>v-mean);
+  const norm=Math.sqrt(centered.reduce((a,b)=>a+b*b,0))||1;
+  return {values:centered.map(v=>v/norm),rel0,rel1,n};
+}
+function profileCorrelation(ref,target,shift){
+  let sum=0,rr=0,tt=0,count=0;
+  for(let i=0;i<ref.length;i++){
+    const j=i+shift;
+    if(j<0||j>=target.length)continue;
+    const a=ref[i],b=target[j];
+    sum+=a*b;rr+=a*a;tt+=b*b;count++;
+  }
+  return count>8?sum/Math.sqrt(Math.max(1e-12,rr*tt)):-1;
+}
+function profileBestShift(refObj,targetObj,maxShift=9){
+  let best={shift:0,score:-2},zero=profileCorrelation(refObj.values,targetObj.values,0),second=-2;
+  for(let s=-maxShift;s<=maxShift;s++){
+    const score=profileCorrelation(refObj.values,targetObj.values,s);
+    if(score>best.score){second=best.score;best={shift:s,score};}
+    else if(score>second)second=score;
+  }
+  const stepRel=(refObj.rel1-refObj.rel0)/Math.max(1,refObj.n-1);
+  return {...best,zero,second,deltaRel:best.shift*stepRel,sharpness:best.score-second,improvement:best.score-zero};
+}
+function faceRigConfidenceFromMatch(match){
+  const corr=clamp((match.score-.12)/.62,0,1);
+  const sharp=clamp(match.sharpness/.055,0,1);
+  const improve=Math.abs(match.shift)<=1?1:clamp((match.improvement+.015)/.075,0,1);
+  return corr*(.55+.25*sharp+.20*improve);
+}
+function faceRigApplyDeadzoneRel(v,deadRel){
+  if(Math.abs(v)<=deadRel)return 0;
+  return v-Math.sign(v)*deadRel;
+}
+function smoothstep01(t){t=clamp(t,0,1);return t*t*(3-2*t)}
+function faceRigVerticalEnvelope(localY,cfg){
+  const rel=clamp(localY/Math.max(1,S.canonical.targetFace),0,1);
+  const enter=smoothstep01((rel-.18)/.14);
+  const exit=1-smoothstep01((rel-.90)/.075);
+  return enter*exit;
+}
+function faceRigHorizontalWeight(t,featherFrac){
+  t=clamp(t,0,1);
+  const f=clamp(featherFrac,.04,.30);
+  if(t<f)return smoothstep01(t/f);
+  if(t>1-f)return smoothstep01((1-t)/f);
+  return 1;
+}
+function prepareExperimentalFaceAlign(){
+  const enabled=!!$("faceRigEnable")?.checked,useEye=!!$("faceRigEye")?.checked,useMouth=!!$("faceRigMouth")?.checked;
+  if(!S.canonical||!S.heads.length||!enabled||!useEye){S.faceAlign=null;return null}
+
+  const refs={};
+  for(const row of [0,1,2]){
+    const idx=findNormalReferenceForVariant(row),h=S.heads[idx];
+    refs[row]={idx,label:h.label,eye:featureInkProfile(h,"eye"),mouth:featureInkProfile(h,"mouth")};
+  }
+  const cfg={
+    enabled:true,useEye,useMouth,
+    confidenceGate:!!$("faceRigConfidence")?.checked,
+    strength:Number($("faceRigStrength").value||64)/100,
+    deadRel:Number($("faceRigDead").value||.5)/100,
+    maxRel:Number($("faceRigMax").value||3)/100,
+    featherFrac:Number($("faceRigFeather").value||14)/100,
+    refs,activeCount:0
+  };
+
+  for(const h of S.heads){
+    const meta=expressionMeta(h),row=clamp(meta.row,0,2),ref=refs[row];
+    const eye=featureInkProfile(h,"eye"),eyeMatch=profileBestShift(ref.eye,eye,9);
+    let deltaRel=eyeMatch.deltaRel;
+    let confidence=faceRigConfidenceFromMatch(eyeMatch);
+    let mouthMatch=null,mouthAgreement=1;
+
+    if(useMouth){
+      const mouth=featureInkProfile(h,"mouth");
+      mouthMatch=profileBestShift(ref.mouth,mouth,8);
+      // boca não manda na posição; apenas reduz confiança quando discorda muito
+      const disagreement=Math.abs(mouthMatch.deltaRel-deltaRel);
+      const tolerance=row===2?.032:.022; // talk varia mais de propósito
+      mouthAgreement=1-clamp((disagreement-tolerance*.35)/tolerance,0,1);
+      confidence*=lerp(.58,1,mouthAgreement);
+    }
+
+    if(h===S.heads[ref.idx]){deltaRel=0;confidence=1}
+    if(cfg.confidenceGate && confidence<.42)deltaRel=0;
+    deltaRel=faceRigApplyDeadzoneRel(deltaRel,cfg.deadRel);
+    deltaRel=clamp(deltaRel,-cfg.maxRel,cfg.maxRel)*cfg.strength;
+    if(Math.abs(deltaRel)<.0007)deltaRel=0;
+
+    const g=activeGeom(h),delta=deltaRel*g.faceHeight;
+    h.faceRig={enabled:true,row,refLabel:ref.label,delta,deltaRel,confidence,eyeMatch,mouthMatch,mouthAgreement};
+    if(delta)cfg.activeCount++;
+  }
+  cfg.refLabel=`${refs[0].label} / ${refs[1].label} / ${refs[2].label}`;
+  S.faceAlign=cfg;
+  return cfg;
 }
 function modelMetadata(){
   const n=getModelNumber();
@@ -1779,7 +2435,7 @@ function exportSheet(){
 function exportJson(){
   if(!S.canonical)return;
   const data={
-    version:"5.3.3-canonical",
+    version:"6.3-face-rig-2",
     canonical:{
       targetSkull:S.canonical.targetSkull,targetTotal:S.canonical.targetTotal,
       targetFace:S.canonical.targetFace,targetNeck:S.canonical.targetNeck,
@@ -1800,6 +2456,7 @@ let rebuildAllWarpToken=0;
 
 function rebuildAllWarpNow(reason="ajuste"){
   if(!S.canonical || !S.heads.length)return;
+  prepareExperimentalFaceAlign();
 
   const token=++rebuildAllWarpToken;
   status("canonicalStatus",`Aplicando ${reason} em todas as expressões…`,"warn");
@@ -1830,6 +2487,7 @@ function rebuildAllWarpNow(reason="ajuste"){
 
 function scheduleRebuildAllWarp(reason="ajuste"){
   if(!S.canonical)return;
+  prepareExperimentalFaceAlign();
 
   // A expressão atual muda na hora.
   current().warped=makeWarpedCanvas(current(),720);
@@ -1840,22 +2498,38 @@ function scheduleRebuildAllWarp(reason="ajuste"){
   rebuildAllWarpTimer=setTimeout(()=>rebuildAllWarpNow(reason),140);
 }
 
+function updateFaceRigControls(){
+  const on=!!$("faceRigEnable")?.checked;
+  ["faceRigEye","faceRigMouth","faceRigConfidence","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather"].forEach(id=>{
+    const el=$(id);
+    if(el)el.disabled=!on;
+  });
+}
+
 /* =========================================================
    EVENTS
 ========================================================= */
 function init(){
-  updateLabels();updateBgModeUI();drawPreview();
+  updateLabels();updateBgModeUI();updateFaceRigControls();drawPreview();
 
-  ["expected","thr","warpStrength","smooth","spike","coreProtect","maxLocalX","edgeBand","innerRigidity","fps"].forEach(id=>{
+  ["expected","thr","warpStrength","smooth","spike","coreProtect","maxLocalX","edgeBand","innerRigidity","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather","v61Blend","v6Dead","v6Cap","v6Snap","fps"].forEach(id=>{
     $(id).addEventListener("input",()=>{
       updateLabels();
       if(id==="fps"&&S.playing)startPlayer();
-      if(["warpStrength","coreProtect","maxLocalX","edgeBand","innerRigidity"].includes(id)&&S.canonical){
+      if(["warpStrength","coreProtect","maxLocalX","edgeBand","innerRigidity","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather","v61Blend","v6Dead","v6Cap","v6Snap"].includes(id)&&S.canonical){
         const reason=
           id==="warpStrength" ? "força do remapeamento" :
           id==="coreProtect" ? "proteção do miolo" :
           id==="maxLocalX" ? "limite local X" :
           id==="edgeBand" ? "faixa lateral" :
+          id==="faceRigStrength" ? "força do Face Rig" :
+          id==="faceRigDead" ? "zona morta do Face Rig" :
+          id==="faceRigMax" ? "correção máxima do Face Rig" :
+          id==="faceRigFeather" ? "suavidade do Face Rig" :
+          id==="v61Blend" ? "influência da cabeça-base" :
+          id==="v6Dead" ? "deadzone V6" :
+          id==="v6Cap" ? "limite V6" :
+          id==="v6Snap" ? "snap subpixel V6" :
           "rigidez do rosto interno";
         scheduleRebuildAllWarp(reason);
       }
@@ -1864,7 +2538,19 @@ function init(){
 
   $("detect").onclick=detectAll;
   $("alreadyTransparent").onchange=()=>{updateBgModeUI(); if(S.heads.length)status("detectStatus","Modo de detecção alterado. Detecte novamente as cabeças.","warn")};
+  ["faceRigEnable","faceRigEye","faceRigMouth","faceRigConfidence"].forEach(id=>$(id).onchange=()=>{
+    if(id==="faceRigEnable")updateFaceRigControls();
+    if(S.canonical){
+      prepareExperimentalFaceAlign();
+      rebuildAllWarpNow("Face Rig experimental");
+    }else if(S.heads.length){
+      status("canonicalStatus","Opção de Face Rig alterada. Clique em Construir molde e alinhar tudo.","warn");
+    }
+  });
   $("canonical").onclick=buildCanonical;
+  $("canonicalExtra").onclick=buildCanonical;
+  $("playExtra").onclick=()=>S.playing?stopPlayer():startPlayer();
+  $("redoCurrent").onclick=redoCurrentExpression;
   $("currentSel").onchange=()=>{S.currentIndex=Number($("currentSel").value);drawPreview();renderThumbs()};
   $("scope").onchange=()=>{
     applyScope();const a=visibleIndices();
@@ -1886,8 +2572,8 @@ function init(){
     if(h)$("dirStatus").textContent=`Pasta lembrada: ${h.name}`;
   });
 
-  ["medianShape","largestScale","splitNeck","adaptiveFace","preserveInnerFace"].forEach(id=>$(id).onchange=()=>{
-    if(["medianShape","largestScale","splitNeck"].includes(id)){
+  ["medianShape","largestScale","smallestHorizontalBase","splitNeck","adaptiveFace","preserveInnerFace","v6Smart","v6Robust","v6SafeScale","v61BestBase","v61DropBad"].forEach(id=>$(id).onchange=()=>{
+    if(["medianShape","largestScale","smallestHorizontalBase","splitNeck","v6Smart","v6Robust","v6SafeScale","v61BestBase","v61DropBad"].includes(id)){
       if(S.heads.length)status("canonicalStatus","Configuração estrutural do molde mudou. Construa o molde novamente.","warn");
       return;
     }
@@ -1908,7 +2594,7 @@ function init(){
 
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});
   window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V5.3.3.3 iniciada. Visual modernizado; lógica preservada da V5.3.3.");
+  log("V6.3.3 iniciada. Refazer selecionada agora preserva topo e fim do pescoço e corrige somente a divisão rosto/pescoço por consenso.");
 }
 init();
 </script>
