@@ -3108,33 +3108,6 @@ export default function Home() {
     setNotice("Encaixe inicial aplicado; arraste e refine se necessário");
   }
 
-  /**
-   * Retorna a imagem de referência real do modelo para as ferramentas de
-   * encaixe. Modelos head-only podem chamar sua expressão padrão de qualquer
-   * nome (por exemplo, o Modelo 12 usa neutra.png em vez de normal.png).
-   * O catálogo já resolve esse alias; o ajuste precisa usar a mesma fonte.
-   */
-  async function loadHeadFitReferenceImage() {
-    if (activeBasePack.type === "head-only") {
-      const cacheKey = basePackCacheKey(model, activeBasePack.id);
-      processedBaseExpressions.current[cacheKey] ??= {};
-      if (!processedBaseExpressions.current[cacheKey].normal) {
-        const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
-        const expressionUrl = URL.createObjectURL(transparentExpression);
-        processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
-        URL.revokeObjectURL(expressionUrl);
-      }
-      return processedBaseExpressions.current[cacheKey].normal;
-    }
-    if (!processedBases.current[model]) {
-      const transparentBase = await removeChroma(`/models/${model}.png`);
-      const baseUrl = URL.createObjectURL(transparentBase);
-      processedBases.current[model] = await loadImage(baseUrl);
-      URL.revokeObjectURL(baseUrl);
-    }
-    return processedBases.current[model];
-  }
-
   async function adjustSelectedOutfitByHead(reference: HeadFitReference = "head") {
     if (category !== "roupas" || !selectedOutfit?.url) return;
     setIsProcessing(true);
@@ -3163,7 +3136,24 @@ export default function Home() {
       // Use a expressão normal do modelo atual como referência estável. A
       // roupa continua sendo ajustada apenas no personagem/modelo selecionado;
       // nenhuma imagem do catálogo é sobrescrita.
-      const baseImage = await loadHeadFitReferenceImage();
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
       if (!baseImage) throw new Error("Modelo selecionado indisponível");
 
       const referenceCanvas = document.createElement("canvas");
@@ -3347,7 +3337,24 @@ export default function Home() {
         );
       if (!sourceHead) throw new Error("Não foi possível identificar a área de encaixe deste cabelo");
 
-      const baseImage = await loadHeadFitReferenceImage();
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
       if (!baseImage) throw new Error("Modelo selecionado indisponível");
 
       const referenceCanvas = document.createElement("canvas");
@@ -3441,7 +3448,24 @@ export default function Home() {
     setIsProcessing(true);
     setNotice("Delimitando a cabeça do modelo e preparando a borracha…");
     try {
-      const baseImage = await loadHeadFitReferenceImage();
+      if (!processedBases.current[model]) {
+        const transparentBase = await removeChroma(`/models/${model}.png`);
+        const baseUrl = URL.createObjectURL(transparentBase);
+        processedBases.current[model] = await loadImage(baseUrl);
+        URL.revokeObjectURL(baseUrl);
+      }
+      let baseImage = processedBases.current[model];
+      if (activeBasePack.expressionKeys.includes("normal")) {
+        const cacheKey = basePackCacheKey(model, activeBasePack.id);
+        processedBaseExpressions.current[cacheKey] ??= {};
+        if (!processedBaseExpressions.current[cacheKey].normal) {
+          const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
+          const expressionUrl = URL.createObjectURL(transparentExpression);
+          processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          URL.revokeObjectURL(expressionUrl);
+        }
+        baseImage = processedBaseExpressions.current[cacheKey].normal;
+      }
       if (!baseImage) throw new Error("Modelo selecionado indisponível");
 
       const referenceCanvas = document.createElement("canvas");
