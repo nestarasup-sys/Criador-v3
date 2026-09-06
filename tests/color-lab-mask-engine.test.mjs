@@ -9,6 +9,7 @@ import {
   selectConnectedColor,
   subjectBounds,
 } from "../app/Ferramentas/laboratorio-cor-modelo/core/mask-engine.mjs";
+import { detectColorAnatomy } from "../app/Ferramentas/laboratorio-cor-modelo/core/automatic-anatomy.mjs";
 
 function image(width, height, color = [245, 230, 224, 255]) {
   const data = new Uint8ClampedArray(width * height * 4);
@@ -65,6 +66,35 @@ test("enquadramento ignora o fundo uniforme e localiza o personagem", () => {
   paintRect(frame, 9, 2, 20, 17, [242, 211, 201, 255]);
   const bounds = subjectBounds(frame, { step: 1 });
   assert.deepEqual(bounds, { minX: 9, minY: 2, maxX: 20, maxY: 17, count: 192 });
+});
+
+function automaticFace({ blink = false } = {}) {
+  const frame = image(300, 400, [0, 0, 0, 0]);
+  paintRect(frame, 40, 20, 260, 360, [244, 211, 201, 255]);
+  paintRect(frame, 92, 171, 133, 178, [102, 52, 43, 255]);
+  paintRect(frame, 177, 173, 218, 180, [103, 53, 44, 255]);
+  if (blink) {
+    paintRect(frame, 89, 220, 139, 223, [65, 35, 36, 255]);
+    paintRect(frame, 174, 220, 224, 223, [65, 35, 36, 255]);
+  } else {
+    paintRect(frame, 105, 214, 123, 237, [93, 54, 205, 255]);
+    paintRect(frame, 190, 216, 208, 239, [93, 54, 205, 255]);
+  }
+  return frame;
+}
+
+test("detector automático encontra pares de pupilas e sobrancelhas sem clique", () => {
+  const result = detectColorAnatomy(automaticFace());
+  assert.ok(maskBounds(result.pupils, 300, 400)?.count > 500);
+  assert.ok(maskBounds(result.brows, 300, 400)?.count > 300);
+  assert.ok(result.confidence.pupils >= 0.7);
+  assert.ok(result.confidence.brows >= 0.7);
+});
+
+test("detector automático não inventa pupilas numa expressão blink", () => {
+  const result = detectColorAnatomy(automaticFace({ blink: true }));
+  assert.equal(maskBounds(result.pupils, 300, 400), null);
+  assert.ok(maskBounds(result.brows, 300, 400)?.count > 300);
 });
 
 test("a rota anuncia isolamento e os dois alvos sem integrar ao Criador", async () => {

@@ -147,7 +147,7 @@ function featurePair(items, expectedY, headWidth, headHeight) {
       const leftX = (left.minX + left.maxX) / 2;
       const rightX = (right.minX + right.maxX) / 2;
       const separation = (rightX - leftX) / headWidth;
-      if (separation < 0.17 || separation > 0.62) continue;
+      if (separation < 0.28 || separation > 0.62) continue;
       const leftY = (left.minY + left.maxY) / 2;
       const rightY = (right.minY + right.maxY) / 2;
       const vertical = Math.abs(leftY - rightY) / headHeight;
@@ -342,7 +342,7 @@ function detectBrows(image, bounds, skin, eyes) {
       if (delta(lab, skin) > 0.038 && lab.l < skin.l - 0.025) binary[pixel] = 1;
     }
   }
-  const candidates = colorComponents(image, binary, roi, 0.025).filter((item) =>
+  const candidates = colorComponents(image, binary, roi, 0.045).filter((item) =>
     item.width >= headWidth * 0.045 && item.width <= headWidth * 0.34
     && item.height >= 1 && item.height <= headHeight * 0.085
     && item.width / Math.max(1, item.height) >= 1.45);
