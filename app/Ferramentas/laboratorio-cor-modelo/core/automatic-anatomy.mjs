@@ -333,7 +333,7 @@ function detectEyePair(image, bounds, skin) {
     left: Math.max(0, Math.round(bounds.minX + headWidth * 0.08)),
     right: Math.min(width - 1, Math.round(bounds.maxX - headWidth * 0.06)),
     top: Math.max(0, Math.round(bounds.minY + headHeight * 0.35)),
-    bottom: Math.min(height - 1, Math.round(bounds.minY + headHeight * 0.68)),
+    bottom: Math.min(height - 1, Math.round(bounds.minY + headHeight * 0.76)),
   };
   const sclera = new Uint8Array(width * height);
   for (let y = roi.top; y <= roi.bottom; y += 1) {
@@ -375,18 +375,98 @@ function detectPupils(image, bounds, skin, eyes) {
         const chroma = Math.hypot(lab.a, lab.b);
         const skinDistance = delta(lab, skin);
         const accepted = mode === "chroma"
-          ? chroma > 0.048 && skinDistance > 0.07
+          ? chroma > 0.03 && skinDistance > 0.065
           : lab.l < skin.l - 0.34 && skinDistance > 0.27;
         if (accepted) binary[pixel] = 1;
       }
     }
-    return colorComponents(image, binary, roi, mode === "chroma" ? 0.052 : 0.025).filter((item) =>
+    return colorComponents(image, binary, roi, mode === "chroma" ? 0.042 : 0.025).filter((item) =>
       item.width >= Math.max(3, headWidth * 0.022) && item.height >= Math.max(3, headHeight * 0.014)
       && item.width <= headWidth * 0.15 && item.height <= headHeight * 0.12
       && item.width / item.height <= 1.9 && item.height / item.width <= 2.8);
   };
-  let pair = featurePair(candidatesFor("chroma"), bounds.minY + headHeight * 0.60, headWidth, headHeight);
-  if (!pair || pair.score < 0.26) pair = featurePair(candidatesFor("dark"), bounds.minY + headHeight * 0.60, headWidth, headHeight);
+  let pair = featurePair(candidatesFor("chroma"), bounds.minY + headHeight * 0.63, headWidth, headHeight);
+  if (!pair || pair.score < 0.26) pair = featurePair(candidatesFor("dark"), bounds.minY + headHeight * 0.63, headWidth, headHeight);
+  if (!pair || pair.score < 0.26) {
+    const scanTop = Math.round(bounds.minY + headHeight * 0.50);
+    const scanBottom = Math.round(bounds.minY + headHeight * 0.73);
+    const scores = new Float64Array(width);
+    for (let y = scanTop; y <= scanBottom; y += 1) {
+      const verticalWeight = 1 - Math.abs(y - (bounds.minY + headHeight * 0.63)) / (headHeight * 0.18);
+      for (let x = roi.left; x <= roi.right; x += 1) {
+        const pixel = y * width + x;
+        const offset = pixel * 4;
+        if (data[offset + 3] < 70) continue;
+        const lab = pixelLab(data, pixel);
+        const chroma = Math.hypot(lab.a, lab.b);
+        if (chroma > 0.027 && delta(lab, skin) > 0.06) scores[x] += chroma * Math.max(0.15, verticalWeight);
+      }
+    }
+    const peak = (blockedX = -9999) => {
+      let bestX = -1;
+      let bestScore = 0;
+      for (let x = roi.left; x <= roi.right; x += 1) {
+        if (Math.abs(x - blockedX) < headWidth * 0.25) continue;
+        if (scores[x] > bestScore) { bestX = x; bestScore = scores[x]; }
+      }
+      return { x: bestX, score: bestScore };
+    };
+    const first = peak();
+    const second = peak(first.x);
+    if (first.x >= 0 && second.x >= 0 && Math.abs(first.x - second.x) <= headWidth * 0.62) {
+      const makeComponent = (centerX) => {
+        const halfWidth = Math.max(4, Math.round(headWidth * 0.055));
+        const rowScores = [];
+        for (let y = scanTop; y <= scanBottom; y += 1) {
+          let score = 0;
+          for (let x = Math.max(roi.left, centerX - halfWidth); x <= Math.min(roi.right, centerX + halfWidth); x += 1) {
+            const lab = pixelLab(data, y * width + x);
+            const chroma = Math.hypot(lab.a, lab.b);
+            if (chroma > 0.027 && delta(lab, skin) > 0.06) score += chroma;
+          }
+          rowScores.push({ y, score });
+        }
+        const centerY = rowScores.reduce((best, row) => row.score > best.score ? row : best, rowScores[0]).y;
+        const halfHeight = Math.max(4, Math.round(headHeight * 0.055));
+        const pixels = [];
+        let minX = centerX;
+        let maxX = centerX;
+        let minY = centerY;
+        let maxY = centerY;
+        for (let y = Math.max(scanTop, centerY - halfHeight); y <= Math.min(scanBottom, centerY + halfHeight); y += 1) {
+          for (let x = Math.max(roi.left, centerX - halfWidth); x <= Math.min(roi.right, centerX + halfWidth); x += 1) {
+            const pixel = y * width + x;
+            const lab = pixelLab(data, pixel);
+            if (Math.hypot(lab.a, lab.b) <= 0.027 || delta(lab, skin) <= 0.06) continue;
+            pixels.push(pixel);
+            minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+          }
+        }
+        return { pixels, minX, maxX, minY, maxY, width: maxX - minX + 1, height: maxY - minY + 1 };
+      };
+      const ordered = [makeComponent(first.x), makeComponent(second.x)].toSorted((left, right) => left.minX - right.minX);
+      const hasOpenEye = (component) => {
+        let scleraPixels = 0;
+        const skinChroma = Math.hypot(skin.a, skin.b);
+        const paddingX = Math.round(headWidth * 0.07);
+        const paddingY = Math.round(headHeight * 0.035);
+        for (let y = Math.max(roi.top, component.minY - paddingY); y <= Math.min(roi.bottom, component.maxY + paddingY); y += 1) {
+          for (let x = Math.max(roi.left, component.minX - paddingX); x <= Math.min(roi.right, component.maxX + paddingX); x += 1) {
+            const lab = pixelLab(data, y * width + x);
+            if (lab.l > skin.l + 0.008
+              && delta(lab, skin) > 0.035
+              && Math.hypot(lab.a, lab.b) < Math.max(0.025, skinChroma * 0.68)) scleraPixels += 1;
+          }
+        }
+        return scleraPixels >= Math.max(10, headWidth * headHeight * 0.00018);
+      };
+      if (ordered.every((component) => component.pixels.length >= 12
+        && component.height >= headHeight * 0.025
+        && component.width / component.height <= 2.2
+        && component.height / component.width <= 2.8
+        && hasOpenEye(component))) pair = { left: ordered[0], right: ordered[1], score: 0.38 };
+    }
+  }
   if (!pair || pair.score < 0.26) return { mask: emptyMask(width, height), confidence: 0.12, pair: null };
   const eyeBonus = eyes ? 0.08 : 0;
   return { mask: expandedFeatureMask(image, pair, skin, 2), confidence: clamp(0.43 + pair.score * 0.46 + eyeBonus, 0, 0.97), pair };
