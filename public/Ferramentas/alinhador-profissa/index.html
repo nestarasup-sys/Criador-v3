@@ -381,6 +381,26 @@ button:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}
   font-weight:800;
   margin-top:4px;
 }
+.riskBadge{
+  display:inline-block;
+  border-radius:999px;
+  padding:2px 6px;
+  font-size:9px;
+  font-weight:850;
+  margin:4px 3px 0 0;
+  letter-spacing:.02em;
+}
+.riskBadge.ok{color:var(--ok);background:var(--ok-bg);border:1px solid #bfe3d1}
+.riskBadge.attention{color:var(--warn);background:var(--warn-bg);border:1px solid #eedda9}
+.riskBadge.outlier{color:var(--bad);background:var(--bad-bg);border:1px solid #f2c2bd}
+.candidatePanel{margin-top:10px;padding:10px;border:1px solid #d9c9eb;border-radius:14px;background:#fbf9ff}
+.candidatePanel h3{font-size:12px;margin:0 0 8px;color:var(--purple)}
+.candidateGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.candidateGrid figure{margin:0;min-width:0}
+.candidateGrid figcaption{font-size:10px;font-weight:800;color:var(--muted);margin-bottom:4px}
+.candidateGrid canvas{width:100%;height:auto;display:block;background:#111;border:1px solid var(--line);border-radius:9px}
+.candidateMeta{font-size:11px;color:var(--ink-soft);white-space:pre-wrap;margin-top:8px}
+.riskSummary{font-size:12px;font-weight:800;color:var(--ink-soft);margin-top:9px}
 .diagGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .diag{
   background:#faf9fc;
@@ -461,9 +481,9 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 
     <div class="v6box" style="margin-top:10px">
       <div class="v6head">
-        <div><b>Face Rig 2 experimental</b><span>neutra / blink / talk separados</span></div>
+        <div><b>Face Rig 2 experimental</b><span>normal / blink / talk separados</span></div>
       </div>
-      <div class="small">Cada linha usa a sua própria referência da expressão <b>Neutra / observando</b> da Folha A. O olho esquerdo mede o deslocamento; o olho direito acompanha automaticamente porque o miolo é movido como bloco. O contorno da cabeça não recebe esse deslocamento.</div>
+      <div class="small">Cada linha usa a sua própria referência da expressão <b>Normal / observando</b> da Folha A. O olho esquerdo mede o deslocamento; o olho direito acompanha automaticamente porque o miolo é movido como bloco. O contorno da cabeça não recebe esse deslocamento.</div>
       <label><input id="faceRigEnable" type="checkbox" style="width:auto"> Ativar Face Rig 2</label>
       <label><input id="faceRigEye" type="checkbox" style="width:auto"> Olho esquerdo = âncora principal</label>
       <label><input id="faceRigMouth" type="checkbox" style="width:auto"> Boca = somente verificação</label>
@@ -490,8 +510,21 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
       <button id="canonicalExtra" class="good">Construir molde e alinhar tudo</button>
       <button id="playExtra">▶ Play</button>
     </div>
-    <button id="redoCurrent" style="margin-top:8px">↻ Refazer expressão selecionada (corrigir queixo)</button>
+    <button id="redoCurrent" style="margin-top:8px">↻ Analisar correção da expressão</button>
     <div class="small" style="margin-top:5px">Mantém <b>TOPO</b> e <b>FIM DO PESCOÇO</b> exatamente onde estavam e recalcula somente a divisão <b>rosto / queixo / pescoço</b> usando o consenso das outras cabeças. É o modo mais seguro contra cabeça espremida ou esticada verticalmente.</div>
+
+    <div id="candidatePanel" class="candidatePanel" hidden>
+      <h3>Correção candidata — expressão selecionada</h3>
+      <div class="candidateGrid">
+        <figure><figcaption>Resultado atual</figcaption><canvas id="candidateCurrent" width="240" height="240"></canvas></figure>
+        <figure><figcaption>Nova correção</figcaption><canvas id="candidateNew" width="240" height="240"></canvas></figure>
+      </div>
+      <div id="candidateMeta" class="candidateMeta">—</div>
+      <div class="row" style="margin-top:8px">
+        <button id="acceptCandidate" class="good">Aceitar correção</button>
+        <button id="discardCandidate">Descartar</button>
+      </div>
+    </div>
 
     <div id="detectStatus" class="status" style="margin-top:8px">Carregue as folhas.</div>
   </div>
@@ -590,6 +623,8 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
       <div class="diag"><span class="small">Y pescoço</span><b id="dYN">—</b></div>
       <div class="diag"><span class="small">Variação local X</span><b id="dVar">—</b></div>
     </div>
+    <div id="riskSummary" class="riskSummary">Diagnóstico geométrico: —</div>
+    <button id="nextSuspect" style="margin-top:8px">Ir para próximo suspeito</button>
     <div id="diagText" class="status" style="margin-top:8px">—</div>
   </div>
 
@@ -681,6 +716,8 @@ const S={
   v61Meta:null,
   faceAlign:null,
   referenceNormalIndex:-1,
+  geometryReport:null,
+  candidate:null,
   playing:false,
   timer:null,
   detectionScaleMax:1000
@@ -1992,7 +2029,7 @@ const MODEL_EXPORT={
   baseScale:1.1,
   emotions:{
     A:[
-      "neutra",
+      "normal",
       "sorrindo_de_canto",
       "surpresa",
       "envergonhada",
@@ -2043,10 +2080,10 @@ function expressionMeta(h){
   };
 }
 function findNormalReferenceForVariant(row){
-  // Nova referência neutra: primeira expressão da Folha A.
+  // Nova referência normal: primeira expressão da Folha A.
   let idx=S.heads.findIndex(h=>{
     const m=expressionMeta(h);
-    return h.sheet==="A" && m.emotion==="neutra" && m.row===row;
+    return h.sheet==="A" && m.emotion==="normal" && m.row===row;
   });
   if(idx>=0)return idx;
   idx=S.heads.findIndex(h=>{
