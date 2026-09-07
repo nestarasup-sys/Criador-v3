@@ -1,0 +1,11 @@
+{
+  "name": "Modelo 9",
+  "gender": "feminino",
+  "type": "head-only",
+  "anchor": "neck-base",
+  "anchorX": 960,
+  "anchorY": 346,
+  "baseScale": 1.1,
+  "width": 1920,
+  "height": 1080
+}
