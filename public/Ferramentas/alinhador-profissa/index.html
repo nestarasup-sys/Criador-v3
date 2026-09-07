@@ -2898,6 +2898,32 @@ function init(){
   window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   log("V7.1.2 iniciada. Defaults da V7 preservados; fluxo rápido + fiscal vertical + refazer protegido + desfazer por expressão + limpeza de contorno.");
 }
+// Ponte read-only usada somente pelo benchmark local; não participa do render/export.
+function debugRasterSummary(c,sampleSize=64){
+  if(!c)return null;
+  const d=c.getContext("2d",{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
+  let alphaPixels=0,minX=c.width,minY=c.height,maxX=-1,maxY=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+    if(d[(y*c.width+x)*4+3]<=16)continue;
+    alphaPixels++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+  }
+  const sample=[];
+  for(let gy=0;gy<sampleSize;gy++)for(let gx=0;gx<sampleSize;gx++){
+    const x=Math.min(c.width-1,Math.floor((gx+.5)*c.width/sampleSize)),y=Math.min(c.height-1,Math.floor((gy+.5)*c.height/sampleSize));
+    sample.push(d[(y*c.width+x)*4+3]>16?1:0);
+  }
+  return {width:c.width,height:c.height,alphaPixels,alphaRatio:alphaPixels/(c.width*c.height),bbox:maxX<0?null:{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1},sampleSize,sample};
+}
+function debugSnapshot(){
+  return {
+    version:"7.1.2",
+    settings:{warpStrength:$("warpStrength")?.value,smallestHorizontalBase:$("smallestHorizontalBase")?.checked,faceRigEnable:$("faceRigEnable")?.checked},
+    timings:null,
+    canonical:S.canonical?{targetSkull:S.canonical.targetSkull,targetTotal:S.canonical.targetTotal,targetFace:S.canonical.targetFace,targetNeck:S.canonical.targetNeck,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex}:null,
+    heads:S.heads.map(h=>({label:h.label,sheet:h.sheet,order:h.order,w:h.w,h:h.h,geom:{...h.geom},geometryMetrics:{...h.geometryMetrics},warpStats:h.warpStats?{...h.warpStats}:null,diagnostics:h.quality?{classification:h.quality.level,score:h.quality.score,dominantReason:h.quality.reason,metrics:h.quality.parts}:null,originalRaster:debugRasterSummary(h.transparent),warpedRaster:debugRasterSummary(h.warped)}))
+  };
+}
+window.__ALINHADOR_DEBUG__={snapshot:debugSnapshot};
 init();
 </script>
 </body>
