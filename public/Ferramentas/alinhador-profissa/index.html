@@ -1715,8 +1715,11 @@ function refreshCandidatePanel(){
     `geometria ${v.betterGeometry?"melhorou":"não melhorou o suficiente"} · warp ${v.warpNotWorse?"estável":"piorou"}`,
     `amostragem ${v.sampling.safe?"dentro da região original":"fora da região original"} · transparência nova ${v.transparency.newHoles}`
   ];
-  $("candidateMeta").textContent=checks.join("\n")+(v.valid?"\nCandidata aprovada para revisão manual.":"\nCandidata rejeitada automaticamente; descarte recomendado.");
-  $("acceptCandidate").disabled=!v.valid;
+  $("candidateMeta").textContent=checks.join("\n")+(v.valid?"\nCandidata aprovada para revisão manual.":"\nCandidata reprovada automaticamente; a aceitação manual continua disponível se a comparação visual justificar.");
+  const accept=$("acceptCandidate");
+  accept.disabled=false;
+  accept.textContent=v.valid?"Aceitar correção":"Aceitar mesmo assim";
+  accept.title=v.valid?"Aplicar a correção validada somente nesta expressão.":"Aplicar manualmente mesmo com alertas; confira os dois quadros antes de aceitar.";
   updateUndoButton();
 }
 function updateUndoButton(){
@@ -1731,16 +1734,17 @@ function discardCandidate(){
 }
 function acceptCandidate(){
   const candidate=S.candidate,h=current();
-  if(!candidate||!h||candidate.index!==S.currentIndex||!candidate.validation.valid)return;
+  if(!candidate||!h||candidate.index!==S.currentIndex)return;
+  if(!candidate.validation.valid && !window.confirm("A candidata foi reprovada por uma ou mais métricas. Deseja aceitar mesmo assim?"))return;
   h.previousCorrection={geomWarp:h.geomWarp||null,warped:h.warped,warpStats:h.warpStats,manualRedo:h.manualRedo,geomFixInfo:h.geomFixInfo||null};
   h.geomWarp=candidate.geom;
   h.warpStats=candidate.warpStats;
   h.warped=candidate.canvas;
   h.manualRedo=true;
-  h.geomFixInfo={manual:true,mode:"validated-candidate",...candidate.validation};
+  h.geomFixInfo={manual:true,mode:candidate.validation.valid?"validated-candidate":"manual-override-candidate",...candidate.validation};
   S.candidate=null;
   updateGeometryDiagnostics();renderThumbs();drawPreview();
-  status("canonicalStatus",`Correção aceita somente para ${h.label}. As outras expressões não foram recalculadas.`,"ok");
+  status("canonicalStatus",`Correção aceita somente para ${h.label}. As outras expressões não foram recalculadas.`,candidate.validation.valid?"ok":"warn");
   log(`Correção aceita: ${h.label}; score ${candidate.validation.currentScore.toFixed(2)} → ${candidate.validation.candidateScore.toFixed(2)}.`);
 }
 function undoLastCorrection(){
