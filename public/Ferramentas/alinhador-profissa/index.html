@@ -1938,11 +1938,21 @@ function computeWarpStats(h){
   for(let i=0;i<90;i++){
     const localY=c.targetTotal*i/89,can=canonicalLocalAtY(localY),sy=sourceYForCanonical(h,localY),p=sampleProfile(h,sy);
     const sw=Math.max(1,p.r-p.l),tw=Math.max(1,(can.r-can.l)*c.targetSkull);
-    scales.push(tw/sw);
+    scales.push({value:tw/sw,sourceWidth:sw,targetWidth:tw});
   }
-  const med=median(scales),min=Math.min(...scales),max=Math.max(...scales);
+  const rawValues=scales.map(x=>x.value),rawMedian=median(rawValues);
+  const sourceMedian=median(scales.map(x=>x.sourceWidth)),targetMedian=median(scales.map(x=>x.targetWidth));
+  // Extremidades quase vazias (ou linhas que atravessam apenas a borda) não
+  // representam a deformação da cabeça. Elas eram capazes de transformar um
+  // único scanline em localVariation de 30x, sem alterar o canvas renderizado.
+  const useful=scales.filter(x=>x.sourceWidth>=Math.max(2,sourceMedian*.18)&&x.targetWidth>=Math.max(2,targetMedian*.18));
+  const robustValues=(useful.length>=12?useful:scales).map(x=>x.value);
+  const med=median(robustValues),p10=percentile(robustValues,.10),p90=percentile(robustValues,.90);
+  const rawMin=Math.min(...rawValues),rawMax=Math.max(...rawValues);
+  const min=Math.min(p10,p90),max=Math.max(p10,p90);
   return {
-    xMedian:med,xMin:min,xMax:max,
+    xMedian:med,xMin:min,xMax:max,rawXMin:rawMin,rawXMax:rawMax,
+    xP10:p10,xP90:p90,validScanlines:useful.length,totalScanlines:scales.length,
     yHead:c.targetFace/g.faceHeight,
     yNeck:c.targetNeck/g.neckHeight,
     yTotal:c.targetTotal/g.totalHeight,
