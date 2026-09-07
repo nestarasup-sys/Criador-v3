@@ -17,6 +17,7 @@
     "test": "npm run build && node --test tests/*.test.mjs",
     "test:unit": "node --test tests/*.test.mjs",
     "test:e2e": "node scripts/run-e2e.mjs",
+    "benchmark:alinhador": "node tests/alinhador-profissa/benchmark.mjs",
     "test:phase8": "npm run build && npm run test:unit && npm run test:e2e",
     "test:beta": "node --test tests/phase9-beta.test.mjs",
     "test:phase9": "npm run test:phase8 && npm run test:beta && npm run visual:phase9 && npm run security:phase9",

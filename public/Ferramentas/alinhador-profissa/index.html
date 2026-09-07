@@ -730,7 +730,9 @@ const S={
   candidate:null,
   playing:false,
   timer:null,
-  detectionScaleMax:1000
+  detectionScaleMax:1000,
+  debugTimings:{},
+  debugRunId:0
 };
 
 function log(msg){
@@ -959,9 +961,11 @@ function cropHead(sheet,b,index){
   }
   tctx.putImageData(td,0,0);
 
+  const geometryStart=performance.now();
   let geom=geometry(mainMask,w,h);
   geom=detectChin(original,geom);
   geom=detectNeckBottom(geom);
+  S.debugTimings.geometry+=(performance.now()-geometryStart);
   const profile=makeRobustProfile(original,mainMask,geom);
 
   return {
@@ -1791,9 +1795,12 @@ async function buildCanonical(){
   $("canonical").disabled=true;
   if($("canonicalExtra"))$("canonicalExtra").disabled=true;
   try{
+    const canonicalStart=performance.now();
+    S.debugTimings.canonical=0;S.debugTimings.warp=0;
     S.candidate=null;
     status("canonicalStatus","Recalculando contornos robustos…","warn");
     for(const h of S.heads){h.manualRedo=false;h.previousCorrection=null;h.geomWarp=null;h.geomFixInfo=null}
+    const warpStart=performance.now();
     for(let i=0;i<S.heads.length;i++){
       S.heads[i].profile=makeRobustProfile(S.heads[i].original,S.heads[i].mask,S.heads[i].geom);
       if(i%5===4)await sleep(0);
@@ -1884,6 +1891,8 @@ async function buildCanonical(){
       h.warped=makeWarpedCanvas(h,720);
       if(i%2===1){status("canonicalStatus",`Renderizando… ${i+1}/${S.heads.length}`,"warn");await sleep(0)}
     }
+    S.debugTimings.warp=performance.now()-warpStart;
+    S.debugTimings.canonical=performance.now()-canonicalStart;
 
     updateGeometryDiagnostics();
     status("canonicalStatus",`V6.3.5 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%`,"ok");
@@ -2380,17 +2389,24 @@ function updateKPIs(){
 ========================================================= */
 async function detectAll(){
   stopPlayer();S.canonical=null;
+  const runId=++S.debugRunId,started=performance.now();
+  S.debugTimings={runId,total:0,loadAssets:0,detectSheets:0,crop:0,geometry:0,canonical:0,warp:0};
   const fa=$("fileA").files[0],fb=$("fileB").files[0];
   if(!fa&&!fb){status("detectStatus","Escolha pelo menos uma folha.","bad");return}
   $("detect").disabled=true;
   try{
     const modeLabel=usingTransparentMode()?"sem fundo (alpha)":"chroma key verde";
     status("detectStatus",`Analisando em modo ${modeLabel}…`,"warn");log(`Iniciando detecção em modo ${modeLabel}.`);
+    const loadStart=performance.now();
     const [ia,ib]=await Promise.all([loadFile(fa),loadFile(fb)]);
+    S.debugTimings.loadAssets=performance.now()-loadStart;
     S.sheets={A:null,B:null};S.heads=[];
+    const detectStart=performance.now();
     if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count}`)}
     if(ib){S.sheets.B=await detectSheet(ib,"B");log(`B: ${S.sheets.B.count}`)}
+    S.debugTimings.detectSheets=performance.now()-detectStart;
 
+    const cropStart=performance.now();
     for(const name of ["A","B"]){
       const sh=S.sheets[name];if(!sh)continue;
       for(let i=0;i<sh.boxes.length;i++){
@@ -2399,6 +2415,7 @@ async function detectAll(){
         if(i%4===3)await sleep(0);
       }
     }
+    S.debugTimings.crop=performance.now()-cropStart;
 
     S.currentIndex=0;S.candidate=null;S.geometryReport=null;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
     updateGeometryDiagnostics();refreshSelectors();renderThumbs();drawPreview();updateKPIs();
@@ -2406,6 +2423,7 @@ async function detectAll(){
     if(S.sheets.A&&S.sheets.A.count!==expected)problems.push(`A=${S.sheets.A.count}`);
     if(S.sheets.B&&S.sheets.B.count!==expected)problems.push(`B=${S.sheets.B.count}`);
 
+    S.debugTimings.total=performance.now()-started;
     if(!S.heads.length)status("detectStatus","Nenhuma cabeça detectada.","bad");
     else if(problems.length)status("detectStatus",`Detectei ${S.heads.length}, mas ${problems.join(", ")} não bate com o esperado. Confira as caixas.`,"warn");
     else status("detectStatus",`Pronto: ${S.heads.length} cabeças detectadas (${usingTransparentMode()?"modo sem fundo":"modo chroma key"}).`,"ok");
@@ -3037,6 +3055,44 @@ function init(){
   window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   log("V6.3.3 iniciada. Refazer selecionada agora preserva topo e fim do pescoço e corrige somente a divisão rosto/pescoço por consenso.");
 }
+
+// Ponte somente de diagnóstico. Não participa do render normal nem do exportador.
+function debugRasterSummary(c,sampleSize=64){
+  if(!c)return null;
+  const ctx=c.getContext("2d",{willReadFrequently:true}),d=ctx.getImageData(0,0,c.width,c.height).data;
+  let alphaPixels=0,minX=c.width,minY=c.height,maxX=-1,maxY=-1;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+    const a=d[(y*c.width+x)*4+3];
+    if(a<=16)continue;
+    alphaPixels++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+  }
+  const sample=[];
+  for(let gy=0;gy<sampleSize;gy++)for(let gx=0;gx<sampleSize;gx++){
+    const x=Math.min(c.width-1,Math.floor((gx+.5)*c.width/sampleSize));
+    const y=Math.min(c.height-1,Math.floor((gy+.5)*c.height/sampleSize));
+    sample.push(d[(y*c.width+x)*4+3]>16?1:0);
+  }
+  return {width:c.width,height:c.height,alphaPixels,alphaRatio:alphaPixels/(c.width*c.height),bbox:maxX<0?null:{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1},sampleSize,sample};
+}
+function debugSnapshot(){
+  const settingIds=["expected","thr","warpStrength","smooth","spike","coreProtect","maxLocalX","edgeBand","innerRigidity","v6Smart","v6Robust","smallestHorizontalBase","splitNeck","adaptiveFace","preserveInnerFace"];
+  const settings={};for(const id of settingIds){const el=$(id);if(el)settings[id]=el.type==="checkbox"?el.checked:el.value}
+  return {
+    version:"6.3.5",
+    settings,
+    timings:{...S.debugTimings},
+    canonical:S.canonical?{targetSkull:S.canonical.targetSkull,targetTotal:S.canonical.targetTotal,targetFace:S.canonical.targetFace,targetNeck:S.canonical.targetNeck,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex}:null,
+    heads:S.heads.map(h=>({
+      label:h.label,sheet:h.sheet,order:h.order,w:h.w,h:h.h,
+      geom:{...h.geom},geometryMetrics:{...h.geometryMetrics},
+      warpStats:h.warpStats?{...h.warpStats}:null,
+      diagnostics:h.diagnostics?JSON.parse(JSON.stringify(h.diagnostics)):null,
+      originalRaster:debugRasterSummary(h.transparent),
+      warpedRaster:debugRasterSummary(h.warped)
+    }))
+  };
+}
+window.__ALINHADOR_DEBUG__={snapshot:debugSnapshot};
 init();
 </script>
 </body>

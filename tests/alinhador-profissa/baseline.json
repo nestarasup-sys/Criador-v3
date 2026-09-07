@@ -1,0 +1,1270 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-07T00:56:10.116Z",
+  "fixtures": [
+    {
+      "id": "pair-01",
+      "metadata": {
+        "id": "pair-01",
+        "expectedHeads": 42,
+        "notes": "Folhas reais usadas na primeira rodada de diagnóstico; quatro falsos positivos antigos em localVariation extrema.",
+        "knownProblems": [
+          "historical-localVariation-false-positive"
+        ],
+        "sourceFiles": [
+          "fola 1.png",
+          "2.png"
+        ]
+      },
+      "benchmark": {
+        "detectedHeads": 42,
+        "canonical": {
+          "targetSkull": 173,
+          "targetTotal": 274,
+          "targetFace": 253.07636363636362,
+          "targetNeck": 20.923636363636376,
+          "smallestHorizIndex": 3,
+          "bestBaseIndex": 31
+        },
+        "metrics": {
+          "skullWidth": {
+            "median": 182.5,
+            "mad": 8.5,
+            "robustScale": 12.602,
+            "min": 173,
+            "max": 192
+          },
+          "faceHeight": {
+            "median": 243,
+            "mad": 10.5,
+            "robustScale": 15.567,
+            "min": 231,
+            "max": 254
+          },
+          "totalHeight": {
+            "median": 262.5,
+            "mad": 11.5,
+            "robustScale": 17.05,
+            "min": 249,
+            "max": 275
+          },
+          "jawY": {
+            "median": 261,
+            "mad": 11,
+            "robustScale": 16.309,
+            "min": 249,
+            "max": 274
+          },
+          "neckBottomY": {
+            "median": 281,
+            "mad": 12,
+            "robustScale": 17.791,
+            "min": 267,
+            "max": 295
+          },
+          "centerX": {
+            "median": 0,
+            "mad": 0,
+            "robustScale": 0,
+            "min": null,
+            "max": null
+          },
+          "xMedian": {
+            "median": 0.95,
+            "mad": 0.046,
+            "robustScale": 0.068,
+            "min": 0.901,
+            "max": 1.002
+          },
+          "yHead": {
+            "median": 1.043,
+            "mad": 0.045,
+            "robustScale": 0.067,
+            "min": 0.996,
+            "max": 1.096
+          },
+          "yNeck": {
+            "median": 1.046,
+            "mad": 0.05,
+            "robustScale": 0.074,
+            "min": 0.996,
+            "max": 1.162
+          },
+          "yTotal": {
+            "median": 1.045,
+            "mad": 0.045,
+            "robustScale": 0.067,
+            "min": 0.996,
+            "max": 1.1
+          },
+          "localVariation": {
+            "median": 0.01,
+            "mad": 0.002,
+            "robustScale": 0.003,
+            "min": 0.007,
+            "max": 0.024
+          },
+          "maxWarpX": {
+            "median": 0.961,
+            "mad": 0.049,
+            "robustScale": 0.072,
+            "min": 0.907,
+            "max": 1.026
+          },
+          "scaleX": {
+            "median": 0.95,
+            "mad": 0.045,
+            "robustScale": 0.066,
+            "min": 0.901,
+            "max": 1
+          },
+          "scaleY": {
+            "median": 1.045,
+            "mad": 0.045,
+            "robustScale": 0.067,
+            "min": 0.996,
+            "max": 1.1
+          }
+        },
+        "alpha": {
+          "area": {
+            "median": 163377,
+            "mad": 309,
+            "robustScale": 458.123,
+            "min": 162224,
+            "max": 164482
+          },
+          "ratio": {
+            "median": 0.315,
+            "mad": 0.001,
+            "robustScale": 0.001,
+            "min": 0.313,
+            "max": 0.317
+          },
+          "unexpectedTransparency": {
+            "median": 0.035,
+            "mad": 0.001,
+            "robustScale": 0.001,
+            "min": 0.033,
+            "max": 0.037
+          }
+        },
+        "frameStability": {
+          "pairs": 41,
+          "meanIoU": 0.993,
+          "meanChangedRatio": 0.002,
+          "silhouetteStabilityScore": 99.79
+        },
+        "diagnostics": [
+          {
+            "label": "A-01",
+            "classification": "ok",
+            "score": 0.25190970302369187,
+            "dominantReason": null,
+            "jawConfidence": 0.6473060874775146,
+            "neckConfidence": 0.8680555555555556,
+            "localVariation": 0.01578734164399631,
+            "warpMax": 1.0026223068648863,
+            "unexpectedTransparency": 0.03321686651314222
+          },
+          {
+            "label": "A-02",
+            "classification": "ok",
+            "score": 0.23152437525196934,
+            "dominantReason": null,
+            "jawConfidence": 0.6786681369203279,
+            "neckConfidence": 0.8666666666666667,
+            "localVariation": 0.014090039270397758,
+            "warpMax": 1.0024691927171407,
+            "unexpectedTransparency": 0.03391566743428889
+          },
+          {
+            "label": "A-03",
+            "classification": "ok",
+            "score": 0.2856892955642443,
+            "dominantReason": null,
+            "jawConfidence": 0.6305764649252553,
+            "neckConfidence": 0.8526011560693642,
+            "localVariation": 0.007733406755781935,
+            "warpMax": 1.0024484944755896,
+            "unexpectedTransparency": 0.03350273961724768
+          },
+          {
+            "label": "A-04",
+            "classification": "ok",
+            "score": 0.2913527868346984,
+            "dominantReason": null,
+            "jawConfidence": 0.6568639001807076,
+            "neckConfidence": 0.8562138728323699,
+            "localVariation": 0.010572438034570864,
+            "warpMax": 1.0097455915291242,
+            "unexpectedTransparency": 0.03497975065512586
+          },
+          {
+            "label": "A-05",
+            "classification": "ok",
+            "score": 0.23748478418000707,
+            "dominantReason": null,
+            "jawConfidence": 0.6325182680358086,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.00969638789477334,
+            "warpMax": 1.0038285216658533,
+            "unexpectedTransparency": 0.03397919479075677
+          },
+          {
+            "label": "A-06",
+            "classification": "ok",
+            "score": 0.2860529466079916,
+            "dominantReason": null,
+            "jawConfidence": 0.628884730731029,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.017696459820384813,
+            "warpMax": 1.0149287810898047,
+            "unexpectedTransparency": 0.03670293019931708
+          },
+          {
+            "label": "A-07",
+            "classification": "ok",
+            "score": 0.21646294596636634,
+            "dominantReason": null,
+            "jawConfidence": 0.628561543256793,
+            "neckConfidence": 0.8666666666666667,
+            "localVariation": 0.011931017192908344,
+            "warpMax": 1.0015146418978347,
+            "unexpectedTransparency": 0.03455094099896768
+          },
+          {
+            "label": "A-08",
+            "classification": "ok",
+            "score": 0.3585482827252612,
+            "dominantReason": null,
+            "jawConfidence": 0.654373541579564,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.012533647039203566,
+            "warpMax": 0.9982602970799831,
+            "unexpectedTransparency": 0.03325657111093465
+          },
+          {
+            "label": "A-09",
+            "classification": "ok",
+            "score": 0.3549158233323103,
+            "dominantReason": null,
+            "jawConfidence": 0.6532902495918267,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.007812781531125745,
+            "warpMax": 0.9982319573216849,
+            "unexpectedTransparency": 0.034320654331771616
+          },
+          {
+            "label": "A-10",
+            "classification": "ok",
+            "score": 0.36651699887049616,
+            "dominantReason": null,
+            "jawConfidence": 0.6556980304411404,
+            "neckConfidence": 0.8608716475095786,
+            "localVariation": 0.012529747215865639,
+            "warpMax": 1.0105102974073772,
+            "unexpectedTransparency": 0.036139124910664656
+          },
+          {
+            "label": "A-11",
+            "classification": "ok",
+            "score": 0.4092304178828303,
+            "dominantReason": null,
+            "jawConfidence": 0.6558496609172199,
+            "neckConfidence": 0.8622350674373795,
+            "localVariation": 0.01407637322631472,
+            "warpMax": 1.0143561441597977,
+            "unexpectedTransparency": 0.036043833875962834
+          },
+          {
+            "label": "A-12",
+            "classification": "ok",
+            "score": 0.3743070445264853,
+            "dominantReason": null,
+            "jawConfidence": 0.6471024835446628,
+            "neckConfidence": 0.8622350674373795,
+            "localVariation": 0.007842897735771182,
+            "warpMax": 1.004100031094216,
+            "unexpectedTransparency": 0.03389978559517192
+          },
+          {
+            "label": "A-13",
+            "classification": "ok",
+            "score": 0.3550205521130447,
+            "dominantReason": null,
+            "jawConfidence": 0.6620356622157391,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.007786887052372737,
+            "warpMax": 0.999632984346573,
+            "unexpectedTransparency": 0.03453505915985071
+          },
+          {
+            "label": "A-14",
+            "classification": "ok",
+            "score": 0.38487750357130307,
+            "dominantReason": null,
+            "jawConfidence": 0.6389224638198233,
+            "neckConfidence": 0.8666666666666667,
+            "localVariation": 0.008431836674660187,
+            "warpMax": 0.9986086224268813,
+            "unexpectedTransparency": 0.03462240927499404
+          },
+          {
+            "label": "A-15",
+            "classification": "ok",
+            "score": 0.2434915464087531,
+            "dominantReason": null,
+            "jawConfidence": 0.6445632290348056,
+            "neckConfidence": 0.8680555555555556,
+            "localVariation": 0.008211199431621852,
+            "warpMax": 1.0065371826415346,
+            "unexpectedTransparency": 0.03550385134598587
+          },
+          {
+            "label": "A-16",
+            "classification": "ok",
+            "score": 0.26376477256093,
+            "dominantReason": null,
+            "jawConfidence": 0.6231199988440274,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.01841083595759274,
+            "warpMax": 1.0153156619598633,
+            "unexpectedTransparency": 0.03694115778607163
+          },
+          {
+            "label": "A-17",
+            "classification": "ok",
+            "score": 0.2665878401642103,
+            "dominantReason": null,
+            "jawConfidence": 0.6320158452799146,
+            "neckConfidence": 0.8566810344827586,
+            "localVariation": 0.016947715656909557,
+            "warpMax": 1.0169303899670674,
+            "unexpectedTransparency": 0.036448820773445564
+          },
+          {
+            "label": "A-18",
+            "classification": "ok",
+            "score": 0.3244692549918653,
+            "dominantReason": null,
+            "jawConfidence": 0.6277224343770358,
+            "neckConfidence": 0.8592244701348748,
+            "localVariation": 0.023726064023328552,
+            "warpMax": 1.0262326516356068,
+            "unexpectedTransparency": 0.037219089970618596
+          },
+          {
+            "label": "A-19",
+            "classification": "ok",
+            "score": 0.2963127205141126,
+            "dominantReason": null,
+            "jawConfidence": 0.6421267878847233,
+            "neckConfidence": 0.8622350674373795,
+            "localVariation": 0.014341557254444526,
+            "warpMax": 1.015702296227734,
+            "unexpectedTransparency": 0.03567855157627253
+          },
+          {
+            "label": "A-20",
+            "classification": "ok",
+            "score": 0.2545973212360521,
+            "dominantReason": null,
+            "jawConfidence": 0.6322355687565653,
+            "neckConfidence": 0.8644636015325671,
+            "localVariation": 0.016144158432210842,
+            "warpMax": 1.016570583551823,
+            "unexpectedTransparency": 0.037417612959580716
+          },
+          {
+            "label": "A-21",
+            "classification": "ok",
+            "score": 0.17197953686922535,
+            "dominantReason": null,
+            "jawConfidence": 0.6544177152800459,
+            "neckConfidence": 0.8636904761904762,
+            "localVariation": 0.0089256609198487,
+            "warpMax": 1.0041692890558325,
+            "unexpectedTransparency": 0.03639323433653617
+          },
+          {
+            "label": "B-01",
+            "classification": "ok",
+            "score": 0.2562134737938305,
+            "dominantReason": null,
+            "jawConfidence": 0.6425529093973456,
+            "neckConfidence": 0.8626302083333333,
+            "localVariation": 0.01380540129989738,
+            "warpMax": 0.9139708967650187,
+            "unexpectedTransparency": 0.03520209640276344
+          },
+          {
+            "label": "B-02",
+            "classification": "ok",
+            "score": 0.24122223122084194,
+            "dominantReason": null,
+            "jawConfidence": 0.6417006212393154,
+            "neckConfidence": 0.859375,
+            "localVariation": 0.01009877538899362,
+            "warpMax": 0.9098872709367665,
+            "unexpectedTransparency": 0.034725641229254346
+          },
+          {
+            "label": "B-03",
+            "classification": "ok",
+            "score": 0.23981933365354322,
+            "dominantReason": null,
+            "jawConfidence": 0.6455107413679244,
+            "neckConfidence": 0.8680555555555555,
+            "localVariation": 0.009751905111364811,
+            "warpMax": 0.9135648401180815,
+            "unexpectedTransparency": 0.03575796077185738
+          },
+          {
+            "label": "B-04",
+            "classification": "ok",
+            "score": 0.1763823654981773,
+            "dominantReason": null,
+            "jawConfidence": 0.6601163148637414,
+            "neckConfidence": 0.8607456140350878,
+            "localVariation": 0.011462881558764182,
+            "warpMax": 0.9149974750482963,
+            "unexpectedTransparency": 0.03397919479075677
+          },
+          {
+            "label": "B-05",
+            "classification": "ok",
+            "score": 0.21441571295834794,
+            "dominantReason": null,
+            "jawConfidence": 0.6786742081418238,
+            "neckConfidence": 0.8660558464223386,
+            "localVariation": 0.007164409249695636,
+            "warpMax": 0.9119797742412236,
+            "unexpectedTransparency": 0.035011514333359806
+          },
+          {
+            "label": "B-06",
+            "classification": "ok",
+            "score": 0.251033039390236,
+            "dominantReason": null,
+            "jawConfidence": 0.6539152405922969,
+            "neckConfidence": 0.8713107638888888,
+            "localVariation": 0.012524524661645997,
+            "warpMax": 0.9068857274179737,
+            "unexpectedTransparency": 0.03478916858572223
+          },
+          {
+            "label": "B-07",
+            "classification": "ok",
+            "score": 0.24532318282366022,
+            "dominantReason": null,
+            "jawConfidence": 0.6597829415466818,
+            "neckConfidence": 0.8680555555555555,
+            "localVariation": 0.008335546066997157,
+            "warpMax": 0.910674225695294,
+            "unexpectedTransparency": 0.03494798697689192
+          },
+          {
+            "label": "B-08",
+            "classification": "ok",
+            "score": 0.15176242982420396,
+            "dominantReason": null,
+            "jawConfidence": 0.6414292625197175,
+            "neckConfidence": 0.8633289703315881,
+            "localVariation": 0.00906138586217975,
+            "warpMax": 0.9110756789770696,
+            "unexpectedTransparency": 0.03481299134439768
+          },
+          {
+            "label": "B-09",
+            "classification": "ok",
+            "score": 0.18745555319384982,
+            "dominantReason": null,
+            "jawConfidence": 0.6481600537686256,
+            "neckConfidence": 0.8637152777777778,
+            "localVariation": 0.007958834519653957,
+            "warpMax": 0.9084357471598863,
+            "unexpectedTransparency": 0.03505915985071071
+          },
+          {
+            "label": "B-10",
+            "classification": "ok",
+            "score": 0.1533453029998646,
+            "dominantReason": null,
+            "jawConfidence": 0.6496353426266492,
+            "neckConfidence": 0.8660558464223386,
+            "localVariation": 0.008670016120944979,
+            "warpMax": 0.9135383031990639,
+            "unexpectedTransparency": 0.03537679663305011
+          },
+          {
+            "label": "B-11",
+            "classification": "ok",
+            "score": 0.1900435821540138,
+            "dominantReason": null,
+            "jawConfidence": 0.6692656332839616,
+            "neckConfidence": 0.8607456140350878,
+            "localVariation": 0.007059811989156062,
+            "warpMax": 0.911492882322102,
+            "unexpectedTransparency": 0.034479472722941315
+          },
+          {
+            "label": "B-12",
+            "classification": "ok",
+            "score": 0.18183950954779965,
+            "dominantReason": null,
+            "jawConfidence": 0.6812187879358125,
+            "neckConfidence": 0.8633289703315881,
+            "localVariation": 0.007141188853856284,
+            "warpMax": 0.9096257844428729,
+            "unexpectedTransparency": 0.034638291114111014
+          },
+          {
+            "label": "B-13",
+            "classification": "ok",
+            "score": 0.1631274117848283,
+            "dominantReason": null,
+            "jawConfidence": 0.6492036719675455,
+            "neckConfidence": 0.8680555555555555,
+            "localVariation": 0.008143011569360148,
+            "warpMax": 0.9079251435618582,
+            "unexpectedTransparency": 0.03555943778289526
+          },
+          {
+            "label": "B-14",
+            "classification": "ok",
+            "score": 0.19264022258503732,
+            "dominantReason": null,
+            "jawConfidence": 0.6571420724061491,
+            "neckConfidence": 0.8713107638888888,
+            "localVariation": 0.006676910769085609,
+            "warpMax": 0.9085657443172351,
+            "unexpectedTransparency": 0.035281505598348285
+          },
+          {
+            "label": "B-15",
+            "classification": "ok",
+            "score": 0.1921856981788988,
+            "dominantReason": null,
+            "jawConfidence": 0.6296035233110959,
+            "neckConfidence": 0.8626302083333333,
+            "localVariation": 0.012658999828941364,
+            "warpMax": 0.9089010523654413,
+            "unexpectedTransparency": 0.03491622329865798
+          },
+          {
+            "label": "B-16",
+            "classification": "ok",
+            "score": 0.1628352379716708,
+            "dominantReason": null,
+            "jawConfidence": 0.6396220449346355,
+            "neckConfidence": 0.859375,
+            "localVariation": 0.008215252347338664,
+            "warpMax": 0.9098872709367665,
+            "unexpectedTransparency": 0.03588501548479314
+          },
+          {
+            "label": "B-17",
+            "classification": "ok",
+            "score": 0.16079267646169818,
+            "dominantReason": null,
+            "jawConfidence": 0.6464534973323084,
+            "neckConfidence": 0.8707682291666666,
+            "localVariation": 0.008720281292112109,
+            "warpMax": 0.9152368999340309,
+            "unexpectedTransparency": 0.036933216866513144
+          },
+          {
+            "label": "B-18",
+            "classification": "ok",
+            "score": 0.22330464453756493,
+            "dominantReason": null,
+            "jawConfidence": 0.6591517459690186,
+            "neckConfidence": 0.8607456140350878,
+            "localVariation": 0.014135837970541187,
+            "warpMax": 0.9230615043054997,
+            "unexpectedTransparency": 0.03547208766775192
+          },
+          {
+            "label": "B-19",
+            "classification": "ok",
+            "score": 0.15500367297789328,
+            "dominantReason": null,
+            "jawConfidence": 0.6806244289671691,
+            "neckConfidence": 0.8616928446771379,
+            "localVariation": 0.008259979587915911,
+            "warpMax": 0.9139708967650187,
+            "unexpectedTransparency": 0.03538473755260859
+          },
+          {
+            "label": "B-20",
+            "classification": "ok",
+            "score": 0.15729361779304374,
+            "dominantReason": null,
+            "jawConfidence": 0.6527721730281463,
+            "neckConfidence": 0.8713107638888888,
+            "localVariation": 0.009585433160735457,
+            "warpMax": 0.9091341906932002,
+            "unexpectedTransparency": 0.03530532835702374
+          },
+          {
+            "label": "B-21",
+            "classification": "ok",
+            "score": 0.15823991472156504,
+            "dominantReason": null,
+            "jawConfidence": 0.658400587407759,
+            "neckConfidence": 0.8626302083333333,
+            "localVariation": 0.010096834360696416,
+            "warpMax": 0.9142748904720314,
+            "unexpectedTransparency": 0.03626617962360041
+          }
+        ],
+        "timings": {
+          "detectMs": 586.06,
+          "canonicalMs": 898.12,
+          "pageTimings": {
+            "runId": 1,
+            "total": 392.19999999925494,
+            "loadAssets": 22.300000000745058,
+            "detectSheets": 67.59999999962747,
+            "crop": 294,
+            "geometry": 294,
+            "canonical": 757.4000000003725,
+            "warp": 757.3000000007451
+          }
+        }
+      }
+    },
+    {
+      "id": "pair-02",
+      "metadata": {
+        "id": "pair-02",
+        "expectedHeads": 42,
+        "notes": "Duas folhas reais mais recentes, com variações artísticas de olhos, boca, blush e marcas faciais.",
+        "knownProblems": [],
+        "sourceFiles": [
+          "ChatGPT Image 6_09_2026, 20_39_07.png",
+          "ChatGPT Image 6_09_2026, 20_39_18.png"
+        ]
+      },
+      "benchmark": {
+        "detectedHeads": 42,
+        "canonical": {
+          "targetSkull": 217,
+          "targetTotal": 303,
+          "targetFace": 282.06907894736844,
+          "targetNeck": 20.93092105263156,
+          "smallestHorizIndex": 27,
+          "bestBaseIndex": 28
+        },
+        "metrics": {
+          "skullWidth": {
+            "median": 217,
+            "mad": 0,
+            "robustScale": 0,
+            "min": 217,
+            "max": 219
+          },
+          "faceHeight": {
+            "median": 284,
+            "mad": 0,
+            "robustScale": 0,
+            "min": 281,
+            "max": 285
+          },
+          "totalHeight": {
+            "median": 304.5,
+            "mad": 0.5,
+            "robustScale": 0.741,
+            "min": 303,
+            "max": 307
+          },
+          "jawY": {
+            "median": 303,
+            "mad": 2,
+            "robustScale": 2.965,
+            "min": 289,
+            "max": 305
+          },
+          "neckBottomY": {
+            "median": 324.5,
+            "mad": 2.5,
+            "robustScale": 3.706,
+            "min": 312,
+            "max": 327
+          },
+          "centerX": {
+            "median": 0,
+            "mad": 0,
+            "robustScale": 0,
+            "min": null,
+            "max": null
+          },
+          "xMedian": {
+            "median": 0.973,
+            "mad": 0.01,
+            "robustScale": 0.014,
+            "min": 0.959,
+            "max": 1.05
+          },
+          "yHead": {
+            "median": 0.993,
+            "mad": 0,
+            "robustScale": 0,
+            "min": 0.99,
+            "max": 1.004
+          },
+          "yNeck": {
+            "median": 0.997,
+            "mad": 0.05,
+            "robustScale": 0.074,
+            "min": 0.837,
+            "max": 1.102
+          },
+          "yTotal": {
+            "median": 0.995,
+            "mad": 0.002,
+            "robustScale": 0.002,
+            "min": 0.987,
+            "max": 1
+          },
+          "localVariation": {
+            "median": 0.04,
+            "mad": 0.008,
+            "robustScale": 0.012,
+            "min": 0.03,
+            "max": 0.064
+          },
+          "maxWarpX": {
+            "median": 1.011,
+            "mad": 0.011,
+            "robustScale": 0.017,
+            "min": 0.997,
+            "max": 1.104
+          },
+          "scaleX": {
+            "median": 1,
+            "mad": 0,
+            "robustScale": 0,
+            "min": 0.991,
+            "max": 1
+          },
+          "scaleY": {
+            "median": 0.995,
+            "mad": 0.002,
+            "robustScale": 0.002,
+            "min": 0.987,
+            "max": 1
+          }
+        },
+        "alpha": {
+          "area": {
+            "median": 186554,
+            "mad": 350,
+            "robustScale": 518.91,
+            "min": 185862,
+            "max": 187437
+          },
+          "ratio": {
+            "median": 0.36,
+            "mad": 0.001,
+            "robustScale": 0.001,
+            "min": 0.359,
+            "max": 0.362
+          },
+          "unexpectedTransparency": {
+            "median": 0.034,
+            "mad": 0.001,
+            "robustScale": 0.001,
+            "min": 0.031,
+            "max": 0.036
+          }
+        },
+        "frameStability": {
+          "pairs": 41,
+          "meanIoU": 0.993,
+          "meanChangedRatio": 0.002,
+          "silhouetteStabilityScore": 99.76
+        },
+        "diagnostics": [
+          {
+            "label": "A-01",
+            "classification": "ok",
+            "score": 0.12016296641370497,
+            "dominantReason": null,
+            "jawConfidence": 0.6461828091360696,
+            "neckConfidence": 0.8596139143730888,
+            "localVariation": 0.05642226775496184,
+            "warpMax": 1.0554873731771235,
+            "unexpectedTransparency": 0.03332081194262421
+          },
+          {
+            "label": "A-02",
+            "classification": "ok",
+            "score": 0.33893527876740875,
+            "dominantReason": null,
+            "jawConfidence": 0.6789489671487089,
+            "neckConfidence": 0.863095238095238,
+            "localVariation": 0.03929241421751417,
+            "warpMax": 1.0005478663718188,
+            "unexpectedTransparency": 0.03135912739819414
+          },
+          {
+            "label": "A-03",
+            "classification": "ok",
+            "score": 0.05755209980099433,
+            "dominantReason": null,
+            "jawConfidence": 0.649700241264608,
+            "neckConfidence": 0.8606950844854071,
+            "localVariation": 0.04839800997140786,
+            "warpMax": 1.0104582667518596,
+            "unexpectedTransparency": 0.033098209441128595
+          },
+          {
+            "label": "A-04",
+            "classification": "ok",
+            "score": 0.06763659756304374,
+            "dominantReason": null,
+            "jawConfidence": 0.6551693154426785,
+            "neckConfidence": 0.8648700305810397,
+            "localVariation": 0.043434978753424724,
+            "warpMax": 1.0051602635311743,
+            "unexpectedTransparency": 0.03396775046259582
+          },
+          {
+            "label": "A-05",
+            "classification": "ok",
+            "score": 0.13181438549607827,
+            "dominantReason": null,
+            "jawConfidence": 0.6603570126299848,
+            "neckConfidence": 0.867737003058104,
+            "localVariation": 0.05930311313247172,
+            "warpMax": 1.020260317004183,
+            "unexpectedTransparency": 0.032979951862209055
+          },
+          {
+            "label": "A-06",
+            "classification": "ok",
+            "score": 0.2974639847441848,
+            "dominantReason": null,
+            "jawConfidence": 0.6712458760213045,
+            "neckConfidence": 0.8647260273972603,
+            "localVariation": 0.05478461310450511,
+            "warpMax": 1.0119623521091305,
+            "unexpectedTransparency": 0.03343211319337201
+          },
+          {
+            "label": "A-07",
+            "classification": "ok",
+            "score": 0.1814685794896018,
+            "dominantReason": null,
+            "jawConfidence": 0.6566560350917443,
+            "neckConfidence": 0.8666286149162862,
+            "localVariation": 0.06387867142859793,
+            "warpMax": 1.0665293108865024,
+            "unexpectedTransparency": 0.03332776827079594
+          },
+          {
+            "label": "A-08",
+            "classification": "ok",
+            "score": 0.029114760131941614,
+            "dominantReason": null,
+            "jawConfidence": 0.6528189900669333,
+            "neckConfidence": 0.8611751152073732,
+            "localVariation": 0.038925994372810635,
+            "warpMax": 1.0531161425193616,
+            "unexpectedTransparency": 0.033842536555504545
+          },
+          {
+            "label": "A-09",
+            "classification": "ok",
+            "score": 0.207576048444039,
+            "dominantReason": null,
+            "jawConfidence": 0.6477007993782125,
+            "neckConfidence": 0.8640552995391705,
+            "localVariation": 0.050606347094405146,
+            "warpMax": 1.015946233011201,
+            "unexpectedTransparency": 0.0337799296019589
+          },
+          {
+            "label": "A-10",
+            "classification": "ok",
+            "score": 0.037971068765946955,
+            "dominantReason": null,
+            "jawConfidence": 0.6671783327641798,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.03673624773253459,
+            "warpMax": 1.0051602635311743,
+            "unexpectedTransparency": 0.03396775046259582
+          },
+          {
+            "label": "A-11",
+            "classification": "ok",
+            "score": 0.20757030127194845,
+            "dominantReason": null,
+            "jawConfidence": 0.6302549299394576,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.04642043019761721,
+            "warpMax": 1.0269422121059153,
+            "unexpectedTransparency": 0.03537292875328687
+          },
+          {
+            "label": "A-12",
+            "classification": "ok",
+            "score": 0.24087167237690305,
+            "dominantReason": null,
+            "jawConfidence": 0.6491655393677389,
+            "neckConfidence": 0.8688556067588326,
+            "localVariation": 0.05465428569060049,
+            "warpMax": 1.0263615227734022,
+            "unexpectedTransparency": 0.03409992069785884
+          },
+          {
+            "label": "A-13",
+            "classification": "ok",
+            "score": 0.21156112826168513,
+            "dominantReason": null,
+            "jawConfidence": 0.641418355113723,
+            "neckConfidence": 0.8658256880733946,
+            "localVariation": 0.03011285902708316,
+            "warpMax": 1.0025727251756686,
+            "unexpectedTransparency": 0.03366167202303936
+          },
+          {
+            "label": "A-14",
+            "classification": "ok",
+            "score": 0.21868301292536863,
+            "dominantReason": null,
+            "jawConfidence": 0.6476017408391791,
+            "neckConfidence": 0.8706039755351682,
+            "localVariation": 0.053185484843900066,
+            "warpMax": 1.1043094261351685,
+            "unexpectedTransparency": 0.03501815601652824
+          },
+          {
+            "label": "A-15",
+            "classification": "ok",
+            "score": 0.6031662107742493,
+            "dominantReason": null,
+            "jawConfidence": 0.6858288493092753,
+            "neckConfidence": 0.8624808868501529,
+            "localVariation": 0.03978464661205461,
+            "warpMax": 1.0552954659918574,
+            "unexpectedTransparency": 0.03327211764542204
+          },
+          {
+            "label": "A-16",
+            "classification": "ok",
+            "score": 0.6304002728698891,
+            "dominantReason": null,
+            "jawConfidence": 0.6657945325424623,
+            "neckConfidence": 0.8648700305810397,
+            "localVariation": 0.04753777389225733,
+            "warpMax": 1.0062286087854588,
+            "unexpectedTransparency": 0.033668628351211094
+          },
+          {
+            "label": "A-17",
+            "classification": "ok",
+            "score": 0.6355935133715109,
+            "dominantReason": null,
+            "jawConfidence": 0.6442521752692889,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.04973579457655708,
+            "warpMax": 1.021574977933022,
+            "unexpectedTransparency": 0.03293125756500689
+          },
+          {
+            "label": "A-18",
+            "classification": "ok",
+            "score": 0.47389366266842564,
+            "dominantReason": null,
+            "jawConfidence": 0.6593142126826849,
+            "neckConfidence": 0.867737003058104,
+            "localVariation": 0.04513233257134175,
+            "warpMax": 1.0107874330230027,
+            "unexpectedTransparency": 0.03481642249954784
+          },
+          {
+            "label": "A-19",
+            "classification": "ok",
+            "score": 0.46051980310946805,
+            "dominantReason": null,
+            "jawConfidence": 0.6743989352892414,
+            "neckConfidence": 0.867737003058104,
+            "localVariation": 0.03656207982809856,
+            "warpMax": 0.999957489151524,
+            "unexpectedTransparency": 0.033418200537028535
+          },
+          {
+            "label": "A-20",
+            "classification": "ok",
+            "score": 0.3280088592326098,
+            "dominantReason": null,
+            "jawConfidence": 0.655847254899707,
+            "neckConfidence": 0.8629587155963303,
+            "localVariation": 0.048130309301920304,
+            "warpMax": 1.0200125623304652,
+            "unexpectedTransparency": 0.034565994685365274
+          },
+          {
+            "label": "A-21",
+            "classification": "ok",
+            "score": 0.5286224056530027,
+            "dominantReason": null,
+            "jawConfidence": 0.6579814456179709,
+            "neckConfidence": 0.8648700305810397,
+            "localVariation": 0.060865199578165385,
+            "warpMax": 1.0632934535535923,
+            "unexpectedTransparency": 0.03279213100157213
+          },
+          {
+            "label": "B-01",
+            "classification": "ok",
+            "score": 0.17324649357790453,
+            "dominantReason": null,
+            "jawConfidence": 0.6416770949953701,
+            "neckConfidence": 0.867737003058104,
+            "localVariation": 0.03991694815787494,
+            "warpMax": 1.0561027242363876,
+            "unexpectedTransparency": 0.03447556241913269
+          },
+          {
+            "label": "B-02",
+            "classification": "ok",
+            "score": 0.18491654219087394,
+            "dominantReason": null,
+            "jawConfidence": 0.6530565426292656,
+            "neckConfidence": 0.8640552995391705,
+            "localVariation": 0.03003350699473417,
+            "warpMax": 0.9998962022447707,
+            "unexpectedTransparency": 0.03389818718087845
+          },
+          {
+            "label": "B-03",
+            "classification": "ok",
+            "score": 0.14770819575774607,
+            "dominantReason": null,
+            "jawConfidence": 0.63863656586719,
+            "neckConfidence": 0.8640552995391705,
+            "localVariation": 0.03923337287105699,
+            "warpMax": 0.9973062662075357,
+            "unexpectedTransparency": 0.03379384225830238
+          },
+          {
+            "label": "B-04",
+            "classification": "ok",
+            "score": 0.17100415769291374,
+            "dominantReason": null,
+            "jawConfidence": 0.63863656586719,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.033473382282691366,
+            "warpMax": 0.9992765069501575,
+            "unexpectedTransparency": 0.03355037077229155
+          },
+          {
+            "label": "B-05",
+            "classification": "ok",
+            "score": 0.17533845722255273,
+            "dominantReason": null,
+            "jawConfidence": 0.6357809683974434,
+            "neckConfidence": 0.8611751152073732,
+            "localVariation": 0.032401714816571836,
+            "warpMax": 1.0006216219658337,
+            "unexpectedTransparency": 0.03381471124281759
+          },
+          {
+            "label": "B-06",
+            "classification": "ok",
+            "score": 0.17572489362927657,
+            "dominantReason": null,
+            "jawConfidence": 0.6420358741224396,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.032306167353370885,
+            "warpMax": 1.0021066552205904,
+            "unexpectedTransparency": 0.03376601694561543
+          },
+          {
+            "label": "B-07",
+            "classification": "ok",
+            "score": 0.21289817318942045,
+            "dominantReason": null,
+            "jawConfidence": 0.6547964635569846,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.057473751974582155,
+            "warpMax": 1.0748947872437797,
+            "unexpectedTransparency": 0.03354341444411982
+          },
+          {
+            "label": "B-08",
+            "classification": "ok",
+            "score": 0.35326432518514184,
+            "dominantReason": null,
+            "jawConfidence": 0.6431510622771567,
+            "neckConfidence": 0.8706039755351682,
+            "localVariation": 0.03447997912337897,
+            "warpMax": 1.056335768807107,
+            "unexpectedTransparency": 0.03520597687716516
+          },
+          {
+            "label": "B-09",
+            "classification": "ok",
+            "score": 0.3217811787506415,
+            "dominantReason": null,
+            "jawConfidence": 0.6492359732547506,
+            "neckConfidence": 0.8640552995391705,
+            "localVariation": 0.03529515170001707,
+            "warpMax": 0.9987353006357123,
+            "unexpectedTransparency": 0.034517300388163114
+          },
+          {
+            "label": "B-10",
+            "classification": "ok",
+            "score": 0.3213406682054531,
+            "dominantReason": null,
+            "jawConfidence": 0.6441979565206567,
+            "neckConfidence": 0.8664554531490015,
+            "localVariation": 0.03540406914250871,
+            "warpMax": 1.0151857759396063,
+            "unexpectedTransparency": 0.03425991624580881
+          },
+          {
+            "label": "B-11",
+            "classification": "ok",
+            "score": 0.3030885797433052,
+            "dominantReason": null,
+            "jawConfidence": 0.643956128643712,
+            "neckConfidence": 0.8688556067588326,
+            "localVariation": 0.04067177567443814,
+            "warpMax": 1.000104863294636,
+            "unexpectedTransparency": 0.03469816492062829
+          },
+          {
+            "label": "B-12",
+            "classification": "ok",
+            "score": 0.3358043933707756,
+            "dominantReason": null,
+            "jawConfidence": 0.6451459521532247,
+            "neckConfidence": 0.8635752688172043,
+            "localVariation": 0.031827873359874026,
+            "warpMax": 1.0009852157287364,
+            "unexpectedTransparency": 0.0341833966359197
+          },
+          {
+            "label": "B-13",
+            "classification": "ok",
+            "score": 0.3397131598866575,
+            "dominantReason": null,
+            "jawConfidence": 0.6441979565206567,
+            "neckConfidence": 0.8659754224270353,
+            "localVariation": 0.030861420100452674,
+            "warpMax": 1.000118245407375,
+            "unexpectedTransparency": 0.03448947507547616
+          },
+          {
+            "label": "B-14",
+            "classification": "ok",
+            "score": 0.20846052078069433,
+            "dominantReason": null,
+            "jawConfidence": 0.6569678674775268,
+            "neckConfidence": 0.8611751152073732,
+            "localVariation": 0.05637653022517186,
+            "warpMax": 1.070202917315797,
+            "unexpectedTransparency": 0.03490685476578043
+          },
+          {
+            "label": "B-15",
+            "classification": "ok",
+            "score": 0.33803337641934506,
+            "dominantReason": null,
+            "jawConfidence": 0.6331974541744658,
+            "neckConfidence": 0.8706039755351682,
+            "localVariation": 0.05060889871622298,
+            "warpMax": 1.0574985775406853,
+            "unexpectedTransparency": 0.0355259679730651
+          },
+          {
+            "label": "B-16",
+            "classification": "ok",
+            "score": 0.3369001196359601,
+            "dominantReason": null,
+            "jawConfidence": 0.6513313808233656,
+            "neckConfidence": 0.8640552995391705,
+            "localVariation": 0.032350215883799494,
+            "warpMax": 1.0081538822821354,
+            "unexpectedTransparency": 0.03433643585569793
+          },
+          {
+            "label": "B-17",
+            "classification": "ok",
+            "score": 0.29787901651794324,
+            "dominantReason": null,
+            "jawConfidence": 0.635060855051412,
+            "neckConfidence": 0.8653478593272171,
+            "localVariation": 0.03990810091588726,
+            "warpMax": 1.0006216219658337,
+            "unexpectedTransparency": 0.034927723750295646
+          },
+          {
+            "label": "B-18",
+            "classification": "ok",
+            "score": 0.2167629839838329,
+            "dominantReason": null,
+            "jawConfidence": 0.6245540322515802,
+            "neckConfidence": 0.8688556067588326,
+            "localVariation": 0.04533539585345192,
+            "warpMax": 1.0257534193239126,
+            "unexpectedTransparency": 0.03599899828874327
+          },
+          {
+            "label": "B-19",
+            "classification": "ok",
+            "score": 0.3384687471117136,
+            "dominantReason": null,
+            "jawConfidence": 0.6387444010503585,
+            "neckConfidence": 0.8611751152073732,
+            "localVariation": 0.03196236843100331,
+            "warpMax": 1.005044069599233,
+            "unexpectedTransparency": 0.0348094661713761
+          },
+          {
+            "label": "B-20",
+            "classification": "ok",
+            "score": 0.3235316059877255,
+            "dominantReason": null,
+            "jawConfidence": 0.6340388992109167,
+            "neckConfidence": 0.8635752688172043,
+            "localVariation": 0.03565561761001135,
+            "warpMax": 1.0077027059155745,
+            "unexpectedTransparency": 0.034705121248800035
+          },
+          {
+            "label": "B-21",
+            "classification": "ok",
+            "score": 0.36073472371542314,
+            "dominantReason": null,
+            "jawConfidence": 0.6602924778566838,
+            "neckConfidence": 0.8635752688172043,
+            "localVariation": 0.05413167928684237,
+            "warpMax": 1.070202917315797,
+            "unexpectedTransparency": 0.0344964314036479
+          }
+        ],
+        "timings": {
+          "detectMs": 624.35,
+          "canonicalMs": 968.79,
+          "pageTimings": {
+            "runId": 1,
+            "total": 447.09999999962747,
+            "loadAssets": 22.699999999254942,
+            "detectSheets": 70.09999999962747,
+            "crop": 346.6000000014901,
+            "geometry": 346.6000000014901,
+            "canonical": 829.1999999992549,
+            "warp": 829.1999999992549
+          }
+        }
+      }
+    }
+  ]
+}

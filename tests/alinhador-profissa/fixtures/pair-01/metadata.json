@@ -1,0 +1,7 @@
+{
+  "id": "pair-01",
+  "expectedHeads": 42,
+  "notes": "Folhas reais usadas na primeira rodada de diagnóstico; quatro falsos positivos antigos em localVariation extrema.",
+  "knownProblems": ["historical-localVariation-false-positive"],
+  "sourceFiles": ["fola 1.png", "2.png"]
+}
