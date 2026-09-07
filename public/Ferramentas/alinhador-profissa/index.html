@@ -525,6 +525,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
         <button id="discardCandidate">Descartar</button>
       </div>
     </div>
+    <button id="undoCorrection" style="margin-top:8px" disabled>↶ Desfazer última correção</button>
 
     <div id="detectStatus" class="status" style="margin-top:8px">Carregue as folhas.</div>
   </div>
@@ -1461,8 +1462,8 @@ function v613ConsensusGeomForHead(h){
   const neckBottomY=jawY+neckH;
   return {...g,jawY,faceHeight:faceH,neckBottomY,neckHeight:neckH,totalHeight:faceH+neckH,source:'manual-consensus'};
 }
-function v633ConsensusJawGeom(h){
-  const others=S.heads.filter(x=>x!==h);
+function v633ConsensusJawGeom(h,poolOverride=null){
+  const others=poolOverride?.filter(x=>x!==h)||S.heads.filter(x=>x!==h);
   const pool=others.length>=3?others:S.heads;
   const g=h.geom;
   const rawTotal=Math.max(1,g.neckBottomY-g.topY);
@@ -1503,6 +1504,128 @@ function v633ConsensusJawGeom(h){
     debug:{medFaceRatio,originalRatio,correctedRatio:finalFaceH/rawTotal,severity}
   };
 }
+function consensusDistance(values,stats,config){
+  if(!stats)return 0;
+  let total=0,weight=0;
+  for(const [key,cfg] of Object.entries(config)){
+    if(!Number.isFinite(values?.[key])||!stats[key])continue;
+    total+=Math.min(8,robustMetricZ(values[key],stats[key],cfg))*cfg.weight;
+    weight+=cfg.weight;
+  }
+  return weight?total/weight:0;
+}
+function sourceYForGeomUnclamped(h,g,localY){
+  const c=S.canonical;
+  if(!$('splitNeck').checked)return g.topY+clamp(localY/c.targetTotal,0,1)*g.totalHeight;
+  if(localY<=c.targetFace){
+    const local=S.faceAlign?faceLocalSourceExperimental(h,localY):clamp(localY/c.targetFace,0,1)*g.faceHeight;
+    return g.topY+local;
+  }
+  return g.jawY+clamp((localY-c.targetFace)/Math.max(1,c.targetNeck),0,1)*g.neckHeight;
+}
+function validateCandidateSampling(h,candidateGeom){
+  const previous=h.geomWarp;h.geomWarp=candidateGeom;
+  let min=Infinity,max=-Infinity,outside=0;
+  const raw=h.geom;
+  for(let i=0;i<=120;i++){
+    const localY=S.canonical.targetTotal*i/120;
+    const y=sourceYForGeomUnclamped(h,candidateGeom,localY);
+    min=Math.min(min,y);max=Math.max(max,y);
+    if(y<raw.topY-.5||y>raw.neckBottomY+.5)outside++;
+  }
+  h.geomWarp=previous;
+  return {safe:outside===0,min,max,outside};
+}
+function internalTransparencyMetrics(currentCanvas,candidateCanvas){
+  const size=Math.min(currentCanvas.width,candidateCanvas.width),
+    c=S.canonical,fit=(size*.78)/c.targetTotal,top=size*.10,cx=size/2;
+  const current=currentCanvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,size,size).data;
+  const candidate=candidateCanvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,size,size).data;
+  const x0=Math.max(0,Math.floor(cx-c.targetSkull*fit*.36)),x1=Math.min(size-1,Math.ceil(cx+c.targetSkull*fit*.36));
+  const y0=Math.max(0,Math.floor(top+fit*c.targetFace*.04)),y1=Math.min(size-1,Math.ceil(top+fit*c.targetFace*.98));
+  let expected=0,currentTransparent=0,candidateTransparent=0,newHoles=0;
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+    const i=(y*size+x)*4,ca=current[i+3],na=candidate[i+3];
+    if(ca>24)expected++;
+    if(ca<16)currentTransparent++;
+    if(na<16)candidateTransparent++;
+    if(ca>32&&na<16)newHoles++;
+  }
+  const delta=candidateTransparent-currentTransparent;
+  return {expected,currentTransparent,candidateTransparent,newHoles,delta,
+    safe:newHoles<=Math.max(24,expected*.008)&&delta<=Math.max(24,expected*.006)};
+}
+function candidateValidation(h,candidateGeom,candidateWarpStats,candidateCanvas){
+  const report=S.geometryReport,active=activeGeom(h);
+  const currentRaw=geometryMetricsFor(active),candidateRaw=geometryMetricsFor(candidateGeom);
+  const currentRawDistance=consensusDistance(currentRaw,report?.rawStats,GEOMETRY_METRIC_CONFIG);
+  const candidateRawDistance=consensusDistance(candidateRaw,report?.rawStats,GEOMETRY_METRIC_CONFIG);
+  const currentWarpDistance=consensusDistance(h.warpStats,report?.warpStats,WARP_METRIC_CONFIG);
+  const candidateWarpDistance=consensusDistance(candidateWarpStats,report?.warpStats,WARP_METRIC_CONFIG);
+  const currentScore=10-(currentRawDistance*.72+currentWarpDistance*.28);
+  const candidateScore=10-(candidateRawDistance*.72+candidateWarpDistance*.28);
+  const sampling=validateCandidateSampling(h,candidateGeom);
+  const transparency=internalTransparencyMetrics(h.warped,candidateCanvas);
+  const betterGeometry=candidateRawDistance<currentRawDistance-Math.max(.015,currentRawDistance*.02);
+  const warpNotWorse=candidateWarpDistance<=currentWarpDistance*1.08+.035;
+  const valid=betterGeometry&&warpNotWorse&&sampling.safe&&transparency.safe;
+  return {valid,currentScore,candidateScore,improvement:candidateScore-currentScore,
+    currentRawDistance,candidateRawDistance,currentWarpDistance,candidateWarpDistance,
+    betterGeometry,warpNotWorse,sampling,transparency};
+}
+function refreshCandidatePanel(){
+  const panel=$("candidatePanel"),candidate=S.candidate;
+  if(!panel)return;
+  const h=current();
+  if(!candidate||!h||candidate.index!==S.currentIndex){panel.hidden=true;updateUndoButton();return}
+  panel.hidden=false;
+  const a=$("candidateCurrent"),b=$("candidateNew");
+  const actx=a.getContext("2d"),bctx=b.getContext("2d");
+  actx.clearRect(0,0,a.width,a.height);bctx.clearRect(0,0,b.width,b.height);
+  if(h.warped)actx.drawImage(h.warped,0,0,a.width,a.height);
+  bctx.drawImage(candidate.canvas,0,0,b.width,b.height);
+  const v=candidate.validation;
+  const checks=[
+    `score atual ${v.currentScore.toFixed(2)} → candidata ${v.candidateScore.toFixed(2)} (${v.improvement>=0?"+":""}${v.improvement.toFixed(2)})`,
+    `geometria ${v.betterGeometry?"melhorou":"não melhorou o suficiente"} · warp ${v.warpNotWorse?"estável":"piorou"}`,
+    `amostragem ${v.sampling.safe?"dentro da região original":"fora da região original"} · transparência nova ${v.transparency.newHoles}`
+  ];
+  $("candidateMeta").textContent=checks.join("\n")+(v.valid?"\nCandidata aprovada para revisão manual.":"\nCandidata rejeitada automaticamente; descarte recomendado.");
+  $("acceptCandidate").disabled=!v.valid;
+  updateUndoButton();
+}
+function updateUndoButton(){
+  const h=current(),btn=$("undoCorrection");
+  if(btn)btn.disabled=!h?.previousCorrection;
+}
+function discardCandidate(){
+  if(!S.candidate)return;
+  log(`Candidata descartada: ${S.heads[S.candidate.index]?.label||"expressão"}. O resultado atual foi preservado.`);
+  S.candidate=null;refreshCandidatePanel();drawPreview();
+  status("canonicalStatus","Candidata descartada; nada foi alterado.","ok");
+}
+function acceptCandidate(){
+  const candidate=S.candidate,h=current();
+  if(!candidate||!h||candidate.index!==S.currentIndex||!candidate.validation.valid)return;
+  h.previousCorrection={geomWarp:h.geomWarp||null,warped:h.warped,warpStats:h.warpStats,manualRedo:h.manualRedo,geomFixInfo:h.geomFixInfo||null};
+  h.geomWarp=candidate.geom;
+  h.warpStats=candidate.warpStats;
+  h.warped=candidate.canvas;
+  h.manualRedo=true;
+  h.geomFixInfo={manual:true,mode:"validated-candidate",...candidate.validation};
+  S.candidate=null;
+  updateGeometryDiagnostics();renderThumbs();drawPreview();
+  status("canonicalStatus",`Correção aceita somente para ${h.label}. As outras expressões não foram recalculadas.`,"ok");
+  log(`Correção aceita: ${h.label}; score ${candidate.validation.currentScore.toFixed(2)} → ${candidate.validation.candidateScore.toFixed(2)}.`);
+}
+function undoLastCorrection(){
+  const h=current();if(!h?.previousCorrection)return;
+  const previous=h.previousCorrection;
+  h.geomWarp=previous.geomWarp;h.warped=previous.warped;h.warpStats=previous.warpStats;
+  h.manualRedo=previous.manualRedo;h.geomFixInfo=previous.geomFixInfo;h.previousCorrection=null;
+  S.candidate=null;updateGeometryDiagnostics();renderThumbs();drawPreview();
+  status("canonicalStatus",`Última correção desfeita somente para ${h.label}.`,"ok");
+}
 async function redoCurrentExpression(){
   stopPlayer();
   if(!S.canonical||!S.heads.length){
@@ -1519,19 +1642,21 @@ async function redoCurrentExpression(){
     const oldFaceAlign=S.faceAlign;
     S.faceAlign=null;
 
-    const repaired=v633ConsensusJawGeom(h);
-    h.geomWarp=repaired.geom;
-    h.geomFixInfo={manual:true,mode:'jaw',...repaired.debug};
-    h.manualRedo=true;
-    h.warpStats=computeWarpStats(h);
-    h.warped=makeWarpedCanvas(h,720);
+    const trusted=S.heads.filter(x=>x!==h&&x.geometryRisk?.level!=="outlier");
+    const repaired=v633ConsensusJawGeom(h,trusted.length>=3?trusted:null);
+    const candidateHead={...h,geomWarp:repaired.geom};
+    const candidateWarpStats=computeWarpStats(candidateHead);
+    const candidateCanvas=makeWarpedCanvas(candidateHead,720);
+    const validation=candidateValidation(h,repaired.geom,candidateWarpStats,candidateCanvas);
+    S.candidate={index:S.currentIndex,geom:repaired.geom,canvas:candidateCanvas,warpStats:candidateWarpStats,validation,debug:repaired.debug};
 
-    // Restaura configuração do Face Rig para as demais expressões, sem reaplicar na atual reparada.
+    // Restaura configuração do Face Rig para o restante do fluxo; nada foi aplicado ainda.
     S.faceAlign=oldFaceAlign;
 
-    drawPreview();renderThumbs();updateDiagnostics();
-    status("canonicalStatus",`Refiz ${h.label}: topo e fim do pescoço preservados; queixo corrigido por consenso.`,"ok");
-    log(`V6.3.3: ${h.label} corrigida por jaw-consensus. face ratio ${repaired.debug.originalRatio.toFixed(3)} → ${repaired.debug.correctedRatio.toFixed(3)}; alvo ${repaired.debug.medFaceRatio.toFixed(3)}.`);
+    refreshCandidatePanel();drawPreview();
+    const result=validation.valid?"candidata pronta para aceitar":"candidata reprovada pela validação";
+    status("canonicalStatus",`${h.label}: ${result}. Compare os dois quadros antes de decidir.`,validation.valid?"warn":"bad");
+    log(`Diagnóstico candidato ${h.label}: score ${validation.currentScore.toFixed(2)} → ${validation.candidateScore.toFixed(2)}; geometria ${validation.betterGeometry?"melhor":"sem ganho"}; amostragem ${validation.sampling.safe?"segura":"fora"}; buracos ${validation.transparency.newHoles}.`);
   }catch(e){
     console.error(e);
     status("canonicalStatus","Erro ao corrigir queixo da expressão: "+e.message,"bad");
@@ -1545,8 +1670,9 @@ async function buildCanonical(){
   $("canonical").disabled=true;
   if($("canonicalExtra"))$("canonicalExtra").disabled=true;
   try{
+    S.candidate=null;
     status("canonicalStatus","Recalculando contornos robustos…","warn");
-    for(const h of S.heads)h.manualRedo=false;
+    for(const h of S.heads){h.manualRedo=false;h.previousCorrection=null;h.geomWarp=null;h.geomFixInfo=null}
     for(let i=0;i<S.heads.length;i++){
       S.heads[i].profile=makeRobustProfile(S.heads[i].original,S.heads[i].mask,S.heads[i].geom);
       if(i%5===4)await sleep(0);
@@ -1981,6 +2107,7 @@ function drawPreview(){
 
   ctx.textAlign="left";ctx.fillStyle="#fff";ctx.font="15px system-ui";
   ctx.fillText(`${h.label}${h.warped?" · CANONICAL":" · original"}`,14,24);
+  refreshCandidatePanel();
   updateDiagnostics();
 }
 function drawCanonicalOverlay(ctx){
@@ -2641,6 +2768,7 @@ function rebuildAllWarpNow(reason="ajuste"){
     if(i<S.heads.length){
       requestAnimationFrame(processBatch);
     }else{
+      updateGeometryDiagnostics();
       renderThumbs();
       updateDiagnostics();
       status("canonicalStatus",`Ajuste aplicado em todas as ${S.heads.length} expressões.`,"ok");
@@ -2716,6 +2844,10 @@ function init(){
   $("canonicalExtra").onclick=buildCanonical;
   $("playExtra").onclick=()=>S.playing?stopPlayer():startPlayer();
   $("redoCurrent").onclick=redoCurrentExpression;
+  $("acceptCandidate").onclick=acceptCandidate;
+  $("discardCandidate").onclick=discardCandidate;
+  $("undoCorrection").onclick=undoLastCorrection;
+  $("nextSuspect").onclick=goToNextSuspect;
   $("currentSel").onchange=()=>{S.currentIndex=Number($("currentSel").value);drawPreview();renderThumbs()};
   $("scope").onchange=()=>{
     applyScope();const a=visibleIndices();
