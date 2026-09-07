@@ -957,7 +957,8 @@ function cropHead(sheet,b,index){
   return {
     sheet:sheet.name,order:index+1,label:`${sheet.name}-${String(index+1).padStart(2,"0")}`,
     original,transparent,mask:mainMask,w,h,geom,profile,
-    warped:null,warpStats:null,manualRedo:false
+    geometryMetrics:geometryMetricsFor(geom),
+    warped:null,warpStats:null,manualRedo:false,previousCorrection:null
   };
 }
 function floodMain(mask,w,h,comp){
@@ -1028,6 +1029,110 @@ function detectNeckBottom(geom){
   if(neckBottomY<geom.jawY+geom.faceHeight*.05)neckBottomY=geom.maxY;
   const neckHeight=Math.max(1,neckBottomY-geom.jawY),totalHeight=Math.max(1,neckBottomY-geom.topY);
   return {...geom,neckBottomY,neckHeight,totalHeight};
+}
+
+/* =========================================================
+   DIAGNÓSTICO GEOMÉTRICO ROBUSTO
+========================================================= */
+const GEOMETRY_METRIC_CONFIG={
+  jawRatio:{label:"queixo / altura total",weight:.22,relativeFloor:.018,absoluteFloor:.012},
+  faceFraction:{label:"rosto / altura total",weight:.18,relativeFloor:.018,absoluteFloor:.012},
+  neckFraction:{label:"pescoço / altura total",weight:.14,relativeFloor:.022,absoluteFloor:.014},
+  totalPerSkull:{label:"altura total / largura",weight:.18,relativeFloor:.035,absoluteFloor:.025},
+  facePerSkull:{label:"rosto / largura",weight:.14,relativeFloor:.035,absoluteFloor:.025},
+  neckPerSkull:{label:"pescoço / largura",weight:.08,relativeFloor:.035,absoluteFloor:.02},
+  neckBottomRatio:{label:"fim do pescoço / altura",weight:.06,relativeFloor:.018,absoluteFloor:.012}
+};
+const WARP_METRIC_CONFIG={
+  yHead:{label:"escala Y da cabeça",weight:.30,relativeFloor:.025,absoluteFloor:.018},
+  yNeck:{label:"escala Y do pescoço",weight:.24,relativeFloor:.03,absoluteFloor:.02},
+  yTotal:{label:"escala Y total",weight:.20,relativeFloor:.025,absoluteFloor:.018},
+  localVariation:{label:"variação local do warp",weight:.26,relativeFloor:.04,absoluteFloor:.018}
+};
+function geometryMetricsFor(g){
+  const total=Math.max(1,g.totalHeight),skull=Math.max(1,g.skullWidth);
+  const jaw=Math.max(0,g.jawY-g.topY),neckBottom=Math.max(0,g.neckBottomY-g.topY);
+  return {
+    skullWidth:g.skullWidth,totalHeight:g.totalHeight,faceHeight:g.faceHeight,neckHeight:g.neckHeight,
+    jawY:jaw,neckBottomY:neckBottom,
+    jawRatio:jaw/total,neckBottomRatio:neckBottom/total,
+    faceFraction:g.faceHeight/total,neckFraction:g.neckHeight/total,
+    totalPerSkull:total/skull,facePerSkull:g.faceHeight/skull,neckPerSkull:g.neckHeight/skull
+  };
+}
+function robustMetricStats(values){
+  const finite=values.filter(Number.isFinite);
+  if(!finite.length)return {median:0,mad:0,p10:0,p25:0,p75:0,p90:0};
+  const med=median(finite);
+  return {
+    median:med,
+    mad:median(finite.map(v=>Math.abs(v-med))),
+    p10:percentile(finite,.10),p25:percentile(finite,.25),
+    p75:percentile(finite,.75),p90:percentile(finite,.90)
+  };
+}
+function robustMetricZ(value,stats,cfg){
+  const floor=Math.max(cfg.absoluteFloor,Math.abs(stats.median)*cfg.relativeFloor);
+  const scale=Math.max(floor,stats.mad*1.4826);
+  return Math.abs(value-stats.median)/scale;
+}
+function buildRobustStats(items,config){
+  const out={};
+  for(const key of Object.keys(config))out[key]=robustMetricStats(items.map(x=>x?.[key]).filter(Number.isFinite));
+  return out;
+}
+function scoreRisk(values,stats,config){
+  const zScores={},reasons=[];let weighted=0,maxZ=0,severe=0,totalWeight=0;
+  for(const [key,cfg] of Object.entries(config)){
+    const value=values?.[key],st=stats?.[key];
+    if(!Number.isFinite(value)||!st)continue;
+    const z=robustMetricZ(value,st,cfg);zScores[key]=z;
+    maxZ=Math.max(maxZ,z);if(z>=4)severe++;
+    weighted+=Math.min(8,z)*cfg.weight;totalWeight+=cfg.weight;
+    if(z>=2.7)reasons.push({key,label:cfg.label,z});
+  }
+  const score=totalWeight?weighted/totalWeight:0;
+  const level=maxZ>=5||score>=3.45||severe>=2?"outlier":(maxZ>=3.2||score>=1.95||severe>=1?"attention":"ok");
+  reasons.sort((a,b)=>b.z-a.z);
+  return {score,maxZ,severe,zScores,level,reasons:reasons.slice(0,3)};
+}
+function buildGeometryReport(){
+  if(!S.heads.length){S.geometryReport=null;return null}
+  for(const h of S.heads)h.geometryMetrics=geometryMetricsFor(activeGeom(h));
+  const rawStats=buildRobustStats(S.heads.map(h=>h.geometryMetrics),GEOMETRY_METRIC_CONFIG);
+  const hasWarp=S.heads.every(h=>h.warpStats);
+  const warpStats=hasWarp?buildRobustStats(S.heads.map(h=>h.warpStats),WARP_METRIC_CONFIG):null;
+  const entries=S.heads.map(h=>{
+    const raw=scoreRisk(h.geometryMetrics,rawStats,GEOMETRY_METRIC_CONFIG);
+    const warp=warpStats?scoreRisk(h.warpStats,warpStats,WARP_METRIC_CONFIG):{score:0,maxZ:0,severe:0,zScores:{},level:"ok",reasons:[]};
+    const score=warpStats?raw.score*.72+warp.score*.28:raw.score;
+    const maxZ=Math.max(raw.maxZ,warp.maxZ),level=maxZ>=5||score>=3.45||raw.severe+warp.severe>=2
+      ?"outlier":(maxZ>=3.2||score>=1.95||raw.severe+warp.severe>=1?"attention":"ok");
+    const reasons=[...raw.reasons,...warp.reasons].sort((a,b)=>b.z-a.z).slice(0,3);
+    h.geometryRisk={score,maxZ,level,raw,warp,reasons};
+    return h.geometryRisk;
+  });
+  S.geometryReport={rawStats,warpStats,entries,updatedAt:Date.now()};
+  return S.geometryReport;
+}
+function riskText(level){return level==="outlier"?"OUT":level==="attention"?"!":"OK"}
+function riskLabel(level){return level==="outlier"?"OUTLIER":level==="attention"?"ATENÇÃO":"OK"}
+function updateRiskSummary(){
+  const counts={ok:0,attention:0,outlier:0};
+  for(const h of S.heads)counts[h.geometryRisk?.level||"ok"]++;
+  const currentHead=current();
+  const currentRisk=currentHead?.geometryRisk;
+  const summary=S.heads.length
+    ? `${counts.ok} OK · ${counts.attention} atenção · ${counts.outlier} outlier`
+    : "Diagnóstico geométrico: —";
+  const currentInfo=currentRisk
+    ? ` · atual: ${riskLabel(currentRisk.level)} (${currentRisk.score.toFixed(2)})`
+    : "";
+  if($("riskSummary"))$("riskSummary").textContent=summary+currentInfo;
+}
+function updateGeometryDiagnostics(){
+  buildGeometryReport();
+  updateRiskSummary();
 }
 
 /* =========================================================
@@ -1533,6 +1638,7 @@ async function buildCanonical(){
       if(i%2===1){status("canonicalStatus",`Renderizando… ${i+1}/${S.heads.length}`,"warn");await sleep(0)}
     }
 
+    updateGeometryDiagnostics();
     status("canonicalStatus",`V6.3.5 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%`,"ok");
     refreshSelectors();renderThumbs();drawPreview();updateKPIs();
   }catch(e){
@@ -1901,13 +2007,19 @@ function drawAnchorOverlay(ctx){
 }
 function updateDiagnostics(){
   const h=current(),d=h?.warpStats;
+  updateRiskSummary();
   if(!d){$("dX").textContent=$("dYH").textContent=$("dYN").textContent=$("dVar").textContent="—";$("diagText").textContent="Molde ainda não aplicado.";return}
   $("dX").textContent="×"+d.xMedian.toFixed(3);
   $("dYH").textContent="×"+d.yHead.toFixed(3);
   $("dYN").textContent="×"+d.yNeck.toFixed(3);
   $("dVar").textContent=(d.localVariation*100).toFixed(1)+"%";
+  const risk=h.geometryRisk;
+  const riskLine=risk
+    ? `Risco geométrico: ${riskLabel(risk.level)} · score ${risk.score.toFixed(2)}${risk.reasons.length?`\nMotivos: ${risk.reasons.map(x=>`${x.label} (${x.z.toFixed(1)}σ)`).join(" · ")}`:""}`
+    : "Risco geométrico: ainda não calculado";
   $("diagText").textContent=
     `${h.label}\n`+
+    `${riskLine}\n`+
     `X local: ${d.xMin.toFixed(3)} → ${d.xMax.toFixed(3)} (mediana ${d.xMedian.toFixed(3)})\n`+
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
@@ -1932,6 +2044,15 @@ function applyScope(){
 function visibleIndices(){
   const sc=$("scope").value;
   return S.heads.map((h,i)=>({h,i})).filter(x=>sc==="all"||x.h.sheet===sc).map(x=>x.i);
+}
+function goToNextSuspect(){
+  const indices=visibleIndices(),suspects=indices.filter(i=>["attention","outlier"].includes(S.heads[i]?.geometryRisk?.level));
+  if(!suspects.length){status("canonicalStatus","Nenhuma expressão ATENÇÃO ou OUTLIER foi encontrada neste filtro.","ok");return}
+  const pos=suspects.indexOf(S.currentIndex),next=suspects[(pos+1+suspects.length)%suspects.length];
+  S.currentIndex=next;
+  $("currentSel").value=String(next);
+  drawPreview();renderThumbs();
+  status("canonicalStatus",`Suspeito selecionado: ${S.heads[next].label} · ${riskLabel(S.heads[next].geometryRisk.level)}.`,"warn");
 }
 function step(dir){
   const a=visibleIndices();if(!a.length)return;
@@ -1964,6 +2085,13 @@ function renderThumbs(){
     }
     d.appendChild(c);
     const t=document.createElement("div");t.textContent=h.label;d.appendChild(t);
+    if(h.geometryRisk){
+      const r=document.createElement("span");
+      r.className=`riskBadge ${h.geometryRisk.level}`;
+      r.textContent=riskText(h.geometryRisk.level);
+      r.title=`${riskLabel(h.geometryRisk.level)} · score ${h.geometryRisk.score.toFixed(2)}${h.geometryRisk.reasons.length?" · "+h.geometryRisk.reasons.map(x=>x.label).join(", "):""}`;
+      d.appendChild(r);
+    }
     if(h.warpStats){const b=document.createElement("span");b.className="badge";b.textContent=`Y ${h.warpStats.yHead.toFixed(2)} · X ${h.warpStats.xMedian.toFixed(2)}${h.manualRedo?" · REF":""}${h.warpStats.geomSource==="guarded"?" · guard":""}`;d.appendChild(b)}
     d.onclick=()=>{S.currentIndex=i;$("currentSel").value=String(i);drawPreview();renderThumbs()};
     wrap.appendChild(d);
@@ -2001,8 +2129,8 @@ async function detectAll(){
       }
     }
 
-    S.currentIndex=0;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
-    refreshSelectors();renderThumbs();drawPreview();updateKPIs();
+    S.currentIndex=0;S.candidate=null;S.geometryReport=null;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
+    updateGeometryDiagnostics();refreshSelectors();renderThumbs();drawPreview();updateKPIs();
     const expected=Number($("expected").value),problems=[];
     if(S.sheets.A&&S.sheets.A.count!==expected)problems.push(`A=${S.sheets.A.count}`);
     if(S.sheets.B&&S.sheets.B.count!==expected)problems.push(`B=${S.sheets.B.count}`);
