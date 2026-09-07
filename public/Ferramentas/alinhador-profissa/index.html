@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V7.1.1 — Canonical SmartLock + Face Rig 2</title>
+<title>V7.1.2 — Canonical SmartLock + Face Rig 2</title>
 
 <style>
 :root{
@@ -315,7 +315,7 @@ button:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}
 
 .kpis{
   display:grid;
-  grid-template-columns:repeat(4,minmax(120px,1fr));
+  grid-template-columns:repeat(5,minmax(105px,1fr));
   gap:10px;
   margin:16px 0;
 }
@@ -455,13 +455,14 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 <body>
 <div class="app">
 <aside class="sidebar">
-  <h1>V7.1.1 · SmartLock + Face Rig 2</h1>
+  <h1>V7.1.2 · SmartLock + Face Rig 2</h1>
   <div class="small">Motor experimental focado em estabilidade: o Face Rig 2 usa referências separadas para normal, blink e talk e desloca somente o miolo do rosto, sem arrastar o contorno da cabeça.</div>
 
   <div class="card">
     <h2>1. Carregar e detectar</h2>
     <label>Folha A</label><input id="fileA" type="file" accept="image/*">
     <label>Folha B</label><input id="fileB" type="file" accept="image/*">
+    <label>Folha C</label><input id="fileC" type="file" accept="image/*">
 
     <label>Cabeças esperadas por folha <span class="value" id="expectedV">21</span></label>
     <input id="expected" type="range" min="1" max="50" value="21">
@@ -528,11 +529,11 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V7.1.1 SmartLock</b><span>experimental</span></div>
+        <div><b>V7.1.2 SmartLock</b><span>experimental</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V7.1.1: mesmos defaults da V7. Mantém o fluxo rápido e melhora o refazer da expressão selecionada, o encaixe da parte de baixo e a limpeza de micro-saliências no contorno do molde.</div>
+      <div class="small" style="margin-top:5px">V7.1.2: mesmos defaults da V7. Mantém o fluxo rápido e melhora o refazer da expressão selecionada, o encaixe da parte de baixo e a limpeza de micro-saliências no contorno do molde.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -545,7 +546,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V7.1.1 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V7.1.2 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -587,6 +588,7 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
       <option value="all">Todas</option>
       <option value="A">Folha A</option>
       <option value="B">Folha B</option>
+      <option value="C">Folha C</option>
     </select>
 
     <label>Expressão atual</label>
@@ -625,8 +627,9 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <div id="modelPreview" class="status">
 Pasta: modelo-13
 JSON: modelo-13.json
-42 PNGs separados
+63 PNGs separados
 Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / aliviada
+Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta
     </div>
 
     <button id="chooseModelsDir">Escolher / trocar pasta de modelos</button>
@@ -658,6 +661,10 @@ Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / ali
         <canvas id="debugB" width="500" height="280"></canvas>
       </div>
       <div class="debugCard">
+        <b>Detecção — Folha C</b><div class="small" id="debugCTxt">—</div>
+        <canvas id="debugC" width="500" height="280"></canvas>
+      </div>
+      <div class="debugCard">
         <b>Molde canônico</b><div class="small" id="canonicalTxt">—</div>
         <canvas id="canonicalDebug" width="500" height="400"></canvas>
       </div>
@@ -670,7 +677,7 @@ Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / ali
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V7.1.1 SmartLock</span>
+    <span class="tag">V7.1.2 SmartLock</span>
     <span class="tag">deadzone + subpixel</span>
   </div>
 
@@ -678,6 +685,7 @@ Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / ali
     <div class="kpi"><span class="small">Total</span><b id="kTotal">0</b></div>
     <div class="kpi"><span class="small">Folha A</span><b id="kA">0</b></div>
     <div class="kpi"><span class="small">Folha B</span><b id="kB">0</b></div>
+    <div class="kpi"><span class="small">Folha C</span><b id="kC">0</b></div>
     <div class="kpi"><span class="small">Maior / escala</span><b id="kLargest">—</b></div>
   </div>
 
@@ -694,7 +702,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 const S={
-  sheets:{A:null,B:null},
+  sheets:{A:null,B:null,C:null},
   heads:[],
   canonical:null,
   currentIndex:0,
@@ -874,7 +882,7 @@ async function detectSheet(im,name){
   return {name,im,full,thr:best.thr,boxes,count:boxes.length,transparentMode};
 }
 function drawDetectionDebug(name,c,boxes,thr){
-  const out=$(name==="A"?"debugA":"debugB"),txt=$(name==="A"?"debugATxt":"debugBTxt");
+  const out=$(`debug${name}`),txt=$(`debug${name}Txt`);
   out.width=500;out.height=Math.round(500*c.height/c.width);
   const ctx=out.getContext("2d");ctx.drawImage(c,0,0,out.width,out.height);
   const sx=out.width/c.width,sy=out.height/c.height;
@@ -1520,7 +1528,7 @@ function v71UndoCurrentRedo(){
   v71AnalyzeQuality({focus:false});
   drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton();
   status('canonicalStatus',`Desfiz a última correção de ${h.label}.`,'ok');
-  log(`V7.1: correção de ${h.label} desfeita.`);
+  log(`V7.1.2: correção de ${h.label} desfeita.`);
 }
 function v633ConsensusJawGeom(h){
   const others=S.heads.filter(x=>x!==h && x.quality?.level!=='OUT');
@@ -1605,8 +1613,8 @@ async function redoCurrentExpression(){
     const clearlyWorse=candidateScore>currentScore*1.18+0.20;
     if(clearlyWorse){
       S.faceAlign=oldFaceAlign;
-      status("canonicalStatus",`Proteção V7.1.1: a correção candidata de ${h.label} ficou pior que a atual e foi bloqueada.`,"warn");
-      log(`V7.1: correção de ${h.label} bloqueada. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}.`);
+      status("canonicalStatus",`Proteção V7.1.2: a correção candidata de ${h.label} ficou pior que a atual e foi bloqueada.`,"warn");
+      log(`V7.1.2: correção de ${h.label} bloqueada. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}.`);
       return;
     }
 
@@ -1628,7 +1636,7 @@ async function redoCurrentExpression(){
     drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton();
     const gain=currentScore>0?((currentScore-candidateScore)/currentScore)*100:0;
     status("canonicalStatus",`Refiz ${h.label} com backup. Consenso inferior ${currentScore.toFixed(2)} → ${candidateScore.toFixed(2)}${gain>0?` (${gain.toFixed(0)}% melhor)`:''}.`,"ok");
-    log(`V7.1: ${h.label} corrigida por lower-consensus. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}; face ratio ${repaired.debug.originalRatio.toFixed(3)} → ${repaired.debug.correctedRatio.toFixed(3)}.`);
+    log(`V7.1.2: ${h.label} corrigida por lower-consensus. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}; face ratio ${repaired.debug.originalRatio.toFixed(3)} → ${repaired.debug.correctedRatio.toFixed(3)}.`);
   }catch(e){
     console.error(e);
     status("canonicalStatus","Erro ao corrigir a geometria inferior da expressão: "+e.message,"bad");
@@ -1739,7 +1747,7 @@ async function buildCanonical(){
     }
 
     const q=v71AnalyzeQuality({focus:true});
-    status("canonicalStatus",`V7.1.1 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%${q?` · ${q.OK} OK / ${q.WARN} atenção / ${q.OUT} outlier`:""}`,q?.OUT?"warn":"ok");
+    status("canonicalStatus",`V7.1.2 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%${q?` · ${q.OK} OK / ${q.WARN} atenção / ${q.OUT} outlier`:""}`,q?.OUT?"warn":"ok");
     refreshSelectors();renderThumbs();drawPreview();updateKPIs();v71UpdateUndoButton();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2124,8 +2132,8 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V7.1.1 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
-    `${h.quality?`Fiscal V7.1.1: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
+    `V7.1.2 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `${h.quality?`Fiscal V7.1.2: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
 }
@@ -2189,6 +2197,7 @@ function updateKPIs(){
   $("kTotal").textContent=S.heads.length;
   $("kA").textContent=S.heads.filter(h=>h.sheet==="A").length;
   $("kB").textContent=S.heads.filter(h=>h.sheet==="B").length;
+  $("kC").textContent=S.heads.filter(h=>h.sheet==="C").length;
   $("kLargest").textContent=S.heads[S.largestIndex]?.label||"—";
 }
 
@@ -2197,18 +2206,19 @@ function updateKPIs(){
 ========================================================= */
 async function detectAll(){
   stopPlayer();S.canonical=null;S.qualitySummary=null;if($("qualityStatus"))status("qualityStatus","Fiscal de estabilidade aguardando o molde.","");
-  const fa=$("fileA").files[0],fb=$("fileB").files[0];
-  if(!fa&&!fb){status("detectStatus","Escolha pelo menos uma folha.","bad");return}
+  const fa=$("fileA").files[0],fb=$("fileB").files[0],fc=$("fileC").files[0];
+  if(!fa&&!fb&&!fc){status("detectStatus","Escolha pelo menos uma folha.","bad");return}
   $("detect").disabled=true;
   try{
     const modeLabel=usingTransparentMode()?"sem fundo (alpha)":"chroma key verde";
     status("detectStatus",`Analisando em modo ${modeLabel}…`,"warn");log(`Iniciando detecção em modo ${modeLabel}.`);
-    const [ia,ib]=await Promise.all([loadFile(fa),loadFile(fb)]);
-    S.sheets={A:null,B:null};S.heads=[];
+    const [ia,ib,ic]=await Promise.all([loadFile(fa),loadFile(fb),loadFile(fc)]);
+    S.sheets={A:null,B:null,C:null};S.heads=[];
     if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count}`)}
     if(ib){S.sheets.B=await detectSheet(ib,"B");log(`B: ${S.sheets.B.count}`)}
+    if(ic){S.sheets.C=await detectSheet(ic,"C");log(`C: ${S.sheets.C.count}`)}
 
-    for(const name of ["A","B"]){
+    for(const name of ["A","B","C"]){
       const sh=S.sheets[name];if(!sh)continue;
       for(let i=0;i<sh.boxes.length;i++){
         try{S.heads.push(cropHead(sh,sh.boxes[i],i))}
@@ -2222,6 +2232,7 @@ async function detectAll(){
     const expected=Number($("expected").value),problems=[];
     if(S.sheets.A&&S.sheets.A.count!==expected)problems.push(`A=${S.sheets.A.count}`);
     if(S.sheets.B&&S.sheets.B.count!==expected)problems.push(`B=${S.sheets.B.count}`);
+    if(S.sheets.C&&S.sheets.C.count!==expected)problems.push(`C=${S.sheets.C.count}`);
 
     if(!S.heads.length)status("detectStatus","Nenhuma cabeça detectada.","bad");
     else if(problems.length)status("detectStatus",`Detectei ${S.heads.length}, mas ${problems.join(", ")} não bate com o esperado. Confira as caixas.`,"warn");
@@ -2243,7 +2254,7 @@ async function v71QuickProcess(){
     await detectAll();
     if(!S.heads.length)return;
     const expected=Number($("expected").value);
-    const expectedTotal=(S.sheets.A?expected:0)+(S.sheets.B?expected:0);
+    const expectedTotal=(S.sheets.A?expected:0)+(S.sheets.B?expected:0)+(S.sheets.C?expected:0);
     if(S.heads.length!==expectedTotal){
       status("canonicalStatus",`Fluxo rápido parou: detectei ${S.heads.length}/${expectedTotal}. Confira as caixas antes de construir o molde.`,"warn");
       return;
@@ -2282,6 +2293,15 @@ const MODEL_EXPORT={
       "animada",
       "ciumenta",
       "aliviada"
+    ],
+    C:[
+      "pt_desconfiada",
+      "pt_surpresa",
+      "pt_impressionada",
+      "pt_envergonhada",
+      "pt_sorrindo_de_canto",
+      "pt_sorriso_maligno_de_canto",
+      "pt_ciumenta"
     ]
   },
   variants:["","_blink","_talk"]
@@ -2484,10 +2504,13 @@ function modelMetadata(){
 function updateModelPreview(){
   if(!$("modelPreview"))return;
   const folder=getModelFolderName();
+  const sheetCount=["A","B","C"].filter(k=>S.sheets?.[k]).length || 3;
+  const pngCount=sheetCount*21;
   $("modelPreview").textContent=
     `Pasta: ${folder}\n`+
     `JSON: ${folder}.json\n`+
-    `42 PNGs: expressão / _blink / _talk`;
+    `${pngCount} PNGs: expressão / _blink / _talk`+
+    `\nFolha C: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta`;
 }
 
 /* =========================================================
@@ -2626,8 +2649,10 @@ async function exportFullModelPackage(){
     status("exportStatus","Primeiro detecte as folhas e construa o molde canônico.","bad");
     return;
   }
-  if(S.heads.length<42){
-    status("exportStatus",`Há ${S.heads.length} cabeças. O pacote esperado tem 42; confira a detecção antes de exportar.`,"warn");
+  const loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length;
+  const expectedExportHeads=loadedSheets*21;
+  if(expectedExportHeads && S.heads.length!==expectedExportHeads){
+    status("exportStatus",`Há ${S.heads.length} cabeças. Para ${loadedSheets} folha(s), o esperado é ${expectedExportHeads}; confira a detecção antes de exportar.`,"warn");
   }
 
   $("exportModelPackage").disabled=true;
@@ -2801,9 +2826,9 @@ function init(){
           id==="faceRigMax" ? "correção máxima do Face Rig" :
           id==="faceRigFeather" ? "suavidade do Face Rig" :
           id==="v61Blend" ? "influência da cabeça-base" :
-          id==="v6Dead" ? "deadzone V7.1.1" :
-          id==="v6Cap" ? "limite V7.1.1" :
-          id==="v6Snap" ? "snap subpixel V7.1.1" :
+          id==="v6Dead" ? "deadzone V7.1.2" :
+          id==="v6Cap" ? "limite V7.1.2" :
+          id==="v6Snap" ? "snap subpixel V7.1.2" :
           "rigidez do rosto interno";
         scheduleRebuildAllWarp(reason);
       }
@@ -2871,34 +2896,8 @@ function init(){
 
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});
   window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V7.1.1 iniciada. Defaults da V7 preservados; fluxo rápido + fiscal vertical + refazer protegido + desfazer por expressão + limpeza de contorno.");
+  log("V7.1.2 iniciada. Defaults da V7 preservados; fluxo rápido + fiscal vertical + refazer protegido + desfazer por expressão + limpeza de contorno.");
 }
-// Ponte de diagnóstico somente para o benchmark local; não participa do fluxo visual/exportador.
-function debugRasterSummary(c,sampleSize=64){
-  if(!c)return null;
-  const d=c.getContext("2d",{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
-  let alphaPixels=0,minX=c.width,minY=c.height,maxX=-1,maxY=-1;
-  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
-    if(d[(y*c.width+x)*4+3]<=16)continue;
-    alphaPixels++;if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
-  }
-  const sample=[];
-  for(let gy=0;gy<sampleSize;gy++)for(let gx=0;gx<sampleSize;gx++){
-    const x=Math.min(c.width-1,Math.floor((gx+.5)*c.width/sampleSize)),y=Math.min(c.height-1,Math.floor((gy+.5)*c.height/sampleSize));
-    sample.push(d[(y*c.width+x)*4+3]>16?1:0);
-  }
-  return {width:c.width,height:c.height,alphaPixels,alphaRatio:alphaPixels/(c.width*c.height),bbox:maxX<0?null:{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1},sampleSize,sample};
-}
-function debugSnapshot(){
-  return {
-    version:"7.1.1",
-    settings:{warpStrength:$("warpStrength")?.value,smallestHorizontalBase:$("smallestHorizontalBase")?.checked,faceRigEnable:$("faceRigEnable")?.checked},
-    timings:null,
-    canonical:S.canonical?{targetSkull:S.canonical.targetSkull,targetTotal:S.canonical.targetTotal,targetFace:S.canonical.targetFace,targetNeck:S.canonical.targetNeck,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex}:null,
-    heads:S.heads.map(h=>({label:h.label,sheet:h.sheet,order:h.order,w:h.w,h:h.h,geom:{...h.geom},geometryMetrics:{...h.geometryMetrics},warpStats:h.warpStats?{...h.warpStats}:null,diagnostics:h.quality?{classification:h.quality.level,score:h.quality.score,dominantReason:h.quality.reason,metrics:h.quality.parts}:null,originalRaster:debugRasterSummary(h.transparent),warpedRaster:debugRasterSummary(h.warped)}))
-  };
-}
-window.__ALINHADOR_DEBUG__={snapshot:debugSnapshot};
 init();
 </script>
 </body>
