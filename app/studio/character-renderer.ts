@@ -48,7 +48,7 @@ function transparentChroma(src: string) {
         estimate.color,
         estimate.tolerance,
         estimate.softness,
-        false,
+        Boolean(estimate.neutral),
         { cleanEdges: true, feather: 1, despill: 72, intensity: 100 },
       );
       pixels.data.set(processed);

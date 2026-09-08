@@ -380,7 +380,7 @@ async function removeChroma(source: Blob | string) {
       estimate.color,
       estimate.tolerance,
       estimate.softness,
-      false,
+      Boolean(estimate.neutral),
       { cleanEdges: true, feather: 1, despill: 72, intensity: 100 },
     );
     pixels.data.set(processed);
@@ -510,11 +510,10 @@ function autoChromaImport(source: HTMLCanvasElement, boost = 0) {
     copy.getContext("2d")?.drawImage(source, 0, 0);
     return copy;
   }
-  // No recorte automático, remova todas as áreas que têm a mesma assinatura
-  // do fundo, inclusive ilhas fechadas entre braços, mãos, pernas ou partes da
-  // roupa. O modo manual continua oferecendo "Somente fundo conectado" para
-  // casos em que o usuário precisa preservar uma área verde da arte.
-  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, false, {
+  // Fundos neutros também aparecem em brilho branco, cabelo preto e detalhes
+  // cinza. Neles, preserve regiões internas isoladas; chromas coloridos podem
+  // continuar removendo cavidades da mesma cor entre as partes da arte.
+  return createChromaResult(source, estimate.color, estimate.tolerance, estimate.softness, Boolean(estimate.neutral), {
     cleanEdges: true,
     feather: 1,
     despill: 72,
@@ -3015,7 +3014,7 @@ export default function Home() {
       setChromaMaskAdjustment(0);
       setChromaDespill(72);
       setChromaIntensity(100);
-      setChromaConnectedOnly(false);
+      setChromaConnectedOnly(Boolean(estimate.neutral));
       setNotice("Chroma detectado automaticamente · limpeza avançada ativa");
     } catch {
       setNotice("Não foi possível detectar a cor; clique no fundo da peça");

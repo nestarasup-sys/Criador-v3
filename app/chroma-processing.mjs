@@ -119,11 +119,14 @@ export function estimateChromaKey(data, width, height, boost = 0) {
   const distances = backgroundSamples.map(([r, g, b]) => chromaColorDistance(r, g, b, color));
   const tolerance = clamp(Math.round(Math.max(16, percentile(distances, .78) + 5) + boost * .25), 16, 64);
   const softness = clamp(Math.round(Math.max(20, percentile(distances, .98) - percentile(distances, .5) + 16) + boost * .45), 20, 72);
+  const maximum = Math.max(color.r, color.g, color.b);
+  const minimum = Math.min(color.r, color.g, color.b);
   return {
     color,
     tolerance,
     softness,
     confidence: backgroundSamples.length / samples.length * opaqueCoverage,
+    neutral: maximum === 0 || maximum - minimum <= Math.max(10, maximum * .12),
   };
 }
 

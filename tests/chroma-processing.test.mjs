@@ -55,11 +55,20 @@ test("detecta fundos neutros claros, cinza e escuros", () => {
     for (let y = 7; y < 27; y += 1) for (let x = 10; x < 30; x += 1) setPixel(data, 40, x, y, [196, 78, 116, 255]);
     const estimate = estimateChromaKey(data, 40, 32);
     assert.ok(estimate, `fundo RGB ${background.slice(0, 3).join(",")} deve ser detectado`);
+    assert.equal(estimate.neutral, true);
     assert.deepEqual(estimate.color, { r: background[0], g: background[1], b: background[2] });
     applyChromaPixels(data, 40, 32, estimate.color, estimate.tolerance, estimate.softness, false, { cleanEdges: true });
     assert.equal(pixel(data, 40, 0, 0)[3], 0);
     assert.equal(pixel(data, 40, 20, 16)[3], 255);
   }
+});
+
+test("classifica chroma colorido sem ativar proteção de fundo neutro", () => {
+  const data = image(24, 24, [0, 195, 102, 255]);
+  for (let y = 6; y < 18; y += 1) for (let x = 7; x < 17; x += 1) setPixel(data, 24, x, y, [82, 48, 51, 255]);
+  const estimate = estimateChromaKey(data, 24, 24);
+  assert.ok(estimate);
+  assert.equal(estimate.neutral, false);
 });
 
 test("a família dominante vence o personagem que encosta em parte das bordas", () => {
