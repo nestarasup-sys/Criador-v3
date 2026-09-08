@@ -454,7 +454,7 @@ test("keeps Studio scene operations, history and print rendering in shared modul
   assert.match(printRenderer, /canvas\.width = STUDIO_SCENE_WIDTH/);
   assert.match(printRenderer, /backgroundRect/);
   assert.match(characterRenderer, /processChromaPixels/);
-  assert.match(characterRenderer, /processChromaPixels\([\s\S]+?false,[\s\S]+?cleanEdges: true[\s\S]+?despill: 72/);
+  assert.match(characterRenderer, /processChromaPixels\([\s\S]+?Boolean\(estimate\.neutral\),[\s\S]+?cleanEdges: true[\s\S]+?despill: 72/);
   assert.match(characterRenderer, /colorAdjustmentIsActive/);
   assert.match(characterRenderer, /renderColorLayer/);
   assert.match(css, /\.stage[^}]*width:\s*1920px[^}]*height:\s*1080px/);
@@ -766,7 +766,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /variantIndex: index/);
   assert.match(page, /detectOutfitSheetRegions/);
   assert.match(page, /prepareOutfitCatalogImages/);
-  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, false/);
+  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, Boolean\(estimate\.neutral\)/);
   assert.match(workerClient, /processChromaPixels/);
   assert.match(workerClient, /applyChromaPixels/);
   assert.match(worker, /applyChromaPixels/);
