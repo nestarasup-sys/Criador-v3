@@ -137,6 +137,20 @@ test("modo de proteção por conexão preserva deliberadamente uma cor interna s
   assert.equal(pixel(data, width, 4, 4)[3], 255);
 });
 
+test("fundo conectado diagonalmente não deixa resíduos no modo protegido", () => {
+  const width = 7;
+  const height = 7;
+  const data = image(width, height, [35, 28, 32, 255]);
+  for (let position = 0; position < width; position += 1) {
+    setPixel(data, width, position, position, [0, 195, 102, 255]);
+  }
+  applyChromaPixels(data, width, height, { r: 0, g: 195, b: 102 }, 22, 12, true, { cleanEdges: true });
+  for (let position = 0; position < width; position += 1) {
+    assert.equal(pixel(data, width, position, position)[3], 0, `resíduo diagonal em ${position}`);
+  }
+  assert.equal(pixel(data, width, 3, 2)[3], 255, "a arte ao lado da diagonal deve permanecer");
+});
+
 test("preserva roupa verde oliva legítima fora da faixa do chroma", () => {
   const width = 7;
   const height = 5;

@@ -168,10 +168,16 @@ function restrictToBorderConnected(matte, data, width, height) {
     const pixelIndex = queue[head++];
     connected[pixelIndex] = matte[pixelIndex];
     const x = pixelIndex % width;
-    if (x > 0) enqueue(pixelIndex - 1);
-    if (x < width - 1) enqueue(pixelIndex + 1);
-    if (pixelIndex >= width) enqueue(pixelIndex - width);
-    if (pixelIndex < pixelCount - width) enqueue(pixelIndex + width);
+    const y = Math.floor(pixelIndex / width);
+    for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+      for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+        if (!offsetX && !offsetY) continue;
+        const nextX = x + offsetX;
+        const nextY = y + offsetY;
+        if (nextX < 0 || nextX >= width || nextY < 0 || nextY >= height) continue;
+        enqueue(nextY * width + nextX);
+      }
+    }
   }
   return connected;
 }

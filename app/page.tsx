@@ -1153,6 +1153,7 @@ async function prepareExpressionPack(source: Blob) {
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chromaCanvasRef = useRef<HTMLCanvasElement>(null);
+  const chromaPreviewSequenceRef = useRef(0);
   const chromaPreviewRef = useRef<{
     source: HTMLCanvasElement;
     drawX: number;
@@ -2126,6 +2127,7 @@ export default function Home() {
 
   const renderChromaPreview = useCallback(async () => {
     if (!chromaMode) return;
+    const requestSequence = ++chromaPreviewSequenceRef.current;
     const item = catalog.find((entry) => entry.id === selections[category]);
     const visibleCanvas = chromaCanvasRef.current;
     if (!item || !visibleCanvas) return;
@@ -2147,6 +2149,7 @@ export default function Home() {
             despill: chromaDespill,
             intensity: chromaIntensity,
           });
+      if (requestSequence !== chromaPreviewSequenceRef.current) return;
       visibleCanvas.width = 1920;
       visibleCanvas.height = 1080;
       const context = visibleCanvas.getContext("2d");
@@ -2981,6 +2984,7 @@ export default function Home() {
   }
 
   async function toggleChromaTool() {
+    chromaPreviewSequenceRef.current += 1;
     const shouldOpen = !chromaMode;
     setChromaMode(shouldOpen);
     setFitMode(false);
