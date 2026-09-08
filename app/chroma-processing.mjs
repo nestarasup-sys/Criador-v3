@@ -49,6 +49,26 @@ function percentile(values, ratio) {
   return sorted[Math.min(sorted.length - 1, Math.max(0, Math.round((sorted.length - 1) * ratio)))];
 }
 
+function dominantEdgeColor(samples) {
+  if (samples.length <= 1) return { color: samples[0], support: samples.length };
+  const stride = Math.max(1, Math.floor(samples.length / 128));
+  let best = samples[0];
+  let bestSupport = 0;
+  for (let candidateIndex = 0; candidateIndex < samples.length; candidateIndex += stride) {
+    const candidate = samples[candidateIndex];
+    const color = { r: candidate[0], g: candidate[1], b: candidate[2] };
+    let support = 0;
+    for (const sample of samples) {
+      if (chromaColorDistance(sample[0], sample[1], sample[2], color) <= 34) support += 1;
+    }
+    if (support > bestSupport) {
+      best = candidate;
+      bestSupport = support;
+    }
+  }
+  return { color: best, support: bestSupport };
+}
+
 /**
  * Estima o fundo pelas bordas, mas elimina amostras de roupa, pele ou cabelo
  * que encostem nelas antes de calcular tolerância e transição.
@@ -56,28 +76,35 @@ function percentile(values, ratio) {
 export function estimateChromaKey(data, width, height, boost = 0) {
   const samples = [];
   const step = Math.max(1, Math.floor(Math.min(width, height) / 90));
+  let sampleSlots = 0;
   const add = (x, y) => {
+    sampleSlots += 1;
     const index = (y * width + x) * 4;
     if (data[index + 3] > 20) samples.push([data[index], data[index + 1], data[index + 2]]);
   };
-  for (let x = 0; x < width; x += step) {
-    add(x, 0);
-    add(x, height - 1);
-  }
-  for (let y = step; y < height - step; y += step) {
-    add(0, y);
-    add(width - 1, y);
+  const ringStep = Math.max(1, Math.round(Math.min(width, height) * .012));
+  const rings = [...new Set([0, ringStep, ringStep * 2])]
+    .filter((inset) => inset * 2 < width && inset * 2 < height);
+  for (const inset of rings) {
+    for (let x = inset; x < width - inset; x += step) {
+      add(x, inset);
+      add(x, height - 1 - inset);
+    }
+    for (let y = inset + step; y < height - inset - step; y += step) {
+      add(inset, y);
+      add(width - 1 - inset, y);
+    }
   }
   if (samples.length === 0) return null;
 
-  const initialColor = {
-    r: Math.round(percentile(samples.map((sample) => sample[0]), .5)),
-    g: Math.round(percentile(samples.map((sample) => sample[1]), .5)),
-    b: Math.round(percentile(samples.map((sample) => sample[2]), .5)),
-  };
-  const maximum = Math.max(initialColor.r, initialColor.g, initialColor.b);
-  const minimum = Math.min(initialColor.r, initialColor.g, initialColor.b);
-  if (maximum < 45 || maximum - minimum < 34) return null;
+  const opaqueCoverage = samples.length / Math.max(1, sampleSlots);
+  // Transparent PNGs commonly touch one edge with hair or clothing. A few
+  // opaque edge pixels are not evidence that the asset still has a backdrop.
+  if (opaqueCoverage < .42) return null;
+
+  const dominant = dominantEdgeColor(samples);
+  if (!dominant.color || dominant.support < Math.max(12, samples.length * .28)) return null;
+  const initialColor = { r: dominant.color[0], g: dominant.color[1], b: dominant.color[2] };
 
   const initialDistances = samples.map(([r, g, b]) => chromaColorDistance(r, g, b, initialColor));
   const coreLimit = Math.min(68, Math.max(10, percentile(initialDistances, .7) * 2.4 + 4));
@@ -96,7 +123,7 @@ export function estimateChromaKey(data, width, height, boost = 0) {
     color,
     tolerance,
     softness,
-    confidence: backgroundSamples.length / samples.length,
+    confidence: backgroundSamples.length / samples.length * opaqueCoverage,
   };
 }
 

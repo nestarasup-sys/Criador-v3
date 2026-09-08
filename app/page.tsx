@@ -369,8 +369,10 @@ async function removeChroma(source: Blob | string) {
     if (!context) throw new Error("Canvas indisponível");
     context.drawImage(image, 0, 0);
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-    const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height)
-      ?? { color: { r: 0, g: 195, b: 102 }, tolerance: 18, softness: 24 };
+    const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height);
+    if (!estimate) return await new Promise<Blob>((resolve, reject) =>
+      canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Falha ao preservar imagem"))), "image/png"),
+    );
     const processed = await processChromaPixels(
       pixels.data,
       canvas.width,
@@ -3005,6 +3007,10 @@ export default function Home() {
       setChromaColor(estimate.color);
       setChromaTolerance(estimate.tolerance);
       setChromaSoftness(estimate.softness);
+      setChromaFeather(1);
+      setChromaMaskAdjustment(0);
+      setChromaDespill(72);
+      setChromaIntensity(100);
       setChromaConnectedOnly(false);
       setNotice("Chroma detectado automaticamente · limpeza avançada ativa");
     } catch {

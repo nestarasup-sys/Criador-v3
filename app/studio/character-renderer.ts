@@ -39,8 +39,8 @@ function transparentChroma(src: string) {
       configureHighQualityContext(context);
       context.drawImage(image, 0, 0);
       const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
-      const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height)
-        ?? { color: { r: 0, g: 195, b: 102 }, tolerance: 18, softness: 24 };
+      const estimate = estimateChromaKey(pixels.data, canvas.width, canvas.height);
+      if (!estimate) return canvas;
       const processed = await processChromaPixels(
         pixels.data,
         canvas.width,

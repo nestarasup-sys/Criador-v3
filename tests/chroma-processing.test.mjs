@@ -49,6 +49,42 @@ test("calibração ignora roupa e pele que encostam nas bordas da folha", () => 
   assert.equal(pixel(data, width, 58, 80)[3], 255, "pele deve permanecer opaca");
 });
 
+test("detecta fundos neutros claros, cinza e escuros", () => {
+  for (const background of [[246, 246, 246, 255], [126, 128, 130, 255], [18, 20, 22, 255]]) {
+    const data = image(40, 32, background);
+    for (let y = 7; y < 27; y += 1) for (let x = 10; x < 30; x += 1) setPixel(data, 40, x, y, [196, 78, 116, 255]);
+    const estimate = estimateChromaKey(data, 40, 32);
+    assert.ok(estimate, `fundo RGB ${background.slice(0, 3).join(",")} deve ser detectado`);
+    assert.deepEqual(estimate.color, { r: background[0], g: background[1], b: background[2] });
+    applyChromaPixels(data, 40, 32, estimate.color, estimate.tolerance, estimate.softness, false, { cleanEdges: true });
+    assert.equal(pixel(data, 40, 0, 0)[3], 0);
+    assert.equal(pixel(data, 40, 20, 16)[3], 255);
+  }
+});
+
+test("a família dominante vence o personagem que encosta em parte das bordas", () => {
+  const width = 80;
+  const height = 64;
+  const background = [168, 170, 174, 255];
+  const data = image(width, height, background);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < 18; x += 1) setPixel(data, width, x, y, [48, 35, 42, 255]);
+  }
+  const estimate = estimateChromaKey(data, width, height);
+  assert.ok(estimate);
+  assert.deepEqual(estimate.color, { r: 168, g: 170, b: 174 });
+});
+
+test("não inventa chroma em PNG transparente com arte tocando uma borda", () => {
+  const width = 48;
+  const height = 48;
+  const data = image(width, height, [0, 0, 0, 0]);
+  for (let y = 0; y < 32; y += 1) {
+    for (let x = 15; x < 34; x += 1) setPixel(data, width, x, y, [0, 195, 102, 255]);
+  }
+  assert.equal(estimateChromaKey(data, width, height), null);
+});
+
 test("remove verde puro, claro, escuro e sombreado na mesma máscara", () => {
   const width = 4;
   const data = image(width, 1, [0, 195, 102, 255]);
