@@ -644,6 +644,39 @@
   color: #963d60;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
 }
+.expressionGrid > button,
+.expressionPair .expressionBaseOption {
+  min-height: 40px;
+  padding: 8px 12px;
+  color: #674d59;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.15;
+  text-align: left;
+}
+.expressionGrid > button.activeOption,
+.expressionPair .expressionBaseOption.activeOption {
+  border-color: #d96c96;
+  background: #ffe1ec;
+  color: #752d49;
+  box-shadow: inset 4px 0 0 #dc3f73, inset 0 0 0 1px rgba(255,255,255,.72);
+}
+.expressionPair .expressionPtOption {
+  min-width: 46px;
+  border-color: #e7a8b9;
+  background: #e66b87;
+  font-size: 12px;
+  text-shadow: 0 1px 1px rgba(100,19,42,.2);
+}
+.expressionPair .expressionPtOption:hover {
+  border-color: #d85070;
+  background: #db5878;
+}
+.expressionPair .expressionPtOption.activePtOption {
+  border-color: #9d1738;
+  background: #b92048;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.7), 0 2px 7px rgba(143,24,48,.25);
+}
 .expressionStates button {
   border-color:rgba(183,137,32,.62);
   background:rgba(183,137,32,.82);

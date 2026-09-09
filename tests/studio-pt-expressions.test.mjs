@@ -24,6 +24,26 @@ test("mantém uma expressão PT órfã acessível", () => {
   ]);
 });
 
+test("associa a variação PT com sufixo de canto à base equivalente", () => {
+  assert.deepEqual(groupStudioPtExpressions([
+    ["sorriso_maligno", "Sorriso Maligno"],
+    ["pt_sorriso_maligno_de_canto", "Pt Sorriso Maligno De Canto"],
+  ]), [
+    { baseKey: "sorriso_maligno", baseLabel: "Sorriso Maligno", ptKey: "pt_sorriso_maligno_de_canto" },
+  ]);
+});
+
+test("prefere um par PT exato a um alias aproximado", () => {
+  assert.deepEqual(groupStudioPtExpressions([
+    ["sorriso_maligno", "Sorriso Maligno"],
+    ["pt_sorriso_maligno", "Pt Sorriso Maligno"],
+    ["pt_sorriso_maligno_de_canto", "Pt Sorriso Maligno De Canto"],
+  ]), [
+    { baseKey: "sorriso_maligno", baseLabel: "Sorriso Maligno", ptKey: "pt_sorriso_maligno" },
+    { baseKey: "pt_sorriso_maligno_de_canto", baseLabel: "Pt Sorriso Maligno De Canto", ptKey: null },
+  ]);
+});
+
 test("o seletor PT preserva o estado blink/talk e altera somente a emoção", async () => {
   const [inspector, renderer] = await Promise.all([
     readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
