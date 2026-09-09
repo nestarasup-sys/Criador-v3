@@ -589,12 +589,12 @@ body { background: #f8f6f7; }
 .chroma-toolbar, .eraser-toolbar, .export-frame-toolbar { position: relative; z-index: 9; width: min(100%,980px); }
 
 .catalog-panel { padding: 9px 13px 14px; border-left-color: #e9e5e9; overflow: hidden; }
-.catalog-panel > .catalog-header { order: 1; min-height: 54px; padding: 0 3px; }
+.catalog-panel > .catalog-header { order: 1; min-height: 54px; flex: 0 0 auto; padding: 0 3px; }
 .catalog-header > div:first-child { display: none; }
 .catalog-header .import-actions { width: 100%; justify-content: flex-end; }
 .catalog-header .import-actions button { min-height: 36px; padding: 7px 13px; border: 1px solid #ebe6ed; background: #fff; color: #33364f; font-size: 12.5px; }
 .catalog-header .import-actions .add-button { background: var(--accent); color: white; border-color: var(--accent); }
-.catalog-panel > .tabs { order: 2; display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin: 0 -4px 10px; padding: 0; border: 1px solid #ede8eb; border-radius: 12px; background: white; overflow: hidden; }
+.catalog-panel > .tabs { order: 2; min-height: 76px; flex: 0 0 76px; display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin: 0 -4px 10px; padding: 0; border: 1px solid #ede8eb; border-radius: 12px; background: white; overflow: hidden; }
 .tabs button { min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid #f0ecef; border-radius: 0; padding: 8px 2px; font-size: 12.5px; }
 .tabs button > span { color: #3a3d59; font-size: 28.75px; }
 .tabs button.active { background: linear-gradient(145deg,#ff746a,#ff554e); color: white; box-shadow: none; }
@@ -717,7 +717,7 @@ body { background: #f8f6f7; }
 .color-collapse-button:hover { background: #f1ebff; border-color: #cfc1f4; transform: translateY(-1px); }
 .color-collapse-button span { font-size: 13px; line-height: 1; }
 .catalog-panel > .expression-workspace { order: 5; flex: 1 1 auto; overflow-y: auto; }
-.catalog-panel.face-catalog > .catalog-header { min-height: 48px; }
+.catalog-panel.face-catalog > .catalog-header { min-height: 48px; flex-basis: 48px; }
 .catalog-panel.face-catalog > .tabs { margin-bottom: 10px; }
 .catalog-panel.face-catalog > .expression-workspace { padding: 1px 0 18px; scrollbar-gutter: stable; }
 .adjust-panel.collapsed > :not(.adjust-heading) { display: none; }

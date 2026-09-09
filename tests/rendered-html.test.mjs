@@ -189,6 +189,8 @@ test("mantém somente Base pronta no catálogo de rosto", async () => {
   assert.match(page, /<BasePackThumbnail src=\{baseExpressionSource\(pack, "normal"\)\} name=\{pack\.name\} \/>/);
   assert.match(css, /\.base-pack-selector\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0,1fr\)\)/s);
   assert.match(css, /\.base-pack-thumbnail-loading/);
+  assert.match(css, /\.catalog-panel > \.tabs\s*\{[^}]*flex:\s*0 0 76px/s);
+  assert.match(css, /\.catalog-panel > \.catalog-header\s*\{[^}]*flex:\s*0 0 auto/s);
   assert.match(css, /\.catalog-panel\.face-catalog > \.expression-workspace\s*\{[^}]*scrollbar-gutter:\s*stable/s);
 });
 
