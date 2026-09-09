@@ -196,6 +196,11 @@
 .expressionHeading { display:flex; align-items:center; justify-content:flex-end; gap:8px; }
 .expressionGrid { margin-top: 7px; display: grid; grid-template-columns: 1fr; gap: 4px; }
 .expressionGrid button, .stateSwitch button, .inlineButtons button { min-width: 0; padding: 9px 6px; border: 1px solid #e5e0eb; border-radius: 7px; background: white; color: #777080; font-size: 12.5px; font-weight: 750; cursor: pointer; }
+.expressionPair { display: grid; grid-template-columns: minmax(0, 7fr) minmax(42px, 3fr); }
+.expressionPair .expressionBaseOption { border-radius: 11px 0 0 11px; }
+.expressionPair .expressionPtOption { border-left: 0; border-radius: 0 11px 11px 0; background: #d83c55; color: #fff; font-weight: 900; letter-spacing: .06em; }
+.expressionPair .expressionPtOption:hover { border-color: #b92d46; background: #c8324b; color: #fff; }
+.expressionPair .expressionPtOption.activePtOption { border-color: #8f1830; background: #a91f38; color: #fff; box-shadow: inset 0 0 0 2px rgba(255,255,255,.55), 0 2px 6px rgba(143,24,48,.22); }
 .stateSwitch { margin-top: 6px; display: grid; grid-template-columns: 1fr; gap: 4px; }
 .expressionHeading .stateSwitch { margin-top: 0; display: inline-flex; flex: 0 0 auto; gap: 3px; }
 .expressionHeading .stateSwitch button { width: auto; padding: 6px 8px; white-space: nowrap; font-size: 11px; }
