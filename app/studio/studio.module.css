@@ -613,6 +613,13 @@
 .inspectorSection > span {
   color: #bd718d;
 }
+.inspectorSection {
+  padding: 9px;
+  border: 1px solid #f1d8e1;
+  border-radius: 14px;
+  background: #fff7fa;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+}
 .inspectorTitle > button {
   border: 1px solid #f1d6e0;
   border-radius: 50%;
