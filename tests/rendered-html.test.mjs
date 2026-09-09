@@ -163,10 +163,24 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   assert.doesNotMatch(toolbar, /disabled=\{!selectedCharacter\}/);
   assert.match(toolbar, /Criar balão livre/);
   assert.match(inspector, /characterBubbleActions/);
-  assert.match(inspector, /onAddBubble\("fala"\)/);
-  assert.match(inspector, /onAddBubble\("pensamento"\)/);
+  assert.match(inspector, /onAddBubblePair\("fala"\)/);
+  assert.match(inspector, /onAddBubblePair\("pensamento"\)/);
   assert.match(css, /\.bubbleTool/);
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
+});
+
+test("cria o par de balões ampliados somente pelos atalhos do inspetor", async () => {
+  const [page, inspector, toolbar] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioToolbar.tsx", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /function addCharacterBubblePair/);
+  assert.match(page, /scale:\s*1\.6/);
+  assert.match(page, /bubbles:\s*\[\.\.\.item\.bubbles, first, second\]/);
+  assert.match(page, /estimatedBubbleOffset\(first\)/);
+  assert.match(inspector, /onAddBubblePair/);
+  assert.match(toolbar, /onAddBubble\("fala"\)/);
 });
 
 test("mantém o inspetor de personagem compacto e isola os controles técnicos no modo Editor", async () => {

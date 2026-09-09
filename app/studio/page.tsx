@@ -761,6 +761,20 @@ export default function StudioPage() {
     setDockSide(bubble.x > .7 ? "left" : "right");
   }
 
+  function addCharacterBubblePair(type: SceneBubble["bubbleType"]) {
+    if (!studio || selection?.kind !== "character") return;
+    const character = studio.characters.find((item) => item.id === selection.id);
+    if (!character) return;
+    const x = Math.max(.12, Math.min(.88, character.x));
+    const y = Math.max(.12, Math.min(.82, character.y));
+    const firstZ = nextZ(studio);
+    const first: SceneBubble = { id: crypto.randomUUID(), characterInstanceId: character.id, bubbleType: type, text: "Escreva aqui…", language: "pt", x, y, scale: 1.6, width: 300, fontSize: 24, tailSide: "left", z: firstZ };
+    const second: SceneBubble = { ...first, id: crypto.randomUUID(), y: Math.min(.94, y + estimatedBubbleOffset(first) + .025), z: firstZ + 1 };
+    updateStudio((item) => ({ ...item, bubbles: [...item.bubbles, first, second] }));
+    setSelection({ kind: "bubble", id: first.id });
+    setDockSide(x > .7 ? "left" : "right");
+  }
+
   async function copyBubbleText(text: string) {
     if (!text.trim()) return;
     try {
@@ -1041,7 +1055,7 @@ export default function StudioPage() {
             characterInspectorExpanded={characterInspectorExpanded}
             inspectorDockSide={dockSide}
             onToggleCharacterInspectorWidth={() => updateStudioUi({ characterInspectorExpanded: !characterInspectorExpanded })}
-            onAddBubble={addBubble}
+            onAddBubblePair={addCharacterBubblePair}
             onPose={cycleSelectedPose}
             poseLabel={poseLabel}
             poseDisabled={poseDisabled}
