@@ -188,8 +188,8 @@
 .inspectorTitle h3 { margin: 3px 0 0; }
 .inspectorTitle > button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: #eeeaf2; color: #827a8d; font-size: 21.25px; cursor: pointer; }
 .bubbleInspectorHeaderActions { min-width: 0; display: flex; flex: 0 0 auto; align-items: flex-start; gap: 5px; }
-.bubbleBackButton { height: 30px; padding: 0 8px; border: 1px solid #050505; border-radius: 9px; background: #050505; color: #fff; font-size: 11px; font-weight: 900; cursor: pointer; }
-.bubbleBackButton:hover { background: #201d20; border-color: #454045; }
+.bubbleBackButton { width: 100%; min-height: 34px; padding: 7px 10px; border: 1px solid #176fc2; border-radius: 9px; background: #1976d2; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; }
+.bubbleBackButton:hover { background: #125fac; border-color: #0f579a; }
 .bubbleInspectorClose { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 1px solid #cf294b; border-radius: 50%; background: #db3658; color: #fff; cursor: pointer; }
 .bubbleInspectorClose:hover { border-color: #ac1735; background: #bd1f40; }
 .bubbleInspectorClose .studioGlyph { width: 18px; height: 18px; }

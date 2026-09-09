@@ -192,7 +192,7 @@ test("cria o par de balões ampliados somente pelos atalhos do inspetor", async 
   assert.match(page, /bubble\.characterInstanceId !== characterId/);
   assert.match(inspector, /onAddBubblePair/);
   assert.match(inspector, /selectedBubbleCharacterName/);
-  assert.match(inspector, />Voltar<\/button>/);
+  assert.match(inspector, /aiTextButton[\s\S]*bubbleBackButton[^>]*onClick=\{onBackToCharacter\}>Voltar<\/button>/);
   assert.match(inspector, /bubbleInspectorClose/);
   assert.match(inspector, /styles\.bubbleInspector/);
   assert.match(inspector, /bubbleLanguageBadge/);
@@ -200,6 +200,7 @@ test("cria o par de balões ampliados somente pelos atalhos do inspetor", async 
   assert.match(inspector, /bubbleControlsCard/);
   assert.match(inspector, /bubbleActionStack/);
   assert.match(css, /\.bubbleInspector\s*\{[^}]*background:\s*#ececef/s);
+  assert.match(css, /\.bubbleBackButton\s*\{[^}]*background:\s*#1976d2[^}]*color:\s*#fff/s);
   assert.match(css, /\.bubbleInspectorTitle\s*\{[^}]*grid-template-columns:\s*minmax\(0,1fr\) auto[^}]*overflow:\s*hidden/s);
   assert.match(css, /\.bubbleInspectorTitle > div:first-child\s*\{[^}]*min-width:\s*0[^}]*overflow:\s*hidden/s);
   assert.match(css, /\.bubbleActionStack \.bubbleDeleteButton\s*\{[^}]*background:\s*#db3658/s);
