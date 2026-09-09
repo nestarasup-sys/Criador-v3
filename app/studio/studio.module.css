@@ -187,6 +187,12 @@
 .inspectorTitle span, .inspectorSection > span { color: #91899d; font-size: 10.9375px; letter-spacing: .15em; font-weight: 900; }
 .inspectorTitle h3 { margin: 3px 0 0; }
 .inspectorTitle > button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: #eeeaf2; color: #827a8d; font-size: 21.25px; cursor: pointer; }
+.bubbleInspectorHeaderActions { display: flex; align-items: flex-start; gap: 6px; }
+.bubbleBackButton { height: 30px; padding: 0 10px; border: 1px solid #e3b7c7; border-radius: 9px; background: #fff; color: #85465d; font-size: 12px; font-weight: 900; cursor: pointer; }
+.bubbleBackButton:hover { background: #fff0f5; border-color: #d8799c; }
+.bubbleInspectorClose { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 1px solid #cf294b; border-radius: 50%; background: #db3658; color: #fff; cursor: pointer; }
+.bubbleInspectorClose:hover { border-color: #ac1735; background: #bd1f40; }
+.bubbleInspectorClose .studioGlyph { width: 18px; height: 18px; }
 .editor .textField, .editor .rangeField { font-size: 15.625px; }
 .rangeField { margin: 15px 0; }
 .rangeField > span { display: flex; justify-content: space-between; }

@@ -768,10 +768,11 @@ export default function StudioPage() {
     const x = Math.max(.12, Math.min(.88, character.x));
     const y = Math.max(.12, Math.min(.82, character.y));
     const firstZ = nextZ(studio);
-    const first: SceneBubble = { id: crypto.randomUUID(), characterInstanceId: character.id, bubbleType: type, text: "Escreva aqui…", language: "pt", x, y, scale: 1.6, width: 300, fontSize: 24, tailSide: "left", z: firstZ };
-    const second: SceneBubble = { ...first, id: crypto.randomUUID(), y: Math.min(.94, y + estimatedBubbleOffset(first) + .025), z: firstZ + 1 };
-    updateStudio((item) => ({ ...item, bubbles: [...item.bubbles, first, second] }));
-    setSelection({ kind: "bubble", id: first.id });
+    const sourceId = crypto.randomUUID();
+    const translation: SceneBubble = { id: crypto.randomUUID(), characterInstanceId: character.id, bubbleType: type, text: "English text…", language: "en", translationOf: sourceId, x, y, scale: 1.6, width: 300, fontSize: 24, tailSide: "left", z: firstZ };
+    const source: SceneBubble = { ...translation, id: sourceId, text: "Escreva aqui…", language: "pt", translationOf: undefined, y: Math.min(.94, y + estimatedBubbleOffset(translation) + .025), z: firstZ + 1 };
+    updateStudio((item) => ({ ...item, bubbles: [...item.bubbles, translation, source] }));
+    setSelection({ kind: "bubble", id: source.id });
     setDockSide(x > .7 ? "left" : "right");
   }
 
@@ -976,6 +977,12 @@ export default function StudioPage() {
   const selectedBubble = (selection?.kind === "bubble" ? studio.bubbles.find((item) => item.id === selection.id) : null) ?? null;
   const selectedNarrator = (selection?.kind === "narrator" ? studio.narrators.find((item) => item.id === selection.id) : null) ?? null;
   const selectedCharacterSource = selectedCharacter ? charactersById.get(selectedCharacter.characterId) : null;
+  const selectedBubbleCharacter = selectedBubble
+    ? studio.characters.find((item) => item.id === selectedBubble.characterInstanceId) ?? null
+    : null;
+  const selectedBubbleCharacterName = selectedBubbleCharacter
+    ? charactersById.get(selectedBubbleCharacter.characterId)?.name ?? null
+    : null;
   const inspectorHasContent = Boolean(
     (selectedCharacter && selectedCharacterSource)
     || selectedObject
@@ -1035,6 +1042,7 @@ export default function StudioPage() {
             selectedCharacterSource={selectedCharacterSource ?? null}
             selectedObject={selectedObject}
             selectedBubble={selectedBubble}
+            selectedBubbleCharacterName={selectedBubbleCharacterName}
             selectedNarrator={selectedNarrator}
             emotions={selectedCharacterSource ? emotionOptionsForCharacter(selectedCharacterSource, data.expressionPacks, modelPacks) : []}
             translatingBubbleId={translatingBubbleId}
@@ -1052,6 +1060,11 @@ export default function StudioPage() {
             onPrint={() => { void printScene(); }}
             isPrinting={isPrinting}
             onCloseCharacterInspector={() => setSelection(null)}
+            onBackToBubbleCharacter={() => {
+              if (!selectedBubbleCharacter) return;
+              setSelection({ kind: "character", id: selectedBubbleCharacter.id });
+              setDockSide(selectedBubbleCharacter.x > .7 ? "left" : "right");
+            }}
             characterInspectorExpanded={characterInspectorExpanded}
             inspectorDockSide={dockSide}
             onToggleCharacterInspectorWidth={() => updateStudioUi({ characterInspectorExpanded: !characterInspectorExpanded })}

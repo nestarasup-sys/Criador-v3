@@ -177,9 +177,14 @@ test("cria o par de balões ampliados somente pelos atalhos do inspetor", async 
   ]);
   assert.match(page, /function addCharacterBubblePair/);
   assert.match(page, /scale:\s*1\.6/);
-  assert.match(page, /bubbles:\s*\[\.\.\.item\.bubbles, first, second\]/);
-  assert.match(page, /estimatedBubbleOffset\(first\)/);
+  assert.match(page, /bubbles:\s*\[\.\.\.item\.bubbles, translation, source\]/);
+  assert.match(page, /estimatedBubbleOffset\(translation\)/);
+  assert.match(page, /translationOf:\s*sourceId/);
+  assert.match(page, /setSelection\(\{ kind: "bubble", id: source\.id \}\)/);
   assert.match(inspector, /onAddBubblePair/);
+  assert.match(inspector, /selectedBubbleCharacterName/);
+  assert.match(inspector, />Voltar<\/button>/);
+  assert.match(inspector, /bubbleInspectorClose/);
   assert.match(toolbar, /onAddBubble\("fala"\)/);
 });
 
