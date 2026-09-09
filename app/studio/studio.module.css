@@ -188,11 +188,44 @@
 .inspectorTitle h3 { margin: 3px 0 0; }
 .inspectorTitle > button { width: 28px; height: 28px; border: 0; border-radius: 8px; background: #eeeaf2; color: #827a8d; font-size: 21.25px; cursor: pointer; }
 .bubbleInspectorHeaderActions { display: flex; align-items: flex-start; gap: 6px; }
-.bubbleBackButton { height: 30px; padding: 0 10px; border: 1px solid #e3b7c7; border-radius: 9px; background: #fff; color: #85465d; font-size: 12px; font-weight: 900; cursor: pointer; }
-.bubbleBackButton:hover { background: #fff0f5; border-color: #d8799c; }
+.bubbleBackButton { height: 30px; padding: 0 10px; border: 1px solid #050505; border-radius: 9px; background: #050505; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; }
+.bubbleBackButton:hover { background: #201d20; border-color: #454045; }
 .bubbleInspectorClose { width: 30px; height: 30px; display: grid; place-items: center; padding: 0; border: 1px solid #cf294b; border-radius: 50%; background: #db3658; color: #fff; cursor: pointer; }
 .bubbleInspectorClose:hover { border-color: #ac1735; background: #bd1f40; }
 .bubbleInspectorClose .studioGlyph { width: 18px; height: 18px; }
+.bubbleInspector {
+  border-color: #d2d2d7;
+  background: #ececef;
+  color: #29262a;
+  box-shadow: 0 18px 42px rgba(33,30,34,.2);
+}
+.bubbleInspectorTitle { margin-bottom: 10px; align-items: flex-start; }
+.bubbleInspectorTitle h3 { max-width: 150px; margin-bottom: 0; overflow: hidden; color: #29262a; font-size: 20px; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.bubbleInspectorTitle > div:first-child > span { color: #646067; }
+.bubbleLanguageBadge { display: inline-grid; min-width: 25px; min-height: 18px; margin-left: 5px; place-items: center; border-radius: 999px; background: #29262a; color: #fff; font-size: 9px; letter-spacing: .05em; }
+.bubbleTextCard,
+.bubbleControlsCard { border: 1px solid #d6d6da; border-radius: 12px; background: #f8f8f9; }
+.bubbleTextCard { padding: 10px; }
+.bubbleControlsCard { margin-top: 8px; padding: 3px 10px; }
+.bubbleInspector .textField,
+.bubbleInspector .rangeField { color: #373238; }
+.bubbleInspector .textField textarea { min-height: 112px; border-color: #c9c9cf; background: #fff; color: #262327; }
+.bubbleInspector .textField textarea:focus { border-color: #6d6870; box-shadow: 0 0 0 3px rgba(45,43,46,.12); }
+.bubbleInspector .textFieldHeading button { border-color: #d0d0d5; background: #fff; color: #302d31; }
+.bubbleInspector .aiTextButton { width: 100%; min-height: 34px; border: 1px solid #151315; border-radius: 9px; background: #151315; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; }
+.bubbleInspector .aiTextButton:hover:not(:disabled) { background: #302c30; }
+.bubbleInspector .aiTextButton:disabled { opacity: .42; cursor: default; }
+.bubbleInspector .rangeField { margin: 10px 0; }
+.bubbleInspector .rangeField b { color: #c52d50; }
+.bubbleInspector .rangeField input { accent-color: #d83c61; }
+.bubbleActionStack { margin-top: 8px; display: grid; gap: 6px; }
+.bubbleActionStack > button,
+.bubbleActionStack .inlineButtons button { min-height: 38px; padding: 8px; border: 1px solid #c8c8cd; border-radius: 10px; background: #fff; color: #302d31; font-size: 12px; font-weight: 850; cursor: pointer; }
+.bubbleActionStack > button:hover,
+.bubbleActionStack .inlineButtons button:hover { border-color: #8f8c92; background: #f7f7f8; }
+.bubbleActionStack .inlineButtons { margin-top: 0; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; }
+.bubbleActionStack .bubbleDeleteButton { border-color: #cf294b; background: #db3658; color: #fff; }
+.bubbleActionStack .bubbleDeleteButton:hover { border-color: #ac1735; background: #bd1f40; }
 .editor .textField, .editor .rangeField { font-size: 15.625px; }
 .rangeField { margin: 15px 0; }
 .rangeField > span { display: flex; justify-content: space-between; }

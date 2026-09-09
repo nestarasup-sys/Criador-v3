@@ -174,10 +174,11 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
 });
 
 test("cria o par de balões ampliados somente pelos atalhos do inspetor", async () => {
-  const [page, inspector, toolbar] = await Promise.all([
+  const [page, inspector, toolbar, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/components/StudioToolbar.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /function addCharacterBubblePair/);
   assert.match(page, /scale:\s*1\.6/);
@@ -193,6 +194,13 @@ test("cria o par de balões ampliados somente pelos atalhos do inspetor", async 
   assert.match(inspector, /selectedBubbleCharacterName/);
   assert.match(inspector, />Voltar<\/button>/);
   assert.match(inspector, /bubbleInspectorClose/);
+  assert.match(inspector, /styles\.bubbleInspector/);
+  assert.match(inspector, /bubbleLanguageBadge/);
+  assert.match(inspector, /bubbleTextCard/);
+  assert.match(inspector, /bubbleControlsCard/);
+  assert.match(inspector, /bubbleActionStack/);
+  assert.match(css, /\.bubbleInspector\s*\{[^}]*background:\s*#ececef/s);
+  assert.match(css, /\.bubbleActionStack \.bubbleDeleteButton\s*\{[^}]*background:\s*#db3658/s);
   assert.match(toolbar, /onAddBubble\("fala"\)/);
 });
 
