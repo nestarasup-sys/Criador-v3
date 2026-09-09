@@ -717,6 +717,7 @@
 }
 .characterInspectorHeaderActions { display: flex; align-items: center; gap: 6px; }
 .editorModeButton,
+.characterInspectorRemove,
 .characterInspectorClose {
   min-height: 30px;
   border: 1px solid #654252;
@@ -738,21 +739,27 @@
   background: #161216;
   color: #fff;
 }
+.characterInspectorRemove,
 .characterInspectorClose {
   width: 30px;
   display: grid;
   place-items: center;
   padding: 0;
-  border-color: #d52d4f;
-  background: #d52d4f;
   color: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,.18);
 }
-.characterInspectorClose:hover {
+.characterInspectorRemove {
+  border-color: #d52d4f;
+  background: #d52d4f;
+}
+.characterInspectorRemove:hover {
   border-color: #f05b76;
   background: #b81639;
   color: #fff;
 }
+.characterInspectorClose { border-color: #000; background: #050505; }
+.characterInspectorClose:hover { border-color: #454045; background: #201d20; color: #fff; }
+.characterInspectorRemove .studioGlyph,
 .characterInspectorClose .studioGlyph { width: 18px; height: 18px; }
 .inspectorWidthToggle {
   width: 30px;

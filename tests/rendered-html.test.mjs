@@ -204,6 +204,10 @@ test("mantém o inspetor de personagem compacto e isola os controles técnicos n
   assert.match(css, /\.inspectorDock > \.characterInspectorExpanded[\s\S]*width:\s*min\(270px,100%\)/);
   assert.match(inspector, /inspectorWidthToggle/);
   assert.match(inspector, /characterInspectorHeaderActions/);
+  assert.match(inspector, /characterInspectorRemove[^>]*aria-label="Remover personagem da cena"[^>]*onClick=\{onRemove\}/);
+  assert.match(inspector, /characterInspectorClose[^>]*aria-label="Fechar inspetor"[^>]*onClick=\{onClose\}[^>]*><StudioGlyph name="right"/);
+  assert.match(css, /\.characterInspectorRemove\s*\{[^}]*background:\s*#d52d4f/s);
+  assert.match(css, /\.characterInspectorClose\s*\{[^}]*background:\s*#050505/s);
   assert.match(page, /characterInspectorExpanded:\s*!characterInspectorExpanded/);
 });
 
