@@ -162,9 +162,25 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   assert.ok(toolbar.indexOf("Fala") < toolbar.indexOf("Pensamento"));
   assert.doesNotMatch(toolbar, /disabled=\{!selectedCharacter\}/);
   assert.match(toolbar, /Criar balão livre/);
-  assert.doesNotMatch(inspector, /chatButtons/);
+  assert.match(inspector, /characterBubbleActions/);
+  assert.match(inspector, /onAddBubble\("fala"\)/);
+  assert.match(inspector, /onAddBubble\("pensamento"\)/);
   assert.match(css, /\.bubbleTool/);
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
+});
+
+test("mantém o inspetor de personagem compacto e isola os controles técnicos no modo Editor", async () => {
+  const [page, inspector, css] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/components/StudioInspector.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(inspector, /aria-pressed=\{editorMode\}/);
+  assert.match(inspector, /editorMode && <ScaleControl/);
+  assert.match(inspector, /onCloseCharacterInspector/);
+  assert.match(page, /onCloseCharacterInspector=\{\(\) => setSelection\(null\)\}/);
+  assert.match(css, /\.characterInspector\s*\{/);
+  assert.match(css, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)/);
 });
 
 test("corrects the inverted Corado 3 blink and talk source names", async () => {

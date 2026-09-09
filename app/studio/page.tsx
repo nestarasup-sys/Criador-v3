@@ -1035,6 +1035,8 @@ export default function StudioPage() {
             onDuplicate={duplicateSelected}
             onPrint={() => { void printScene(); }}
             isPrinting={isPrinting}
+            onCloseCharacterInspector={() => setSelection(null)}
+            onAddBubble={addBubble}
             onPose={cycleSelectedPose}
             poseLabel={poseLabel}
             poseDisabled={poseDisabled}

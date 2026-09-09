@@ -694,6 +694,130 @@
   color:#fff;
   box-shadow:inset 0 0 0 1px rgba(255,241,184,.65), 0 2px 6px rgba(145,98,10,.2);
 }
+.characterInspector {
+  border-color: #6f3d51;
+  background:
+    radial-gradient(circle at 100% 0,rgba(196,67,115,.15),transparent 34%),
+    linear-gradient(165deg,#2a2026,#171317 72%);
+  color: #f7eaf0;
+  box-shadow: 0 18px 42px rgba(24,10,17,.34);
+}
+.characterInspectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.editorModeButton,
+.characterInspectorClose {
+  min-height: 30px;
+  border: 1px solid #654252;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.editorModeButton {
+  padding: 5px 10px;
+  background: #382a32;
+  color: #f7dce7;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .04em;
+}
+.editorModeButton:hover,
+.editorModeButtonActive {
+  border-color: #dc6f99;
+  background: #5a3041;
+  color: #fff;
+}
+.characterInspectorClose {
+  width: 30px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-color: #fff;
+  background: #fff;
+  color: #d52d4f;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+}
+.characterInspectorClose:hover {
+  border-color: #ffb2c0;
+  background: #fff0f3;
+  color: #b81639;
+}
+.characterInspectorClose .studioGlyph { width: 18px; height: 18px; }
+.characterInspector .rangeField > span { color: #f1dce5; }
+.characterInspector .inspectorActionRow { margin-top: 0; }
+.characterInspector .inspectorActionRow button {
+  height: 40px;
+  min-height: 40px;
+  padding: 6px 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.characterInspector .inspectorActionRow .studioGlyph { width: 16px; height: 16px; margin-right: 1px; }
+.characterBubbleActions {
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 6px;
+}
+.characterBubbleActions button {
+  min-width: 0;
+  min-height: 36px;
+  padding: 6px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #e8e1e5;
+  border-radius: 10px;
+  background: #fff;
+  color: #201a1e;
+  font-size: 10.5px;
+  font-weight: 850;
+  cursor: pointer;
+}
+.characterBubbleActions button:hover { border-color: #f09ab7; background: #fff5f8; }
+.characterBubbleActions .studioGlyph { width: 16px; height: 16px; }
+.characterInspector .inspectorSection {
+  margin: 10px 0;
+  padding: 8px;
+  border: 1px solid #49323d;
+  border-radius: 13px;
+  background: #120f11;
+}
+.characterInspector .expressionHeading { width: 100%; }
+.characterInspector .expressionHeading .stateSwitch {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 3px;
+}
+.characterInspector .expressionHeading .stateSwitch button {
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 1px;
+  overflow: hidden;
+  font-size: 9.25px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.characterInspector .expressionGrid { margin-top: 6px; }
+.characterInspector .expressionGrid button { border-color: #ead7df; background: #fff; color: #674d59; }
+.characterInspector .expressionGrid button:hover { border-color: #ed8fb1; background: #fff3f7; }
+.characterInspector .outfitAdjustToggle,
+.inspector.characterInspector .wideButton,
+.characterInspector .inlineButtons button { border-color: #684454; background: #fff; color: #32252b; }
+.inspector.characterInspector .dangerButton { border-color: #e36a82; background: #fff; color: #c21f42; }
 .inspector .wideButton { background: #fff1f6; }
 .inspector .dangerButton {
   border-color: #f1c9d6;
