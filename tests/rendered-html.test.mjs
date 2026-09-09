@@ -220,7 +220,7 @@ test("mantém o inspetor de personagem compacto e isola os controles técnicos n
   assert.match(css, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.characterInspector \.expressionPair \.expressionPtOption\s*\{[^}]*background:\s*#d83c55/s);
   assert.match(css, /\.inspectorDock > \.characterInspectorExpanded[\s\S]*width:\s*min\(270px,100%\)/);
-  assert.match(inspector, /inspectorWidthToggle/);
+  assert.match(inspector, /\{editorMode && <button[^>]*className=\{styles\.inspectorWidthToggle\}/);
   assert.match(inspector, /characterInspectorHeaderActions/);
   assert.match(inspector, /characterInspectorRemove[^>]*aria-label="Remover personagem da cena"[^>]*onClick=\{onRemove\}/);
   assert.match(inspector, /characterInspectorClose[^>]*aria-label="Fechar inspetor"[^>]*onClick=\{onClose\}[^>]*><StudioGlyph name="right"/);
