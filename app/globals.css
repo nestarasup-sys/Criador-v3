@@ -382,6 +382,9 @@ a { color: inherit; }
 .base-pack-selector button:hover, .base-pack-selector > div:hover { border-color: #cfc7e8; background: white; }
 .base-pack-selector button.active, .base-pack-selector > div.active { border-color: var(--accent); background: white; box-shadow: 0 0 0 2px var(--accent-soft); color: var(--accent-dark); }
 .base-pack-selector img { width: 100%; height: 80px; display: block; object-fit: contain; }
+.base-pack-thumbnail { object-position: center; }
+.base-pack-thumbnail-loading { width: 56px; height: 56px; place-self: center; border-radius: 50%; background: linear-gradient(110deg,#eeeaf1 25%,#faf8fb 42%,#eeeaf1 58%); background-size: 220% 100%; animation: base-pack-thumbnail-loading 1.1s linear infinite; }
+@keyframes base-pack-thumbnail-loading { to { background-position-x: -220%; } }
 .base-pack-selector span { min-width: 0; font-size: 11.25px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .base-pack-selector small { color: #9993a2; font-size: 8.75px; }
 .base-pack-selector > div.delete-selected { border-color: #e95361; background: #fff7f8; box-shadow: 0 0 0 2px rgba(233,83,97,.22); }

@@ -493,6 +493,49 @@ function createCharacterPhotoDataUrl(source: HTMLCanvasElement) {
   return photo.toDataURL("image/png");
 }
 
+const basePackThumbnailCache = new Map<string, Promise<string>>();
+
+async function createBasePackThumbnail(src: string) {
+  const cached = basePackThumbnailCache.get(src);
+  if (cached) return cached;
+  const pending = (async () => {
+    const transparentBlob = await removeChroma(src);
+    const temporaryUrl = URL.createObjectURL(transparentBlob);
+    try {
+      const image = await loadImage(temporaryUrl);
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Canvas da miniatura indisponível");
+      context.drawImage(image, 0, 0);
+      return createCharacterPhotoDataUrl(canvas);
+    } finally {
+      URL.revokeObjectURL(temporaryUrl);
+    }
+  })().catch((error) => {
+    basePackThumbnailCache.delete(src);
+    throw error;
+  });
+  basePackThumbnailCache.set(src, pending);
+  return pending;
+}
+
+function BasePackThumbnail({ src, name }: { src: string; name: string }) {
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    void createBasePackThumbnail(src)
+      .then((result) => { if (active) setThumbnail(result); })
+      .catch(() => { if (active) setThumbnail(src); });
+    return () => { active = false; };
+  }, [src]);
+  if (!thumbnail) return <span className="base-pack-thumbnail-loading" aria-label={`Carregando prévia de ${name}`} />;
+  // The generated data URL is a local, dynamically cropped preview.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className="base-pack-thumbnail" src={thumbnail} alt={`Prévia de ${name}`} />;
+}
+
 /** Estima qualquer chroma saturado pelas bordas, sem pressupor verde. */
 function estimateImportChroma(source: HTMLCanvasElement, boost = 0) {
   const context = source.getContext("2d", { willReadFrequently: true });
@@ -5740,9 +5783,7 @@ export default function Home() {
                       aria-pressed={assetDeleteMode ? selectedForDelete : undefined}
                       title={assetDeleteMode ? `Selecionar ${pack.name} para apagar` : `Selecionar ${pack.name}`}
                     >
-                      {/* Static local base preview. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={baseExpressionSource(pack, "normal")} alt="" />
+                      <BasePackThumbnail src={baseExpressionSource(pack, "normal")} name={pack.name} />
                       <span>{pack.name}</span>
                       <small>{pack.expressionKeys.length} expressões</small>
                       {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}

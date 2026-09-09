@@ -183,7 +183,12 @@ test("mantém somente Base pronta no catálogo de rosto", async () => {
   assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("pack"\)\}/);
   assert.match(page, /if \(nextCategory === "rostos"\) \{[\s\S]*setFaceMode\("base"\)/);
   assert.match(page, /category === "rostos" \? "face-catalog"/);
+  assert.match(page, /function BasePackThumbnail/);
+  assert.match(page, /createBasePackThumbnail\(src\)/);
+  assert.match(page, /createCharacterPhotoDataUrl\(canvas\)/);
+  assert.match(page, /<BasePackThumbnail src=\{baseExpressionSource\(pack, "normal"\)\} name=\{pack\.name\} \/>/);
   assert.match(css, /\.base-pack-selector\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0,1fr\)\)/s);
+  assert.match(css, /\.base-pack-thumbnail-loading/);
   assert.match(css, /\.catalog-panel\.face-catalog > \.expression-workspace\s*\{[^}]*scrollbar-gutter:\s*stable/s);
 });
 
