@@ -173,6 +173,13 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
 });
 
+test("mantém somente Base pronta visível nos modos de rosto", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(page, />\s*Base pronta\s*<\/button>/);
+  assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("single"\)\}/);
+  assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("pack"\)\}/);
+});
+
 test("cria o par de balões ampliados somente pelos atalhos do inspetor", async () => {
   const [page, inspector, toolbar, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),

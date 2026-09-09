@@ -5554,12 +5554,6 @@ export default function Home() {
               <button className={faceMode === "base" ? "active" : ""} onClick={() => changeFaceMode("base")}>
                 Base pronta
               </button>
-              <button className={faceMode === "single" ? "active" : ""} onClick={() => changeFaceMode("single")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
-                Rosto avulso
-              </button>
-              <button className={faceMode === "pack" ? "active" : ""} onClick={() => changeFaceMode("pack")} disabled={basePackId !== getBasePack(basePacks, model).id} title={basePackId !== getBasePack(basePacks, model).id ? "Os outros modelos já possuem seus próprios rostos completos" : undefined}>
-                Pack de expressões
-              </button>
             </div>
           )}
 
