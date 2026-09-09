@@ -696,9 +696,8 @@
 }
 .characterInspector {
   border-color: #6f3d51;
-  background:
-    radial-gradient(circle at 100% 0,rgba(196,67,115,.15),transparent 34%),
-    linear-gradient(165deg,#2a2026,#171317 72%);
+  padding: 12px;
+  background: #291821;
   color: #f7eaf0;
   box-shadow: 0 18px 42px rgba(24,10,17,.34);
 }
@@ -749,15 +748,15 @@
 .characterInspector .rangeField > span { color: #f1dce5; }
 .characterInspector .inspectorActionRow { margin-top: 0; }
 .characterInspector .inspectorActionRow button {
-  height: 40px;
-  min-height: 40px;
-  padding: 6px 5px;
+  height: 44px;
+  min-height: 44px;
+  padding: 7px 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 3px;
   overflow: hidden;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1;
   white-space: nowrap;
 }
@@ -788,10 +787,9 @@
 .characterBubbleActions .studioGlyph { width: 16px; height: 16px; }
 .characterInspector .inspectorSection {
   margin: 10px 0;
-  padding: 8px;
-  border: 1px solid #49323d;
-  border-radius: 13px;
-  background: #120f11;
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 .characterInspector .expressionHeading { width: 100%; }
 .characterInspector .expressionHeading .stateSwitch {
@@ -806,14 +804,31 @@
   min-height: 32px;
   padding: 5px 1px;
   overflow: hidden;
-  font-size: 9.25px;
+  font-size: 10.5px;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .characterInspector .expressionGrid { margin-top: 6px; }
-.characterInspector .expressionGrid button { border-color: #ead7df; background: #fff; color: #674d59; }
-.characterInspector .expressionGrid button:hover { border-color: #ed8fb1; background: #fff3f7; }
+.characterInspector .expressionGrid > button,
+.characterInspector .expressionPair .expressionBaseOption { border-color: #ead7df; background: #fff; color: #674d59; }
+.characterInspector .expressionGrid > button:hover,
+.characterInspector .expressionPair .expressionBaseOption:hover { border-color: #ed8fb1; background: #fff3f7; }
+.characterInspector .expressionPair .expressionPtOption {
+  border-color: #d83c55;
+  background: #d83c55;
+  color: #fff;
+}
+.characterInspector .expressionPair .expressionPtOption:hover {
+  border-color: #b92d46;
+  background: #c8324b;
+  color: #fff;
+}
+.characterInspector .expressionPair .expressionPtOption.activePtOption {
+  border-color: #8f1830;
+  background: #a91f38;
+  color: #fff;
+}
 .characterInspector .outfitAdjustToggle,
 .inspector.characterInspector .wideButton,
 .characterInspector .inlineButtons button { border-color: #684454; background: #fff; color: #32252b; }
@@ -909,6 +924,10 @@
   width: min(204px, 100%);
   max-height: calc(100dvh - 28px);
   pointer-events: auto;
+}
+.inspectorDock > .characterInspector,
+.rightArea.dockLeft .inspectorDock > .characterInspector {
+  width: min(224px,100%);
 }
 
 @media (max-width: 1000px) {
