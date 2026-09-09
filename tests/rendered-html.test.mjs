@@ -173,11 +173,18 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
 });
 
-test("mantém somente Base pronta visível nos modos de rosto", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  assert.match(page, />\s*Base pronta\s*<\/button>/);
+test("mantém somente Base pronta no catálogo de rosto", async () => {
+  const [page, css] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /<b>Base pronta<\/b>/);
   assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("single"\)\}/);
   assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("pack"\)\}/);
+  assert.match(page, /if \(nextCategory === "rostos"\) \{[\s\S]*setFaceMode\("base"\)/);
+  assert.match(page, /category === "rostos" \? "face-catalog"/);
+  assert.match(css, /\.base-pack-selector\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0,1fr\)\)/s);
+  assert.match(css, /\.catalog-panel\.face-catalog > \.expression-workspace\s*\{[^}]*scrollbar-gutter:\s*stable/s);
 });
 
 test("cria o par de balões ampliados somente pelos atalhos do inspetor", async () => {

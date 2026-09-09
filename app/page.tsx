@@ -4294,13 +4294,11 @@ export default function Home() {
     setColorPanelOpen(false);
     setCategory(nextCategory);
     setChromaMode(false);
-  }
-
-  function changeFaceMode(nextFaceMode: FaceMode) {
-    resetAssetDeleteMode();
-    setColorPanelOpen(false);
-    setFaceMode(nextFaceMode);
-    setAnimationMode(null);
+    if (nextCategory === "rostos") {
+      setFaceMode("base");
+      setActivePackId(null);
+      setAnimationMode(null);
+    }
   }
 
   function changeOutfitCatalogMode(nextMode: OutfitCatalogMode) {
@@ -5526,7 +5524,7 @@ export default function Home() {
           </div>
         </section>
 
-        <aside className={`sidebar catalog-panel ${colorPanelOpen && colorEligible ? "color-editing" : ""}`}>
+        <aside className={`sidebar catalog-panel ${category === "rostos" ? "face-catalog" : ""} ${colorPanelOpen && colorEligible ? "color-editing" : ""}`}>
           <CreatorCatalogHeader
             category={category}
             faceMode={faceMode}
@@ -5548,14 +5546,6 @@ export default function Home() {
             onToggleDeleteMode={toggleAssetDeleteMode}
             onDeleteSelected={() => void removeSelectedAssets()}
           />
-
-          {category === "rostos" && (
-            <div className="face-mode-switch" role="group" aria-label="Modo de rosto">
-              <button className={faceMode === "base" ? "active" : ""} onClick={() => changeFaceMode("base")}>
-                Base pronta
-              </button>
-            </div>
-          )}
 
           <div className="tabs" role="tablist" aria-label="Categorias do catálogo">
             {(["cabelos", "rostos", "roupas"] as Category[]).map((tab) => (
@@ -5727,8 +5717,8 @@ export default function Home() {
           {category === "rostos" && faceMode === "base" ? (
             <div className="expression-workspace">
               <div className="base-pack-heading">
-                <span>MODELO BASE</span>
-                <small>Modelos são carregados da pasta local; roupas e cabelos são compartilhados pelo gênero.</small>
+                <div><span>{availableBasePacks.length} modelos</span><small>{model === "feminino" ? "Modelos femininos" : "Modelos masculinos"}</small></div>
+                <b>Base pronta</b>
               </div>
               <div className="base-pack-selector" role="group" aria-label={`Modelos ${model}`}>
                 {availableBasePacks.map((pack) => {
