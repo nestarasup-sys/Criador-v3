@@ -776,6 +776,22 @@ export default function StudioPage() {
     setDockSide(x > .7 ? "left" : "right");
   }
 
+  function goToSelectedCharacterBubble() {
+    if (!studio || selection?.kind !== "character") return;
+    const characterBubbles = studio.bubbles.filter((bubble) => bubble.characterInstanceId === selection.id);
+    const target = [...characterBubbles].reverse().find((bubble) => bubble.language !== "en") ?? characterBubbles.at(-1);
+    if (!target) return;
+    setSelection({ kind: "bubble", id: target.id });
+    setDockSide(target.x > .7 ? "left" : "right");
+  }
+
+  function clearSelectedCharacterBubbles() {
+    if (!studio || selection?.kind !== "character") return;
+    const characterId = selection.id;
+    updateStudio((item) => ({ ...item, bubbles: item.bubbles.filter((bubble) => bubble.characterInstanceId !== characterId) }));
+    setNotice("Balões do personagem removidos");
+  }
+
   async function copyBubbleText(text: string) {
     if (!text.trim()) return;
     try {
@@ -996,6 +1012,7 @@ export default function StudioPage() {
   const poseLabel = selectedPose.variants.length > 1 ? `Pose ${selectedPose.index + 1}/${selectedPose.variants.length}` : "Pose";
   const poseDisabled = selectedPose.variants.length < 2;
   const outfitAdjustDisabled = !selectedPose.variant;
+  const selectedCharacterHasBubbles = Boolean(selectedCharacter && studio.bubbles.some((bubble) => bubble.characterInstanceId === selectedCharacter.id));
   return (
     <main className={`${styles.editor} ${viewMode ? styles.viewMode : ""}`}>
       <StudioCanvas
@@ -1069,6 +1086,9 @@ export default function StudioPage() {
             inspectorDockSide={dockSide}
             onToggleCharacterInspectorWidth={() => updateStudioUi({ characterInspectorExpanded: !characterInspectorExpanded })}
             onAddBubblePair={addCharacterBubblePair}
+            characterHasBubbles={selectedCharacterHasBubbles}
+            onGoToCharacterBubble={goToSelectedCharacterBubble}
+            onClearCharacterBubbles={clearSelectedCharacterBubbles}
             onPose={cycleSelectedPose}
             poseLabel={poseLabel}
             poseDisabled={poseDisabled}

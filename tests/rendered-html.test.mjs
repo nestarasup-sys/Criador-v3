@@ -165,6 +165,10 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
   assert.match(inspector, /characterBubbleActions/);
   assert.match(inspector, /onAddBubblePair\("fala"\)/);
   assert.match(inspector, /onAddBubblePair\("pensamento"\)/);
+  assert.match(inspector, /characterBubbleGoButton[^>]*disabled=\{!characterHasBubbles\}[^>]*onClick=\{onGoToCharacterBubble\}>Ir para\.\.\.<\/button>/);
+  assert.match(inspector, /characterBubbleClearButton[^>]*disabled=\{!characterHasBubbles\}[^>]*onClick=\{onClearCharacterBubbles\}>Limpar<\/button>/);
+  assert.match(css, /\.characterBubbleManageActions \.characterBubbleGoButton\s*\{[^}]*background:\s*#1976d2[^}]*color:\s*#fff/s);
+  assert.match(css, /\.characterBubbleManageActions \.characterBubbleClearButton\s*\{[^}]*background:\s*#db3658[^}]*color:\s*#fff/s);
   assert.match(css, /\.bubbleTool/);
   assert.match(css, /\.leftTools[^}]*overflow-y:\s*auto/);
 });
@@ -181,6 +185,10 @@ test("cria o par de balões ampliados somente pelos atalhos do inspetor", async 
   assert.match(page, /estimatedBubbleOffset\(translation\)/);
   assert.match(page, /translationOf:\s*sourceId/);
   assert.match(page, /setSelection\(\{ kind: "bubble", id: source\.id \}\)/);
+  assert.match(page, /function goToSelectedCharacterBubble/);
+  assert.match(page, /find\(\(bubble\) => bubble\.language !== "en"\)/);
+  assert.match(page, /function clearSelectedCharacterBubbles/);
+  assert.match(page, /bubble\.characterInstanceId !== characterId/);
   assert.match(inspector, /onAddBubblePair/);
   assert.match(inspector, /selectedBubbleCharacterName/);
   assert.match(inspector, />Voltar<\/button>/);
