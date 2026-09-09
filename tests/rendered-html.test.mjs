@@ -179,10 +179,12 @@ test("mantém o inspetor de personagem compacto e isola os controles técnicos n
   assert.match(inspector, /editorMode && <ScaleControl/);
   assert.match(inspector, /onCloseCharacterInspector/);
   assert.match(page, /onCloseCharacterInspector=\{\(\) => setSelection\(null\)\}/);
-  assert.match(css, /\.characterInspector\s*\{[^}]*background:\s*#291821/s);
+  assert.match(css, /\.characterInspector\s*\{[^}]*background:\s*#303034/s);
   assert.match(css, /grid-template-columns:\s*repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.characterInspector \.expressionPair \.expressionPtOption\s*\{[^}]*background:\s*#d83c55/s);
-  assert.match(css, /\.inspectorDock > \.characterInspector[\s\S]*width:\s*min\(224px,100%\)/);
+  assert.match(css, /\.inspectorDock > \.characterInspectorExpanded[\s\S]*width:\s*min\(270px,100%\)/);
+  assert.match(inspector, /inspectorWidthToggle/);
+  assert.match(page, /characterInspectorExpanded:\s*!characterInspectorExpanded/);
 });
 
 test("corrects the inverted Corado 3 blink and talk source names", async () => {

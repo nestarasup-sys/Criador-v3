@@ -303,6 +303,7 @@ export default function StudioPage() {
   const storedBackgroundCollapsed = studio?.uiPreferences?.backgroundCollapsed;
   const storedRosterCompact = studio?.uiPreferences?.rosterCompact;
   const storedInspectorDockSide = studio?.uiPreferences?.inspectorDockSide;
+  const characterInspectorExpanded = studio?.uiPreferences?.characterInspectorExpanded !== false;
   const charactersById = useMemo(() => new Map(data.characters.map((character) => [character.id, character])), [data.characters]);
   const backgroundAssets = useMemo(() => {
     const backgroundIds = new Set(studios.map((item) => item.background?.assetId).filter(Boolean));
@@ -338,6 +339,7 @@ export default function StudioPage() {
       backgroundCollapsed: item.uiPreferences?.backgroundCollapsed === true,
       rosterCompact: item.uiPreferences?.rosterCompact === true,
       inspectorDockSide: item.uiPreferences?.inspectorDockSide === "left" ? "left" : "right",
+      characterInspectorExpanded: item.uiPreferences?.characterInspectorExpanded !== false,
       ...patch,
     } }), false);
   }
@@ -452,7 +454,7 @@ export default function StudioPage() {
     const created: Studio = {
       id: crypto.randomUUID(), name: createName.trim(), rosterIds: createRoster,
       background: null, characters: [], objects: [], bubbles: [], narrators: [],
-      uiPreferences: { characterPositionsLocked: false, backgroundCollapsed: false, rosterCompact: false, inspectorDockSide: "right" },
+      uiPreferences: { characterPositionsLocked: false, backgroundCollapsed: false, rosterCompact: false, inspectorDockSide: "right", characterInspectorExpanded: true },
       createdAt: now, updatedAt: now,
     };
     setStudios((current) => [created, ...current]);
@@ -1036,6 +1038,9 @@ export default function StudioPage() {
             onPrint={() => { void printScene(); }}
             isPrinting={isPrinting}
             onCloseCharacterInspector={() => setSelection(null)}
+            characterInspectorExpanded={characterInspectorExpanded}
+            inspectorDockSide={dockSide}
+            onToggleCharacterInspectorWidth={() => updateStudioUi({ characterInspectorExpanded: !characterInspectorExpanded })}
             onAddBubble={addBubble}
             onPose={cycleSelectedPose}
             poseLabel={poseLabel}

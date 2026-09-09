@@ -108,6 +108,7 @@ function normalizeStudio(value) {
       backgroundCollapsed: uiPreferences.backgroundCollapsed === true,
       rosterCompact: uiPreferences.rosterCompact === true,
       inspectorDockSide: uiPreferences.inspectorDockSide === "left" ? "left" : "right",
+      characterInspectorExpanded: uiPreferences.characterInspectorExpanded !== false,
     } } : {}),
   };
 }

@@ -14,11 +14,13 @@ function ScaleControl({ value, onChange, min = .25, max = 2.5 }: { value: number
   return <label className={styles.rangeField}><span>Scale <b>{Math.round(value * 100)}%</b></span><input type="range" min={min} max={max} step=".05" value={value} onChange={(event) => onChange(Number(event.target.value))} /></label>;
 }
 
-function CharacterInspector({ item, emotions, onUpdate, onLayer, onRemove, onClose, onPrint, isPrinting, onPose, poseLabel, poseDisabled, onAddBubble, onNudgeOutfit, outfitAdjustDisabled }: InspectorProps<SceneCharacter> & { emotions: ReadonlyArray<readonly [Emotion, string]>; onClose: () => void; onPrint: () => void; isPrinting: boolean; onPose: () => void; poseLabel: string; poseDisabled: boolean; onAddBubble: (type: SceneBubble["bubbleType"]) => void; onNudgeOutfit: (dx: number, dy: number) => void; outfitAdjustDisabled: boolean }) {
+function CharacterInspector({ item, emotions, expanded, dockSide, onToggleWidth, onUpdate, onLayer, onRemove, onClose, onPrint, isPrinting, onPose, poseLabel, poseDisabled, onAddBubble, onNudgeOutfit, outfitAdjustDisabled }: InspectorProps<SceneCharacter> & { emotions: ReadonlyArray<readonly [Emotion, string]>; expanded: boolean; dockSide: "left" | "right"; onToggleWidth: () => void; onClose: () => void; onPrint: () => void; isPrinting: boolean; onPose: () => void; poseLabel: string; poseDisabled: boolean; onAddBubble: (type: SceneBubble["bubbleType"]) => void; onNudgeOutfit: (dx: number, dy: number) => void; outfitAdjustDisabled: boolean }) {
   const [editorMode, setEditorMode] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const expressionGroups = groupStudioPtExpressions(emotions);
+  const widthArrow = expanded ? dockSide : dockSide === "left" ? "right" : "left";
   return <>
+    <button type="button" className={styles.inspectorWidthToggle} aria-label={expanded ? "Diminuir inspetor" : "Aumentar inspetor"} title={expanded ? "Diminuir inspetor" : "Aumentar inspetor"} onClick={onToggleWidth}><StudioGlyph name={widthArrow} /></button>
     <div className={styles.characterInspectorHeader}><button type="button" className={`${styles.editorModeButton} ${editorMode ? styles.editorModeButtonActive : ""}`} aria-pressed={editorMode} onClick={() => setEditorMode((active) => !active)}>Editor</button><button type="button" className={styles.characterInspectorClose} aria-label="Fechar inspetor" title="Fechar inspetor" onClick={onClose}><StudioGlyph name="close" /></button></div>
     {editorMode && <ScaleControl value={item.scale} onChange={(scale) => onUpdate({ scale })} />}
     <div className={styles.inspectorActionRow}><button type="button" className={styles.inspectorPrintButton} onClick={onPrint} disabled={isPrinting}><StudioGlyph name="print" /> {isPrinting ? "Salvando…" : "Print"}</button><button type="button" className={styles.inspectorPoseButton} onClick={onPose} disabled={poseDisabled} title={poseDisabled ? "Esta roupa não possui variantes" : "Trocar variante da roupa"}><StudioGlyph name="outfit" /> {poseLabel}</button></div>
@@ -64,6 +66,9 @@ type StudioInspectorProps = {
   onPrint: () => void;
   isPrinting: boolean;
   onCloseCharacterInspector: () => void;
+  characterInspectorExpanded: boolean;
+  inspectorDockSide: "left" | "right";
+  onToggleCharacterInspectorWidth: () => void;
   onAddBubble: (type: SceneBubble["bubbleType"]) => void;
   onPose: () => void;
   poseLabel: string;
@@ -72,13 +77,13 @@ type StudioInspectorProps = {
   outfitAdjustDisabled: boolean;
 };
 
-export function StudioInspector({ studio, selection, selectedCharacter, selectedCharacterSource, selectedObject, selectedBubble, selectedNarrator, emotions, translatingBubbleId, onToggleBackgroundFit, backgroundCollapsed, onToggleBackgroundCollapsed, onRemoveBackground, onUpdate, onCopyBubble, onPasteBubble, onGenerateEnglish, onLayer, onRemove, onDuplicate, onPrint, isPrinting, onCloseCharacterInspector, onAddBubble, onPose, poseLabel, poseDisabled, onNudgeOutfit, outfitAdjustDisabled }: StudioInspectorProps) {
+export function StudioInspector({ studio, selection, selectedCharacter, selectedCharacterSource, selectedObject, selectedBubble, selectedNarrator, emotions, translatingBubbleId, onToggleBackgroundFit, backgroundCollapsed, onToggleBackgroundCollapsed, onRemoveBackground, onUpdate, onCopyBubble, onPasteBubble, onGenerateEnglish, onLayer, onRemove, onDuplicate, onPrint, isPrinting, onCloseCharacterInspector, characterInspectorExpanded, inspectorDockSide, onToggleCharacterInspectorWidth, onAddBubble, onPose, poseLabel, poseDisabled, onNudgeOutfit, outfitAdjustDisabled }: StudioInspectorProps) {
   const update = <T extends object>(kind: NonNullable<Selection>["kind"], id: string, patch: Partial<T>) => onUpdate(kind, id, patch as Record<string, unknown>);
   if (!selection && !studio.background) return null;
   if (studio.background && !selection && backgroundCollapsed) return null;
-  return <section className={`${styles.inspector} ${selectedCharacter && selectedCharacterSource ? styles.characterInspector : ""}`}>
+  return <section className={`${styles.inspector} ${selectedCharacter && selectedCharacterSource ? `${styles.characterInspector} ${characterInspectorExpanded ? styles.characterInspectorExpanded : ""}` : ""}`}>
     {studio.background && !selection && <>{backgroundCollapsed ? <div className={styles.backgroundCollapsed}><strong>Fundo</strong><button onClick={onToggleBackgroundCollapsed}>Mostrar controles</button></div> : <><div className={styles.backgroundPanelHeading}><h3>Fundo</h3><button aria-label="Recolher painel Fundo" title="Recolher painel Fundo" onClick={onToggleBackgroundCollapsed}>▴</button></div><button onClick={onToggleBackgroundFit}>{studio.background.fit === "cover" ? "Mostrar inteiro" : "Preencher tela"}</button><button className={styles.dangerButton} onClick={onRemoveBackground}>Remover fundo</button></>}</>}
-    {selectedCharacter && selectedCharacterSource && <CharacterInspector item={selectedCharacter} emotions={emotions} onUpdate={(patch) => update("character", selectedCharacter.id, patch)} onLayer={onLayer} onRemove={onRemove} onClose={onCloseCharacterInspector} onPrint={onPrint} isPrinting={isPrinting} onAddBubble={onAddBubble} onPose={onPose} poseLabel={poseLabel} poseDisabled={poseDisabled} onNudgeOutfit={onNudgeOutfit} outfitAdjustDisabled={outfitAdjustDisabled} />}
+    {selectedCharacter && selectedCharacterSource && <CharacterInspector item={selectedCharacter} emotions={emotions} expanded={characterInspectorExpanded} dockSide={inspectorDockSide} onToggleWidth={onToggleCharacterInspectorWidth} onUpdate={(patch) => update("character", selectedCharacter.id, patch)} onLayer={onLayer} onRemove={onRemove} onClose={onCloseCharacterInspector} onPrint={onPrint} isPrinting={isPrinting} onAddBubble={onAddBubble} onPose={onPose} poseLabel={poseLabel} poseDisabled={poseDisabled} onNudgeOutfit={onNudgeOutfit} outfitAdjustDisabled={outfitAdjustDisabled} />}
     {selectedObject && <ObjectInspector item={selectedObject} onUpdate={(patch) => update("object", selectedObject.id, patch)} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}
     {selectedBubble && <BubbleInspector item={selectedBubble} onUpdate={(patch) => update("bubble", selectedBubble.id, patch)} onCopy={onCopyBubble} onPaste={() => onPasteBubble((patch) => update("bubble", selectedBubble.id, patch))} onGenerateEnglish={onGenerateEnglish} isTranslating={translatingBubbleId === selectedBubble.id} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}
     {selectedNarrator && <NarratorInspector item={selectedNarrator} onUpdate={(patch) => update("narrator", selectedNarrator.id, patch)} onLayer={onLayer} onRemove={onRemove} onDuplicate={onDuplicate} />}

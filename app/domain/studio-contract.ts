@@ -89,6 +89,7 @@ export type StudioUiPreferences = {
   backgroundCollapsed: boolean;
   rosterCompact: boolean;
   inspectorDockSide: "left" | "right";
+  characterInspectorExpanded: boolean;
 };
 
 export type Studio = {
