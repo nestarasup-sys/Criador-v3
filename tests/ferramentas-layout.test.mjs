@@ -40,6 +40,6 @@ test("teste de controles de cor usa o compositor e os alvos do Criador", async (
   assert.match(page, /URL\.createObjectURL/);
   assert.match(page, /Voltar para catálogo/);
   const styles = await read("app/Ferramentas/teste-controles-cor/teste-controles-cor.module.css");
-  assert.match(styles, /overflow-y:auto/);
+  assert.match(styles, /overflow-y:scroll/);
   assert.match(styles, /overflow:auto/);
 });
