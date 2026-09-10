@@ -5873,7 +5873,18 @@ export default function Home() {
           {(colorEligible || versionedCatalogCategory) && (
             <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
               {!colorPanelOpen && <div className="color-tool-dock" aria-label="Ferramentas do item">
-                <button type="button" className="color-tool-button color-tool-v0" onClick={openV0Catalog}>Catálogo V0</button>
+                <button
+                  type="button"
+                  className="color-tool-button color-tool-v0"
+                  onClick={() => {
+                    if (outfitCatalogVersion === "v0") {
+                      setOutfitCatalogVersion("v1");
+                      setOutfitGroupViewId(null);
+                    } else {
+                      openV0Catalog();
+                    }
+                  }}
+                >{outfitCatalogVersion === "v0" ? "Catálogo V1" : "Catálogo V0"}</button>
                 {colorEligible && <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>}
               </div>}
               {colorPanelOpen && <div className="color-editor-topbar">
