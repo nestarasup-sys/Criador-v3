@@ -269,7 +269,7 @@ function corsHeaders(request) {
   const origin = request.headers.origin;
   return {
     "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : DEFAULT_UI_ORIGIN,
-    "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": `Content-Type,${SESSION_HEADER},X-Gacha-Meta`,
     "Cache-Control": "no-store",
   };
@@ -993,7 +993,7 @@ async function route(request, response) {
     return;
   }
   const modelCatalogMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})\/catalog$/i);
-  if (modelCatalogMatch && request.method === "PATCH") {
+  if (modelCatalogMatch && (request.method === "PATCH" || request.method === "POST")) {
     const gender = modelCatalogMatch[1].toLowerCase();
     const modelId = safeId(modelCatalogMatch[2]);
     const folder = join(MODELS_ROOT, gender, modelId);

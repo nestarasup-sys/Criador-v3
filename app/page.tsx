@@ -4838,18 +4838,26 @@ export default function Home() {
           (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
     : [];
   const versionedCatalogCategory = category === "roupas" || category === "cabelos" || category === "cabelosTras" || isBaseModelCatalog;
+  const transferItemsForVersion = (version: OutfitCatalogVersion) => {
+    const outfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === version);
+    const standardOutfitsForVersion = [
+      ...outfits.filter((item) => !item.outfitGroupId),
+      ...Array.from(new Set(outfits.flatMap((item) => item.outfitGroupId ? [item.outfitGroupId] : [])))
+        .map((groupId) => outfits.find((item) => item.outfitGroupId === groupId && item.outfitCover)
+          ?? outfits.find((item) => item.outfitGroupId === groupId))
+        .filter((item): item is CatalogItem => Boolean(item)),
+    ];
+    return category === "roupas"
+      ? standardOutfitsForVersion
+      : catalog.filter((item) => item.model === model && item.category === "cabelos" && (item.catalogVersion ?? "v1") === version);
+  };
+  const v1TransferItems = transferItemsForVersion("v1");
+  const v0TransferItems = transferItemsForVersion("v0");
   const transferSourceVersion: OutfitCatalogVersion = catalogTransferDirection === "toV0" ? "v1" : "v0";
-  const transferOutfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === transferSourceVersion);
-  const transferStandardOutfits = [
-    ...transferOutfits.filter((item) => !item.outfitGroupId),
-    ...Array.from(new Set(transferOutfits.flatMap((item) => item.outfitGroupId ? [item.outfitGroupId] : [])))
-      .map((groupId) => transferOutfits.find((item) => item.outfitGroupId === groupId && item.outfitCover)
-        ?? transferOutfits.find((item) => item.outfitGroupId === groupId))
-      .filter((item): item is CatalogItem => Boolean(item)),
-  ];
-  const transferFrontHairs = catalog.filter((item) => item.model === model && item.category === "cabelos" && (item.catalogVersion ?? "v1") === transferSourceVersion);
-  const transferBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === transferSourceVersion);
-  const transferItems = category === "roupas" ? transferStandardOutfits : transferFrontHairs;
+  const transferItems = catalogTransferDirection === "toV0" ? v1TransferItems : v0TransferItems;
+  const v1TransferBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === "v1");
+  const v0TransferBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === "v0");
+  const transferBasePacks = catalogTransferDirection === "toV0" ? v1TransferBasePacks : v0TransferBasePacks;
   const visibleItems = category === "roupas"
     ? outfitCatalogMode === "standard" ? standardOutfits : variantOutfits
     : catalog.filter((item) =>
@@ -5914,8 +5922,8 @@ export default function Home() {
             <div><strong>Catálogo {outfitCatalogVersion.toUpperCase()}</strong><small>{isBaseModelCatalog ? "Modelos antigos separados do catálogo atual" : category === "roupas" ? "Roupas movidas para a versão antiga" : "Cabelos movidos para a versão antiga"}</small></div>
             <div className="outfit-v0-actions">
               <button type="button" onClick={() => changeCatalogVersion("v1")}>V1 atual</button>
-              <button type="button" onClick={() => openCatalogTransfer("toV0")} disabled={transferItems.length === 0 && (!isBaseModelCatalog || transferBasePacks.length === 0)}>＋ Trazer do V1</button>
-              <button type="button" className="primary" onClick={() => openCatalogTransfer("toV1")} disabled={transferItems.length === 0 && (!isBaseModelCatalog || transferBasePacks.length === 0)}>↑ Enviar para V1</button>
+              <button type="button" onClick={() => openCatalogTransfer("toV0")} disabled={v1TransferItems.length === 0 && (!isBaseModelCatalog || v1TransferBasePacks.length === 0)}>＋ Trazer do V1</button>
+              <button type="button" className="primary" onClick={() => openCatalogTransfer("toV1")} disabled={v0TransferItems.length === 0 && (!isBaseModelCatalog || v0TransferBasePacks.length === 0)}>↑ Enviar para V1</button>
             </div>
           </div>}
 
