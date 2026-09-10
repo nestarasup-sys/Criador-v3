@@ -440,12 +440,13 @@ test("keeps autosave, independent panels and the non-destructive body eraser", a
 });
 
 test("shares characters and imported assets through the local PC service", async () => {
-  const [library, storage, client, server, launcher] = await Promise.all([
+  const [library, storage, client, server, launcher, page] = await Promise.all([
     readFile(new URL("../app/creator/components/CreatorLibraryPanel.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/lib/local-data-client.ts", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../INICIAR-NYMI-GACHA.bat", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(storage, /localDataFetch/);
