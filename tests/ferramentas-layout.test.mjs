@@ -36,4 +36,10 @@ test("teste de controles de cor usa o compositor e os alvos do Criador", async (
   assert.match(page, /Somente pele/);
   assert.match(page, /Somente sobrancelhas/);
   assert.match(page, /Nada é salvo no personagem/);
+  assert.match(page, /Testar imagem temporária/);
+  assert.match(page, /URL\.createObjectURL/);
+  assert.match(page, /Voltar para catálogo/);
+  const styles = await read("app/Ferramentas/teste-controles-cor/teste-controles-cor.module.css");
+  assert.match(styles, /overflow-y:auto/);
+  assert.match(styles, /overflow:auto/);
 });

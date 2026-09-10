@@ -58,6 +58,7 @@ function adjustmentMap(scope: ModelColorScope, value: ColorAdjustment): ModelCol
 
 export function ColorControlsTestClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const [models, setModels] = useState<ModelsResponse>({ feminino: [], masculino: [] });
   const [gender, setGender] = useState<"feminino" | "masculino">("feminino");
   const [modelId, setModelId] = useState("");
@@ -72,9 +73,16 @@ export function ColorControlsTestClient() {
   const [zoom, setZoom] = useState(100);
   const [status, setStatus] = useState("Carregando modelos…");
   const [loading, setLoading] = useState(false);
+  const [temporarySource, setTemporarySource] = useState<string | null>(null);
+  const [temporaryName, setTemporaryName] = useState("");
 
   const availableModels = models[gender] ?? [];
   const selectedModel = useMemo(() => availableModels.find((item) => item.id === modelId) ?? availableModels[0], [availableModels, modelId]);
+  const usingTemporaryImage = Boolean(temporarySource);
+
+  useEffect(() => () => {
+    if (temporarySource) URL.revokeObjectURL(temporarySource);
+  }, [temporarySource]);
 
   useEffect(() => {
     let active = true;
@@ -100,14 +108,14 @@ export function ColorControlsTestClient() {
   }, [selectedModel, expression]);
 
   useEffect(() => {
-    if (!selectedModel || !expression) return;
+    if (!temporarySource && (!selectedModel || !expression)) return;
     let active = true;
     setLoading(true);
     setImage(null);
     setMapImage(null);
-    setCalibration(getStoredModelColorCalibration(gender, selectedModel.id));
-    const source = sourceFor(selectedModel, expression);
-    const mapSource = modelColorMapSource(selectedModel.source, expression, selectedModel.colorMap);
+    const source = temporarySource ?? sourceFor(selectedModel!, expression);
+    const mapSource = temporarySource ? null : modelColorMapSource(selectedModel!.source, expression, selectedModel!.colorMap);
+    setCalibration(temporarySource ? null : getStoredModelColorCalibration(gender, selectedModel!.id));
     Promise.all([loadImage(source), mapSource ? loadImage(mapSource) : Promise.resolve(null)]).then(([nextImage, nextMap]) => {
       if (!active) return;
       setImage(nextImage);
@@ -115,7 +123,7 @@ export function ColorControlsTestClient() {
       setStatus(mapSource ? "Mapa semântico do modelo carregado; resultado usa o caminho preciso." : "Expressão carregada; resultado usa a calibração/heurística do Criador.");
     }).catch((error) => active && setStatus(error instanceof Error ? error.message : "Não foi possível carregar a expressão.")).finally(() => active && setLoading(false));
     return () => { active = false; };
-  }, [gender, selectedModel, expression]);
+  }, [gender, selectedModel, expression, temporarySource]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -131,7 +139,7 @@ export function ColorControlsTestClient() {
     const original = context.getImageData(0, 0, width, height);
     let result: HTMLCanvasElement | HTMLImageElement = image;
     if (colorAdjustmentIsActive(adjustment)) {
-      result = createModelColorAdjustedCanvasForScopes(image, width, height, adjustmentMap(scope, adjustment), mapImage, calibration, `${gender}:${selectedModel?.id}:${expression}`) as HTMLCanvasElement;
+      result = createModelColorAdjustedCanvasForScopes(image, width, height, adjustmentMap(scope, adjustment), mapImage, calibration, temporarySource ?? `${gender}:${selectedModel?.id}:${expression}`) as HTMLCanvasElement;
     }
     if (preview === "original") return;
     if (preview === "split") {
@@ -148,26 +156,41 @@ export function ColorControlsTestClient() {
     }
     context.clearRect(0, 0, width, height);
     context.drawImage(result, 0, 0);
-  }, [adjustment, background, calibration, expression, gender, image, mapImage, preview, scope, selectedModel]);
+  }, [adjustment, background, calibration, expression, gender, image, mapImage, preview, scope, selectedModel, temporarySource]);
 
   const update = (patch: Partial<ColorAdjustment>) => setAdjustment((current) => normalizeColorAdjustment({ ...current, ...patch, enabled: true }));
   const reset = () => setAdjustment(normalizeColorAdjustment(DEFAULT_COLOR_ADJUSTMENT));
+  const handleTemporaryUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const nextSource = URL.createObjectURL(file);
+    setTemporarySource(nextSource);
+    setTemporaryName(file.name);
+    setStatus(`Imagem temporária carregada: ${file.name}`);
+  };
+  const useCatalogImage = () => {
+    setTemporarySource(null);
+    setTemporaryName("");
+    setStatus("Usando novamente uma imagem do catálogo.");
+  };
 
   return <main className={styles.main}>
     <section className={styles.hero}><div><span>TESTE SEM EFEITO COLATERAL</span><h1>Controles de cor</h1><p>Esta ferramenta usa o mesmo compositor do Criador. Nada é salvo no personagem, no modelo ou no catálogo.</p></div><strong>{mapImage ? "MAPA PRECISO" : calibration ? "CALIBRAÇÃO" : "COMPATIBILIDADE"}</strong></section>
     <section className={styles.layout}>
       <aside className={styles.panel}>
         <h2>Imagem de teste</h2>
-        <label>Gênero<select value={gender} onChange={(event) => setGender(event.target.value as "feminino" | "masculino")}><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></label>
-        <label>Modelo<select value={selectedModel?.id ?? ""} onChange={(event) => setModelId(event.target.value)}>{availableModels.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
-        <label>Expressão<select value={expression} onChange={(event) => setExpression(event.target.value)}>{selectedModel?.expressionKeys.map((key) => <option key={key} value={key}>{key}</option>)}</select></label>
+        <div className={styles.uploadBox}><input ref={uploadInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={handleTemporaryUpload} /><button className={styles.uploadButton} onClick={() => uploadInputRef.current?.click()}>＋ Testar imagem temporária</button>{usingTemporaryImage ? <><small>{temporaryName}</small><button className={styles.backButton} onClick={useCatalogImage}>Voltar para catálogo</button></> : <small>PNG/JPG/WebP. O arquivo fica somente nesta sessão.</small>}</div>
+        <label className={usingTemporaryImage ? styles.disabled : ""}>Gênero<select disabled={usingTemporaryImage} value={gender} onChange={(event) => setGender(event.target.value as "feminino" | "masculino")}><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></label>
+        <label className={usingTemporaryImage ? styles.disabled : ""}>Modelo<select disabled={usingTemporaryImage} value={selectedModel?.id ?? ""} onChange={(event) => setModelId(event.target.value)}>{availableModels.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+        <label className={usingTemporaryImage ? styles.disabled : ""}>Expressão<select disabled={usingTemporaryImage} value={expression} onChange={(event) => setExpression(event.target.value)}>{selectedModel?.expressionKeys.map((key) => <option key={key} value={key}>{key}</option>)}</select></label>
         <div className={styles.group}><span>Área afetada</span>{scopes.map(([value, label]) => <button key={value} className={scope === value ? styles.active : ""} onClick={() => setScope(value)}>{label}</button>)}</div>
         <div className={styles.group}><span>Prévia</span>{([ ["result", "Resultado"], ["original", "Original"], ["split", "Antes / depois"] ] as const).map(([value, label]) => <button key={value} className={preview === value ? styles.active : ""} onClick={() => setPreview(value)}>{label}</button>)}</div>
         <div className={styles.group}><span>Fundo</span>{([ ["checker", "Quadriculado"], ["white", "Branco"], ["black", "Preto"] ] as const).map(([value, label]) => <button key={value} className={background === value ? styles.active : ""} onClick={() => setBackground(value)}>{label}</button>)}</div>
-        <p className={styles.status}>{loading ? "Carregando expressão…" : status}</p>
+        <p className={styles.status}>{loading ? "Carregando imagem…" : status}</p>
       </aside>
       <section className={styles.previewPanel}>
-        <div className={`${styles.stage} ${styles[`bg${background[0].toUpperCase()}${background.slice(1)}`]}`}><canvas ref={canvasRef} style={{ width: `${zoom}%` }} aria-label="Prévia da recoloração" /></div>
+        <div className={`${styles.stage} ${styles[`bg${background[0].toUpperCase()}${background.slice(1)}`]}`}><canvas ref={canvasRef} style={{ width: `${zoom}%` }} aria-label={`Prévia da recoloração${usingTemporaryImage ? ` · ${temporaryName}` : ""}`} /></div>
         <label className={styles.zoom}>Zoom <input type="range" min="35" max="250" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><output>{zoom}%</output></label>
       </section>
       <aside className={styles.panel}>
