@@ -258,5 +258,7 @@ test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
     const result = measureHeadSilhouette(data, info.width, info.height, 0.46, true);
     assert.ok(result, `${file} deveria ter cabeça detectável`);
     assert.ok(result.bottom <= maximumBottom, `${file} incluiu parte do tronco: ${result.bottom}`);
+    assert.ok(result.neckContour?.length >= 5, `${file} deveria recuperar o pescoço pela pele mesmo com gola alta`);
+    assert.ok(result.neckWidth > 0, `${file} deveria possuir largura cervical utilizável`);
   }
 });

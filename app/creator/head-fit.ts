@@ -49,6 +49,89 @@ export type HairOpeningMeasurement = HeadMeasurement & {
 // frestas nas bordas por causa do antialiasing dos dois assets.
 const NECK_FIT_WIDTH_MARGIN = 1.02;
 
+function skinColorDistance(r: number, g: number, b: number, reference: { r: number; g: number; b: number }) {
+  // Diferenças de crominância recebem mais peso que iluminação. Isso mantém
+  // sombras da mesma pele no componente e rejeita gola/cabelo de brilho parecido.
+  const redGreen = (r - g) - (reference.r - reference.g);
+  const blueGreen = (b - g) - (reference.b - reference.g);
+  const luminance = (r + g + b - reference.r - reference.g - reference.b) / 3;
+  return Math.hypot(redGreen, blueGreen) + Math.abs(luminance) * 0.28;
+}
+
+function detectSkinNeckContour(
+  pixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  head: { left: number; right: number; top: number; bottom: number; centerX: number },
+  visibleLimit: number,
+) {
+  const headWidth = head.right - head.left + 1;
+  const headHeight = head.bottom - head.top + 1;
+  const samples: Array<{ r: number; g: number; b: number }> = [];
+  for (const yRatio of [0.2, 0.28, 0.36]) {
+    const y = clamp(Math.round(head.top + headHeight * yRatio), 0, height - 1);
+    for (const xRatio of [-0.08, -0.04, 0, 0.04, 0.08]) {
+      const x = clamp(Math.round(head.centerX + headWidth * xRatio), 0, width - 1);
+      const index = (y * width + x) * 4;
+      if (pixels[index + 3] < 160) continue;
+      samples.push({ r: pixels[index], g: pixels[index + 1], b: pixels[index + 2] });
+    }
+  }
+  if (samples.length < 6) return null;
+  const reference = {
+    r: median(samples.map((sample) => sample.r)),
+    g: median(samples.map((sample) => sample.g)),
+    b: median(samples.map((sample) => sample.b)),
+  };
+  const startY = Math.max(head.top, head.bottom - Math.round(headHeight * 0.04));
+  const endY = Math.min(visibleLimit, head.bottom + Math.max(12, Math.round(headHeight * 0.42)));
+  const searchLeft = clamp(Math.floor(head.centerX - headWidth * 0.34), 0, width - 1);
+  const searchRight = clamp(Math.ceil(head.centerX + headWidth * 0.34), 0, width - 1);
+  const minimumWidth = Math.max(4, headWidth * 0.045);
+  const maximumWidth = headWidth * 0.58;
+  const rows: HeadContourRow[] = [];
+  let missing = 0;
+  for (let y = startY; y <= endY; y += 1) {
+    const runs: Array<{ left: number; right: number }> = [];
+    let runStart = -1;
+    for (let x = searchLeft; x <= searchRight; x += 1) {
+      const index = (y * width + x) * 4;
+      const matches = pixels[index + 3] > 80
+        && skinColorDistance(pixels[index], pixels[index + 1], pixels[index + 2], reference) <= 24;
+      if (matches && runStart < 0) runStart = x;
+      if ((!matches || x === searchRight) && runStart >= 0) {
+        runs.push({ left: runStart, right: matches && x === searchRight ? x : x - 1 });
+        runStart = -1;
+      }
+    }
+    const candidate = runs
+      .map((run) => ({ ...run, width: run.right - run.left + 1, center: (run.left + run.right) / 2 }))
+      .filter((run) => run.width >= minimumWidth && run.width <= maximumWidth)
+      .sort((leftRun, rightRun) => (
+        Math.abs(leftRun.center - head.centerX) - Math.abs(rightRun.center - head.centerX)
+        || rightRun.width - leftRun.width
+      ))[0];
+    if (!candidate) {
+      missing += 1;
+      if (rows.length >= 5 && missing >= 3) break;
+      continue;
+    }
+    missing = 0;
+    rows.push({ y, left: candidate.left, right: candidate.right });
+  }
+  if (rows.length < 5) return null;
+  // O final pode conter até duas linhas anteriores a uma interrupção; manter
+  // apenas a sequência contínua mais longa evita pular uma gola e reencontrar pele.
+  let best: HeadContourRow[] = [];
+  let current: HeadContourRow[] = [];
+  for (const row of rows) {
+    if (current.length && row.y > current[current.length - 1].y + 1) current = [];
+    current.push(row);
+    if (current.length > best.length) best = current.slice();
+  }
+  return best.length >= 5 ? best : null;
+}
+
 /**
  * Measures the upper silhouette of a transparent character image.
  * Clothing imports contain a full body, so the lower part is deliberately
@@ -255,6 +338,35 @@ export function measureHeadSilhouette(
     if (accepted.length >= 5) {
       neckContour = accepted.map((row) => ({ y: row.y, left: row.left, right: row.right }));
       neckBottomY = accepted[accepted.length - 1].y;
+    }
+  }
+  if (!neckContour) {
+    const skinNeck = detectSkinNeckContour(pixels, width, height, { left, right, top, bottom, centerX: (left + right) / 2 }, visibleLimit);
+    if (skinNeck) {
+      neckContour = skinNeck;
+      neckBottomY = skinNeck[skinNeck.length - 1].y;
+      const stableSkinRows = skinNeck.slice(Math.max(0, skinNeck.length - Math.min(9, skinNeck.length)));
+      const skinLeft = median(stableSkinRows.map((row) => row.left));
+      const skinRight = median(stableSkinRows.map((row) => row.right));
+      // Estes campos eram constantes; `let` permite preencher o fallback por
+      // pele somente quando a silhueta alpha não encontrou uma faixa cervical.
+      return {
+        left,
+        right,
+        top,
+        bottom,
+        width: Math.max(1, right - left + 1),
+        height: Math.max(1, bottom - top + 1),
+        centerX: (left + right) / 2,
+        neckLeft: skinLeft,
+        neckRight: skinRight,
+        neckWidth: Math.max(1, skinRight - skinLeft + 1),
+        neckCenterX: (skinLeft + skinRight) / 2,
+        neckY: skinNeck[0].y,
+        neckBottomY,
+        neckContour,
+        contour,
+      };
     }
   }
 
