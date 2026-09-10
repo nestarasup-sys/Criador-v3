@@ -331,7 +331,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fitByBasePack\?\.\[basePackId\] \?\? linkedBackHair\?\.fit\)/);
-  assert.doesNotMatch(page, /category === "cabelosTras" \? "cabelos" : category/);
+  assert.match(page, /category === "cabelosTras" \? "cabelos" : category/);
   assert.match(page, /prepareHairPair/);
   assert.match(page, /detectHairSheetGrid/);
   assert.match(page, /const \[back, front\] = await Promise\.all/);
@@ -882,6 +882,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /fitReferenceHeight/);
   assert.match(page, /Refazer recorte/);
   assert.match(page, /moveSelectedOutfitsToV0/);
+  assert.match(page, /category === "cabelos"/);
+  assert.match(page, /Par frontal \+ traseiro/);
+  assert.match(page, /openV0Catalog/);
   assert.match(page, /Catálogo V0/);
   assert.match(page, /Mover para V0/);
   assert.match(page, /a roupa e sua variante foram mantidas/);

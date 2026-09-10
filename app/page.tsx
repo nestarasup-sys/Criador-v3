@@ -4506,10 +4506,9 @@ export default function Home() {
     setOutfitCatalogMode(nextMode);
   }
 
-  function openV0OutfitCatalog() {
+  function openV0Catalog() {
     resetAssetDeleteMode();
     setColorPanelOpen(false);
-    setCategory("roupas");
     setOutfitCatalogVersion("v0");
     setOutfitCatalogMode("standard");
     setOutfitGroupViewId(null);
@@ -4524,13 +4523,23 @@ export default function Home() {
   }
 
   async function moveSelectedOutfitsToV0() {
+    const transferCategory = category === "cabelosTras" ? "cabelos" : category;
     const sourceItems = catalog.filter((item) => {
-      if (item.category !== "roupas" || (item.catalogVersion ?? "v1") !== "v1") return false;
-      const key = item.outfitGroupId ?? item.id;
-      return v0TransferSelection.includes(key);
+      if (transferCategory === "roupas") {
+        if (item.category !== "roupas" || (item.catalogVersion ?? "v1") !== "v1") return false;
+        return v0TransferSelection.includes(item.outfitGroupId ?? item.id);
+      }
+      if (item.category === "cabelos") {
+        return (item.catalogVersion ?? "v1") === "v1" && v0TransferSelection.includes(item.id);
+      }
+      return item.category === "cabelosTras"
+        && Boolean(item.linkedHairId)
+        && v0TransferSelection.includes(item.linkedHairId ?? "");
     });
     if (!sourceItems.length) return;
-    const groupCount = new Set(sourceItems.map((item) => item.outfitGroupId ?? item.id)).size;
+    const groupCount = new Set(sourceItems.map((item) => transferCategory === "roupas"
+      ? item.outfitGroupId ?? item.id
+      : item.category === "cabelosTras" ? item.linkedHairId ?? item.id : item.id)).size;
     setIsProcessing(true);
     setNotice("Movendo roupas para o Catálogo V0…");
     try {
@@ -4547,9 +4556,10 @@ export default function Home() {
       setCatalog((current) => current.map((item) => movedById.get(item.id) ?? item));
       setV0TransferSelection([]);
       setV0TransferOpen(false);
+      const itemLabel = transferCategory === "roupas" ? "roupa(s)" : "par(es) de cabelo";
       setNotice(pcPending
-        ? `${groupCount} roupa(s) movida(s) no navegador; sincronização com o PC pendente`
-        : `${groupCount} roupa(s) movida(s) para o Catálogo V0`);
+        ? `${groupCount} ${itemLabel} movido(s) no navegador; sincronização com o PC pendente`
+        : `${groupCount} ${itemLabel} movido(s) para o Catálogo V0`);
     } catch {
       setNotice("Não foi possível concluir a movimentação; nenhuma referência foi alterada");
     } finally {
@@ -4727,6 +4737,7 @@ export default function Home() {
   const selectedOutfit = catalog.find((item) => item.id === selections.roupas && item.category === "roupas");
   const modelOutfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === outfitCatalogVersion);
   const v1Outfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === "v1");
+  const v1FrontHairs = catalog.filter((item) => item.model === model && item.category === "cabelos" && (item.catalogVersion ?? "v1") === "v1");
   const activeOutfitGroupId = selectedOutfit?.outfitGroupId ?? outfitGroupViewId;
   const outfitVariantCounts = new Map<string, number>();
   modelOutfits.forEach((item) => {
@@ -4764,14 +4775,16 @@ export default function Home() {
         .sort((left, right) =>
           (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
     : [];
+  const versionedCatalogCategory = category === "roupas" || category === "cabelos" || category === "cabelosTras";
+  const v1TransferItems = category === "roupas" ? v1StandardOutfits : v1FrontHairs;
   const visibleItems = category === "roupas"
     ? outfitCatalogMode === "standard" ? standardOutfits : variantOutfits
     : catalog.filter((item) =>
         item.model === model
         && item.category === category
-        && (item.category === "cabelos"
-          || item.category === "cabelosTras"
-          || normalizeBasePackId(item.basePackId) === basePackId),
+        && (category === "cabelos" || category === "cabelosTras"
+          ? (item.catalogVersion ?? "v1") === outfitCatalogVersion
+          : normalizeBasePackId(item.basePackId) === basePackId),
       );
   const selectedAssetCount = category === "rostos" && faceMode === "base"
     ? selectedBaseModelIds.length
@@ -5816,15 +5829,16 @@ export default function Home() {
                 <button role="tab" aria-selected={outfitCatalogMode === "standard"} className={outfitCatalogMode === "standard" ? "active" : ""} onClick={() => changeOutfitCatalogMode("standard")}>Padrão</button>
                 <button role="tab" aria-selected={outfitCatalogMode === "variants"} className={outfitCatalogMode === "variants" ? "active" : ""} onClick={() => changeOutfitCatalogMode("variants")}>Variantes</button>
               </div>
-              {outfitCatalogVersion === "v0" && <div className="outfit-v0-toolbar">
-                <div><strong>Catálogo V0</strong><small>Roupas movidas para a versão antiga</small></div>
-                <div className="outfit-v0-actions">
-                  <button type="button" onClick={() => { setOutfitCatalogVersion("v1"); setOutfitGroupViewId(null); }}>V1 atual</button>
-                  <button type="button" className="primary" onClick={() => { setV0TransferSelection([]); setV0TransferOpen(true); }} disabled={v1StandardOutfits.length === 0}>＋ Trazer do V1</button>
-                </div>
-              </div>}
             </>
           )}
+
+          {versionedCatalogCategory && outfitCatalogVersion === "v0" && <div className="outfit-v0-toolbar">
+            <div><strong>Catálogo V0</strong><small>{category === "roupas" ? "Roupas movidas para a versão antiga" : "Cabelos movidos para a versão antiga"}</small></div>
+            <div className="outfit-v0-actions">
+              <button type="button" onClick={() => { setOutfitCatalogVersion("v1"); setOutfitGroupViewId(null); }}>V1 atual</button>
+              <button type="button" className="primary" onClick={() => { setV0TransferSelection([]); setV0TransferOpen(true); }} disabled={v1TransferItems.length === 0}>＋ Trazer do V1</button>
+            </div>
+          </div>}
 
           {category === "cabelos" && (
             <div className="back-hair-help">
@@ -5856,10 +5870,10 @@ export default function Home() {
             </div>
           )}
 
-          {(colorEligible || category === "roupas") && (
+          {(colorEligible || versionedCatalogCategory) && (
             <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
               {!colorPanelOpen && <div className="color-tool-dock" aria-label="Ferramentas do item">
-                <button type="button" className="color-tool-button color-tool-v0" onClick={openV0OutfitCatalog}>Catálogo V0</button>
+                <button type="button" className="color-tool-button color-tool-v0" onClick={openV0Catalog}>Catálogo V0</button>
                 {colorEligible && <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>}
               </div>}
               {colorPanelOpen && <div className="color-editor-topbar">
@@ -6142,16 +6156,18 @@ export default function Home() {
         <div className="outfit-v0-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isProcessing) setV0TransferOpen(false); }}>
           <section className="outfit-v0-modal" role="dialog" aria-modal="true" aria-labelledby="outfit-v0-title">
             <header>
-              <div><span>CATÁLOGO V1 · ROUPAS</span><h2 id="outfit-v0-title">Mover roupas para o V0</h2><p>Roupas com variantes serão movidas junto com todas as suas poses. Os IDs e os ajustes dos personagens serão preservados.</p></div>
+              <div><span>{category === "roupas" ? "CATÁLOGO V1 · ROUPAS" : "CATÁLOGO V1 · CABELOS"}</span><h2 id="outfit-v0-title">Mover {category === "roupas" ? "roupas" : "cabelos"} para o V0</h2><p>{category === "roupas" ? "Roupas com variantes serão movidas junto com todas as suas poses." : "Cada cabelo frontal será movido junto com seu par traseiro vinculado."} Os IDs e os ajustes dos personagens serão preservados.</p></div>
               <button type="button" onClick={() => setV0TransferOpen(false)} disabled={isProcessing} aria-label="Fechar">×</button>
             </header>
             <div className="outfit-v0-picker">
-              {v1StandardOutfits.map((item) => {
+              {v1TransferItems.map((item) => {
                 const key = item.outfitGroupId ?? item.id;
                 const selected = v0TransferSelection.includes(key);
                 return <button type="button" key={key} className={selected ? "selected" : ""} onClick={() => toggleV0TransferSelection(item)} aria-pressed={selected}>
                   {item.url && <img src={item.url} alt="" />}
-                  <span><strong>{item.outfitGroupName ?? item.name}</strong><small>{item.outfitGroupId ? `${v1OutfitVariantCounts.get(item.outfitGroupId) ?? 1} versões` : "Roupa individual"}</small></span>
+                  <span><strong>{item.outfitGroupName ?? item.name}</strong><small>{category === "roupas"
+                    ? item.outfitGroupId ? `${v1OutfitVariantCounts.get(item.outfitGroupId) ?? 1} versões` : "Roupa individual"
+                    : catalog.some((entry) => entry.category === "cabelosTras" && entry.linkedHairId === item.id) ? "Par frontal + traseiro" : "Cabelo frontal"}</small></span>
                   <i aria-hidden="true">{selected ? "✓" : "＋"}</i>
                 </button>;
               })}
