@@ -500,6 +500,7 @@ async function discoverModels() {
         ...(expressionAliases ? { expressionAliases } : {}),
         source: `/models/modelos/${gender}/${entry.name}`,
         version,
+        catalogVersion: config?.catalogVersion === "v0" ? "v0" : "v1",
         ...((config?.type === "head-only" || inferredLayout) ? {
           type: "head-only",
           anchor: config?.anchor === "neck-base" || inferredLayout?.anchor === "neck-base"
@@ -960,6 +961,24 @@ async function route(request, response) {
     await mkdir(PRINTS_ROOT, { recursive: true });
     await openWindowsFolder(PRINTS_ROOT);
     sendJson(response, request, 200, { ok: true, folder: PRINTS_ROOT });
+    return;
+  }
+  const modelCatalogMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})\/catalog$/i);
+  if (modelCatalogMatch && request.method === "PATCH") {
+    const gender = modelCatalogMatch[1].toLowerCase();
+    const modelId = safeId(modelCatalogMatch[2]);
+    const folder = join(MODELS_ROOT, gender, modelId);
+    if (!inside(join(MODELS_ROOT, gender), folder)) throw Object.assign(new Error("Modelo inválido."), { status: 400 });
+    try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
+    const body = await requestJson(request);
+    if (body?.catalogVersion !== "v0" && body?.catalogVersion !== "v1") throw Object.assign(new Error("Catálogo do modelo inválido."), { status: 400 });
+    const modelJsonPath = join(folder, "model.json");
+    const legacyModelJsonPath = join(folder, "modelo.json");
+    const modelConfig = await readOptionalJson(modelJsonPath);
+    const legacyModelConfig = modelConfig ? null : await readOptionalJson(legacyModelJsonPath);
+    const targetPath = modelConfig ? modelJsonPath : legacyModelConfig ? legacyModelJsonPath : modelJsonPath;
+    await writeJsonAtomic(targetPath, { ...(modelConfig ?? legacyModelConfig ?? {}), catalogVersion: body.catalogVersion });
+    sendJson(response, request, 200, { ok: true, gender, id: modelId, catalogVersion: body.catalogVersion });
     return;
   }
 

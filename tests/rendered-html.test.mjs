@@ -660,7 +660,8 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /restoreColorAdjustment/);
   assert.match(page, />Restaurar<|>Restaurar<\/button>/);
   assert.match(page, />CORES<|>CORES<\/button>/);
-  assert.match(page, />Catálogo V0<|>Catálogo V0<\/button>/);
+  assert.match(page, /outfitCatalogVersion\.toUpperCase\(\)/);
+  assert.match(page, /isBaseModelCatalog \? "modelos"/);
   assert.match(page, /detailPreservation/);
   assert.match(page, /Contraste/);
   assert.match(page, /Textura/);

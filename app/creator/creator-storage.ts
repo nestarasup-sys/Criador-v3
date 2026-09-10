@@ -148,6 +148,7 @@ type PcBasePackDefinition = {
   expressionAliases?: Record<string, string>;
   source: string;
   version?: string;
+  catalogVersion?: "v0" | "v1";
 };
 type PcBasePackCollection = Record<Model, PcBasePackDefinition[]>;
 
@@ -257,6 +258,15 @@ export async function deleteExpressionPackFromPc(id: string) {
 
 export async function deleteBaseModelFromPc(gender: Model, id: string) {
   await pcRequest(`/models/modelos/${encodeURIComponent(gender)}/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function updateBaseModelCatalogVersion(gender: Model, id: string, catalogVersion: "v0" | "v1") {
+  const response = await pcRequest(`/models/modelos/${encodeURIComponent(gender)}/${encodeURIComponent(id)}/catalog`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ catalogVersion }),
+  });
+  return response.json() as Promise<{ ok: true; gender: Model; id: string; catalogVersion: "v0" | "v1" }>;
 }
 
 export async function saveModelColorMapToPc(gender: Model, modelId: string, expressionKey: string, blob: Blob) {

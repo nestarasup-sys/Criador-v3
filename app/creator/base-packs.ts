@@ -20,6 +20,8 @@ export type BasePackDefinition = {
   source: string;
   /** Changes whenever a file in the discovered folder changes. */
   version?: string;
+  /** Logical catalog used by the creator; legacy models remain in V1 by default. */
+  catalogVersion?: "v0" | "v1";
   type?: "full-body" | "head-only";
   anchor?: "neck-base";
   anchorX?: number;
