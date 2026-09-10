@@ -188,6 +188,13 @@ test("cria correção local quando a bochecha está em outra altura", () => {
   assert.ok(warp.improvement > 0.3, `melhoria insuficiente: ${warp.improvement}`);
   assert.ok(warp.maxDisplacement > 0, "o contorno precisa receber correção lateral");
   assert.ok(warp.knots.every((knot, index) => index === 0 || knot.sourceY >= warp.knots[index - 1].sourceY), "o mapeamento vertical deve permanecer monotônico");
+  assert.equal(warp.knots[0].sourceY, source.top, "o warp não pode buscar pixels abaixo do topo original");
+  assert.equal(warp.knots.at(-1).sourceY, source.neckY, "o warp deve terminar na base estrutural original");
+  assert.ok(warp.knots.every((knot) => {
+    const sourceWidth = knot.sourceRight - knot.sourceLeft;
+    const targetWidth = knot.targetRight - knot.targetLeft;
+    return targetWidth >= sourceWidth * 0.74 && targetWidth <= sourceWidth * 1.31;
+  }), "nenhuma linha pode receber escala local extrema");
 });
 
 test("não cria warp desnecessário para contornos já coincidentes", () => {

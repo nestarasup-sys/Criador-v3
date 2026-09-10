@@ -164,8 +164,17 @@ export function buildHeadContourWarp(
       ? clamp((SAMPLE_COUNT - 1 - index) / (SAMPLE_COUNT * 0.18), 0, 1)
       : 1;
     const strength = 0.9 * fade;
-    const finalLeft = sourceSample.left + leftShift * strength;
-    const finalRight = sourceSample.right + rightShift * strength;
+    let safeTargetLeft = sourceSample.left + leftShift;
+    let safeTargetRight = sourceSample.right + rightShift;
+    const requestedWidth = safeTargetRight - safeTargetLeft;
+    const safeWidth = clamp(requestedWidth, sourceSample.width * 0.75, sourceSample.width * 1.3);
+    if (Math.abs(safeWidth - requestedWidth) > 0.001) {
+      const requestedCenter = (safeTargetLeft + safeTargetRight) / 2;
+      safeTargetLeft = requestedCenter - safeWidth / 2;
+      safeTargetRight = requestedCenter + safeWidth / 2;
+    }
+    const finalLeft = sourceSample.left + (safeTargetLeft - sourceSample.left) * strength;
+    const finalRight = sourceSample.right + (safeTargetRight - sourceSample.right) * strength;
     const norm = Math.max(1, sourceSample.width);
     baselineError += (Math.abs(rawLeftShift) + Math.abs(rawRightShift)) / norm;
     candidateError += (Math.abs(targetLeft - finalLeft) + Math.abs(targetRight - finalRight)) / norm;
@@ -175,8 +184,8 @@ export function buildHeadContourWarp(
       sourceY: source.top + sourceSpan * (sourcePosition / (SAMPLE_COUNT - 1)),
       sourceLeft: sourceSample.left,
       sourceRight: sourceSample.right,
-      targetLeft: sourceSample.left + leftShift,
-      targetRight: sourceSample.right + rightShift,
+      targetLeft: safeTargetLeft,
+      targetRight: safeTargetRight,
       strength,
     });
   }
@@ -184,6 +193,11 @@ export function buildHeadContourWarp(
   const smoothedSourceY = movingMedian(knots.map((knot) => knot.sourceY), 1);
   const smoothedTargetLeft = movingMedian(knots.map((knot) => knot.targetLeft), 1);
   const smoothedTargetRight = movingMedian(knots.map((knot) => knot.targetRight), 1);
+  smoothedSourceY[0] = source.top;
+  smoothedSourceY[smoothedSourceY.length - 1] = structuralBottom(source);
+  for (let index = 1; index < smoothedSourceY.length; index += 1) {
+    smoothedSourceY[index] = Math.max(smoothedSourceY[index], smoothedSourceY[index - 1]);
+  }
   knots.forEach((knot, index) => {
     knot.sourceY = smoothedSourceY[index];
     knot.targetLeft = smoothedTargetLeft[index];
