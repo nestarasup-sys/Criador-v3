@@ -4637,8 +4637,6 @@ export default function Home() {
       : colorAdjustments[category]);
   const colorEligible = modelColorEditorActive
     || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas"));
-  const colorIsChanged = colorAdjustmentIsActive(activeColor);
-  const colorStatusLabel = !activeColor.enabled ? "Desligada" : colorIsChanged ? "Aplicada" : "Original";
   const selectedColorItem = catalog.find((entry) => entry.id === selections[category]);
   const colorEditingTitle = modelColorEditorActive
     ? activeBasePack.name
@@ -4806,17 +4804,6 @@ export default function Home() {
     });
   }
 
-  function resetActiveColor() {
-    updateColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT });
-    setNotice(modelColorEditorActive
-      ? `Cor restaurada em ${modelColorScope === "pupils" ? "pupilas" : modelColorScope === "pupilsBrows" ? "pupilas e sobrancelhas" : modelColorScope === "skin" ? "pele" : "sobrancelhas"}`
-      : category === "roupas" && activeOutfitVariantCount > 1
-      ? `Cor original restaurada nas ${activeOutfitVariantCount} versões da roupa`
-      : syncHairColor && (category === "cabelos" || category === "cabelosTras")
-      ? "Cor original restaurada no par de cabelo"
-      : "Cor original restaurada");
-  }
-
   function applyTargetColor(tint: string, patch: Partial<ColorAdjustment> = {}) {
     updateColorAdjustment({
       enabled: true,
@@ -4878,12 +4865,6 @@ export default function Home() {
     } else {
       setNotice("Ainda não há padrão salvo para este modelo e área");
     }
-  }
-
-  function toggleActiveColor() {
-    const nextEnabled = !activeColor.enabled;
-    updateColorAdjustment({ enabled: nextEnabled });
-    setNotice(nextEnabled ? "Recoloração ativada" : "Recoloração desligada; ajuste preservado");
   }
 
   function drawColorEditorCanvas() {
@@ -5686,14 +5667,14 @@ export default function Home() {
 
           {colorEligible && (
             <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
+              {!colorPanelOpen && <div className="color-tool-dock" aria-label="Ferramentas do item">
+                <button type="button" className="color-tool-button color-tool-trash" disabled>Lixão</button>
+                <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>
+              </div>}
               {colorPanelOpen && <div className="color-editor-topbar">
                 <button type="button" className="color-editor-back" onClick={() => setColorPanelOpen(false)}>← Voltar ao catálogo</button>
                 <div className="color-editor-context"><span>EDITANDO AGORA</span><strong>{colorEditingTitle}</strong><small>{modelColorEditorActive ? `${model} · ${activeBasePack.expressionKeys.length} expressões` : `${category === "cabelos" ? "cabelo frontal" : category === "cabelosTras" ? "cabelo traseiro" : category}`}{category === "roupas" && activeOutfitVariantCount > 1 ? ` · ${activeOutfitVariantCount} versões vinculadas` : ""}</small></div>
               </div>}
-              <div className="color-heading">
-                <div className="color-title"><span className="color-current-swatch" style={{ background: activeColor.tint }} aria-hidden="true" /><strong>{modelColorEditorActive ? "Cores do modelo" : "Cor do item"}</strong><span className={`color-status color-status-${colorStatusLabel.toLowerCase()}`}>{colorStatusLabel}</span></div>
-                <div className="color-heading-actions"><button type="button" className="color-power-button" onClick={toggleActiveColor}>{activeColor.enabled ? "Desligar" : "Ativar"}</button><button type="button" onClick={resetActiveColor}>Restaurar</button></div>
-              </div>
               {colorPanelOpen && <div className={`color-panel-body ${!activeColor.enabled ? "color-disabled" : ""}`}>
               <div className="color-section color-preview-section">
                 <button type="button" className="color-section-heading" aria-expanded={colorSectionsOpen.preview} onClick={() => setColorSectionsOpen((current) => ({ ...current, preview: !current.preview }))}>
@@ -5789,10 +5770,6 @@ export default function Home() {
                 {modelColorEditorActive && <><button className="protect-color-button" onClick={saveModelColorDefault}>Salvar padrão do modelo</button><button className="protect-color-button" onClick={applyModelColorDefault}>Usar padrão</button></>}
               </div>
               </div></div>}
-              <button className="color-collapse-button" type="button" aria-expanded={colorPanelOpen} onClick={() => setColorPanelOpen((open) => !open)}>
-                <span aria-hidden="true">{colorPanelOpen ? "⌃" : "⌄"}</span>
-                {colorPanelOpen ? "Ocultar controles de cor" : "Mostrar controles de cor"}
-              </button>
             </section>
           )}
 

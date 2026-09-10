@@ -644,8 +644,10 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /Cor desejada/);
   assert.match(page, /color-neutral-presets/);
   assert.match(page, /colorPanelOpen/);
-  assert.match(page, /Ocultar controles de cor/);
-  assert.match(page, /Mostrar controles de cor/);
+  assert.match(page, /className="color-tool-button color-tool-colors"/);
+  assert.match(page, /className="color-tool-button color-tool-trash"/);
+  assert.match(page, />CORES<|>CORES<\/button>/);
+  assert.match(page, />Lixão<|>Lixão<\/button>/);
   assert.match(page, /detailPreservation/);
   assert.match(page, /Contraste/);
   assert.match(page, /Textura/);
@@ -663,7 +665,9 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(css, /\.color-editor-modal/);
   assert.match(css, /\.color-panel/);
   assert.match(css, /\.color-panel-body/);
-  assert.match(css, /\.color-collapse-button/);
+  assert.match(css, /\.color-tool-dock/);
+  assert.match(css, /\.color-tool-colors/);
+  assert.match(css, /\.color-tool-trash/);
 });
 
 test("mantém cores do modelo no cache do Studio e oferece controle reversível", async () => {
@@ -673,7 +677,7 @@ test("mantém cores do modelo no cache do Studio e oferece controle reversível"
     readFile(new URL("../app/domain/color-rendering.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /toggleActiveColor/);
+  assert.match(page, /updateColorAdjustment/);
   assert.match(page, /enabled: true/);
   assert.match(studio, /modelColorAdjustments/);
   assert.match(studio, /modelColorScope/);
