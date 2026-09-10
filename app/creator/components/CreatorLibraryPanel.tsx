@@ -9,9 +9,7 @@ type CreatorLibraryPanelProps = {
   model: Model;
   migrationAvailable: boolean;
   migrating: boolean;
-  generatingPhoto: boolean;
   getPackName: (character: Character) => string;
-  onGeneratePhoto: () => void;
   onNameChange: (value: string) => void;
   onChangeModel: (model: Model) => void;
   onMigrate: () => void;
@@ -20,13 +18,11 @@ type CreatorLibraryPanelProps = {
   onNewCharacter: () => void;
 };
 
-export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, generatingPhoto, getPackName, onGeneratePhoto, onNameChange, onChangeModel, onMigrate, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
+export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, getPackName, onNameChange, onChangeModel, onMigrate, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
   return <aside className="sidebar left-panel">
     <div className="panel-heading">
       <div><span>MEUS PERSONAGENS</span><small>{characters.length} salvos</small></div>
-      <button className="button secondary panel-photo-button" onClick={onGeneratePhoto} disabled={generatingPhoto} title={activeCharacter ? "Gerar a foto do personagem selecionado" : "Selecione um personagem salvo primeiro"}>
-        {generatingPhoto ? "Gerando…" : "▣ Gerar foto"}
-      </button>
+      <button className="new-character-header-button" onClick={onNewCharacter}>＋ Novo personagem</button>
     </div>
     <details className="character-settings">
       <summary>Editar personagem atual</summary>
@@ -51,6 +47,5 @@ export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, 
         </div>;
       })}
     </div>
-    <button className="new-character-button" onClick={onNewCharacter}>＋ Novo Personagem</button>
   </aside>;
 }

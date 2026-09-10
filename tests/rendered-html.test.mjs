@@ -748,7 +748,8 @@ test("uses the approved premium three-column editor hierarchy", async () => {
   ]);
 
   assert.match(library, /MEUS PERSONAGENS/);
-  assert.match(library, /Novo Personagem/);
+  assert.match(library, /new-character-header-button/);
+  assert.match(library, /Novo personagem/);
   assert.match(topbar, /NymiConnectionStatus/);
   assert.match(library, /Migrar dados deste navegador/);
   assert.match(page, /Ajustes do item selecionado/);

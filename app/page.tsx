@@ -5467,9 +5467,7 @@ export default function Home() {
           model={model}
           migrationAvailable={migrationAvailable}
           migrating={isMigrating}
-          generatingPhoto={isGeneratingPhoto}
           getPackName={(character) => getBasePack(basePacks, character.model, character.basePackId).name}
-          onGeneratePhoto={() => { void generateCharacterPhoto(); }}
           onNameChange={setCharacterName}
           onChangeModel={changeModel}
           onMigrate={() => { void migrateBrowserDataToPc(); }}
