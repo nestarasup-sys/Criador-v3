@@ -30,42 +30,59 @@ function rgbToHsv(r,g,b){r/=255;g/=255;b/=255;const M=Math.max(r,g,b),m=Math.min
 const hueDist=(a,b)=>{let d=Math.abs(a-b);return Math.min(d,360-d)};
 function percentile(a,p){if(!a.length)return 0;const b=[...a].sort((x,y)=>x-y);return b[Math.min(b.length-1,Math.max(0,Math.floor((b.length-1)*p)))]}
 function dominantBackground(src,w,h){
-  // Histograma HSV: escolhe a família verde mais frequente na imagem inteira,
-  // mas dá peso extra às bordas para preferir o verdadeiro fundo externo.
-  const bins=new Float64Array(72), satSum=new Float64Array(72), valSum=new Float64Array(72), count=new Float64Array(72);
-  const step=Math.max(1,Math.floor(Math.max(w,h)/900)), band=Math.max(3,Math.floor(Math.min(w,h)*.03));
-  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){const i=(y*w+x)*4,r=src[i],g=src[i+1],b=src[i+2],[hh,s,v]=rgbToHsv(r,g,b);if(s<.12||v<.08)continue;const greenish=hh>=55&&hh<=185;if(!greenish)continue;const dominance=(g-Math.max(r,b))/255; if(dominance<-.03)continue; const edgePix=x<band||y<band||x>=w-band||y>=h-band; const weight=(edgePix?3.4:1)*(0.55+s)*(1+Math.max(0,dominance)*1.8); const bi=Math.max(0,Math.min(71,Math.floor(hh/5)));bins[bi]+=weight;satSum[bi]+=s*weight;valSum[bi]+=v*weight;count[bi]+=weight;}
+  // O modo automático começa pelas bordas: verde/chroma continua usando a
+  // detecção HSV existente; branco e cinza usam uma paleta neutra local.
+  const bins=new Float64Array(72),satSum=new Float64Array(72),valSum=new Float64Array(72),count=new Float64Array(72);
+  const neutralBins=new Float64Array(32),neutralR=new Float64Array(32),neutralG=new Float64Array(32),neutralB=new Float64Array(32);
+  const step=Math.max(1,Math.floor(Math.max(w,h)/900)),band=Math.max(3,Math.floor(Math.min(w,h)*.03));
+  let neutralSamples=0,greenSamples=0,neutralEdgeSamples=0,greenEdgeSamples=0;
+  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){const i=(y*w+x)*4,r=src[i],g=src[i+1],b=src[i+2],[hh,s,v]=rgbToHsv(r,g,b);const edgePix=x<band||y<band||x>=w-band||y>=h-band,weight=edgePix?3.4:1;
+    if(s<.22){const yi=Math.max(0,Math.min(31,Math.round((r+g+b)/3/8)));neutralBins[yi]+=weight;neutralR[yi]+=r*weight;neutralG[yi]+=g*weight;neutralB[yi]+=b*weight;neutralSamples+=weight;if(edgePix)neutralEdgeSamples+=weight;}
+    if(s<.12||v<.08)continue;const greenish=hh>=55&&hh<=185;const dominance=(g-Math.max(r,b))/255;if(!greenish||dominance<-.03)continue;
+    const weightG=weight*(.55+s)*(1+Math.max(0,dominance)*1.8),bi=Math.max(0,Math.min(71,Math.floor(hh/5)));bins[bi]+=weightG;satSum[bi]+=s*weightG;valSum[bi]+=v*weightG;count[bi]+=weightG;greenSamples+=weightG;if(edgePix)greenEdgeSamples+=weightG;}
+  let neutralBest=0;for(let i=1;i<neutralBins.length;i++)if(neutralBins[i]>neutralBins[neutralBest])neutralBest=i;
+  // Só escolhe neutro quando ele realmente domina a borda. Isso evita que
+  // um personagem branco em fundo verde troque acidentalmente de algoritmo.
+  if(neutralEdgeSamples>greenEdgeSamples*1.15 && neutralBins[neutralBest]>Math.max(8,neutralSamples*.02)){
+    const wgt=neutralBins[neutralBest];return{mode:'neutral',r:neutralR[neutralBest]/wgt,g:neutralG[neutralBest]/wgt,b:neutralB[neutralBest]/wgt,h:0,s:0,v:(neutralR[neutralBest]+neutralG[neutralBest]+neutralB[neutralBest])/(wgt*3)};
+  }
   let best=24;for(let i=0;i<bins.length;i++)if(bins[i]>bins[best])best=i;
-  // média local em torno do pico para não depender de um tom exato
   let wx=0,wy=0,ss=0,vv=0,ww=0;for(let k=-3;k<=3;k++){const bi=Math.max(0,Math.min(71,best+k)),wgt=bins[bi];if(!wgt)continue;const h0=(bi+.5)*5*Math.PI/180;wx+=Math.cos(h0)*wgt;wy+=Math.sin(h0)*wgt;ss+=satSum[bi];vv+=valSum[bi];ww+=count[bi];}
-  const h0=(Math.atan2(wy,wx)*180/Math.PI+360)%360;return{h:h0,s:ww?ss/ww:.72,v:ww?vv/ww:.72};
+  const h0=(Math.atan2(wy,wx)*180/Math.PI+360)%360;return{mode:'green',r:0,g:0,b:0,h:h0,s:ww?ss/ww:.72,v:ww?vv/ww:.72};
 }
 function buildFeatures(src,w,h,bg){
-  const n=w*h, hueD=new Float32Array(n), sat=new Float32Array(n), val=new Float32Array(n), dom=new Float32Array(n), grad=new Float32Array(n);
-  for(let p=0,i=0;p<n;p++,i+=4){const r=src[i],g=src[i+1],b=src[i+2],[hh,s,v]=rgbToHsv(r,g,b);hueD[p]=hueDist(hh,bg.h);sat[p]=s;val[p]=v;dom[p]=(g-Math.max(r,b))/255;}
+  const n=w*h, hueD=new Float32Array(n), sat=new Float32Array(n), val=new Float32Array(n), dom=new Float32Array(n), bgD=new Float32Array(n), grad=new Float32Array(n);
+  for(let p=0,i=0;p<n;p++,i+=4){const r=src[i],g=src[i+1],b=src[i+2],[hh,s,v]=rgbToHsv(r,g,b);hueD[p]=hueDist(hh,bg.h);sat[p]=s;val[p]=v;dom[p]=(g-Math.max(r,b))/255;bgD[p]=Math.hypot(r-bg.r,g-bg.g,b-bg.b)/441.6729559;}
   // gradiente simples de luminância/cor: funciona como parede no contorno do personagem
   const lum=p=>{const i=p*4;return src[i]*.299+src[i+1]*.587+src[i+2]*.114};
   for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const p=y*w+x,i=p*4;const l=lum(p);let g1=Math.abs(l-lum(p-1))+Math.abs(l-lum(p+1))+Math.abs(l-lum(p-w))+Math.abs(l-lum(p+w));let c=0;for(const q of[p-1,p+1,p-w,p+w]){const j=q*4;c+=Math.abs(src[i]-src[j])+Math.abs(src[i+1]-src[j+1])+Math.abs(src[i+2]-src[j+2]);}grad[p]=Math.min(255,(g1*.35+c*.18));}
-  return{hueD,sat,val,dom,grad};
+  return{hueD,sat,val,dom,bgD,grad};
 }
 function processImage(){if(!originalImageData)return;statusEl.textContent='Analisando fundo dominante…';requestAnimationFrame(()=>{
   const src=originalImageData.data,w=originalImageData.width,h=originalImageData.height,n=w*h;const bg=dominantBackground(src,w,h),f=buildFeatures(src,w,h,bg);
   const T=+tol.value, protect=+edge.value/100, feather=+soft.value, despill=+spill.value/100;
   // limiares adaptativos medidos nas bordas que se parecem com o verde dominante
-  const borderHue=[],borderSat=[],borderVal=[];const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
-  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){const p=y*w+x;if(f.hueD[p]<42&&f.dom[p]>-.04){borderHue.push(f.hueD[p]);borderSat.push(Math.abs(f.sat[p]-bg.s));borderVal.push(Math.abs(f.val[p]-bg.v));}}
+  const borderHue=[],borderSat=[],borderVal=[],borderDist=[];const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
+  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){const p=y*w+x;if(bg.mode==='neutral'){if(f.sat[p]<.34){borderDist.push(f.bgD[p]);borderSat.push(f.sat[p]);}}else if(f.hueD[p]<42&&f.dom[p]>-.04){borderHue.push(f.hueD[p]);borderSat.push(Math.abs(f.sat[p]-bg.s));borderVal.push(Math.abs(f.val[p]-bg.v));}}
   const hBase=Math.max(11,percentile(borderHue,.93)), sBase=Math.max(.12,percentile(borderSat,.90)), vBase=Math.max(.18,percentile(borderVal,.92));
   const hueLim=Math.min(70,hBase+T*.38+(hardMode?9:0)), satLim=Math.min(.75,sBase+T*.004+(hardMode?.08:0)), valLim=Math.min(.9,vBase+T*.005+(hardMode?.12:0));
+  const neutralDistLim=Math.min(.62,Math.max(.10,percentile(borderDist,.94)+T*.0028+(hardMode?.06:0)));
   const seed=new Uint8Array(n),pass=new Uint8Array(n),bgmask=new Uint8Array(n),q=new Int32Array(n);let head=0,tail=0;
   for(let p=0;p<n;p++){
     const hd=f.hueD[p],sd=Math.abs(f.sat[p]-bg.s),vd=Math.abs(f.val[p]-bg.v);const greenOK=f.dom[p]>-(.03+T*.0009);
-    // score elíptico: aceita grande variação de brilho sem aceitar qualquer verde do desenho
-    const score=(hd/hueLim)**2+(sd/(satLim*1.25))**2+(vd/(valLim*1.55))**2;
-    pass[p]=greenOK && f.sat[p]>.07 && score<(hardMode?2.25:1.72) ? 1:0;
-    seed[p]=greenOK && hd<hueLim*.58 && score<.82 ? 1:0;
+    // Neutros são julgados pela distância de cor e pela baixa saturação;
+    // nunca removemos branco/cinza apenas por serem claros.
+    if(bg.mode==='neutral'){
+      const neutralOK=f.sat[p]<Math.min(.48,.18+T*.0045)&&f.bgD[p]<neutralDistLim;
+      pass[p]=neutralOK?1:0;seed[p]=neutralOK&&f.bgD[p]<neutralDistLim*.58?1:0;
+    }else{
+      const score=(hd/hueLim)**2+(sd/(satLim*1.25))**2+(vd/(valLim*1.55))**2;
+      pass[p]=greenOK && f.sat[p]>.07 && score<(hardMode?2.25:1.72) ? 1:0;
+      seed[p]=greenOK && hd<hueLim*.58 && score<.82 ? 1:0;
+    }
   }
   const edgeBarrier=195-protect*150; // proteção alta => barreira mais sensível
-  const add=(p,from=-1)=>{if(p<0||p>=n||bgmask[p]||!pass[p])return;if(from>=0){const localGrad=Math.max(f.grad[p],f.grad[from]);if(localGrad>edgeBarrier && !seed[p])return;}bgmask[p]=1;q[tail++]=p;};
+  const add=(p,from=-1)=>{if(p<0||p>=n||bgmask[p]||!pass[p])return;if(from>=0){const localGrad=Math.max(f.grad[p],f.grad[from]);if(localGrad>edgeBarrier && !(bg.mode==='green'&&seed[p]))return;}bgmask[p]=1;q[tail++]=p;};
   // sementes somente nas bordas; o flood-fill garante preservação topológica das ilhas internas
   for(let x=0;x<w;x++){if(seed[x]||pass[x])add(x);let p=(h-1)*w+x;if(seed[p]||pass[p])add(p)}for(let y=0;y<h;y++){let p=y*w;if(seed[p]||pass[p])add(p);p=y*w+w-1;if(seed[p]||pass[p])add(p)}
   while(head<tail){const p=q[head++],x=p%w,y=(p/w)|0;if(x)add(p-1,p);if(x<w-1)add(p+1,p);if(y)add(p-w,p);if(y<h-1)add(p+w,p)}
@@ -75,11 +92,11 @@ function processImage(){if(!originalImageData)return;statusEl.textContent='Anali
   const out=new ImageData(new Uint8ClampedArray(src),w,h),d=out.data;
   // Distância curta à máscara para feather APENAS do lado externo do objeto.
   const rad=Math.max(1,Math.round(feather/10)), near=new Uint8Array(n);if(feather>0){for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=y*w+x;if(!fill[p])continue;for(let yy=Math.max(0,y-rad);yy<=Math.min(h-1,y+rad);yy++)for(let xx=Math.max(0,x-rad);xx<=Math.min(w-1,x+rad);xx++){const q=yy*w+xx;if(!fill[q])near[q]=1;}}}
-  let removed=0;for(let p=0,i=0;p<n;p++,i+=4){if(fill[p]){d[i+3]=0;removed++;continue}const r=d[i],g=d[i+1],b=d[i+2];if(near[p]&&feather>0){const hd=f.hueD[p];if(hd<hueLim*1.12&&f.dom[p]>-.08){const a=Math.max(.58,Math.min(1,.62+hd/(hueLim*2.2)));d[i+3]=Math.round(255*a)}}if(despill>0&&near[p]){const mx=Math.max(r,b),ex=Math.max(0,g-mx);d[i+1]=Math.round(g-ex*despill*.92)}}
+  let removed=0;for(let p=0,i=0;p<n;p++,i+=4){if(fill[p]){d[i+3]=0;removed++;continue}const r=d[i],g=d[i+1],b=d[i+2];if(near[p]&&feather>0){const edgeLike=bg.mode==='neutral'?f.bgD[p]<neutralDistLim*1.28:f.hueD[p]<hueLim*1.12&&f.dom[p]>-.08;if(edgeLike){const a=Math.max(.58,Math.min(1,.62+(bg.mode==='neutral'?f.bgD[p]/(neutralDistLim*2.2):f.hueD[p]/(hueLim*2.2))));d[i+3]=Math.round(255*a)}}if(despill>0&&near[p]&&bg.mode!=='neutral'){const mx=Math.max(r,b),ex=Math.max(0,g-mx);d[i+1]=Math.round(g-ex*despill*.92)}}
   processedImageData=out;
   const m=new ImageData(w,h);for(let p=0,i=0;p<n;p++,i+=4){const on=fill[p];m.data[i]=on?40:255;m.data[i+1]=on?230:70;m.data[i+2]=on?100:70;m.data[i+3]=255}maskImageData=m;
   view='result';ctx.putImageData(out,0,0);$('toggleOriginal').textContent='◐ Ver original';$('toggleMask').textContent='◉ Ver máscara';
-  $('bgStat').textContent=`Fundo: H ${Math.round(bg.h)}° • faixa ${Math.round(hueLim)}°`;$('rmStat').textContent=`Removido: ${(removed/n*100).toFixed(1)}%`;statusEl.textContent='Pronto — conteúdo interno protegido';
+  $('bgStat').textContent=bg.mode==='neutral'?`Fundo: ${bg.v>.82?'branco':bg.v>.42?'cinza claro':'cinza escuro'} • tolerância ${Math.round(neutralDistLim*100)}`:`Fundo: H ${Math.round(bg.h)}° • faixa ${Math.round(hueLim)}°`;$('rmStat').textContent=`Removido: ${(removed/n*100).toFixed(1)}%`;statusEl.textContent='Pronto — conteúdo interno protegido';
 });}
 function loadImage(src,name='imagem.png'){const img=new Image();img.onload=()=>{const maxSide=2400,scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight));canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);originalImageData=ctx.getImageData(0,0,canvas.width,canvas.height);filename=name.replace(/\.[^.]+$/,'')+'-sem-fundo.png';$('drop').classList.add('hidden');processImage()};img.onerror=()=>statusEl.textContent='Não foi possível abrir a imagem.';img.src=src}
 function handleFile(file){if(!file||!file.type.startsWith('image/'))return;const u=URL.createObjectURL(file);loadImage(u,file.name)}
