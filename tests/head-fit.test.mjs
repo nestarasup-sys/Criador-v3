@@ -4,7 +4,7 @@ import { join } from "node:path";
 import sharp from "sharp";
 import test from "node:test";
 import { calculateHeadFit, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "../app/creator/head-fit.ts";
-import { buildHeadContourWarp } from "../app/creator/head-contour-warp.ts";
+import { buildHeadContourWarp, buildNeckContourWarp, mergeContourWarps } from "../app/creator/head-contour-warp.ts";
 
 function profileImage({ width = 320, height = 560, top = 20, profile }) {
   const pixels = new Uint8ClampedArray(width * height * 4);
@@ -223,6 +223,24 @@ test("não cria warp desnecessário para contornos já coincidentes", () => {
   const item = { width: 300, height: 400, defaultX: 150, defaultY: 200 };
   const fit = { ...calculateHeadFit(source, target, item), rotation: 0, flipX: false };
   assert.equal(buildHeadContourWarp(source, target, item, fit), null);
+});
+
+test("refina a curva intermediária do pescoço sem mover suas extremidades", () => {
+  const neck = (center, bulge) => Array.from({ length: 25 }, (_, index) => ({
+    y: 180 + index,
+    left: center - 30 - Math.sin(index / 24 * Math.PI) * bulge,
+    right: center + 30 + Math.sin(index / 24 * Math.PI) * bulge,
+  }));
+  const source = { left: 80, right: 220, top: 0, bottom: 180, width: 141, height: 181, centerX: 150, neckLeft: 120, neckRight: 180, neckWidth: 61, neckCenterX: 150, neckY: 180, neckBottomY: 204, neckContour: neck(150, 2) };
+  const target = { left: 430, right: 570, top: 0, bottom: 180, width: 141, height: 181, centerX: 500, neckLeft: 470, neckRight: 530, neckWidth: 61, neckCenterX: 500, neckY: 180, neckBottomY: 204, neckContour: neck(500, 9) };
+  const item = { width: 300, height: 420, defaultX: 150, defaultY: 210 };
+  const fit = { ...calculateHeadFit(source, target, item, undefined, "neck"), rotation: 0, flipX: false };
+  const warp = buildNeckContourWarp(source, target, item, fit);
+  assert.ok(warp, "a curva diferente do pescoço deve gerar refinamento local");
+  assert.equal(warp.knots[0].strength, 0, "a entrada do pescoço não pode criar costura");
+  assert.equal(warp.knots.at(-1).strength, 0, "a saída para a gola não pode criar costura");
+  assert.ok(warp.knots.slice(1, -1).some((knot) => knot.strength > .8), "o miolo do pescoço deve receber a correção");
+  assert.ok(mergeContourWarps(null, warp)?.knots.length === warp.knots.length);
 });
 
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {

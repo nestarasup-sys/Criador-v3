@@ -40,6 +40,24 @@ function contourAtY(measurement: HeadMeasurement, y: number) {
   return { left, right, center: (left + right) / 2, width: Math.max(1, right - left) };
 }
 
+function contourRowsAtY(rows: HeadContourRow[], y: number) {
+  if (rows.length < 2) return null;
+  let lower = rows[0];
+  let upper = rows[rows.length - 1];
+  for (const row of rows) {
+    if (row.y <= y) lower = row;
+    if (row.y >= y) {
+      upper = row;
+      break;
+    }
+  }
+  const span = upper.y - lower.y;
+  const ratio = span > 0 ? (y - lower.y) / span : 0;
+  const left = lower.left + (upper.left - lower.left) * ratio;
+  const right = lower.right + (upper.right - lower.right) * ratio;
+  return { left, right, width: Math.max(1, right - left), center: (left + right) / 2 };
+}
+
 function structuralBottom(measurement: HeadMeasurement) {
   return measurement.neckY ?? measurement.bottom;
 }
@@ -229,6 +247,124 @@ export function buildHeadContourWarp(
     knots: knots.map((knot) => Object.fromEntries(
       Object.entries(knot).map(([key, value]) => [key, typeof value === "number" ? +value.toFixed(3) : value]),
     ) as unknown as HeadContourWarpKnot),
+  };
+}
+
+/**
+ * Corrige somente a curva da faixa cervical. A transformação global já
+ * encaixa a largura mediana; este resíduo resolve inclinação/assimetria sem
+ * deslocar novamente o topo da cabeça nem abrir uma costura na gola.
+ */
+export function buildNeckContourWarp(
+  source: HeadMeasurement,
+  target: HeadMeasurement,
+  item: { width: number; height: number; defaultX?: number; defaultY?: number },
+  transform: ItemTransform,
+): HeadContourWarp | null {
+  if (Math.abs(transform.rotation) > 0.25 || transform.flipX) return null;
+  const sourceRows = source.neckContour?.filter((row) => row.right > row.left) ?? [];
+  const targetRows = target.neckContour?.filter((row) => row.right > row.left) ?? [];
+  if (sourceRows.length < 5 || targetRows.length < 5) return null;
+  const sourceTop = sourceRows[0].y;
+  const sourceBottom = sourceRows[sourceRows.length - 1].y;
+  const targetTop = targetRows[0].y;
+  const targetBottom = targetRows[targetRows.length - 1].y;
+  if (sourceBottom - sourceTop < 4 || targetBottom - targetTop < 4) return null;
+
+  const count = 15;
+  const maxSideShift = Math.max(1.5, (source.neckWidth ?? sourceRows[0].right - sourceRows[0].left) * 0.14);
+  const knots: HeadContourWarpKnot[] = [];
+  let baselineError = 0;
+  let candidateError = 0;
+  let maxDisplacement = 0;
+  let cappedRows = 0;
+  for (let index = 0; index < count; index += 1) {
+    const ratio = index / (count - 1);
+    const sourceY = sourceTop + (sourceBottom - sourceTop) * ratio;
+    const targetY = targetTop + (targetBottom - targetTop) * ratio;
+    const sourceSample = contourRowsAtY(sourceRows, sourceY);
+    const targetSample = contourRowsAtY(targetRows, targetY);
+    if (!sourceSample || !targetSample) continue;
+    const targetLeft = localCoordinateX(targetSample.left, transform, item);
+    const targetRight = localCoordinateX(targetSample.right, transform, item);
+    const rawLeftShift = targetLeft - sourceSample.left;
+    const rawRightShift = targetRight - sourceSample.right;
+    const leftShift = clamp(rawLeftShift, -maxSideShift, maxSideShift);
+    const rightShift = clamp(rawRightShift, -maxSideShift, maxSideShift);
+    if (Math.abs(rawLeftShift) > maxSideShift || Math.abs(rawRightShift) > maxSideShift) cappedRows += 1;
+    const edgeFade = Math.sin(Math.PI * ratio);
+    const strength = edgeFade * 0.88;
+    let safeLeft = sourceSample.left + leftShift;
+    let safeRight = sourceSample.right + rightShift;
+    const requestedWidth = safeRight - safeLeft;
+    const safeWidth = clamp(requestedWidth, sourceSample.width * 0.82, sourceSample.width * 1.2);
+    if (Math.abs(requestedWidth - safeWidth) > 0.001) {
+      const center = (safeLeft + safeRight) / 2;
+      safeLeft = center - safeWidth / 2;
+      safeRight = center + safeWidth / 2;
+    }
+    const finalLeft = sourceSample.left + (safeLeft - sourceSample.left) * strength;
+    const finalRight = sourceSample.right + (safeRight - sourceSample.right) * strength;
+    const norm = Math.max(1, sourceSample.width);
+    baselineError += (Math.abs(rawLeftShift) + Math.abs(rawRightShift)) / norm;
+    candidateError += (Math.abs(targetLeft - finalLeft) + Math.abs(targetRight - finalRight)) / norm;
+    maxDisplacement = Math.max(maxDisplacement, Math.abs(finalLeft - sourceSample.left), Math.abs(finalRight - sourceSample.right));
+    knots.push({
+      y: localCoordinateY(targetY, transform, item),
+      sourceY,
+      sourceLeft: sourceSample.left,
+      sourceRight: sourceSample.right,
+      targetLeft: safeLeft,
+      targetRight: safeRight,
+      strength,
+    });
+  }
+  if (knots.length < count * 0.8) return null;
+  baselineError /= knots.length;
+  candidateError /= knots.length;
+  const improvement = baselineError > 0 ? (baselineError - candidateError) / baselineError : 0;
+  const confidence = clamp(1 - cappedRows / knots.length * 0.8, 0, 1);
+  if (baselineError < 0.006 || maxDisplacement < 1 || improvement < MIN_IMPROVEMENT || confidence < 0.55) return null;
+  return {
+    version: 1,
+    top: knots[0].y,
+    bottom: knots[knots.length - 1].y,
+    confidence: +confidence.toFixed(4),
+    baselineError: +baselineError.toFixed(5),
+    candidateError: +candidateError.toFixed(5),
+    improvement: +improvement.toFixed(4),
+    maxDisplacement: +maxDisplacement.toFixed(2),
+    knots: knots.map((knot) => ({
+      y: +knot.y.toFixed(3),
+      sourceY: +knot.sourceY.toFixed(3),
+      sourceLeft: +knot.sourceLeft.toFixed(3),
+      sourceRight: +knot.sourceRight.toFixed(3),
+      targetLeft: +knot.targetLeft.toFixed(3),
+      targetRight: +knot.targetRight.toFixed(3),
+      strength: +knot.strength.toFixed(3),
+    })),
+  };
+}
+
+export function mergeContourWarps(...warps: Array<HeadContourWarp | null | undefined>): HeadContourWarp | null {
+  const available = warps.filter((warp): warp is HeadContourWarp => Boolean(warp?.knots?.length));
+  if (!available.length) return null;
+  if (available.length === 1) return available[0];
+  const knots = available
+    .flatMap((warp) => warp.knots)
+    .sort((left, right) => left.y - right.y)
+    .filter((knot, index, all) => index === 0 || knot.y - all[index - 1].y > 0.05);
+  const weight = available.reduce((sum, warp) => sum + warp.knots.length, 0);
+  return {
+    version: 1,
+    top: knots[0].y,
+    bottom: knots[knots.length - 1].y,
+    confidence: available.reduce((sum, warp) => sum + warp.confidence * warp.knots.length, 0) / weight,
+    baselineError: available.reduce((sum, warp) => sum + warp.baselineError * warp.knots.length, 0) / weight,
+    candidateError: available.reduce((sum, warp) => sum + warp.candidateError * warp.knots.length, 0) / weight,
+    improvement: available.reduce((sum, warp) => sum + warp.improvement * warp.knots.length, 0) / weight,
+    maxDisplacement: Math.max(...available.map((warp) => warp.maxDisplacement)),
+    knots,
   };
 }
 
