@@ -846,6 +846,18 @@ async function route(request, response) {
     sendJson(response, request, 200, await discoverModels());
     return;
   }
+  const nextModelMatch = url.pathname.match(/^\/models\/next\/(feminino|masculino)$/i);
+  if (nextModelMatch && request.method === "GET") {
+    const gender = nextModelMatch[1].toLowerCase();
+    const genderRoot = join(MODELS_ROOT, gender);
+    const entries = await readdir(genderRoot, { withFileTypes: true });
+    const numbers = entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => Number(entry.name.match(/^modelo-(\d+)$/i)?.[1] ?? 0));
+    const number = Math.max(0, ...numbers) + 1;
+    sendJson(response, request, 200, { gender, number, id: `modelo-${number}` });
+    return;
+  }
   const modelColorMapMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})\/color-map\/([a-zA-Z0-9_-]{1,120})$/i);
   if (modelColorMapMatch && request.method === "POST") {
     const gender = modelColorMapMatch[1].toLowerCase();
@@ -896,6 +908,12 @@ async function route(request, response) {
     const body = await requestBody(request, isJson ? BODY_LIMITS.json : BODY_LIMITS.image);
     if (isJson) {
       assertMimeType(contentTypeOf(request), new Set(["application/json"]), "O manifesto do modelo precisa ser JSON.");
+      try {
+        await stat(folder);
+        throw Object.assign(new Error("Esse número de modelo já existe. Atualize a numeração automática e tente novamente."), { status: 409 });
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
       let manifest;
       try { manifest = JSON.parse(body.toString("utf8")); } catch { throw Object.assign(new Error("Manifesto de modelo inválido."), { status: 400 }); }
       await mkdir(folder, { recursive: true });

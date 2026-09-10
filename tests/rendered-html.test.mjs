@@ -125,6 +125,8 @@ test("discovers numbered model folders with shared hair and outfits by gender", 
   assert.match(server, /url\.pathname === "\/models"/);
   assert.match(server, /readModelConfig/);
   assert.match(server, /`\$\{modelId\}\.json`/);
+  assert.match(server, /models\\\/next/);
+  assert.match(server, /Esse número de modelo já existe/);
   assert.match(server, /MODELS_ROOT/);
 });
 

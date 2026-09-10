@@ -2649,11 +2649,11 @@ async function catalogFetch(path,init={}){
   return response;
 }
 async function nextCatalogModelNumber(gender){
-  const response=await catalogFetch("/models",{cache:"no-store"});
-  if(!response.ok)throw new Error("Não foi possível consultar os modelos existentes.");
+  const response=await catalogFetch(`/models/next/${gender}`,{cache:"no-store"});
+  if(!response.ok)throw new Error("Não foi possível consultar o próximo número de modelo.");
   const data=await response.json();
-  const numbers=(data?.[gender]||[]).map(pack=>Number(String(pack.id||"").match(/^modelo-(\d+)$/i)?.[1]||0));
-  return Math.max(0,...numbers)+1;
+  if(!Number.isInteger(data?.number)||data.number<1)throw new Error("O app retornou uma numeração de modelo inválida.");
+  return data.number;
 }
 async function uploadCatalogV1File(gender,folderName,fileName,body,contentType){
   const response=await catalogFetch(`/models/import/${gender}/${folderName}/${encodeURIComponent(fileName)}`,{
@@ -2679,6 +2679,7 @@ async function exportToCatalogV1(){
     return;
   }
   const button=$("exportToCatalogV1");
+  let createdTarget=null;
   button.disabled=true;
   try{
     const number=await nextCatalogModelNumber(gender);
@@ -2687,6 +2688,7 @@ async function exportToCatalogV1(){
     const folderName=`modelo-${number}`;
     const metadata=modelMetadata(gender);
     await uploadCatalogV1File(gender,folderName,`${folderName}.json`,JSON.stringify(metadata,null,2),"application/json");
+    createdTarget={gender,folderName};
     const ordered=[...S.heads].sort((a,b)=>a.sheet===b.sheet?a.order-b.order:a.sheet.localeCompare(b.sheet));
     for(let i=0;i<ordered.length;i++){
       const h=ordered[i];
@@ -2700,7 +2702,16 @@ async function exportToCatalogV1(){
     if(window.parent&&window.parent!==window)window.parent.dispatchEvent(new CustomEvent("nymi:models-updated"));
   }catch(e){
     console.error(e);
-    status("catalogExportStatus","Erro ao enviar para o Catálogo V1: "+(e.message||e),"bad");
+    let cleanup="";
+    if(createdTarget){
+      try{
+        const response=await catalogFetch(`/models/modelos/${createdTarget.gender}/${createdTarget.folderName}`,{method:"DELETE"});
+        if(response.ok)cleanup=" A pasta incompleta foi removida.";
+      }catch(cleanupError){
+        console.error("Falha ao limpar modelo incompleto",cleanupError);
+      }
+    }
+    status("catalogExportStatus","Erro ao enviar para o Catálogo V1: "+(e.message||e)+cleanup,"bad");
   }finally{
     button.disabled=false;
   }
