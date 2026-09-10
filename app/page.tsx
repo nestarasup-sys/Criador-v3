@@ -10,7 +10,7 @@ import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCan
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
 import { calculateHeadFit, headContourPolygon, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
 import type { HeadFitReference, HeadMeasurement } from "./creator/head-fit";
-import { buildHeadContourWarp, contourWarpCacheKey, renderHeadContourWarp } from "./creator/head-contour-warp";
+import { buildHeadContourWarp, buildNeckContourWarp, contourWarpCacheKey, mergeContourWarps, renderHeadContourWarp } from "./creator/head-contour-warp";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -3277,12 +3277,16 @@ export default function Home() {
         rotation: adjustments.roupas.rotation,
         flipX: adjustments.roupas.flipX,
       });
-      const headWarp = buildHeadContourWarp(sourceHead, targetHead, {
+      const fitItem = {
         width: outfitWidth,
         height: outfitHeight,
         defaultX: selectedOutfit.defaultX,
         defaultY: selectedOutfit.defaultY,
-      }, baselineTransform);
+      };
+      const headWarp = mergeContourWarps(
+        buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
+        reference === "neck" ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform) : null,
+      );
       const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
       const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
       const skippedVariants: string[] = [];
@@ -3345,12 +3349,16 @@ export default function Home() {
           rotation: existingVariantTransform.rotation,
           flipX: existingVariantTransform.flipX,
         });
-        const variantWarp = buildHeadContourWarp(variantHead, targetHead, {
+        const variantItem = {
           width: variantWidth,
           height: variantHeight,
           defaultX: variant.defaultX,
           defaultY: variant.defaultY,
-        }, variantBaseline);
+        };
+        const variantWarp = mergeContourWarps(
+          buildHeadContourWarp(variantHead, targetHead, variantItem, variantBaseline),
+          reference === "neck" ? buildNeckContourWarp(variantHead, targetHead, variantItem, variantBaseline) : null,
+        );
         variantTransforms[variantKey] = normalizeTransform({ ...variantBaseline, headWarp: variantWarp ?? undefined });
       }
       setHeadFitGuide({
