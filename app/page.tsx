@@ -5848,11 +5848,11 @@ export default function Home() {
             </div>
           )}
 
-          {colorEligible && (
+          {(colorEligible || category === "roupas") && (
             <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
               {!colorPanelOpen && <div className="color-tool-dock" aria-label="Ferramentas do item">
                 <button type="button" className="color-tool-button color-tool-v0" onClick={openV0OutfitCatalog}>Catálogo V0</button>
-                <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>
+                {colorEligible && <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>}
               </div>}
               {colorPanelOpen && <div className="color-editor-topbar">
                 <button type="button" className="color-editor-back" onClick={() => setColorPanelOpen(false)}>← Voltar ao catálogo</button>
