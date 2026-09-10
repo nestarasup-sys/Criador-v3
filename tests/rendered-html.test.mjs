@@ -645,9 +645,9 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /color-neutral-presets/);
   assert.match(page, /colorPanelOpen/);
   assert.match(page, /className="color-tool-button color-tool-colors"/);
-  assert.match(page, /className="color-tool-button color-tool-trash"/);
+  assert.match(page, /className="color-tool-button color-tool-v0"/);
   assert.match(page, />CORES<|>CORES<\/button>/);
-  assert.match(page, />Lixão<|>Lixão<\/button>/);
+  assert.match(page, />Catálogo V0<|>Catálogo V0<\/button>/);
   assert.match(page, /detailPreservation/);
   assert.match(page, /Contraste/);
   assert.match(page, /Textura/);
@@ -667,7 +667,7 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(css, /\.color-panel-body/);
   assert.match(css, /\.color-tool-dock/);
   assert.match(css, /\.color-tool-colors/);
-  assert.match(css, /\.color-tool-trash/);
+  assert.match(css, /\.color-tool-v0/);
 });
 
 test("mantém cores do modelo no cache do Studio e oferece controle reversível", async () => {
@@ -843,6 +843,7 @@ test("imports one outfit as standard plus three or five additional variants shar
 
   assert.match(catalogContract, /outfitGroupId\?: string/);
   assert.match(catalogContract, /outfitVariantIndex\?: number/);
+  assert.match(catalogContract, /catalogVersion\?: "v0" \| "v1"/);
   assert.match(page, /async function importOutfitVariantSheet/);
   assert.match(page, /async function confirmOutfitVariantSheet/);
   assert.match(catalogHeader, /Folha de variantes/);
@@ -869,6 +870,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /canvasSize = 1024/);
   assert.match(page, /fitReferenceHeight/);
   assert.match(page, /Refazer recorte/);
+  assert.match(page, /moveSelectedOutfitsToV0/);
+  assert.match(page, /Catálogo V0/);
+  assert.match(page, /Mover para V0/);
   assert.match(page, /a roupa e sua variante foram mantidas/);
   assert.match(page, /outfitAdjustmentsByBasePack/);
   assert.match(page, /outfitLayerMasksByBasePack/);

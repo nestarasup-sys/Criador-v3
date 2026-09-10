@@ -16,6 +16,8 @@ export type CatalogItemMetadata = NormalizedContentGeometry & {
   name: string;
   model: Model;
   category: Category;
+  /** Catálogo lógico da roupa. Itens legados sem o campo continuam no V1. */
+  catalogVersion?: "v0" | "v1";
   width?: number;
   height?: number;
   defaultX?: number;
