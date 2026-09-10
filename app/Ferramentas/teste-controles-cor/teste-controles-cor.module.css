@@ -22,6 +22,16 @@
 .mode { color:#fff; border:0; background:#5f3c73; }
 .reset { color:#a03f6c; background:#fff0f7; }
 .status { min-height:42px; margin:2px 0 0; padding:9px; border-radius:9px; color:#7c6576; background:#faf4f8; font-size:10px; line-height:1.4; }
+.auditLegend { display:grid; gap:5px; padding:9px; border:1px solid #ead9e4; border-radius:9px; color:#776171; background:#fffafd; font-size:10px; line-height:1.35; }
+.auditLegend span { display:flex; align-items:center; gap:6px; }
+.auditLegend i { width:9px; height:9px; flex:0 0 auto; border-radius:3px; }
+.auditGood { background:#41d98a; }.auditLeak { background:#ff3b52; }.auditMiss { background:#ffc857; }
+.auditCard { display:grid; gap:7px; padding:11px; border:1px solid #e7d5e2; border-radius:11px; background:#fff7fb; }
+.auditCard strong { color:#77425f; font-size:12px; }
+.auditCard p { margin:0; color:#866f7f; font-size:10px; line-height:1.4; }
+.auditMetrics { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
+.auditMetrics span { display:grid; gap:3px; padding:7px 4px; border-radius:7px; color:#947c8b; background:#fff; font-size:9px; text-align:center; }
+.auditMetrics strong { color:#9b4f78; font-size:12px; }
 .uploadBox { display:grid; gap:6px; padding:10px; border:1px dashed #d8b4c9; border-radius:11px; background:#fff8fc; }
 .uploadBox small { color:#9a8292; font-size:10px; line-height:1.35; }
 .uploadButton,.backButton { padding:9px 10px; border:0; border-radius:8px; color:#fff; background:#9b4f78; font:inherit; font-size:11px; font-weight:850; cursor:pointer; }

@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ColorAdjustment, ModelColorAdjustments, ModelColorScope } from "../../domain/character-contract";
 import { DEFAULT_COLOR_ADJUSTMENT, colorAdjustmentIsActive, normalizeColorAdjustment } from "../../domain/color-rendering";
-import { createModelColorAdjustedCanvasForScopes } from "../../domain/model-color-rendering";
-import { modelColorMapSource } from "../../domain/model-color-map.mjs";
+import { createModelColorAdjustedCanvasForScopes, createModelColorMaskCanvas } from "../../domain/model-color-rendering";
+import { modelColorMapChannel, modelColorMapSource } from "../../domain/model-color-map.mjs";
 import { getStoredModelColorCalibration } from "../../domain/model-color-calibration-storage";
 import type { ModelColorCalibration } from "../../domain/model-color-calibration-storage";
 import styles from "./teste-controles-cor.module.css";
@@ -20,8 +20,9 @@ type ModelPack = {
   colorMap?: { version: 1; format: "rgb-weights"; directory: string; channels: { red: "pupils"; green: "brows"; blue: "skin" }; expressions: string[] };
 };
 type ModelsResponse = Record<"feminino" | "masculino", ModelPack[]>;
-type PreviewMode = "result" | "original" | "split";
+type PreviewMode = "result" | "original" | "split" | "audit";
 type BackgroundMode = "checker" | "white" | "black";
+type AuditMetrics = { changed: number; expected: number; changedExpected: number; changedOutside: number; coverage: number | null; leakage: number | null };
 
 const scopes: Array<[ModelColorScope, string]> = [
   ["pupils", "Somente pupilas"],
@@ -56,6 +57,80 @@ function adjustmentMap(scope: ModelColorScope, value: ColorAdjustment): ModelCol
   } as ModelColorAdjustments;
 }
 
+function neonAuditAdjustment() {
+  return normalizeColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT, tint: "#ff00e8", tintStrength: 100, colorSpace: "oklch" });
+}
+
+function mapMask(image: HTMLImageElement, width: number, height: number, scope: ModelColorScope) {
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return null;
+  context.drawImage(image, 0, 0, width, height);
+  const data = context.getImageData(0, 0, width, height).data;
+  const mask = new Uint8Array(width * height);
+  const channels = scope === "pupilsBrows" ? [0, 1] : [modelColorMapChannel(scope) ?? 0];
+  for (let pixel = 0; pixel < mask.length; pixel += 1) {
+    const offset = pixel * 4;
+    mask[pixel] = Math.max(...channels.map((channel) => data[offset + channel]));
+  }
+  return mask;
+}
+
+function canvasAlphaMask(canvas: HTMLCanvasElement | null, width: number, height: number) {
+  if (!canvas) return null;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return null;
+  const data = context.getImageData(0, 0, width, height).data;
+  const mask = new Uint8Array(width * height);
+  for (let pixel = 0; pixel < mask.length; pixel += 1) mask[pixel] = data[pixel * 4 + 3];
+  return mask;
+}
+
+function auditPixels(original: Uint8ClampedArray, result: Uint8ClampedArray, expected: Uint8Array | null, width: number, height: number) {
+  const pixels = new Uint8ClampedArray(original.length);
+  let changed = 0;
+  let expectedPixels = 0;
+  let changedExpected = 0;
+  let changedOutside = 0;
+  for (let pixel = 0; pixel < width * height; pixel += 1) {
+    const offset = pixel * 4;
+    const delta = Math.max(
+      Math.abs(original[offset] - result[offset]),
+      Math.abs(original[offset + 1] - result[offset + 1]),
+      Math.abs(original[offset + 2] - result[offset + 2]),
+      Math.abs(original[offset + 3] - result[offset + 3]),
+    );
+    const isChanged = delta > 8;
+    const isExpected = Boolean(expected?.[pixel]);
+    if (isExpected) expectedPixels += 1;
+    if (isChanged) {
+      changed += 1;
+      if (isExpected) changedExpected += 1;
+      else changedOutside += 1;
+    }
+    if (isChanged && isExpected) {
+      pixels[offset] = 65; pixels[offset + 1] = 217; pixels[offset + 2] = 138; pixels[offset + 3] = 255;
+    } else if (isChanged) {
+      pixels[offset] = 255; pixels[offset + 1] = 59; pixels[offset + 2] = 82; pixels[offset + 3] = 255;
+    } else if (isExpected) {
+      pixels[offset] = 255; pixels[offset + 1] = 200; pixels[offset + 2] = 87; pixels[offset + 3] = 220;
+    }
+  }
+  return {
+    pixels,
+    metrics: {
+      changed,
+      expected: expectedPixels,
+      changedExpected,
+      changedOutside,
+      coverage: expectedPixels ? changedExpected / expectedPixels : null,
+      leakage: changed ? changedOutside / changed : null,
+    } satisfies AuditMetrics,
+  };
+}
+
 export function ColorControlsTestClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
@@ -73,6 +148,7 @@ export function ColorControlsTestClient() {
   const [zoom, setZoom] = useState(100);
   const [status, setStatus] = useState("Carregando modelos…");
   const [loading, setLoading] = useState(false);
+  const [auditMetrics, setAuditMetrics] = useState<AuditMetrics | null>(null);
   const [temporarySource, setTemporarySource] = useState<string | null>(null);
   const [temporaryName, setTemporaryName] = useState("");
 
@@ -138,10 +214,24 @@ export function ColorControlsTestClient() {
     context.drawImage(image, 0, 0);
     const original = context.getImageData(0, 0, width, height);
     let result: HTMLCanvasElement | HTMLImageElement = image;
-    if (colorAdjustmentIsActive(adjustment)) {
-      result = createModelColorAdjustedCanvasForScopes(image, width, height, adjustmentMap(scope, adjustment), mapImage, calibration, temporarySource ?? `${gender}:${selectedModel?.id}:${expression}`) as HTMLCanvasElement;
+    const sourceKey = temporarySource ?? `${gender}:${selectedModel?.id}:${expression}`;
+    const selectedAdjustment = preview === "audit" ? neonAuditAdjustment() : adjustment;
+    if (colorAdjustmentIsActive(selectedAdjustment)) {
+      result = createModelColorAdjustedCanvasForScopes(image, width, height, adjustmentMap(scope, selectedAdjustment), mapImage, calibration, sourceKey) as HTMLCanvasElement;
     }
     if (preview === "original") return;
+    if (preview === "audit") {
+      const resultContext = result instanceof HTMLCanvasElement ? result.getContext("2d", { willReadFrequently: true }) : null;
+      if (!resultContext) return;
+      const expected = mapImage
+        ? mapMask(mapImage, width, height, scope)
+        : canvasAlphaMask(createModelColorMaskCanvas(image, width, height, scope, calibration, sourceKey), width, height);
+      const audited = auditPixels(original.data, resultContext.getImageData(0, 0, width, height).data, expected, width, height);
+      setAuditMetrics(audited.metrics);
+      context.putImageData(new ImageData(audited.pixels, width, height), 0, 0);
+      return;
+    }
+    setAuditMetrics(null);
     if (preview === "split") {
       context.putImageData(original, 0, 0);
       context.save();
@@ -185,7 +275,8 @@ export function ColorControlsTestClient() {
         <label className={usingTemporaryImage ? styles.disabled : ""}>Modelo<select disabled={usingTemporaryImage} value={selectedModel?.id ?? ""} onChange={(event) => setModelId(event.target.value)}>{availableModels.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
         <label className={usingTemporaryImage ? styles.disabled : ""}>Expressão<select disabled={usingTemporaryImage} value={expression} onChange={(event) => setExpression(event.target.value)}>{selectedModel?.expressionKeys.map((key) => <option key={key} value={key}>{key}</option>)}</select></label>
         <div className={styles.group}><span>Área afetada</span>{scopes.map(([value, label]) => <button key={value} className={scope === value ? styles.active : ""} onClick={() => setScope(value)}>{label}</button>)}</div>
-        <div className={styles.group}><span>Prévia</span>{([ ["result", "Resultado"], ["original", "Original"], ["split", "Antes / depois"] ] as const).map(([value, label]) => <button key={value} className={preview === value ? styles.active : ""} onClick={() => setPreview(value)}>{label}</button>)}</div>
+        <div className={styles.group}><span>Prévia</span>{([ ["result", "Resultado"], ["original", "Original"], ["split", "Antes / depois"], ["audit", "Auditoria neon"] ] as const).map(([value, label]) => <button key={value} className={preview === value ? styles.active : ""} onClick={() => setPreview(value)}>{label}</button>)}</div>
+        {preview === "audit" && <div className={styles.auditLegend}><span><i className={styles.auditGood} /> Alterado na área esperada</span><span><i className={styles.auditLeak} /> Alterado fora da área</span><span><i className={styles.auditMiss} /> Esperado, mas não alterado</span></div>}
         <div className={styles.group}><span>Fundo</span>{([ ["checker", "Quadriculado"], ["white", "Branco"], ["black", "Preto"] ] as const).map(([value, label]) => <button key={value} className={background === value ? styles.active : ""} onClick={() => setBackground(value)}>{label}</button>)}</div>
         <p className={styles.status}>{loading ? "Carregando imagem…" : status}</p>
       </aside>
@@ -195,6 +286,7 @@ export function ColorControlsTestClient() {
       </section>
       <aside className={styles.panel}>
         <h2>Cor do Criador</h2>
+        {preview === "audit" && <div className={styles.auditCard}><strong>Teste de contaminação</strong><p>A ferramenta aplica magenta neon e mede cada pixel alterado. Vermelho indica vazamento.</p><div className={styles.auditMetrics}><span>Alterados<strong>{auditMetrics?.changed.toLocaleString("pt-BR") ?? "—"}</strong></span><span>Cobertura<strong>{auditMetrics?.coverage == null ? "—" : `${Math.round(auditMetrics.coverage * 100)}%`}</strong></span><span>Vazamento<strong>{auditMetrics?.leakage == null ? "—" : `${(auditMetrics.leakage * 100).toFixed(2)}%`}</strong></span></div></div>}
         <label className={styles.colorField}>Cor desejada<input type="color" value={adjustment.tint} onChange={(event) => update({ tint: event.target.value, hue: 0, tintStrength: 100 })} /></label>
         <label>Matiz <output>{adjustment.hue}°</output><input type="range" min="0" max="360" value={adjustment.hue} onChange={(event) => update({ hue: Number(event.target.value) })} /></label>
         <label>Saturação <output>{adjustment.saturation}%</output><input type="range" min="0" max="250" value={adjustment.saturation} onChange={(event) => update({ saturation: Number(event.target.value) })} /></label>
