@@ -4146,16 +4146,8 @@ export default function Home() {
     setNotice("Migrando personagens e imagens para o PC…");
     try {
       const browserData = browserMigrationRef.current;
-      const latestBrowserCatalog = normalizeOutfitCatalog(await loadCatalog()).map((item) => ({
-        ...item,
-        url: URL.createObjectURL(item.blob),
-      }));
-      const latestBrowserPacks = (await loadExpressionPacks()).map((pack) => ({
-        ...pack,
-        frames: pack.frames.map((frame) => ({ ...frame, url: URL.createObjectURL(frame.blob) })),
-      }));
-      const catalogSource = latestBrowserCatalog;
-      const packSource = latestBrowserPacks;
+      const catalogSource = normalizeOutfitCatalog(await loadCatalog());
+      const packSource = await loadExpressionPacks();
       const catalogTombstones = loadCatalogTombstones();
       const expressionPackTombstones = loadExpressionPackTombstones();
       let latestBrowserCharacters = browserData.characters;
@@ -4196,12 +4188,20 @@ export default function Home() {
       expressionPackTombstones.forEach((tombstone) => clearExpressionPackTombstone(tombstone.id));
       const updatedCatalogIds = new Set(catalogUpdates.map((item) => item.id));
       const updatedPackIds = new Set(packUpdates.map((pack) => pack.id));
+      const catalogUpdatesWithUrls = catalogUpdates.map((item) => ({
+        ...item,
+        url: URL.createObjectURL(item.blob),
+      }));
+      const packUpdatesWithUrls = packUpdates.map((pack) => ({
+        ...pack,
+        frames: pack.frames.map((frame) => ({ ...frame, url: URL.createObjectURL(frame.blob) })),
+      }));
       const mergedCatalog = catalog
         .filter((item) => !catalogDeletionIds.has(item.id) && !updatedCatalogIds.has(item.id))
-        .concat(catalogUpdates);
+        .concat(catalogUpdatesWithUrls);
       const mergedPacks = expressionPacks
         .filter((pack) => !packDeletionIds.has(pack.id) && !updatedPackIds.has(pack.id))
-        .concat(packUpdates);
+        .concat(packUpdatesWithUrls);
       setCharacters(mergedCharacters);
       setCatalog(mergedCatalog);
       setExpressionPacks(mergedPacks);
