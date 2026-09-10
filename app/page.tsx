@@ -4553,8 +4553,12 @@ export default function Home() {
         return;
       }
       setIsProcessing(true);
+      const movedPacks: BasePackDefinition[] = [];
       try {
-        await Promise.all(sourcePacks.map((pack) => updateBaseModelCatalogVersion(model, pack.id, targetVersion)));
+        for (const pack of sourcePacks) {
+          await updateBaseModelCatalogVersion(model, pack.id, targetVersion);
+          movedPacks.push(pack);
+        }
         setBasePacks((current) => ({
           ...current,
           [model]: current[model].map((pack) => sourcePacks.some((source) => source.id === pack.id)
@@ -4575,7 +4579,15 @@ export default function Home() {
         setV0TransferOpen(false);
         setNotice(`${sourcePacks.length} modelo(s) enviado(s) para o Catálogo ${targetVersion.toUpperCase()}`);
       } catch {
-        setNotice("Não foi possível mover os modelos; nenhuma referência foi alterada");
+        const rollback = await Promise.allSettled(movedPacks.map((pack) => updateBaseModelCatalogVersion(model, pack.id, sourceVersion)));
+        const rollbackFailed = rollback.some((result) => result.status === "rejected");
+        if (rollbackFailed) {
+          const refreshed = await loadPcModels().catch(() => null);
+          if (refreshed) setBasePacks(refreshed);
+          setNotice("A movimentação foi interrompida; o catálogo foi recarregado para refletir o estado real do PC");
+        } else {
+          setNotice("Não foi possível mover os modelos; as alterações parciais foram desfeitas");
+        }
       } finally {
         setIsProcessing(false);
       }
@@ -4592,7 +4604,6 @@ export default function Home() {
       }
       return item.category === "cabelosTras"
         && Boolean(item.linkedHairId)
-        && (item.catalogVersion ?? "v1") === sourceVersion
         && v0TransferSelection.includes(item.linkedHairId ?? "");
     });
     if (!sourceItems.length) return;
@@ -4795,11 +4806,8 @@ export default function Home() {
 
   const selectedOutfit = catalog.find((item) => item.id === selections.roupas && item.category === "roupas");
   const modelOutfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === outfitCatalogVersion);
-  const v1Outfits = catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === "v1");
-  const v1FrontHairs = catalog.filter((item) => item.model === model && item.category === "cabelos" && (item.catalogVersion ?? "v1") === "v1");
   const isBaseModelCatalog = category === "rostos" && faceMode === "base";
   const visibleBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === outfitCatalogVersion);
-  const v1BasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === "v1");
   const activeOutfitGroupId = selectedOutfit?.outfitGroupId ?? outfitGroupViewId;
   const outfitVariantCounts = new Map<string, number>();
   modelOutfits.forEach((item) => {
@@ -4808,26 +4816,12 @@ export default function Home() {
       (outfitVariantCounts.get(item.outfitGroupId) ?? 0) + 1,
     );
   });
-  const v1OutfitVariantCounts = new Map<string, number>();
-  v1Outfits.forEach((item) => {
-    if (item.outfitGroupId) v1OutfitVariantCounts.set(
-      item.outfitGroupId,
-      (v1OutfitVariantCounts.get(item.outfitGroupId) ?? 0) + 1,
-    );
-  });
   const standardOutfits = [
     // Roupas individuais são compartilhadas entre todos os modelos-base do gênero.
     ...modelOutfits.filter((item) => !item.outfitGroupId),
     ...Array.from(new Set(modelOutfits.flatMap((item) => item.outfitGroupId ? [item.outfitGroupId] : [])))
       .map((groupId) => modelOutfits.find((item) => item.outfitGroupId === groupId && item.outfitCover)
         ?? modelOutfits.find((item) => item.outfitGroupId === groupId))
-      .filter((item): item is CatalogItem => Boolean(item)),
-  ];
-  const v1StandardOutfits = [
-    ...v1Outfits.filter((item) => !item.outfitGroupId),
-    ...Array.from(new Set(v1Outfits.flatMap((item) => item.outfitGroupId ? [item.outfitGroupId] : [])))
-      .map((groupId) => v1Outfits.find((item) => item.outfitGroupId === groupId && item.outfitCover)
-        ?? v1Outfits.find((item) => item.outfitGroupId === groupId))
       .filter((item): item is CatalogItem => Boolean(item)),
   ];
   const variantOutfits = activeOutfitGroupId
@@ -4855,6 +4849,10 @@ export default function Home() {
   const v0TransferItems = transferItemsForVersion("v0");
   const transferSourceVersion: OutfitCatalogVersion = catalogTransferDirection === "toV0" ? "v1" : "v0";
   const transferItems = catalogTransferDirection === "toV0" ? v1TransferItems : v0TransferItems;
+  const transferOutfitVariantCounts = new Map<string, number>();
+  catalog.filter((item) => item.model === model && item.category === "roupas" && (item.catalogVersion ?? "v1") === transferSourceVersion).forEach((item) => {
+    if (item.outfitGroupId) transferOutfitVariantCounts.set(item.outfitGroupId, (transferOutfitVariantCounts.get(item.outfitGroupId) ?? 0) + 1);
+  });
   const v1TransferBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === "v1");
   const v0TransferBasePacks = availableBasePacks.filter((pack) => (pack.catalogVersion ?? "v1") === "v0");
   const transferBasePacks = catalogTransferDirection === "toV0" ? v1TransferBasePacks : v0TransferBasePacks;
@@ -6270,8 +6268,8 @@ export default function Home() {
                 return <button type="button" key={key} className={selected ? "selected" : ""} onClick={() => toggleV0TransferSelection(item)} aria-pressed={selected}>
                   {item.url && <img src={item.url} alt="" />}
                   <span><strong>{item.outfitGroupName ?? item.name}</strong><small>{category === "roupas"
-                    ? item.outfitGroupId ? `${v1OutfitVariantCounts.get(item.outfitGroupId) ?? 1} versões` : "Roupa individual"
-                    : catalog.some((entry) => entry.category === "cabelosTras" && entry.linkedHairId === item.id && (entry.catalogVersion ?? "v1") === transferSourceVersion) ? "Par frontal + traseiro" : "Cabelo frontal"}</small></span>
+                    ? item.outfitGroupId ? `${transferOutfitVariantCounts.get(item.outfitGroupId) ?? 1} versões` : "Roupa individual"
+                    : catalog.some((entry) => entry.category === "cabelosTras" && entry.linkedHairId === item.id) ? "Par frontal + traseiro" : "Cabelo frontal"}</small></span>
                   <i aria-hidden="true">{selected ? "✓" : "＋"}</i>
                 </button>;
               })}
