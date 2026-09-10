@@ -624,6 +624,12 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <label>Número do modelo</label>
     <input id="modelNumber" type="number" min="1" max="99999" value="13">
 
+    <label>Gênero do modelo</label>
+    <select id="modelGender">
+      <option value="feminino">Feminino</option>
+      <option value="masculino">Masculino</option>
+    </select>
+
     <div id="modelPreview" class="status">
 Pasta: modelo-13
 JSON: modelo-13.json
@@ -636,6 +642,8 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <div id="dirStatus" class="small">Na primeira vez, selecione: C:\TRABALHO 2\NYMI GACHA\public\models\modelos</div>
 
     <button id="exportModelPackage" class="good" style="margin-top:8px">Exportar modelo completo</button>
+    <button id="exportToCatalogV1" class="good" style="margin-top:8px">Exportar direto para Catálogo V1</button>
+    <div id="catalogExportStatus" class="status" style="margin-top:8px">O app escolherá automaticamente o próximo número disponível.</div>
     <div id="exportStatus" class="status" style="margin-top:8px">Nenhum modelo exportado ainda.</div>
 
     <div class="small" style="margin-top:8px">
@@ -2310,6 +2318,9 @@ const MODEL_EXPORT={
 function getModelNumber(){
   return clamp(Math.round(Number($("modelNumber")?.value||13)),1,99999);
 }
+function getModelGender(){
+  return $("modelGender")?.value==="masculino" ? "masculino" : "feminino";
+}
 function getModelFolderName(){
   return `modelo-${getModelNumber()}`;
 }
@@ -2487,11 +2498,11 @@ function prepareExperimentalFaceAlign(){
   S.faceAlign=cfg;
   return cfg;
 }
-function modelMetadata(){
+function modelMetadata(gender=getModelGender()){
   const n=getModelNumber();
   return {
     name:`Modelo ${n}`,
-    gender:"feminino",
+    gender,
     type:"head-only",
     anchor:"neck-base",
     anchorX:MODEL_EXPORT.anchorX,
@@ -2610,6 +2621,89 @@ function canvasToBlob(canvasEl){
   return new Promise((resolve,reject)=>{
     canvasEl.toBlob(blob=>blob?resolve(blob):reject(new Error("Falha ao gerar PNG")),"image/png");
   });
+}
+
+/* =========================================================
+   EXPORTAÇÃO DIRETA PARA O CATÁLOGO V1 DO APP
+========================================================= */
+function localDataBaseUrl(){
+  const port=Number.parseInt(location.port,10);
+  const dataPort=Number.isFinite(port)&&port>=6700&&port<6800?port+100:6800;
+  return `http://127.0.0.1:${dataPort}`;
+}
+let catalogSessionToken=null;
+async function catalogFetch(path,init={}){
+  const headers=new Headers(init.headers||{});
+  if(!catalogSessionToken){
+    const session=await fetch(`${localDataBaseUrl()}/session`,{cache:"no-store"});
+    const payload=await session.json().catch(()=>({}));
+    if(!session.ok||typeof payload.token!=="string")throw new Error("Não foi possível iniciar a sessão local do app.");
+    catalogSessionToken=payload.token;
+  }
+  headers.set("X-Gacha-Session",catalogSessionToken);
+  let response=await fetch(`${localDataBaseUrl()}${path}`,{...init,headers});
+  if(response.status===401){
+    catalogSessionToken=null;
+    return catalogFetch(path,init);
+  }
+  return response;
+}
+async function nextCatalogModelNumber(gender){
+  const response=await catalogFetch("/models",{cache:"no-store"});
+  if(!response.ok)throw new Error("Não foi possível consultar os modelos existentes.");
+  const data=await response.json();
+  const numbers=(data?.[gender]||[]).map(pack=>Number(String(pack.id||"").match(/^modelo-(\d+)$/i)?.[1]||0));
+  return Math.max(0,...numbers)+1;
+}
+async function uploadCatalogV1File(gender,folderName,fileName,body,contentType){
+  const response=await catalogFetch(`/models/import/${gender}/${folderName}/${encodeURIComponent(fileName)}`,{
+    method:"POST",
+    headers:{"Content-Type":contentType},
+    body
+  });
+  if(!response.ok){
+    const detail=await response.json().catch(()=>({}));
+    throw new Error(detail.error||`Falha ao enviar ${fileName}.`);
+  }
+}
+async function exportToCatalogV1(){
+  if(!S.canonical||!S.heads.length){
+    status("catalogExportStatus","Primeiro detecte as folhas e construa o molde canônico.","bad");
+    return;
+  }
+  const gender=getModelGender();
+  const loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length;
+  const expectedExportHeads=loadedSheets*21;
+  if(expectedExportHeads&&S.heads.length!==expectedExportHeads){
+    status("catalogExportStatus",`Detectei ${S.heads.length}/${expectedExportHeads} cabeças. Corrija a detecção antes de exportar.`,"bad");
+    return;
+  }
+  const button=$("exportToCatalogV1");
+  button.disabled=true;
+  try{
+    const number=await nextCatalogModelNumber(gender);
+    $("modelNumber").value=String(number);
+    updateModelPreview();
+    const folderName=`modelo-${number}`;
+    const metadata=modelMetadata(gender);
+    await uploadCatalogV1File(gender,folderName,`${folderName}.json`,JSON.stringify(metadata,null,2),"application/json");
+    const ordered=[...S.heads].sort((a,b)=>a.sheet===b.sheet?a.order-b.order:a.sheet.localeCompare(b.sheet));
+    for(let i=0;i<ordered.length;i++){
+      const h=ordered[i];
+      const filename=expressionFilename(h);
+      status("catalogExportStatus",`Enviando ${i+1}/${ordered.length}\n${gender}/${folderName}/${filename}`,"warn");
+      await uploadCatalogV1File(gender,folderName,filename,await canvasToBlob(makeModelExportFrame(h)),"image/png");
+      if(i%3===2)await sleep(0);
+    }
+    status("catalogExportStatus",`Concluído: ${gender}/${folderName} entrou no Catálogo V1.\n${ordered.length} PNGs + JSON`,"ok");
+    log(`Modelo ${gender}/${folderName} enviado diretamente para o Catálogo V1.`);
+    if(window.parent&&window.parent!==window)window.parent.dispatchEvent(new CustomEvent("nymi:models-updated"));
+  }catch(e){
+    console.error(e);
+    status("catalogExportStatus","Erro ao enviar para o Catálogo V1: "+(e.message||e),"bad");
+  }finally{
+    button.disabled=false;
+  }
 }
 
 /* =========================================================
@@ -2866,6 +2960,7 @@ function init(){
   $("showAnchors").onchange=drawPreview;
   $("chooseModelsDir").onclick=chooseModelsDirectory;
   $("exportModelPackage").onclick=exportFullModelPackage;
+  $("exportToCatalogV1").onclick=exportToCatalogV1;
   $("modelNumber").addEventListener("input",updateModelPreview);
   updateModelPreview();
 

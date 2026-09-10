@@ -876,6 +876,35 @@ async function route(request, response) {
     sendJson(response, request, 200, { ok: true, gender, id: modelId, expressionKey, bytes: body.length, path: filePath });
     return;
   }
+  const modelImportMatch = url.pathname.match(/^\/models\/import\/(feminino|masculino)\/(modelo-[0-9]{1,5})\/([a-zA-Z0-9_.-]{1,160})$/i);
+  if (modelImportMatch && request.method === "POST") {
+    const gender = modelImportMatch[1].toLowerCase();
+    const modelId = safeId(modelImportMatch[2]);
+    const fileName = modelImportMatch[3];
+    if (fileName.includes("..") || fileName.startsWith(".")) throw Object.assign(new Error("Nome de arquivo inválido."), { status: 400 });
+    const folder = join(MODELS_ROOT, gender, modelId);
+    const filePath = join(folder, fileName);
+    if (!inside(join(MODELS_ROOT, gender), folder) || !inside(folder, filePath)) throw Object.assign(new Error("Destino do modelo inválido."), { status: 400 });
+    const isJson = fileName.toLowerCase() === `${modelId}.json`;
+    const isPng = fileName.toLowerCase().endsWith(".png");
+    if (!isJson && !isPng) throw Object.assign(new Error("O exportador só aceita PNGs e o JSON do modelo."), { status: 415 });
+    const body = await requestBody(request, isJson ? BODY_LIMITS.json : BODY_LIMITS.image);
+    if (isJson) {
+      assertMimeType(contentTypeOf(request), new Set(["application/json"]), "O manifesto do modelo precisa ser JSON.");
+      let manifest;
+      try { manifest = JSON.parse(body.toString("utf8")); } catch { throw Object.assign(new Error("Manifesto de modelo inválido."), { status: 400 }); }
+      await mkdir(folder, { recursive: true });
+      await writeJsonAtomic(filePath, { ...manifest, gender, catalogVersion: "v1" });
+    } else {
+      assertMimeType(contentTypeOf(request), new Set(["image/png"]), "As expressões do modelo precisam ser PNG.");
+      const imageMetadata = await sharp(body).metadata();
+      if (imageMetadata.width !== 1920 || imageMetadata.height !== 1080) throw Object.assign(new Error("Cada expressão precisa ter exatamente 1920×1080 pixels."), { status: 400 });
+      await mkdir(folder, { recursive: true });
+      await writeFile(filePath, body);
+    }
+    sendJson(response, request, 200, { ok: true, gender, id: modelId, fileName });
+    return;
+  }
   const modelDeleteMatch = url.pathname.match(/^\/models\/modelos\/(feminino|masculino)\/([a-zA-Z0-9_-]{1,120})$/i);
   if (modelDeleteMatch && request.method === "DELETE") {
     const gender = modelDeleteMatch[1].toLowerCase();
