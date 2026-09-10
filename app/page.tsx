@@ -1358,7 +1358,6 @@ export default function Home() {
   const [draftStarted, setDraftStarted] = useState(false);
   const [characterName, setCharacterName] = useState("Novo personagem");
   const [characterPhoto, setCharacterPhoto] = useState<string | null>(null);
-  const [isGeneratingPhoto, setIsGeneratingPhoto] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [notice, setNotice] = useState("Pronto para criar");
   const [previewZoom, setPreviewZoom] = useState(100);
@@ -2191,7 +2190,6 @@ export default function Home() {
     }
     if (photoGenerationBusyRef.current) return;
     photoGenerationBusyRef.current = true;
-    setIsGeneratingPhoto(true);
     if (!automatic) {
       setNotice("Gerando foto do personagem…");
     }
@@ -2212,7 +2210,6 @@ export default function Home() {
       if (!automatic) setNotice(error instanceof Error ? `Erro ao gerar foto: ${error.message}` : "Não foi possível gerar a foto");
     } finally {
       photoGenerationBusyRef.current = false;
-      setIsGeneratingPhoto(false);
     }
   }, [activeCharacter, composeCharacter]);
 
@@ -3079,21 +3076,6 @@ export default function Home() {
       ...current,
       [category]: { ...normalizeTransform(current[category]), ...patch },
     }));
-  }
-
-  function updateHeadFitScale(axis: "scaleX" | "scaleY", percentage: number) {
-    if (category !== "roupas" || !selectedOutfit) return;
-    const current = normalizeTransform(adjustments.roupas);
-    const next = +(current[axis] * (1 + percentage / 100)).toFixed(4);
-    setAdjustments((state) => ({ ...state, roupas: { ...current, [axis]: Math.max(.1, Math.min(4, next)) } }));
-    setFitMode(true);
-  }
-
-  function updateHeadFitOffset(axis: "x" | "y", delta: number) {
-    if (category !== "roupas" || !selectedOutfit) return;
-    const current = normalizeTransform(adjustments.roupas);
-    setAdjustments((state) => ({ ...state, roupas: { ...current, [axis]: current[axis] + delta } }));
-    setFitMode(true);
   }
 
   function sampleChromaColor(event: ReactPointerEvent<HTMLCanvasElement>) {
