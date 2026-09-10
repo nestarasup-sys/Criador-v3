@@ -889,7 +889,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /Par frontal \+ traseiro/);
   assert.match(page, /openV0Catalog/);
   assert.match(page, /Catálogo V0/);
-  assert.match(page, /Mover para V0/);
+  assert.match(page, /openCatalogTransfer/);
+  assert.match(page, /Enviar para V1/);
+  assert.match(page, /catalogTransferDirection === "toV0"/);
   assert.match(page, /a roupa e sua variante foram mantidas/);
   assert.match(page, /outfitAdjustmentsByBasePack/);
   assert.match(page, /outfitLayerMasksByBasePack/);
