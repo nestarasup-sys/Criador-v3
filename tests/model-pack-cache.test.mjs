@@ -31,6 +31,8 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(server, /defaultExpressionKey/);
   assert.match(server, /version = createHash\("sha1"\)/);
   assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
+  assert.match(server, /config:\$\{metadata\.size\}:\$\{metadata\.mtimeMs\}/);
+  assert.doesNotMatch(creatorStorage, /validModels\.length > 0 \? validModels : DEFAULT_BASE_PACKS/);
   assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
   assert.match(renderer, /discovered\.version/);
   assert.match(compositor, /globalCompositeOperation = "source-over"/);

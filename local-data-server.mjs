@@ -456,7 +456,7 @@ async function discoverModels() {
       const files = await readdir(folder);
       const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
       const expressionKeys = collectModelExpressionKeys(pngFiles);
-      const { config } = await readModelConfig(folder, entry.name);
+      const { config, path: configPath } = await readModelConfig(folder, entry.name);
       const availableBaseExpressions = baseExpressionKeys(expressionKeys);
       if (availableBaseExpressions.length === 0) continue;
       const configuredDefault = typeof config?.defaultExpression === "string"
@@ -492,6 +492,9 @@ async function discoverModels() {
           const metadata = await stat(join(folder, colorMap.directory, name));
           return `color-map/${name}:${metadata.size}:${metadata.mtimeMs}`;
         }),
+        stat(configPath)
+          .then((metadata) => `config:${metadata.size}:${metadata.mtimeMs}`)
+          .catch(() => "config:none"),
       ]);
       const version = createHash("sha1")
         .update(versionParts.sort().join("|"))

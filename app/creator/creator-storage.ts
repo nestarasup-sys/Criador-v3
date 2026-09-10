@@ -11,7 +11,6 @@ import type {
   PcExpressionPack,
 } from "../domain/catalog-contract";
 import type { Model } from "../domain/character-primitives";
-import { DEFAULT_BASE_PACKS } from "./base-packs";
 import { localDataFetch } from "../lib/local-data-client";
 
 const DB_NAME = "gacha-maker";
@@ -171,7 +170,7 @@ export async function loadPcModels(): Promise<BasePackCollection> {
       ...pack,
       expressionKeys: pack.expressionKeys.filter((key): key is ExpressionKey => isExpressionKey(key)),
     })).filter((pack) => pack.expressionKeys.includes("normal"));
-    return [gender, validModels.length > 0 ? validModels : DEFAULT_BASE_PACKS[gender]];
+    return [gender, validModels];
   })) as unknown as BasePackCollection;
 }
 
