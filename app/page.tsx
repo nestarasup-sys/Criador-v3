@@ -5015,6 +5015,11 @@ export default function Home() {
     });
   }
 
+  function restoreColorAdjustment() {
+    updateColorAdjustment({ ...DEFAULT_COLOR_ADJUSTMENT, enabled: false });
+    setNotice("Cor original restaurada");
+  }
+
   function saveCurrentColorPreset() {
     const name = window.prompt("Nome do preset de cor", `${modelColorEditorActive ? "Modelo" : category} · ${activeColor.tint}`);
     if (!name?.trim()) return;
@@ -5890,6 +5895,7 @@ export default function Home() {
               {colorPanelOpen && <div className="color-editor-topbar">
                 <button type="button" className="color-editor-back" onClick={() => setColorPanelOpen(false)}>← Voltar ao catálogo</button>
                 <div className="color-editor-context"><span>EDITANDO AGORA</span><strong>{colorEditingTitle}</strong><small>{modelColorEditorActive ? `${model} · ${activeBasePack.expressionKeys.length} expressões` : `${category === "cabelos" ? "cabelo frontal" : category === "cabelosTras" ? "cabelo traseiro" : category}`}{category === "roupas" && activeOutfitVariantCount > 1 ? ` · ${activeOutfitVariantCount} versões vinculadas` : ""}</small></div>
+                <button type="button" className="color-editor-restore" onClick={restoreColorAdjustment}>Restaurar</button>
               </div>}
               {colorPanelOpen && <div className={`color-panel-body ${!activeColor.enabled ? "color-disabled" : ""}`}>
               <div className="color-section color-preview-section">

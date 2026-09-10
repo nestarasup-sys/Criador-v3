@@ -657,6 +657,8 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /colorPanelOpen/);
   assert.match(page, /className="color-tool-button color-tool-colors"/);
   assert.match(page, /className="color-tool-button color-tool-v0"/);
+  assert.match(page, /restoreColorAdjustment/);
+  assert.match(page, />Restaurar<|>Restaurar<\/button>/);
   assert.match(page, />CORES<|>CORES<\/button>/);
   assert.match(page, />Catálogo V0<|>Catálogo V0<\/button>/);
   assert.match(page, /detailPreservation/);
