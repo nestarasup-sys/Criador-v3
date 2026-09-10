@@ -20,8 +20,20 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
     read("local-data-server.mjs"),
   ]);
 
-  assert.match(page, /<strong>03<\/strong>/);
+  assert.match(page, /<strong>04<\/strong>/);
   assert.match(page, /laboratorio-cor-modelo/);
+  assert.match(page, /teste-controles-cor/);
   assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
   assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
+});
+
+test("teste de controles de cor usa o compositor e os alvos do Criador", async () => {
+  const page = await read("app/Ferramentas/teste-controles-cor/ColorControlsTestClient.tsx");
+  assert.match(page, /createModelColorAdjustedCanvasForScopes/);
+  assert.match(page, /getStoredModelColorCalibration/);
+  assert.match(page, /Somente pupilas/);
+  assert.match(page, /Pupilas \+ sobrancelhas/);
+  assert.match(page, /Somente pele/);
+  assert.match(page, /Somente sobrancelhas/);
+  assert.match(page, /Nada é salvo no personagem/);
 });
