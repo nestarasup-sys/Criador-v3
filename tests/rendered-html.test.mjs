@@ -462,8 +462,10 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(storage, /CATALOG_TOMBSTONES_KEY/);
   assert.match(storage, /catalogItemNeedsMigration/);
   assert.match(storage, /pcSaved/);
+  assert.match(storage, /nymi:pc-persistence-recovered/);
   assert.doesNotMatch(storage, /saveCatalogItemToPc\(item\)\.catch\(\(\) => undefined\)/);
   assert.match(page, /loadCatalogTombstones/);
+  assert.match(page, /pc-persistence-recovered/);
   assert.match(page, /deleteCatalogItemFromPc/);
   assert.match(page, /sincronização com o PC pendente/);
   assert.match(server, /missingFile: true/);

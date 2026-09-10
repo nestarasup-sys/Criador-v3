@@ -1408,7 +1408,15 @@ export default function Home() {
         : "Alteração salva neste navegador; o PC está indisponível. Migre os dados quando o serviço voltar.");
     };
     window.addEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
-    return () => window.removeEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
+    const handlePersistenceRecovery = () => {
+      pcSyncReadyRef.current = true;
+      setPcStorageAvailable(true);
+    };
+    window.addEventListener("nymi:pc-persistence-recovered", handlePersistenceRecovery);
+    return () => {
+      window.removeEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
+      window.removeEventListener("nymi:pc-persistence-recovered", handlePersistenceRecovery);
+    };
   }, []);
 
   useEffect(() => {

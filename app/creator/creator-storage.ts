@@ -21,6 +21,7 @@ const PACK_STORE_NAME = "expressionPacks";
 export const CHARACTER_KEY = "gacha-maker-characters";
 const CATALOG_TOMBSTONES_KEY = "gacha-maker-catalog-tombstones";
 const PACK_TOMBSTONES_KEY = "gacha-maker-expression-pack-tombstones";
+let pcPersistenceDegraded = false;
 
 export type LocalDeletionTombstone = { id: string; deletedAt: string };
 export type LocalPersistenceResult = { pcSaved: boolean };
@@ -48,7 +49,11 @@ function readTombstones(key: string): LocalDeletionTombstone[] {
 
 function writeTombstones(key: string, tombstones: LocalDeletionTombstone[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(tombstones));
+  try {
+    window.localStorage.setItem(key, JSON.stringify(tombstones));
+  } catch {
+    // A quota/privacidade restrita não pode transformar uma exclusão local em erro fatal.
+  }
 }
 
 function recordTombstone(key: string, id: string) {
@@ -123,10 +128,17 @@ export function expressionPackNeedsMigration(localPack: ExpressionPack, pcPack: 
 
 function notifyPcPersistenceFailure(kind: "catalog" | "expressionPack", error: unknown) {
   if (typeof window === "undefined") return;
+  pcPersistenceDegraded = true;
   const message = error instanceof Error ? error.message : "serviço local indisponível";
   window.setTimeout(() => window.dispatchEvent(new CustomEvent("nymi:pc-persistence-failed", {
     detail: { kind, message },
   })), 0);
+}
+
+function notifyPcPersistenceRecovered() {
+  if (typeof window === "undefined" || !pcPersistenceDegraded) return;
+  pcPersistenceDegraded = false;
+  window.setTimeout(() => window.dispatchEvent(new CustomEvent("nymi:pc-persistence-recovered")), 0);
 }
 
 type PcBasePackDefinition = {
@@ -356,6 +368,7 @@ export async function storeCatalogItem(item: CatalogItem): Promise<CatalogItem &
   try {
     await saveCatalogItemToPc(persistedItem);
     clearCatalogTombstone(persistedItem.id);
+    notifyPcPersistenceRecovered();
     return Object.assign(persistedItem, { pcSaved: true });
   } catch (error) {
     notifyPcPersistenceFailure("catalog", error);
@@ -375,6 +388,7 @@ export async function deleteCatalogItem(id: string): Promise<LocalPersistenceRes
   try {
     await deleteCatalogItemFromPc(id);
     clearCatalogTombstone(id);
+    notifyPcPersistenceRecovered();
     return { pcSaved: true };
   } catch (error) {
     notifyPcPersistenceFailure("catalog", error);
@@ -404,6 +418,7 @@ export async function storeExpressionPack(pack: ExpressionPack): Promise<Express
   try {
     await saveExpressionPackToPc(persistedPack);
     clearExpressionPackTombstone(persistedPack.id);
+    notifyPcPersistenceRecovered();
     return Object.assign(persistedPack, { pcSaved: true });
   } catch (error) {
     notifyPcPersistenceFailure("expressionPack", error);
@@ -423,6 +438,7 @@ export async function deleteExpressionPack(id: string): Promise<LocalPersistence
   try {
     await deleteExpressionPackFromPc(id);
     clearExpressionPackTombstone(id);
+    notifyPcPersistenceRecovered();
     return { pcSaved: true };
   } catch (error) {
     notifyPcPersistenceFailure("expressionPack", error);
