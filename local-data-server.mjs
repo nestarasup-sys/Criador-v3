@@ -389,6 +389,16 @@ async function readOptionalJson(filePath) {
   }
 }
 
+async function readModelConfig(folder, modelId) {
+  const candidates = ["model.json", "modelo.json", `${modelId}.json`];
+  for (const name of candidates) {
+    const path = join(folder, name);
+    const config = await readOptionalJson(path);
+    if (config) return { config, path };
+  }
+  return { config: {}, path: join(folder, "model.json") };
+}
+
 /**
  * Imported head-only models are allowed to omit model.json. Infer that layout
  * from the real alpha bounds instead of silently treating a 1920x1080 head
@@ -446,8 +456,7 @@ async function discoverModels() {
       const files = await readdir(folder);
       const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
       const expressionKeys = collectModelExpressionKeys(pngFiles);
-      const config = await readOptionalJson(join(folder, "model.json"))
-        ?? await readOptionalJson(join(folder, "modelo.json"));
+      const { config } = await readModelConfig(folder, entry.name);
       const availableBaseExpressions = baseExpressionKeys(expressionKeys);
       if (availableBaseExpressions.length === 0) continue;
       const configuredDefault = typeof config?.defaultExpression === "string"
@@ -856,14 +865,10 @@ async function route(request, response) {
     if (!inside(folder, mapFolder) || !inside(mapFolder, filePath)) throw new Error("Destino do mapa de cores inválido.");
     await mkdir(mapFolder, { recursive: true });
     await writeFile(filePath, body);
-    const modelJsonPath = join(folder, "model.json");
-    const legacyModelJsonPath = join(folder, "modelo.json");
-    const modelConfig = await readOptionalJson(modelJsonPath);
-    const legacyModelConfig = modelConfig ? null : await readOptionalJson(legacyModelJsonPath);
-    const existingConfig = modelConfig ?? legacyModelConfig ?? {};
+    const { config: existingConfig, path: modelConfigPath } = await readModelConfig(folder, modelId);
     const previousMap = normalizeModelColorMapMetadata(existingConfig.colorMap);
     const expressions = [...new Set([...(previousMap?.expressions ?? []), expressionKey])].sort();
-    await writeJsonAtomic(modelConfig ? modelJsonPath : legacyModelConfig ? legacyModelJsonPath : modelJsonPath, {
+    await writeJsonAtomic(modelConfigPath, {
       ...existingConfig,
       colorMap: {
         version: 1,
@@ -1001,12 +1006,8 @@ async function route(request, response) {
     try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
     const body = await requestJson(request);
     if (body?.catalogVersion !== "v0" && body?.catalogVersion !== "v1") throw Object.assign(new Error("Catálogo do modelo inválido."), { status: 400 });
-    const modelJsonPath = join(folder, "model.json");
-    const legacyModelJsonPath = join(folder, "modelo.json");
-    const modelConfig = await readOptionalJson(modelJsonPath);
-    const legacyModelConfig = modelConfig ? null : await readOptionalJson(legacyModelJsonPath);
-    const targetPath = modelConfig ? modelJsonPath : legacyModelConfig ? legacyModelJsonPath : modelJsonPath;
-    await writeJsonAtomic(targetPath, { ...(modelConfig ?? legacyModelConfig ?? {}), catalogVersion: body.catalogVersion });
+    const { config, path: configPath } = await readModelConfig(folder, modelId);
+    await writeJsonAtomic(configPath, { ...config, catalogVersion: body.catalogVersion });
     sendJson(response, request, 200, { ok: true, gender, id: modelId, catalogVersion: body.catalogVersion });
     return;
   }

@@ -123,6 +123,8 @@ test("discovers numbered model folders with shared hair and outfits by gender", 
   assert.match(page, /basePackId/);
   assert.match(server, /async function discoverModels/);
   assert.match(server, /url\.pathname === "\/models"/);
+  assert.match(server, /readModelConfig/);
+  assert.match(server, /`\$\{modelId\}\.json`/);
   assert.match(server, /MODELS_ROOT/);
 });
 
