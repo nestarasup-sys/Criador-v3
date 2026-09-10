@@ -18,6 +18,10 @@ export type CatalogItemMetadata = NormalizedContentGeometry & {
   category: Category;
   /** Catálogo lógico da roupa. Itens legados sem o campo continuam no V1. */
   catalogVersion?: "v0" | "v1";
+  /** Revisão da última alteração local, usada para sincronizar o navegador com o PC. */
+  updatedAt?: string;
+  /** Marcador interno quando o arquivo local não está disponível no momento. */
+  missingFile?: boolean;
   width?: number;
   height?: number;
   defaultX?: number;
@@ -49,6 +53,8 @@ export type ExpressionFrame = {
   url?: string;
   width: number;
   height: number;
+  /** Marcador interno quando o arquivo local não está disponível no momento. */
+  missingFile?: boolean;
 };
 
 export type PcExpressionFrame = Omit<ExpressionFrame, "blob" | "url"> & { fileUrl: string };
@@ -60,6 +66,8 @@ export type ExpressionPack = {
   basePackId?: BasePackId;
   frames: ExpressionFrame[];
   createdAt: string;
+  /** Revisão da última alteração local, usada para sincronizar o navegador com o PC. */
+  updatedAt?: string;
 };
 
 export type PcExpressionPack = Omit<ExpressionPack, "frames"> & { frames: PcExpressionFrame[] };

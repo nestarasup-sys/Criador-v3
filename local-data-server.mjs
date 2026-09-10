@@ -548,9 +548,9 @@ async function localFileExists(filePath) {
 }
 
 /**
- * Remove only metadata entries whose backing files were deleted outside the app.
- * Existing files are never touched. This keeps /state usable after a manual
- * catalog cleanup and prevents one missing PNG from aborting the whole load.
+ * Preserve metadata when a backing file disappears outside the app. A missing
+ * file is marked for the UI instead of being silently deleted from state, so a
+ * temporary cleanup or restore cannot resurrect/erase an asset without a trace.
  */
 async function reconcileMissingLocalAssets() {
   let changed = false;
@@ -558,8 +558,16 @@ async function reconcileMissingLocalAssets() {
   for (const item of state.catalog ?? []) {
     const id = String(item?.id ?? "");
     const filePath = join(CATALOG_ROOT, `${id}.png`);
-    if (id && inside(CATALOG_ROOT, filePath) && await localFileExists(filePath)) catalog.push(item);
-    else changed = true;
+    const exists = id && inside(CATALOG_ROOT, filePath) && await localFileExists(filePath);
+    if (exists) {
+      if (item.missingFile) changed = true;
+      const { missingFile: _missingFile, ...availableItem } = item;
+      void _missingFile;
+      catalog.push(availableItem);
+    } else {
+      if (item.missingFile !== true) changed = true;
+      catalog.push({ ...item, missingFile: true });
+    }
   }
 
   const expressionPacks = [];
@@ -569,11 +577,19 @@ async function reconcileMissingLocalAssets() {
     for (const frame of pack.frames ?? []) {
       const key = String(frame?.key ?? "");
       const filePath = join(PACKS_ROOT, packId, `${key}.png`);
-      if (packId && key && inside(PACKS_ROOT, filePath) && await localFileExists(filePath)) frames.push(frame);
-      else changed = true;
+      const exists = packId && key && inside(PACKS_ROOT, filePath) && await localFileExists(filePath);
+      if (exists) {
+        if (frame.missingFile) changed = true;
+        const { missingFile: _missingFile, ...availableFrame } = frame;
+        void _missingFile;
+        frames.push(availableFrame);
+      } else {
+        if (frame.missingFile !== true) changed = true;
+        frames.push({ ...frame, missingFile: true });
+      }
     }
-    if (frames.length > 0) expressionPacks.push({ ...pack, frames });
-    else if (packId) changed = true;
+    if (packId) expressionPacks.push({ ...pack, frames });
+    else changed = true;
   }
 
   // Cenas podem sobreviver aos arquivos quando um fundo/objeto é removido

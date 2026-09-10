@@ -458,6 +458,14 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(storage, /characterSaveQueue = operation\.then/);
   assert.match(storage, /saveCatalogItemToPc/);
   assert.match(storage, /saveExpressionPackToPc/);
+  assert.match(storage, /CATALOG_TOMBSTONES_KEY/);
+  assert.match(storage, /catalogItemNeedsMigration/);
+  assert.match(storage, /pcSaved/);
+  assert.doesNotMatch(storage, /saveCatalogItemToPc\(item\)\.catch\(\(\) => undefined\)/);
+  assert.match(page, /loadCatalogTombstones/);
+  assert.match(page, /deleteCatalogItemFromPc/);
+  assert.match(page, /sincronização com o PC pendente/);
+  assert.match(server, /missingFile: true/);
   assert.match(server, /const HOST = "127\.0\.0\.1"/);
   assert.match(server, /dados-locais/);
   assert.match(server, /state\.json/);

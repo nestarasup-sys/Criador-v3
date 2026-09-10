@@ -28,14 +28,22 @@ import { basePackCacheKey, baseExpressionColorMapSource, baseExpressionSource, D
 import { buildModelColorMapData } from "./domain/model-color-map.mjs";
 import {
   deleteCatalogItem,
+  deleteCatalogItemFromPc,
   deleteBaseModelFromPc,
   deleteExpressionPack,
+  deleteExpressionPackFromPc,
+  clearCatalogTombstone,
+  clearExpressionPackTombstone,
+  expressionPackNeedsMigration,
   hydratePcState,
   loadCatalog,
+  loadCatalogTombstones,
   loadExpressionPacks,
+  loadExpressionPackTombstones,
   loadPcModels,
   loadPcState,
   normalizeOutfitCatalog,
+  catalogItemNeedsMigration,
   saveCatalogItemToPc,
   saveCharactersToPc,
   saveExpressionPackToPc,
@@ -1235,10 +1243,18 @@ export default function Home() {
   const charactersRef = useRef<Character[]>([]);
   const characterSwitchRef = useRef(false);
   const pcSyncReadyRef = useRef(false);
-  const browserMigrationRef = useRef<{ characters: Character[]; catalog: CatalogItem[]; expressionPacks: ExpressionPack[] }>({
+  const browserMigrationRef = useRef<{
+    characters: Character[];
+    catalog: CatalogItem[];
+    expressionPacks: ExpressionPack[];
+    catalogTombstones: { id: string; deletedAt: string }[];
+    expressionPackTombstones: { id: string; deletedAt: string }[];
+  }>({
     characters: [],
     catalog: [],
     expressionPacks: [],
+    catalogTombstones: [],
+    expressionPackTombstones: [],
   });
   const dragRef = useRef<{
     pointerId: number;
@@ -1382,6 +1398,20 @@ export default function Home() {
   const [isMigrating, setIsMigrating] = useState(false);
 
   useEffect(() => {
+    const handlePersistenceFailure = (event: Event) => {
+      const detail = (event as CustomEvent<{ kind?: string }>).detail;
+      pcSyncReadyRef.current = false;
+      setPcStorageAvailable(false);
+      setMigrationAvailable(true);
+      setNotice(detail?.kind === "expressionPack"
+        ? "Pack salvo neste navegador; o PC está indisponível. Migre os dados quando o serviço voltar."
+        : "Alteração salva neste navegador; o PC está indisponível. Migre os dados quando o serviço voltar.");
+    };
+    window.addEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
+    return () => window.removeEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
+  }, []);
+
+  useEffect(() => {
     let browserCharacters: Character[] = [];
     const saved = localStorage.getItem(CHARACTER_KEY);
     if (saved) {
@@ -1411,22 +1441,44 @@ export default function Home() {
           basePackId: normalizeBasePackId(pack.basePackId),
           frames: pack.frames.map((frame) => ({ ...frame, url: URL.createObjectURL(frame.blob) })),
         }));
-        browserMigrationRef.current = { characters: browserCharacters, catalog: browserCatalog, expressionPacks: browserPacks };
+        const catalogTombstones = loadCatalogTombstones();
+        const expressionPackTombstones = loadExpressionPackTombstones();
+        browserMigrationRef.current = {
+          characters: browserCharacters,
+          catalog: browserCatalog,
+          expressionPacks: browserPacks,
+          catalogTombstones,
+          expressionPackTombstones,
+        };
         if (pcState) {
           setPcStorageAvailable(true);
           const pcHasData = pcState.characters.length > 0 || pcState.catalog.length > 0 || pcState.expressionPacks.length > 0;
+          const pcCatalogById = new Map(pcState.catalog.map((item) => [item.id, item]));
+          const pcPackById = new Map(pcState.expressionPacks.map((pack) => [pack.id, pack]));
+          const hasCatalogChanges = browserCatalog.some((item) => catalogItemNeedsMigration(item, pcCatalogById.get(item.id)));
+          const hasCatalogDeletions = catalogTombstones.some((tombstone) => {
+            const item = pcCatalogById.get(tombstone.id);
+            return item && new Date(tombstone.deletedAt).getTime() > new Date(item.updatedAt ?? 0).getTime();
+          });
+          const hasPackChanges = browserPacks.some((pack) => expressionPackNeedsMigration(pack, pcPackById.get(pack.id)));
+          const hasPackDeletions = expressionPackTombstones.some((tombstone) => {
+            const pack = pcPackById.get(tombstone.id);
+            return pack && new Date(tombstone.deletedAt).getTime() > new Date(pack.updatedAt ?? 0).getTime();
+          });
           const hasUnmigratedBrowserData = browserCharacters.some((character) => {
             const pcCharacter = pcState.characters.find((entry) => entry.id === character.id);
             return !pcCharacter || new Date(character.updatedAt).getTime() > new Date(pcCharacter.updatedAt).getTime();
-          }) || browserCatalog.some((item) => !pcState.catalog.some((entry) => entry.id === item.id))
-            || browserPacks.some((pack) => !pcState.expressionPacks.some((entry) => entry.id === pack.id));
+          }) || hasCatalogChanges || hasCatalogDeletions || hasPackChanges || hasPackDeletions;
           if (pcHasData) {
             const hydrated = await hydratePcState(pcState);
             setCharacters(hydrated.characters);
             setCatalog(hydrated.catalog);
             setExpressionPacks(hydrated.expressionPacks);
             setMigrationAvailable(hasUnmigratedBrowserData);
-            setNotice(hasUnmigratedBrowserData ? "Há dados deste navegador para migrar" : "Dados carregados do PC");
+            const missingCount = hydrated.missingCatalogIds.length + hydrated.missingExpressionPackFrames.length;
+            setNotice(missingCount > 0
+              ? `${missingCount} asset(s) do PC não foram encontrados; os metadados foram preservados`
+              : hasUnmigratedBrowserData ? "Há dados deste navegador para migrar" : "Dados carregados do PC");
           } else {
             const browserHasData = browserCharacters.length > 0 || browserCatalog.length > 0 || browserPacks.length > 0;
             setCharacters(browserCharacters);
@@ -2801,7 +2853,7 @@ export default function Home() {
   async function removeActiveExpressionPack() {
     if (!activeExpressionPack) return;
     if (!window.confirm(`Excluir o pack de expressões “${activeExpressionPack.name}”?`)) return;
-    await deleteExpressionPack(activeExpressionPack.id);
+    const deleteResult = await deleteExpressionPack(activeExpressionPack.id);
     activeExpressionPack.frames.forEach((frame) => {
       if (frame.url) URL.revokeObjectURL(frame.url);
     });
@@ -2809,7 +2861,9 @@ export default function Home() {
     setActivePackId(null);
     setFaceMode("base");
     setAnimationMode(null);
-    setNotice("Pack de expressões removido");
+    setNotice(deleteResult.pcSaved
+      ? "Pack de expressões removido"
+      : "Pack removido localmente; exclusão no PC pendente");
   }
 
   async function selectCatalogItem(id: string | null) {
@@ -4092,26 +4146,69 @@ export default function Home() {
     setNotice("Migrando personagens e imagens para o PC…");
     try {
       const browserData = browserMigrationRef.current;
+      const latestBrowserCatalog = normalizeOutfitCatalog(await loadCatalog()).map((item) => ({
+        ...item,
+        url: URL.createObjectURL(item.blob),
+      }));
+      const latestBrowserPacks = (await loadExpressionPacks()).map((pack) => ({
+        ...pack,
+        frames: pack.frames.map((frame) => ({ ...frame, url: URL.createObjectURL(frame.blob) })),
+      }));
+      const catalogSource = latestBrowserCatalog;
+      const packSource = latestBrowserPacks;
+      const catalogTombstones = loadCatalogTombstones();
+      const expressionPackTombstones = loadExpressionPackTombstones();
+      let latestBrowserCharacters = browserData.characters;
+      try {
+        const storedCharacters = JSON.parse(localStorage.getItem(CHARACTER_KEY) ?? "[]");
+        if (Array.isArray(storedCharacters)) latestBrowserCharacters = storedCharacters;
+      } catch {
+        // Mantém o snapshot inicial se o navegador tiver um JSON inválido.
+      }
       const mergedCharacters = [...characters];
-      for (const browserCharacter of browserData.characters) {
+      for (const browserCharacter of latestBrowserCharacters) {
         const index = mergedCharacters.findIndex((entry) => entry.id === browserCharacter.id);
         if (index === -1) mergedCharacters.push(browserCharacter);
         else if (new Date(browserCharacter.updatedAt).getTime() > new Date(mergedCharacters[index].updatedAt).getTime()) {
           mergedCharacters[index] = browserCharacter;
         }
       }
-      const newCatalogItems = browserData.catalog.filter((item) => !catalog.some((entry) => entry.id === item.id));
-      const newPacks = browserData.expressionPacks.filter((pack) => !expressionPacks.some((entry) => entry.id === pack.id));
+      const catalogUpdates = catalogSource.filter((item) => catalogItemNeedsMigration(item, catalog.find((entry) => entry.id === item.id)));
+      const packUpdates = packSource.filter((pack) => expressionPackNeedsMigration(pack, expressionPacks.find((entry) => entry.id === pack.id)));
+      const catalogDeletionIds = new Set(catalogTombstones
+        .filter((tombstone) => {
+          const current = catalog.find((item) => item.id === tombstone.id);
+          return current && new Date(tombstone.deletedAt).getTime() > new Date(current.updatedAt ?? 0).getTime();
+        })
+        .map((tombstone) => tombstone.id));
+      const packDeletionIds = new Set(expressionPackTombstones
+        .filter((tombstone) => {
+          const current = expressionPacks.find((pack) => pack.id === tombstone.id);
+          return current && new Date(tombstone.deletedAt).getTime() > new Date(current.updatedAt ?? 0).getTime();
+        })
+        .map((tombstone) => tombstone.id));
       await saveCharactersToPc(mergedCharacters);
-      for (const item of newCatalogItems) await saveCatalogItemToPc(item);
-      for (const pack of newPacks) await saveExpressionPackToPc(pack);
+      for (const item of catalogUpdates) await saveCatalogItemToPc(item);
+      for (const id of catalogDeletionIds) await deleteCatalogItemFromPc(id);
+      for (const pack of packUpdates) await saveExpressionPackToPc(pack);
+      for (const id of packDeletionIds) await deleteExpressionPackFromPc(id);
+      catalogTombstones.forEach((tombstone) => clearCatalogTombstone(tombstone.id));
+      expressionPackTombstones.forEach((tombstone) => clearExpressionPackTombstone(tombstone.id));
+      const updatedCatalogIds = new Set(catalogUpdates.map((item) => item.id));
+      const updatedPackIds = new Set(packUpdates.map((pack) => pack.id));
+      const mergedCatalog = catalog
+        .filter((item) => !catalogDeletionIds.has(item.id) && !updatedCatalogIds.has(item.id))
+        .concat(catalogUpdates);
+      const mergedPacks = expressionPacks
+        .filter((pack) => !packDeletionIds.has(pack.id) && !updatedPackIds.has(pack.id))
+        .concat(packUpdates);
       setCharacters(mergedCharacters);
-      setCatalog((current) => [...current, ...newCatalogItems]);
-      setExpressionPacks((current) => [...current, ...newPacks]);
+      setCatalog(mergedCatalog);
+      setExpressionPacks(mergedPacks);
       pcSyncReadyRef.current = true;
       setMigrationAvailable(false);
       setPcStorageAvailable(true);
-      setNotice("Migração concluída; dados salvos no PC");
+      setNotice(`Migração concluída; ${catalogUpdates.length} item(ns) e ${packUpdates.length} pack(s) sincronizados no PC`);
     } catch {
       setNotice("Não foi possível concluir a migração para o PC");
     } finally {
@@ -4137,7 +4234,7 @@ export default function Home() {
     if (!items.length) return;
     const groupName = items[0].outfitGroupName ?? items[0].name;
     if (!options.skipConfirm && !window.confirm(`Excluir “${groupName}” e todas as suas variantes?`)) return;
-    await Promise.all(items.map((item) => deleteCatalogItem(item.id)));
+    const deleteResults = await Promise.all(items.map((item) => deleteCatalogItem(item.id)));
     items.forEach((item) => {
       if (item.url) URL.revokeObjectURL(item.url);
     });
@@ -4160,7 +4257,9 @@ export default function Home() {
       setOutfitProtectionMasksByBasePack({});
     }
     setOutfitGroupViewId((current) => current === groupId ? null : current);
-    setNotice(`${groupName} e suas variantes foram removidas`);
+    setNotice(deleteResults.some((result) => !result.pcSaved)
+      ? `${groupName} removida localmente; exclusão no PC pendente`
+      : `${groupName} e suas variantes foram removidas`);
   }
 
   async function removeItem(item: CatalogItem, options: { skipConfirm?: boolean } = {}) {
@@ -4168,13 +4267,13 @@ export default function Home() {
       ? " O vínculo com o cabelo traseiro também será removido."
       : "";
     if (!options.skipConfirm && !window.confirm(`Excluir “${item.name}” do catálogo?${extraMessage}`)) return;
-    await deleteCatalogItem(item.id);
+    const deleteResult = await deleteCatalogItem(item.id);
     const unlinkedBackHairs = item.category === "cabelos"
       ? catalog
           .filter((entry) => entry.category === "cabelosTras" && entry.linkedHairId === item.id)
           .map((entry) => ({ ...entry, linkedHairId: undefined }))
       : [];
-    await Promise.all(unlinkedBackHairs.map(storeCatalogItem));
+    const unlinkResults = await Promise.all(unlinkedBackHairs.map(storeCatalogItem));
     if (item.url) URL.revokeObjectURL(item.url);
     setCatalog((current) => current
       .filter((entry) => entry.id !== item.id)
@@ -4194,7 +4293,9 @@ export default function Home() {
         Object.entries(current).filter(([entryKey]) => entryKey !== key),
       ));
     }
-    setNotice(`${item.name} removido do catálogo`);
+    setNotice(!deleteResult.pcSaved || unlinkResults.some((result) => !result.pcSaved)
+      ? `${item.name} removido localmente; sincronização com o PC pendente`
+      : `${item.name} removido do catálogo`);
   }
 
   function persistEditorSnapshot(message: string, force = false): Character[] | null {
@@ -4426,12 +4527,21 @@ export default function Home() {
     setNotice("Movendo roupas para o Catálogo V0…");
     try {
       const movedItems = sourceItems.map((item) => ({ ...item, catalogVersion: "v0" as const }));
-      for (const item of movedItems) await storeCatalogItem(item);
-      const movedIds = new Set(movedItems.map((item) => item.id));
-      setCatalog((current) => current.map((item) => movedIds.has(item.id) ? { ...item, catalogVersion: "v0" } : item));
+      const persistedMovedItems: CatalogItem[] = [];
+      let pcPending = false;
+      for (const item of movedItems) {
+        const result = await storeCatalogItem(item);
+        const { pcSaved, ...persistedItem } = result;
+        persistedMovedItems.push(persistedItem);
+        pcPending ||= !pcSaved;
+      }
+      const movedById = new Map(persistedMovedItems.map((item) => [item.id, item]));
+      setCatalog((current) => current.map((item) => movedById.get(item.id) ?? item));
       setV0TransferSelection([]);
       setV0TransferOpen(false);
-      setNotice(`${groupCount} roupa(s) movida(s) para o Catálogo V0`);
+      setNotice(pcPending
+        ? `${groupCount} roupa(s) movida(s) no navegador; sincronização com o PC pendente`
+        : `${groupCount} roupa(s) movida(s) para o Catálogo V0`);
     } catch {
       setNotice("Não foi possível concluir a movimentação; nenhuma referência foi alterada");
     } finally {

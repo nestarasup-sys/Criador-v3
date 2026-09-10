@@ -7,6 +7,7 @@ import type {
   ExpressionFrame,
   ExpressionPack,
   PcCatalogItem,
+  PcExpressionFrame,
   PcExpressionPack,
 } from "../domain/catalog-contract";
 import type { Model } from "../domain/character-primitives";
@@ -18,12 +19,115 @@ const DB_VERSION = 2;
 const STORE_NAME = "catalog";
 const PACK_STORE_NAME = "expressionPacks";
 export const CHARACTER_KEY = "gacha-maker-characters";
+const CATALOG_TOMBSTONES_KEY = "gacha-maker-catalog-tombstones";
+const PACK_TOMBSTONES_KEY = "gacha-maker-expression-pack-tombstones";
+
+export type LocalDeletionTombstone = { id: string; deletedAt: string };
+export type LocalPersistenceResult = { pcSaved: boolean };
 
 export type PcState = {
   characters: Character[];
   catalog: PcCatalogItem[];
   expressionPacks: PcExpressionPack[];
 };
+
+function readTombstones(key: string): LocalDeletionTombstone[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry): entry is LocalDeletionTombstone =>
+      Boolean(entry)
+      && typeof entry.id === "string"
+      && typeof entry.deletedAt === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeTombstones(key: string, tombstones: LocalDeletionTombstone[]) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(tombstones));
+}
+
+function recordTombstone(key: string, id: string) {
+  const next = readTombstones(key).filter((entry) => entry.id !== id);
+  next.push({ id, deletedAt: new Date().toISOString() });
+  writeTombstones(key, next);
+}
+
+function clearTombstone(key: string, id: string) {
+  writeTombstones(key, readTombstones(key).filter((entry) => entry.id !== id));
+}
+
+export function loadCatalogTombstones() {
+  return readTombstones(CATALOG_TOMBSTONES_KEY);
+}
+
+export function loadExpressionPackTombstones() {
+  return readTombstones(PACK_TOMBSTONES_KEY);
+}
+
+export function clearCatalogTombstone(id: string) {
+  clearTombstone(CATALOG_TOMBSTONES_KEY, id);
+}
+
+export function clearExpressionPackTombstone(id: string) {
+  clearTombstone(PACK_TOMBSTONES_KEY, id);
+}
+
+function stableSerialize(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value) ?? "undefined";
+  if (Array.isArray(value)) return `[${value.map(stableSerialize).join(",")}]`;
+  return `{${Object.entries(value as Record<string, unknown>)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, entry]) => `${JSON.stringify(key)}:${stableSerialize(entry)}`)
+    .join(",")}}`;
+}
+
+function catalogComparable(item: CatalogItem | PcCatalogItem) {
+  const { blob: _blob, url: _url, fileUrl: _fileUrl, ...metadata } = item as CatalogItem & PcCatalogItem;
+  void _blob;
+  void _url;
+  void _fileUrl;
+  return metadata;
+}
+
+export function catalogItemNeedsMigration(localItem: CatalogItem, pcItem: PcCatalogItem | CatalogItem | undefined) {
+  if (!pcItem) return true;
+  const localRevision = Date.parse(localItem.updatedAt ?? "");
+  const pcRevision = Date.parse(pcItem.updatedAt ?? "");
+  if (Number.isFinite(localRevision) && (!Number.isFinite(pcRevision) || localRevision > pcRevision)) return true;
+  return stableSerialize(catalogComparable(localItem)) !== stableSerialize(catalogComparable(pcItem));
+}
+
+export function expressionPackNeedsMigration(localPack: ExpressionPack, pcPack: PcExpressionPack | ExpressionPack | undefined) {
+  if (!pcPack) return true;
+  const localRevision = Date.parse(localPack.updatedAt ?? "");
+  const pcRevision = Date.parse(pcPack.updatedAt ?? "");
+  if (Number.isFinite(localRevision) && (!Number.isFinite(pcRevision) || localRevision > pcRevision)) return true;
+  const localFrames = localPack.frames.map((entry) => {
+    const { blob: _blob, url: _url, ...frame } = entry as ExpressionFrame & PcExpressionFrame;
+    void _blob;
+    void _url;
+    return frame;
+  });
+  const pcFrames = pcPack.frames.map((entry) => {
+    const { fileUrl: _fileUrl, ...frame } = entry as ExpressionFrame & PcExpressionFrame;
+    void _fileUrl;
+    return frame;
+  });
+  return stableSerialize({ ...localPack, frames: localFrames }) !== stableSerialize({ ...pcPack, frames: pcFrames });
+}
+
+function notifyPcPersistenceFailure(kind: "catalog" | "expressionPack", error: unknown) {
+  if (typeof window === "undefined") return;
+  const message = error instanceof Error ? error.message : "serviço local indisponível";
+  window.setTimeout(() => window.dispatchEvent(new CustomEvent("nymi:pc-persistence-failed", {
+    detail: { kind, message },
+  })), 0);
+}
 
 type PcBasePackDefinition = {
   id: string;
@@ -172,28 +276,38 @@ async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, work
 
 export async function hydratePcState(pcState: PcState) {
   const normalizedPcCatalog = normalizeOutfitCatalog(pcState.catalog);
+  const missingCatalogIds: string[] = [];
   const catalog = (await mapWithConcurrency(normalizedPcCatalog, 6, async (item) => {
     try {
       const response = await fetch(item.fileUrl, { cache: "no-store" });
-      if (!response.ok) return null;
+      if (!response.ok) {
+        missingCatalogIds.push(item.id);
+        return null;
+      }
       const blob = await response.blob();
       const { fileUrl: _fileUrl, ...metadata } = item;
       void _fileUrl;
       return { ...metadata, blob, url: URL.createObjectURL(blob) } as CatalogItem;
     } catch {
+      missingCatalogIds.push(item.id);
       return null;
     }
   })).filter((item): item is CatalogItem => item !== null);
+  const missingExpressionPackFrames: string[] = [];
   const expressionPacks: ExpressionPack[] = (await mapWithConcurrency(pcState.expressionPacks ?? [], 4, async (pack) => {
     const frames = (await mapWithConcurrency(pack.frames ?? [], 6, async (frame) => {
       try {
         const response = await fetch(frame.fileUrl, { cache: "no-store" });
-        if (!response.ok) return null;
+        if (!response.ok) {
+          missingExpressionPackFrames.push(`${pack.id}:${frame.key}`);
+          return null;
+        }
         const blob = await response.blob();
         const { fileUrl: _fileUrl, ...metadata } = frame;
         void _fileUrl;
         return { ...metadata, blob, url: URL.createObjectURL(blob) } as ExpressionFrame;
       } catch {
+        missingExpressionPackFrames.push(`${pack.id}:${frame.key}`);
         return null;
       }
     })).filter((frame): frame is ExpressionFrame => frame !== null);
@@ -203,6 +317,8 @@ export async function hydratePcState(pcState: PcState) {
     characters: (pcState.characters ?? []).map((character) => ({ ...character, basePackId: normalizeBasePackId(character.basePackId) })),
     catalog,
     expressionPacks: expressionPacks.map((pack) => ({ ...pack, basePackId: normalizeBasePackId(pack.basePackId) })),
+    missingCatalogIds,
+    missingExpressionPackFrames,
   };
 }
 
@@ -228,18 +344,26 @@ export async function loadCatalog() {
   });
 }
 
-export async function storeCatalogItem(item: CatalogItem) {
+export async function storeCatalogItem(item: CatalogItem): Promise<CatalogItem & LocalPersistenceResult> {
+  const persistedItem: CatalogItem = { ...item, updatedAt: new Date().toISOString() };
   const db = await openDatabase();
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
-    transaction.objectStore(STORE_NAME).put({ ...item, url: undefined });
+    transaction.objectStore(STORE_NAME).put({ ...persistedItem, url: undefined });
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
-  await saveCatalogItemToPc(item).catch(() => undefined);
+  try {
+    await saveCatalogItemToPc(persistedItem);
+    clearCatalogTombstone(persistedItem.id);
+    return Object.assign(persistedItem, { pcSaved: true });
+  } catch (error) {
+    notifyPcPersistenceFailure("catalog", error);
+    return Object.assign(persistedItem, { pcSaved: false });
+  }
 }
 
-export async function deleteCatalogItem(id: string) {
+export async function deleteCatalogItem(id: string): Promise<LocalPersistenceResult> {
   const db = await openDatabase();
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
@@ -247,7 +371,15 @@ export async function deleteCatalogItem(id: string) {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
-  await deleteCatalogItemFromPc(id).catch(() => undefined);
+  recordTombstone(CATALOG_TOMBSTONES_KEY, id);
+  try {
+    await deleteCatalogItemFromPc(id);
+    clearCatalogTombstone(id);
+    return { pcSaved: true };
+  } catch (error) {
+    notifyPcPersistenceFailure("catalog", error);
+    return { pcSaved: false };
+  }
 }
 
 export async function loadExpressionPacks() {
@@ -259,19 +391,27 @@ export async function loadExpressionPacks() {
   });
 }
 
-export async function storeExpressionPack(pack: ExpressionPack) {
+export async function storeExpressionPack(pack: ExpressionPack): Promise<ExpressionPack & LocalPersistenceResult> {
+  const persistedPack: ExpressionPack = { ...pack, updatedAt: new Date().toISOString() };
   const db = await openDatabase();
-  const storedPack = { ...pack, frames: pack.frames.map((frame) => ({ key: frame.key, blob: frame.blob, width: frame.width, height: frame.height })) };
+  const storedPack = { ...persistedPack, frames: persistedPack.frames.map((frame) => ({ key: frame.key, blob: frame.blob, width: frame.width, height: frame.height })) };
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(PACK_STORE_NAME, "readwrite");
     transaction.objectStore(PACK_STORE_NAME).put(storedPack);
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
-  await saveExpressionPackToPc(pack).catch(() => undefined);
+  try {
+    await saveExpressionPackToPc(persistedPack);
+    clearExpressionPackTombstone(persistedPack.id);
+    return Object.assign(persistedPack, { pcSaved: true });
+  } catch (error) {
+    notifyPcPersistenceFailure("expressionPack", error);
+    return Object.assign(persistedPack, { pcSaved: false });
+  }
 }
 
-export async function deleteExpressionPack(id: string) {
+export async function deleteExpressionPack(id: string): Promise<LocalPersistenceResult> {
   const db = await openDatabase();
   await new Promise<void>((resolve, reject) => {
     const transaction = db.transaction(PACK_STORE_NAME, "readwrite");
@@ -279,5 +419,13 @@ export async function deleteExpressionPack(id: string) {
     transaction.oncomplete = () => resolve();
     transaction.onerror = () => reject(transaction.error);
   });
-  await deleteExpressionPackFromPc(id).catch(() => undefined);
+  recordTombstone(PACK_TOMBSTONES_KEY, id);
+  try {
+    await deleteExpressionPackFromPc(id);
+    clearExpressionPackTombstone(id);
+    return { pcSaved: true };
+  } catch (error) {
+    notifyPcPersistenceFailure("expressionPack", error);
+    return { pcSaved: false };
+  }
 }
