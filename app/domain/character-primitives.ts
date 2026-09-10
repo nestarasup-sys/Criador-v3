@@ -4,6 +4,30 @@ export type Model = "feminino" | "masculino";
 export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
 export type FaceMode = "base" | "single" | "pack";
 
+export type HeadContourWarpKnot = {
+  /** Linha de destino no canvas nativo da roupa, antes do transform global. */
+  y: number;
+  /** Linha da imagem original usada nas faixas externas da cabeça. */
+  sourceY: number;
+  sourceLeft: number;
+  sourceRight: number;
+  targetLeft: number;
+  targetRight: number;
+  strength: number;
+};
+
+export type HeadContourWarp = {
+  version: 1;
+  top: number;
+  bottom: number;
+  confidence: number;
+  baselineError: number;
+  candidateError: number;
+  improvement: number;
+  maxDisplacement: number;
+  knots: HeadContourWarpKnot[];
+};
+
 export type ItemTransform = {
   x: number;
   y: number;
@@ -12,6 +36,8 @@ export type ItemTransform = {
   scaleY: number;
   rotation: number;
   flipX: boolean;
+  /** Correção local e não destrutiva da cabeça incluída na roupa. */
+  headWarp?: HeadContourWarp;
 };
 
 export type MaskPoint = { x: number; y: number };

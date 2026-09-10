@@ -4,6 +4,7 @@ import { join } from "node:path";
 import sharp from "sharp";
 import test from "node:test";
 import { calculateHeadFit, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "../app/creator/head-fit.ts";
+import { buildHeadContourWarp } from "../app/creator/head-contour-warp.ts";
 
 function profileImage({ width = 320, height = 560, top = 20, profile }) {
   const pixels = new Uint8ClampedArray(width * height * 4);
@@ -170,6 +171,32 @@ test("refina a altura usando o perfil inteiro quando as extremidades não repres
   const target = { left: 325, right: 675, top: 0, bottom: 180, neckY: 180, width: 351, height: 181, centerX: 500, contour: targetContour };
   const fit = calculateHeadFit(source, target, { width: 520, height: 520, defaultX: 260, defaultY: 260 });
   assert.ok(Math.abs(fit.scaleY - 0.8) < 0.08, `escala vertical refinada inesperada: ${fit.scaleY}`);
+});
+
+test("cria correção local quando a bochecha está em outra altura", () => {
+  const contour = (bulgeAt) => Array.from({ length: 181 }, (_, y) => {
+    const bulge = 42 * Math.exp(-Math.pow((y - bulgeAt) / 24, 2));
+    const half = 70 + bulge - Math.max(0, y - 135) * 1.1;
+    return { y, left: 250 - half, right: 250 + half };
+  });
+  const source = { left: 138, right: 362, top: 0, bottom: 180, neckY: 180, width: 225, height: 181, centerX: 250, contour: contour(112) };
+  const target = { left: 388, right: 612, top: 0, bottom: 180, neckY: 180, width: 225, height: 181, centerX: 500, contour: contour(78).map((row) => ({ ...row, left: row.left + 250, right: row.right + 250 })) };
+  const item = { width: 500, height: 520, defaultX: 250, defaultY: 260 };
+  const fit = { ...calculateHeadFit(source, target, item), rotation: 0, flipX: false };
+  const warp = buildHeadContourWarp(source, target, item, fit);
+  assert.ok(warp, "a diferença de altura da bochecha deve produzir um warp local");
+  assert.ok(warp.improvement > 0.3, `melhoria insuficiente: ${warp.improvement}`);
+  assert.ok(warp.maxDisplacement > 0, "o contorno precisa receber correção lateral");
+  assert.ok(warp.knots.every((knot, index) => index === 0 || knot.sourceY >= warp.knots[index - 1].sourceY), "o mapeamento vertical deve permanecer monotônico");
+});
+
+test("não cria warp desnecessário para contornos já coincidentes", () => {
+  const contour = Array.from({ length: 151 }, (_, y) => ({ y, left: 80 - Math.sin(y / 150 * Math.PI) * 30, right: 220 + Math.sin(y / 150 * Math.PI) * 30 }));
+  const source = { left: 50, right: 250, top: 0, bottom: 150, neckY: 150, width: 201, height: 151, centerX: 150, contour };
+  const target = { ...source, contour: contour.map((row) => ({ ...row })) };
+  const item = { width: 300, height: 400, defaultX: 150, defaultY: 200 };
+  const fit = { ...calculateHeadFit(source, target, item), rotation: 0, flipX: false };
+  assert.equal(buildHeadContourWarp(source, target, item, fit), null);
 });
 
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
