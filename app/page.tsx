@@ -10,6 +10,7 @@ import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCan
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
 import { calculateHeadFit, headContourPolygon, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
 import type { HeadFitReference, HeadMeasurement } from "./creator/head-fit";
+import { buildHeadContourWarp, contourWarpCacheKey, renderHeadContourWarp } from "./creator/head-contour-warp";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
@@ -1214,6 +1215,7 @@ export default function Home() {
   const protectionMaskCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const colorEditorPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const colorLayerCacheRef = useRef(new Map<string, CanvasImageSource>());
+  const headWarpCacheRef = useRef(new Map<string, CanvasImageSource>());
   const processedBases = useRef<Partial<Record<Model, HTMLImageElement>>>({});
   const processedBaseExpressions = useRef<Record<string, Partial<Record<ExpressionKey, HTMLImageElement>>>>({});
   const renderVersionRef = useRef(0);
@@ -1834,6 +1836,21 @@ export default function Home() {
             const oldest = colorLayerCacheRef.current.keys().next().value;
             if (!oldest) break;
             colorLayerCacheRef.current.delete(oldest);
+          }
+        }
+      }
+      if (layerCategory === "roupas" && transform.headWarp) {
+        const warpKey = `${item.url}:${width}x${height}:${colorRenderCacheKey("warp", color, protectionMask ?? "")}:${contourWarpCacheKey(transform.headWarp)}`;
+        const cachedWarp = headWarpCacheRef.current.get(warpKey);
+        if (cachedWarp) {
+          renderSource = cachedWarp;
+        } else {
+          renderSource = renderHeadContourWarp(renderSource, width, height, transform.headWarp);
+          headWarpCacheRef.current.set(warpKey, renderSource);
+          while (headWarpCacheRef.current.size > 80) {
+            const oldest = headWarpCacheRef.current.keys().next().value;
+            if (!oldest) break;
+            headWarpCacheRef.current.delete(oldest);
           }
         }
       }
@@ -3255,11 +3272,18 @@ export default function Home() {
         : undefined,
         reference,
       );
-      const nextTransform = normalizeTransform({
+      const baselineTransform = normalizeTransform({
         ...fitted,
         rotation: adjustments.roupas.rotation,
         flipX: adjustments.roupas.flipX,
       });
+      const headWarp = buildHeadContourWarp(sourceHead, targetHead, {
+        width: outfitWidth,
+        height: outfitHeight,
+        defaultX: selectedOutfit.defaultX,
+        defaultY: selectedOutfit.defaultY,
+      }, baselineTransform);
+      const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
       const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
       const skippedVariants: string[] = [];
       const outfitGroupId = selectedOutfit.outfitGroupId;
@@ -3316,11 +3340,18 @@ export default function Home() {
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           reference,
         );
-        variantTransforms[variantKey] = normalizeTransform({
+        const variantBaseline = normalizeTransform({
           ...variantFit,
           rotation: existingVariantTransform.rotation,
           flipX: existingVariantTransform.flipX,
         });
+        const variantWarp = buildHeadContourWarp(variantHead, targetHead, {
+          width: variantWidth,
+          height: variantHeight,
+          defaultX: variant.defaultX,
+          defaultY: variant.defaultY,
+        }, variantBaseline);
+        variantTransforms[variantKey] = normalizeTransform({ ...variantBaseline, headWarp: variantWarp ?? undefined });
       }
       setHeadFitGuide({
         category: "roupas",
@@ -3343,8 +3374,8 @@ export default function Home() {
         : "";
       setNotice(
         outfitVariants.length > 1
-          ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}; você ainda pode refinar manualmente.${skippedMessage}`
-          : `Roupa ajustada pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}; você ainda pode refinar manualmente`,
+          ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente.${skippedMessage}`
+          : `Roupa ajustada pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente`,
       );
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");

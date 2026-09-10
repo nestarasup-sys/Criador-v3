@@ -18,6 +18,7 @@ import { baseExpressionColorMapSource } from "../creator/base-packs";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
+import { contourWarpCacheKey, renderHeadContourWarp } from "../creator/head-contour-warp";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -26,6 +27,8 @@ const chromaCache = new Map<string, Promise<HTMLCanvasElement>>();
 const MAX_CHROMA_CACHE = 48;
 const colorLayerCache = new Map<string, Promise<CanvasImageSource>>();
 const MAX_COLOR_CACHE = 160;
+const headWarpCache = new Map<string, CanvasImageSource>();
+const MAX_HEAD_WARP_CACHE = 80;
 
 function transparentChroma(src: string) {
   if (!chromaCache.has(src)) {
@@ -164,6 +167,7 @@ function normalizedTransform(transform?: Partial<ItemTransform>): ItemTransform 
     scaleY: transform?.scaleY ?? 1,
     rotation: transform?.rotation ?? 0,
     flipX: transform?.flipX ?? false,
+    headWarp: transform?.headWarp,
   };
 }
 
@@ -254,6 +258,21 @@ export async function renderStudioCharacter(
       } catch (error) {
         colorLayerCache.delete(cacheKey);
         throw error;
+      }
+    }
+    if (layerCategory === "roupas" && transform.headWarp) {
+      const warpKey = `${item.fileUrl}:${width}x${height}:${colorRenderCacheKey("warp", color, protectionMask ?? "")}:${contourWarpCacheKey(transform.headWarp)}`;
+      const cachedWarp = headWarpCache.get(warpKey);
+      if (cachedWarp) {
+        renderImage = cachedWarp;
+      } else {
+        renderImage = renderHeadContourWarp(renderImage, width, height, transform.headWarp);
+        headWarpCache.set(warpKey, renderImage);
+        while (headWarpCache.size > MAX_HEAD_WARP_CACHE) {
+          const oldest = headWarpCache.keys().next().value;
+          if (!oldest) break;
+          headWarpCache.delete(oldest);
+        }
       }
     }
     renderImage = colorizeRenderDebugLayer(renderImage, width, height, layerCategory ?? "");
