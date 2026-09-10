@@ -109,6 +109,25 @@ test("calcula a altura global pelo topo até a base estrutural do pescoço", () 
   assert.equal(fit.scaleY, 2, "a escala deve considerar topo→pescoço, não o fragmento abaixo do pescoço");
 });
 
+test("o ajuste de pescoço mantém topo e faixa cervical exatamente ancorados", () => {
+  const source = {
+    left: 20, right: 180, top: 10, bottom: 190, width: 161, height: 181, centerX: 100,
+    neckLeft: 72, neckRight: 128, neckWidth: 57, neckCenterX: 100, neckY: 190,
+    contour: Array.from({ length: 181 }, (_, y) => ({ y: y + 10, left: 20 + y * .28, right: 180 - y * .28 })),
+  };
+  const target = {
+    left: 400, right: 620, top: 30, bottom: 300, width: 221, height: 271, centerX: 510,
+    neckLeft: 468, neckRight: 552, neckWidth: 85, neckCenterX: 510, neckY: 300,
+    contour: Array.from({ length: 271 }, (_, y) => ({ y: y + 30, left: 400 + y * .25, right: 620 - y * .25 })),
+  };
+  const item = { width: 240, height: 420, defaultX: 120, defaultY: 210 };
+  const fit = calculateHeadFit(source, target, item, undefined, "neck");
+  const projected = projectHeadMeasurement(source, item, fit);
+  assert.ok(Math.abs(projected.top - target.top) < .1, `topo divergente: ${projected.top}`);
+  assert.ok(Math.abs(projected.neckY - target.neckY) < .1, `pescoço divergente: ${projected.neckY}`);
+  assert.ok(Math.abs(projected.neckCenterX - target.neckCenterX) < .1, `centro divergente: ${projected.neckCenterX}`);
+});
+
 test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
   const contour = (leftOffset, rightOffset) => Array.from({ length: 101 }, (_, y) => ({
     y,

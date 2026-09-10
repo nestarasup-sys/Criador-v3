@@ -12,6 +12,10 @@ export type HeadMeasurement = {
   neckWidth?: number;
   neckCenterX?: number;
   neckY?: number;
+  /** Última linha confiável antes de o pescoço abrir para gola/ombros. */
+  neckBottomY?: number;
+  /** Perfil separado para não contaminar o polígono usado ao apagar a cabeça. */
+  neckContour?: HeadContourRow[];
   contour?: HeadContourRow[];
 };
 
@@ -226,6 +230,33 @@ export function measureHeadSilhouette(
   const neckY = neckRows.length >= 3
     ? median(neckRows.map((row) => row.y))
     : jawTurnIndex >= 0 ? rows[jawTurnIndex].y : undefined;
+  let neckContour: HeadContourRow[] | undefined;
+  let neckBottomY: number | undefined;
+  if (neckIndex >= 0 && neckRows.length >= 3) {
+    const referenceWidth = median(neckRows.map((row) => row.width));
+    const referenceCenter = median(neckRows.map((row) => (row.left + row.right) / 2));
+    const maximumRows = Math.max(12, Math.round(widestRow.width * 0.34));
+    const candidates = rows.slice(neckIndex, Math.min(rows.length, neckIndex + maximumRows));
+    let invalidRun = 0;
+    const accepted: typeof rows = [];
+    for (const row of candidates) {
+      const center = (row.left + row.right) / 2;
+      const plausible = row.width > 0
+        && row.width <= referenceWidth * 1.24
+        && Math.abs(center - referenceCenter) <= widestRow.width * 0.1;
+      if (plausible) {
+        invalidRun = 0;
+        accepted.push(row);
+      } else {
+        invalidRun += 1;
+        if (invalidRun >= 3) break;
+      }
+    }
+    if (accepted.length >= 5) {
+      neckContour = accepted.map((row) => ({ y: row.y, left: row.left, right: row.right }));
+      neckBottomY = accepted[accepted.length - 1].y;
+    }
+  }
 
   return {
     left,
@@ -236,7 +267,7 @@ export function measureHeadSilhouette(
     height: Math.max(1, bottom - top + 1),
     centerX: (left + right) / 2,
     ...(neckLeft !== undefined && neckRight !== undefined && neckWidth !== undefined && neckCenterX !== undefined
-      ? { neckLeft, neckRight, neckWidth, neckCenterX, neckY }
+      ? { neckLeft, neckRight, neckWidth, neckCenterX, neckY, neckBottomY, neckContour }
       : neckY !== undefined ? { neckY } : {}),
     contour,
   };
@@ -591,14 +622,18 @@ export function calculateHeadFit(
     ?? contourReference?.sourceCenterX
     ?? source.centerX;
   const endpointScaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);
-  const scaleY = profileScaleY(
-    source,
-    target,
-    scaleX,
-    sourceCenterX,
-    targetCenterX,
-    endpointScaleY,
-  );
+  // No modo pescoço, topo e faixa cervical precisam coincidir exatamente.
+  // O refinamento pelo perfil da cabeça é útil no encaixe comum, mas alterava
+  // scaleY depois do cálculo dos extremos e fazia o pescoço voltar a sair do
+  // lugar. O warp local cuida das diferenças de curva sem quebrar a âncora.
+  const scaleY = useNeckReference ? endpointScaleY : profileScaleY(
+      source,
+      target,
+      scaleX,
+      sourceCenterX,
+      targetCenterX,
+      endpointScaleY,
+    );
   const targetTopY = target.top;
 
   // drawLayer translates to item center and draws from -width/2,-height/2.
@@ -646,6 +681,12 @@ export function projectHeadMeasurement(
           neckWidth: Math.max(1, Math.abs(neckRight - neckLeft)),
           neckCenterX: (neckLeft + neckRight) / 2,
           neckY: projectY(source.neckY),
+          neckBottomY: source.neckBottomY === undefined ? undefined : projectY(source.neckBottomY),
+          neckContour: source.neckContour?.map((row) => ({
+            y: projectY(row.y),
+            left: Math.min(projectX(row.left), projectX(row.right)),
+            right: Math.max(projectX(row.left), projectX(row.right)),
+          })),
         }
       : {}),
     contour: source.contour?.map((row) => ({
