@@ -5066,12 +5066,12 @@ export default function Home() {
     updateColorAdjustment({
       enabled: true,
       hue: 0,
-      saturation: 100,
-      brightness: 100,
+      saturation: 118,
+      brightness: 96,
       contrast: 100,
-      detailPreservation: 78,
+      detailPreservation: 23,
       tint,
-      tintStrength: 100,
+      tintStrength: 68,
       ...patch,
     });
   }
@@ -6025,7 +6025,7 @@ export default function Home() {
                 {savedColorPresets.map((preset) => <div key={preset.id} className="saved-color-preset"><button type="button" onClick={() => applySavedColorPreset(preset)} title={`Aplicar ${preset.name}`}><i style={{ background: preset.adjustment.tint }} />{preset.name}</button><button type="button" className="saved-color-preset-remove" aria-label={`Excluir preset ${preset.name}`} onClick={() => removeSavedColorPreset(preset.id)}>×</button></div>)}
               </div>}
               <div className="color-custom-row">
-                <label><span>Cor desejada</span><input type="color" value={activeColor.tint} onChange={(event) => updateColorAdjustment({ tint: event.target.value, hue: 0, tintStrength: 100 })} /></label>
+                <label><span>Cor desejada</span><input type="color" value={activeColor.tint} onChange={(event) => applyTargetColor(event.target.value)} /></label>
                 <span className="color-custom-hint">Ajuste preservado ao desligar</span>
               </div>
               <label className="color-range"><span>Matiz fina</span><input type="range" min="0" max="360" value={activeColor.hue} onChange={(event) => updateColorAdjustment({ hue: Number(event.target.value) })} /><strong>{activeColor.hue}°</strong></label>

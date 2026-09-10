@@ -667,6 +667,11 @@ test("ships premium color controls and non-destructive protection masks", async 
   assert.match(page, /outfitCatalogVersion\.toUpperCase\(\)/);
   assert.match(page, /isBaseModelCatalog \? "modelos"/);
   assert.match(page, /detailPreservation/);
+  assert.match(page, /saturation: 118/);
+  assert.match(page, /brightness: 96/);
+  assert.match(page, /detailPreservation: 23/);
+  assert.match(page, /tintStrength: 68/);
+  assert.match(page, /onChange=\{\(event\) => applyTargetColor\(event\.target\.value\)\}/);
   assert.match(page, /Contraste/);
   assert.match(page, /Textura/);
   assert.match(page, /syncHairColor/);
