@@ -20,7 +20,8 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
     read("local-data-server.mjs"),
   ]);
 
-  assert.match(page, /<strong>04<\/strong>/);
+  assert.match(page, /<strong>05<\/strong>/);
+  assert.match(page, /alinhador-profissional-v2/);
   assert.match(page, /laboratorio-cor-modelo/);
   assert.match(page, /teste-controles-cor/);
   assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
