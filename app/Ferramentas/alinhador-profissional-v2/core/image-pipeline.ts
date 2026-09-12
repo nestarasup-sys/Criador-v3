@@ -105,7 +105,7 @@ export async function processSheet(file: File, sheet: "A" | "B" | "C"): Promise<
       if (!foreground) { pixels.data[offset + 3] = 0; continue; }
       alpha[index] = 255; rawArea += 1;
     }
-    const { area, minX, minY, maxX, maxY } = largestComponentBounds(alpha, cellWidth, cellHeight);
+    const { minX, minY, maxX, maxY } = largestComponentBounds(alpha, cellWidth, cellHeight);
     if (maxX < minX || maxY < minY) continue;
     const padding = 4;
     const left = Math.max(0, minX - padding); const top = Math.max(0, minY - padding);

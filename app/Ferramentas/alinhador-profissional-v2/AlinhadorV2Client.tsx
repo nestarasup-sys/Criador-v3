@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- recortes locais em data URL não passam pelo otimizador do Next. */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { applyTransform, solveWeightedSimilarity } from "./core/alignment-engine.mjs";
