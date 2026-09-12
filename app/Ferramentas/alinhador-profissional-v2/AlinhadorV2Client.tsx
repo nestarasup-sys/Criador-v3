@@ -2,12 +2,15 @@
 /* eslint-disable @next/next/no-img-element -- recortes locais em data URL não passam pelo otimizador do Next. */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import { applyTransform, solveWeightedSimilarity } from "./core/alignment-engine.mjs";
+import * as alignmentEngine from "./core/alignment-engine.mjs";
 import { processSheet, type V2Head, type V2Landmark } from "./core/image-pipeline";
 import styles from "./alinhador-v2.module.css";
 
 type ViewMode = "result" | "onion" | "difference";
+type AlignmentMode = "rigid" | "similarity" | "affine";
 type HistoryEntry = { headId: string; landmarks: V2Landmark[] };
+type AlignmentResult = { a: number; b: number; c: number; d: number; tx: number; ty: number; scale: number; scaleX: number; scaleY: number; rotation: number; rms: number; max: number; errors: Array<{ name: string; kind: string; distance: number }> };
+const { applyTransform, solveAlignment } = alignmentEngine as unknown as { applyTransform: (point: { x: number; y: number }, transform: AlignmentResult) => { x: number; y: number }; solveAlignment: (source: V2Landmark[], target: V2Landmark[], mode: AlignmentMode) => AlignmentResult };
 const SHEETS = ["A", "B", "C"] as const;
 const cloneLandmarks = (landmarks: V2Landmark[]) => landmarks.map((point) => ({ ...point }));
 
@@ -20,14 +23,14 @@ function loadImage(source: string) {
   });
 }
 
-async function renderAligned(head: V2Head, reference: V2Head, localStrength: number) {
+async function renderAligned(head: V2Head, reference: V2Head, localStrength: number, alignmentMode: AlignmentMode) {
   const sourceImage = await loadImage(head.sourceUrl);
   const output = document.createElement("canvas");
   output.width = reference.width; output.height = reference.height;
   const context = output.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("Canvas de alinhamento indisponível.");
-  const transform = solveWeightedSimilarity(head.landmarks.filter((point) => point.kind === "structural"), reference.landmarks.filter((point) => point.kind === "structural"));
-  context.setTransform(transform.a, transform.b, -transform.b, transform.a, transform.tx, transform.ty);
+  const transform = solveAlignment(head.landmarks.filter((point) => point.kind === "structural"), reference.landmarks.filter((point) => point.kind === "structural"), alignmentMode);
+  context.setTransform(transform.a, transform.b, transform.c, transform.d, transform.tx, transform.ty);
   context.drawImage(sourceImage, 0, 0);
   context.resetTransform();
 
@@ -64,6 +67,7 @@ export function AlinhadorV2Client() {
   const [selectedId, setSelectedId] = useState("");
   const [referenceId, setReferenceId] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("onion");
+  const [alignmentMode, setAlignmentMode] = useState<AlignmentMode>("similarity");
   const [opacity, setOpacity] = useState(55);
   const [zoom, setZoom] = useState(100);
   const [localStrength, setLocalStrength] = useState(0);
@@ -77,7 +81,7 @@ export function AlinhadorV2Client() {
   const dragRef = useRef<string | null>(null);
   const selected = heads.find((head) => head.id === selectedId) ?? heads[0];
   const reference = heads.find((head) => head.id === referenceId) ?? heads[0];
-  const transform = useMemo(() => selected && reference ? solveWeightedSimilarity(selected.landmarks.filter((point) => point.kind === "structural"), reference.landmarks.filter((point) => point.kind === "structural")) : null, [selected, reference]);
+  const transform = useMemo(() => selected && reference ? solveAlignment(selected.landmarks.filter((point) => point.kind === "structural"), reference.landmarks.filter((point) => point.kind === "structural"), alignmentMode) : null, [selected, reference, alignmentMode]);
 
   const loadSheet = useCallback(async (file: File, sheet: typeof SHEETS[number]) => {
     setBusySheet(sheet); setMessage(`Analisando Folha ${sheet}…`);
@@ -98,7 +102,7 @@ export function AlinhadorV2Client() {
       const sourceImage = await loadImage(selected.sourceUrl); if (cancelled) return;
       const sourceCanvas = sourceCanvasRef.current; sourceCanvas.width = selected.width; sourceCanvas.height = selected.height;
       sourceCanvas.getContext("2d")?.drawImage(sourceImage, 0, 0);
-      const { canvas } = await renderAligned(selected, reference, localStrength); if (cancelled) return;
+      const { canvas } = await renderAligned(selected, reference, localStrength, alignmentMode); if (cancelled) return;
       renderedRef.current = canvas;
       const result = resultCanvasRef.current; result.width = canvas.width; result.height = canvas.height;
       const context = result.getContext("2d"); if (!context) return;
@@ -110,7 +114,7 @@ export function AlinhadorV2Client() {
     }
     draw().catch((error) => setMessage(error instanceof Error ? error.message : "Falha ao renderizar."));
     return () => { cancelled = true; };
-  }, [selected, reference, localStrength, viewMode, opacity]);
+  }, [selected, reference, localStrength, alignmentMode, viewMode, opacity]);
 
   const updateLandmark = useCallback((name: string, x: number, y: number, saveHistory = false) => {
     if (!selected) return;
@@ -137,7 +141,7 @@ export function AlinhadorV2Client() {
     <section className={styles.mainGrid}>
       <aside className={styles.sidebar}><div className={styles.panelHeading}><div><span className={styles.kicker}>Dataset</span><h2>Expressões</h2></div><strong>{heads.length}</strong></div><div className={styles.thumbnails}>{SHEETS.map((sheet) => <div key={sheet}><h3>Folha {sheet}</h3><div className={styles.thumbGrid}>{heads.filter((head) => head.sheet === sheet).map((head) => <button key={head.id} className={`${styles.thumb} ${selected?.id === head.id ? styles.thumbActive : ""}`} onClick={() => setSelectedId(head.id)} title={head.touchesSourceBoundary ? "Toca a borda da fonte" : head.id}><img src={head.sourceUrl} alt="" /><span>{head.slot}</span>{head.touchesSourceBoundary && <b>BORDA</b>}</button>)}</div></div>)}</div></aside>
       <section className={styles.editorPanel}><div className={styles.panelHeading}><div><span className={styles.kicker}>Edição precisa</span><h2>{selected?.id ?? "Nenhuma expressão"}</h2></div>{selected && <button className={styles.referenceButton} onClick={() => setReferenceId(selected.id)}>{reference?.id === selected.id ? "Referência atual" : "Usar como referência"}</button>}</div>{!selected ? <div className={styles.empty}>Carregue uma folha para começar.</div> : <div className={styles.editLayout}><div><div className={styles.canvasLabel}>Original + landmarks</div><div className={styles.sourceStage} style={{ width: `${selected.width * zoom / 100}px`, aspectRatio: `${selected.width}/${selected.height}` }} onPointerMove={(event) => { const name = dragRef.current; if (!name) return; const rect = event.currentTarget.getBoundingClientRect(); updateLandmark(name, (event.clientX - rect.left) * selected.width / rect.width, (event.clientY - rect.top) * selected.height / rect.height); }} onPointerUp={() => { dragRef.current = null; }} onPointerLeave={() => { dragRef.current = null; }}><canvas ref={sourceCanvasRef} />{selected.landmarks.map((point) => <button key={point.name} className={`${styles.landmark} ${point.kind === "detail" ? styles.landmarkDetail : ""}`} style={{ left: `${point.x / selected.width * 100}%`, top: `${point.y / selected.height * 100}%` }} title={point.label} onPointerDown={(event) => { event.preventDefault(); dragRef.current = point.name; updateLandmark(point.name, point.x, point.y, true); }}>{point.kind === "structural" ? "◆" : "●"}</button>)}</div></div><div><div className={styles.canvasLabel}>Resultado / comparação</div><div className={styles.resultStage} style={{ width: `${reference.width * zoom / 100}px`, aspectRatio: `${reference.width}/${reference.height}` }}><canvas ref={resultCanvasRef} /></div></div></div>}</section>
-      <aside className={styles.controls}><div className={styles.panelHeading}><div><span className={styles.kicker}>Controle</span><h2>Alinhamento</h2></div></div><label>Visualização<select value={viewMode} onChange={(event) => setViewMode(event.target.value as ViewMode)}><option value="result">Resultado</option><option value="onion">Onion skin</option><option value="difference">Diferença</option></select></label><label>Opacidade <output>{opacity}%</output><input type="range" min="0" max="100" value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} /></label><label>Zoom <output>{zoom}%</output><input type="range" min="60" max="180" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label><label>Warp local <output>{Math.round(localStrength * 100)}%</output><input type="range" min="0" max="100" value={localStrength * 100} onChange={(event) => setLocalStrength(Number(event.target.value) / 100)} /></label><p className={styles.hint}>O ajuste global usa apenas topo, laterais, queixo e pescoço. O warp local usa olhos, nariz e boca e começa desligado.</p><div className={styles.metrics}><span>Referência <b>{reference?.id ?? "—"}</b></span><span>Escala <b>{transform ? transform.scale.toFixed(4) : "—"}</b></span><span>Rotação <b>{transform ? `${transform.rotation.toFixed(2)}°` : "—"}</b></span><span>Erro estrutural <b>{transform && Number.isFinite(transform.rms) ? `${transform.rms.toFixed(2)} px` : "—"}</b></span><span>Fonte <b>{selected?.touchesSourceBoundary ? "toca borda" : "íntegra"}</b></span></div><div className={styles.historyButtons}><button disabled={!undo.length} onClick={() => restoreHistory(undo, setUndo, setRedo)}>Desfazer</button><button disabled={!redo.length} onClick={() => restoreHistory(redo, setRedo, setUndo)}>Refazer</button></div></aside>
+      <aside className={styles.controls}><div className={styles.panelHeading}><div><span className={styles.kicker}>Controle</span><h2>Alinhamento</h2></div></div><label>Modelo global<select value={alignmentMode} onChange={(event) => setAlignmentMode(event.target.value as AlignmentMode)}><option value="rigid">Rígido · posição + rotação</option><option value="similarity">Similarity · escala uniforme</option><option value="affine">Affine · experimental</option></select></label><label>Visualização<select value={viewMode} onChange={(event) => setViewMode(event.target.value as ViewMode)}><option value="result">Resultado</option><option value="onion">Onion skin</option><option value="difference">Diferença</option></select></label><label>Opacidade <output>{opacity}%</output><input type="range" min="0" max="100" value={opacity} onChange={(event) => setOpacity(Number(event.target.value))} /></label><label>Zoom <output>{zoom}%</output><input type="range" min="60" max="180" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label><label>Warp local <output>{Math.round(localStrength * 100)}%</output><input type="range" min="0" max="100" value={localStrength * 100} onChange={(event) => setLocalStrength(Number(event.target.value) / 100)} /></label><p className={styles.hint}>O global usa topo, laterais, queixo e pescoço. O warp local usa olhos, nariz e boca e começa desligado.</p><div className={styles.metrics}><span>Referência <b>{reference?.id ?? "—"}</b></span><span>Escala X/Y <b>{transform ? `${transform.scaleX.toFixed(4)} / ${transform.scaleY.toFixed(4)}` : "—"}</b></span><span>Rotação <b>{transform ? `${transform.rotation.toFixed(2)}°` : "—"}</b></span><span>RMS / máximo <b>{transform && Number.isFinite(transform.rms) ? `${transform.rms.toFixed(2)} / ${transform.max.toFixed(2)} px` : "—"}</b></span><span>Fonte <b>{selected?.touchesSourceBoundary ? "toca borda" : "íntegra"}</b></span></div>{transform && <div className={styles.residuals}><strong>Erro residual por região</strong>{Object.entries(transform.errors.reduce<Record<string, number>>((groups, item) => { groups[item.kind] = Math.max(groups[item.kind] ?? 0, item.distance); return groups; }, {})).map(([region, error]) => <span key={region}>{region} <b>{error.toFixed(1)} px</b></span>)}</div>}<div className={styles.historyButtons}><button disabled={!undo.length} onClick={() => restoreHistory(undo, setUndo, setRedo)}>Desfazer</button><button disabled={!redo.length} onClick={() => restoreHistory(redo, setRedo, setUndo)}>Refazer</button></div></aside>
     </section>
   </main>;
 }

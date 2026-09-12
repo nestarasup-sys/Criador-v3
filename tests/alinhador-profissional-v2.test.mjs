@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { analyzeFixture } from "../scripts/analyze-alinhador-v2-fixtures.mjs";
-import { applyTransform, solveWeightedSimilarity } from "../app/Ferramentas/alinhador-profissional-v2/core/alignment-engine.mjs";
+import { applyTransform, solveAlignment, solveWeightedSimilarity } from "../app/Ferramentas/alinhador-profissional-v2/core/alignment-engine.mjs";
 
 test("fixture A/B/C contém três grades completas de 21 cabeças", async () => {
   const report = await analyzeFixture();
@@ -26,6 +26,18 @@ test("Procrustes ponderado recupera escala, rotação e translação", () => {
   assert.ok(Math.abs(solved.b - expected.b) < 1e-9);
   assert.ok(Math.abs(solved.tx - expected.tx) < 1e-9);
   assert.ok(Math.abs(solved.ty - expected.ty) < 1e-9);
+  assert.ok(solved.rms < 1e-9);
+});
+
+test("fitting affine recupera shear e escalas não uniformes", () => {
+  const source = [{ name: "a", x: 0, y: 0 }, { name: "b", x: 10, y: 0 }, { name: "c", x: 0, y: 10 }, { name: "d", x: 8, y: 7 }];
+  const expected = { a: 1.2, b: 0.1, c: 0.25, d: 0.9, tx: 4, ty: -3 };
+  const target = source.map((point) => ({ ...point, ...applyTransform(point, expected) }));
+  const solved = solveAlignment(source, target, "affine");
+  assert.ok(Math.abs(solved.a - expected.a) < 1e-9);
+  assert.ok(Math.abs(solved.b - expected.b) < 1e-9);
+  assert.ok(Math.abs(solved.c - expected.c) < 1e-9);
+  assert.ok(Math.abs(solved.d - expected.d) < 1e-9);
   assert.ok(solved.rms < 1e-9);
 });
 
