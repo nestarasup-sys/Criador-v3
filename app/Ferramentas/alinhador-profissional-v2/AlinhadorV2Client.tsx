@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import * as alignmentEngine from "./core/alignment-engine.mjs";
 import { processSheet, type V2Head, type V2Landmark } from "./core/image-pipeline";
+import { createProject, parseProject, serializeProject, type V2Project } from "./core/project-state";
 import styles from "./alinhador-v2.module.css";
 
 type ViewMode = "result" | "onion" | "difference";
@@ -75,6 +76,7 @@ export function AlinhadorV2Client() {
   const [message, setMessage] = useState("Carregue as folhas A, B e C. Nenhum arquivo original será alterado.");
   const [undo, setUndo] = useState<HistoryEntry[]>([]);
   const [redo, setRedo] = useState<HistoryEntry[]>([]);
+  const projectInputRef = useRef<HTMLInputElement>(null);
   const sourceCanvasRef = useRef<HTMLCanvasElement>(null);
   const resultCanvasRef = useRef<HTMLCanvasElement>(null);
   const renderedRef = useRef<HTMLCanvasElement | null>(null);
@@ -135,8 +137,21 @@ export function AlinhadorV2Client() {
     const link = document.createElement("a"); link.download = `${selected.id.toLowerCase()}-alinhado-v2.png`; link.href = renderedRef.current.toDataURL("image/png"); link.click();
   }, [selected]);
 
+  const saveProject = useCallback(() => {
+    const project = createProject(heads, reference?.id ?? "", selected?.id ?? "", { alignmentMode, localStrength, opacity, zoom, viewMode });
+    const link = document.createElement("a"); link.download = "alinhador-profissional-v2.json"; link.href = URL.createObjectURL(new Blob([serializeProject(project)], { type: "application/json" })); link.click(); setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    setMessage("Projeto V2 salvo com landmarks, referência e parâmetros.");
+  }, [heads, reference, selected, alignmentMode, localStrength, opacity, zoom, viewMode]);
+
+  const openProject = useCallback(async (file: File) => {
+    try {
+      const project: V2Project = parseProject(await file.text());
+      setHeads(project.heads); setSelectedId(project.selectedId); setReferenceId(project.referenceId); setAlignmentMode(project.settings.alignmentMode); setLocalStrength(project.settings.localStrength); setOpacity(project.settings.opacity); setZoom(project.settings.zoom); setViewMode(project.settings.viewMode); setUndo([]); setRedo([]); setMessage(`Projeto V2 aberto: ${project.heads.length} cabeças.`);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível abrir o projeto."); }
+  }, []);
+
   return <main className={styles.workspace}>
-    <section className={styles.commandBar}><div><span className={styles.kicker}>Projeto não destrutivo</span><h1>Folhas e referência</h1></div><div className={styles.uploads}>{SHEETS.map((sheet) => <label key={sheet} className={styles.uploadButton}>Folha {sheet}<input type="file" accept="image/png,image/jpeg" disabled={busySheet !== null} onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadSheet(file, sheet); event.currentTarget.value = ""; }} /></label>)}</div><button className={styles.primaryButton} disabled={!selected} onClick={exportSelected}>Exportar selecionada</button></section>
+    <section className={styles.commandBar}><div><span className={styles.kicker}>Projeto não destrutivo</span><h1>Folhas e referência</h1></div><div className={styles.uploads}>{SHEETS.map((sheet) => <label key={sheet} className={styles.uploadButton}>Folha {sheet}<input type="file" accept="image/png,image/jpeg" disabled={busySheet !== null} onChange={(event) => { const file = event.target.files?.[0]; if (file) void loadSheet(file, sheet); event.currentTarget.value = ""; }} /></label>)}<button className={styles.secondaryButton} onClick={saveProject}>Salvar projeto</button><button className={styles.secondaryButton} onClick={() => projectInputRef.current?.click()}>Abrir projeto</button><input ref={projectInputRef} className={styles.hiddenInput} type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; if (file) void openProject(file); event.currentTarget.value = ""; }} /></div><button className={styles.primaryButton} disabled={!selected} onClick={exportSelected}>Exportar selecionada</button></section>
     <div className={styles.status} role="status"><span>{busySheet ? "Processando" : `${heads.length}/63 cabeças`}</span>{message}</div>
     <section className={styles.mainGrid}>
       <aside className={styles.sidebar}><div className={styles.panelHeading}><div><span className={styles.kicker}>Dataset</span><h2>Expressões</h2></div><strong>{heads.length}</strong></div><div className={styles.thumbnails}>{SHEETS.map((sheet) => <div key={sheet}><h3>Folha {sheet}</h3><div className={styles.thumbGrid}>{heads.filter((head) => head.sheet === sheet).map((head) => <button key={head.id} className={`${styles.thumb} ${selected?.id === head.id ? styles.thumbActive : ""}`} onClick={() => setSelectedId(head.id)} title={head.touchesSourceBoundary ? "Toca a borda da fonte" : head.id}><img src={head.sourceUrl} alt="" /><span>{head.slot}</span>{head.touchesSourceBoundary && <b>BORDA</b>}</button>)}</div></div>)}</div></aside>

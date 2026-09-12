@@ -50,3 +50,12 @@ test("V2 permanece separada do HTML original e oferece edição não destrutiva"
   assert.match(client, /Desfazer/);
   assert.match(client, /Exportar selecionada/);
 });
+
+test("formato de projeto V2 preserva versão, landmarks e parâmetros", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../app/Ferramentas/alinhador-profissional-v2/core/project-state.ts", import.meta.url), "utf8");
+  assert.match(source, /projectVersion: 2/);
+  assert.match(source, /serializeProject/);
+  assert.match(source, /parseProject/);
+  assert.match(source, /landmarks/);
+});
