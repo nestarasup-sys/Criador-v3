@@ -1,0 +1,523 @@
+{
+  "version": 1,
+  "fixture": "same-character-abc",
+  "generatedBy": "scripts/analyze-alinhador-v2-fixtures.mjs",
+  "sheets": {
+    "A": {
+      "detected": 21,
+      "width": {
+        "min": 225,
+        "median": 226,
+        "max": 228,
+        "range": 3
+      },
+      "height": {
+        "min": 253,
+        "median": 306,
+        "max": 309,
+        "range": 56
+      },
+      "centerX": {
+        "min": 109.38,
+        "median": 110.47,
+        "max": 111,
+        "range": 1.62
+      },
+      "centerY": {
+        "min": 119.35,
+        "median": 142.2,
+        "max": 152.09,
+        "range": 32.74
+      },
+      "aspectRatio": {
+        "min": 0.73,
+        "median": 0.74,
+        "max": 0.9,
+        "range": 0.17
+      },
+      "foregroundRatio": {
+        "min": 0.59,
+        "median": 0.64,
+        "max": 0.67,
+        "range": 0.08
+      },
+      "pcaAngle": {
+        "min": 85.56,
+        "median": 88.17,
+        "max": 88.66,
+        "range": 3.1
+      }
+    },
+    "B": {
+      "detected": 21,
+      "width": {
+        "min": 229,
+        "median": 230,
+        "max": 234,
+        "range": 5
+      },
+      "height": {
+        "min": 269,
+        "median": 306,
+        "max": 309,
+        "range": 40
+      },
+      "centerX": {
+        "min": 114.61,
+        "median": 117.39,
+        "max": 118.72,
+        "range": 4.11
+      },
+      "centerY": {
+        "min": 127.02,
+        "median": 143.82,
+        "max": 152.56,
+        "range": 25.54
+      },
+      "aspectRatio": {
+        "min": 0.74,
+        "median": 0.75,
+        "max": 0.87,
+        "range": 0.13
+      },
+      "foregroundRatio": {
+        "min": 0.64,
+        "median": 0.67,
+        "max": 0.7,
+        "range": 0.07
+      },
+      "pcaAngle": {
+        "min": 87.58,
+        "median": 88.81,
+        "max": 89.61,
+        "range": 2.03
+      }
+    },
+    "C": {
+      "detected": 21,
+      "width": {
+        "min": 225,
+        "median": 235,
+        "max": 235,
+        "range": 10
+      },
+      "height": {
+        "min": 309,
+        "median": 310,
+        "max": 310,
+        "range": 1
+      },
+      "centerX": {
+        "min": 114.04,
+        "median": 116.79,
+        "max": 121.72,
+        "range": 7.68
+      },
+      "centerY": {
+        "min": 140.46,
+        "median": 144.71,
+        "max": 152.58,
+        "range": 12.12
+      },
+      "aspectRatio": {
+        "min": 0.73,
+        "median": 0.76,
+        "max": 0.76,
+        "range": 0.03
+      },
+      "foregroundRatio": {
+        "min": 0.68,
+        "median": 0.69,
+        "max": 0.7,
+        "range": 0.01
+      },
+      "pcaAngle": {
+        "min": 87.17,
+        "median": 87.76,
+        "max": 88.43,
+        "range": 1.26
+      }
+    }
+  },
+  "corresponding": [
+    {
+      "slot": 1,
+      "widthRange": 8,
+      "heightRange": 4,
+      "centerXRange": 5.07,
+      "centerYRange": 0.75,
+      "aspectRange": 0.02,
+      "angleRange": 1.41
+    },
+    {
+      "slot": 2,
+      "widthRange": 10,
+      "heightRange": 5,
+      "centerXRange": 8.84,
+      "centerYRange": 0.46,
+      "aspectRange": 0.02,
+      "angleRange": 1.54
+    },
+    {
+      "slot": 3,
+      "widthRange": 10,
+      "heightRange": 4,
+      "centerXRange": 8.22,
+      "centerYRange": 0.65,
+      "aspectRange": 0.02,
+      "angleRange": 1.83
+    },
+    {
+      "slot": 4,
+      "widthRange": 7,
+      "heightRange": 5,
+      "centerXRange": 7.16,
+      "centerYRange": 0.47,
+      "aspectRange": 0.01,
+      "angleRange": 2.15
+    },
+    {
+      "slot": 5,
+      "widthRange": 10,
+      "heightRange": 5,
+      "centerXRange": 8.13,
+      "centerYRange": 0.59,
+      "aspectRange": 0.02,
+      "angleRange": 2.16
+    },
+    {
+      "slot": 6,
+      "widthRange": 8,
+      "heightRange": 4,
+      "centerXRange": 9.48,
+      "centerYRange": 0.42,
+      "aspectRange": 0.02,
+      "angleRange": 1.08
+    },
+    {
+      "slot": 7,
+      "widthRange": 9,
+      "heightRange": 4,
+      "centerXRange": 11.2,
+      "centerYRange": 0.57,
+      "aspectRange": 0.02,
+      "angleRange": 0.93
+    },
+    {
+      "slot": 8,
+      "widthRange": 8,
+      "heightRange": 0,
+      "centerXRange": 4.9,
+      "centerYRange": 2.29,
+      "aspectRange": 0.03,
+      "angleRange": 0.88
+    },
+    {
+      "slot": 9,
+      "widthRange": 5,
+      "heightRange": 0,
+      "centerXRange": 8.73,
+      "centerYRange": 2.52,
+      "aspectRange": 0.02,
+      "angleRange": 0.78
+    },
+    {
+      "slot": 10,
+      "widthRange": 5,
+      "heightRange": 0,
+      "centerXRange": 7.86,
+      "centerYRange": 2.59,
+      "aspectRange": 0.02,
+      "angleRange": 0.75
+    },
+    {
+      "slot": 11,
+      "widthRange": 4,
+      "heightRange": 0,
+      "centerXRange": 6.98,
+      "centerYRange": 2.59,
+      "aspectRange": 0.01,
+      "angleRange": 1.37
+    },
+    {
+      "slot": 12,
+      "widthRange": 6,
+      "heightRange": 0,
+      "centerXRange": 7.32,
+      "centerYRange": 2.59,
+      "aspectRange": 0.02,
+      "angleRange": 1.61
+    },
+    {
+      "slot": 13,
+      "widthRange": 4,
+      "heightRange": 0,
+      "centerXRange": 8.46,
+      "centerYRange": 2.21,
+      "aspectRange": 0.01,
+      "angleRange": 0.72
+    },
+    {
+      "slot": 14,
+      "widthRange": 6,
+      "heightRange": 0,
+      "centerXRange": 9.3,
+      "centerYRange": 2.18,
+      "aspectRange": 0.02,
+      "angleRange": 0.92
+    },
+    {
+      "slot": 15,
+      "widthRange": 7,
+      "heightRange": 57,
+      "centerXRange": 4.69,
+      "centerYRange": 21.04,
+      "aspectRange": 0.14,
+      "angleRange": 2.13
+    },
+    {
+      "slot": 16,
+      "widthRange": 9,
+      "heightRange": 57,
+      "centerXRange": 8.25,
+      "centerYRange": 21.33,
+      "aspectRange": 0.14,
+      "angleRange": 2.33
+    },
+    {
+      "slot": 17,
+      "widthRange": 9,
+      "heightRange": 57,
+      "centerXRange": 7.64,
+      "centerYRange": 21.28,
+      "aspectRange": 0.14,
+      "angleRange": 1.83
+    },
+    {
+      "slot": 18,
+      "widthRange": 8,
+      "heightRange": 57,
+      "centerXRange": 6.67,
+      "centerYRange": 20.94,
+      "aspectRange": 0.14,
+      "angleRange": 2.03
+    },
+    {
+      "slot": 19,
+      "widthRange": 10,
+      "heightRange": 57,
+      "centerXRange": 7.45,
+      "centerYRange": 21.33,
+      "aspectRange": 0.13,
+      "angleRange": 2.92
+    },
+    {
+      "slot": 20,
+      "widthRange": 9,
+      "heightRange": 57,
+      "centerXRange": 8.4,
+      "centerYRange": 21.02,
+      "aspectRange": 0.14,
+      "angleRange": 2.23
+    },
+    {
+      "slot": 21,
+      "widthRange": 9,
+      "heightRange": 57,
+      "centerXRange": 9.52,
+      "centerYRange": 21.05,
+      "aspectRange": 0.14,
+      "angleRange": 2.67
+    }
+  ],
+  "worstCrossSheetVariation": {
+    "width": [
+      {
+        "slot": 2,
+        "widthRange": 10,
+        "heightRange": 5,
+        "centerXRange": 8.84,
+        "centerYRange": 0.46,
+        "aspectRange": 0.02,
+        "angleRange": 1.54
+      },
+      {
+        "slot": 3,
+        "widthRange": 10,
+        "heightRange": 4,
+        "centerXRange": 8.22,
+        "centerYRange": 0.65,
+        "aspectRange": 0.02,
+        "angleRange": 1.83
+      },
+      {
+        "slot": 5,
+        "widthRange": 10,
+        "heightRange": 5,
+        "centerXRange": 8.13,
+        "centerYRange": 0.59,
+        "aspectRange": 0.02,
+        "angleRange": 2.16
+      },
+      {
+        "slot": 19,
+        "widthRange": 10,
+        "heightRange": 57,
+        "centerXRange": 7.45,
+        "centerYRange": 21.33,
+        "aspectRange": 0.13,
+        "angleRange": 2.92
+      },
+      {
+        "slot": 7,
+        "widthRange": 9,
+        "heightRange": 4,
+        "centerXRange": 11.2,
+        "centerYRange": 0.57,
+        "aspectRange": 0.02,
+        "angleRange": 0.93
+      }
+    ],
+    "height": [
+      {
+        "slot": 15,
+        "widthRange": 7,
+        "heightRange": 57,
+        "centerXRange": 4.69,
+        "centerYRange": 21.04,
+        "aspectRange": 0.14,
+        "angleRange": 2.13
+      },
+      {
+        "slot": 16,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 8.25,
+        "centerYRange": 21.33,
+        "aspectRange": 0.14,
+        "angleRange": 2.33
+      },
+      {
+        "slot": 17,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 7.64,
+        "centerYRange": 21.28,
+        "aspectRange": 0.14,
+        "angleRange": 1.83
+      },
+      {
+        "slot": 18,
+        "widthRange": 8,
+        "heightRange": 57,
+        "centerXRange": 6.67,
+        "centerYRange": 20.94,
+        "aspectRange": 0.14,
+        "angleRange": 2.03
+      },
+      {
+        "slot": 19,
+        "widthRange": 10,
+        "heightRange": 57,
+        "centerXRange": 7.45,
+        "centerYRange": 21.33,
+        "aspectRange": 0.13,
+        "angleRange": 2.92
+      }
+    ],
+    "center": [
+      {
+        "slot": 21,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 9.52,
+        "centerYRange": 21.05,
+        "aspectRange": 0.14,
+        "angleRange": 2.67
+      },
+      {
+        "slot": 16,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 8.25,
+        "centerYRange": 21.33,
+        "aspectRange": 0.14,
+        "angleRange": 2.33
+      },
+      {
+        "slot": 20,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 8.4,
+        "centerYRange": 21.02,
+        "aspectRange": 0.14,
+        "angleRange": 2.23
+      },
+      {
+        "slot": 17,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 7.64,
+        "centerYRange": 21.28,
+        "aspectRange": 0.14,
+        "angleRange": 1.83
+      },
+      {
+        "slot": 19,
+        "widthRange": 10,
+        "heightRange": 57,
+        "centerXRange": 7.45,
+        "centerYRange": 21.33,
+        "aspectRange": 0.13,
+        "angleRange": 2.92
+      }
+    ],
+    "aspect": [
+      {
+        "slot": 15,
+        "widthRange": 7,
+        "heightRange": 57,
+        "centerXRange": 4.69,
+        "centerYRange": 21.04,
+        "aspectRange": 0.14,
+        "angleRange": 2.13
+      },
+      {
+        "slot": 16,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 8.25,
+        "centerYRange": 21.33,
+        "aspectRange": 0.14,
+        "angleRange": 2.33
+      },
+      {
+        "slot": 17,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 7.64,
+        "centerYRange": 21.28,
+        "aspectRange": 0.14,
+        "angleRange": 1.83
+      },
+      {
+        "slot": 18,
+        "widthRange": 8,
+        "heightRange": 57,
+        "centerXRange": 6.67,
+        "centerYRange": 20.94,
+        "aspectRange": 0.14,
+        "angleRange": 2.03
+      },
+      {
+        "slot": 20,
+        "widthRange": 9,
+        "heightRange": 57,
+        "centerXRange": 8.4,
+        "centerYRange": 21.02,
+        "aspectRange": 0.14,
+        "angleRange": 2.23
+      }
+    ]
+  }
+}

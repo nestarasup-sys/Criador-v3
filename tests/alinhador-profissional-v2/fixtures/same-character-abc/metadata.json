@@ -1,0 +1,15 @@
+{
+  "id": "same-character-abc",
+  "description": "Três folhas reais do mesmo personagem e design, fornecidas para validar o Alinhador Profissional V2.",
+  "grid": { "columns": 7, "rows": 3, "headsPerSheet": 21, "totalHeads": 63 },
+  "sheets": {
+    "A": { "file": "sheet-a.png", "sha256": "94375ae97a37772a4b04c083a3410e60d25d3da3456faa9debd7d7f4ab1c999a" },
+    "B": { "file": "sheet-b.png", "sha256": "c14a733dcbbc563dbdff99b78fc2eb5730b638d7c583f09bfa5e13b4cd9623d6" },
+    "C": { "file": "sheet-c.png", "sha256": "418921091e0274c90abfa2aee3da89ec4c435399d5754060fea26d65d1c1f19a" }
+  },
+  "expected": {
+    "sameCharacter": true,
+    "preserveExpressionDifferences": true,
+    "knownVariation": ["escala", "posição", "proporção externa", "landmarks internos", "perspectiva", "deformação local"]
+  }
+}
