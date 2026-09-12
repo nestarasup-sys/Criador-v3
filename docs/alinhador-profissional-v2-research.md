@@ -23,11 +23,11 @@ Resultados iniciais:
 - centro horizontal varia até 11,2 px;
 - a orientação global estimada pela silhueta varia menos de 3°;
 - as duas primeiras linhas têm altura muito próxima entre folhas, normalmente 0–5 px de diferença;
-- a terceira linha da folha A está encostada no limite da imagem e perde aproximadamente 57 px de conteúdo inferior quando comparada a B/C;
+- a terceira linha da folha A está encostada no limite da imagem e apresenta até 23 px a menos de componente principal útil quando comparada a B/C;
 - olhos, sobrancelhas, boca e marcas decorativas variam de forma legítima e não podem ser usados como erro de alinhamento denso;
 - existem diferenças locais de bochecha, mandíbula, orelha e distribuição dos elementos internos que uma transformação global não elimina.
 
-A diferença de 57 px não é evidência de uma cabeça verticalmente comprimida: é evidência de conteúdo truncado pelo enquadramento. A V2 precisa registrar `touchesSourceBoundary` e impedir warps que inventem pixels ausentes.
+A diferença da última linha não é evidência suficiente de uma cabeça verticalmente comprimida: pode ser conteúdo truncado pelo enquadramento. A análise também encontrou uma faixa branca externa na base da folha C e passou a excluí-la como separador, em vez de contá-la como personagem. A V2 registra `touchesSourceBoundary` e deve impedir warps que inventem pixels ausentes.
 
 ## Técnicas avaliadas
 

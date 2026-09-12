@@ -1,5 +1,10 @@
-import { LegacyToolPage } from "../components/LegacyToolPage";
+import { ToolsTopbar } from "../components/ToolsTopbar";
+import { AlinhadorV2Client } from "./AlinhadorV2Client";
+import styles from "./alinhador-v2.module.css";
 
 export default function AlinhadorProfissionalV2Page() {
-  return <LegacyToolPage title="Alinhador Profissional V2" subtitle="Ambiente independente para alinhamento avançado e comparação não destrutiva" source="/Ferramentas/alinhador-profissional-v2/baseline-v1.html?rev=v2-baseline" />;
+  return <div className={styles.page}>
+    <ToolsTopbar title="Alinhador Profissional V2" subtitle="Landmarks, alinhamento regional e comparação não destrutiva" />
+    <AlinhadorV2Client />
+  </div>;
 }

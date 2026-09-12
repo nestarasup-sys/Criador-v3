@@ -13,39 +13,39 @@
       },
       "height": {
         "min": 253,
-        "median": 306,
-        "max": 309,
-        "range": 56
+        "median": 272,
+        "max": 288,
+        "range": 35
       },
       "centerX": {
-        "min": 109.38,
-        "median": 110.47,
-        "max": 111,
-        "range": 1.62
+        "min": 109.45,
+        "median": 110.45,
+        "max": 111.13,
+        "range": 1.68
       },
       "centerY": {
-        "min": 119.35,
-        "median": 142.2,
-        "max": 152.09,
-        "range": 32.74
+        "min": 118.77,
+        "median": 131.85,
+        "max": 148.8,
+        "range": 30.03
       },
       "aspectRatio": {
-        "min": 0.73,
-        "median": 0.74,
+        "min": 0.78,
+        "median": 0.83,
         "max": 0.9,
-        "range": 0.17
+        "range": 0.12
       },
       "foregroundRatio": {
-        "min": 0.59,
-        "median": 0.64,
-        "max": 0.67,
-        "range": 0.08
+        "min": 0.57,
+        "median": 0.61,
+        "max": 0.63,
+        "range": 0.06
       },
       "pcaAngle": {
-        "min": 85.56,
-        "median": 88.17,
-        "max": 88.66,
-        "range": 3.1
+        "min": 85.51,
+        "median": 86.65,
+        "max": 87.65,
+        "range": 2.14
       }
     },
     "B": {
@@ -58,465 +58,465 @@
       },
       "height": {
         "min": 269,
-        "median": 306,
-        "max": 309,
-        "range": 40
+        "median": 282,
+        "max": 293,
+        "range": 24
       },
       "centerX": {
-        "min": 114.61,
-        "median": 117.39,
-        "max": 118.72,
-        "range": 4.11
+        "min": 114.57,
+        "median": 117.42,
+        "max": 118.85,
+        "range": 4.28
       },
       "centerY": {
-        "min": 127.02,
-        "median": 143.82,
-        "max": 152.56,
-        "range": 25.54
+        "min": 126.3,
+        "median": 137.63,
+        "max": 150.8,
+        "range": 24.5
       },
       "aspectRatio": {
-        "min": 0.74,
-        "median": 0.75,
+        "min": 0.78,
+        "median": 0.82,
         "max": 0.87,
-        "range": 0.13
+        "range": 0.09
       },
       "foregroundRatio": {
-        "min": 0.64,
-        "median": 0.67,
-        "max": 0.7,
-        "range": 0.07
+        "min": 0.62,
+        "median": 0.65,
+        "max": 0.67,
+        "range": 0.05
       },
       "pcaAngle": {
-        "min": 87.58,
-        "median": 88.81,
-        "max": 89.61,
-        "range": 2.03
+        "min": 87.45,
+        "median": 88.13,
+        "max": 89.31,
+        "range": 1.86
       }
     },
     "C": {
       "detected": 21,
       "width": {
         "min": 225,
-        "median": 235,
-        "max": 235,
-        "range": 10
+        "median": 228,
+        "max": 231,
+        "range": 6
       },
       "height": {
-        "min": 309,
-        "median": 310,
-        "max": 310,
-        "range": 1
+        "min": 276,
+        "median": 285,
+        "max": 296,
+        "range": 20
       },
       "centerX": {
-        "min": 114.04,
-        "median": 116.79,
-        "max": 121.72,
-        "range": 7.68
+        "min": 113.53,
+        "median": 116.87,
+        "max": 121.63,
+        "range": 8.1
       },
       "centerY": {
-        "min": 140.46,
-        "median": 144.71,
-        "max": 152.58,
-        "range": 12.12
+        "min": 127.71,
+        "median": 138.68,
+        "max": 154.18,
+        "range": 26.47
       },
       "aspectRatio": {
-        "min": 0.73,
-        "median": 0.76,
-        "max": 0.76,
-        "range": 0.03
+        "min": 0.76,
+        "median": 0.8,
+        "max": 0.84,
+        "range": 0.07
       },
       "foregroundRatio": {
-        "min": 0.68,
-        "median": 0.69,
-        "max": 0.7,
-        "range": 0.01
+        "min": 0.62,
+        "median": 0.65,
+        "max": 0.67,
+        "range": 0.05
       },
       "pcaAngle": {
-        "min": 87.17,
-        "median": 87.76,
-        "max": 88.43,
-        "range": 1.26
+        "min": 85.76,
+        "median": 86.55,
+        "max": 88.24,
+        "range": 2.48
       }
     }
   },
   "corresponding": [
     {
       "slot": 1,
-      "widthRange": 8,
-      "heightRange": 4,
-      "centerXRange": 5.07,
-      "centerYRange": 0.75,
+      "widthRange": 7,
+      "heightRange": 8,
+      "centerXRange": 5.02,
+      "centerYRange": 5.08,
       "aspectRange": 0.02,
-      "angleRange": 1.41
+      "angleRange": 1.71
     },
     {
       "slot": 2,
-      "widthRange": 10,
-      "heightRange": 5,
-      "centerXRange": 8.84,
-      "centerYRange": 0.46,
+      "widthRange": 5,
+      "heightRange": 8,
+      "centerXRange": 8.72,
+      "centerYRange": 5.32,
       "aspectRange": 0.02,
-      "angleRange": 1.54
+      "angleRange": 1.92
     },
     {
       "slot": 3,
-      "widthRange": 10,
-      "heightRange": 4,
-      "centerXRange": 8.22,
-      "centerYRange": 0.65,
-      "aspectRange": 0.02,
-      "angleRange": 1.83
+      "widthRange": 4,
+      "heightRange": 8,
+      "centerXRange": 8.44,
+      "centerYRange": 5.65,
+      "aspectRange": 0.01,
+      "angleRange": 2.19
     },
     {
       "slot": 4,
-      "widthRange": 7,
-      "heightRange": 5,
-      "centerXRange": 7.16,
-      "centerYRange": 0.47,
+      "widthRange": 3,
+      "heightRange": 8,
+      "centerXRange": 6.91,
+      "centerYRange": 5.11,
       "aspectRange": 0.01,
-      "angleRange": 2.15
+      "angleRange": 2.6
     },
     {
       "slot": 5,
-      "widthRange": 10,
-      "heightRange": 5,
-      "centerXRange": 8.13,
-      "centerYRange": 0.59,
-      "aspectRange": 0.02,
+      "widthRange": 5,
+      "heightRange": 8,
+      "centerXRange": 7.85,
+      "centerYRange": 5.22,
+      "aspectRange": 0.01,
       "angleRange": 2.16
     },
     {
       "slot": 6,
-      "widthRange": 8,
-      "heightRange": 4,
-      "centerXRange": 9.48,
-      "centerYRange": 0.42,
+      "widthRange": 4,
+      "heightRange": 8,
+      "centerXRange": 9.28,
+      "centerYRange": 5.38,
       "aspectRange": 0.02,
-      "angleRange": 1.08
+      "angleRange": 1.18
     },
     {
       "slot": 7,
-      "widthRange": 9,
-      "heightRange": 4,
-      "centerXRange": 11.2,
-      "centerYRange": 0.57,
+      "widthRange": 5,
+      "heightRange": 8,
+      "centerXRange": 11.05,
+      "centerYRange": 5.2,
       "aspectRange": 0.02,
-      "angleRange": 0.93
+      "angleRange": 1.43
     },
     {
       "slot": 8,
       "widthRange": 8,
-      "heightRange": 0,
-      "centerXRange": 4.9,
-      "centerYRange": 2.29,
+      "heightRange": 13,
+      "centerXRange": 4.73,
+      "centerYRange": 6.61,
       "aspectRange": 0.03,
-      "angleRange": 0.88
+      "angleRange": 1.63
     },
     {
       "slot": 9,
       "widthRange": 5,
-      "heightRange": 0,
-      "centerXRange": 8.73,
-      "centerYRange": 2.52,
-      "aspectRange": 0.02,
-      "angleRange": 0.78
+      "heightRange": 12,
+      "centerXRange": 8.82,
+      "centerYRange": 6.95,
+      "aspectRange": 0.03,
+      "angleRange": 1.43
     },
     {
       "slot": 10,
       "widthRange": 5,
-      "heightRange": 0,
+      "heightRange": 13,
       "centerXRange": 7.86,
-      "centerYRange": 2.59,
-      "aspectRange": 0.02,
-      "angleRange": 0.75
+      "centerYRange": 7.04,
+      "aspectRange": 0.03,
+      "angleRange": 1.64
     },
     {
       "slot": 11,
       "widthRange": 4,
-      "heightRange": 0,
-      "centerXRange": 6.98,
-      "centerYRange": 2.59,
-      "aspectRange": 0.01,
-      "angleRange": 1.37
+      "heightRange": 13,
+      "centerXRange": 6.75,
+      "centerYRange": 6.99,
+      "aspectRange": 0.02,
+      "angleRange": 2.31
     },
     {
       "slot": 12,
       "widthRange": 6,
-      "heightRange": 0,
-      "centerXRange": 7.32,
-      "centerYRange": 2.59,
-      "aspectRange": 0.02,
-      "angleRange": 1.61
+      "heightRange": 13,
+      "centerXRange": 7.56,
+      "centerYRange": 6.96,
+      "aspectRange": 0.03,
+      "angleRange": 2.58
     },
     {
       "slot": 13,
       "widthRange": 4,
-      "heightRange": 0,
-      "centerXRange": 8.46,
-      "centerYRange": 2.21,
-      "aspectRange": 0.01,
-      "angleRange": 0.72
+      "heightRange": 13,
+      "centerXRange": 8.3,
+      "centerYRange": 6.36,
+      "aspectRange": 0.03,
+      "angleRange": 1.04
     },
     {
       "slot": 14,
       "widthRange": 6,
-      "heightRange": 0,
-      "centerXRange": 9.3,
-      "centerYRange": 2.18,
-      "aspectRange": 0.02,
-      "angleRange": 0.92
+      "heightRange": 13,
+      "centerXRange": 9.24,
+      "centerYRange": 6.52,
+      "aspectRange": 0.04,
+      "angleRange": 1.71
     },
     {
       "slot": 15,
-      "widthRange": 7,
-      "heightRange": 57,
-      "centerXRange": 4.69,
-      "centerYRange": 21.04,
-      "aspectRange": 0.14,
-      "angleRange": 2.13
+      "widthRange": 6,
+      "heightRange": 23,
+      "centerXRange": 4.67,
+      "centerYRange": 8.72,
+      "aspectRange": 0.06,
+      "angleRange": 1.94
     },
     {
       "slot": 16,
-      "widthRange": 9,
-      "heightRange": 57,
-      "centerXRange": 8.25,
-      "centerYRange": 21.33,
-      "aspectRange": 0.14,
-      "angleRange": 2.33
+      "widthRange": 4,
+      "heightRange": 23,
+      "centerXRange": 8.26,
+      "centerYRange": 9.28,
+      "aspectRange": 0.07,
+      "angleRange": 2.19
     },
     {
       "slot": 17,
-      "widthRange": 9,
-      "heightRange": 57,
-      "centerXRange": 7.64,
-      "centerYRange": 21.28,
-      "aspectRange": 0.14,
-      "angleRange": 1.83
+      "widthRange": 4,
+      "heightRange": 23,
+      "centerXRange": 7.74,
+      "centerYRange": 9.2,
+      "aspectRange": 0.07,
+      "angleRange": 1.94
     },
     {
       "slot": 18,
-      "widthRange": 8,
-      "heightRange": 57,
-      "centerXRange": 6.67,
-      "centerYRange": 20.94,
-      "aspectRange": 0.14,
-      "angleRange": 2.03
+      "widthRange": 4,
+      "heightRange": 23,
+      "centerXRange": 6.89,
+      "centerYRange": 9.1,
+      "aspectRange": 0.06,
+      "angleRange": 1.99
     },
     {
       "slot": 19,
-      "widthRange": 10,
-      "heightRange": 57,
-      "centerXRange": 7.45,
-      "centerYRange": 21.33,
-      "aspectRange": 0.13,
-      "angleRange": 2.92
+      "widthRange": 5,
+      "heightRange": 23,
+      "centerXRange": 7.23,
+      "centerYRange": 9.17,
+      "aspectRange": 0.06,
+      "angleRange": 2.7
     },
     {
       "slot": 20,
-      "widthRange": 9,
-      "heightRange": 57,
-      "centerXRange": 8.4,
-      "centerYRange": 21.02,
-      "aspectRange": 0.14,
-      "angleRange": 2.23
+      "widthRange": 5,
+      "heightRange": 23,
+      "centerXRange": 8.32,
+      "centerYRange": 9.12,
+      "aspectRange": 0.07,
+      "angleRange": 1.72
     },
     {
       "slot": 21,
-      "widthRange": 9,
-      "heightRange": 57,
-      "centerXRange": 9.52,
-      "centerYRange": 21.05,
-      "aspectRange": 0.14,
-      "angleRange": 2.67
+      "widthRange": 5,
+      "heightRange": 23,
+      "centerXRange": 9.49,
+      "centerYRange": 8.87,
+      "aspectRange": 0.07,
+      "angleRange": 2.05
     }
   ],
   "worstCrossSheetVariation": {
     "width": [
       {
-        "slot": 2,
-        "widthRange": 10,
-        "heightRange": 5,
-        "centerXRange": 8.84,
-        "centerYRange": 0.46,
-        "aspectRange": 0.02,
-        "angleRange": 1.54
+        "slot": 8,
+        "widthRange": 8,
+        "heightRange": 13,
+        "centerXRange": 4.73,
+        "centerYRange": 6.61,
+        "aspectRange": 0.03,
+        "angleRange": 1.63
       },
       {
-        "slot": 3,
-        "widthRange": 10,
-        "heightRange": 4,
-        "centerXRange": 8.22,
-        "centerYRange": 0.65,
+        "slot": 1,
+        "widthRange": 7,
+        "heightRange": 8,
+        "centerXRange": 5.02,
+        "centerYRange": 5.08,
         "aspectRange": 0.02,
-        "angleRange": 1.83
+        "angleRange": 1.71
       },
       {
-        "slot": 5,
-        "widthRange": 10,
-        "heightRange": 5,
-        "centerXRange": 8.13,
-        "centerYRange": 0.59,
-        "aspectRange": 0.02,
-        "angleRange": 2.16
+        "slot": 12,
+        "widthRange": 6,
+        "heightRange": 13,
+        "centerXRange": 7.56,
+        "centerYRange": 6.96,
+        "aspectRange": 0.03,
+        "angleRange": 2.58
       },
       {
-        "slot": 19,
-        "widthRange": 10,
-        "heightRange": 57,
-        "centerXRange": 7.45,
-        "centerYRange": 21.33,
-        "aspectRange": 0.13,
-        "angleRange": 2.92
+        "slot": 14,
+        "widthRange": 6,
+        "heightRange": 13,
+        "centerXRange": 9.24,
+        "centerYRange": 6.52,
+        "aspectRange": 0.04,
+        "angleRange": 1.71
       },
       {
-        "slot": 7,
-        "widthRange": 9,
-        "heightRange": 4,
-        "centerXRange": 11.2,
-        "centerYRange": 0.57,
-        "aspectRange": 0.02,
-        "angleRange": 0.93
+        "slot": 15,
+        "widthRange": 6,
+        "heightRange": 23,
+        "centerXRange": 4.67,
+        "centerYRange": 8.72,
+        "aspectRange": 0.06,
+        "angleRange": 1.94
       }
     ],
     "height": [
       {
         "slot": 15,
-        "widthRange": 7,
-        "heightRange": 57,
-        "centerXRange": 4.69,
-        "centerYRange": 21.04,
-        "aspectRange": 0.14,
-        "angleRange": 2.13
+        "widthRange": 6,
+        "heightRange": 23,
+        "centerXRange": 4.67,
+        "centerYRange": 8.72,
+        "aspectRange": 0.06,
+        "angleRange": 1.94
       },
       {
         "slot": 16,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 8.25,
-        "centerYRange": 21.33,
-        "aspectRange": 0.14,
-        "angleRange": 2.33
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 8.26,
+        "centerYRange": 9.28,
+        "aspectRange": 0.07,
+        "angleRange": 2.19
       },
       {
         "slot": 17,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 7.64,
-        "centerYRange": 21.28,
-        "aspectRange": 0.14,
-        "angleRange": 1.83
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 7.74,
+        "centerYRange": 9.2,
+        "aspectRange": 0.07,
+        "angleRange": 1.94
       },
       {
         "slot": 18,
-        "widthRange": 8,
-        "heightRange": 57,
-        "centerXRange": 6.67,
-        "centerYRange": 20.94,
-        "aspectRange": 0.14,
-        "angleRange": 2.03
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 6.89,
+        "centerYRange": 9.1,
+        "aspectRange": 0.06,
+        "angleRange": 1.99
       },
       {
         "slot": 19,
-        "widthRange": 10,
-        "heightRange": 57,
-        "centerXRange": 7.45,
-        "centerYRange": 21.33,
-        "aspectRange": 0.13,
-        "angleRange": 2.92
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 7.23,
+        "centerYRange": 9.17,
+        "aspectRange": 0.06,
+        "angleRange": 2.7
       }
     ],
     "center": [
       {
         "slot": 21,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 9.52,
-        "centerYRange": 21.05,
-        "aspectRange": 0.14,
-        "angleRange": 2.67
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 9.49,
+        "centerYRange": 8.87,
+        "aspectRange": 0.07,
+        "angleRange": 2.05
       },
       {
         "slot": 16,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 8.25,
-        "centerYRange": 21.33,
-        "aspectRange": 0.14,
-        "angleRange": 2.33
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 8.26,
+        "centerYRange": 9.28,
+        "aspectRange": 0.07,
+        "angleRange": 2.19
       },
       {
         "slot": 20,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 8.4,
-        "centerYRange": 21.02,
-        "aspectRange": 0.14,
-        "angleRange": 2.23
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 8.32,
+        "centerYRange": 9.12,
+        "aspectRange": 0.07,
+        "angleRange": 1.72
       },
       {
         "slot": 17,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 7.64,
-        "centerYRange": 21.28,
-        "aspectRange": 0.14,
-        "angleRange": 1.83
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 7.74,
+        "centerYRange": 9.2,
+        "aspectRange": 0.07,
+        "angleRange": 1.94
       },
       {
         "slot": 19,
-        "widthRange": 10,
-        "heightRange": 57,
-        "centerXRange": 7.45,
-        "centerYRange": 21.33,
-        "aspectRange": 0.13,
-        "angleRange": 2.92
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 7.23,
+        "centerYRange": 9.17,
+        "aspectRange": 0.06,
+        "angleRange": 2.7
       }
     ],
     "aspect": [
       {
-        "slot": 15,
-        "widthRange": 7,
-        "heightRange": 57,
-        "centerXRange": 4.69,
-        "centerYRange": 21.04,
-        "aspectRange": 0.14,
-        "angleRange": 2.13
-      },
-      {
         "slot": 16,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 8.25,
-        "centerYRange": 21.33,
-        "aspectRange": 0.14,
-        "angleRange": 2.33
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 8.26,
+        "centerYRange": 9.28,
+        "aspectRange": 0.07,
+        "angleRange": 2.19
       },
       {
         "slot": 17,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 7.64,
-        "centerYRange": 21.28,
-        "aspectRange": 0.14,
-        "angleRange": 1.83
-      },
-      {
-        "slot": 18,
-        "widthRange": 8,
-        "heightRange": 57,
-        "centerXRange": 6.67,
-        "centerYRange": 20.94,
-        "aspectRange": 0.14,
-        "angleRange": 2.03
+        "widthRange": 4,
+        "heightRange": 23,
+        "centerXRange": 7.74,
+        "centerYRange": 9.2,
+        "aspectRange": 0.07,
+        "angleRange": 1.94
       },
       {
         "slot": 20,
-        "widthRange": 9,
-        "heightRange": 57,
-        "centerXRange": 8.4,
-        "centerYRange": 21.02,
-        "aspectRange": 0.14,
-        "angleRange": 2.23
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 8.32,
+        "centerYRange": 9.12,
+        "aspectRange": 0.07,
+        "angleRange": 1.72
+      },
+      {
+        "slot": 21,
+        "widthRange": 5,
+        "heightRange": 23,
+        "centerXRange": 9.49,
+        "centerYRange": 8.87,
+        "aspectRange": 0.07,
+        "angleRange": 2.05
+      },
+      {
+        "slot": 15,
+        "widthRange": 6,
+        "heightRange": 23,
+        "centerXRange": 4.67,
+        "centerYRange": 8.72,
+        "aspectRange": 0.06,
+        "angleRange": 1.94
       }
     ]
   }
