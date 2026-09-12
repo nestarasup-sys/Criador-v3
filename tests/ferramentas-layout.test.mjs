@@ -20,30 +20,8 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
     read("local-data-server.mjs"),
   ]);
 
-  assert.match(page, /<strong>05<\/strong>/);
-  assert.match(page, /alinhador-profissional-v2/);
-  assert.match(page, /laboratorio-cor-modelo/);
-  assert.match(page, /teste-controles-cor/);
+  assert.match(page, /<strong>02<\/strong>/);
+  assert.doesNotMatch(page, /alinhador-profissional-v2|laboratorio-cor-modelo|teste-controles-cor/);
   assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
   assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
-});
-
-test("teste de controles de cor usa o compositor e os alvos do Criador", async () => {
-  const page = await read("app/Ferramentas/teste-controles-cor/ColorControlsTestClient.tsx");
-  assert.match(page, /createModelColorAdjustedCanvasForScopes/);
-  assert.match(page, /getStoredModelColorCalibration/);
-  assert.match(page, /Somente pupilas/);
-  assert.match(page, /Pupilas \+ sobrancelhas/);
-  assert.match(page, /Somente pele/);
-  assert.match(page, /Somente sobrancelhas/);
-  assert.match(page, /Nada é salvo no personagem/);
-  assert.match(page, /Testar imagem temporária/);
-  assert.match(page, /URL\.createObjectURL/);
-  assert.match(page, /Voltar para catálogo/);
-  assert.match(page, /Auditoria neon/);
-  assert.match(page, /Teste de contaminação/);
-  assert.match(page, /changedOutside/);
-  const styles = await read("app/Ferramentas/teste-controles-cor/teste-controles-cor.module.css");
-  assert.match(styles, /overflow-y:scroll/);
-  assert.match(styles, /overflow:auto/);
 });

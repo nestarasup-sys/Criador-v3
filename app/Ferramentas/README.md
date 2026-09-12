@@ -10,4 +10,3 @@ essa integração seja planejada explicitamente.
 
 - `public/Ferramentas/green-bg-pro/index.html` — Green BG PRO, ferramenta integrada em modo legado.
 - `public/Ferramentas/alinhador-profissa/index.html` — Alinhador Profissa, ferramenta integrada em modo legado.
-- `public/Ferramentas/alinhador-profissional-v2/baseline-v1.html` — cópia imutável do baseline usada como referência pela V2 independente.
