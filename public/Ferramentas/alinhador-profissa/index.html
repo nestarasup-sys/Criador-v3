@@ -472,6 +472,8 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 
     <label><input id="autoThr" type="checkbox" checked style="width:auto"> Encontrar sensibilidade automaticamente</label>
     <label><input id="chroma2" type="checkbox" style="width:auto"> Chroma 2</label>
+    <label>Alcance de tons do fundo <span class="value" id="chroma2ToneV">52</span></label>
+    <input id="chroma2ToneRange" type="range" min="20" max="90" value="52" disabled>
     <div id="bgModeHint" class="small">Desativado: usa o chroma clássico atual. Ativado: Chroma 2 detecta o fundo conectado às bordas, incluindo variações de verde e fundos claros, com proteção do contorno.</div>
     <label><input id="smallestHorizontalBase" type="checkbox" checked disabled style="width:auto"> Molde horizontal = menor cabeça detectada</label>
     <div class="small">Modo fixo: a menor cabeça detectada sempre é usada como referência da <b>largura</b> do molde, para evitar que uma cabeça muito gorda deixe todas as outras largas demais. A altura continua sendo calculada normalmente.</div>
@@ -749,6 +751,7 @@ function percentile(v,p){
 function updateLabels(){
   $("expectedV").textContent=$("expected").value;
   $("thrV").textContent=$("thr").value;
+  $("chroma2ToneV").textContent=$("chroma2ToneRange").value;
   $("warpV").textContent=$("warpStrength").value+"%";
   $("smoothV").textContent=$("smooth").value;
   $("spikeV").textContent=Number($("spike").value).toFixed(1)+"%";
@@ -808,6 +811,7 @@ function updateBgModeUI(){
   const on=usingChroma2();
   $("thr").disabled=on;
   $("autoThr").disabled=on;
+  $("chroma2ToneRange").disabled=!on;
   const hint=$("bgModeHint");
   if(hint)hint.textContent=on
     ? "Chroma 2 ATIVO: segmentação topológica do fundo conectado às bordas (verde + branco/claro), com proteção de contorno e despill. Os controles do chroma clássico ficam desativados."
@@ -897,7 +901,7 @@ function chroma2ProcessCanvas(c,{processed=true}={}){
   const ctx=c.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,c.width,c.height);
   const src=img.data,w=c.width,h=c.height,n=w*h;
   const bg=ch2DominantBackground(src,w,h),f=ch2BuildFeatures(src,w,h,bg);
-  const T=52,protect=.72,feather=24,despill=.44,hardMode=false;
+  const T=clamp(Number($("chroma2ToneRange")?.value||52),20,90),protect=.72,feather=24,despill=.44,hardMode=false;
   const borderHue=[],borderSat=[],borderVal=[],borderWhite=[];
   const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
   for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){
@@ -3113,6 +3117,7 @@ function init(){
   $("quickProcess").onclick=v71QuickProcess;
   $("detect").onclick=detectAll;
   $("chroma2").onchange=()=>{updateBgModeUI(); if(S.heads.length)status("detectStatus","Chroma alterado. Detecte novamente as cabeças.","warn")};
+  $("chroma2ToneRange").oninput=()=>{updateLabels(); if(S.heads.length&&usingChroma2())status("detectStatus","Alcance de tons alterado. Detecte novamente as cabeças.","warn")};
   ["faceRigEnable","faceRigEye","faceRigMouth","faceRigConfidence"].forEach(id=>$(id).onchange=()=>{
     if(id==="faceRigEnable")updateFaceRigControls();
     if(S.canonical){
