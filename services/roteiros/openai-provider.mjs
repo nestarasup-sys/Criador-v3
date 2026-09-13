@@ -1,10 +1,10 @@
 import { readFile } from "node:fs/promises";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 
-const DEFAULT_MODEL = "gpt-5.4-mini";
+const DEFAULT_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_OUTPUT = 2400;
 const DEFAULT_TIMEOUT = 90_000;
-const AVAILABLE_MODELS = ["gpt-5.4-mini"];
+const AVAILABLE_MODELS = ["gpt-5.6-luna"];
 
 let usagePath = "";
 let usage = { version: 1, calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, errors: 0, lastCallAt: null, lastModel: null };

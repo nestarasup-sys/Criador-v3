@@ -148,7 +148,10 @@ function normalizeRoteirosSettings(value) {
     aiBaseUrl: typeof source.aiBaseUrl === "string" ? source.aiBaseUrl : defaults.aiBaseUrl,
     aiModel: typeof source.aiModel === "string" ? source.aiModel : defaults.aiModel,
     temperature: numeric("temperature", 0, 1.5),
-    openAiModel: typeof source.openAiModel === "string" && source.openAiModel.trim() ? source.openAiModel.trim() : defaults.openAiModel,
+    openAiModel: (() => {
+      const model = typeof source.openAiModel === "string" && source.openAiModel.trim() ? source.openAiModel.trim() : defaults.openAiModel;
+      return model === "gpt-5.4-mini" ? defaults.openAiModel : model;
+    })(),
     openAiReasoningEffort: ["low", "medium", "high"].includes(source.openAiReasoningEffort) ? source.openAiReasoningEffort : defaults.openAiReasoningEffort,
     openAiMaxOutputTokens: numeric("openAiMaxOutputTokens", 256, 8000),
     openAiTimeoutMs: numeric("openAiTimeoutMs", 5_000, 180_000),

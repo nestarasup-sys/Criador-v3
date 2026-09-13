@@ -121,7 +121,7 @@ async function fetchWithTimeout(url, init = {}, timeoutMs = AI_TIMEOUT_MS, exter
 
 function providerConfig(settings) {
   const provider = settings?.aiProvider;
-  if (provider === "openai") return { provider, model: String(settings?.openAiModel || "gpt-5.4-mini") };
+  if (provider === "openai") return { provider, model: String(settings?.openAiModel || "gpt-5.6-luna") };
   if (provider !== "lmstudio" && provider !== "ollama") throw new Error("Selecione uma IA local ou a OpenAI nas configurações.");
   return {
     provider,
