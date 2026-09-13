@@ -4486,6 +4486,39 @@ export default function Home() {
     }
   }
 
+  function copyCharacterAppearance(source: Character) {
+    const targetBasePack = getBasePack(basePacks, source.model, source.basePackId);
+    setModel(source.model);
+    setBasePackId(targetBasePack.id);
+    setSelections(normalizeSelections(source.selections));
+    setAdjustments(normalizeAdjustments(source.adjustments));
+    setColorAdjustments(normalizeColorAdjustments(source.colorAdjustments));
+    setModelColorAdjustments(normalizeModelColorAdjustments(source.modelColorAdjustments));
+    setModelColorScope(source.modelColorScope ?? "pupilsBrows");
+    setOutfitColorAdjustmentsByGroup({ ...(source.outfitColorAdjustmentsByGroup ?? {}) });
+    setProtectionMasks({ ...(source.protectionMasks ?? {}) });
+    setHairAdjustmentsByBasePack({ ...(source.hairAdjustmentsByBasePack ?? {}) });
+    setOutfitAdjustmentsByBasePack({ ...(source.outfitAdjustmentsByBasePack ?? {}) });
+    setOutfitLayerMasksByBasePack({ ...(source.outfitLayerMasksByBasePack ?? {}) });
+    setOutfitProtectionMasksByBasePack({ ...(source.outfitProtectionMasksByBasePack ?? {}) });
+    setFaceMode(source.faceMode ?? "base");
+    setActivePackId(source.expressionPackId ?? null);
+    setExpressionEmotion(source.expressionEmotion ?? "normal");
+    setExpressionState(source.expressionState ?? "default");
+    setLayerMasks(normalizeLayerMasks(source.layerMasks, source.maskStrokes));
+    setMaskRedo(emptyLayerMasks());
+    setMaskTarget("body");
+    setCharacterPhoto(source.photoUrl ?? source.photoDataUrl ?? null);
+    setPreviewPan(source.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
+    setExportFrame(source.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+    setOutfitCatalogMode("standard");
+    setOutfitCatalogVersion("v1");
+    setV0TransferOpen(false);
+    setV0TransferSelection([]);
+    setOutfitGroupViewId(null);
+    setNotice(`Aparência copiada de ${source.name}`);
+  }
+
   function changeOutfitCatalogMode(nextMode: OutfitCatalogMode) {
     resetAssetDeleteMode();
     setOutfitCatalogMode(nextMode);
@@ -5451,6 +5484,7 @@ export default function Home() {
           onNameChange={setCharacterName}
           onChangeModel={changeModel}
           onMigrate={() => { void migrateBrowserDataToPc(); }}
+          onCopyAppearance={copyCharacterAppearance}
           onOpenCharacter={openCharacter}
           onRemoveCharacter={removeCharacter}
           onNewCharacter={() => newCharacter()}

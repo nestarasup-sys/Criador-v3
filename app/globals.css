@@ -539,6 +539,14 @@ body { background: #f8f6f7; }
 .character-settings .name-input { padding: 8px 9px; font-size: 13.75px; }
 .character-settings .model-switch button { padding: 7px 3px; font-size: 11.25px; }
 .migration-button { width: 100%; margin-top: 8px; border: 0; border-radius: 8px; padding: 8px; background: var(--accent); color: white; font-size: 11.25px; font-weight: 750; cursor: pointer; }
+.migration-button:disabled, .copy-appearance-button:disabled { opacity: .55; cursor: not-allowed; }
+.copy-appearance-button { width: 100%; margin-top: 6px; border: 1px solid #d7c8f4; border-radius: 8px; padding: 8px; background: #fff; color: var(--accent-dark); font-size: 11.25px; font-weight: 750; cursor: pointer; }
+.copy-appearance-box { margin-top: 7px; padding: 8px; border: 1px solid #e3d9ee; border-radius: 9px; background: #fff; }
+.copy-appearance-box select { width: 100%; margin-top: 5px; border: 1px solid #ddd3e5; border-radius: 7px; padding: 7px; background: #fff; color: #292331; font: inherit; font-size: 11px; }
+.copy-appearance-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 7px; }
+.copy-appearance-actions button { border: 0; border-radius: 7px; padding: 7px 4px; font-size: 10.5px; font-weight: 750; cursor: pointer; }
+.copy-appearance-confirm { background: var(--accent); color: white; }
+.copy-appearance-cancel { background: #f1eef4; color: #665b70; }
 .saved-list { flex: 1 1 auto; min-height: 0; max-height: none; padding-right: 2px; gap: 6px; }
 .saved-card { flex: 0 0 auto; min-height: 61px; padding: 5px 6px; border-color: #eee9ed; background: #fff; box-shadow: 0 3px 10px rgba(48,38,57,.025); }
 .saved-card:hover { background: #fffaf9; border-color: #ffc8c2; }

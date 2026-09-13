@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Character } from "../../domain/character-contract";
 import type { Model } from "../../domain/character-primitives";
 
@@ -13,12 +14,26 @@ type CreatorLibraryPanelProps = {
   onNameChange: (value: string) => void;
   onChangeModel: (model: Model) => void;
   onMigrate: () => void;
+  onCopyAppearance: (character: Character) => void;
   onOpenCharacter: (character: Character) => void;
   onRemoveCharacter: (id: string) => void;
   onNewCharacter: () => void;
 };
 
-export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, getPackName, onNameChange, onChangeModel, onMigrate, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
+export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, getPackName, onNameChange, onChangeModel, onMigrate, onCopyAppearance, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
+  const [copyAppearanceOpen, setCopyAppearanceOpen] = useState(false);
+  const copySources = characters.filter((character) => character.id !== activeCharacter);
+  const [copySourceId, setCopySourceId] = useState("");
+  const selectedCopySource = copySources.find((character) => character.id === copySourceId) ?? copySources[0] ?? null;
+  const openCopyAppearance = () => {
+    setCopySourceId(copySources[0]?.id ?? "");
+    setCopyAppearanceOpen(true);
+  };
+  const confirmCopyAppearance = () => {
+    if (!selectedCopySource) return;
+    onCopyAppearance(selectedCopySource);
+    setCopyAppearanceOpen(false);
+  };
   return <aside className="sidebar left-panel">
     <div className="panel-heading">
       <div><span>MEUS PERSONAGENS</span><small>{characters.length} salvos</small></div>
@@ -34,6 +49,14 @@ export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, 
         <button className={model === "masculino" ? "active" : ""} onClick={() => onChangeModel("masculino")}>Masculino</button>
       </div>
       {migrationAvailable && <button className="migration-button" onClick={onMigrate} disabled={migrating}>{migrating ? "Migrando…" : "Migrar dados deste navegador"}</button>}
+      <button className="copy-appearance-button" onClick={openCopyAppearance} disabled={copySources.length === 0} title={copySources.length === 0 ? "Crie ou salve outro personagem primeiro" : "Copiar cabelo, roupa, modelo e demais ajustes"}>Copiar aparência</button>
+      {copyAppearanceOpen && <div className="copy-appearance-box" role="group" aria-label="Copiar aparência de outro personagem">
+        <label className="field-label" htmlFor="copy-appearance-source">Copiar de</label>
+        <select id="copy-appearance-source" value={selectedCopySource?.id ?? ""} onChange={(event) => setCopySourceId(event.target.value)}>
+          {copySources.map((character) => <option key={character.id} value={character.id}>{character.name} · {character.model}</option>)}
+        </select>
+        <div className="copy-appearance-actions"><button type="button" className="copy-appearance-confirm" onClick={confirmCopyAppearance} disabled={!selectedCopySource}>Aplicar</button><button type="button" className="copy-appearance-cancel" onClick={() => setCopyAppearanceOpen(false)}>Cancelar</button></div>
+      </div>}
     </details>
     <div className="saved-list">
       {characters.length === 0 ? <div className="empty-saved">Seus personagens salvos aparecerão aqui.</div> : characters.map((character) => {
