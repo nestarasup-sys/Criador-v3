@@ -50,7 +50,7 @@ async function main() {
         originals.push({ name, hash: sha256(await readFile(source)) });
       }
 
-      await page.locator("#a2Folder").setInputFiles(files.map((name) => path.join(sourceDir, name)));
+      await page.locator("#a2Folder").setInputFiles(sourceDir);
       await page.waitForFunction(() => !document.getElementById("a2Process").disabled, null, { timeout: 30_000 });
       await page.locator("#a2Process").click();
       await page.waitForFunction(() => document.getElementById("a2Status").textContent.includes("Precision Lock concluído"), null, { timeout: 600_000 });
