@@ -3586,10 +3586,13 @@ export default function Home() {
     // O masculino usa o mesmo encaixe de cabeça que já funciona melhor, mas
     // reaproveita a normalização vertical do ajuste V2: topo e base visíveis
     // das variantes passam a acompanhar a roupa padrão.
-    await adjustSelectedOutfitByHead("head", {
+    const adjusted = await adjustSelectedOutfitByHead("head", {
       alignVariantsEnvelope: true,
       neckV2Profile: "masculino",
     });
+    if (!adjusted) return;
+    setCompositionMode("outfit-over-face");
+    setNotice("Ajuste de roupa masculino aplicado: o modelo ficará atrás da roupa e o cabelo frontal continuará na frente.");
   }
 
   async function adjustSelectedOutfitByHeadForModel() {
