@@ -127,7 +127,11 @@ export default function BaseDadosPage() {
   const updateDraft = (id: string, patch: Partial<VideoDraft>) => {
     saveRevisionRef.current[id] = (saveRevisionRef.current[id] || 0) + 1;
     scheduledRevisionRef.current[id] = -1;
-    saveControllersRef.current.get(id)?.abort();
+    // Do not abort a PATCH already accepted by the local server. The browser
+    // may stop waiting while the server still commits it, which would let the
+    // next request race and potentially restore an older draft. saveJobsRef
+    // serializes revisions for each video; cancellation remains reserved for
+    // unmount and deletion.
     const next = { ...draftsRef.current, [id]: { ...(draftsRef.current[id] ?? { description: "", sceneEndSeconds: "0", changedAt: 0 }), ...patch, changedAt: (draftsRef.current[id]?.changedAt ?? 0) + 1 } };
     draftsRef.current = next;
     writeBaseDadosDrafts(window.localStorage, next);
