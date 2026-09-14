@@ -160,3 +160,24 @@ test("reutiliza o mesmo vídeo por hash e importa metadados do roteiro sem dupli
     await rm(sourceRoot, { recursive: true, force: true });
   }
 });
+
+test("serializa importações concorrentes para não reutilizar o mesmo número de arquivo", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-concurrent-"));
+  const sourceRoot = await mkdtemp(join(tmpdir(), "nymi-base-dados-concurrent-source-"));
+  try {
+    const service = createBaseDadosService(root);
+    await service.init();
+    const firstSource = join(sourceRoot, "first.mp4");
+    const secondSource = join(sourceRoot, "second.mp4");
+    await writeFile(firstSource, Buffer.from([1, 2, 3]));
+    await writeFile(secondSource, Buffer.from([4, 5, 6]));
+    const [first, second] = await Promise.all([
+      service.importFile(firstSource, { name: "first.mp4", contentType: "video/mp4" }),
+      service.importFile(secondSource, { name: "second.mp4", contentType: "video/mp4" }),
+    ]);
+    assert.deepEqual([first.video.sequence, second.video.sequence].sort((a, b) => a - b), [1, 2]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(sourceRoot, { recursive: true, force: true });
+  }
+});

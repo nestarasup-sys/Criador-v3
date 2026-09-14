@@ -127,6 +127,13 @@ export function createBaseDadosService(root) {
   const statePath = join(root, "state.json");
   let state = structuredClone(EMPTY_STATE);
   let writeQueue = Promise.resolve();
+  let mutationQueue = Promise.resolve();
+
+  function enqueueMutation(task) {
+    const operation = mutationQueue.catch(() => undefined).then(task);
+    mutationQueue = operation.then(() => undefined, () => undefined);
+    return operation;
+  }
 
   async function persist() {
     state.updatedAt = new Date().toISOString();
@@ -171,7 +178,7 @@ export function createBaseDadosService(root) {
     return updated;
   }
 
-  async function importFile(sourcePath, metadata = {}) {
+  async function importFileUnsafe(sourcePath, metadata = {}) {
     const sourceInfo = await stat(sourcePath);
     if (!sourceInfo.isFile() || sourceInfo.size <= 0) throw Object.assign(new Error("Vídeo vazio ou inválido."), { status: 400 });
     if (sourceInfo.size > BODY_LIMITS.video) throw Object.assign(new Error("Arquivo grande demais para esta operação."), { status: 413 });
@@ -208,6 +215,10 @@ export function createBaseDadosService(root) {
     state.nextSequence = sequence + 1;
     await persist();
     return { duplicate: false, video: { ...item, fileAvailable: true, url: `/base-dados/videos/${item.id}` }, state };
+  }
+
+  function importFile(sourcePath, metadata = {}) {
+    return enqueueMutation(() => importFileUnsafe(sourcePath, metadata));
   }
 
   return {
