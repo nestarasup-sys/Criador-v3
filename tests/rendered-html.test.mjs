@@ -929,8 +929,10 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /AUTOMATIC_HEAD_ERASE_SIDE_MARGIN/);
   assert.match(page, /adjustSelectedOutfitByHead\("head"\)/);
   assert.match(page, /adjustSelectedOutfitByHead\("neck"\)/);
-  assert.match(page, /const useBalancedNeck = reference === "neck" && model === "masculino"/);
-  assert.match(page, /useBalancedNeck \? "balanced-neck" : "default"/);
+  assert.match(page, /neckV2Profile\?: "feminino" \| "masculino"/);
+  assert.match(page, /adjustSelectedOutfitByNeckV2Feminino/);
+  assert.match(page, /adjustSelectedOutfitByNeckV2Masculino/);
+  assert.match(page, /if \(model === "masculino"\) await adjustSelectedOutfitByNeckV2Masculino\(\)/);
   assert.match(page, /Ajustar pescoço V2/);
   assert.match(page, /alignVariantsEnvelope/);
   assert.match(page, /topo e base das variantes alinhados à roupa padrão/);

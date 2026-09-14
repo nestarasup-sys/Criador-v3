@@ -3261,13 +3261,15 @@ export default function Home() {
 
   async function adjustSelectedOutfitByHead(
     reference: HeadFitReference = "head",
-    options: { alignVariantsEnvelope?: boolean } = {},
+    options: { alignVariantsEnvelope?: boolean; neckV2Profile?: "feminino" | "masculino" } = {},
   ) {
     if (category !== "roupas" || !selectedOutfit?.url) return false;
     const alignVariantsEnvelope = options.alignVariantsEnvelope === true;
-    // O perfil masculino usa a escala global da cabeça e corrige a gola por
-    // warp local; o feminino mantém o ajuste cervical original, já calibrado.
-    const useBalancedNeck = reference === "neck" && model === "masculino";
+    // As duas rotas ficam separadas desde já. Nesta rodada elas usam a mesma
+    // estratégia estável; isso permite evoluir apenas o masculino depois sem
+    // alterar o comportamento feminino já validado.
+    const neckV2Profile = options.neckV2Profile ?? "feminino";
+    const neckV2FitMode = neckV2Profile === "masculino" ? "default" : "default";
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"
@@ -3390,7 +3392,7 @@ export default function Home() {
             },
             headOnly ? { x: activeBasePack.anchorX } : undefined,
             reference,
-            { mode: useBalancedNeck ? "balanced-neck" : "default" },
+            { mode: neckV2FitMode },
           );
           const standardExistingTransform = standardOutfit.id === selectedOutfit.id
             ? adjustments.roupas
@@ -3431,7 +3433,7 @@ export default function Home() {
           ? { x: activeBasePack.anchorX }
         : undefined,
         reference,
-        { mode: useBalancedNeck ? "balanced-neck" : "default" },
+        { mode: neckV2FitMode },
       );
       const baselineTransform = normalizeTransform({
         ...fitted,
@@ -3447,7 +3449,7 @@ export default function Home() {
       const headWarp = mergeContourWarps(
         buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
         reference === "neck"
-          ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: useBalancedNeck ? "balanced-neck" : "default" })
+          ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: neckV2FitMode })
           : null,
       );
       const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
@@ -3488,7 +3490,7 @@ export default function Home() {
           },
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           reference,
-          { mode: useBalancedNeck ? "balanced-neck" : "default" },
+          { mode: neckV2FitMode },
         );
         const variantBaseline = normalizeTransform({
           ...variantFit,
@@ -3507,7 +3509,7 @@ export default function Home() {
         const variantWarp = mergeContourWarps(
           buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
           reference === "neck"
-            ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: useBalancedNeck ? "balanced-neck" : "default" })
+            ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: neckV2FitMode })
             : null,
         );
         variantTransforms[variantKey] = normalizeTransform({ ...envelopeBaseline, headWarp: variantWarp ?? undefined });
@@ -3547,12 +3549,25 @@ export default function Home() {
     }
   }
 
-  async function adjustSelectedOutfitByNeckV2() {
+  async function adjustSelectedOutfitByNeckV2Feminino() {
     if (category !== "roupas" || !selectedOutfit?.url) return;
-    const adjusted = await adjustSelectedOutfitByHead("neck", { alignVariantsEnvelope: true });
+    const adjusted = await adjustSelectedOutfitByHead("neck", { alignVariantsEnvelope: true, neckV2Profile: "feminino" });
     if (!adjusted) return;
     setCompositionMode("outfit-over-face");
-    setNotice("Ajuste de pescoço V2 aplicado: o rosto ficará atrás da roupa e o cabelo frontal continuará na frente.");
+    setNotice("Ajuste de pescoço V2 feminino aplicado: o rosto ficará atrás da roupa e o cabelo frontal continuará na frente.");
+  }
+
+  async function adjustSelectedOutfitByNeckV2Masculino() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    const adjusted = await adjustSelectedOutfitByHead("neck", { alignVariantsEnvelope: true, neckV2Profile: "masculino" });
+    if (!adjusted) return;
+    setCompositionMode("outfit-over-face");
+    setNotice("Ajuste de pescoço V2 masculino aplicado: o rosto ficará atrás da roupa e o cabelo frontal continuará na frente.");
+  }
+
+  async function adjustSelectedOutfitByNeckV2() {
+    if (model === "masculino") await adjustSelectedOutfitByNeckV2Masculino();
+    else await adjustSelectedOutfitByNeckV2Feminino();
   }
 
   async function adjustSelectedHairByHead() {
