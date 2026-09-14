@@ -3265,11 +3265,11 @@ export default function Home() {
   ) {
     if (category !== "roupas" || !selectedOutfit?.url) return false;
     const alignVariantsEnvelope = options.alignVariantsEnvelope === true;
-    // As duas rotas ficam separadas desde já. Nesta rodada elas usam a mesma
-    // estratégia estável; isso permite evoluir apenas o masculino depois sem
-    // alterar o comportamento feminino já validado.
+    // As rotas ficam separadas para que a roupa masculina possa preservar a
+    // largura estrutural do corpo e aceitar uma faixa cervical mais espessa.
+    // O perfil feminino continua usando o comportamento já validado.
     const neckV2Profile = options.neckV2Profile ?? "feminino";
-    const neckV2FitMode = neckV2Profile === "masculino" ? "default" : "default";
+    const neckV2FitMode = neckV2Profile === "masculino" ? "male-neck" : "default";
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"

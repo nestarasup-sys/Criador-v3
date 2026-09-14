@@ -43,7 +43,7 @@ export type HeadFitOptions = {
    * local. Isso é importante em roupas com gola/armadura, cuja largura não
    * representa a largura real da cabeça.
    */
-  mode?: "default" | "balanced-neck";
+  mode?: "default" | "balanced-neck" | "male-neck";
 };
 
 /**
@@ -731,13 +731,15 @@ export function calculateHeadFit(
   const neckScale = useNeckReference
     ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
     : headScale;
-  const balancedNeck = useNeckReference && options.mode === "balanced-neck";
+  const balancedNeck = useNeckReference && (options.mode === "balanced-neck" || options.mode === "male-neck");
   // Se a proporção cervical diverge muito da proporção da cabeça, ela é uma
   // característica local da roupa (gola, armadura, cachecol etc.), não uma
   // boa escala para o corpo inteiro. Perto da proporção esperada ainda
   // permitimos uma pequena contribuição do pescoço; quando a divergência é
   // grande, a cabeça passa a comandar a escala e o warp corrige a faixa.
-  const neckAgreement = balancedNeck
+  const neckAgreement = options.mode === "male-neck"
+    ? 0
+    : balancedNeck
     ? clamp(0.32 - Math.abs(Math.log(Math.max(0.01, neckScale / Math.max(0.01, headScale)))) * 0.42, 0, 0.32)
     : 1;
   const scaleX = clamp(

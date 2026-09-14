@@ -930,6 +930,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /adjustSelectedOutfitByHead\("head"\)/);
   assert.match(page, /adjustSelectedOutfitByHead\("neck"\)/);
   assert.match(page, /neckV2Profile\?: "feminino" \| "masculino"/);
+  assert.match(page, /const neckV2FitMode = neckV2Profile === "masculino" \? "male-neck" : "default"/);
   assert.match(page, /adjustSelectedOutfitByNeckV2Feminino/);
   assert.match(page, /adjustSelectedOutfitByNeckV2Masculino/);
   assert.match(page, /if \(model === "masculino"\) await adjustSelectedOutfitByNeckV2Masculino\(\)/);

@@ -260,7 +260,7 @@ export function buildNeckContourWarp(
   target: HeadMeasurement,
   item: { width: number; height: number; defaultX?: number; defaultY?: number },
   transform: ItemTransform,
-  options: { mode?: "default" | "balanced-neck" } = {},
+  options: { mode?: "default" | "balanced-neck" | "male-neck" } = {},
 ): HeadContourWarp | null {
   if (Math.abs(transform.rotation) > 0.25 || transform.flipX) return null;
   const sourceRows = source.neckContour?.filter((row) => row.right > row.left) ?? [];
@@ -283,12 +283,13 @@ export function buildNeckContourWarp(
   const count = 15;
   const sourceNeckWidth = source.neckWidth ?? sourceRows[0].right - sourceRows[0].left;
   const balancedNeck = options.mode === "balanced-neck";
+  const maleNeck = options.mode === "male-neck";
   // Em roupas com gola ou armadura, a largura cervical pode divergir muito
   // da cabeça. Nesse modo a escala global preserva a cabeça/corpo e este warp
   // recebe autorização para corrigir a faixa local com mais liberdade. O
   // limite continua finito para impedir que um landmark ruim deforme a roupa
   // inteira.
-  const maxSideShift = Math.max(1.5, sourceNeckWidth * (balancedNeck ? 0.34 : 0.14));
+  const maxSideShift = Math.max(1.5, sourceNeckWidth * (maleNeck ? 0.18 : balancedNeck ? 0.34 : 0.14));
   const knots: HeadContourWarpKnot[] = [];
   let baselineError = 0;
   let candidateError = 0;
@@ -319,11 +320,16 @@ export function buildNeckContourWarp(
     let safeLeft = sourceSample.left + leftShift;
     let safeRight = sourceSample.right + rightShift;
     const requestedWidth = safeRight - safeLeft;
-    const safeWidth = clamp(
-      requestedWidth,
-      sourceSample.width * (balancedNeck ? 0.58 : 0.82),
-      sourceSample.width * (balancedNeck ? 1.5 : 1.2),
-    );
+    // No masculino, uma gola mais larga é uma característica válida da
+    // roupa. Nunca a comprima para caber no pescoço mais fino do modelo;
+    // apenas permita expansão quando a silhueta do modelo pedir isso.
+    const safeWidth = maleNeck
+      ? Math.max(sourceSample.width, requestedWidth)
+      : clamp(
+        requestedWidth,
+        sourceSample.width * (balancedNeck ? 0.58 : 0.82),
+        sourceSample.width * (balancedNeck ? 1.5 : 1.2),
+      );
     if (Math.abs(requestedWidth - safeWidth) > 0.001) {
       const center = (safeLeft + safeRight) / 2;
       safeLeft = center - safeWidth / 2;

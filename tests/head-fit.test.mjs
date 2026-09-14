@@ -144,11 +144,17 @@ test("preserva a escala da cabeça quando a gola masculina tem outra proporção
   const item = { width: outfit.info.width, height: outfit.info.height, defaultX: 960, defaultY: 560 };
   const strict = calculateHeadFit(source, target, item, { x: 960 }, "neck");
   const balanced = calculateHeadFit(source, target, item, { x: 960 }, "neck", { mode: "balanced-neck" });
+  const male = calculateHeadFit(source, target, item, { x: 960 }, "neck", { mode: "male-neck" });
   assert.ok(strict.scaleX < balanced.scaleX - .2, "o modo antigo deveria demonstrar a compressão cervical");
   assert.ok(Math.abs(balanced.scaleX - target.width / source.width) < .16, "a escala global deve acompanhar a cabeça, não a gola");
+  assert.ok(Math.abs(male.scaleX - target.width / source.width) < .16, "o masculino deve escalar pelo corpo/cabeça, não pela gola");
   const warp = buildNeckContourWarp(source, target, item, balanced, { mode: "balanced-neck" });
   assert.ok(warp, "a divergência local da gola deve ser enviada para o warp");
   assert.ok(warp.maxDisplacement > 10, "o warp deve corrigir uma diferença cervical real");
+  const maleWarp = buildNeckContourWarp(source, target, item, male, { mode: "male-neck" });
+  if (maleWarp) {
+    assert.ok(maleWarp.knots.every((k) => (k.targetRight - k.targetLeft) >= (k.sourceRight - k.sourceLeft) - 0.5), "o warp masculino não deve estreitar a gola");
+  }
 });
 
 test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
