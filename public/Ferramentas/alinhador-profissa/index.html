@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V7.5 — Canonical SmartLock + Chroma 2</title>
+<title>V8.4 — Alinhador Profissa · Finish Lock Integrado + Área 2 Precision Lock</title>
 
 <style>
 :root{
@@ -449,14 +449,55 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
   .kpis{grid-template-columns:1fr 1fr}
   .previewGrid{gap:12px}
 }
+
+/* V8: modo produção, pipeline, QA e revisão */
+.modebar{display:flex;gap:8px;margin:0 0 12px}.modebar button{width:auto;flex:1}
+body:not(.advanced) .advancedOnly{display:none!important}
+body.advanced .advancedOnly{display:block}
+.pipelineBox{border:1px solid var(--line-strong);border-radius:14px;padding:11px;margin-top:10px;background:#faf9fc}
+.pipelineBox.ready{border-color:#bfe3d1;background:var(--ok-bg)}
+.pipelineBox.dirty{border-color:#eedda9;background:var(--warn-bg)}
+.pipelineBox.error{border-color:#f2c2bd;background:var(--bad-bg)}
+.pipelineSteps{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.pipeStep{font-size:9px;font-weight:850;border-radius:999px;padding:3px 6px;border:1px solid #ddd7e8;background:#fff;color:#736c7c}.pipeStep.ok{border-color:#bfe3d1;color:var(--ok);background:#f6fcf8}.pipeStep.dirty{border-color:#eedda9;color:var(--warn);background:#fffaf0}
+.engineLine{font-size:11px;color:var(--muted);margin-top:7px}.engineLine b{color:var(--ink-soft)}
+.reviewPanel{margin-top:10px;border:1px solid var(--line);border-radius:16px;padding:10px;background:#fff}.reviewGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.reviewCell{font-size:9px;font-weight:800;text-align:center;color:var(--muted)}.reviewCell canvas{width:100%;aspect-ratio:1;display:block;background:#101216;border-radius:9px;margin-top:4px}.reviewActions{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:8px}.reviewActions button{padding:8px 6px;font-size:11px}
+.detailsAdvanced{margin-top:10px;border:1px solid var(--line);border-radius:13px;padding:8px;background:#fbfaff}.detailsAdvanced>summary{cursor:pointer;font-weight:850;color:var(--purple-2);user-select:none}
+.preflight{margin-top:10px}.preflight strong{display:block;margin-bottom:4px}.preflight ul{margin:5px 0 0;padding-left:18px;font-size:11px}
+.thumb .engineBadge{display:inline-block;margin:4px 2px 0;border:1px solid #d7d0e2;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:900;color:#5d5368}
+
+
+/* V8.4 — AREA 2 · pós-alinhamento de modelo processado */
+#area2{display:none}
+body.area2 #area1{display:none}
+body.area2 #area2{display:grid}
+.area2hero{padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#fff,#f7f4fb);box-shadow:var(--shadow-sm);margin-bottom:14px}
+.area2hero b{font-size:14px;color:var(--purple)}
+.a2Drop{border:1px dashed #b8abc9;background:#faf8fd;border-radius:15px;padding:13px;margin-top:9px;text-align:center}
+.a2Stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.a2Stat{padding:9px;border:1px solid var(--line);border-radius:12px;background:#fff}.a2Stat span{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.a2Stat b{display:block;margin-top:3px;color:var(--purple);font-size:15px}
+.a2PreviewWrap{display:grid;grid-template-columns:minmax(520px,900px) minmax(260px,1fr);gap:18px;align-items:start}
+#a2Preview{width:100%;height:auto;display:block;background:linear-gradient(45deg,#f2f2f5 25%,transparent 25%),linear-gradient(-45deg,#f2f2f5 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f2f2f5 75%),linear-gradient(-45deg,transparent 75%,#f2f2f5 75%),#fff;background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow-lg)}
+.a2Guide{border:1px solid var(--line);border-radius:18px;background:#fff;padding:12px;box-shadow:var(--shadow-sm)}
+.a2Guide canvas{width:100%;height:auto;background:#101216;border-radius:12px;display:block;margin-top:8px}
+.a2Heads{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:8px;margin-top:14px}
+.a2Thumb{background:#fff;border:1px solid var(--line);border-radius:11px;padding:6px;cursor:pointer;text-align:center;font-size:10px;box-shadow:var(--shadow-xs)}
+.a2Thumb.active{outline:2px solid var(--purple-3)}.a2Thumb.bad{box-shadow:inset 0 0 0 2px var(--warn)}
+.a2Thumb canvas{display:block;width:100%;aspect-ratio:16/9;background:#f2f2f4;border-radius:7px;margin-bottom:4px}
+.a2LockBadge{display:inline-block;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:900;background:var(--ok-bg);color:var(--ok);border:1px solid #bfe3d1;margin-top:3px}
+#a2Folder{padding:8px}
+body.area2 .sidebar{height:100vh}
+@media(max-width:1180px){.a2PreviewWrap{grid-template-columns:1fr}}
+@media(max-width:980px){body.area2 #area2{display:block}}
+
 </style>
 
 </head>
 <body>
-<div class="app">
+<div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V7.5 · SmartLock + Chroma 2</h1>
-  <div class="small">Motor de alinhamento focado em estabilidade. V7.5 adiciona Chroma 2 opcional sem alterar os defaults do molde/warp; Face Rig 2 continua desligado por padrão.</div>
+  <h1>V8.4 · Alinhador Profissa</h1>
+  <div class="small">Pipeline de produção com chroma clássico como base, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock final integrado diretamente na Área 1.</div>
+  <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
   <div class="card">
     <h2>1. Carregar e detectar</h2>
@@ -464,66 +505,68 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <label>Folha B</label><input id="fileB" type="file" accept="image/*">
     <label>Folha C</label><input id="fileC" type="file" accept="image/*">
 
-    <label>Cabeças esperadas por folha <span class="value" id="expectedV">21</span></label>
-    <input id="expected" type="range" min="1" max="50" value="21">
-
-    <label>Sensibilidade do verde <span class="value" id="thrV">35</span></label>
-    <input id="thr" type="range" min="10" max="100" value="35">
-
-    <label><input id="autoThr" type="checkbox" checked style="width:auto"> Encontrar sensibilidade automaticamente</label>
-    <label><input id="chroma2" type="checkbox" style="width:auto"> Chroma 2</label>
-    <label>Alcance de tons do fundo <span class="value" id="chroma2ToneV">52</span></label>
-    <input id="chroma2ToneRange" type="range" min="20" max="90" value="52" disabled>
-    <div id="bgModeHint" class="small">Desativado: usa o chroma clássico atual. Ativado: Chroma 2 detecta o fundo conectado às bordas, incluindo variações de verde e fundos claros, com proteção do contorno.</div>
-    <label><input id="smallestHorizontalBase" type="checkbox" checked disabled style="width:auto"> Molde horizontal = menor cabeça detectada</label>
-    <div class="small">Modo fixo: a menor cabeça detectada sempre é usada como referência da <b>largura</b> do molde, para evitar que uma cabeça muito gorda deixe todas as outras largas demais. A altura continua sendo calculada normalmente.</div>
-
-    <div class="v6box" style="margin-top:10px">
-      <div class="v6head">
-        <div><b>Face Rig 2 experimental</b><span>normal / blink / talk separados</span></div>
+    <label><input id="chroma2Quick" type="checkbox" style="width:auto"> Chroma 2</label>
+    <div class="small">O <b>chroma clássico é o padrão</b>, como no V7.5. Ative Chroma 2 somente quando quiser substituir o chroma base nesta detecção.</div>
+    <div id="inputEngineStatus" class="status">Chroma clássico ativo · Chroma 2 opcional.</div>
+    <details class="detailsAdvanced advancedOnly" id="advancedInput"><summary>Entrada / segmentação</summary>
+      <label>Engine de entrada</label>
+      <select id="inputEngine"><option value="classic" selected>CLASSIC — padrão V7.5</option><option value="chroma2">CHROMA 2</option><option value="alpha">ALPHA</option><option value="auto">AUTO — experimental</option></select>
+      <label>Quantidade experimental por folha <span class="value" id="expectedV">21</span></label>
+      <input id="expected" type="range" min="1" max="50" value="21">
+      <div class="small">Modo Produção usa o schema oficial 7×3 = 21. Quantidade diferente é experimental e desativa a validação semântica completa.</div>
+      <label>Sensibilidade do verde <span class="value" id="thrV">35</span></label>
+      <input id="thr" type="range" min="10" max="100" value="35">
+      <label><input id="autoThr" type="checkbox" checked style="width:auto"> Encontrar sensibilidade automaticamente</label>
+      <label><input id="smallestHorizontalBase" type="checkbox" checked disabled style="width:auto"> Molde horizontal = menor cabeça detectada</label>
+      <div class="small">Default calibrado V7.5 preservado: largura pela menor cabeça confiável, com proteção contra outlier estreito.</div>
+      <label>Engine de contorno / geometria</label>
+      <select id="contourEngine"><option value="auto" selected>AUTO — V2 com fallback V7.5</option><option value="v2">ENGINE 2</option><option value="v75">V7.5 BASELINE</option></select>
+      <div class="v6box" style="margin-top:10px">
+        <div class="v6head"><div><b>Face Rig 2 experimental</b><span>normal / blink / talk separados</span></div></div>
+        <div class="small">Continua desligado por padrão. Ajusta somente o miolo do rosto quando explicitamente ativado.</div>
+        <label><input id="faceRigEnable" type="checkbox" style="width:auto"> Ativar Face Rig 2</label>
+        <label><input id="faceRigEye" type="checkbox" style="width:auto"> Olho esquerdo = âncora principal</label>
+        <label><input id="faceRigMouth" type="checkbox" style="width:auto"> Boca = somente verificação</label>
+        <label><input id="faceRigConfidence" type="checkbox" style="width:auto"> Só corrigir quando a detecção for confiável</label>
+        <label>Força do Face Rig <span class="value" id="faceRigStrengthV">64%</span></label><input id="faceRigStrength" type="range" min="0" max="100" step="1" value="64">
+        <label>Zona morta facial <span class="value" id="faceRigDeadV">0.5%</span></label><input id="faceRigDead" type="range" min="0" max="2" step="0.05" value="0.5">
+        <label>Correção máxima <span class="value" id="faceRigMaxV">3.0%</span></label><input id="faceRigMax" type="range" min="0.5" max="6" step="0.1" value="3">
+        <label>Transição lateral <span class="value" id="faceRigFeatherV">14%</span></label><input id="faceRigFeather" type="range" min="4" max="30" step="1" value="14">
       </div>
-      <div class="small">Cada linha usa a sua própria referência da expressão <b>Normal</b> da Folha A. O olho esquerdo mede o deslocamento; o olho direito acompanha automaticamente porque o miolo é movido como bloco. O contorno da cabeça não recebe esse deslocamento.</div>
-      <label><input id="faceRigEnable" type="checkbox" style="width:auto"> Ativar Face Rig 2</label>
-      <label><input id="faceRigEye" type="checkbox" style="width:auto"> Olho esquerdo = âncora principal</label>
-      <label><input id="faceRigMouth" type="checkbox" style="width:auto"> Boca = somente verificação</label>
-      <label><input id="faceRigConfidence" type="checkbox" style="width:auto"> Só corrigir quando a detecção for confiável</label>
-
-      <label>Força do Face Rig <span class="value" id="faceRigStrengthV">64%</span></label>
-      <input id="faceRigStrength" type="range" min="0" max="100" step="1" value="64">
-
-      <label>Zona morta facial <span class="value" id="faceRigDeadV">0.5%</span></label>
-      <input id="faceRigDead" type="range" min="0" max="2" step="0.05" value="0.5">
-
-      <label>Correção máxima <span class="value" id="faceRigMaxV">3.0%</span></label>
-      <input id="faceRigMax" type="range" min="0.5" max="6" step="0.1" value="3">
-
-      <label>Transição lateral <span class="value" id="faceRigFeatherV">14%</span></label>
-      <input id="faceRigFeather" type="range" min="4" max="30" step="1" value="14">
-
-      <div class="small">O centro do rosto recebe a mesma translação vertical. As laterais fazem uma transição suave até 0%, mantendo testa, orelha, mandíbula e contorno no alinhamento canônico original.</div>
-    </div>
-
+    </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>Na V8.4:</b> quando você conclui <b>Construir molde e alinhar tudo</b> — inclusive via <b>⚡ Processar tudo</b> — o <b>Finish Lock</b> é aplicado automaticamente como última etapa.</div>
+    <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
+    <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
 
     <div class="row" style="margin-top:8px">
-      <button id="canonicalExtra" class="good">Construir molde e alinhar tudo</button>
+      <button id="canonicalExtra" class="good">Construir molde, alinhar tudo e aplicar Finish Lock</button>
       <button id="playExtra">▶ Play</button>
     </div>
     <button id="redoCurrent" style="margin-top:8px">↻ Refazer expressão selecionada</button>
-    <div class="small" style="margin-top:5px">Mantém <b>TOPO</b> e <b>FIM DO PESCOÇO</b> fixos e corrige rosto/queixo/pescoço por consenso, com leve ajuste de base do pescoço. A V7.1.1 faz backup antes, refaz o encaixe inferior com consenso e bloqueia uma correção claramente pior.</div>
+    <div class="small" style="margin-top:5px">Mantém <b>TOPO</b> e <b>FIM DO PESCOÇO</b> fixos e corrige rosto/queixo/pescoço por consenso, com leve ajuste de base do pescoço. Na V8, Refazer gera uma candidata comparável antes de substituir o resultado atual; aceitar cria backup e Undo permanece disponível.</div>
     <div class="row" style="margin-top:8px">
       <button id="nextSuspect">◎ Próximo suspeito</button>
       <button id="undoRedo" disabled>↶ Desfazer correção</button>
     </div>
     <div id="qualityStatus" class="status" style="margin-top:8px">Fiscal de estabilidade aguardando o molde.</div>
+    <div id="reviewPanel" class="reviewPanel" hidden>
+      <b id="reviewTitle">Revisão</b><div id="reviewReason" class="small"></div>
+      <div class="reviewGrid">
+        <div class="reviewCell">ORIGINAL<canvas id="reviewOriginal" width="180" height="180"></canvas></div>
+        <div class="reviewCell">ATUAL<canvas id="reviewCurrent" width="180" height="180"></canvas></div>
+        <div class="reviewCell">CANDIDATA<canvas id="reviewCandidate" width="180" height="180"></canvas></div>
+      </div>
+      <div class="reviewActions"><button id="acceptCandidate" class="good">Aceitar candidata</button><button id="keepCurrent">Manter atual</button></div>
+    </div>
 
     <div id="detectStatus" class="status" style="margin-top:8px">Carregue as folhas.</div>
   </div>
 
-  <div class="card">
-    <h2>2. Construir molde canônico</h2>
+  <div class="card advancedOnly">
+    <h2>2. Construir molde canônico — laboratório</h2>
 
     <label><input id="medianShape" type="checkbox" checked style="width:auto"> Formato = mediana de todas as cabeças</label>
     <label><input id="largestScale" type="checkbox" checked style="width:auto"> Escala/resolução = maior cabeça detectada</label>
@@ -531,11 +574,11 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V7.5 SmartLock</b><span>experimental</span></div>
+        <div><b>V8.4 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V7.5: mantém os defaults de alinhamento que já estavam funcionando e adiciona o <b>Chroma 2</b> como alternativa selecionável ao chroma clássico. Desligado = chroma clássico; ligado = segmentação topológica por fundo conectado às bordas.</div>
+      <div class="small" style="margin-top:5px">V8.4 preserva os defaults calibrados do V7.5. O chroma clássico continua como base, o Smart Remap mantém 6% nas cabeças boas e o Finish Lock final refina topo e laterais do pescoço automaticamente no fim do alinhamento.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -548,15 +591,19 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V7.5 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V8.4 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
       <input id="v6Snap" type="range" min="1" max="16" step="1" value="8">
     </div>
 
-    <label>Força do remapeamento <span class="value" id="warpV">6%</span></label>
+    <label>Força-base do remapeamento <span class="value" id="warpV">6%</span></label>
     <input id="warpStrength" type="range" min="0" max="100" value="6">
+    <label><input id="smartRemap" type="checkbox" checked style="width:auto"> Smart Remap 3X — adaptar força por cabeça e por região</label>
+    <div class="small">6% continua sendo o piso calibrado. Cabeças já corretas ficam perto de 6%; divergências confiáveis podem receber mais correção só no contorno, sem aumentar a força do miolo do rosto.</div>
+    <label>Força automática máxima <span class="value" id="smartRemapMaxV">24%</span></label>
+    <input id="smartRemapMax" type="range" min="8" max="36" step="1" value="24">
 
     <label>Suavização do contorno <span class="value" id="smoothV">11</span></label>
     <input id="smooth" type="range" min="3" max="31" step="2" value="11">
@@ -626,16 +673,10 @@ input:disabled,select:disabled{background:#f3f2f6;color:#aaa6b1}
     <label>Número do modelo</label>
     <input id="modelNumber" type="number" min="1" max="99999" value="13">
 
-    <label>Gênero do modelo</label>
-    <select id="modelGender">
-      <option value="feminino">Feminino</option>
-      <option value="masculino">Masculino</option>
-    </select>
-
     <div id="modelPreview" class="status">
 Pasta: modelo-13
 JSON: modelo-13.json
-63 PNGs separados
+63 PNGs separados · schema 7×3 por folha
 Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / aliviada
 Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta
     </div>
@@ -643,9 +684,9 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <button id="chooseModelsDir">Escolher / trocar pasta de modelos</button>
     <div id="dirStatus" class="small">Na primeira vez, selecione: C:\TRABALHO 2\NYMI GACHA\public\models\modelos</div>
 
-    <button id="exportModelPackage" class="good" style="margin-top:8px">Exportar modelo completo</button>
-    <button id="exportToCatalogV1" class="good" style="margin-top:8px">Exportar direto para Catálogo V1</button>
-    <div id="catalogExportStatus" class="status" style="margin-top:8px">O app escolherá automaticamente o próximo número disponível.</div>
+    <div id="preflightBox" class="status preflight"><strong>PRE-FLIGHT</strong><span id="preflightText">Aguardando processamento.</span><ul id="preflightIssues"></ul></div>
+    <label class="advancedOnly"><input id="exportOverride" type="checkbox" style="width:auto"> Override consciente: permitir export mesmo com alerta bloqueante</label>
+    <button id="exportModelPackage" class="good" style="margin-top:8px" disabled>Exportar modelo completo</button>
     <div id="exportStatus" class="status" style="margin-top:8px">Nenhum modelo exportado ainda.</div>
 
     <div class="small" style="margin-top:8px">
@@ -687,8 +728,9 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V7.5 SmartLock</span>
-    <span class="tag">Chroma 2 opcional</span>
+    <span class="tag">V8.4 pipeline</span>
+    <span class="tag">Chroma base + Chroma 2 opcional</span>
+    <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
   </div>
 
@@ -704,6 +746,74 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
 </main>
 </div>
 
+<!-- =======================================================
+     V8.4 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+======================================================== -->
+<div class="app" id="area2">
+  <aside class="sidebar">
+    <h1>V8.4 · Área 2</h1>
+    <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando as 63 PNGs transparentes.</div>
+    <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
+
+    <div class="card">
+      <h2>1. Carregar modelo processado</h2>
+      <div class="a2Drop">
+        <label>Pasta do modelo (63 PNGs)</label>
+        <input id="a2Folder" type="file" webkitdirectory multiple accept="image/png">
+        <div class="small">Selecione a pasta <b>modelo-N</b>. JSON e outros arquivos são ignorados; os nomes dos 63 PNGs são preservados.</div>
+      </div>
+      <button id="a2Process" class="primary" style="margin-top:9px" disabled>◎ Construir molde perfeito e alinhar 100% (topo + pescoço)</button>
+      <div id="a2Status" class="status" style="margin-top:8px">Aguardando pasta.</div>
+      <div class="a2Stats">
+        <div class="a2Stat"><span>Imagens</span><b id="a2Count">0/63</b></div>
+        <div class="a2Stat"><span>Topo alvo</span><b id="a2TopStat">—</b></div>
+        <div class="a2Stat"><span>Pescoço L/R</span><b id="a2NeckStat">—</b></div>
+        <div class="a2Stat"><span>Precisão</span><b id="a2Precision">—</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Player de precisão</h2>
+      <label>Expressão atual</label><select id="a2Current"></select>
+      <div class="row3"><button id="a2Prev">◀</button><button id="a2Play">▶ Play</button><button id="a2Next">▶</button></div>
+      <label>Velocidade <span class="value" id="a2FpsV">6 fps</span></label><input id="a2Fps" type="range" min="1" max="20" value="6">
+      <label>Visualização</label>
+      <select id="a2View"><option value="result">Resultado alinhado</option><option value="original">Original processado</option><option value="compare">Antes / Depois</option></select>
+      <label><input id="a2ShowGuide" type="checkbox" checked style="width:auto"> Mostrar molde perfeito / âncoras</label>
+    </div>
+
+    <div class="card">
+      <h2>3. Exportar pós-alinhamento</h2>
+      <div class="small">Exporta os mesmos 63 nomes PNG para uma pasta escolhida por você. O modelo original não é sobrescrito automaticamente.</div>
+      <button id="a2Export" class="good" disabled>Exportar 63 PNGs alinhados</button>
+      <div id="a2ExportStatus" class="status" style="margin-top:8px">Nada exportado.</div>
+    </div>
+
+    <div class="card">
+      <h2>O que a Área 2 trava</h2>
+      <div class="small">
+        <b>1.</b> Topo útil da cabeça → mesma coordenada em todas.<br>
+        <b>2.</b> Base do pescoço → preservada no anchor Y 346.<br>
+        <b>3.</b> Lateral esquerda/direita do pescoço → perfil canônico mediano, aplicado a 100% apenas na região do pescoço.<br>
+        <b>4.</b> Rosto/cabelo interno → não recebe remapeamento horizontal da Área 2.
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="area2hero"><b>Precision Lock 100%</b><div class="small">Segunda passagem para modelo pronto. O objetivo aqui não é “embelezar” a cabeça: é remover a pequena oscilação residual entre sprites já processados.</div></div>
+    <div class="a2PreviewWrap">
+      <canvas id="a2Preview" width="960" height="540"></canvas>
+      <div class="a2Guide">
+        <b>Molde perfeito pós-processamento</b>
+        <div id="a2GuideText" class="small">Carregue a pasta para medir as 63 imagens.</div>
+        <canvas id="a2GuideCanvas" width="460" height="300"></canvas>
+      </div>
+    </div>
+    <div id="a2Heads" class="a2Heads"></div>
+  </main>
+</div>
+
 <script>
 "use strict";
 
@@ -711,6 +821,79 @@ const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* =========================================================
+   V8.4 — SCHEMA / BASELINE / CONFIG / PIPELINE
+========================================================= */
+const MODEL_SCHEMA=Object.freeze({
+  version:"8.4",
+  sheets:["A","B","C"],rows:3,cols:7,headsPerSheet:21,
+  variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
+  emotions:Object.freeze({
+    A:["normal","sorrindo_de_canto","surpresa","envergonhada","impressionada","indignada","desconfiada"],
+    B:["sorriso_maligno","nojo","orgulhosa","cansada","animada","ciumenta","aliviada"],
+    C:["pt_desconfiada","pt_surpresa","pt_impressionada","pt_envergonhada","pt_sorrindo_de_canto","pt_sorriso_maligno_de_canto","pt_ciumenta"]
+  }),
+  export:Object.freeze({width:1920,height:1080,anchorX:960,anchorY:346,baseScale:1.1,anchor:"neck-base"})
+});
+const BASELINE_V75=Object.freeze({
+  warpStrength:6,smartRemap:true,smartRemapMax:24,smooth:11,spike:6,coreProtect:72,maxLocalX:8,edgeBand:18,innerRigidity:88,
+  splitNeck:true,medianShape:true,largestScale:true,smartLock:true,robust:true,safeScale:true,bestBase:true,dropBad:true,
+  baseBlend:32,deadzone:.8,cap:3,snap:8,faceRig:false
+});
+const PIPE_STAGES=["input","segmentation","detection","geometry","profile","canonical","render","qa"];
+function getConfigSnapshot(){
+  const val=(id,fallback=0)=>{const e=$(id);return e?Number(e.value):fallback};
+  const chk=(id,fallback=false)=>{const e=$(id);return e?!!e.checked:fallback};
+  return Object.freeze({
+    inputEngine:$("inputEngine")?.value||"classic", contourEngine:$("contourEngine")?.value||"auto",
+    expected:val("expected",MODEL_SCHEMA.headsPerSheet), greenThreshold:val("thr",35), autoThreshold:chk("autoThr",true),
+    medianShape:chk("medianShape",true), largestScale:chk("largestScale",true), splitNeck:chk("splitNeck",true),
+    smartLock:chk("v6Smart",true), robust:chk("v6Robust",true), safeScale:chk("v6SafeScale",true), bestBase:chk("v61BestBase",true),dropBad:chk("v61DropBad",true),baseBlend:val("v61Blend",32),
+    deadzone:val("v6Dead",.8),cap:val("v6Cap",3),snap:val("v6Snap",8),
+    warpStrength:val("warpStrength",6),smartRemap:chk("smartRemap",true),smartRemapMax:val("smartRemapMax",24),smooth:val("smooth",11),spike:val("spike",6),coreProtect:val("coreProtect",72),maxLocalX:val("maxLocalX",8),adaptiveFace:chk("adaptiveFace",true),preserveInnerFace:chk("preserveInnerFace",true),edgeBand:val("edgeBand",18),innerRigidity:val("innerRigidity",88),
+    faceRigEnable:chk("faceRigEnable",false),faceRigEye:chk("faceRigEye",false),faceRigMouth:chk("faceRigMouth",false),faceRigConfidence:chk("faceRigConfidence",false),faceRigStrength:val("faceRigStrength",64),faceRigDead:val("faceRigDead",.5),faceRigMax:val("faceRigMax",3),faceRigFeather:val("faceRigFeather",14)
+  });
+}
+function cfg(k,fallback){const c=S.engineConfig||getConfigSnapshot();return c[k]??fallback}
+function newPipeline(){
+  return {counter:0,stages:Object.fromEntries(PIPE_STAGES.map(k=>[k,{valid:false,rev:0}])),dirtyFrom:"input",lastReason:"aguardando entrada",snapshots:{},exportReady:false};
+}
+function stageIndex(name){return PIPE_STAGES.indexOf(name)}
+function markStage(name,meta={}){const st=S.pipeline.stages[name];if(!st)return;st.valid=true;st.rev=++S.pipeline.counter;st.meta=meta;S.pipeline.dirtyFrom=PIPE_STAGES.find(k=>!S.pipeline.stages[k].valid)||null;updatePipelineUI()}
+function invalidateFrom(name,reason="configuração alterada"){
+  const i=stageIndex(name);if(i<0)return;
+  for(let n=i;n<PIPE_STAGES.length;n++){const st=S.pipeline.stages[PIPE_STAGES[n]];st.valid=false;st.meta=null}
+  S.pipeline.dirtyFrom=name;S.pipeline.lastReason=reason;S.pipeline.exportReady=false;
+  if(i<=stageIndex("canonical")){S.canonical=null;S.qualitySummary=null;S.finishLock=null}
+  if(i<=stageIndex("render"))for(const h of S.heads){h.warpStats=null;h.quality=null;h.reviewResolved=false;h.reviewResolvedRevision=0;h.repairCandidate=null;h.exportFrameBase=null;h.exportFrame=null;h.finishLockVerify=null;h.finishLockRevision=0;if(i<=stageIndex("canonical")){h.warped=null;h.geomWarp=null;h.geomFixInfo=null;h.manualRedo=false;h.lastRedoBackup=null;h.remapPlan=null}}
+  updatePipelineUI();updatePreflight();renderThumbs();drawPreview();
+}
+function pipelineValid(name){return !!S.pipeline.stages[name]?.valid}
+function setEngineConfig(){S.engineConfig=getConfigSnapshot();S.pipeline.snapshots.current=S.engineConfig;return S.engineConfig}
+function v8ReviewDetection(){document.body.classList.add("advanced");$("advancedMode")?.classList.add("primary");$("productionMode")?.classList.remove("primary");if($("advancedInput"))$("advancedInput").open=true;status("detectStatus","Revise as caixas de detecção e, se necessário, force CLASSIC / CHROMA 2 / ALPHA em Ajustes avançados.","warn")}
+function stageNeedsAction(){
+  const hasInput=["fileA","fileB","fileC"].some(id=>$(id)?.files?.length);if(!hasInput&&!pipelineValid("input"))return null;
+  const badGrid=MODEL_SCHEMA.sheets.find(k=>S.sheets?.[k]&&!S.sheets[k].grid?.valid);if(badGrid)return {label:`REVISAR DETECÇÃO ${badGrid}`,fn:v8ReviewDetection};
+  const d=S.pipeline.dirtyFrom;
+  if(!d||pipelineValid("qa"))return null;
+  if(["input","segmentation","detection"].includes(d))return {label:"REPROCESSAR",fn:v71QuickProcess};
+  if(["geometry","profile","canonical"].includes(d))return {label:"RECONSTRUIR MOLDE",fn:buildCanonical};
+  if(d==="render")return {label:"ATUALIZAR RENDER",fn:()=>rebuildAllWarpNow("estado desatualizado")};
+  if(d==="qa")return {label:"ATUALIZAR QA",fn:()=>{v8AnalyzeQuality({focus:false});markStage("qa",{reason:"manual"});updatePreflight()}};
+  return null;
+}
+function updatePipelineUI(){
+  const box=$("pipelineBox");if(!box)return;
+  const complete=pipelineValid("qa"),dirty=S.pipeline.dirtyFrom;
+  box.className="pipelineBox "+(complete?"ready":"dirty");
+  const a=stageNeedsAction();$("pipelineHeadline").textContent=complete?"PRONTO":(a?.label||(S.heads.length?"REPROCESSAR":"AGUARDANDO ENTRADA"));
+  $("pipelineMessage").textContent=complete?"Pipeline consistente. Execute o Preflight para exportar.":S.pipeline.lastReason;
+  const steps=$("pipelineSteps");steps.innerHTML="";for(const k of PIPE_STAGES){const sp=document.createElement("span");sp.className="pipeStep "+(pipelineValid(k)?"ok":"dirty");sp.textContent=k.toUpperCase();steps.appendChild(sp)}
+  const engines=S.sheets?MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>`${k}: ${S.sheets[k].engine||"—"} · grid ${Math.round(S.sheets[k].grid?.confidence||0)}`).join(" | "):"";
+  $("pipelineEngineLine").innerHTML=engines?`<b>Entrada:</b> ${engines}`:"";
+  const btn=$("pipelineAction");if(a){btn.hidden=false;btn.textContent=a.label;btn.onclick=a.fn}else btn.hidden=true;
+}
 
 const S={
   sheets:{A:null,B:null,C:null},
@@ -727,7 +910,12 @@ const S={
   quickProcessing:false,
   playing:false,
   timer:null,
-  detectionScaleMax:1000
+  detectionScaleMax:1000,
+  engineConfig:null,
+  pipeline:newPipeline(),
+  thumbNodes:[],
+  reviewIndex:-1,
+  finishLock:null
 };
 
 function log(msg){
@@ -751,8 +939,8 @@ function percentile(v,p){
 function updateLabels(){
   $("expectedV").textContent=$("expected").value;
   $("thrV").textContent=$("thr").value;
-  $("chroma2ToneV").textContent=$("chroma2ToneRange").value;
   $("warpV").textContent=$("warpStrength").value+"%";
+  if($("smartRemapMaxV"))$("smartRemapMaxV").textContent=$("smartRemapMax").value+"%";
   $("smoothV").textContent=$("smooth").value;
   $("spikeV").textContent=Number($("spike").value).toFixed(1)+"%";
   $("coreProtectV").textContent=$("coreProtect").value+"%";
@@ -804,18 +992,17 @@ function alphaMask(c,alphaThr=10){
   for(let p=0,i=0;p<out.length;p++,i+=4)out[p]=d[i+3]>alphaThr?1:0;
   return out;
 }
-function usingChroma2(){
-  return !!($("chroma2")&&$("chroma2").checked);
-}
 function updateBgModeUI(){
-  const on=usingChroma2();
-  $("thr").disabled=on;
-  $("autoThr").disabled=on;
-  $("chroma2ToneRange").disabled=!on;
-  const hint=$("bgModeHint");
-  if(hint)hint.textContent=on
-    ? "Chroma 2 ATIVO: segmentação topológica do fundo conectado às bordas (verde + branco/claro), com proteção de contorno e despill. Os controles do chroma clássico ficam desativados."
-    : "Chroma 2 desligado: usa o chroma clássico atual. Ative Chroma 2 para substituir o chroma clássico nesta detecção.";
+  const mode=$("inputEngine")?.value||"classic",classic=mode==="classic";
+  $("thr").disabled=!classic;$("autoThr").disabled=!classic;
+  if($("chroma2Quick"))$("chroma2Quick").checked=mode==="chroma2";
+  const el=$("inputEngineStatus");
+  if(el){
+    if(mode==="classic")el.textContent="Chroma clássico ativo · base V7.5. Chroma 2 está desligado.";
+    else if(mode==="chroma2")el.textContent="Chroma 2 ATIVO · substituindo o chroma clássico nesta detecção.";
+    else if(mode==="alpha")el.textContent="ALPHA forçado · usa transparência existente.";
+    else el.textContent="AUTO experimental · Alpha / Classic / Chroma 2 competem em baixa resolução.";
+  }
 }
 /* =========================================================
    CHROMA 2 — integrado do GreenCut Pro
@@ -901,7 +1088,7 @@ function chroma2ProcessCanvas(c,{processed=true}={}){
   const ctx=c.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,c.width,c.height);
   const src=img.data,w=c.width,h=c.height,n=w*h;
   const bg=ch2DominantBackground(src,w,h),f=ch2BuildFeatures(src,w,h,bg);
-  const T=clamp(Number($("chroma2ToneRange")?.value||52),20,90),protect=.72,feather=24,despill=.44,hardMode=false;
+  const T=52,protect=.72,feather=24,despill=.44,hardMode=false;
   const borderHue=[],borderSat=[],borderVal=[],borderWhite=[];
   const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
   for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){
@@ -1056,62 +1243,106 @@ function detectionScore(boxes,expected){
   const sd=Math.sqrt(areas.reduce((s,x)=>s+(x-mean)**2,0)/areas.length);
   return Math.abs(boxes.length-expected)*1000+(sd/(mean||1))*100;
 }
-async function detectSheet(im,name){
-  const small=imageToCanvas(im,S.detectionScaleMax),expected=Number($("expected").value);
-  const chroma2Mode=usingChroma2();
-  let best;
-  if(chroma2Mode){
-    const ch2Small=chroma2ProcessCanvas(small.canvas,{processed:false});
-    const boxes=sortReadingOrder(filterHeads(components(ch2Small.mask,small.canvas.width,small.canvas.height),small.canvas.width,small.canvas.height,expected));
-    best={score:detectionScore(boxes,expected),boxes,thr:"chroma2",ch2Small};
-    await sleep(0);
-  }else{
-    const tests=$("autoThr").checked?[18,22,26,30,34,38,42,46,50,55,60,66,72,80]:[Number($("thr").value)];
-    best={score:1e9,boxes:[],thr:Number($("thr").value)};
-    for(let i=0;i<tests.length;i++){
-      const test=tests[i],mask=greenMask(small.canvas,test);
-      const boxes=sortReadingOrder(filterHeads(components(mask,small.canvas.width,small.canvas.height),small.canvas.width,small.canvas.height,expected));
-      const sc=detectionScore(boxes,expected);
-      if(sc<best.score)best={score:sc,boxes,thr:test};
-      if(boxes.length===expected&&sc<25)break;
-      if(i%3===2)await sleep(0);
-    }
+
+function v8Std(vals){if(!vals.length)return 0;const m=vals.reduce((a,b)=>a+b,0)/vals.length;return Math.sqrt(vals.reduce((a,b)=>a+(b-m)**2,0)/vals.length)}
+function validateGrid(boxes,w,h,expected=MODEL_SCHEMA.headsPerSheet){
+  const result={valid:false,semantic:expected===MODEL_SCHEMA.headsPerSheet,confidence:0,issues:[],rows:[],ordered:[],metrics:{}};
+  if(!boxes.length){result.issues.push("nenhum componente");return result}
+  if(expected!==MODEL_SCHEMA.headsPerSheet){
+    result.ordered=sortReadingOrder(boxes);result.valid=boxes.length===expected;result.confidence=result.valid?70:Math.max(0,70-Math.abs(boxes.length-expected)*12);result.issues.push("schema custom: validação semântica 7×3 desativada");return result;
   }
+  if(boxes.length!==MODEL_SCHEMA.headsPerSheet)result.issues.push(`${boxes.length}/${MODEL_SCHEMA.headsPerSheet} componentes`);
+  const sorted=[...boxes].sort((a,b)=>a.cy-b.cy),k=MODEL_SCHEMA.rows;
+  if(sorted.length){
+    let centers=[.17,.50,.83].map(q=>sorted[Math.min(sorted.length-1,Math.round((sorted.length-1)*q))].cy);
+    let groups=[];
+    for(let it=0;it<8;it++){
+      groups=Array.from({length:k},()=>[]);
+      for(const b of sorted){let bi=0,bd=Infinity;for(let j=0;j<k;j++){const d=Math.abs(b.cy-centers[j]);if(d<bd){bd=d;bi=j}}groups[bi].push(b)}
+      centers=groups.map((g,j)=>g.length?g.reduce((a,b)=>a+b.cy,0)/g.length:centers[j]);
+    }
+    const orderedGroups=groups.map((g,i)=>({items:g,cy:centers[i]})).sort((a,b)=>a.cy-b.cy);
+    const medH=median(boxes.map(b=>b.h))||1,medW=median(boxes.map(b=>b.w))||1,medArea=median(boxes.map(b=>b.area))||1;
+    const counts=orderedGroups.map(g=>g.items.length),countPenalty=counts.reduce((a,c)=>a+Math.abs(c-MODEL_SCHEMA.cols),0);
+    let rowYSpread=0,xCv=0,colSpread=0,collisions=0,gapRows=[];
+    orderedGroups.forEach((g,row)=>{
+      g.items.sort((a,b)=>a.cx-b.cx);
+      const ys=g.items.map(b=>b.cy);rowYSpread+=v8Std(ys)/medH;
+      const gaps=[];for(let i=1;i<g.items.length;i++){const gap=g.items[i].cx-g.items[i-1].cx;gaps.push(gap);if(gap<medW*.45)collisions++}
+      if(gaps.length){const mg=median(gaps)||1;xCv+=v8Std(gaps)/mg}
+      g.items.forEach((b,col)=>{b.gridRow=row;b.gridCol=col});
+    });
+    for(let r=1;r<orderedGroups.length;r++)gapRows.push((orderedGroups[r].cy-orderedGroups[r-1].cy)/medH);
+    if(counts.every(c=>c===MODEL_SCHEMA.cols)){
+      for(let col=0;col<MODEL_SCHEMA.cols;col++)colSpread+=v8Std(orderedGroups.map(g=>g.items[col].cx))/medW;
+    }else colSpread=3;
+    const areaDev=median(boxes.map(b=>Math.abs(b.area-medArea)/medArea));
+    const countScore=clamp(100-countPenalty*16,0,100);
+    const rowScore=clamp(100-(rowYSpread/k)*150,0,100);
+    const xScore=clamp(100-(xCv/k)*70,0,100);
+    const colScore=clamp(100-(colSpread/MODEL_SCHEMA.cols)*85,0,100);
+    const areaScore=clamp(100-areaDev*105,0,100);
+    const separationScore=gapRows.length?clamp(100-Math.max(0,1.0-Math.min(...gapRows))*70,0,100):0;
+    const collisionScore=clamp(100-collisions*22,0,100);
+    let confidence=.34*countScore+.16*rowScore+.14*xScore+.12*colScore+.10*areaScore+.08*separationScore+.06*collisionScore;
+    if(boxes.length!==MODEL_SCHEMA.headsPerSheet)confidence=Math.min(confidence,55);
+    result.rows=orderedGroups.map(g=>g.items);result.ordered=orderedGroups.flatMap(g=>g.items);result.confidence=clamp(confidence,0,100);
+    result.metrics={counts,rowYSpread,xCv,colSpread,areaDev,gapRows,collisions,countScore,rowScore,xScore,colScore,areaScore,separationScore};
+    if(!counts.every(c=>c===MODEL_SCHEMA.cols))result.issues.push(`linhas ${counts.join("/")} (esperado 7/7/7)`);
+    if(rowScore<65)result.issues.push("centros Y irregulares");
+    if(xScore<55)result.issues.push("espaçamento X irregular");
+    if(collisions)result.issues.push(`${collisions} possível(is) colisão(ões)`);
+    if(areaScore<45)result.issues.push("áreas muito inconsistentes");
+    result.valid=boxes.length===MODEL_SCHEMA.headsPerSheet&&counts.every(c=>c===MODEL_SCHEMA.cols)&&result.confidence>=62;
+  }
+  return result;
+}
+function alphaSignal(c){
+  const d=c.getContext("2d",{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;let transparent=0,partial=0;
+  for(let i=3;i<d.length;i+=4){if(d[i]<10)transparent++;else if(d[i]<245)partial++}
+  const n=d.length/4;return {transparentRatio:transparent/n,partialRatio:partial/n,meaningful:transparent/n>.008||partial/n>.02};
+}
+function scoreDetectionCandidate(boxes,grid,expected,extraPenalty=0){
+  const exact=Math.abs(boxes.length-expected);const area=detectionScore(boxes,expected);
+  return grid.confidence - exact*18 - Math.min(35,area/35) - extraPenalty;
+}
+function classicCandidate(c,expected,forcedThr=null){
+  const tests=forcedThr!=null?[forcedThr]:(cfg("autoThreshold",true)?[18,22,26,30,34,38,42,46,50,55,60,66,72,80]:[cfg("greenThreshold",35)]);
+  let best=null;
+  for(const thr of tests){const mask=greenMask(c,thr),boxes=filterHeads(components(mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected),score=scoreDetectionCandidate(boxes,grid,expected);const cand={engine:"classic",thr,boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score};if(!best||cand.score>best.score)best=cand}
+  return best;
+}
+function chroma2Candidate(c,expected){const ch2=chroma2ProcessCanvas(c,{processed:false}),boxes=filterHeads(components(ch2.mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected);return {engine:"chroma2",thr:"chroma2",boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score:scoreDetectionCandidate(boxes,grid,expected),ch2Small:ch2}}
+function alphaCandidate(c,expected){const sig=alphaSignal(c),mask=alphaMask(c),boxes=filterHeads(components(mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected),penalty=sig.meaningful?0:55;return {engine:"alpha",thr:"alpha",boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score:scoreDetectionCandidate(boxes,grid,expected,penalty),alphaSignal:sig}}
+async function detectSheet(im,name){
+  const small=imageToCanvas(im,S.detectionScaleMax),expected=cfg("expected",MODEL_SCHEMA.headsPerSheet),mode=cfg("inputEngine","classic");
+  const candidates=[];
+  if(mode==="auto"||mode==="alpha")candidates.push(alphaCandidate(small.canvas,expected));
+  if(mode==="auto"||mode==="classic")candidates.push(classicCandidate(small.canvas,expected));
+  if(mode==="auto"||mode==="chroma2")candidates.push(chroma2Candidate(small.canvas,expected));
+  candidates.sort((a,b)=>b.score-a.score);
+  const best=candidates[0];
+  if(!best)throw new Error("nenhuma engine de entrada disponível");
+  const second=candidates[1],margin=second?best.score-second.score:30;
+  best.grid.engineMargin=margin;best.grid.engineConfidence=clamp(best.grid.confidence*.78+clamp((margin+8)*2.0,0,22),0,100);
+  await sleep(0);
 
   const full=imageToCanvas(im,0).canvas,inv=1/small.scale;
   let chroma2Full=null;
-  if(chroma2Mode){
-    chroma2Full=chroma2ProcessCanvas(full,{processed:true});
-    await sleep(0);
-  }
+  if(best.engine==="chroma2"){chroma2Full=chroma2ProcessCanvas(full,{processed:true});await sleep(0)}
   const boxes=best.boxes.map(b=>({
-    minX:Math.round(b.minX*inv),minY:Math.round(b.minY*inv),
-    maxX:Math.round((b.maxX+1)*inv)-1,maxY:Math.round((b.maxY+1)*inv)-1,
-    w:Math.round(b.w*inv),h:Math.round(b.h*inv),
-    cx:b.cx*inv,cy:b.cy*inv
+    minX:Math.round(b.minX*inv),minY:Math.round(b.minY*inv),maxX:Math.round((b.maxX+1)*inv)-1,maxY:Math.round((b.maxY+1)*inv)-1,
+    w:Math.round(b.w*inv),h:Math.round(b.h*inv),cx:b.cx*inv,cy:b.cy*inv,area:b.area/(small.scale*small.scale),gridRow:b.gridRow,gridCol:b.gridCol
   }));
-  drawDetectionDebug(name,small.canvas,best.boxes,best.thr,chroma2Mode?best.ch2Small?.removedRatio:null);
-  return {
-    name,im,full,thr:best.thr,boxes,count:boxes.length,chroma2Mode,
-    chroma2Mask:chroma2Full?.mask||null,
-    chroma2Processed:chroma2Full?.processed||null,
-    chroma2Info:chroma2Full?{bg:chroma2Full.bg,removedRatio:chroma2Full.removedRatio}:null
-  };
+  drawDetectionDebug(name,small.canvas,best.boxes,best.engine,best.grid,best.ch2Small?.removedRatio);
+  return {name,im,full,thr:best.thr,boxes,count:boxes.length,engine:best.engine,grid:best.grid,inputCandidates:candidates.map(c=>({engine:c.engine,score:c.score,grid:c.grid.confidence,count:c.boxes.length})),
+    chroma2Mode:best.engine==="chroma2",chroma2Mask:chroma2Full?.mask||null,chroma2Processed:chroma2Full?.processed||null,chroma2Info:chroma2Full?{bg:chroma2Full.bg,removedRatio:chroma2Full.removedRatio}:null};
 }
-function drawDetectionDebug(name,c,boxes,thr,chroma2Removed=null){
-  const out=$(`debug${name}`),txt=$(`debug${name}Txt`);
-  out.width=500;out.height=Math.round(500*c.height/c.width);
-  const ctx=out.getContext("2d");ctx.drawImage(c,0,0,out.width,out.height);
-  const sx=out.width/c.width,sy=out.height/c.height;
-  ctx.lineWidth=2;ctx.font="12px system-ui";
-  boxes.forEach((b,i)=>{
-    ctx.strokeStyle="#67caff";ctx.strokeRect(b.minX*sx,b.minY*sy,b.w*sx,b.h*sy);
-    ctx.fillStyle="#07131a";ctx.fillRect(b.minX*sx,b.minY*sy,28,17);
-    ctx.fillStyle="#fff";ctx.fillText(String(i+1),b.minX*sx+5,b.minY*sy+13);
-  });
-  txt.textContent=thr==="chroma2"
-    ? `${boxes.length} detectadas · Chroma 2${Number.isFinite(chroma2Removed)?` · fundo ${(chroma2Removed*100).toFixed(1)}%`:""}`
-    : `${boxes.length} detectadas · chroma clássico · sensibilidade ${thr}`;
+function drawDetectionDebug(name,c,boxes,engine,grid,chroma2Removed=null){
+  const out=$(`debug${name}`),txt=$(`debug${name}Txt`);out.width=500;out.height=Math.round(500*c.height/c.width);
+  const ctx=out.getContext("2d");ctx.drawImage(c,0,0,out.width,out.height);const sx=out.width/c.width,sy=out.height/c.height;ctx.lineWidth=2;ctx.font="12px system-ui";
+  boxes.forEach((b,i)=>{ctx.strokeStyle=grid?.valid?"#67d59a":"#ffbd5b";ctx.strokeRect(b.minX*sx,b.minY*sy,b.w*sx,b.h*sy);ctx.fillStyle="#07131a";ctx.fillRect(b.minX*sx,b.minY*sy,36,17);ctx.fillStyle="#fff";ctx.fillText(`${b.gridRow??"?"},${b.gridCol??"?"}`,b.minX*sx+3,b.minY*sy+13)});
+  txt.textContent=`${boxes.length} detectadas · ${engine.toUpperCase()} · grid ${Math.round(grid?.confidence||0)}/100${grid?.valid?" OK":" REVISAR"}${Number.isFinite(chroma2Removed)?` · fundo ${(chroma2Removed*100).toFixed(1)}%`:""}`;
 }
 
 /* =========================================================
@@ -1137,14 +1368,12 @@ function cropHead(sheet,b,index){
   octx.drawImage(sheet.full,x,y,w,h,0,0,w,h);
 
   const d=octx.getImageData(0,0,w,h).data,mask=new Uint8Array(w*h);
-  if(sheet.chroma2Mode&&sheet.chroma2Mask){
-    const fw=sheet.full.width;
-    for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)mask[yy*w+xx]=sheet.chroma2Mask[(y+yy)*fw+(x+xx)]?1:0;
+  if(sheet.engine==="chroma2"&&sheet.chroma2Mask){
+    const fw=sheet.full.width;for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)mask[yy*w+xx]=sheet.chroma2Mask[(y+yy)*fw+(x+xx)]?1:0;
+  }else if(sheet.engine==="alpha"){
+    for(let p=0,i=0;p<mask.length;p++,i+=4)mask[p]=d[i+3]>10?1:0;
   }else{
-    for(let p=0,i=0;p<mask.length;p++,i+=4){
-      const r=d[i],g=d[i+1],bb=d[i+2];
-      mask[p]=(g>55&&g-Math.max(r,bb)>sheet.thr)?0:1;
-    }
+    for(let p=0,i=0;p<mask.length;p++,i+=4){const r=d[i],g=d[i+1],bb=d[i+2];mask[p]=(g>55&&g-Math.max(r,bb)>sheet.thr)?0:1}
   }
 
   const comps=components(mask,w,h).sort((a,b)=>b.area-a.area);
@@ -1152,7 +1381,7 @@ function cropHead(sheet,b,index){
 
   const mainMask=floodMain(mask,w,h,comps[0]);
   const transparent=canvas(w,h),tctx=transparent.getContext("2d",{willReadFrequently:true});
-  if(sheet.chroma2Mode&&sheet.chroma2Processed){
+  if(sheet.engine==="chroma2"&&sheet.chroma2Processed){
     tctx.drawImage(sheet.chroma2Processed,x,y,w,h,0,0,w,h);
   }else{
     tctx.drawImage(original,0,0);
@@ -1161,7 +1390,7 @@ function cropHead(sheet,b,index){
   for(let p=0,i=0;p<mainMask.length;p++,i+=4){
     if(!mainMask[p]){
       td.data[i+3]=0;
-    }else if(!sheet.chroma2Mode){
+    }else if(sheet.engine==="classic"){
       const r=td.data[i],g=td.data[i+1],bb=td.data[i+2];
       const dom=g-Math.max(r,bb);
       if(g>55&&dom>sheet.thr-8)td.data[i+3]=clamp(Math.round(255*(1-(dom-(sheet.thr-8))/18)),0,255);
@@ -1169,15 +1398,19 @@ function cropHead(sheet,b,index){
   }
   tctx.putImageData(td,0,0);
 
-  let geom=geometry(mainMask,w,h);
-  geom=detectChin(original,geom);
-  geom=detectNeckBottom(geom);
-  const profile=makeRobustProfile(original,mainMask,geom);
-
+  const geomBase=geometry(mainMask,w,h);
+  const geomV75=detectNeckBottomV75(detectChinV75(original,geomBase));
+  const geomV2=detectNeckBottomV2(detectChinV2(original,mainMask,geomBase));
+  const profileV75=makeRobustProfileV75(original,mainMask,geomV75);
+  const profileV2=makeRobustProfileV2(original,mainMask,geomV2);
+  const row=Number.isInteger(b.gridRow)?b.gridRow:Math.floor(index/MODEL_SCHEMA.cols),col=Number.isInteger(b.gridCol)?b.gridCol:index%MODEL_SCHEMA.cols;
+  const expression=MODEL_SCHEMA.emotions[sheet.name]?.[col]||`expressao_${col+1}`,variant=MODEL_SCHEMA.variantNames[row]||`row${row}`;
   return {
-    sheet:sheet.name,order:index+1,label:`${sheet.name}-${String(index+1).padStart(2,"0")}`,
-    original,transparent,mask:mainMask,w,h,geom,profile,
-    warped:null,warpStats:null,manualRedo:false
+    sheet:sheet.name,order:index+1,label:`${sheet.name}-${String(index+1).padStart(2,"0")}`,row,col,variant,expression,
+    original,transparent,mask:mainMask,w,h,geomV75,geomV2,profileV75,profileV2,
+    geom:geomV75,profile:profileV75,geometryEngine:"v75",engineFallback:false,
+    warped:null,warpStats:null,manualRedo:false,geometryRevision:0,
+    exportFrameBase:null,exportFrame:null,finishLockVerify:null,finishLockRevision:0
   };
 }
 function floodMain(mask,w,h,comp){
@@ -1217,7 +1450,7 @@ function geometry(mask,w,h){
   const skullCenterX=median(upper.map(r=>r.mid));
   return {area,minX,minY,maxX,maxY,rows,skullWidth,skullCenterX,topY:minY,centroid:{x:sumX/area,y:sumY/area}};
 }
-function detectChin(original,geom){
+function detectChinV75(original,geom){
   const ctx=original.getContext("2d",{willReadFrequently:true}),w=original.width,h=original.height;
   const d=ctx.getImageData(0,0,w,h).data,range=Math.max(1,geom.maxY-geom.minY);
   const cx=geom.skullCenterX,skull=geom.skullWidth;
@@ -1239,7 +1472,7 @@ function detectChin(original,geom){
   const faceHeight=Math.max(1,jawY-geom.topY);
   return {...geom,jawY,faceHeight,chinSource:best&&best.cross?"brown":"fallback"};
 }
-function detectNeckBottom(geom){
+function detectNeckBottomV75(geom){
   const skull=geom.skullWidth,cx=geom.skullCenterX;
   const cand=geom.rows.filter(r=>
     r.y>=geom.jawY&&r.width>=skull*.07&&r.width<=skull*.48&&Math.abs(r.mid-cx)<=skull*.20
@@ -1248,6 +1481,55 @@ function detectNeckBottom(geom){
   if(neckBottomY<geom.jawY+geom.faceHeight*.05)neckBottomY=geom.maxY;
   const neckHeight=Math.max(1,neckBottomY-geom.jawY),totalHeight=Math.max(1,neckBottomY-geom.topY);
   return {...geom,neckBottomY,neckHeight,totalHeight};
+}
+
+function v8OutlineEvidence(original,geom,y){
+  const row=geom.rows.find(r=>r.y===y);if(!row)return 0;
+  const d=original.getContext("2d",{willReadFrequently:true}).getImageData(0,Math.max(0,y-1),original.width,Math.min(3,original.height-Math.max(0,y-1))).data;
+  let hits=0,total=0;const yyBase=Math.max(0,y-1),rad=Math.max(2,Math.round(geom.skullWidth*.012));
+  for(const bx of [row.l,row.r])for(let yy=Math.max(0,y-1);yy<=Math.min(original.height-1,y+1);yy++)for(let x=Math.max(0,bx-rad);x<=Math.min(original.width-1,bx+rad);x++){
+    const i=((yy-yyBase)*original.width+x)*4;if(i<0||i+2>=d.length)continue;total++;if(isDarkBrown(d[i],d[i+1],d[i+2]))hits++;
+  }
+  return total?hits/total:0;
+}
+function detectChinV2(original,mask,geom){
+  const rowsByY=new Map(geom.rows.map(r=>[r.y,r])),range=Math.max(1,geom.maxY-geom.minY),skull=Math.max(1,geom.skullWidth),cx=geom.skullCenterX;
+  const widths=new Array(original.height).fill(NaN),mids=new Array(original.height).fill(NaN);for(const r of geom.rows){widths[r.y]=r.width;mids[r.y]=r.mid}
+  const smooth=movingMedian(interpolateMissing(widths),Math.max(5,Math.round(range*.018)|1));
+  const lo=Math.round(geom.topY+range*.62),hi=Math.min(geom.maxY-3,Math.round(geom.topY+range*.94));
+  const candidates=[];const win=Math.max(3,Math.round(range*.025));
+  for(let y=lo;y<=hi;y++){
+    const row=rowsByY.get(y);if(!row)continue;
+    const pre=[],post=[];for(let yy=Math.max(geom.topY,y-win*2);yy<y;yy++)if(Number.isFinite(smooth[yy]))pre.push(smooth[yy]);for(let yy=y+1;yy<=Math.min(geom.maxY,y+win*2);yy++)if(Number.isFinite(smooth[yy]))post.push(smooth[yy]);
+    if(pre.length<2||post.length<2)continue;
+    const before=median(pre),after=median(post),drop=(before-after)/skull,centered=1-clamp(Math.abs((mids[y]||cx)-cx)/(skull*.22),0,1);
+    const neckLike=clamp((.62-after/skull)/.32,0,1),curv=clamp(Math.abs((smooth[Math.max(0,y-2)]||smooth[y])-2*smooth[y]+(smooth[Math.min(smooth.length-1,y+2)]||smooth[y]))/(skull*.12),0,1);
+    const outline=v8OutlineEvidence(original,geom,y),rel=(y-geom.topY)/range,pos=1-clamp(Math.abs(rel-.84)/.20,0,1);
+    const score=clamp(drop/.18,0,1)*.34+neckLike*.24+centered*.14+curv*.10+clamp(outline/.16,0,1)*.10+pos*.08;
+    candidates.push({y,score,drop,after,before,outline,centered,neckLike,rel});
+  }
+  candidates.sort((a,b)=>b.score-a.score);const best=candidates[0],second=candidates[1];
+  const v75=detectChinV75(original,geom);
+  let jawY=best?.y??v75.jawY;
+  const separation=best&&second?best.score-second.score:0;
+  let confidence=best?clamp(best.score*.78+clamp(separation/.12,0,1)*.22,0,1):0;
+  if(best&&best.drop<.015)confidence*=.65;
+  if(!best||confidence<.28)jawY=v75.jawY;
+  const faceHeight=Math.max(1,jawY-geom.topY);
+  return {...geom,jawY,faceHeight,chinSource:confidence>=.28?"v2-hybrid":"v75-fallback",chinConfidence:confidence,chinCandidates:candidates.slice(0,5),v75JawY:v75.jawY};
+}
+function detectNeckBottomV2(geom){
+  const skull=Math.max(1,geom.skullWidth),cx=geom.skullCenterX,rows=geom.rows.filter(r=>r.y>=geom.jawY).sort((a,b)=>a.y-b.y);
+  const plausible=rows.filter(r=>r.width>=skull*.055&&r.width<=skull*.54&&Math.abs(r.mid-cx)<=skull*.22);
+  let bestRun=[],run=[];
+  for(const r of plausible){if(!run.length||r.y-run[run.length-1].y<=2)run.push(r);else{if(run.length>bestRun.length)bestRun=run;run=[r]}}if(run.length>bestRun.length)bestRun=run;
+  let neckBottomY=bestRun.length?bestRun[bestRun.length-1].y:geom.maxY;
+  if(neckBottomY<geom.jawY+geom.faceHeight*.045)neckBottomY=geom.maxY;
+  const runSpan=bestRun.length?(bestRun[bestRun.length-1].y-bestRun[0].y+1):0,expectedSpan=Math.max(1,geom.maxY-geom.jawY);
+  const continuity=bestRun.length?bestRun.length/Math.max(1,runSpan):0,spanScore=clamp(runSpan/(expectedSpan*.55),0,1);
+  const neckConfidence=clamp(continuity*.55+spanScore*.35+(bestRun.length>=4?.10:0),0,1);
+  const neckHeight=Math.max(1,neckBottomY-geom.jawY),totalHeight=Math.max(1,neckBottomY-geom.topY);
+  return {...geom,neckBottomY,neckHeight,totalHeight,neckConfidence,neckSource:bestRun.length?"v2-silhouette-run":"fallback-maxY"};
 }
 
 /* =========================================================
@@ -1278,7 +1560,7 @@ function interpolateMissing(arr){
   for(let i=last+1;i<a.length;i++)a[i]=a[last];
   return a;
 }
-function makeRobustProfile(original,mask,geom){
+function makeRobustProfileV75(original,mask,geom){
   const w=original.width,h=original.height,d=original.getContext("2d",{willReadFrequently:true}).getImageData(0,0,w,h).data;
   const maskL=new Array(h).fill(NaN),maskR=new Array(h).fill(NaN);
   for(const r of geom.rows){maskL[r.y]=r.l;maskR[r.y]=r.r}
@@ -1299,7 +1581,7 @@ function makeRobustProfile(original,mask,geom){
     rawR[y]=right.length?Math.max(...right):maskR[y];
   }
 
-  const win=Number($("smooth").value),spike=Number($("spike").value)/100*skull;
+  const win=cfg("smooth",BASELINE_V75.smooth),spike=cfg("spike",BASELINE_V75.spike)/100*skull;
   const baseL=movingMedian(interpolateMissing(rawL),win),baseR=movingMedian(interpolateMissing(rawR),win);
 
   const cleanL=new Array(h).fill(NaN),cleanR=new Array(h).fill(NaN);
@@ -1320,6 +1602,34 @@ function makeRobustProfile(original,mask,geom){
   finalR=cleaned.right;
   return {left:finalL,right:finalR};
 }
+function makeRobustProfileV2(original,mask,geom){
+  const w=original.width,h=original.height,d=original.getContext("2d",{willReadFrequently:true}).getImageData(0,0,w,h).data;
+  const maskL=new Array(h).fill(NaN),maskR=new Array(h).fill(NaN);for(const r of geom.rows){maskL[r.y]=r.l;maskR[r.y]=r.r}
+  const rawL=new Array(h).fill(NaN),rawR=new Array(h).fill(NaN),conf=new Array(h).fill(0),skull=Math.max(1,geom.skullWidth);
+  const outside=Math.max(1,Math.round(skull*.016)),inside=Math.max(2,Math.round(skull*.026));
+  const darkAt=x=>{const i=(CURRENT_Y*w+x)*4;return isDarkBrown(d[i],d[i+1],d[i+2])};
+  let CURRENT_Y=0;
+  for(let y=geom.topY;y<=geom.neckBottomY;y++){
+    CURRENT_Y=y;const l=maskL[y],r=maskR[y];if(!Number.isFinite(l)||!Number.isFinite(r))continue;
+    let bestL=l,bestR=r,dl=Infinity,dr=Infinity;
+    for(let x=Math.max(0,l-outside);x<=Math.min(w-1,l+inside);x++)if(darkAt(x)){const dist=Math.abs(x-l);if(dist<dl){dl=dist;bestL=x}}
+    for(let x=Math.max(0,r-inside);x<=Math.min(w-1,r+outside);x++)if(darkAt(x)){const dist=Math.abs(x-r);if(dist<dr){dr=dist;bestR=x}}
+    // Topologia manda: outline só pode refinar alguns pixels ao redor da boundary real.
+    rawL[y]=clamp(bestL,l-outside,l+inside);rawR[y]=clamp(bestR,r-inside,r+outside);
+    conf[y]=.68+.16*(dl<Infinity)+.16*(dr<Infinity);
+  }
+  const win=Math.max(5,cfg("smooth",BASELINE_V75.smooth)),spike=cfg("spike",BASELINE_V75.spike)/100*skull;
+  const baseL=movingMedian(interpolateMissing(rawL),win),baseR=movingMedian(interpolateMissing(rawR),win);let cleanL=[...baseL],cleanR=[...baseR];
+  for(let y=geom.topY;y<=geom.neckBottomY;y++){
+    if(Math.abs(rawL[y]-baseL[y])<=spike*.72)cleanL[y]=lerp(baseL[y],rawL[y],.55);
+    if(Math.abs(rawR[y]-baseR[y])<=spike*.72)cleanR[y]=lerp(baseR[y],rawR[y],.55);
+  }
+  cleanL=movingMedian(interpolateMissing(cleanL),Math.max(3,win-4));cleanR=movingMedian(interpolateMissing(cleanR),Math.max(3,win-4));
+  const cleaned=v711CleanProfileSides(cleanL,cleanR,geom);cleanL=cleaned.left;cleanR=cleaned.right;
+  const validConf=conf.slice(geom.topY,geom.neckBottomY+1).filter(Boolean),profileConfidence=validConf.length?median(validConf):.45;
+  return {left:cleanL,right:cleanR,profileConfidence,engine:"v2"};
+}
+function makeRobustProfileForHead(h){const p=h.geometryEngine==="v2"?makeRobustProfileV2(h.original,h.mask,h.geom):makeRobustProfileV75(h.original,h.mask,h.geom);if(h.geometryEngine==="v2")h.profileV2=p;else h.profileV75=p;return p}
 function sampleArray(a,y){
   const y0=clamp(Math.floor(y),0,a.length-1),y1=clamp(y0+1,0,a.length-1),t=y-y0;
   return lerp(a[y0],a[y1],t);
@@ -1377,6 +1687,21 @@ function v711CleanCanonicalContour(left,right,nHead){
   return {left:cleanL,right:cleanR};
 }
 
+function v8GeomVector(g){const total=Math.max(1,g.totalHeight),sk=Math.max(1,g.skullWidth);return [g.faceHeight/total,g.neckHeight/total,total/sk,g.faceHeight/sk]}
+function v8GeomDistance(vec,stats){return vec.reduce((acc,v,i)=>acc+Math.abs(v-stats[i].median)/stats[i].scale,0)}
+function v8SelectGeometryEngines(){
+  const mode=cfg("contourEngine","auto"),all=[];for(const h of S.heads){all.push(v8GeomVector(h.geomV75),v8GeomVector(h.geomV2))}
+  const stats=[0,1,2,3].map(i=>v71RobustStat(all.map(v=>v[i]),[.012,.012,.045,.04][i]));
+  for(const h of S.heads){
+    const d75=v8GeomDistance(v8GeomVector(h.geomV75),stats),d2=v8GeomDistance(v8GeomVector(h.geomV2),stats),conf=(h.geomV2.chinConfidence||0)*.62+(h.geomV2.neckConfidence||0)*.38;
+    let useV2=mode==="v2"||(mode==="auto"&&conf>=.42&&d2<=d75+1.10);if(mode==="v75")useV2=false;
+    h.geometryEngine=useV2?"v2":"v75";h.engineFallback=mode==="auto"&&!useV2;h.geom=useV2?h.geomV2:h.geomV75;h.profile=useV2?h.profileV2:h.profileV75;h.geometryDecision={d75,d2,confidence:conf,mode};h.geometryRevision=S.pipeline.counter+1;
+  }
+}
+function v8SemanticGroups(){
+  const map=new Map();for(const h of S.heads){const key=`${h.sheet}:${h.col}`;if(!map.has(key))map.set(key,[]);map.get(key).push(h)}return map;
+}
+
 /* =========================================================
    MOLDE CANÔNICO
 ========================================================= */
@@ -1398,7 +1723,7 @@ function smallestHorizontalHeadIndex(heads=S.heads){
 }
 function v634SafeSmallestWidth(smallest,heads){
   const rawW=smallest.geom.skullWidth;
-  if(!($("v6Smart")?.checked && $("v6SafeScale")?.checked))return {w:rawW,clipped:false};
+  if(!(cfg("smartLock",true)&&cfg("safeScale",true)))return {w:rawW,clipped:false};
   const ws=heads.map(h=>h.geom.skullWidth);
   const p10w=percentile(ws,.10);
   const minW=p10w*0.94;
@@ -1429,7 +1754,7 @@ function smoothNumeric(a,window=5){
 function v6RobustConsensus(values){
   if(!values.length)return 0;
   const m=median(values);
-  if(!($("v6Smart")?.checked && $("v6Robust")?.checked))return m;
+  if(!(cfg("smartLock",true)&&cfg("robust",true)))return m;
   const dev=values.map(v=>Math.abs(v-m));
   const mad=Math.max(0.0005,median(dev));
   const lim=mad*3.2;
@@ -1440,28 +1765,28 @@ function v6RobustConsensus(values){
 }
 function v6SafeLargestTarget(largest,heads){
   const rawW=largest.geom.skullWidth,rawH=largest.geom.totalHeight;
-  if(!($("v6Smart")?.checked && $("v6SafeScale")?.checked))return {w:rawW,h:rawH,clipped:false};
+  if(!(cfg("smartLock",true)&&cfg("safeScale",true)))return {w:rawW,h:rawH,clipped:false};
   const ws=heads.map(h=>h.geom.skullWidth),hs=heads.map(h=>h.geom.totalHeight);
   const p90w=percentile(ws,.90),p90h=percentile(hs,.90);
   const maxW=p90w*1.075,maxH=p90h*1.075;
   return {w:Math.min(rawW,maxW),h:Math.min(rawH,maxH),clipped:rawW>maxW||rawH>maxH};
 }
 function v6Deadzone(delta){
-  if(!$("v6Smart")?.checked)return delta;
-  const dead=Number($("v6Dead").value||0);
+  if(!cfg("smartLock",true))return delta;
+  const dead=cfg("deadzone",0);
   const a=Math.abs(delta);
   if(a<=dead)return 0;
   return Math.sign(delta)*(a-dead);
 }
-function v6CapCorrection(delta,fit){
-  if(!$("v6Smart")?.checked)return delta;
-  const pct=Number($("v6Cap").value||3)/100;
+function v6CapCorrection(delta,fit,capPct=null){
+  if(!cfg("smartLock",true))return delta;
+  const pct=(capPct??cfg("cap",3))/100;
   const cap=S.canonical.targetSkull*fit*pct;
   return clamp(delta,-cap,cap);
 }
 function v6SnapPx(v){
   if(!$("v6Smart")?.checked)return v;
-  const div=Math.max(1,Number($("v6Snap").value||8));
+  const div=Math.max(1,cfg("snap",8));
   return Math.round(v*div)/div;
 }
 function v61RowMedianSamples(samples){
@@ -1534,99 +1859,8 @@ function v61BlendShape(medianShape,baseShape,blend){
   }
   return {left,right};
 }
-function v612GeomRefStats(heads){
-  const faceFrac=heads.map(h=>h.geom.faceHeight/Math.max(1,h.geom.totalHeight));
-  const neckFrac=heads.map(h=>h.geom.neckHeight/Math.max(1,h.geom.totalHeight));
-  const facePerSkull=heads.map(h=>h.geom.faceHeight/Math.max(1,h.geom.skullWidth));
-  const neckPerSkull=heads.map(h=>h.geom.neckHeight/Math.max(1,h.geom.skullWidth));
-  const totalPerSkull=heads.map(h=>h.geom.totalHeight/Math.max(1,h.geom.skullWidth));
-  return {
-    faceFrac:median(faceFrac),
-    neckFrac:median(neckFrac),
-    facePerSkull:median(facePerSkull),
-    neckPerSkull:median(neckPerSkull),
-    totalPerSkull:median(totalPerSkull)
-  };
-}
-function v612PrepareWarpGeometries(){
-  const ref=v612GeomRefStats(S.heads);
-  let fixed=0;
-  for(const h of S.heads){
-    const g=h.geom;
-    const total=g.totalHeight, skull=Math.max(1,g.skullWidth);
-    const faceFrac=g.faceHeight/Math.max(1,total);
-    const neckFrac=g.neckHeight/Math.max(1,total);
-    const totalPerSkull=total/skull;
-    const faceExpected=(total*ref.faceFrac + skull*ref.facePerSkull)*0.5;
-    const neckExpected=(total*ref.neckFrac + skull*ref.neckPerSkull)*0.5;
-    const totalExpected=skull*ref.totalPerSkull;
-
-    const badFace=(faceFrac<ref.faceFrac*0.88 || faceFrac>ref.faceFrac*1.12 || Math.abs(g.faceHeight-faceExpected)>Math.max(6,faceExpected*0.11));
-    const badNeck=(neckFrac<ref.neckFrac*0.75 || neckFrac>ref.neckFrac*1.30 || Math.abs(g.neckHeight-neckExpected)>Math.max(5,neckExpected*0.22));
-    const badTotal=(totalPerSkull<ref.totalPerSkull*0.88 || totalPerSkull>ref.totalPerSkull*1.15);
-
-    let faceH=g.faceHeight, neckH=g.neckHeight;
-    let changed=false;
-
-    if(badFace){
-      faceH=lerp(faceH,faceExpected,0.85);
-      faceH=clamp(faceH,faceExpected*0.92,faceExpected*1.08);
-      changed=true;
-    }
-    if(badNeck){
-      neckH=lerp(neckH,neckExpected,0.80);
-      neckH=clamp(neckH,neckExpected*0.80,neckExpected*1.20);
-      changed=true;
-    }
-    if(badTotal){
-      const desiredTotal=clamp(lerp(faceH+neckH,totalExpected,0.45),totalExpected*0.92,totalExpected*1.08);
-      const sum=Math.max(1,faceH+neckH);
-      const k=desiredTotal/sum;
-      faceH*=k; neckH*=k;
-      changed=true;
-    }
-
-    // caso raro: cabeça achatada para baixo. Expande a parte do rosto e diminui a chance de jawY subir demais.
-    const yHeadRatio=S.canonical ? (S.canonical.targetFace/Math.max(1,faceH)) : 1;
-    if(yHeadRatio>1.18){
-      faceH*=Math.min(yHeadRatio/1.08,1.14);
-      changed=true;
-    }
-
-    if(changed){
-      const jawY=g.topY+faceH;
-      const neckBottomY=jawY+neckH;
-      h.geomWarp={...g,jawY,faceHeight:faceH,neckBottomY,neckHeight:neckH,totalHeight:faceH+neckH,source:'guarded'};
-      h.geomFixInfo={badFace,badNeck,badTotal};
-      fixed++;
-    }else{
-      h.geomWarp=g;
-      h.geomFixInfo=null;
-    }
-  }
-  return fixed;
-}
 function activeGeom(h){
   return h.geomWarp||h.geom;
-}
-function v613ConsensusGeomForHead(h){
-  const others=S.heads.filter(x=>x!==h);
-  const pool=others.length>=3?others:S.heads;
-  const facePerSkull=median(pool.map(x=>x.geom.faceHeight/Math.max(1,x.geom.skullWidth)));
-  const neckPerSkull=median(pool.map(x=>x.geom.neckHeight/Math.max(1,x.geom.skullWidth)));
-  const totalPerSkull=median(pool.map(x=>x.geom.totalHeight/Math.max(1,x.geom.skullWidth)));
-  const faceFrac=median(pool.map(x=>x.geom.faceHeight/Math.max(1,x.geom.totalHeight)));
-
-  const g=h.geom, skull=Math.max(1,g.skullWidth);
-  let totalH=skull*totalPerSkull;
-  let faceH=skull*facePerSkull;
-  let neckH=skull*neckPerSkull;
-  const faceFromTotal=totalH*faceFrac;
-  faceH=lerp(faceH,faceFromTotal,.65);
-  neckH=Math.max(1,totalH-faceH);
-  const jawY=g.topY+faceH;
-  const neckBottomY=jawY+neckH;
-  return {...g,jawY,faceHeight:faceH,neckBottomY,neckHeight:neckH,totalHeight:faceH+neckH,source:'manual-consensus'};
 }
 function v71RobustStat(values,floor=0.001){
   const vals=values.filter(Number.isFinite);
@@ -1679,39 +1913,6 @@ function v71EvaluateHead(h,stats){
   else if(maxZ>=3.35 || score>=3.9)level='WARN';
   return {level,score,maxZ,reason:parts[0]?.label||'—',reasonKey:parts[0]?.key||'',parts};
 }
-function v71AnalyzeQuality({focus=true}={}){
-  if(!S.canonical||!S.heads.length)return null;
-  const stats=v71QualityStats();
-  const summary={OK:0,WARN:0,OUT:0,stats,suspects:[]};
-  S.heads.forEach((h,i)=>{
-    h.quality=v71EvaluateHead(h,stats);
-    summary[h.quality.level]++;
-    if(h.quality.level!=='OK')summary.suspects.push(i);
-  });
-  summary.suspects.sort((ia,ib)=>{
-    const rank={OUT:2,WARN:1,OK:0};
-    const a=S.heads[ia].quality,b=S.heads[ib].quality;
-    return rank[b.level]-rank[a.level] || b.score-a.score;
-  });
-  S.qualitySummary=summary;
-  const el=$("qualityStatus");
-  if(el){
-    const cls=summary.OUT?'bad':summary.WARN?'warn':'ok';
-    const text=summary.OUT||summary.WARN
-      ? `${summary.OK} OK · ${summary.WARN} atenção · ${summary.OUT} outlier. Principal suspeito: ${S.heads[summary.suspects[0]]?.label||'—'} (${S.heads[summary.suspects[0]]?.quality?.reason||'—'}).`
-      : `${summary.OK} OK · nenhuma cabeça verticalmente suspeita.`;
-    status('qualityStatus',text,cls);
-  }
-  if(focus&&summary.suspects.length){
-    const firstOut=summary.suspects.find(i=>S.heads[i].quality.level==='OUT');
-    if(Number.isInteger(firstOut)){
-      S.currentIndex=firstOut;
-      if($("currentSel"))$("currentSel").value=String(firstOut);
-    }
-  }
-  if($("nextSuspect"))$("nextSuspect").disabled=!summary.suspects.length;
-  return summary;
-}
 function v71VerticalConsensusScore(h,geom){
   const pool=S.heads.filter(x=>x!==h && x.quality?.level!=='OUT');
   const use=pool.length>=3?pool:S.heads.filter(x=>x!==h);
@@ -1724,16 +1925,50 @@ function v71VerticalConsensusScore(h,geom){
   return Math.abs(faceRatio-s1.median)/s1.scale + .55*Math.abs(facePerSkull-s2.median)/s2.scale + .35*Math.abs(neckRatio-s3.median)/s3.scale;
 }
 function v71NextSuspect(){
-  const list=S.qualitySummary?.suspects||[];
-  if(!list.length){status('qualityStatus','Nenhuma cabeça suspeita no molde atual.','ok');return}
-  let p=list.indexOf(S.currentIndex);
-  p=p<0?0:(p+1)%list.length;
-  S.currentIndex=list[p];
-  $("currentSel").value=String(S.currentIndex);
-  drawPreview();renderThumbs();updateDiagnostics();
-  const h=current();
-  status('qualityStatus',`${h.label} · ${h.quality.level==='OUT'?'OUTLIER':'atenção'} · causa principal: ${h.quality.reason}.`,h.quality.level==='OUT'?'bad':'warn');
+  const list=S.qualitySummary?.suspects||[];if(!list.length){status("qualityStatus","Nenhuma expressão suspeita.","ok");return}
+  let p=list.indexOf(S.currentIndex);p=p<0?0:(p+1)%list.length;S.currentIndex=list[p];$("currentSel").value=String(S.currentIndex);drawPreview();updateActiveThumb();updateDiagnostics();v8OpenReview(S.currentIndex);
 }
+function v8SemanticDeviation(h){
+  const peers=(v8SemanticGroups().get(`${h.sheet}:${h.col}`)||[]).filter(x=>x!==h);if(!peers.length)return 0;
+  const v=v8GeomVector(activeGeom(h)),med=[0,1,2,3].map(i=>median(peers.map(x=>v8GeomVector(activeGeom(x))[i]))),floors=[.018,.018,.06,.05];
+  return median(v.map((x,i)=>Math.abs(x-med[i])/floors[i]));
+}
+function v8EvaluateQuality(h,stats){
+  const base=v71EvaluateHead(h,stats),semantic=v8SemanticDeviation(h),chin=h.geomV2?.chinConfidence??0,neck=h.geomV2?.neckConfidence??0,grid=S.sheets[h.sheet]?.grid?.confidence??0,profile=h.profile?.profileConfidence??.7;
+  const warnings=[];if(chin<.35)warnings.push("queixo baixa confiança");if(neck<.35)warnings.push("pescoço baixa confiança");if(grid<70)warnings.push("grid baixo");if(h.engineFallback)warnings.push("fallback V7.5");if(semantic>2.6)warnings.push("anatomia diverge do trio normal/blink/talk");
+  const score=base.score*.58+clamp(semantic,0,6)*.55+clamp((.45-chin)*5,0,2)+clamp((.42-neck)*4,0,1.6)+clamp((72-grid)/18,0,1.4)+clamp((.55-profile)*3,0,1);
+  let level="OK";if(score>=4.4||base.maxZ>=4.8||warnings.length>=3)level="REVIEW";else if(score>=2.8||base.maxZ>=3.4||warnings.length>=2)level="WARN";
+  return {...base,level,score,semantic,chinConfidence:chin,neckConfidence:neck,gridConfidence:grid,profileConfidence:profile,warnings,reason:warnings[0]||base.reason};
+}
+function v8AnalyzeQuality({focus=true}={}){
+  if(!S.canonical||!S.heads.length)return null;const stats=v71QualityStats(),summary={OK:0,WARN:0,REVIEW:0,stats,suspects:[]};
+  S.heads.forEach((h,i)=>{h.quality=v8EvaluateQuality(h,stats);summary[h.quality.level]++;if(h.quality.level!=="OK")summary.suspects.push(i)});
+  summary.suspects.sort((ia,ib)=>{const rank={REVIEW:2,WARN:1,OK:0},a=S.heads[ia].quality,b=S.heads[ib].quality;return rank[b.level]-rank[a.level]||b.score-a.score});S.qualitySummary=summary;
+  const text=summary.REVIEW||summary.WARN?`${summary.OK} OK · ${summary.WARN} atenção · ${summary.REVIEW} revisar${summary.suspects.length?` · próximo: ${S.heads[summary.suspects[0]].label} (${S.heads[summary.suspects[0]].quality.reason})`:""}`:`${summary.OK} OK · nenhuma expressão requer revisão.`;
+  status("qualityStatus",text,summary.REVIEW?"bad":summary.WARN?"warn":"ok");
+  if(focus&&summary.suspects.length){S.currentIndex=summary.suspects[0];if($("currentSel"))$("currentSel").value=String(S.currentIndex);v8OpenReview(S.currentIndex)}
+  if($("nextSuspect"))$("nextSuspect").disabled=!summary.suspects.length;updatePreflight();return summary;
+}
+function drawReviewCanvas(canvasEl,img){const c=canvasEl,ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#0b0e12";ctx.fillRect(0,0,c.width,c.height);if(!img)return;const sc=Math.min(c.width*.92/img.width,c.height*.92/img.height);ctx.drawImage(img,(c.width-img.width*sc)/2,(c.height-img.height*sc)/2,img.width*sc,img.height*sc)}
+function v8BuildRepairCandidate(h){
+  const old=h.geomWarp,repaired=v633ConsensusJawGeom(h);h.geomWarp=repaired.geom;const warped=makeWarpedCanvas(h,720),stats=computeWarpStats(h),score=v71VerticalConsensusScore(h,repaired.geom);h.geomWarp=old;
+  return {geom:repaired.geom,debug:repaired.debug,warped,warpStats:stats,score,baseCanonicalRevision:S.canonical?.revision||0};
+}
+function v8OpenReview(index=S.currentIndex){
+  if(!S.heads[index])return;S.reviewIndex=index;const h=S.heads[index];if(!h.repairCandidate||h.repairCandidate.baseCanonicalRevision!==(S.canonical?.revision||0))h.repairCandidate=v8BuildRepairCandidate(h);
+  $("reviewPanel").hidden=false;$("reviewTitle").textContent=`${h.label} · ${h.quality?.level||"REVISÃO"}`;$("reviewReason").textContent=`${h.quality?.reason||"correção consensual"} · engine ${h.geometryEngine.toUpperCase()}${h.engineFallback?" (fallback)":""}`;
+  drawReviewCanvas($("reviewOriginal"),h.transparent);drawReviewCanvas($("reviewCurrent"),h.warped||h.transparent);drawReviewCanvas($("reviewCandidate"),h.repairCandidate.warped);
+}
+function v8AcceptCandidate(){
+  const h=S.heads[S.reviewIndex];if(!h?.repairCandidate)return;const c=h.repairCandidate;
+  if(c.baseCanonicalRevision!==(S.canonical?.revision||0)){status("canonicalStatus","Candidata ficou stale após mudança do molde. Gere novamente.","warn");h.repairCandidate=null;return}
+  h.lastRedoBackup={geomWarp:h.geomWarp?{...h.geomWarp}:null,geomFixInfo:h.geomFixInfo?{...h.geomFixInfo}:null,manualRedo:!!h.manualRedo,warpStats:h.warpStats?{...h.warpStats}:null,warped:h.warped};
+  h.geomWarp=c.geom;h.geomFixInfo={manual:true,mode:"candidate",candidateScore:c.score,canonicalRevision:S.canonical.revision};h.manualRedo=true;h.warpStats=c.warpStats;h.warped=c.warped;h.repairCandidate=null;h.reviewResolved=true;h.reviewResolvedRevision=S.canonical.revision;
+  v83ApplyFinishLockArea1();
+  v8AnalyzeQuality({focus:false});drawPreview();updateThumbAt(S.reviewIndex,true);updateDiagnostics();v71UpdateUndoButton();$("reviewPanel").hidden=true;updatePreflight();status("canonicalStatus",`${h.label}: candidata aceita e Finish Lock reaplicado.`,"ok");
+}
+function v8KeepCurrent(){const h=S.heads[S.reviewIndex];if(h){h.repairCandidate=null;h.reviewResolved=true;h.reviewResolvedRevision=S.canonical?.revision||0}$("reviewPanel").hidden=true;updatePreflight()}
+
 function v71UpdateUndoButton(){
   const h=current();
   if($("undoRedo"))$("undoRedo").disabled=!(h&&h.lastRedoBackup);
@@ -1748,11 +1983,12 @@ function v71UndoCurrentRedo(){
   h.manualRedo=b.manualRedo;
   h.warpStats=b.warpStats;
   h.warped=b.warped;
-  h.lastRedoBackup=null;
-  v71AnalyzeQuality({focus:false});
-  drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton();
-  status('canonicalStatus',`Desfiz a última correção de ${h.label}.`,'ok');
-  log(`V7.5: correção de ${h.label} desfeita.`);
+  h.lastRedoBackup=null;h.reviewResolved=false;h.reviewResolvedRevision=0;
+  v83ApplyFinishLockArea1();
+  v8AnalyzeQuality({focus:false});
+  drawPreview();updateThumbAt(S.currentIndex,true);updateDiagnostics();v71UpdateUndoButton();updatePreflight();
+  status('canonicalStatus',`Desfiz a última correção de ${h.label} e reapliquei o Finish Lock.`,'ok');
+  log(`V8: correção de ${h.label} desfeita.`);
 }
 function v633ConsensusJawGeom(h){
   const others=S.heads.filter(x=>x!==h && x.quality?.level!=='OUT');
@@ -1817,67 +2053,21 @@ function v633ConsensusJawGeom(h){
   };
 }
 async function redoCurrentExpression(){
-  stopPlayer();
-  if(!S.canonical||!S.heads.length){
-    status("canonicalStatus","Construa o molde antes de refazer uma expressão.","bad");
-    return;
-  }
-  const h=current();
-  if(!h)return;
-
-  const btn=$("redoCurrent");
-  btn.disabled=true;
-  try{
-    const oldFaceAlign=S.faceAlign;
-    S.faceAlign=null;
-
-    const repaired=v633ConsensusJawGeom(h);
-    const currentScore=v71VerticalConsensusScore(h,activeGeom(h));
-    const candidateScore=v71VerticalConsensusScore(h,repaired.geom);
-    const clearlyWorse=candidateScore>currentScore*1.18+0.20;
-    if(clearlyWorse){
-      S.faceAlign=oldFaceAlign;
-      status("canonicalStatus",`Proteção V7.5: a correção candidata de ${h.label} ficou pior que a atual e foi bloqueada.`,"warn");
-      log(`V7.5: correção de ${h.label} bloqueada. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}.`);
-      return;
-    }
-
-    h.lastRedoBackup={
-      geomWarp:h.geomWarp?{...h.geomWarp}:null,
-      geomFixInfo:h.geomFixInfo?{...h.geomFixInfo}:null,
-      manualRedo:!!h.manualRedo,
-      warpStats:h.warpStats?{...h.warpStats}:null,
-      warped:h.warped
-    };
-    h.geomWarp=repaired.geom;
-    h.geomFixInfo={manual:true,mode:'jaw',...repaired.debug,currentScore,candidateScore};
-    h.manualRedo=true;
-    h.warpStats=computeWarpStats(h);
-    h.warped=makeWarpedCanvas(h,720);
-    S.faceAlign=oldFaceAlign;
-
-    v71AnalyzeQuality({focus:false});
-    drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton();
-    const gain=currentScore>0?((currentScore-candidateScore)/currentScore)*100:0;
-    status("canonicalStatus",`Refiz ${h.label} com backup. Consenso inferior ${currentScore.toFixed(2)} → ${candidateScore.toFixed(2)}${gain>0?` (${gain.toFixed(0)}% melhor)`:''}.`,"ok");
-    log(`V7.5: ${h.label} corrigida por lower-consensus. score ${currentScore.toFixed(3)} → ${candidateScore.toFixed(3)}; face ratio ${repaired.debug.originalRatio.toFixed(3)} → ${repaired.debug.correctedRatio.toFixed(3)}.`);
-  }catch(e){
-    console.error(e);
-    status("canonicalStatus","Erro ao corrigir a geometria inferior da expressão: "+e.message,"bad");
-  }finally{
-    btn.disabled=false;
-  }
+  stopPlayer();if(!S.canonical||!S.heads.length){status("canonicalStatus","Construa o molde antes de refazer uma expressão.","bad");return}
+  const h=current();if(!h)return;try{h.repairCandidate=v8BuildRepairCandidate(h);v8OpenReview(S.currentIndex);status("canonicalStatus",`${h.label}: candidata criada. Compare Atual × Candidata e aceite somente se melhorar.`,"warn")}catch(e){console.error(e);status("canonicalStatus","Erro ao gerar candidata: "+e.message,"bad")}
 }
 async function buildCanonical(){
-  stopPlayer();
+  stopPlayer();setEngineConfig();
   if(!S.heads.length){status("canonicalStatus","Primeiro detecte as cabeças.","bad");return}
+  if(!pipelineValid("profile")){v8SelectGeometryEngines();markStage("geometry",{});for(const h of S.heads)h.profile=makeRobustProfileForHead(h);markStage("profile",{})}
   $("canonical").disabled=true;
   if($("canonicalExtra"))$("canonicalExtra").disabled=true;
   try{
     status("canonicalStatus","Recalculando contornos robustos…","warn");
-    for(const h of S.heads){h.manualRedo=false;h.lastRedoBackup=null;h.quality=null;}
+    // Política V8: rebuild do canonical invalida integralmente correções manuais anteriores.
+    for(const h of S.heads){h.manualRedo=false;h.lastRedoBackup=null;h.repairCandidate=null;h.reviewResolved=false;h.reviewResolvedRevision=0;h.quality=null;h.geomWarp=null;h.geomFixInfo=null;}
     for(let i=0;i<S.heads.length;i++){
-      S.heads[i].profile=makeRobustProfile(S.heads[i].original,S.heads[i].mask,S.heads[i].geom);
+      S.heads[i].profile=makeRobustProfileForHead(S.heads[i]);
       if(i%5===4)await sleep(0);
     }
 
@@ -1888,11 +2078,11 @@ async function buildCanonical(){
     const keepSamples=consensus.keep.map(i=>samples[i]);
     const keepHeads=consensus.keep.map(i=>S.heads[i]);
 
-    S.bestBaseIndex=$("v61BestBase")?.checked ? consensus.bestIndex : S.largestIndex;
+    S.bestBaseIndex=cfg("bestBase",true) ? consensus.bestIndex : S.largestIndex;
     const baseHead=S.heads[S.bestBaseIndex];
     const baseSample=samples[S.bestBaseIndex];
 
-    const scalePool=(keepHeads.length && $("v61DropBad")?.checked && $("v6Smart")?.checked)?keepHeads:S.heads;
+    const scalePool=(keepHeads.length && cfg("dropBad",true) && cfg("smartLock",true))?keepHeads:S.heads;
     const smallestPoolHead=scalePool.reduce((a,b)=>b.geom.skullWidth<a.geom.skullWidth?b:a, scalePool[0]);
     S.smallestHorizIndex=S.heads.indexOf(smallestPoolHead);
     const smallestSample=samples[S.smallestHorizIndex];
@@ -1900,47 +2090,40 @@ async function buildCanonical(){
     const medAll=v61RowMedianSamples(keepSamples.length?keepSamples:samples);
     let left=[],right=[];
 
-    if($("medianShape").checked){
+    if(cfg("medianShape",true)){
       left=[...medAll.left]; right=[...medAll.right];
-      if($("smallestHorizontalBase")?.checked){
+      if(true){
         const blendSmall=.20;
         const mixed=v61BlendShape({left,right},smallestSample,blendSmall);
         left=mixed.left; right=mixed.right;
       }
-      if($("v6Smart")?.checked && $("v61BestBase")?.checked){
-        const blend=Number($("v61Blend").value||32)/100;
+      if(cfg("smartLock",true) && cfg("bestBase",true)){
+        const blend=cfg("baseBlend",32)/100;
         const mixed=v61BlendShape({left,right},baseSample,blend);
         left=mixed.left; right=mixed.right;
       }
     }else{
-      const shapeSample=$("smallestHorizontalBase")?.checked
-        ? smallestSample
-        : ($("v61BestBase")?.checked ? baseSample : samples[S.largestIndex]);
+      const shapeSample=smallestSample;
       left=[...shapeSample.left]; right=[...shapeSample.right];
     }
 
-    const canonSmooth=$("v6Smart")?.checked?7:5;
+    const canonSmooth=cfg("smartLock",true)?7:5;
     left=smoothNumeric(left,canonSmooth);right=smoothNumeric(right,canonSmooth);
     const canonicalClean=v711CleanCanonicalContour(left,right,nHead);
     left=canonicalClean.left;
     right=canonicalClean.right;
 
-    const scaleRef=$("v61BestBase")?.checked ? baseHead : largest;
+    const scaleRef=cfg("bestBase",true) ? baseHead : largest;
     const v6Scale=v6SafeLargestTarget(scaleRef,scalePool);
     const smallScale=v634SafeSmallestWidth(smallestPoolHead,scalePool);
-    const targetSkull=$("smallestHorizontalBase")?.checked
-      ? smallScale.w
-      : ($("largestScale").checked
-          ? v6Scale.w
-          : median(scalePool.map(h=>h.geom.skullWidth)));
-    const targetTotal=$("largestScale").checked
-      ? v6Scale.h
-      : median(scalePool.map(h=>h.geom.totalHeight));
+    const targetSkull=smallScale.w;
+    const targetTotal=cfg("largestScale",true)?v6Scale.h:median(scalePool.map(h=>h.geom.totalHeight));
 
     const faceRatio=median(scalePool.map(h=>h.geom.faceHeight/h.geom.totalHeight));
     const targetFace=targetTotal*faceRatio,targetNeck=targetTotal-targetFace;
 
-    S.canonical={left,right,nHead,nNeck,targetSkull,targetTotal,targetFace,targetNeck,largestIndex:S.largestIndex,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex};
+    S.canonical={left,right,nHead,nNeck,targetSkull,targetTotal,targetFace,targetNeck,largestIndex:S.largestIndex,smallestHorizIndex:S.smallestHorizIndex,bestBaseIndex:S.bestBaseIndex,revision:0};
+    markStage("canonical",{base:baseHead.label});S.canonical.revision=S.pipeline.stages.canonical.rev;
     S.v61Meta={
       bestLabel:baseHead.label,
       kept:consensus.keep.length,
@@ -1949,19 +2132,20 @@ async function buildCanonical(){
       score:consensus.scores.find(x=>x.i===S.bestBaseIndex)?.score||0,
       medianScore:consensus.medianScore,
       limit:consensus.limit,
-      horizMode: $("smallestHorizontalBase")?.checked ? "menor cabeça" : ($("largestScale").checked ? "maior cabeça" : "mediana"),
+      horizMode:"menor cabeça",
       horizLabel: smallestPoolHead?.label || "—",
       smallClipped: smallScale.clipped,
       largeClipped: v6Scale.clipped
     };
 
+    v81PrepareSmartRemapPlans();
     prepareExperimentalFaceAlign();
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V7.1 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V6.1.1 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V6.1.1 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V8.4 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V8.4 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V8.4 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -1970,9 +2154,11 @@ async function buildCanonical(){
       if(i%2===1){status("canonicalStatus",`Renderizando… ${i+1}/${S.heads.length}`,"warn");await sleep(0)}
     }
 
-    const q=v71AnalyzeQuality({focus:true});
-    status("canonicalStatus",`V7.5 pronta · base ${baseHead.label}${S.faceAlign?` · Face Rig ${S.faceAlign.enabled?"ON":"OFF"} · ref ${S.faceAlign.refLabel}`:""} · SmartLock ${$("v6Smart").checked?"ATIVO":"desligado"} · força ${$("warpStrength").value}%${q?` · ${q.OK} OK / ${q.WARN} atenção / ${q.OUT} outlier`:""}`,q?.OUT?"warn":"ok");
-    refreshSelectors();renderThumbs();drawPreview();updateKPIs();v71UpdateUndoButton();
+    const finish=v83ApplyFinishLockArea1();
+    markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
+    const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
+    status("canonicalStatus",`V8.4 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""}${finish?` · Finish Lock aplicado ${finish.ok}/${finish.count} · P90 ${finish.p90.toFixed(1)} px`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
     status("canonicalStatus","Erro: "+e.message,"bad");
@@ -1998,7 +2184,7 @@ function canonicalLocalAtY(localY){
 function sourceYForCanonical(h,localY){
   const c=S.canonical,g=activeGeom(h),raw=h.geom;
   let src;
-  if(!$("splitNeck").checked){
+  if(!cfg("splitNeck",true)){
     src = g.topY+clamp(localY/c.targetTotal,0,1)*g.totalHeight;
   }else if(localY<=c.targetFace){
     const srcFaceLocal=S.faceAlign ? faceLocalSourceExperimental(h,localY) : clamp(localY/c.targetFace,0,1)*g.faceHeight;
@@ -2033,14 +2219,17 @@ function computeWarpStats(h){
     yTotal:c.targetTotal/g.totalHeight,
     localVariation:Math.max(Math.abs(min/med-1),Math.abs(max/med-1)),
     globalX:global,
-    geomSource:g.source||'raw'
+    geomSource:g.source||'raw',
+    remapRisk:h.remapPlan?.headRisk||0,
+    remapBase:cfg("warpStrength",6)/100,
+    remapMax:cfg("smartRemap",true)?cfg("smartRemapMax",24)/100:cfg("warpStrength",6)/100
   };
 }
 
 
 function faceRegionProtection(h,srcY){
   const g=activeGeom(h);
-  if(!$("adaptiveFace").checked)return 1;
+  if(!cfg("adaptiveFace",true))return 1;
   if(srcY>g.jawY)return 1;
   const rel=(srcY-g.topY)/Math.max(1,g.faceHeight);
   if(rel>=.28 && rel<=.60) return .34; // olhos
@@ -2048,8 +2237,8 @@ function faceRegionProtection(h,srcY){
   if(rel<.14) return .72;              // topo da cabeça
   return 1;
 }
-function clampLocalScale(globalScale,localScale){
-  const maxDev=Number($("maxLocalX").value)/100;
+function clampLocalScale(globalScale,localScale,adaptiveMax=null){
+  const maxDev=adaptiveMax??(cfg("maxLocalX",8)/100);
   return clamp(localScale, globalScale*(1-maxDev), globalScale*(1+maxDev));
 }
 function drawRowSegment(ctx,img,srcY,sx0,sx1,dx0,dx1,destY){
@@ -2070,7 +2259,7 @@ function drawRowSegment(ctx,img,srcY,sx0,sx1,dx0,dx1,destY){
 
 function edgeBandBounds(h,p){
   const srcW=Math.max(1,p.r-p.l);
-  let band=Number($("edgeBand").value)/100;
+  let band=cfg("edgeBand",18)/100;
   if(S.faceAlign && h.faceRig)band=Math.max(band,S.faceAlign.featherFrac||0);
   const edgeW=srcW*band;
   const innerL=p.l+edgeW;
@@ -2087,7 +2276,7 @@ function rigidInnerDest(globalL,globalR,finalL,finalR,p,innerL,innerR){
   const gmap = x => globalCenter + ((x - (p.l+p.r)/2) / srcW) * (globalR-globalL);
   const gInnerL=gmap(innerL), gInnerR=gmap(innerR);
 
-  const rigidity=Number($("innerRigidity").value)/100; // 1 = totalmente rígido
+  const rigidity=cfg("innerRigidity",88)/100; // 1 = totalmente rígido
   const edgeDrivenL = lerp(finalL, finalR, (innerL-p.l)/srcW);
   const edgeDrivenR = lerp(finalL, finalR, (innerR-p.l)/srcW);
 
@@ -2099,7 +2288,7 @@ function rigidInnerDest(globalL,globalR,finalL,finalR,p,innerL,innerR){
 
 function safeCoreBounds(h,p){
   const srcW=Math.max(1,p.r-p.l);
-  const keep=Number($("coreProtect").value)/100;
+  const keep=cfg("coreProtect",72)/100;
   const coreW=srcW*keep;
   const center=clamp(h.geom.skullCenterX,p.l+coreW/2,p.r-coreW/2);
   let coreL=center-coreW/2, coreR=center+coreW/2;
@@ -2114,6 +2303,90 @@ function safeCoreBounds(h,p){
 }
 
 /* =========================================================
+   V8.4 SMART REMAP 3X
+   6% continua sendo a força-base. A força adicional depende
+   de divergência de contorno + acordo semântico + confiança
+   da geometria. O miolo continua protegido normalmente.
+========================================================= */
+function v81Smoothstep(t){t=clamp(t,0,1);return t*t*(3-2*t)}
+function v81NormalizedContourAt(h,localY){
+  const g=activeGeom(h),c=S.canonical;
+  let sy;
+  if(!cfg("splitNeck",true))sy=g.topY+clamp(localY/c.targetTotal,0,1)*g.totalHeight;
+  else if(localY<=c.targetFace)sy=g.topY+clamp(localY/c.targetFace,0,1)*g.faceHeight;
+  else sy=g.jawY+clamp((localY-c.targetFace)/Math.max(1,c.targetNeck),0,1)*g.neckHeight;
+  sy=clamp(sy,h.geom.topY,h.geom.neckBottomY);
+  const p=sampleProfile(h,sy),sw=Math.max(1,g.skullWidth);
+  return {l:(p.l-g.skullCenterX)/sw,r:(p.r-g.skullCenterX)/sw,p,sy};
+}
+function v81SemanticContourRisk(h){
+  const peers=S.heads.filter(x=>x!==h&&x.sheet===h.sheet&&x.col===h.col);
+  if(!peers.length||!S.canonical)return 0;
+  const vals=[];
+  for(let i=5;i<43;i++){
+    const t=i/47,ly=t*S.canonical.targetFace,cur=v81NormalizedContourAt(h,ly);
+    const pl=peers.map(x=>v81NormalizedContourAt(x,ly));
+    const ml=median(pl.map(x=>x.l)),mr=median(pl.map(x=>x.r));
+    vals.push(Math.max(Math.abs(cur.l-ml),Math.abs(cur.r-mr)));
+  }
+  const p85=percentile(vals,.85);
+  return v81Smoothstep((p85-.010)/.050);
+}
+function v81BuildSmartRemapPlan(h){
+  if(!S.canonical)return null;
+  const N=96,devs=[];
+  for(let i=0;i<N;i++){
+    const ly=S.canonical.targetTotal*i/(N-1),can=canonicalLocalAtY(ly),cur=v81NormalizedContourAt(h,ly);
+    devs.push(Math.max(Math.abs(can.l-cur.l),Math.abs(can.r-cur.r)));
+  }
+  const smooth=smoothNumeric(devs,7),p50=percentile(smooth,.50),p85=percentile(smooth,.85),p95=percentile(smooth,.95);
+  const contourRisk=v81Smoothstep((p85-.012)/.060);
+  const semanticRisk=v81SemanticContourRisk(h);
+  const profileConf=clamp(h.profile?.profileConfidence??.72,0,1);
+  const geomConf=h.geometryEngine==="v2"?clamp((h.geomV2?.chinConfidence||.5)*.45+(h.geomV2?.neckConfidence||.5)*.20+profileConf*.35,0,1):clamp(.62+profileConf*.25,0,1);
+  const fallbackPenalty=h.engineFallback?.88:1;
+  const trust=clamp(geomConf*fallbackPenalty,.35,1);
+  const headRisk=clamp((contourRisk*.72+semanticRisk*.28)*(.48+.52*trust),0,1);
+  const rowRisk=smooth.map(d=>clamp((v81Smoothstep((d-.008)/.070)*.62+headRisk*.38)*(.55+.45*trust),0,1));
+  return {p50,p85,p95,contourRisk,semanticRisk,trust,headRisk,rowRisk,n:N,canonicalRevision:S.canonical.revision};
+}
+function v81PrepareSmartRemapPlans(){
+  if(!S.canonical)return;
+  for(const h of S.heads)h.remapPlan=v81BuildSmartRemapPlan(h);
+  v81UpdateSmartRemapStatus();
+}
+function v81SmartRiskAt(h,localY){
+  const plan=h.remapPlan;
+  if(!plan||plan.canonicalRevision!==S.canonical?.revision){h.remapPlan=v81BuildSmartRemapPlan(h)}
+  const p=h.remapPlan;if(!p)return 0;
+  const pos=clamp(localY/Math.max(1,S.canonical.targetTotal),0,1)*(p.n-1),i0=Math.floor(pos),i1=Math.min(p.n-1,i0+1),t=pos-i0;
+  return lerp(p.rowRisk[i0]||0,p.rowRisk[i1]||0,t);
+}
+function v81EffectiveRemap(h,localY,srcY){
+  const base=clamp(cfg("warpStrength",6)/100,0,1);
+  if(!cfg("smartRemap",true))return {strength:base,risk:0,capPct:cfg("cap",3),maxLocal:cfg("maxLocalX",8)/100};
+  let risk=v81SmartRiskAt(h,localY);
+  const g=activeGeom(h);
+  // Pescoço varia mais naturalmente: permite ganho, mas de forma mais conservadora.
+  if(srcY>=g.jawY)risk*=.78;
+  const maxStrength=Math.max(base,clamp(cfg("smartRemapMax",24)/100,base,.60));
+  const strength=lerp(base,maxStrength,risk);
+  const capPct=cfg("cap",3)*(1+risk*.95); // 3% -> até ~5.85%, apenas quando necessário
+  const maxLocal=(cfg("maxLocalX",8)/100)*(1+risk*.55);
+  return {strength,risk,capPct,maxLocal};
+}
+function v81UpdateSmartRemapStatus(){
+  const el=$("smartRemapStatus");if(!el)return;
+  if(!cfg("smartRemap",true)){el.textContent=`Smart Remap 3X desligado · força fixa ${cfg("warpStrength",6)}%.`;return}
+  const plans=S.heads.map(h=>h.remapPlan).filter(Boolean);
+  if(!plans.length){el.textContent=`Smart Remap 3X ativo · ${cfg("warpStrength",6)}% base · auto até ${cfg("smartRemapMax",24)}%.`;return}
+  const risks=plans.map(p=>p.headRisk),high=risks.filter(r=>r>.55).length,med=risks.filter(r=>r>.25&&r<=.55).length;
+  const avg=risks.reduce((a,b)=>a+b,0)/risks.length;
+  const effective=cfg("warpStrength",6)+(cfg("smartRemapMax",24)-cfg("warpStrength",6))*avg;
+  el.textContent=`Smart Remap 3X · ${cfg("warpStrength",6)}% base · teto ${cfg("smartRemapMax",24)}% · ${high} cabeça(s) pedem correção forte · ${med} moderada(s) · força média estimada ${effective.toFixed(1)}%.`;
+}
+
+/* =========================================================
    SCANLINE WARP
 ========================================================= */
 function makeWarpedCanvas(h,size=720){
@@ -2122,10 +2395,10 @@ function makeWarpedCanvas(h,size=720){
   if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
   const fit=(size*.78)/c.targetTotal,top=size*.10,center=size/2;
   const bottom=top+c.targetTotal*fit;
-  const strength=Number($("warpStrength").value)/100;
+  const baseStrength=cfg("warpStrength",6)/100;
   const globalX=c.targetSkull/h.geom.skullWidth;
   const gmap=x=>center+(x-h.geom.skullCenterX)*globalX*fit;
-  const preserveInner=$("preserveInnerFace").checked;
+  const preserveInner=cfg("preserveInnerFace",true);
 
   for(let y=Math.floor(top);y<=Math.ceil(bottom);y++){
     const localY=clamp((y-top)/fit,0,c.targetTotal);
@@ -2140,7 +2413,8 @@ function makeWarpedCanvas(h,size=720){
     const globalR=gmap(p.r);
     const globalScale=(globalR-globalL)/srcW;
 
-    let rowStrength=strength*faceRegionProtection(h,srcY);
+    const smart=v81EffectiveRemap(h,localY,srcY);
+    let rowStrength=smart.strength*faceRegionProtection(h,srcY);
     if(h.manualRedo){
       const ag=activeGeom(h);
       const relTotal=(srcY-ag.topY)/Math.max(1,ag.totalHeight);
@@ -2149,16 +2423,16 @@ function makeWarpedCanvas(h,size=720){
     }
     let corrL=(canL-globalL)*rowStrength;
     let corrR=(canR-globalR)*rowStrength;
-    if($("v6Smart")?.checked){
-      corrL=v6CapCorrection(v6Deadzone(corrL),fit);
-      corrR=v6CapCorrection(v6Deadzone(corrR),fit);
+    if(cfg("smartLock",true)){
+      corrL=v6CapCorrection(v6Deadzone(corrL),fit,smart.capPct);
+      corrR=v6CapCorrection(v6Deadzone(corrR),fit,smart.capPct);
     }
     const desiredL=globalL+corrL;
     const desiredR=globalR+corrR;
     const desiredCenter=(desiredL+desiredR)/2;
 
     const wantedScale=(desiredR-desiredL)/srcW;
-    const finalScale=clampLocalScale(globalScale,wantedScale);
+    const finalScale=clampLocalScale(globalScale,wantedScale,smart.maxLocal);
 
     const globalCenter=(globalL+globalR)/2;
     const maxShift=srcW*globalScale*.10;
@@ -2169,7 +2443,7 @@ function makeWarpedCanvas(h,size=720){
 
     let leftOuter=gmap(0)+shift*.22;
     let rightOuter=gmap(h.w)+shift*.22;
-    if($("v6Smart")?.checked){
+    if(cfg("smartLock",true)){
       finalL=v6SnapPx(finalL); finalR=v6SnapPx(finalR);
       leftOuter=v6SnapPx(leftOuter); rightOuter=v6SnapPx(rightOuter);
     }
@@ -2196,7 +2470,7 @@ function makeWarpedCanvas(h,size=720){
       }
       innerDL=clamp(innerDL, finalL+srcW*globalScale*.03, finalR-srcW*globalScale*.20);
       innerDR=clamp(innerDR, innerDL+srcW*globalScale*.12, finalR-srcW*globalScale*.03);
-      if($("v6Smart")?.checked){innerDL=v6SnapPx(innerDL);innerDR=v6SnapPx(innerDR)}
+      if(cfg("smartLock",true)){innerDL=v6SnapPx(innerDL);innerDR=v6SnapPx(innerDR)}
 
       const srcAnch=[0,p.l,innerL,innerR,p.r,h.w];
       const dstAnch=[leftOuter,finalL,innerDL,innerDR,finalR,rightOuter];
@@ -2248,7 +2522,7 @@ function makeWarpedCanvas(h,size=720){
       coreCenter=(finalL+finalR)/2;
     }
     let coreDL=coreCenter-halfCore, coreDR=coreCenter+halfCore;
-    if($("v6Smart")?.checked){coreDL=v6SnapPx(coreDL);coreDR=v6SnapPx(coreDR)}
+    if(cfg("smartLock",true)){coreDL=v6SnapPx(coreDL);coreDR=v6SnapPx(coreDR)}
 
     const srcAnch=[0,p.l,coreL,coreR,p.r,h.w];
     const dstAnch=[leftOuter,finalL,coreDL,coreDR,finalR,rightOuter];
@@ -2356,8 +2630,8 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V7.5 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
-    `${h.quality?`Fiscal V7.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
+    `V8.4 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `${h.quality?`QA V8.4: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
 }
@@ -2382,8 +2656,8 @@ function visibleIndices(){
 function step(dir){
   const a=visibleIndices();if(!a.length)return;
   let p=a.indexOf(S.currentIndex);p=p<0?0:(p+dir+a.length)%a.length;
-  S.currentIndex=a[p];$("currentSel").value=String(S.currentIndex);
-  drawPreview();renderThumbs();v71UpdateUndoButton();
+  const old=S.currentIndex;S.currentIndex=a[p];$("currentSel").value=String(S.currentIndex);
+  drawPreview();updateActiveThumb(old,S.currentIndex);v71UpdateUndoButton();
 }
 function startPlayer(){
   stopPlayer();if(!S.heads.length)return;
@@ -2398,25 +2672,23 @@ function stopPlayer(){
   if($("play"))$("play").textContent="▶ Play";
   if($("playExtra"))$("playExtra").textContent="▶ Play";
 }
-function renderThumbs(){
-  const wrap=$("heads");wrap.innerHTML="";
-  S.heads.forEach((h,i)=>{
-    const d=document.createElement("div");
-    const q=h.quality;
-    d.className="thumb"+(i===S.currentIndex?" active":"")+(i===S.largestIndex?" largest":"")+(q?.level==='OUT'?" suspectOut":q?.level==='WARN'?" suspectWarn":"");
-    const c=canvas(100,100),ctx=c.getContext("2d");
-    if(h.warped)ctx.drawImage(h.warped,0,0,100,100);
-    else{
-      const sc=Math.min(90/h.w,90/h.h);ctx.drawImage(h.transparent,(100-h.w*sc)/2,(100-h.h*sc)/2,h.w*sc,h.h*sc);
-    }
-    d.appendChild(c);
-    const t=document.createElement("div");t.textContent=h.label;d.appendChild(t);
-    if(q){const qb=document.createElement("span");qb.className=`qualityBadge ${q.level==='OUT'?'out':q.level==='WARN'?'warn':'ok'}`;qb.textContent=q.level==='WARN'?'!':q.level;qb.title=`${q.reason} · score ${q.score.toFixed(2)}`;d.appendChild(qb)}
-    if(h.warpStats){const b=document.createElement("span");b.className="badge";b.textContent=`Y ${h.warpStats.yHead.toFixed(2)} · X ${h.warpStats.xMedian.toFixed(2)}${h.manualRedo?" · REF":""}${h.warpStats.geomSource==="guarded"?" · guard":""}`;d.appendChild(b)}
-    d.onclick=()=>{S.currentIndex=i;$("currentSel").value=String(i);drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton()};
-    wrap.appendChild(d);
-  });
+function buildThumbNode(h,i){
+  const d=document.createElement("div");d.className="thumb";const c=canvas(100,100);d.appendChild(c);const t=document.createElement("div");d.appendChild(t);const badges=document.createElement("div");d.appendChild(badges);d._canvas=c;d._title=t;d._badges=badges;d.onclick=()=>{const old=S.currentIndex;S.currentIndex=i;$("currentSel").value=String(i);drawPreview();updateActiveThumb(old,i);updateDiagnostics();v71UpdateUndoButton()};return d;
 }
+function updateThumbAt(i,force=false){
+  const h=S.heads[i],d=S.thumbNodes[i];if(!h||!d)return;const q=h.quality,key=`${h.renderRevision||0}|${h.manualRedo?1:0}|${q?.level||""}|${h.geometryEngine}|${q?.score?.toFixed(2)||""}`;
+  if(force||d._key!==key){const ctx=d._canvas.getContext("2d");ctx.clearRect(0,0,100,100);if(h.warped)ctx.drawImage(h.warped,0,0,100,100);else{const sc=Math.min(90/h.w,90/h.h);ctx.drawImage(h.transparent,(100-h.w*sc)/2,(100-h.h*sc)/2,h.w*sc,h.h*sc)}d._title.textContent=h.label;d._badges.innerHTML="";
+    if(q){const qb=document.createElement("span");qb.className=`qualityBadge ${q.level==="REVIEW"?"out":q.level==="WARN"?"warn":"ok"}`;qb.textContent=q.level==="WARN"?"!":q.level;qb.title=`${q.reason} · score ${q.score.toFixed(2)}`;d._badges.appendChild(qb)}
+    const eb=document.createElement("span");eb.className="engineBadge";eb.textContent=h.geometryEngine.toUpperCase()+(h.engineFallback?"↩":"");d._badges.appendChild(eb);
+    if(h.warpStats){const b=document.createElement("span");b.className="badge";b.textContent=`Y ${h.warpStats.yHead.toFixed(2)} · X ${h.warpStats.xMedian.toFixed(2)}${h.manualRedo?" · REF":""}`;d._badges.appendChild(b)}d._key=key;
+  }
+  d.className="thumb"+(i===S.currentIndex?" active":"")+(i===S.largestIndex?" largest":"")+(q?.level==="REVIEW"?" suspectOut":q?.level==="WARN"?" suspectWarn":"");
+}
+function renderThumbs(force=false){
+  const wrap=$("heads");if(force||S.thumbNodes.length!==S.heads.length){wrap.innerHTML="";S.thumbNodes=S.heads.map((h,i)=>{const d=buildThumbNode(h,i);wrap.appendChild(d);return d});force=true}
+  for(let i=0;i<S.heads.length;i++)updateThumbAt(i,force);
+}
+function updateActiveThumb(oldIndex=null,newIndex=S.currentIndex){if(Number.isInteger(oldIndex)&&S.thumbNodes[oldIndex])updateThumbAt(oldIndex);if(S.thumbNodes[newIndex])updateThumbAt(newIndex)}
 function updateKPIs(){
   $("kTotal").textContent=S.heads.length;
   $("kA").textContent=S.heads.filter(h=>h.sheet==="A").length;
@@ -2429,113 +2701,61 @@ function updateKPIs(){
    DETECT ALL
 ========================================================= */
 async function detectAll(){
-  stopPlayer();S.canonical=null;S.qualitySummary=null;if($("qualityStatus"))status("qualityStatus","Fiscal de estabilidade aguardando o molde.","");
+  stopPlayer();setEngineConfig();
+  S.canonical=null;S.qualitySummary=null;S.reviewIndex=-1;if($("reviewPanel"))$("reviewPanel").hidden=true;
   const fa=$("fileA").files[0],fb=$("fileB").files[0],fc=$("fileC").files[0];
-  if(!fa&&!fb&&!fc){status("detectStatus","Escolha pelo menos uma folha.","bad");return}
+  if(!fa&&!fb&&!fc){status("detectStatus","Escolha pelo menos uma folha.","bad");S.pipeline.lastReason="nenhuma folha carregada";updatePipelineUI();return}
   $("detect").disabled=true;
   try{
-    const modeLabel=usingChroma2()?"Chroma 2":"chroma clássico";
-    status("detectStatus",`Analisando em modo ${modeLabel}…`,"warn");log(`Iniciando detecção em modo ${modeLabel}.`);
+    S.pipeline=newPipeline();setEngineConfig();markStage("input",{files:[!!fa,!!fb,!!fc]});
+    status("detectStatus",cfg("inputEngine","classic")==="auto"?"AUTO experimental: avaliando segmentação e grid…":`Detectando com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");log(`V8.4 detecção: modo ${cfg("inputEngine","classic")}.`);
     const [ia,ib,ic]=await Promise.all([loadFile(fa),loadFile(fb),loadFile(fc)]);
     S.sheets={A:null,B:null,C:null};S.heads=[];
-    if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count}`)}
-    if(ib){S.sheets.B=await detectSheet(ib,"B");log(`B: ${S.sheets.B.count}`)}
-    if(ic){S.sheets.C=await detectSheet(ic,"C");log(`C: ${S.sheets.C.count}`)}
+    if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count} · ${S.sheets.A.engine} · grid ${S.sheets.A.grid.confidence.toFixed(0)}`)}
+    if(ib){S.sheets.B=await detectSheet(ib,"B");log(`B: ${S.sheets.B.count} · ${S.sheets.B.engine} · grid ${S.sheets.B.grid.confidence.toFixed(0)}`)}
+    if(ic){S.sheets.C=await detectSheet(ic,"C");log(`C: ${S.sheets.C.count} · ${S.sheets.C.engine} · grid ${S.sheets.C.grid.confidence.toFixed(0)}`)}
+    markStage("segmentation",{engines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>[k,S.sheets[k].engine]))});
+    markStage("detection",{grids:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>[k,S.sheets[k].grid.confidence]))});
 
-    for(const name of ["A","B","C"]){
-      const sh=S.sheets[name];if(!sh)continue;
-      for(let i=0;i<sh.boxes.length;i++){
-        try{S.heads.push(cropHead(sh,sh.boxes[i],i))}
-        catch(e){log(`${name}-${i+1}: ${e.message}`)}
-        if(i%4===3)await sleep(0);
-      }
-    }
-
+    for(const name of MODEL_SCHEMA.sheets){const sh=S.sheets[name];if(!sh)continue;for(let i=0;i<sh.boxes.length;i++){try{S.heads.push(cropHead(sh,sh.boxes[i],i))}catch(e){log(`${name}-${i+1}: ${e.message}`)}if(i%4===3)await sleep(0)}}
+    v8SelectGeometryEngines();markStage("geometry",{v2:S.heads.filter(h=>h.geometryEngine==="v2").length,v75:S.heads.filter(h=>h.geometryEngine==="v75").length});markStage("profile",{});
     S.currentIndex=0;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
-    refreshSelectors();renderThumbs();drawPreview();updateKPIs();
-    const expected=Number($("expected").value),problems=[];
-    if(S.sheets.A&&S.sheets.A.count!==expected)problems.push(`A=${S.sheets.A.count}`);
-    if(S.sheets.B&&S.sheets.B.count!==expected)problems.push(`B=${S.sheets.B.count}`);
-    if(S.sheets.C&&S.sheets.C.count!==expected)problems.push(`C=${S.sheets.C.count}`);
-
+    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();
+    const expected=cfg("expected",MODEL_SCHEMA.headsPerSheet),problems=[];
+    for(const k of MODEL_SCHEMA.sheets){const sh=S.sheets[k];if(!sh)continue;if(sh.count!==expected)problems.push(`${k}=${sh.count}/${expected}`);if(expected===MODEL_SCHEMA.headsPerSheet&&!sh.grid.valid)problems.push(`${k}: grid ${Math.round(sh.grid.confidence)}/100`)}
+    const eng=MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>`${k} ${S.sheets[k].engine.toUpperCase()} (${Math.round(S.sheets[k].grid.confidence)})`).join(" · ");
+    if($("inputEngineStatus"))$("inputEngineStatus").textContent=(cfg("inputEngine","classic")==="auto"?"Escolha automática: ":"Engine usada: ")+eng;
     if(!S.heads.length)status("detectStatus","Nenhuma cabeça detectada.","bad");
-    else if(problems.length)status("detectStatus",`Detectei ${S.heads.length}, mas ${problems.join(", ")} não bate com o esperado. Confira as caixas.`,"warn");
-    else status("detectStatus",`Pronto: ${S.heads.length} cabeças detectadas (${usingChroma2()?"Chroma 2":"chroma clássico"}).`,"ok");
-
-    status("canonicalStatus","Clique em “Construir molde e alinhar tudo”.","");
-  }catch(e){
-    console.error(e);log("ERRO DETECT: "+(e.stack||e.message));status("detectStatus","Erro: "+e.message,"bad");
-  }finally{$("detect").disabled=false}
+    else if(problems.length)status("detectStatus",`Detecção concluída, mas exige revisão: ${problems.join(" · ")}.`,"warn");
+    else status("detectStatus",`Pronto: ${S.heads.length} cabeças · grid estrutural validado.`,"ok");
+    S.pipeline.lastReason=problems.length?"detecção/grid precisa de revisão":"detecção pronta; construir canonical";
+    invalidateFrom("canonical",S.pipeline.lastReason); // preserva input→profile, invalida somente o que vem depois
+    status("canonicalStatus","Clique em “Construir molde e alinhar tudo” ou use Processar tudo.",problems.length?"warn":"");
+  }catch(e){console.error(e);log("ERRO DETECT: "+(e.stack||e.message));status("detectStatus","Erro: "+e.message,"bad");S.pipeline.lastReason=e.message;updatePipelineUI()}
+  finally{$("detect").disabled=false;updatePreflight()}
 }
 
-
 async function v71QuickProcess(){
-  if(S.quickProcessing)return;
-  S.quickProcessing=true;
-  const btn=$("quickProcess");
-  btn.disabled=true;
+  if(S.quickProcessing)return;S.quickProcessing=true;const btn=$("quickProcess");btn.disabled=true;
   try{
-    await detectAll();
-    if(!S.heads.length)return;
-    const expected=Number($("expected").value);
-    const expectedTotal=(S.sheets.A?expected:0)+(S.sheets.B?expected:0)+(S.sheets.C?expected:0);
-    if(S.heads.length!==expectedTotal){
-      status("canonicalStatus",`Fluxo rápido parou: detectei ${S.heads.length}/${expectedTotal}. Confira as caixas antes de construir o molde.`,"warn");
-      return;
-    }
+    await detectAll();if(!S.heads.length)return;
+    const expected=cfg("expected",MODEL_SCHEMA.headsPerSheet),loaded=MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]);
+    const expectedTotal=loaded.length*expected,gridBad=expected===MODEL_SCHEMA.headsPerSheet&&loaded.some(k=>!S.sheets[k].grid.valid);
+    if(S.heads.length!==expectedTotal||gridBad){S.pipeline.lastReason=gridBad?"grid 7×3 precisa de revisão":"quantidade detectada não confere";updatePipelineUI();status("canonicalStatus",`Processar tudo parou: ${S.pipeline.lastReason}.`,`warn`);return}
     await buildCanonical();
-  }finally{
-    S.quickProcessing=false;
-    btn.disabled=false;
-  }
+  }finally{S.quickProcessing=false;btn.disabled=false}
 }
 
 /* =========================================================
    MODELO / NOMES FIXOS
 ========================================================= */
 const MODEL_EXPORT={
-  width:1920,
-  height:1080,
-  anchorX:960,
-  anchorY:346,
-  baseScale:1.1,
-  emotions:{
-    A:[
-      "normal",
-      "sorrindo_de_canto",
-      "surpresa",
-      "envergonhada",
-      "impressionada",
-      "indignada",
-      "desconfiada"
-    ],
-    B:[
-      "sorriso_maligno",
-      "nojo",
-      "orgulhosa",
-      "cansada",
-      "animada",
-      "ciumenta",
-      "aliviada"
-    ],
-    C:[
-      "pt_desconfiada",
-      "pt_surpresa",
-      "pt_impressionada",
-      "pt_envergonhada",
-      "pt_sorrindo_de_canto",
-      "pt_sorriso_maligno_de_canto",
-      "pt_ciumenta"
-    ]
-  },
-  variants:["","_blink","_talk"]
+  width:MODEL_SCHEMA.export.width,height:MODEL_SCHEMA.export.height,anchorX:MODEL_SCHEMA.export.anchorX,anchorY:MODEL_SCHEMA.export.anchorY,baseScale:MODEL_SCHEMA.export.baseScale,
+  emotions:MODEL_SCHEMA.emotions,variants:MODEL_SCHEMA.variants
 };
 
 function getModelNumber(){
   return clamp(Math.round(Number($("modelNumber")?.value||13)),1,99999);
-}
-function getModelGender(){
-  return $("modelGender")?.value==="masculino" ? "masculino" : "feminino";
 }
 function getModelFolderName(){
   return `modelo-${getModelNumber()}`;
@@ -2545,8 +2765,8 @@ function expressionFilename(h){
   if(!list)return `${h.label.toLowerCase()}.png`;
 
   const zero=Math.max(0,h.order-1);
-  const row=Math.floor(zero/7);
-  const col=zero%7;
+  const row=Number.isInteger(h.row)?h.row:Math.floor(zero/MODEL_SCHEMA.cols);
+  const col=Number.isInteger(h.col)?h.col:zero%MODEL_SCHEMA.cols;
   const emotion=list[col]||`expressao_${col+1}`;
   const suffix=MODEL_EXPORT.variants[row]??`_${row}`;
   return `${emotion}${suffix}.png`;
@@ -2554,8 +2774,8 @@ function expressionFilename(h){
 function expressionMeta(h){
   const list=MODEL_EXPORT.emotions[h.sheet]||[];
   const zero=Math.max(0,h.order-1);
-  const row=Math.floor(zero/7);
-  const col=zero%7;
+  const row=Number.isInteger(h.row)?h.row:Math.floor(zero/MODEL_SCHEMA.cols);
+  const col=Number.isInteger(h.col)?h.col:zero%MODEL_SCHEMA.cols;
   return {
     row,
     col,
@@ -2657,29 +2877,22 @@ function faceRigVerticalEnvelope(localY,cfg){
   const exit=1-smoothstep01((rel-.90)/.075);
   return enter*exit;
 }
-function faceRigHorizontalWeight(t,featherFrac){
-  t=clamp(t,0,1);
-  const f=clamp(featherFrac,.04,.30);
-  if(t<f)return smoothstep01(t/f);
-  if(t>1-f)return smoothstep01((1-t)/f);
-  return 1;
-}
 function prepareExperimentalFaceAlign(){
-  const enabled=!!$("faceRigEnable")?.checked,useEye=!!$("faceRigEye")?.checked,useMouth=!!$("faceRigMouth")?.checked;
+  const enabled=cfg("faceRigEnable",false),useEye=cfg("faceRigEye",false),useMouth=cfg("faceRigMouth",false);
   if(!S.canonical||!S.heads.length||!enabled||!useEye){S.faceAlign=null;return null}
 
   const refs={};
-  for(const row of [0,1,2]){
+  for(let row=0;row<MODEL_SCHEMA.rows;row++){
     const idx=findNormalReferenceForVariant(row),h=S.heads[idx];
     refs[row]={idx,label:h.label,eye:featureInkProfile(h,"eye"),mouth:featureInkProfile(h,"mouth")};
   }
-  const cfg={
+  const rigCfg={
     enabled:true,useEye,useMouth,
-    confidenceGate:!!$("faceRigConfidence")?.checked,
-    strength:Number($("faceRigStrength").value||64)/100,
-    deadRel:Number($("faceRigDead").value||.5)/100,
-    maxRel:Number($("faceRigMax").value||3)/100,
-    featherFrac:Number($("faceRigFeather").value||14)/100,
+    confidenceGate:cfg("faceRigConfidence",false),
+    strength:cfg("faceRigStrength",64)/100,
+    deadRel:cfg("faceRigDead",.5)/100,
+    maxRel:cfg("faceRigMax",3)/100,
+    featherFrac:cfg("faceRigFeather",14)/100,
     refs,activeCount:0
   };
 
@@ -2701,43 +2914,64 @@ function prepareExperimentalFaceAlign(){
     }
 
     if(h===S.heads[ref.idx]){deltaRel=0;confidence=1}
-    if(cfg.confidenceGate && confidence<.42)deltaRel=0;
-    deltaRel=faceRigApplyDeadzoneRel(deltaRel,cfg.deadRel);
-    deltaRel=clamp(deltaRel,-cfg.maxRel,cfg.maxRel)*cfg.strength;
+    if(rigCfg.confidenceGate && confidence<.42)deltaRel=0;
+    deltaRel=faceRigApplyDeadzoneRel(deltaRel,rigCfg.deadRel);
+    deltaRel=clamp(deltaRel,-rigCfg.maxRel,rigCfg.maxRel)*rigCfg.strength;
     if(Math.abs(deltaRel)<.0007)deltaRel=0;
 
     const g=activeGeom(h),delta=deltaRel*g.faceHeight;
     h.faceRig={enabled:true,row,refLabel:ref.label,delta,deltaRel,confidence,eyeMatch,mouthMatch,mouthAgreement};
-    if(delta)cfg.activeCount++;
+    if(delta)rigCfg.activeCount++;
   }
-  cfg.refLabel=`${refs[0].label} / ${refs[1].label} / ${refs[2].label}`;
-  S.faceAlign=cfg;
-  return cfg;
+  rigCfg.refLabel=`${refs[0].label} / ${refs[1].label} / ${refs[2].label}`;
+  S.faceAlign=rigCfg;
+  return rigCfg;
 }
-function modelMetadata(gender=getModelGender()){
+function modelMetadata(){
   const n=getModelNumber();
   return {
     name:`Modelo ${n}`,
-    gender,
+    gender:"feminino",
     type:"head-only",
     anchor:"neck-base",
     anchorX:MODEL_EXPORT.anchorX,
     anchorY:MODEL_EXPORT.anchorY,
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
-    height:MODEL_EXPORT.height
+    height:MODEL_EXPORT.height,
+    aligner:{version:"8.4",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
   if(!$("modelPreview"))return;
   const folder=getModelFolderName();
   const sheetCount=["A","B","C"].filter(k=>S.sheets?.[k]).length || 3;
-  const pngCount=sheetCount*21;
+  const pngCount=sheetCount*MODEL_SCHEMA.headsPerSheet;
   $("modelPreview").textContent=
     `Pasta: ${folder}\n`+
     `JSON: ${folder}.json\n`+
     `${pngCount} PNGs: expressão / _blink / _talk`+
     `\nFolha C: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta`;
+}
+
+function v8Preflight(){
+  const issues=[],warnings=[],loaded=MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]);
+  if(!loaded.length)issues.push("nenhuma folha carregada");
+  if(!pipelineValid("canonical"))issues.push("canonical stale ou ausente");
+  if(!pipelineValid("render"))issues.push("render stale");
+  if(!pipelineValid("qa"))issues.push("QA stale");
+  for(const k of loaded){const sh=S.sheets[k];if(sh.count!==MODEL_SCHEMA.headsPerSheet)issues.push(`Folha ${k}: ${sh.count}/${MODEL_SCHEMA.headsPerSheet} cabeças`);if(!sh.grid?.valid)issues.push(`Folha ${k}: grid 7×3 inválido (${Math.round(sh.grid?.confidence||0)}/100)`)}
+  if(S.canonical&&S.heads.some(h=>h.renderRevision!==S.pipeline.stages.render.rev))issues.push("há sprites de revisão de render diferente");
+  const unresolved=S.heads.filter(h=>h.quality?.level==="REVIEW"&&!h.reviewResolved);if(unresolved.length)issues.push(`${unresolved.length} expressão(ões) marcada(s) REVISAR`);
+  const warnHeads=S.heads.filter(h=>h.quality?.level==="WARN"&&!h.reviewResolved);if(warnHeads.length)warnings.push(`${warnHeads.length} expressão(ões) em atenção`);
+  const names=S.heads.map(expressionFilename),dupes=names.filter((n,i)=>names.indexOf(n)!==i);if(dupes.length)issues.push("naming duplicado: "+[...new Set(dupes)].join(", "));
+  const ready=!issues.length;return {ready,issues,warnings,loaded};
+}
+function updatePreflight(){
+  const pf=v8Preflight(),box=$("preflightBox"),txt=$("preflightText"),ul=$("preflightIssues");if(!box)return pf;
+  box.className="status preflight "+(pf.ready?"ok":"bad");txt.textContent=pf.ready?"READY TO EXPORT":`EXPORT BLOCKED · ${pf.issues.length} problema(s)`;ul.innerHTML="";
+  [...pf.issues,...pf.warnings.map(x=>"Aviso: "+x)].forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.appendChild(li)});
+  const override=!!$("exportOverride")?.checked;$("exportModelPackage").disabled=!pf.ready&&!override;S.pipeline.exportReady=pf.ready;return pf;
 }
 
 /* =========================================================
@@ -2840,61 +3074,9 @@ function canvasToBlob(canvasEl){
 }
 
 /* =========================================================
-   EXPORTAÇÃO DIRETA PARA O CATÁLOGO V1 DO APP
-========================================================= */
-function localDataBaseUrl(){
-  const port=Number.parseInt(location.port,10);
-  const dataPort=Number.isFinite(port)&&port>=6700&&port<6800?port+100:6800;
-  return `http://127.0.0.1:${dataPort}`;
-}
-let catalogSessionToken=null;
-async function catalogFetch(path,init={}){
-  const headers=new Headers(init.headers||{});
-  if(!catalogSessionToken){
-    const session=await fetch(`${localDataBaseUrl()}/session`,{cache:"no-store"});
-    const payload=await session.json().catch(()=>({}));
-    if(!session.ok||typeof payload.token!=="string")throw new Error("Não foi possível iniciar a sessão local do app.");
-    catalogSessionToken=payload.token;
-  }
-  headers.set("X-Gacha-Session",catalogSessionToken);
-  const response=await fetch(`${localDataBaseUrl()}${path}`,{...init,headers});
-  if(response.status===401){catalogSessionToken=null;return catalogFetch(path,init);}
-  return response;
-}
-async function nextCatalogModelNumber(gender){
-  const response=await catalogFetch(`/models/next/${gender}`,{cache:"no-store"});
-  if(!response.ok)throw new Error("Não foi possível consultar o próximo número de modelo.");
-  const data=await response.json();
-  if(!Number.isInteger(data?.number)||data.number<1)throw new Error("O app retornou uma numeração de modelo inválida.");
-  return data.number;
-}
-async function uploadCatalogV1File(gender,folderName,fileName,body,contentType){
-  const response=await catalogFetch(`/models/import/${gender}/${folderName}/${encodeURIComponent(fileName)}`,{method:"POST",headers:{"Content-Type":contentType},body});
-  if(!response.ok){const detail=await response.json().catch(()=>({}));throw new Error(detail.error||`Falha ao enviar ${fileName}.`);}
-}
-async function exportToCatalogV1(){
-  if(!S.canonical||!S.heads.length){status("catalogExportStatus","Primeiro detecte as folhas e construa o molde canônico.","bad");return;}
-  const gender=getModelGender(),loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length,expectedExportHeads=loadedSheets*21;
-  if(expectedExportHeads&&S.heads.length!==expectedExportHeads){status("catalogExportStatus",`Detectei ${S.heads.length}/${expectedExportHeads} cabeças. Corrija a detecção antes de exportar.`,`bad`);return;}
-  const button=$("exportToCatalogV1");let createdTarget=null;button.disabled=true;
-  try{
-    const number=await nextCatalogModelNumber(gender);$("modelNumber").value=String(number);updateModelPreview();
-    const folderName=`modelo-${number}`;await uploadCatalogV1File(gender,folderName,`${folderName}.json`,JSON.stringify(modelMetadata(gender),null,2),"application/json");createdTarget={gender,folderName};
-    const ordered=[...S.heads].sort((a,b)=>a.sheet===b.sheet?a.order-b.order:a.sheet.localeCompare(b.sheet));
-    for(let i=0;i<ordered.length;i++){const h=ordered[i],filename=expressionFilename(h);status("catalogExportStatus",`Enviando ${i+1}/${ordered.length}\n${gender}/${folderName}/${filename}`,"warn");await uploadCatalogV1File(gender,folderName,filename,await canvasToBlob(makeModelExportFrame(h)),"image/png");if(i%3===2)await sleep(0);}
-    status("catalogExportStatus",`Concluído: ${gender}/${folderName} entrou no Catálogo V1.\n${ordered.length} PNGs + JSON`,"ok");log(`Modelo ${gender}/${folderName} enviado diretamente para o Catálogo V1.`);
-    if(window.parent&&window.parent!==window)window.parent.dispatchEvent(new CustomEvent("nymi:models-updated"));
-  }catch(e){
-    console.error(e);let cleanup="";
-    if(createdTarget)try{const response=await catalogFetch(`/models/modelos/${createdTarget.gender}/${createdTarget.folderName}`,{method:"DELETE"});if(response.ok)cleanup=" A pasta incompleta foi removida.";}catch(cleanupError){console.error("Falha ao limpar modelo incompleto",cleanupError);}
-    status("catalogExportStatus","Erro ao enviar para o Catálogo V1: "+(e.message||e)+cleanup,"bad");
-  }finally{button.disabled=false;}
-}
-
-/* =========================================================
    FRAME 1920x1080 COM ÂNCORA neck-base
 ========================================================= */
-function makeModelExportFrame(h){
+function makeModelExportFrameBase(h){
   const W=MODEL_EXPORT.width,H=MODEL_EXPORT.height;
   const out=canvas(W,H),ctx=out.getContext("2d");
   ctx.clearRect(0,0,W,H);
@@ -2920,16 +3102,20 @@ function makeModelExportFrame(h){
   return out;
 }
 
+function makeModelExportFrame(h){
+  if(h?.exportFrame && h.finishLockRevision && S.finishLock?.canonicalRevision===S.canonical?.revision) return h.exportFrame;
+  return makeModelExportFrameBase(h);
+}
+
 /* =========================================================
    EXPORTAÇÃO DO PACOTE COMPLETO
 ========================================================= */
 async function exportFullModelPackage(){
-  if(!S.canonical || !S.heads.length){
-    status("exportStatus","Primeiro detecte as folhas e construa o molde canônico.","bad");
-    return;
-  }
+  const pf=updatePreflight(),override=!!$("exportOverride")?.checked;
+  if(!pf.ready&&!override){status("exportStatus","EXPORT BLOQUEADO. Resolva o Preflight ou use o override consciente no modo avançado.","bad");return}
+  if(!S.canonical || !S.heads.length){status("exportStatus","Primeiro processe o modelo.","bad");return}
   const loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length;
-  const expectedExportHeads=loadedSheets*21;
+  const expectedExportHeads=loadedSheets*MODEL_SCHEMA.headsPerSheet;
   if(expectedExportHeads && S.heads.length!==expectedExportHeads){
     status("exportStatus",`Há ${S.heads.length} cabeças. Para ${loadedSheets} folha(s), o esperado é ${expectedExportHeads}; confira a detecção antes de exportar.`,"warn");
   }
@@ -2990,76 +3176,13 @@ async function exportFullModelPackage(){
   }
 }
 
-/* =========================================================
-   EXPORT
-========================================================= */
-function downloadCanvas(c,name){
-  c.toBlob(blob=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)},"image/png");
-}
-function exportFrame(){
-  const h=current();if(!h)return;
-  const c=S.canonical?makeWarpedCanvas(h,900):h.transparent;
-  downloadCanvas(c,h.label+"_canonical.png");
-}
-function exportSheet(){
-  if(!S.heads.length)return;
-  const ids=visibleIndices(),cell=340,cols=7,rows=Math.ceil(ids.length/cols),out=canvas(cols*cell,rows*cell),ctx=out.getContext("2d");
-  ids.forEach((id,i)=>{
-    const h=S.heads[id],c=S.canonical?makeWarpedCanvas(h,cell):h.transparent;
-    ctx.drawImage(c,(i%cols)*cell,Math.floor(i/cols)*cell,cell,cell);
-  });
-  downloadCanvas(out,"folha_canonical_alinhada.png");
-}
-function exportJson(){
-  if(!S.canonical)return;
-  const data={
-    version:"6.3-face-rig-2",
-    canonical:{
-      targetSkull:S.canonical.targetSkull,targetTotal:S.canonical.targetTotal,
-      targetFace:S.canonical.targetFace,targetNeck:S.canonical.targetNeck,
-      largest:S.heads[S.largestIndex]?.label,
-      left:S.canonical.left,right:S.canonical.right
-    },
-    heads:S.heads.map(h=>({label:h.label,sheet:h.sheet,geom:{
-      skullWidth:h.geom.skullWidth,faceHeight:h.geom.faceHeight,neckHeight:h.geom.neckHeight,totalHeight:h.geom.totalHeight
-    },warpStats:h.warpStats}))
-  };
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);a.download="canonical_head_model.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-}
-
-
 let rebuildAllWarpTimer=null;
 let rebuildAllWarpToken=0;
 
 function rebuildAllWarpNow(reason="ajuste"){
-  if(!S.canonical || !S.heads.length)return;
-  prepareExperimentalFaceAlign();
-
-  const token=++rebuildAllWarpToken;
-  status("canonicalStatus",`Aplicando ${reason} em todas as expressões…`,"warn");
-
-  let i=0;
-  const processBatch=()=>{
-    if(token!==rebuildAllWarpToken)return;
-
-    const end=Math.min(S.heads.length,i+3);
-    for(;i<end;i++){
-      S.heads[i].warped=makeWarpedCanvas(S.heads[i],720);
-    }
-
-    // Mantém a atual responsiva enquanto as demais são processadas.
-    drawPreview();
-
-    if(i<S.heads.length){
-      requestAnimationFrame(processBatch);
-    }else{
-      renderThumbs();
-      updateDiagnostics();
-      status("canonicalStatus",`Ajuste aplicado em todas as ${S.heads.length} expressões.`,"ok");
-    }
-  };
-
+  if(!S.canonical||!S.heads.length)return;setEngineConfig();prepareExperimentalFaceAlign();const token=++rebuildAllWarpToken;status("canonicalStatus",`Aplicando ${reason} em todas as expressões…`,"warn");let i=0;
+  const processBatch=()=>{if(token!==rebuildAllWarpToken)return;const end=Math.min(S.heads.length,i+3);for(;i<end;i++){const h=S.heads[i];h.warped=makeWarpedCanvas(h,720);h.warpStats=computeWarpStats(h)}drawPreview();
+    if(i<S.heads.length)requestAnimationFrame(processBatch);else{const finish=v83ApplyFinishLockArea1();markStage("render",{reason});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;const q=v8AnalyzeQuality({focus:false});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;renderThumbs();updateDiagnostics();updatePreflight();status("canonicalStatus",`Render, Finish Lock e QA atualizados em ${S.heads.length} expressões${finish?` · ${finish.ok}/${finish.count} LOCK · P90 ${finish.p90.toFixed(1)} px`:""} · ${q.REVIEW||0} revisar.`,q.REVIEW?"warn":"ok")}}
   requestAnimationFrame(processBatch);
 }
 
@@ -3068,8 +3191,8 @@ function scheduleRebuildAllWarp(reason="ajuste"){
   prepareExperimentalFaceAlign();
 
   // A expressão atual muda na hora.
-  current().warped=makeWarpedCanvas(current(),720);
-  drawPreview();
+  current().warped=makeWarpedCanvas(current(),720);current().warpStats=computeWarpStats(current());
+  drawPreview();updateThumbAt(S.currentIndex,true);
 
   // As demais são refeitas depois que o usuário para de arrastar por alguns ms.
   clearTimeout(rebuildAllWarpTimer);
@@ -3085,99 +3208,269 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
+   V8.4 — FINISH LOCK DA ÁREA 2 DENTRO DA ÁREA 1
+========================================================= */
+function v83MeasureCanvasForFinishLock(cnv){
+  const ctx=cnv.getContext("2d",{willReadFrequently:true});
+  const scanH=Math.min(cnv.height,MODEL_EXPORT.anchorY+45);
+  const data=ctx.getImageData(0,0,cnv.width,scanH).data;
+  return a2MeasurePixels(data,cnv.width,scanH);
+}
+function v83BuildFinishLockCanonical(items){
+  if(!items.length) return null;
+  return a2BuildCanonical(items.map(it=>({w:it.w,h:it.h,measure:it.measure})));
+}
+function v83RenderFinishLockCanvas(srcCanvas,measure,canonical){
+  const W=srcCanvas.width,H=srcCanvas.height,out=canvas(W,H),ctx=out.getContext("2d");
+  ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  const srcTop=measure.top,srcBottom=measure.bottom,tTop=canonical.targetTop,tBottom=canonical.targetBottom,srcSpan=Math.max(1,srcBottom-srcTop),dstSpan=Math.max(1,tBottom-tTop);
+  for(let y=tTop;y<=tBottom;y++){
+    const rel=(y-tTop)/dstSpan,sy=srcTop+rel*srcSpan,depth=tBottom-y;
+    if(depth<=canonical.depth){
+      const srcP=a2SourceProfileAt({measure},sy),target=a2ProfileAt(canonical,depth),transition=clamp((canonical.depth-depth)/Math.max(6,Math.min(14,canonical.depth*.16)),0,1),lock=transition*transition*(3-2*transition);
+      const tl=lerp(srcP.l,target.l,lock),tr=lerp(srcP.r,target.r,lock),srcL=srcP.l,srcR=Math.max(srcP.l+1,srcP.r);
+      if(srcL>0)ctx.drawImage(srcCanvas,0,sy,srcL,1,0,y,tl,1);
+      ctx.drawImage(srcCanvas,srcL,sy,srcR-srcL,1,tl,y,Math.max(1,tr-tl),1);
+      if(srcR<W)ctx.drawImage(srcCanvas,srcR,sy,W-srcR,1,tr,y,W-tr,1);
+    }else ctx.drawImage(srcCanvas,0,sy,W,1,0,y,W,1);
+  }
+  return out;
+}
+function v83VerifyFinishLockCanvas(cnv,canonical){
+  const m=v83MeasureCanvasForFinishLock(cnv),topErr=Math.abs(m.top-canonical.targetTop),depth=Math.min(canonical.depth,m.bottom-m.neckStart),errs=[];
+  const lockedDepth=Math.max(0,depth-Math.max(6,Math.min(14,canonical.depth*.16)));
+  for(let d=0;d<=lockedDepth;d+=4){const p=m.profile.get(d);if(!p)continue;const t=a2ProfileAt(canonical,d);errs.push(Math.max(Math.abs(p.l-t.l),Math.abs(p.r-t.r)))}
+  return {topErr,neckP90:errs.length?percentile(errs,.90):99,neckMax:errs.length?Math.max(...errs):99,ok:topErr<=1&&(errs.length?percentile(errs,.90)<=2:false)};
+}
+function v83ApplyFinishLockArea1(){
+  if(!S.canonical||!S.heads.length) return null;
+  const items=[];
+  for(const h of S.heads){
+    const base=makeModelExportFrameBase(h),measure=v83MeasureCanvasForFinishLock(base);
+    h.exportFrameBase=base;items.push({head:h,canvas:base,w:base.width,h:base.height,measure});
+  }
+  const canonical=v83BuildFinishLockCanonical(items); if(!canonical) return null;
+  let ok=0; const p90s=[], topErrs=[];
+  for(const it of items){
+    const final=v83RenderFinishLockCanvas(it.canvas,it.measure,canonical),verify=v83VerifyFinishLockCanvas(final,canonical);
+    it.head.exportFrame=final;it.head.finishLockVerify=verify;it.head.finishLockRevision=S.canonical.revision; if(verify.ok) ok++; p90s.push(verify.neckP90); topErrs.push(verify.topErr);
+  }
+  const summary={ok,count:items.length,p90:percentile(p90s,.90),topMax:topErrs.length?Math.max(...topErrs):0};
+  S.finishLock={canonical,summary,count:items.length,canonicalRevision:S.canonical.revision};
+  return summary;
+}
+
+/* =========================================================
+   V8.4 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+========================================================= */
+const A2={
+  files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
+  work:document.createElement("canvas"),workCtx:null
+};
+A2.workCtx=A2.work.getContext("2d",{willReadFrequently:true});
+
+function a2ExpectedNames(){
+  const out=[];
+  for(const sheet of MODEL_SCHEMA.sheets)for(let row=0;row<MODEL_SCHEMA.rows;row++)for(let col=0;col<MODEL_SCHEMA.cols;col++){
+    const base=MODEL_SCHEMA.emotions[sheet][col],suffix=MODEL_SCHEMA.variants[row]||"";out.push(`${base}${suffix}.png`);
+  }
+  return out;
+}
+function a2SortFiles(files){
+  const order=new Map(a2ExpectedNames().map((n,i)=>[n.toLowerCase(),i]));
+  return [...files].filter(f=>f.type==="image/png"||f.name.toLowerCase().endsWith(".png")).sort((a,b)=>{
+    const ia=order.has(a.name.toLowerCase())?order.get(a.name.toLowerCase()):9999,ib=order.has(b.name.toLowerCase())?order.get(b.name.toLowerCase()):9999;
+    return ia-ib||a.name.localeCompare(b.name,undefined,{numeric:true});
+  });
+}
+async function a2Bitmap(file){return await createImageBitmap(file)}
+function a2CentralSegment(data,w,y,center,alpha=18){
+  const segments=[];let start=-1;
+  for(let x=0;x<w;x++){
+    const on=data[(y*w+x)*4+3]>=alpha;
+    if(on&&start<0)start=x;
+    if((!on||x===w-1)&&start>=0){const end=(on&&x===w-1)?x:x-1;segments.push({l:start,r:end,w:end-start+1,c:(start+end)/2});start=-1}
+  }
+  if(!segments.length)return null;
+  const containing=segments.filter(s=>s.l<=center&&s.r>=center).sort((a,b)=>b.w-a.w)[0];
+  if(containing)return containing;
+  return segments.sort((a,b)=>Math.abs(a.c-center)-Math.abs(b.c-center)||b.w-a.w)[0];
+}
+function a2MeasurePixels(data,w,h){
+  const center=MODEL_EXPORT.anchorX,anchor=Math.min(h-1,MODEL_EXPORT.anchorY),rowCount=new Int32Array(Math.min(h,anchor+45));
+  let maxRow=0,left=w,right=-1,bottom=-1;
+  for(let y=0;y<rowCount.length;y++){
+    let count=0,rl=w,rr=-1;
+    for(let x=0;x<w;x++){if(data[(y*w+x)*4+3]>=18){count++;if(x<rl)rl=x;if(x>rr)rr=x}}
+    rowCount[y]=count;if(count>maxRow)maxRow=count;if(count){left=Math.min(left,rl);right=Math.max(right,rr);bottom=y}
+  }
+  const topThreshold=Math.max(3,Math.round(maxRow*.012));let top=0;
+  outer:for(let y=0;y<Math.min(rowCount.length,anchor);y++)if(rowCount[y]>=topThreshold){
+    let run=0;for(let yy=y;yy<Math.min(rowCount.length,y+4);yy++)if(rowCount[yy]>=topThreshold)run++;if(run>=3){top=y;break outer}
+  }
+  const measuredBottom=Math.max(top+1,Math.min(anchor,bottom>=0?bottom:anchor));
+  const maxWidth=Math.max(1,right-left+1),scanStart=Math.max(top+Math.round((measuredBottom-top)*.62),measuredBottom-115),rows=[];
+  for(let y=scanStart;y<=measuredBottom;y++){
+    const seg=a2CentralSegment(data,w,y,center,18);if(!seg)continue;
+    if(seg.w<=maxWidth*.52&&Math.abs(seg.c-center)<=maxWidth*.16)rows.push({y,...seg});
+  }
+  let neckStart=Math.max(scanStart,measuredBottom-70),bestRun=[],run=[];
+  for(const r of rows){if(!run.length||r.y-run[run.length-1].y<=2)run.push(r);else{if(run.length>bestRun.length)bestRun=run;run=[r]}}
+  if(run.length>bestRun.length)bestRun=run;if(bestRun.length>=6)neckStart=bestRun[0].y;
+  const profile=new Map();for(const r of rows)if(r.y>=neckStart)profile.set(measuredBottom-r.y,{l:r.l,r:r.r,w:r.w,y:r.y});
+  const baseSamples=rows.filter(r=>r.y>=measuredBottom-12);const baseL=baseSamples.length?median(baseSamples.map(r=>r.l)):center-maxWidth*.12,baseR=baseSamples.length?median(baseSamples.map(r=>r.r)):center+maxWidth*.12;
+  return {top,bottom:measuredBottom,left,right,maxWidth,neckStart,profile,baseL,baseR};
+}
+async function a2MeasureFile(file,index,total){
+  const bm=await a2Bitmap(file),w=bm.width,h=bm.height;A2.work.width=w;A2.work.height=h;A2.workCtx.clearRect(0,0,w,h);A2.workCtx.drawImage(bm,0,0);const data=A2.workCtx.getImageData(0,0,w,h).data;
+  const m=a2MeasurePixels(data,w,h);bm.close?.();status("a2Status",`Medindo ${index+1}/${total} · ${file.name}`,"warn");await sleep(0);return {file,name:file.name,w,h,measure:m,thumb:null,verify:null}
+}
+function a2SmoothSeries(a,win=5){
+  const out=[];for(let i=0;i<a.length;i++){const v=[];for(let k=Math.max(0,i-(win>>1));k<=Math.min(a.length-1,i+(win>>1));k++)if(Number.isFinite(a[k]))v.push(a[k]);out[i]=v.length?median(v):NaN}return out;
+}
+function a2BuildCanonical(items){
+  const valid=items.filter(x=>x.measure&&x.w===MODEL_EXPORT.width&&x.h===MODEL_EXPORT.height);if(!valid.length)throw new Error("Nenhuma PNG 1920×1080 válida.");
+  const targetTop=Math.round(median(valid.map(x=>x.measure.top))),targetBottom=MODEL_EXPORT.anchorY;
+  const startDepth=Math.round(clamp(median(valid.map(x=>x.measure.bottom-x.measure.neckStart)),38,105));
+  const left=[],right=[];
+  for(let d=0;d<=startDepth;d++){
+    const ls=[],rs=[];for(const it of valid){const p=it.measure.profile.get(Math.round(d*it.measure.bottom/targetBottom))||it.measure.profile.get(d);if(p){ls.push(p.l);rs.push(p.r)}}
+    left[d]=ls.length>=Math.max(4,valid.length*.35)?median(ls):NaN;right[d]=rs.length>=Math.max(4,valid.length*.35)?median(rs):NaN;
+  }
+  let sl=a2SmoothSeries(left,7),sr=a2SmoothSeries(right,7);
+  // Preenche pequenas lacunas a partir do vizinho mais próximo.
+  for(const arr of [sl,sr])for(let i=0;i<arr.length;i++)if(!Number.isFinite(arr[i])){let v=NaN;for(let r=1;r<arr.length;r++){if(i-r>=0&&Number.isFinite(arr[i-r])){v=arr[i-r];break}if(i+r<arr.length&&Number.isFinite(arr[i+r])){v=arr[i+r];break}}arr[i]=v}
+  const baseL=Math.round(median(valid.map(x=>x.measure.baseL))),baseR=Math.round(median(valid.map(x=>x.measure.baseR)));
+  if(!Number.isFinite(sl[0]))sl[0]=baseL;if(!Number.isFinite(sr[0]))sr[0]=baseR;
+  return {targetTop,targetBottom,depth:startDepth,left:sl,right:sr,baseL,baseR,width:MODEL_EXPORT.width,height:MODEL_EXPORT.height,count:valid.length};
+}
+function a2ProfileAt(c,depth){
+  const d=clamp(depth,0,c.depth),i0=Math.floor(d),i1=Math.min(c.depth,i0+1),t=d-i0;return {l:lerp(c.left[i0],c.left[i1],t),r:lerp(c.right[i0],c.right[i1],t)};
+}
+function a2SourceProfileAt(item,srcY){
+  const m=item.measure,d=m.bottom-srcY;let p=m.profile.get(Math.round(d));if(p)return p;
+  for(let r=1;r<10;r++){p=m.profile.get(Math.round(d-r))||m.profile.get(Math.round(d+r));if(p)return p}return {l:m.baseL,r:m.baseR};
+}
+async function a2RenderItem(item,{previewScale=1}={}){
+  const c=A2.canonical,bm=await a2Bitmap(item.file),W=item.w,H=item.h,out=canvas(W,H),ctx=out.getContext("2d");ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  const m=item.measure,srcTop=m.top,srcBottom=m.bottom,tTop=c.targetTop,tBottom=c.targetBottom,srcSpan=Math.max(1,srcBottom-srcTop),dstSpan=Math.max(1,tBottom-tTop);
+  // Render por scanline. Verticalmente, topo e neck-base são âncoras exatas.
+  for(let y=tTop;y<=tBottom;y++){
+    const rel=(y-tTop)/dstSpan,sy=srcTop+rel*srcSpan,depth=tBottom-y;
+    if(depth<=c.depth){
+      const srcP=a2SourceProfileAt(item,sy),target=a2ProfileAt(c,depth),transition=clamp((c.depth-depth)/Math.max(6,Math.min(14,c.depth*.16)),0,1),lock=transition*transition*(3-2*transition);
+      const tl=lerp(srcP.l,target.l,lock),tr=lerp(srcP.r,target.r,lock),srcL=srcP.l,srcR=Math.max(srcP.l+1,srcP.r);
+      // Mapeamento horizontal em três segmentos; 100% no pescoço, feather suave na entrada.
+      if(srcL>0)ctx.drawImage(bm,0,sy,srcL,1,0,y,tl,1);
+      ctx.drawImage(bm,srcL,sy,srcR-srcL,1,tl,y,Math.max(1,tr-tl),1);
+      if(srcR<W)ctx.drawImage(bm,srcR,sy,W-srcR,1,tr,y,W-tr,1);
+    }else ctx.drawImage(bm,0,sy,W,1,0,y,W,1);
+  }
+  bm.close?.();return out;
+}
+async function a2VerifyCanvas(cnv){
+  const ctx=cnv.getContext("2d",{willReadFrequently:true}),data=ctx.getImageData(0,0,cnv.width,Math.min(cnv.height,MODEL_EXPORT.anchorY+45)).data,m=a2MeasurePixels(data,cnv.width,Math.min(cnv.height,MODEL_EXPORT.anchorY+45));
+  const c=A2.canonical,topErr=Math.abs(m.top-c.targetTop),depth=Math.min(c.depth,m.bottom-m.neckStart),errs=[];
+  const lockedDepth=Math.max(0,depth-Math.max(6,Math.min(14,c.depth*.16)));
+  for(let d=0;d<=lockedDepth;d+=4){const p=m.profile.get(d);if(!p)continue;const t=a2ProfileAt(c,d);errs.push(Math.max(Math.abs(p.l-t.l),Math.abs(p.r-t.r)))}
+  return {topErr,neckP90:errs.length?percentile(errs,.90):99,neckMax:errs.length?Math.max(...errs):99,ok:topErr<=1&&(errs.length?percentile(errs,.90)<=2:false)};
+}
+async function a2CreateThumb(item){
+  const full=await a2RenderItem(item),thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);item.verify=await a2VerifyCanvas(full);item.resultBlob=await canvasToBlob(full);return thumb;
+}
+async function a2LoadFolder(){
+  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length}/63`;$("a2Process").disabled=files.length!==63;$("a2Export").disabled=true;
+  if(files.length!==63){status("a2Status",`Pasta carregada com ${files.length} PNGs. A Área 2 exige exatamente 63 imagens.`,files.length?"warn":"");a2DrawPreview();return}
+  status("a2Status","63 PNGs reconhecidas. Pronto para medir e construir o Precision Lock.","ok");a2PopulateSelect();a2DrawPreview();
+}
+function a2PopulateSelect(){const sel=$("a2Current");sel.innerHTML="";A2.files.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${String(i+1).padStart(2,"0")} · ${f.name}`;sel.appendChild(o)})}
+async function a2Process(){
+  if(A2.files.length!==63)return;$("a2Process").disabled=true;$("a2Export").disabled=true;A2.items=[];A2.thumbs=[];$("a2Heads").innerHTML="";
+  try{
+    for(let i=0;i<A2.files.length;i++)A2.items.push(await a2MeasureFile(A2.files[i],i,A2.files.length));
+    const dims=A2.items.filter(x=>x.w!==MODEL_EXPORT.width||x.h!==MODEL_EXPORT.height);if(dims.length)throw new Error(`${dims.length} PNG(s) não estão em 1920×1080.`);
+    A2.canonical=a2BuildCanonical(A2.items);$("a2TopStat").textContent=`Y ${A2.canonical.targetTop}`;$("a2NeckStat").textContent=`${Math.round(A2.canonical.baseL)} / ${Math.round(A2.canonical.baseR)}`;
+    status("a2Status","Molde construído. Aplicando Precision Lock e verificando as 63 imagens…","warn");
+    for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Lock ${i+1}/63 · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
+    A2.processed=true;const ok=A2.items.filter(x=>x.verify?.ok).length,p90=percentile(A2.items.map(x=>x.verify?.neckP90??99),.90),topMax=Math.max(...A2.items.map(x=>x.verify?.topErr??99));$("a2Precision").textContent=`${ok}/63 LOCK`;
+    $("a2GuideText").textContent=`Topo Y ${A2.canonical.targetTop} · neck-base Y ${A2.canonical.targetBottom} · pescoço base L ${Math.round(A2.canonical.baseL)} / R ${Math.round(A2.canonical.baseR)} · P90 residual ${p90.toFixed(1)} px · erro máximo de topo ${topMax.toFixed(1)} px.`;
+    status("a2Status",ok===63?"Precision Lock concluído: 63/63 dentro da tolerância de verificação.":`Precision Lock concluído: ${ok}/63 dentro da tolerância. Confira as miniaturas marcadas.`,ok===63?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
+  }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false}
+}
+function a2RenderThumbs(){
+  const wrap=$("a2Heads");wrap.innerHTML="";A2.items.forEach((it,i)=>{const d=document.createElement("div");d.className="a2Thumb"+(i===A2.currentIndex?" active":"")+(it.verify&&!it.verify.ok?" bad":"");const c=canvas(240,135);c.getContext("2d").drawImage(it.thumb,0,0);d.appendChild(c);const n=document.createElement("div");n.textContent=it.name;d.appendChild(n);if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.verify.ok?"LOCK":"REVISAR";d.appendChild(b)}d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)})
+}
+async function a2DrawPreview(){
+  const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue uma pasta com 63 PNGs",c.width/2,c.height/2);return}
+  const i=clamp(A2.currentIndex,0,A2.files.length-1),file=A2.files[i],mode=$("a2View").value,bm=await a2Bitmap(file),result=A2.processed&&A2.items[i]?.resultBlob?await createImageBitmap(A2.items[i].resultBlob):null;
+  const drawFit=(img,x,w)=>{const sc=Math.min((w-22)/img.width,(c.height-22)/img.height),dw=img.width*sc,dh=img.height*sc;ctx.drawImage(img,x+(w-dw)/2,(c.height-dh)/2,dw,dh)};
+  if(mode==="compare"&&result){drawFit(bm,0,c.width/2);drawFit(result,c.width/2,c.width/2);ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("ANTES",15,22);ctx.fillText("DEPOIS",c.width/2+15,22)}
+  else drawFit(mode==="original"||!result?bm:result,0,c.width);
+  if(result&&$("a2ShowGuide").checked&&mode!=="original"){const cc=A2.canonical,sc=Math.min((c.width-22)/MODEL_EXPORT.width,(c.height-22)/MODEL_EXPORT.height),dw=MODEL_EXPORT.width*sc,dh=MODEL_EXPORT.height*sc,ox=(c.width-dw)/2,oy=(c.height-dh)/2;ctx.save();ctx.strokeStyle="#7c3aed";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox,oy+cc.targetTop*sc);ctx.lineTo(ox+dw,oy+cc.targetTop*sc);ctx.stroke();ctx.strokeStyle="#18794e";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);if(d===0)ctx.moveTo(ox+p.l*sc,y);else ctx.lineTo(ox+p.l*sc,y)}for(let d=cc.depth;d>=0;d--){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,y)}ctx.stroke();ctx.restore()}
+  bm.close?.();result?.close?.();
+}
+function a2DrawGuide(){const c=$("a2GuideCanvas"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#101216";ctx.fillRect(0,0,c.width,c.height);if(!A2.canonical)return;const cc=A2.canonical,sx=.20,sy=.65,ox=c.width/2-MODEL_EXPORT.anchorX*sx,oy=20;ctx.strokeStyle="#9d7bd0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,oy+cc.targetTop*sy);ctx.lineTo(c.width-20,oy+cc.targetTop*sy);ctx.stroke();ctx.strokeStyle="#67d59a";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy,x=ox+p.l*sx;if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}for(let d=cc.depth;d>=0;d--){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy;ctx.lineTo(ox+p.r*sx,y)}ctx.stroke();ctx.fillStyle="#ddd";ctx.font="11px system-ui";ctx.fillText(`TOPO Y ${cc.targetTop}`,12,16);ctx.fillText(`NECK-BASE Y ${cc.targetBottom}`,12,c.height-12)}
+function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex+dir+A2.files.length)%A2.files.length;$("a2Current").value=String(A2.currentIndex);a2RenderThumbs();a2DrawPreview()}
+function a2Stop(){A2.playing=false;clearInterval(A2.timer);A2.timer=null;if($("a2Play"))$("a2Play").textContent="▶ Play"}
+function a2Start(){if(!A2.files.length)return;a2Stop();A2.playing=true;$("a2Play").textContent="⏸ Pausar";A2.timer=setInterval(()=>a2Step(1),1000/Number($("a2Fps").value||6))}
+async function a2Export(){
+  if(!A2.processed||A2.items.length!==63)return;$("a2Export").disabled=true;try{
+    if("showDirectoryPicker" in window){const dir=await window.showDirectoryPicker({mode:"readwrite",id:"nymi-area2-export"});for(let i=0;i<A2.items.length;i++){status("a2ExportStatus",`Exportando ${i+1}/63 · ${A2.items[i].name}`,"warn");const blob=A2.items[i].resultBlob||(await canvasToBlob(await a2RenderItem(A2.items[i]))),fh=await dir.getFileHandle(A2.items[i].name,{create:true}),wr=await fh.createWritable();await wr.write(blob);await wr.close();if(i%3===2)await sleep(0)}status("a2ExportStatus","Concluído: 63 PNGs pós-alinhados exportados.","ok")}
+    else{for(const it of A2.items){const blob=it.resultBlob||(await canvasToBlob(await a2RenderItem(it))),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=it.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);await sleep(80)}status("a2ExportStatus","Downloads iniciados para os 63 PNGs.","ok")}
+  }catch(e){if(e.name!=="AbortError")status("a2ExportStatus","Erro: "+e.message,"bad")}finally{$("a2Export").disabled=false}
+}
+function switchToArea2(){stopPlayer();document.body.classList.add("area2");a2DrawPreview();window.scrollTo(0,0)}
+function switchToArea1(){a2Stop();document.body.classList.remove("area2");window.scrollTo(0,0)}
+
+/* =========================================================
    EVENTS
 ========================================================= */
 function init(){
-  updateLabels();updateBgModeUI();updateFaceRigControls();drawPreview();
+  updateLabels();updateBgModeUI();updateFaceRigControls();drawPreview();setEngineConfig();v81UpdateSmartRemapStatus();updatePipelineUI();updateModelPreview();updatePreflight();
+  $("productionMode").onclick=()=>{document.body.classList.remove("advanced");$("productionMode").classList.add("primary");$("advancedMode").classList.remove("primary")};
+  $("area2Mode").onclick=switchToArea2;$("area1Back").onclick=switchToArea1;
+  $("a2Folder").onchange=a2LoadFolder;$("a2Process").onclick=a2Process;$("a2Export").onclick=a2Export;
+  $("a2Prev").onclick=()=>{a2Stop();a2Step(-1)};$("a2Next").onclick=()=>{a2Stop();a2Step(1)};$("a2Play").onclick=()=>A2.playing?a2Stop():a2Start();
+  $("a2Current").onchange=()=>{A2.currentIndex=Number($("a2Current").value||0);a2RenderThumbs();a2DrawPreview()};
+  $("a2View").onchange=a2DrawPreview;$("a2ShowGuide").onchange=a2DrawPreview;$("a2Fps").oninput=()=>{$("a2FpsV").textContent=$("a2Fps").value+" fps";if(A2.playing)a2Start()};
+  $("advancedMode").onclick=()=>{document.body.classList.add("advanced");$("advancedMode").classList.add("primary");$("productionMode").classList.remove("primary")};
 
-  ["expected","thr","warpStrength","smooth","spike","coreProtect","maxLocalX","edgeBand","innerRigidity","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather","v61Blend","v6Dead","v6Cap","v6Snap","fps"].forEach(id=>{
-    $(id).addEventListener("input",()=>{
-      updateLabels();
-      if(id==="fps"&&S.playing)startPlayer();
-      if(["warpStrength","coreProtect","maxLocalX","edgeBand","innerRigidity","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather","v61Blend","v6Dead","v6Cap","v6Snap"].includes(id)&&S.canonical){
-        const reason=
-          id==="warpStrength" ? "força do remapeamento" :
-          id==="coreProtect" ? "proteção do miolo" :
-          id==="maxLocalX" ? "limite local X" :
-          id==="edgeBand" ? "faixa lateral" :
-          id==="faceRigStrength" ? "força do Face Rig" :
-          id==="faceRigDead" ? "zona morta do Face Rig" :
-          id==="faceRigMax" ? "correção máxima do Face Rig" :
-          id==="faceRigFeather" ? "suavidade do Face Rig" :
-          id==="v61Blend" ? "influência da cabeça-base" :
-          id==="v6Dead" ? "deadzone V7.5" :
-          id==="v6Cap" ? "limite V7.5" :
-          id==="v6Snap" ? "snap subpixel V7.5" :
-          "rigidez do rosto interno";
-        scheduleRebuildAllWarp(reason);
-      }
-    });
-  });
+  const labelInputs=["expected","thr","warpStrength","smartRemapMax","smooth","spike","coreProtect","maxLocalX","edgeBand","innerRigidity","faceRigStrength","faceRigDead","faceRigMax","faceRigFeather","v61Blend","v6Dead","v6Cap","v6Snap","fps"];
+  labelInputs.forEach(id=>$(id)?.addEventListener("input",()=>{updateLabels();if(id==="smartRemapMax"||id==="warpStrength")v81UpdateSmartRemapStatus();if(id==="fps"&&S.playing)startPlayer()}));
 
-  $("quickProcess").onclick=v71QuickProcess;
-  $("detect").onclick=detectAll;
-  $("chroma2").onchange=()=>{updateBgModeUI(); if(S.heads.length)status("detectStatus","Chroma alterado. Detecte novamente as cabeças.","warn")};
-  $("chroma2ToneRange").oninput=()=>{updateLabels(); if(S.heads.length&&usingChroma2())status("detectStatus","Alcance de tons alterado. Detecte novamente as cabeças.","warn")};
-  ["faceRigEnable","faceRigEye","faceRigMouth","faceRigConfidence"].forEach(id=>$(id).onchange=()=>{
-    if(id==="faceRigEnable")updateFaceRigControls();
-    if(S.canonical){
-      prepareExperimentalFaceAlign();
-      rebuildAllWarpNow("Face Rig experimental");
-    }else if(S.heads.length){
-      status("canonicalStatus","Opção de Face Rig alterada. Clique em Construir molde e alinhar tudo.","warn");
-    }
-  });
-  $("canonical").onclick=buildCanonical;
-  $("canonicalExtra").onclick=buildCanonical;
-  $("playExtra").onclick=()=>S.playing?stopPlayer():startPlayer();
-  $("redoCurrent").onclick=redoCurrentExpression;
-  $("nextSuspect").onclick=v71NextSuspect;
-  $("undoRedo").onclick=v71UndoCurrentRedo;
-  $("currentSel").onchange=()=>{S.currentIndex=Number($("currentSel").value);drawPreview();renderThumbs();updateDiagnostics();v71UpdateUndoButton()};
-  $("scope").onchange=()=>{
-    applyScope();const a=visibleIndices();
-    if(a.length&&!a.includes(S.currentIndex)){S.currentIndex=a[0];$("currentSel").value=String(a[0])}
-    drawPreview();renderThumbs();v71UpdateUndoButton();
+  const invalidate=(stage,reason,{autoRender=false}={})=>{setEngineConfig();invalidateFrom(stage,reason);if(autoRender&&S.canonical)scheduleRebuildAllWarp(reason)};
+  ["fileA","fileB","fileC"].forEach(id=>$(id).addEventListener("change",()=>invalidate("input","arquivos de entrada alterados")));
+  $("inputEngine").onchange=()=>{updateBgModeUI();invalidate("segmentation","engine de entrada alterada")};
+  $("chroma2Quick").onchange=()=>{
+    $("inputEngine").value=$("chroma2Quick").checked?"chroma2":"classic";
+    updateBgModeUI();invalidate("segmentation",$("chroma2Quick").checked?"Chroma 2 ativado":"chroma clássico restaurado");
   };
-  $("prev").onclick=()=>{stopPlayer();step(-1)};
-  $("next").onclick=()=>{stopPlayer();step(1)};
-  $("play").onclick=()=>S.playing?stopPlayer():startPlayer();
-  $("showContour").onchange=drawPreview;
-  $("showAnchors").onchange=drawPreview;
-  $("chooseModelsDir").onclick=chooseModelsDirectory;
-  $("exportModelPackage").onclick=exportFullModelPackage;
-  $("exportToCatalogV1").onclick=exportToCatalogV1;
-  $("modelNumber").addEventListener("input",updateModelPreview);
-  updateModelPreview();
+  $("expected").addEventListener("change",()=>invalidate("detection","quantidade/schema experimental alterado"));
+  $("thr").addEventListener("change",()=>invalidate("segmentation","sensibilidade do chroma clássico alterada"));
+  $("autoThr").onchange=()=>invalidate("segmentation","auto threshold alterado");
+  $("contourEngine").onchange=()=>invalidate("geometry","engine de geometria/contorno alterada");
+  ["smooth","spike"].forEach(id=>$(id).addEventListener("change",()=>invalidate("profile",id==="smooth"?"suavização do contorno alterada":"rejeição de saliências alterada")));
+  ["medianShape","largestScale","v6Smart","v6Robust","v6SafeScale","v61BestBase","v61DropBad"].forEach(id=>$(id).onchange=()=>invalidate("canonical","configuração estrutural do canonical alterada"));
+  $("v61Blend").addEventListener("change",()=>invalidate("canonical","influência da cabeça-base alterada"));
+  ["warpStrength","smartRemapMax","coreProtect","maxLocalX","edgeBand","innerRigidity","v6Dead","v6Cap","v6Snap"].forEach(id=>$(id).addEventListener("change",()=>invalidate("render",`parâmetro de render ${id} alterado`,{autoRender:true})));
+  $("smartRemap").onchange=()=>{setEngineConfig();v81UpdateSmartRemapStatus();invalidate("render","Smart Remap 3X alterado",{autoRender:true})};
+  ["splitNeck","adaptiveFace","preserveInnerFace"].forEach(id=>$(id).onchange=()=>invalidate("render",`modo de render ${id} alterado`,{autoRender:true}));
+  ["faceRigEnable","faceRigEye","faceRigMouth","faceRigConfidence"].forEach(id=>$(id).onchange=()=>{if(id==="faceRigEnable")updateFaceRigControls();invalidate("render","Face Rig alterado",{autoRender:true})});
+  ["faceRigStrength","faceRigDead","faceRigMax","faceRigFeather"].forEach(id=>$(id).addEventListener("change",()=>invalidate("render",`Face Rig ${id} alterado`,{autoRender:true})));
 
-  // Mostra a pasta lembrada, se houver.
-  loadDirectoryHandle().then(h=>{
-    if(h)$("dirStatus").textContent=`Pasta lembrada: ${h.name}`;
-  });
+  $("quickProcess").onclick=v71QuickProcess;$("detect").onclick=detectAll;$("canonical").onclick=buildCanonical;$("canonicalExtra").onclick=buildCanonical;
+  $("playExtra").onclick=()=>S.playing?stopPlayer():startPlayer();$("redoCurrent").onclick=redoCurrentExpression;$("nextSuspect").onclick=v71NextSuspect;$("undoRedo").onclick=v71UndoCurrentRedo;
+  $("acceptCandidate").onclick=v8AcceptCandidate;$("keepCurrent").onclick=v8KeepCurrent;$("exportOverride").onchange=updatePreflight;
+  $("currentSel").onchange=()=>{const old=S.currentIndex;S.currentIndex=Number($("currentSel").value);drawPreview();updateActiveThumb(old,S.currentIndex);updateDiagnostics();v71UpdateUndoButton()};
+  $("scope").onchange=()=>{applyScope();const a=visibleIndices(),old=S.currentIndex;if(a.length&&!a.includes(S.currentIndex)){S.currentIndex=a[0];$("currentSel").value=String(a[0])}drawPreview();updateActiveThumb(old,S.currentIndex);v71UpdateUndoButton()};
+  $("prev").onclick=()=>{stopPlayer();step(-1)};$("next").onclick=()=>{stopPlayer();step(1)};$("play").onclick=()=>S.playing?stopPlayer():startPlayer();
+  $("showContour").onchange=drawPreview;$("showAnchors").onchange=drawPreview;$("chooseModelsDir").onclick=chooseModelsDirectory;$("exportModelPackage").onclick=exportFullModelPackage;
+  $("modelNumber").addEventListener("input",()=>{updateModelPreview();updatePreflight()});
 
-  ["medianShape","largestScale","smallestHorizontalBase","splitNeck","adaptiveFace","preserveInnerFace","v6Smart","v6Robust","v6SafeScale","v61BestBase","v61DropBad"].forEach(id=>$(id).onchange=()=>{
-    if(["medianShape","largestScale","smallestHorizontalBase","splitNeck","v6Smart","v6Robust","v6SafeScale","v61BestBase","v61DropBad"].includes(id)){
-      if(S.heads.length)status("canonicalStatus","Configuração estrutural do molde mudou. Construa o molde novamente.","warn");
-      return;
-    }
-
-    if(["adaptiveFace","preserveInnerFace"].includes(id)&&S.canonical){
-      rebuildAllWarpNow(
-        id==="adaptiveFace" ? "proteção automática de olhos/boca" : "preservação do rosto interno"
-      );
-    }
-  });
-
-  document.addEventListener("keydown",e=>{
-    if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;
-    if(e.code==="Space"){e.preventDefault();S.playing?stopPlayer():startPlayer()}
-    if(e.code==="ArrowLeft"){e.preventDefault();stopPlayer();step(-1)}
-    if(e.code==="ArrowRight"){e.preventDefault();stopPlayer();step(1)}
-  });
-
-  window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});
-  window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V7.5 iniciada. Defaults de alinhamento preservados; Chroma 2 integrado como alternativa ao chroma clássico.");
+  loadDirectoryHandle().then(h=>{if(h)$("dirStatus").textContent=`Pasta lembrada: ${h.name}`});
+  document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
+  window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
+  log("V8.4 iniciada. Área 1 preserva Chroma + Smart Remap e agora aplica Finish Lock final automaticamente após construir o molde; Área 2 continua disponível para pós-processamento manual de 63 PNGs.");
 }
 init();
 </script>
