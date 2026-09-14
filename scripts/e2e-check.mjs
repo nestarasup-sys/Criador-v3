@@ -35,7 +35,17 @@ try {
   assert.ok(stageBox.width <= 1280 && stageBox.height <= 720, "A prévia deve caber responsivamente na janela do teste");
   const qualityCharacter = page.getByRole("button", { name: "Selecionar Qualidade E2E", exact: true });
   await assertVisible(qualityCharacter);
+  await assertVisible(page.getByRole("button", { name: "Selecionar Roupa salva pelo autosave no elenco", exact: true }));
   await qualityCharacter.click();
+  await page.getByRole("button", { name: "Salvar agora no PC", exact: true }).click();
+  await page.waitForTimeout(700);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await waitForImages(page);
+  await page.getByRole("button", { name: "Abrir", exact: true }).click();
+  await assertVisible(page.getByRole("button", { name: "Selecionar Roupa salva pelo autosave no elenco", exact: true }));
+  const reloadedQualityCharacter = page.getByRole("button", { name: "Selecionar Qualidade E2E", exact: true });
+  await assertVisible(reloadedQualityCharacter);
+  await reloadedQualityCharacter.click();
   assert.equal(await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).count(), 0, "Avisos técnicos de qualidade não devem poluir o Studio");
 
   // Keep the editor workflow in a fresh context. This avoids development-mode
@@ -47,6 +57,9 @@ try {
   await assertVisible(roteiroPage.getByRole("heading", { name: "Meus roteiros" }));
   await roteiroPage.getByRole("button", { name: /Criar roteiro/ }).first().click();
   await roteiroPage.getByLabel("Nome do roteiro").fill("E2E Fase 8");
+  const participant = roteiroPage.getByRole("button", { name: /Roupa salva pelo autosave/ }).first();
+  await assertVisible(participant);
+  await participant.click();
   await roteiroPage.getByRole("button", { name: "Criar e abrir" }).click();
   await roteiroPage.waitForURL(/\/roteiros\/.+/, { timeout: 20_000 });
   assert.match(await roteiroPage.url(), /\/roteiros\/.+/);
@@ -55,6 +68,7 @@ try {
   // action; the route HTML is available slightly before React is interactive
   // in Vinext development mode.
   await roteiroPage.waitForTimeout(1_500);
+  await assertVisible(roteiroPage.getByText("1 personagens", { exact: true }));
   await addTikTokAndWait(roteiroPage);
   // The editor autosave is debounced; allow its PC write to complete before
   // reopening the route for the persistence assertion.
@@ -63,6 +77,7 @@ try {
   await waitForImages(roteiroPage);
   await assertVisible(roteiroPage.getByText("E2E Fase 8", { exact: true }).first());
   await roteiroPage.waitForFunction(() => document.body.innerText.includes("TikTok 1"), undefined, { timeout: 20_000 });
+  await assertVisible(roteiroPage.getByText("1 personagens", { exact: true }));
 
   const objectUrlStats = await monitorObjectUrls(roteiroPage, baseURL);
   assert.ok(objectUrlStats.active < 100, `URLs de objeto ativas demais: ${objectUrlStats.active}`);
@@ -124,8 +139,12 @@ async function seedStudioQualityFixture(currentPage) {
     const sessionResponse = await fetch(`${dataUrl}/session`, { cache: "no-store" });
     const session = await sessionResponse.json();
     const headers = { "Content-Type": "application/json", "X-Gacha-Session": session.token };
-    const charactersResponse = await fetch(`${dataUrl}/characters`, { method: "POST", headers, body: JSON.stringify([characterDocument]) });
-    const studiosResponse = await fetch(`${dataUrl}/studios`, { method: "POST", headers, body: JSON.stringify([studioDocument]) });
+    const currentResponse = await fetch(`${dataUrl}/state`, { headers, cache: "no-store" });
+    const currentState = await currentResponse.json();
+    const characters = [...(Array.isArray(currentState.characters) ? currentState.characters : []).filter((item) => item.id !== characterDocument.id), characterDocument];
+    const studio = { ...studioDocument, rosterIds: [characterDocument.id, "creator-autosave-a"] };
+    const charactersResponse = await fetch(`${dataUrl}/characters`, { method: "POST", headers, body: JSON.stringify(characters) });
+    const studiosResponse = await fetch(`${dataUrl}/studios`, { method: "POST", headers, body: JSON.stringify([studio]) });
     const stateResponse = await fetch(`${dataUrl}/state`, { headers, cache: "no-store" });
     const state = await stateResponse.json();
     return {
@@ -140,13 +159,12 @@ async function seedStudioQualityFixture(currentPage) {
     characterDocument: character,
     studioDocument: studio,
   });
-  assert.deepEqual(result, {
-    characters: 200,
-    studios: 200,
-    state: 200,
-    characterIds: [character.id],
-    studioIds: [studio.id],
-  });
+  assert.equal(result.characters, 200);
+  assert.equal(result.studios, 200);
+  assert.equal(result.state, 200);
+  assert.ok(result.characterIds.includes(character.id));
+  assert.ok(result.characterIds.includes("creator-autosave-a"));
+  assert.deepEqual(result.studioIds, [studio.id]);
 }
 
 async function seedCreatorAutosaveFixture(currentPage) {
