@@ -33,6 +33,7 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
   await page.goto(pathToFileURL(tool).href, { waitUntil: "load" });
+  await page.locator("#area2Mode").click();
   const report = { tool: "V8.4 Finish Lock / Área 2", createdAt: new Date().toISOString(), backupRoot, models: [] };
 
   try {
