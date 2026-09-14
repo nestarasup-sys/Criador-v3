@@ -11,9 +11,9 @@ test("Studio não quebra a biblioteca quando um timestamp persistido é inválid
   const outfile = join(root, "scene-ops.mjs");
   try {
     await build({ entryPoints: [resolve("app/studio/scene-ops.ts")], bundle: true, format: "esm", platform: "node", outfile, logLevel: "silent" });
-    const module = await import(`${pathToFileURL(outfile).href}?v=${Date.now()}`);
-    assert.equal(module.formatStudioDate("não-é-uma-data"), "data desconhecida");
-    assert.notEqual(module.formatStudioDate("2026-09-14T12:00:00.000Z"), "data desconhecida");
+    const sceneOps = await import(`${pathToFileURL(outfile).href}?v=${Date.now()}`);
+    assert.equal(sceneOps.formatStudioDate("não-é-uma-data"), "data desconhecida");
+    assert.notEqual(sceneOps.formatStudioDate("2026-09-14T12:00:00.000Z"), "data desconhecida");
   } finally {
     await rm(root, { recursive: true, force: true });
   }
