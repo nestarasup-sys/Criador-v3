@@ -19,6 +19,7 @@ test("estado v2 moderno faz round-trip sem perda de dados", () => {
       id: "char-1", name: "Nymi", model: "feminino", basePackId: "modelo-2",
       selections: { cabelos: "hair-1", cabelosTras: null, rostos: null, roupas: "outfit-1" },
       adjustments: { cabelos: transform, cabelosTras: transform, rostos: transform, roupas: transform },
+      compositionMode: "outfit-over-face",
       updatedAt: "2026-08-02T00:00:00.000Z", futureCharacterField: "preservado",
     }],
     catalog: [{ id: "outfit-1", name: "Roupa", model: "feminino", category: "roupas", fileUrl: "/file.png", outfitGroupId: "group-1", outfitVariantIndex: 0 }],
@@ -42,6 +43,7 @@ test("estado legado recebe defaults, migra modelos e preserva extensões", () =>
   assert.equal(normalized.version, 2);
   assert.equal(normalized.legacyExtension, 7);
   assert.equal(normalized.characters[0].basePackId, "modelo-3");
+  assert.equal(normalized.characters[0].compositionMode, undefined);
   assert.equal(normalized.characters[0].custom, "keep");
   assert.deepEqual(normalized.characters[0].selections, { cabelos: null, cabelosTras: null, rostos: null, roupas: null });
   assert.equal(normalized.expressionPacks[0].basePackId, "modelo-1");

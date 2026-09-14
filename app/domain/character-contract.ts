@@ -1,6 +1,7 @@
 import type {
   BasePackId,
   Category,
+  CompositionMode,
   FaceMode,
   HairAdjustmentsByBasePack,
   ItemTransform,
@@ -60,6 +61,8 @@ export type Character = {
   outfitColorAdjustmentsByGroup?: OutfitColorAdjustmentsByGroup;
   protectionMasks?: ProtectionMasks;
   faceMode?: FaceMode;
+  /** Ausente em personagens antigos: mantém a composição histórica. */
+  compositionMode?: CompositionMode;
   expressionPackId?: string | null;
   expressionEmotion?: Emotion;
   expressionState?: ExpressionState;

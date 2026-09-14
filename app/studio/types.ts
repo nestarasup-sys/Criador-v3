@@ -5,6 +5,7 @@
 export type {
   BasePackId,
   Category,
+  CompositionMode,
   FaceMode,
   ItemTransform,
   MaskStroke,

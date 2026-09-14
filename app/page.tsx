@@ -60,6 +60,7 @@ import type { BasePackCollection, BasePackDefinition } from "./creator/base-pack
 import type {
   BasePackId,
   Category,
+  CompositionMode,
   FaceMode,
   ItemTransform,
   MaskStroke,
@@ -1382,6 +1383,7 @@ export default function Home() {
   const [chromaApplyPair, setChromaApplyPair] = useState(true);
   const [isApplyingChroma, setIsApplyingChroma] = useState(false);
   const [faceMode, setFaceMode] = useState<FaceMode>("base");
+  const [compositionMode, setCompositionMode] = useState<CompositionMode>("legacy");
   const [activePackId, setActivePackId] = useState<string | null>(null);
   const [expressionEmotion, setExpressionEmotion] = useState<Emotion>("normal");
   const [expressionState, setExpressionState] = useState<ExpressionState>("default");
@@ -1574,6 +1576,7 @@ export default function Home() {
     outfitColorAdjustmentsByGroup,
     protectionMasks,
     faceMode,
+    compositionMode,
     expressionPackId: activePackId,
     expressionEmotion,
     expressionState: animationMode ? "default" : expressionState,
@@ -1612,6 +1615,7 @@ export default function Home() {
     outfitColorAdjustmentsByGroup,
     protectionMasks,
     faceMode,
+    compositionMode,
     activePackId,
     expressionEmotion,
     animationMode,
@@ -1727,6 +1731,7 @@ export default function Home() {
     setOutfitLayerMasksByBasePack(snapshot.outfitLayerMasksByBasePack ?? {});
     setOutfitProtectionMasksByBasePack(snapshot.outfitProtectionMasksByBasePack ?? {});
     setFaceMode(snapshot.faceMode ?? "base");
+    setCompositionMode(snapshot.compositionMode ?? "legacy");
     setActivePackId(snapshot.expressionPackId ?? null);
     setExpressionEmotion(snapshot.expressionEmotion ?? "normal");
     setExpressionState(snapshot.expressionState ?? "default");
@@ -2103,13 +2108,34 @@ export default function Home() {
       captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target, layer: "roupas" });
     }
 
+    const faceBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && faceMode !== "base";
+    const faceLayer = faceBehindOutfit ? document.createElement("canvas") : null;
+    if (faceLayer) {
+      faceLayer.width = sceneCanvas.width;
+      faceLayer.height = sceneCanvas.height;
+      const faceContext = faceLayer.getContext("2d");
+      if (!faceContext) throw new Error("Canvas do rosto indisponível");
+      configureHighQualityContext(faceContext);
+      if (faceMode === "pack") {
+        const pack = activeExpressionPack;
+        const frame = pack?.frames.find((entry) => entry.key === expressionKey);
+        if (frame) {
+          await drawLayer({ ...frame, defaultX: 970, defaultY: 285 }, renderAdjustments.rostos, false, [], undefined, faceContext);
+        }
+      } else {
+        const face = catalog.find((entry) => entry.id === renderSelections.rostos);
+        if (face) await drawLayer(face, renderAdjustments.rostos, false, [], "rostos", faceContext);
+      }
+      captureRenderDebug("snapshot:faceBehindOutfit", faceLayer, { renderId, target, layer: "rosto→roupa" });
+    }
+
     // A exportação gera um PNG achatado. Componha as camadas na ordem
     // definitiva antes de entregar a imagem ao outro aplicativo.
-    compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
-    markRenderDebug("layers:flattened", { renderId, target, layer: "backHair→body→outfit" });
-    captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: "backHair→body→outfit" });
+    compositeCharacterLayers(context, [backHairLayer, bodyLayer, faceLayer, outfitLayer]);
+    markRenderDebug("layers:flattened", { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
+    captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-    if (includeExpression && faceMode !== "base") {
+    if (includeExpression && faceMode !== "base" && !faceBehindOutfit) {
       if (faceMode === "pack" && activeExpressionPack) {
         const frame = activeExpressionPack.frames.find((entry) => entry.key === expressionKey);
         if (frame) {
@@ -2152,7 +2178,7 @@ export default function Home() {
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, compositionMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
   const renderCharacter = useCallback(async () => {
     const visibleCanvas = canvasRef.current;
@@ -2320,6 +2346,7 @@ export default function Home() {
     setOutfitProtectionMasksByBasePack({});
     setOutfitCatalogMode("standard");
     setOutfitGroupViewId(null);
+    setCompositionMode("legacy");
     setFaceMode("base");
     setActivePackId(null);
     setLayerMasks(emptyLayerMasks());
@@ -3232,7 +3259,7 @@ export default function Home() {
   }
 
   async function adjustSelectedOutfitByHead(reference: HeadFitReference = "head") {
-    if (category !== "roupas" || !selectedOutfit?.url) return;
+    if (category !== "roupas" || !selectedOutfit?.url) return false;
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"
@@ -3439,11 +3466,21 @@ export default function Home() {
           ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente.${skippedMessage}`
           : `Roupa ajustada pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente`,
       );
+      return true;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "Não foi possível ajustar a roupa pela cabeça");
+      return false;
     } finally {
       setIsProcessing(false);
     }
+  }
+
+  async function adjustSelectedOutfitByNeckV2() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    const adjusted = await adjustSelectedOutfitByHead("neck");
+    if (!adjusted) return;
+    setCompositionMode("outfit-over-face");
+    setNotice("Ajuste de pescoço V2 aplicado: o rosto ficará atrás da roupa e o cabelo frontal continuará na frente.");
   }
 
   async function adjustSelectedHairByHead() {
@@ -4379,6 +4416,7 @@ export default function Home() {
       setV0TransferOpen(false);
       setV0TransferSelection([]);
       setOutfitGroupViewId(null);
+      setCompositionMode(character.compositionMode ?? "legacy");
       setFaceMode(openedBasePackId === openedPrimaryPackId ? character.faceMode ?? "base" : "base");
       setActivePackId(openedBasePackId === openedPrimaryPackId ? character.expressionPackId ?? null : null);
       const openedEmotion = character.expressionEmotion ?? "normal";
@@ -4428,6 +4466,7 @@ export default function Home() {
     setOutfitProtectionMasksByBasePack({});
     setOutfitCatalogMode("standard");
     setOutfitGroupViewId(null);
+    setCompositionMode("legacy");
     setFaceMode("base");
     setActivePackId(null);
     setExpressionEmotion("normal");
@@ -4502,6 +4541,7 @@ export default function Home() {
     setOutfitAdjustmentsByBasePack({ ...(source.outfitAdjustmentsByBasePack ?? {}) });
     setOutfitLayerMasksByBasePack({ ...(source.outfitLayerMasksByBasePack ?? {}) });
     setOutfitProtectionMasksByBasePack({ ...(source.outfitProtectionMasksByBasePack ?? {}) });
+    setCompositionMode(source.compositionMode ?? "legacy");
     setFaceMode(source.faceMode ?? "base");
     setActivePackId(source.expressionPackId ?? null);
     setExpressionEmotion(source.expressionEmotion ?? "normal");
@@ -5513,6 +5553,15 @@ export default function Home() {
                   title="Ajustar a roupa pela largura e pelo centro do pescoço"
                 >
                   {isProcessing ? "Ajustando…" : "Ajustar pescoço"}
+                </button>
+                <button
+                  type="button"
+                  className="neck-fit-button"
+                  onClick={() => { void adjustSelectedOutfitByNeckV2(); }}
+                  disabled={isProcessing}
+                  title="Ajustar o pescoço e colocar o rosto atrás da roupa somente neste personagem"
+                >
+                  {isProcessing ? "Ajustando…" : "Ajustar pescoço V2"}
                 </button>
                 <button
                   type="button"

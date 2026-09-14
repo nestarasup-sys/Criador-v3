@@ -332,7 +332,8 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.ok(backLayerPosition >= 0 && baseLayerPosition > backLayerPosition);
   assert.match(page, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
   assert.match(page, /const outfitLayer = document\.createElement\("canvas"\)/);
-  assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, outfitLayer\]\)/);
+  assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, faceLayer, outfitLayer\]\)/);
+  assert.match(page, /faceBehindOutfit/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fitByBasePack\?\.\[basePackId\] \?\? linkedBackHair\?\.fit\)/);
   assert.match(page, /category === "cabelosTras" \? "cabelos" : category/);
@@ -928,6 +929,14 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /AUTOMATIC_HEAD_ERASE_SIDE_MARGIN/);
   assert.match(page, /adjustSelectedOutfitByHead\("head"\)/);
   assert.match(page, /adjustSelectedOutfitByHead\("neck"\)/);
+  assert.match(page, /Ajustar pescoço V2/);
+  assert.match(page, /compositionMode/);
+  assert.match(page, /backHairLayer, bodyLayer, faceLayer, outfitLayer/);
+  const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");
+  assert.match(characterContract, /compositionMode\?: CompositionMode/);
+  const studioRenderer = await readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8");
+  assert.match(studioRenderer, /character\.compositionMode === "outfit-over-face"/);
+  assert.match(studioRenderer, /backHairLayer, bodyLayer, faceLayer, outfitLayer/);
   assert.match(page, /Ajustar pescoço/);
   assert.doesNotMatch(page, /head-fit-fine-controls/);
   assert.doesNotMatch(page, /Ajuste fino/);

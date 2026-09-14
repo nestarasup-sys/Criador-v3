@@ -3,6 +3,8 @@ export { CATEGORIES, FACE_MODES, MODELS, isCategory, isModel } from "./character
 export type Model = "feminino" | "masculino";
 export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
 export type FaceMode = "base" | "single" | "pack";
+/** Ordem opcional das camadas para personagens que precisam do pescoço da roupa sobre o rosto. */
+export type CompositionMode = "legacy" | "outfit-over-face";
 
 export type HeadContourWarpKnot = {
   /** Linha de destino no canvas nativo da roupa, antes do transform global. */

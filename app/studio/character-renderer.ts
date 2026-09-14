@@ -377,6 +377,26 @@ export async function renderStudioCharacter(
   }
   markRenderDebug("layer:bodyDone", { renderId, target: "studio-render", layer: "corpo" });
   captureRenderDebug("snapshot:after-body", bodyLayer, { renderId, target: "studio-render", layer: "corpo" });
+
+  const faceBehindOutfit = character.compositionMode === "outfit-over-face" && faceMode !== "base";
+  const faceLayer = faceBehindOutfit ? document.createElement("canvas") : null;
+  if (faceLayer) {
+    faceLayer.width = scene.width;
+    faceLayer.height = scene.height;
+    const faceContext = faceLayer.getContext("2d");
+    if (!faceContext) throw new Error("Canvas do rosto indisponível");
+    configureHighQualityContext(faceContext);
+    if (faceMode === "pack") {
+      const pack = packs.find((item) => item.id === character.expressionPackId);
+      const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
+      if (frame) await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos), [], undefined, faceContext);
+    } else {
+      const face = catalog.find((item) => item.id === character.selections.rostos);
+      if (face) await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos", faceContext);
+    }
+    captureRenderDebug("snapshot:faceBehindOutfit", faceLayer, { renderId, target: "studio-render", layer: "rosto→roupa" });
+  }
+
   const outfitLayer = document.createElement("canvas");
   outfitLayer.width = scene.width;
   outfitLayer.height = scene.height;
@@ -397,11 +417,11 @@ export async function renderStudioCharacter(
 
   // Exportações são PNGs achatados: a ordem precisa ser explícita antes de
   // chegar ao outro aplicativo, que não recebe as camadas separadamente.
-  compositeCharacterLayers(context, [backHairLayer, bodyLayer, outfitLayer]);
-  markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: "backHair→body→outfit" });
-  captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target: "studio-render", layer: "backHair→body→outfit" });
+  compositeCharacterLayers(context, [backHairLayer, bodyLayer, faceLayer, outfitLayer]);
+  markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
+  captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-  if (faceMode !== "base") {
+  if (faceMode !== "base" && !faceBehindOutfit) {
     if (faceMode === "pack") {
       const pack = packs.find((item) => item.id === character.expressionPackId);
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
