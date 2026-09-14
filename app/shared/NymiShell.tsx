@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- the brand asset is a local static icon. */
+
 import Link from "next/link";
 
 export type NymiArea = "characters" | "studio" | "roteiros" | "base-dados" | "tools";

@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- the canvas composes dynamic local/blob image URLs. */
+
 import { useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type RefObject, type CSSProperties } from "react";
 import styles from "../studio.module.css";
 import type { Character, SceneBubble, SceneCharacter, SceneNarrator, SceneObject, Selection, Studio } from "../types";

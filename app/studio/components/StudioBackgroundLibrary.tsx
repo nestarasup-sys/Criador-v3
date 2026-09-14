@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- backgrounds are local service/blob URLs. */
+
 import { useRef, type ChangeEvent } from "react";
 import styles from "../studio.module.css";
 import type { StudioAsset, StudioBackground } from "../types";

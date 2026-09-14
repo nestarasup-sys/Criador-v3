@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- character thumbnails can be dynamic local data URLs. */
+
 import { useState } from "react";
 import type { GeneratedReaction, PremiumCharacter, ReactionBlock, ScriptProject, TikTokSection } from "../types";
 import styles from "../roteiros.module.css";

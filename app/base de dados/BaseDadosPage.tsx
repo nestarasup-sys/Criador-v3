@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- local character previews use dynamic data URLs. */
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
@@ -121,7 +123,7 @@ export default function BaseDadosPage() {
     return () => window.removeEventListener("pagehide", persistDrafts);
   }, []);
 
-  const draftFor = (video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), changedAt: 0 };
+  const draftFor = useCallback((video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), changedAt: 0 }, [drafts]);
   const updateDraft = (id: string, patch: Partial<VideoDraft>) => {
     saveRevisionRef.current[id] = (saveRevisionRef.current[id] || 0) + 1;
     scheduledRevisionRef.current[id] = -1;
@@ -446,7 +448,7 @@ export default function BaseDadosPage() {
       const matchesFilter = videoFilter === "all" || (videoFilter === "filled" ? filled : !filled);
       return matchesQuery && matchesFilter;
     });
-  }, [database, drafts, videoFilter, videoQuery]);
+  }, [database, draftFor, videoFilter, videoQuery]);
 
   const openDataFolder = async () => {
     setBusy("folder"); setMessage("");

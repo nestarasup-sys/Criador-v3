@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- roster thumbnails are dynamic local data URLs. */
+
 import styles from "../studio.module.css";
 import type { Character, SceneCharacter, Selection } from "../types";
 import { StudioGlyph } from "./StudioGlyph";

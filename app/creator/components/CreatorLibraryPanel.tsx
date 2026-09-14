@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- local character previews use dynamic data URLs. */
+
 import { useState } from "react";
 import type { Character } from "../../domain/character-contract";
 import type { Model } from "../../domain/character-primitives";

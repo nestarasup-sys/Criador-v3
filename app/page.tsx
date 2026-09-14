@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- previews include dynamic Blob/data URLs and local assets. */
+
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCharacterBundle, createCharacterVariantsBundle, outfitVariantsForExport } from "./studio/character-export";
 import { applyChromaPixels, estimateChromaKey } from "./chroma-processing.mjs";
@@ -544,7 +546,6 @@ function BasePackThumbnail({ src, name }: { src: string; name: string }) {
   }, [src]);
   if (!thumbnail) return <span className="base-pack-thumbnail-loading" aria-label={`Carregando prévia de ${name}`} />;
   // The generated data URL is a local, dynamically cropped preview.
-  // eslint-disable-next-line @next/next/no-img-element
   return <img className="base-pack-thumbnail" src={thumbnail} alt={`Prévia de ${name}`} />;
 }
 
@@ -6141,7 +6142,6 @@ export default function Home() {
                     title={key}
                   >
                     {/* Static local preview; chroma is removed in the final composition. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={baseExpressionSource(activeBasePack, key)} alt="" />
                     <span>{key.replaceAll("_", " ")}</span>
                   </button>
@@ -6184,7 +6184,6 @@ export default function Home() {
                         title={frame.key}
                       >
                         {/* Local Blob preview. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         {frame.url && <img src={frame.url} alt="" />}
                         <span>{frame.key.replace("_", " ")}</span>
                       </button>
@@ -6241,8 +6240,7 @@ export default function Home() {
                   return (
                     <div className={`item-card ${item.outfitGroupId ? "outfit-pack-card" : ""} ${itemSelected ? "selected" : ""} ${selectedForDelete ? "delete-selected" : ""}`} key={item.id}>
                       <button className="item-select" aria-label={item.name || `${CATEGORY_LABELS[category]} ${index + 1}`} aria-pressed={assetDeleteMode ? selectedForDelete : undefined} onClick={() => assetDeleteMode ? toggleCatalogAssetSelection(item.id) : category === "roupas" ? void selectOutfitCard(item) : void selectCatalogItem(item.id)}>
-                        {/* Catalog images are local Blob URLs and cannot use next/image. */}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {/* Catalog images are local Blob URLs and cannot use next/image. */}
                         {item.url && <img src={item.url} alt="" />}
                         {item.outfitGroupId && outfitCatalogMode === "standard" && <span className="outfit-count-badge">{Math.max(0, (outfitVariantCounts.get(item.outfitGroupId) ?? 1) - 1)} variantes</span>}
                         {item.outfitGroupId && outfitCatalogMode === "variants" && <span className="outfit-pose-badge">{variantIndex === 0 ? "Padrão" : `Variante ${variantIndex}`}</span>}
@@ -6323,7 +6321,6 @@ export default function Home() {
                 <article key={variant.previewUrl}>
                   <div>
                     {/* Local temporary Blob preview. */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={variant.previewUrl} alt={index === 0 ? "Versão padrão" : `Variante ${index}`} />
                     <span>{index + 1}</span>
                   </div>

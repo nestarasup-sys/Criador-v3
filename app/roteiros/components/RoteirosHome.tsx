@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- character thumbnails can be dynamic local data URLs. */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createGlobalRule, createId, createNarrativeProfile, createScriptAiContext, createScriptProject, nowIso, PROTECTED_RULES } from "../defaults";

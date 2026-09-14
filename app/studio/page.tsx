@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Studio previews use dynamic local/blob URLs. */
+
 import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./studio.module.css";
