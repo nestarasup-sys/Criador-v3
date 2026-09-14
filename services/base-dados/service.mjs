@@ -278,26 +278,32 @@ export function createBaseDadosService(root) {
       if (videoMatch && request.method === "PATCH") {
         const id = safeId(videoMatch[1]);
         const body = await readJson(request);
-        const index = state.videos.findIndex((video) => video.id === id);
-        if (index < 0) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
-        const sceneEndSeconds = Number(body?.sceneEndSeconds);
-        if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
-        const current = state.videos[index];
-        const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, updatedAt: new Date().toISOString() };
-        state.videos = state.videos.map((video) => video.id === id ? updated : video);
-        await persist();
-        sendJson(response, responseHeaders, 200, { ok: true, video: await withFileStatus(root, updated), state });
+        const result = await enqueueMutation(async () => {
+          const index = state.videos.findIndex((video) => video.id === id);
+          if (index < 0) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
+          const sceneEndSeconds = Number(body?.sceneEndSeconds);
+          if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
+          const current = state.videos[index];
+          const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, updatedAt: new Date().toISOString() };
+          state.videos = state.videos.map((video) => video.id === id ? updated : video);
+          await persist();
+          return { video: await withFileStatus(root, updated), state };
+        });
+        sendJson(response, responseHeaders, 200, { ok: true, ...result });
         return true;
       }
 
       if (videoMatch && request.method === "DELETE") {
         const id = safeId(videoMatch[1]);
-        const item = state.videos.find((video) => video.id === id);
-        if (!item) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
-        await rm(videoPath(root, item), { force: true });
-        state.videos = state.videos.filter((video) => video.id !== id);
-        await persist();
-        sendJson(response, responseHeaders, 200, { ok: true, state });
+        const result = await enqueueMutation(async () => {
+          const item = state.videos.find((video) => video.id === id);
+          if (!item) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
+          await rm(videoPath(root, item), { force: true });
+          state.videos = state.videos.filter((video) => video.id !== id);
+          await persist();
+          return { state };
+        });
+        sendJson(response, responseHeaders, 200, { ok: true, ...result });
         return true;
       }
 
