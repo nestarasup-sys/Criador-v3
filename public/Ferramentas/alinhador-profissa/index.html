@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V8.4 — Alinhador Profissa · Finish Lock Integrado + Área 2 Precision Lock</title>
+<title>V8.5 — Alinhador Profissa · Finish Lock Integrado + Área 2 Precision Lock</title>
 
 <style>
 :root{
@@ -466,7 +466,7 @@ body.advanced .advancedOnly{display:block}
 .thumb .engineBadge{display:inline-block;margin:4px 2px 0;border:1px solid #d7d0e2;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:900;color:#5d5368}
 
 
-/* V8.4 — AREA 2 · pós-alinhamento de modelo processado */
+/* V8.5 — AREA 2 · pós-alinhamento de modelo processado */
 #area2{display:none}
 body.area2 #area1{display:none}
 body.area2 #area2{display:grid}
@@ -495,8 +495,8 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V8.4 · Alinhador Profissa</h1>
-  <div class="small">Pipeline de produção com chroma clássico como base, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock final integrado diretamente na Área 1.</div>
+  <h1>V8.5 · Alinhador Profissa</h1>
+  <div class="small">Pipeline de produção com chroma clássico como base, Chroma 2 opcional, força extra para fundos difíceis, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock final integrado diretamente na Área 1.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
   <div class="card">
@@ -508,6 +508,8 @@ body.area2 .sidebar{height:100vh}
     <label><input id="chroma2Quick" type="checkbox" style="width:auto"> Chroma 2</label>
     <label>Alcance de tons do fundo <span class="value" id="chroma2ToneV">52</span></label>
     <input id="chroma2ToneRange" type="range" min="20" max="90" value="52" disabled>
+    <label><input id="chroma2Hard" type="checkbox" style="width:auto" disabled> Força extra sobre o fundo (fundo difícil)</label>
+    <div class="small">Ative somente quando o fundo tiver sombras, gradientes ou tons muito variados. O modo amplia a remoção conectada sem liberar áreas internas do personagem.</div>
     <div id="bgModeHint" class="small">Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.</div>
     <div class="small">O <b>chroma clássico é o padrão</b>, como no V7.5. Ative Chroma 2 somente quando quiser substituir o chroma base nesta detecção.</div>
     <div id="inputEngineStatus" class="status">Chroma clássico ativo · Chroma 2 opcional.</div>
@@ -539,7 +541,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>Na V8.4:</b> quando você conclui <b>Construir molde e alinhar tudo</b> — inclusive via <b>⚡ Processar tudo</b> — o <b>Finish Lock</b> é aplicado automaticamente como última etapa.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>Na V8.5:</b> quando você conclui <b>Construir molde e alinhar tudo</b> — inclusive via <b>⚡ Processar tudo</b> — o <b>Finish Lock</b> é aplicado automaticamente como última etapa.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -577,11 +579,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V8.4 SmartLock</b><span>estável</span></div>
+        <div><b>V8.5 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V8.4 preserva os defaults calibrados do V7.5. O chroma clássico continua como base, o Smart Remap mantém 6% nas cabeças boas e o Finish Lock final refina topo e laterais do pescoço automaticamente no fim do alinhamento.</div>
+      <div class="small" style="margin-top:5px">V8.5 preserva os defaults calibrados do V7.5. O chroma clássico continua como base, o Smart Remap mantém 6% nas cabeças boas e o Finish Lock final refina topo e laterais do pescoço automaticamente no fim do alinhamento.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -594,7 +596,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V8.4 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V8.5 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -676,6 +678,12 @@ body.area2 .sidebar{height:100vh}
     <label>Número do modelo</label>
     <input id="modelNumber" type="number" min="1" max="99999" value="13">
 
+    <label>Gênero do modelo</label>
+    <select id="modelGender">
+      <option value="feminino">Feminino</option>
+      <option value="masculino">Masculino</option>
+    </select>
+
     <div id="modelPreview" class="status">
 Pasta: modelo-13
 JSON: modelo-13.json
@@ -690,6 +698,8 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <div id="preflightBox" class="status preflight"><strong>PRE-FLIGHT</strong><span id="preflightText">Aguardando processamento.</span><ul id="preflightIssues"></ul></div>
     <label class="advancedOnly"><input id="exportOverride" type="checkbox" style="width:auto"> Override consciente: permitir export mesmo com alerta bloqueante</label>
     <button id="exportModelPackage" class="good" style="margin-top:8px" disabled>Exportar modelo completo</button>
+    <button id="exportToCatalogV1" class="good" style="margin-top:8px" disabled>Exportar direto para o Catálogo V1</button>
+    <div id="catalogExportStatus" class="status" style="margin-top:8px">O app escolherá automaticamente o próximo número disponível.</div>
     <div id="exportStatus" class="status" style="margin-top:8px">Nenhum modelo exportado ainda.</div>
 
     <div class="small" style="margin-top:8px">
@@ -731,7 +741,7 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V8.4 pipeline</span>
+    <span class="tag">V8.5 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -750,11 +760,11 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
 </div>
 
 <!-- =======================================================
-     V8.4 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V8.5 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V8.4 · Área 2</h1>
+    <h1>V8.5 · Área 2</h1>
     <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando os PNGs transparentes disponíveis.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -826,10 +836,10 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V8.4 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V8.5 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"8.4",
+  version:"8.5",
   sheets:["A","B","C"],rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
   emotions:Object.freeze({
@@ -855,7 +865,7 @@ function getConfigSnapshot(){
     smartLock:chk("v6Smart",true), robust:chk("v6Robust",true), safeScale:chk("v6SafeScale",true), bestBase:chk("v61BestBase",true),dropBad:chk("v61DropBad",true),baseBlend:val("v61Blend",32),
     deadzone:val("v6Dead",.8),cap:val("v6Cap",3),snap:val("v6Snap",8),
     warpStrength:val("warpStrength",6),smartRemap:chk("smartRemap",true),smartRemapMax:val("smartRemapMax",24),smooth:val("smooth",11),spike:val("spike",6),coreProtect:val("coreProtect",72),maxLocalX:val("maxLocalX",8),adaptiveFace:chk("adaptiveFace",true),preserveInnerFace:chk("preserveInnerFace",true),edgeBand:val("edgeBand",18),innerRigidity:val("innerRigidity",88),
-    faceRigEnable:chk("faceRigEnable",false),faceRigEye:chk("faceRigEye",false),faceRigMouth:chk("faceRigMouth",false),faceRigConfidence:chk("faceRigConfidence",false),faceRigStrength:val("faceRigStrength",64),faceRigDead:val("faceRigDead",.5),faceRigMax:val("faceRigMax",3),faceRigFeather:val("faceRigFeather",14)
+    faceRigEnable:chk("faceRigEnable",false),faceRigEye:chk("faceRigEye",false),faceRigMouth:chk("faceRigMouth",false),faceRigConfidence:chk("faceRigConfidence",false),faceRigStrength:val("faceRigStrength",64),faceRigDead:val("faceRigDead",.5),faceRigMax:val("faceRigMax",3),faceRigFeather:val("faceRigFeather",14),chroma2Hard:chk("chroma2Hard",false)
   });
 }
 function cfg(k,fallback){const c=S.engineConfig||getConfigSnapshot();return c[k]??fallback}
@@ -1000,6 +1010,7 @@ function updateBgModeUI(){
   const mode=$("inputEngine")?.value||"classic",classic=mode==="classic";
   $("thr").disabled=!classic;$("autoThr").disabled=!classic;
   $("chroma2ToneRange").disabled=mode!=="chroma2";
+  $("chroma2Hard").disabled=mode!=="chroma2";
   if($("chroma2Quick"))$("chroma2Quick").checked=mode==="chroma2";
   const el=$("inputEngineStatus");
   const hint=$("bgModeHint");
@@ -1009,7 +1020,7 @@ function updateBgModeUI(){
     else if(mode==="alpha")el.textContent="ALPHA forçado · usa transparência existente.";
     else el.textContent="AUTO experimental · Alpha / Classic / Chroma 2 competem em baixa resolução.";
   }
-  if(hint)hint.textContent=mode==="chroma2"?"Chroma 2 ativo: ajuste o alcance para incluir variações de iluminação do fundo sem ampliar a remoção sobre o personagem.":"Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.";
+  if(hint)hint.textContent=mode==="chroma2"?($("chroma2Hard")?.checked?"Chroma 2 + força extra ativos: o fundo difícil recebe alcance ampliado, sempre limitado ao fundo conectado às bordas.":"Chroma 2 ativo: ajuste o alcance para incluir variações de iluminação do fundo sem ampliar a remoção sobre o personagem."):"Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.";
 }
 /* =========================================================
    CHROMA 2 — integrado do GreenCut Pro
@@ -1096,7 +1107,7 @@ function chroma2ProcessCanvas(c,{processed=true}={}){
   const src=img.data,w=c.width,h=c.height,n=w*h;
   const bg=ch2DominantBackground(src,w,h),f=ch2BuildFeatures(src,w,h,bg);
   const T=clamp(Number($("chroma2ToneRange")?.value||52),20,90);
-  const protect=.72,feather=24,despill=.44,hardMode=false;
+  const protect=.72,feather=24,despill=.44,hardMode=!!$("chroma2Hard")?.checked;
   const borderHue=[],borderSat=[],borderVal=[],borderWhite=[];
   const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
   for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){
@@ -2151,9 +2162,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V8.4 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V8.4 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V8.4 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V8.5 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V8.5 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V8.5 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2165,7 +2176,7 @@ async function buildCanonical(){
     const finish=v83ApplyFinishLockArea1();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V8.4 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""}${finish?` · Finish Lock aplicado ${finish.ok}/${finish.count} · P90 ${finish.p90.toFixed(1)} px`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V8.5 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""}${finish?` · Finish Lock aplicado ${finish.ok}/${finish.count} · P90 ${finish.p90.toFixed(1)} px`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2311,7 +2322,7 @@ function safeCoreBounds(h,p){
 }
 
 /* =========================================================
-   V8.4 SMART REMAP 3X
+   V8.5 SMART REMAP 3X
    6% continua sendo a força-base. A força adicional depende
    de divergência de contorno + acordo semântico + confiança
    da geometria. O miolo continua protegido normalmente.
@@ -2638,8 +2649,8 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V8.4 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
-    `${h.quality?`QA V8.4: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
+    `V8.5 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
 }
@@ -2716,7 +2727,7 @@ async function detectAll(){
   $("detect").disabled=true;
   try{
     S.pipeline=newPipeline();setEngineConfig();markStage("input",{files:[!!fa,!!fb,!!fc]});
-    status("detectStatus",cfg("inputEngine","classic")==="auto"?"AUTO experimental: avaliando segmentação e grid…":`Detectando com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");log(`V8.4 detecção: modo ${cfg("inputEngine","classic")}.`);
+    status("detectStatus",cfg("inputEngine","classic")==="auto"?"AUTO experimental: avaliando segmentação e grid…":`Detectando com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");log(`V8.5 detecção: modo ${cfg("inputEngine","classic")}.`);
     const [ia,ib,ic]=await Promise.all([loadFile(fa),loadFile(fb),loadFile(fc)]);
     S.sheets={A:null,B:null,C:null};S.heads=[];
     if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count} · ${S.sheets.A.engine} · grid ${S.sheets.A.grid.confidence.toFixed(0)}`)}
@@ -2764,6 +2775,9 @@ const MODEL_EXPORT={
 
 function getModelNumber(){
   return clamp(Math.round(Number($("modelNumber")?.value||13)),1,99999);
+}
+function getModelGender(){
+  return $("modelGender")?.value==="masculino"?"masculino":"feminino";
 }
 function getModelFolderName(){
   return `modelo-${getModelNumber()}`;
@@ -2935,11 +2949,11 @@ function prepareExperimentalFaceAlign(){
   S.faceAlign=rigCfg;
   return rigCfg;
 }
-function modelMetadata(){
+function modelMetadata(gender=getModelGender()){
   const n=getModelNumber();
   return {
     name:`Modelo ${n}`,
-    gender:"feminino",
+    gender,
     type:"head-only",
     anchor:"neck-base",
     anchorX:MODEL_EXPORT.anchorX,
@@ -2947,7 +2961,7 @@ function modelMetadata(){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"8.4",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"8.5",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
@@ -2979,7 +2993,10 @@ function updatePreflight(){
   const pf=v8Preflight(),box=$("preflightBox"),txt=$("preflightText"),ul=$("preflightIssues");if(!box)return pf;
   box.className="status preflight "+(pf.ready?"ok":"bad");txt.textContent=pf.ready?"READY TO EXPORT":`EXPORT BLOCKED · ${pf.issues.length} problema(s)`;ul.innerHTML="";
   [...pf.issues,...pf.warnings.map(x=>"Aviso: "+x)].forEach(x=>{const li=document.createElement("li");li.textContent=x;ul.appendChild(li)});
-  const override=!!$("exportOverride")?.checked;$("exportModelPackage").disabled=!pf.ready&&!override;S.pipeline.exportReady=pf.ready;return pf;
+  const override=!!$("exportOverride")?.checked;
+  $("exportModelPackage").disabled=!pf.ready&&!override;
+  if($("exportToCatalogV1"))$("exportToCatalogV1").disabled=!pf.ready&&!override;
+  S.pipeline.exportReady=pf.ready;return pf;
 }
 
 /* =========================================================
@@ -3079,6 +3096,70 @@ function canvasToBlob(canvasEl){
   return new Promise((resolve,reject)=>{
     canvasEl.toBlob(blob=>blob?resolve(blob):reject(new Error("Falha ao gerar PNG")),"image/png");
   });
+}
+
+/* =========================================================
+   EXPORTAÇÃO DIRETA PARA O CATÁLOGO V1 DO APP
+   Usa a sessão protegida do servidor local, sem abrir seletor
+   de pasta e sem deixar uma pasta parcial quando um upload falha.
+========================================================= */
+function localDataBaseUrl(){
+  const port=Number.parseInt(location.port,10);
+  const dataPort=Number.isFinite(port)&&port>=6700&&port<6800?port+100:6800;
+  return `http://127.0.0.1:${dataPort}`;
+}
+let catalogSessionToken=null;
+async function catalogFetch(path,init={}){
+  const headers=new Headers(init.headers||{});
+  if(!catalogSessionToken){
+    const session=await fetch(`${localDataBaseUrl()}/session`,{cache:"no-store"});
+    const payload=await session.json().catch(()=>({}));
+    if(!session.ok||typeof payload.token!=="string")throw new Error("Não foi possível iniciar a sessão local do app.");
+    catalogSessionToken=payload.token;
+  }
+  headers.set("X-Gacha-Session",catalogSessionToken);
+  const response=await fetch(`${localDataBaseUrl()}${path}`,{...init,headers});
+  if(response.status===401){catalogSessionToken=null;return catalogFetch(path,init)}
+  return response;
+}
+async function nextCatalogModelNumber(gender){
+  const response=await catalogFetch(`/models/next/${gender}`,{cache:"no-store"});
+  if(!response.ok)throw new Error("Não foi possível consultar o próximo número de modelo.");
+  const data=await response.json();
+  if(!Number.isInteger(data?.number)||data.number<1)throw new Error("O app retornou uma numeração de modelo inválida.");
+  return data.number;
+}
+async function uploadCatalogV1File(gender,folderName,fileName,body,contentType){
+  const response=await catalogFetch(`/models/import/${gender}/${folderName}/${encodeURIComponent(fileName)}`,{method:"POST",headers:{"Content-Type":contentType},body});
+  if(!response.ok){const detail=await response.json().catch(()=>({}));throw new Error(detail.error||`Falha ao enviar ${fileName}.`)}
+}
+async function exportToCatalogV1(){
+  const pf=updatePreflight(),override=!!$("exportOverride")?.checked;
+  if(!pf.ready&&!override){status("catalogExportStatus","EXPORT DIRETO BLOQUEADO. Resolva o Preflight ou use o override consciente no modo avançado.","bad");return}
+  if(!S.canonical||!S.heads.length){status("catalogExportStatus","Primeiro processe o modelo.","bad");return}
+  const gender=getModelGender(),loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length,expectedExportHeads=loadedSheets*MODEL_SCHEMA.headsPerSheet;
+  if(expectedExportHeads&&S.heads.length!==expectedExportHeads&&!override){status("catalogExportStatus",`Detectei ${S.heads.length}/${expectedExportHeads} cabeças. Corrija a detecção antes de exportar.`,`bad`);return}
+  const button=$("exportToCatalogV1");let createdTarget=null;button.disabled=true;
+  try{
+    const number=await nextCatalogModelNumber(gender);$("modelNumber").value=String(number);updateModelPreview();
+    const folderName=`modelo-${number}`;
+    await uploadCatalogV1File(gender,folderName,`${folderName}.json`,JSON.stringify(modelMetadata(gender),null,2),"application/json");
+    createdTarget={gender,folderName};
+    const ordered=[...S.heads].sort((a,b)=>a.sheet===b.sheet?a.order-b.order:a.sheet.localeCompare(b.sheet));
+    for(let i=0;i<ordered.length;i++){
+      const h=ordered[i],filename=expressionFilename(h);
+      status("catalogExportStatus",`Enviando ${i+1}/${ordered.length}\n${gender}/${folderName}/${filename}`,"warn");
+      await uploadCatalogV1File(gender,folderName,filename,await canvasToBlob(makeModelExportFrame(h)),"image/png");
+      if(i%3===2)await sleep(0);
+    }
+    status("catalogExportStatus",`Concluído: ${gender}/${folderName} entrou no Catálogo V1.\n${ordered.length} PNGs + JSON`,"ok");
+    log(`Modelo ${gender}/${folderName} enviado diretamente para o Catálogo V1.`);
+    if(window.parent&&window.parent!==window)window.parent.dispatchEvent(new CustomEvent("nymi:models-updated"));
+  }catch(e){
+    console.error(e);let cleanup="";
+    if(createdTarget)try{const response=await catalogFetch(`/models/modelos/${createdTarget.gender}/${createdTarget.folderName}`,{method:"DELETE"});if(response.ok)cleanup=" A pasta incompleta foi removida."}catch(cleanupError){console.error("Falha ao limpar modelo incompleto",cleanupError)}
+    status("catalogExportStatus","Erro ao enviar para o Catálogo V1: "+(e.message||e)+cleanup,"bad");
+  }finally{button.disabled=false}
 }
 
 /* =========================================================
@@ -3216,7 +3297,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V8.4 — FINISH LOCK DA ÁREA 2 DENTRO DA ÁREA 1
+   V8.5 — FINISH LOCK DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3269,7 +3350,7 @@ function v83ApplyFinishLockArea1(){
 }
 
 /* =========================================================
-   V8.4 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V8.5 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
@@ -3454,7 +3535,8 @@ function init(){
     $("inputEngine").value=$("chroma2Quick").checked?"chroma2":"classic";
     updateBgModeUI();invalidate("segmentation",$("chroma2Quick").checked?"Chroma 2 ativado":"chroma clássico restaurado");
   };
-  $("chroma2ToneRange").oninput=()=>{updateLabels();if(S.heads.length&&usingChroma2())status("detectStatus","Alcance de tons alterado. Detecte novamente as cabeças.","warn")};
+  $("chroma2ToneRange").oninput=()=>{updateLabels();if(S.heads.length&&$("inputEngine")?.value==="chroma2")status("detectStatus","Alcance de tons alterado. Detecte novamente as cabeças.","warn")};
+  $("chroma2Hard").onchange=()=>{updateBgModeUI();invalidate("segmentation",$("chroma2Hard").checked?"força extra do Chroma 2 ativada":"força extra do Chroma 2 desativada")};
   $("expected").addEventListener("change",()=>invalidate("detection","quantidade/schema experimental alterado"));
   $("thr").addEventListener("change",()=>invalidate("segmentation","sensibilidade do chroma clássico alterada"));
   $("autoThr").onchange=()=>invalidate("segmentation","auto threshold alterado");
@@ -3474,13 +3556,14 @@ function init(){
   $("currentSel").onchange=()=>{const old=S.currentIndex;S.currentIndex=Number($("currentSel").value);drawPreview();updateActiveThumb(old,S.currentIndex);updateDiagnostics();v71UpdateUndoButton()};
   $("scope").onchange=()=>{applyScope();const a=visibleIndices(),old=S.currentIndex;if(a.length&&!a.includes(S.currentIndex)){S.currentIndex=a[0];$("currentSel").value=String(a[0])}drawPreview();updateActiveThumb(old,S.currentIndex);v71UpdateUndoButton()};
   $("prev").onclick=()=>{stopPlayer();step(-1)};$("next").onclick=()=>{stopPlayer();step(1)};$("play").onclick=()=>S.playing?stopPlayer():startPlayer();
-  $("showContour").onchange=drawPreview;$("showAnchors").onchange=drawPreview;$("chooseModelsDir").onclick=chooseModelsDirectory;$("exportModelPackage").onclick=exportFullModelPackage;
+  $("showContour").onchange=drawPreview;$("showAnchors").onchange=drawPreview;$("chooseModelsDir").onclick=chooseModelsDirectory;$("exportModelPackage").onclick=exportFullModelPackage;$("exportToCatalogV1").onclick=exportToCatalogV1;
   $("modelNumber").addEventListener("input",()=>{updateModelPreview();updatePreflight()});
+  $("modelGender").addEventListener("change",()=>{updateModelPreview();updatePreflight()});
 
   loadDirectoryHandle().then(h=>{if(h)$("dirStatus").textContent=`Pasta lembrada: ${h.name}`});
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V8.4 iniciada. Área 1 preserva Chroma + Smart Remap e agora aplica Finish Lock final automaticamente após construir o molde; Área 2 continua disponível para pós-processamento manual de 63 PNGs.");
+  log("V8.5 iniciada. Área 1 preserva Chroma + Smart Remap, restaura a força extra sobre fundos difíceis e aplica Finish Lock final; exportação direta para o Catálogo V1 disponível.");
 }
 init();
 </script>
