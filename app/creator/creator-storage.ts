@@ -244,11 +244,17 @@ export async function deleteCatalogItemFromPc(id: string) {
 }
 
 export async function saveExpressionPackToPc(pack: ExpressionPack) {
-  await Promise.all(pack.frames.map((frame) => pcRequest(`/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(frame.key)}`, {
+  // Each frame updates the same pack entry in state.json. Sending these
+  // requests concurrently makes the server's read-modify-write steps race,
+  // leaving the files present but only a subset of frames indexed. Keep the
+  // upload order deterministic; the individual image request is still
+  // streamed and the next frame starts immediately after its metadata is
+  // persisted.
+  for (const frame of pack.frames) await pcRequest(`/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(frame.key)}`, {
     method: "POST",
     headers: { "Content-Type": "image/png", "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name: pack.name, model: pack.model, basePackId: normalizeBasePackId(pack.basePackId), createdAt: pack.createdAt, width: frame.width, height: frame.height })) },
     body: frame.blob,
-  })));
+  });
 }
 
 export async function deleteExpressionPackFromPc(id: string) {
