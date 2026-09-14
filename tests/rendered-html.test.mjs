@@ -935,6 +935,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   const visibleEnvelopeFit = await readFile(new URL("../app/creator/visible-envelope-fit.ts", import.meta.url), "utf8");
   assert.match(visibleEnvelopeFit, /projectVisibleEnvelope/);
   assert.match(visibleEnvelopeFit, /fitVisibleEnvelope/);
+  const contourWarp = await readFile(new URL("../app/creator/head-contour-warp.ts", import.meta.url), "utf8");
+  assert.match(contourWarp, /verticalCompression/);
+  assert.match(contourWarp, /targetBottomInSourceSpace/);
   assert.match(page, /compositionMode/);
   assert.match(page, /backHairLayer, bodyLayer, faceLayer, outfitLayer/);
   const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");

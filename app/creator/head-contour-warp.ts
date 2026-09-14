@@ -270,6 +270,14 @@ export function buildNeckContourWarp(
   const targetTop = targetRows[0].y;
   const targetBottom = targetRows[targetRows.length - 1].y;
   if (sourceBottom - sourceTop < 4 || targetBottom - targetTop < 4) return null;
+  // O encaixe global alinha a entrada do pescoço, mas uma roupa pode ter uma
+  // faixa cervical muito mais comprida que a do modelo. Nesse caso, a última
+  // linha desejada do pescoço volta para o espaço local da roupa antes de o
+  // warp ser renderizado; o restante recebe uma transição suave até voltar à
+  // imagem original. Isso comprime somente a região cervical, sem levantar o
+  // corpo inteiro nem mexer no envelope dos pés.
+  const targetBottomInSourceSpace = localCoordinateY(targetBottom, transform, item);
+  const verticalCompression = targetBottomInSourceSpace < sourceBottom - 2;
 
   const count = 15;
   const maxSideShift = Math.max(1.5, (source.neckWidth ?? sourceRows[0].right - sourceRows[0].left) * 0.14);
@@ -277,6 +285,7 @@ export function buildNeckContourWarp(
   let baselineError = 0;
   let candidateError = 0;
   let maxDisplacement = 0;
+  const verticalSpan = Math.max(1, sourceBottom - sourceTop);
   let cappedRows = 0;
   for (let index = 0; index < count; index += 1) {
     const ratio = index / (count - 1);
@@ -287,13 +296,18 @@ export function buildNeckContourWarp(
     if (!sourceSample || !targetSample) continue;
     const targetLeft = localCoordinateX(targetSample.left, transform, item);
     const targetRight = localCoordinateX(targetSample.right, transform, item);
+    const outputY = localCoordinateY(targetY, transform, item);
     const rawLeftShift = targetLeft - sourceSample.left;
     const rawRightShift = targetRight - sourceSample.right;
     const leftShift = clamp(rawLeftShift, -maxSideShift, maxSideShift);
     const rightShift = clamp(rawRightShift, -maxSideShift, maxSideShift);
     if (Math.abs(rawLeftShift) > maxSideShift || Math.abs(rawRightShift) > maxSideShift) cappedRows += 1;
     const edgeFade = Math.sin(Math.PI * ratio);
-    const strength = edgeFade * 0.88;
+    // Quando há encurtamento, não desfaça a correção justamente na base do
+    // pescoço. O fade acontece depois dela, no trecho de transição abaixo.
+    const strength = verticalCompression
+      ? (index === 0 ? 0 : 0.88)
+      : edgeFade * 0.88;
     let safeLeft = sourceSample.left + leftShift;
     let safeRight = sourceSample.right + rightShift;
     const requestedWidth = safeRight - safeLeft;
@@ -306,11 +320,18 @@ export function buildNeckContourWarp(
     const finalLeft = sourceSample.left + (safeLeft - sourceSample.left) * strength;
     const finalRight = sourceSample.right + (safeRight - sourceSample.right) * strength;
     const norm = Math.max(1, sourceSample.width);
-    baselineError += (Math.abs(rawLeftShift) + Math.abs(rawRightShift)) / norm;
+    const verticalShift = Math.abs(sourceY - outputY);
+    baselineError += (Math.abs(rawLeftShift) + Math.abs(rawRightShift)) / norm
+      + verticalShift / verticalSpan;
     candidateError += (Math.abs(targetLeft - finalLeft) + Math.abs(targetRight - finalRight)) / norm;
-    maxDisplacement = Math.max(maxDisplacement, Math.abs(finalLeft - sourceSample.left), Math.abs(finalRight - sourceSample.right));
+    maxDisplacement = Math.max(
+      maxDisplacement,
+      Math.abs(finalLeft - sourceSample.left),
+      Math.abs(finalRight - sourceSample.right),
+      verticalShift,
+    );
     knots.push({
-      y: localCoordinateY(targetY, transform, item),
+      y: outputY,
       sourceY,
       sourceLeft: sourceSample.left,
       sourceRight: sourceSample.right,
@@ -320,6 +341,18 @@ export function buildNeckContourWarp(
     });
   }
   if (knots.length < count * 0.8) return null;
+  if (verticalCompression && sourceBottom > knots[knots.length - 1].y + 1) {
+    const lastSourceRow = sourceRows[sourceRows.length - 1];
+    knots.push({
+      y: sourceBottom,
+      sourceY: sourceBottom,
+      sourceLeft: lastSourceRow.left,
+      sourceRight: lastSourceRow.right,
+      targetLeft: lastSourceRow.left,
+      targetRight: lastSourceRow.right,
+      strength: 0,
+    });
+  }
   baselineError /= knots.length;
   candidateError /= knots.length;
   const improvement = baselineError > 0 ? (baselineError - candidateError) / baselineError : 0;
