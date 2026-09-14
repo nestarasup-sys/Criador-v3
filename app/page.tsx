@@ -3573,12 +3573,15 @@ export default function Home() {
 
   async function adjustSelectedOutfitByHeadFeminino() {
     if (category !== "roupas" || !selectedOutfit?.url) return;
-    // Mantém o caminho feminino original: a roupa é ajustada pela cabeça,
-    // sem impor o envelope da roupa padrão às variantes.
-    await adjustSelectedOutfitByHead("head", {
-      alignVariantsEnvelope: false,
+    // O feminino agora compartilha as melhorias de fluxo do masculino, mas
+    // mantém seu próprio perfil geométrico de encaixe.
+    const adjusted = await adjustSelectedOutfitByHead("head", {
+      alignVariantsEnvelope: true,
       neckV2Profile: "feminino",
     });
+    if (!adjusted) return;
+    setCompositionMode("outfit-over-face");
+    setNotice("Ajuste de roupa feminino aplicado: o modelo ficará atrás da roupa e o cabelo frontal continuará na frente.");
   }
 
   async function adjustSelectedOutfitByHeadMasculino() {
