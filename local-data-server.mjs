@@ -184,7 +184,14 @@ function isUiOrigin(origin) {
 
 let state = structuredClone(EMPTY_STATE);
 let writeQueue = Promise.resolve();
+let stateMutationQueue = Promise.resolve();
 let lastBackupAt = 0;
+
+function queueStateMutation(task) {
+  const operation = stateMutationQueue.catch(() => undefined).then(task);
+  stateMutationQueue = operation.then(() => undefined, () => undefined);
+  return operation;
+}
 
 function normalizeBaseModelId(value) {
   if (!value || value === "padrao") return "modelo-1";
@@ -965,35 +972,39 @@ async function route(request, response) {
   if (request.method === "POST" && url.pathname === "/characters") {
     const characters = await requestJson(request);
     if (!Array.isArray(characters)) throw new Error("Lista de personagens inválida");
-    state.characters = characters;
-    const knownCharacterIds = new Set(characters.map((character) => String(character?.id || "")));
-    for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
-      if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
-        await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
+    await queueStateMutation(async () => {
+      state.characters = characters;
+      const knownCharacterIds = new Set(characters.map((character) => String(character?.id || "")));
+      for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
+        if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
+          await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
+        }
       }
-    }
-    await queueStateWrite();
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
   if (request.method === "POST" && url.pathname === "/studios") {
     const studios = await requestJson(request);
     if (!Array.isArray(studios)) throw new Error("Lista de Studios inválida");
-    state.studios = studios;
-    const referencedAssets = new Set();
-    for (const studio of studios) {
-      if (studio?.background?.assetId) referencedAssets.add(studio.background.assetId);
-      for (const object of Array.isArray(studio?.objects) ? studio.objects : []) {
-        if (object?.assetId) referencedAssets.add(object.assetId);
+    await queueStateMutation(async () => {
+      state.studios = studios;
+      const referencedAssets = new Set();
+      for (const studio of studios) {
+        if (studio?.background?.assetId) referencedAssets.add(studio.background.assetId);
+        for (const object of Array.isArray(studio?.objects) ? studio.objects : []) {
+          if (object?.assetId) referencedAssets.add(object.assetId);
+        }
       }
-    }
-    const orphanedAssets = state.studioAssets.filter((asset) => !referencedAssets.has(asset.id));
-    state.studioAssets = state.studioAssets.filter((asset) => referencedAssets.has(asset.id));
-    for (const asset of orphanedAssets) {
-      const filePath = join(STUDIO_ASSETS_ROOT, safeId(asset.id));
-      if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
-    }
-    await queueStateWrite();
+      const orphanedAssets = state.studioAssets.filter((asset) => !referencedAssets.has(asset.id));
+      state.studioAssets = state.studioAssets.filter((asset) => referencedAssets.has(asset.id));
+      for (const asset of orphanedAssets) {
+        const filePath = join(STUDIO_ASSETS_ROOT, safeId(asset.id));
+        if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
+      }
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
@@ -1518,21 +1529,25 @@ async function route(request, response) {
     const body = await requestBody(request, BODY_LIMITS.image);
     const filePath = join(STUDIO_ASSETS_ROOT, id);
     if (!inside(STUDIO_ASSETS_ROOT, filePath)) throw new Error("Destino inválido");
-    await writeFile(filePath, body);
-    state.studioAssets = [
-      ...state.studioAssets.filter((asset) => asset.id !== id),
-      { id, name: metadata.name ?? "Imagem", contentType: metadata.contentType ?? "application/octet-stream", ...(metadata.kind === "background" || metadata.kind === "object" ? { kind: metadata.kind } : {}) },
-    ];
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      await writeFile(filePath, body);
+      state.studioAssets = [
+        ...state.studioAssets.filter((asset) => asset.id !== id),
+        { id, name: metadata.name ?? "Imagem", contentType: metadata.contentType ?? "application/octet-stream", ...(metadata.kind === "background" || metadata.kind === "object" ? { kind: metadata.kind } : {}) },
+      ];
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true, fileUrl: `http://${HOST}:${PORT}/files/studio/${id}` });
     return;
   }
   if (studioAssetMatch && request.method === "DELETE") {
     const id = safeId(studioAssetMatch[1]);
     const filePath = join(STUDIO_ASSETS_ROOT, id);
-    if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
-    state.studioAssets = state.studioAssets.filter((asset) => asset.id !== id);
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
+      state.studioAssets = state.studioAssets.filter((asset) => asset.id !== id);
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
@@ -1545,18 +1560,22 @@ async function route(request, response) {
     const body = await requestBody(request, BODY_LIMITS.image);
     const filePath = join(CATALOG_ROOT, `${id}.png`);
     if (!inside(CATALOG_ROOT, filePath)) throw new Error("Destino inválido");
-    await writeFile(filePath, body);
-    state.catalog = [...state.catalog.filter((item) => item.id !== id), metadata];
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      await writeFile(filePath, body);
+      state.catalog = [...state.catalog.filter((item) => item.id !== id), metadata];
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
   if (catalogMatch && request.method === "DELETE") {
     const id = safeId(catalogMatch[1]);
     const filePath = join(CATALOG_ROOT, `${id}.png`);
-    if (inside(CATALOG_ROOT, filePath)) await rm(filePath, { force: true });
-    state.catalog = state.catalog.filter((item) => item.id !== id);
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      if (inside(CATALOG_ROOT, filePath)) await rm(filePath, { force: true });
+      state.catalog = state.catalog.filter((item) => item.id !== id);
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
@@ -1572,19 +1591,21 @@ async function route(request, response) {
     const filePath = join(packFolder, `${key}.png`);
     if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
     await mkdir(packFolder, { recursive: true });
-    await writeFile(filePath, body);
-    const existing = state.expressionPacks.find((pack) => pack.id === packId);
-    const frame = { key, width: metadata.width, height: metadata.height };
-    const pack = {
-      id: packId,
-      name: metadata.name,
-      model: metadata.model,
-      basePackId: metadata.basePackId ?? "padrao",
-      createdAt: metadata.createdAt,
-      frames: [...(existing?.frames ?? []).filter((item) => item.key !== key), frame],
-    };
-    state.expressionPacks = [...state.expressionPacks.filter((item) => item.id !== packId), pack];
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      await writeFile(filePath, body);
+      const existing = state.expressionPacks.find((pack) => pack.id === packId);
+      const frame = { key, width: metadata.width, height: metadata.height };
+      const pack = {
+        id: packId,
+        name: metadata.name,
+        model: metadata.model,
+        basePackId: metadata.basePackId ?? "padrao",
+        createdAt: metadata.createdAt,
+        frames: [...(existing?.frames ?? []).filter((item) => item.key !== key), frame],
+      };
+      state.expressionPacks = [...state.expressionPacks.filter((item) => item.id !== packId), pack];
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
@@ -1593,9 +1614,11 @@ async function route(request, response) {
   if (packDeleteMatch && request.method === "DELETE") {
     const packId = safeId(packDeleteMatch[1]);
     const packFolder = join(PACKS_ROOT, packId);
-    if (inside(PACKS_ROOT, packFolder)) await rm(packFolder, { recursive: true, force: true });
-    state.expressionPacks = state.expressionPacks.filter((pack) => pack.id !== packId);
-    await queueStateWrite();
+    await queueStateMutation(async () => {
+      if (inside(PACKS_ROOT, packFolder)) await rm(packFolder, { recursive: true, force: true });
+      state.expressionPacks = state.expressionPacks.filter((pack) => pack.id !== packId);
+      await queueStateWrite();
+    });
     sendJson(response, request, 200, { ok: true });
     return;
   }
