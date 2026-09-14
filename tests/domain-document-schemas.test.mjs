@@ -59,6 +59,21 @@ test("normaliza transformação de fundo nova e preserva a classificação dos a
   assert.deepEqual(legacy.studios[0].background, { assetId: "", src: "/old.png", fit: "cover", offsetX: 0, offsetY: 0, scale: 1 });
 });
 
+test("normaliza transforms inválidos antes que cheguem ao preview ou à exportação", () => {
+  const normalized = normalizeAppState({ characters: [{
+    id: "char-invalid-transform",
+    model: "feminino",
+    adjustments: {
+      cabelos: { x: "12", y: "não-numérico", scale: 0, scaleX: -2, scaleY: "3", rotation: "90", flipX: "true", futureTransformField: "keep" },
+    },
+  }] });
+  const transform = normalized.characters[0].adjustments.cabelos;
+  assert.deepEqual(transform, {
+    x: 12, y: 0, scale: 1, scaleX: 1, scaleY: 3, rotation: 90, flipX: false,
+    futureTransformField: "keep",
+  });
+});
+
 test("preserva pose da roupa por instância do Studio e descarta índice inválido", () => {
   const normalized = normalizeAppState({ studios: [{ id: "studio-pose", characters: [
     { id: "scene-1", characterId: "char-1", expressionEmotion: "normal", expressionState: "default", outfitGroupId: "outfit-1", outfitVariantIndex: 4, outfitVariantOffsets: { "outfit-1": { x: 12, y: -8 }, invalid: { x: "no", y: 4 } } },

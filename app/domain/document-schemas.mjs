@@ -20,7 +20,21 @@ function normalizeSelections(value) {
 
 function normalizeTransform(value) {
   const source = record(value);
-  return { ...DEFAULT_TRANSFORM, ...source };
+  const finiteOr = (candidate, fallback) => Number.isFinite(Number(candidate)) ? Number(candidate) : fallback;
+  const positiveOr = (candidate, fallback) => {
+    const number = Number(candidate);
+    return Number.isFinite(number) && number > 0 ? number : fallback;
+  };
+  return {
+    ...source,
+    x: finiteOr(source.x, DEFAULT_TRANSFORM.x),
+    y: finiteOr(source.y, DEFAULT_TRANSFORM.y),
+    scale: positiveOr(source.scale, DEFAULT_TRANSFORM.scale),
+    scaleX: positiveOr(source.scaleX, DEFAULT_TRANSFORM.scaleX),
+    scaleY: positiveOr(source.scaleY, DEFAULT_TRANSFORM.scaleY),
+    rotation: finiteOr(source.rotation, DEFAULT_TRANSFORM.rotation),
+    flipX: source.flipX === true,
+  };
 }
 
 function normalizeAdjustments(value) {
