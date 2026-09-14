@@ -3571,6 +3571,32 @@ export default function Home() {
     else await adjustSelectedOutfitByNeckV2Feminino();
   }
 
+  async function adjustSelectedOutfitByHeadFeminino() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    // Mantém o caminho feminino original: a roupa é ajustada pela cabeça,
+    // sem impor o envelope da roupa padrão às variantes.
+    await adjustSelectedOutfitByHead("head", {
+      alignVariantsEnvelope: false,
+      neckV2Profile: "feminino",
+    });
+  }
+
+  async function adjustSelectedOutfitByHeadMasculino() {
+    if (category !== "roupas" || !selectedOutfit?.url) return;
+    // O masculino usa o mesmo encaixe de cabeça que já funciona melhor, mas
+    // reaproveita a normalização vertical do ajuste V2: topo e base visíveis
+    // das variantes passam a acompanhar a roupa padrão.
+    await adjustSelectedOutfitByHead("head", {
+      alignVariantsEnvelope: true,
+      neckV2Profile: "masculino",
+    });
+  }
+
+  async function adjustSelectedOutfitByHeadForModel() {
+    if (model === "masculino") await adjustSelectedOutfitByHeadMasculino();
+    else await adjustSelectedOutfitByHeadFeminino();
+  }
+
   async function adjustSelectedHairByHead() {
     const hairCategory: Category = category === "cabelosTras" ? "cabelosTras" : "cabelos";
     const hairId = selections[hairCategory];
@@ -5627,7 +5653,7 @@ export default function Home() {
                 <button
                   type="button"
                   className="head-fit-button"
-                  onClick={() => { void adjustSelectedOutfitByHead("head"); }}
+                  onClick={() => { void adjustSelectedOutfitByHeadForModel(); }}
                   disabled={isProcessing}
                   title="Ajustar a roupa pela cabeça do personagem selecionado"
                 >
