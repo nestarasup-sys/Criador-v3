@@ -22,7 +22,8 @@ type RenderDebugWindow = Window & {
   };
 };
 
-const MAX_EVENTS = 20_000;
+const MAX_EVENTS = 2_000;
+const MAX_SNAPSHOTS = 12;
 
 function isEnabled() {
   return typeof window !== "undefined"
@@ -111,6 +112,14 @@ function installRenderDebug() {
       ...details,
     });
     if (events.length > MAX_EVENTS) events.splice(0, events.length - MAX_EVENTS);
+    if (details.snapshot) {
+      let snapshots = 0;
+      for (let index = events.length - 1; index >= 0; index -= 1) {
+        if (!events[index].snapshot) continue;
+        snapshots += 1;
+        if (snapshots > MAX_SNAPSHOTS) delete events[index].snapshot;
+      }
+    }
   };
 
   debugWindow.__NYMI_CHARACTER_RENDER_DEBUG__ = {

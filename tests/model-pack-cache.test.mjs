@@ -66,12 +66,13 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
 });
 
 test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {
-  const [page, studioLoader, studioRenderer, studioPage, modelColors] = await Promise.all([
+  const [page, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/image-loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/model-color-rendering.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/render-debug.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /PAGE_IMAGE_CACHE_LIMIT = 24/);
@@ -90,4 +91,6 @@ test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studi
   assert.match(studioPage, /Math\.min\(2, queue\.length\)/);
   assert.match(studioPage, /activeFallbackKeys/);
   assert.doesNotMatch(studioPage, /requested\.forEach\(\(request, key\) =>/);
+  assert.match(renderDebug, /MAX_EVENTS = 2_000/);
+  assert.match(renderDebug, /MAX_SNAPSHOTS = 12/);
 });
