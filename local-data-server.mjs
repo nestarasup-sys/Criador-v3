@@ -1088,8 +1088,8 @@ async function route(request, response) {
 
   if (request.method === "POST" && url.pathname === "/roteiros/import-base-video") {
     const body = await requestJson(request);
-    const scriptId = safeId(body?.scriptId);
-    const tiktokId = safeId(body?.tiktokId);
+    safeId(body?.scriptId);
+    safeId(body?.tiktokId);
     const videoId = safeId(body?.videoId);
     const sourceVideo = baseDadosService.getVideo(videoId);
     if (!sourceVideo) throw Object.assign(new Error("Vídeo da Base de dados não encontrado."), { status: 404 });
