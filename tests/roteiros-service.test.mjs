@@ -239,6 +239,7 @@ test("rejeita uma fala vazia retornada pela IA antes de gravar no roteiro", asyn
     assert.equal(response.status, 422);
     assert.match(response.value.error, /fala\/pensamento vazio/i);
     assert.equal(response.value.diagnostics.attempts, 2);
+    assert.match(response.value.diagnostics.promptPreview.input, /REFAZER_GERACAO/);
   } finally {
     await new Promise((resolve) => stub.server.close(resolve));
     await rm(root, { recursive: true, force: true });

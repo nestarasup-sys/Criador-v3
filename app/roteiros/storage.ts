@@ -27,7 +27,11 @@ export type { RecoveryJournalEntry } from "./recovery-types";
 async function request(path: string, init?: RequestInit) {
   const response = await localDataFetch(path, { cache: "no-store", ...init });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
-  if (!response.ok) throw new Error(String(result.error || `Serviço local indisponível (${response.status})`));
+  if (!response.ok) {
+    const error = new Error(String(result.error || `Serviço local indisponível (${response.status})`));
+    if (result.diagnostics) Object.assign(error, { diagnostics: result.diagnostics });
+    throw error;
+  }
   return result;
 }
 

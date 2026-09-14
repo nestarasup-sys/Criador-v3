@@ -35,6 +35,11 @@ function rememberSentPrompt(preview: Omit<SentPromptPreview, "sentAt">) {
   window.dispatchEvent(new Event("nymi-roteiros-prompt-updated"));
 }
 
+function rememberPromptFromError(error: unknown) {
+  const preview = (error as { diagnostics?: { promptPreview?: Omit<SentPromptPreview, "sentAt"> } })?.diagnostics?.promptPreview;
+  if (preview?.instructions && preview.input) rememberSentPrompt(preview);
+}
+
 function CharacterMark({ character }: { character: PremiumCharacter }) {
   const photo = character.photoUrl ?? character.photoDataUrl;
   const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
@@ -220,7 +225,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
       const next = [...section.reactionBlocks];
       targets.forEach((targetIndex, resultIndex) => { const generated = result.reactions[resultIndex]; next[targetIndex] = { ...next[targetIndex], ...generated, englishText: "", updatedAt: nowIso() }; });
       patch({ reactionBlocks: next }); setMessage(`${targets.length} bloco(s) gerado(s) com ${result.model}.`);
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível gerar os blocos."); }
+    } catch (error) { rememberPromptFromError(error); setMessage(error instanceof Error ? error.message : "Não foi possível gerar os blocos."); }
     finally { setLoading(""); }
   };
 
