@@ -506,6 +506,9 @@ body.area2 .sidebar{height:100vh}
     <label>Folha C</label><input id="fileC" type="file" accept="image/*">
 
     <label><input id="chroma2Quick" type="checkbox" style="width:auto"> Chroma 2</label>
+    <label>Alcance de tons do fundo <span class="value" id="chroma2ToneV">52</span></label>
+    <input id="chroma2ToneRange" type="range" min="20" max="90" value="52" disabled>
+    <div id="bgModeHint" class="small">Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.</div>
     <div class="small">O <b>chroma clássico é o padrão</b>, como no V7.5. Ative Chroma 2 somente quando quiser substituir o chroma base nesta detecção.</div>
     <div id="inputEngineStatus" class="status">Chroma clássico ativo · Chroma 2 opcional.</div>
     <details class="detailsAdvanced advancedOnly" id="advancedInput"><summary>Entrada / segmentação</summary>
@@ -752,20 +755,20 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
 <div class="app" id="area2">
   <aside class="sidebar">
     <h1>V8.4 · Área 2</h1>
-    <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando as 63 PNGs transparentes.</div>
+    <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando os PNGs transparentes disponíveis.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
     <div class="card">
       <h2>1. Carregar modelo processado</h2>
       <div class="a2Drop">
-        <label>Pasta do modelo (63 PNGs)</label>
+      <label>Pasta do modelo processado (PNG da grade)</label>
         <input id="a2Folder" type="file" webkitdirectory multiple accept="image/png">
-        <div class="small">Selecione a pasta <b>modelo-N</b>. JSON e outros arquivos são ignorados; os nomes dos 63 PNGs são preservados.</div>
+        <div class="small">Selecione a pasta <b>modelo-N</b>. JSON e outros arquivos são ignorados; os nomes dos PNGs são preservados. Modelos com grades diferentes também são aceitos.</div>
       </div>
       <button id="a2Process" class="primary" style="margin-top:9px" disabled>◎ Construir molde perfeito e alinhar 100% (topo + pescoço)</button>
       <div id="a2Status" class="status" style="margin-top:8px">Aguardando pasta.</div>
       <div class="a2Stats">
-        <div class="a2Stat"><span>Imagens</span><b id="a2Count">0/63</b></div>
+<div class="a2Stat"><span>Imagens</span><b id="a2Count">0 PNGs</b></div>
         <div class="a2Stat"><span>Topo alvo</span><b id="a2TopStat">—</b></div>
         <div class="a2Stat"><span>Pescoço L/R</span><b id="a2NeckStat">—</b></div>
         <div class="a2Stat"><span>Precisão</span><b id="a2Precision">—</b></div>
@@ -784,8 +787,8 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
 
     <div class="card">
       <h2>3. Exportar pós-alinhamento</h2>
-      <div class="small">Exporta os mesmos 63 nomes PNG para uma pasta escolhida por você. O modelo original não é sobrescrito automaticamente.</div>
-      <button id="a2Export" class="good" disabled>Exportar 63 PNGs alinhados</button>
+      <div class="small">Exporta os mesmos nomes PNG para uma pasta escolhida por você. O modelo original não é sobrescrito automaticamente.</div>
+      <button id="a2Export" class="good" disabled>Exportar conjunto alinhado</button>
       <div id="a2ExportStatus" class="status" style="margin-top:8px">Nada exportado.</div>
     </div>
 
@@ -806,7 +809,7 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
       <canvas id="a2Preview" width="960" height="540"></canvas>
       <div class="a2Guide">
         <b>Molde perfeito pós-processamento</b>
-        <div id="a2GuideText" class="small">Carregue a pasta para medir as 63 imagens.</div>
+        <div id="a2GuideText" class="small">Carregue a pasta para medir as imagens do modelo.</div>
         <canvas id="a2GuideCanvas" width="460" height="300"></canvas>
       </div>
     </div>
@@ -938,6 +941,7 @@ function percentile(v,p){
 }
 function updateLabels(){
   $("expectedV").textContent=$("expected").value;
+  $("chroma2ToneV").textContent=$("chroma2ToneRange").value;
   $("thrV").textContent=$("thr").value;
   $("warpV").textContent=$("warpStrength").value+"%";
   if($("smartRemapMaxV"))$("smartRemapMaxV").textContent=$("smartRemapMax").value+"%";
@@ -995,14 +999,17 @@ function alphaMask(c,alphaThr=10){
 function updateBgModeUI(){
   const mode=$("inputEngine")?.value||"classic",classic=mode==="classic";
   $("thr").disabled=!classic;$("autoThr").disabled=!classic;
+  $("chroma2ToneRange").disabled=mode!=="chroma2";
   if($("chroma2Quick"))$("chroma2Quick").checked=mode==="chroma2";
   const el=$("inputEngineStatus");
+  const hint=$("bgModeHint");
   if(el){
     if(mode==="classic")el.textContent="Chroma clássico ativo · base V7.5. Chroma 2 está desligado.";
     else if(mode==="chroma2")el.textContent="Chroma 2 ATIVO · substituindo o chroma clássico nesta detecção.";
     else if(mode==="alpha")el.textContent="ALPHA forçado · usa transparência existente.";
     else el.textContent="AUTO experimental · Alpha / Classic / Chroma 2 competem em baixa resolução.";
   }
+  if(hint)hint.textContent=mode==="chroma2"?"Chroma 2 ativo: ajuste o alcance para incluir variações de iluminação do fundo sem ampliar a remoção sobre o personagem.":"Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.";
 }
 /* =========================================================
    CHROMA 2 — integrado do GreenCut Pro
@@ -1088,7 +1095,8 @@ function chroma2ProcessCanvas(c,{processed=true}={}){
   const ctx=c.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,c.width,c.height);
   const src=img.data,w=c.width,h=c.height,n=w*h;
   const bg=ch2DominantBackground(src,w,h),f=ch2BuildFeatures(src,w,h,bg);
-  const T=52,protect=.72,feather=24,despill=.44,hardMode=false;
+  const T=clamp(Number($("chroma2ToneRange")?.value||52),20,90);
+  const protect=.72,feather=24,despill=.44,hardMode=false;
   const borderHue=[],borderSat=[],borderVal=[],borderWhite=[];
   const band=Math.max(2,Math.floor(Math.min(w,h)*.018)),step=Math.max(1,Math.floor(Math.min(w,h)/400));
   for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step)if(x<band||y<band||x>=w-band||y>=h-band){
@@ -3379,29 +3387,30 @@ async function a2CreateThumb(item){
   const full=await a2RenderItem(item),thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);item.verify=await a2VerifyCanvas(full);item.resultBlob=await canvasToBlob(full);return thumb;
 }
 async function a2LoadFolder(){
-  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length}/63`;$("a2Process").disabled=files.length!==63;$("a2Export").disabled=true;
-  if(files.length!==63){status("a2Status",`Pasta carregada com ${files.length} PNGs. A Área 2 exige exatamente 63 imagens.`,files.length?"warn":"");a2DrawPreview();return}
-  status("a2Status","63 PNGs reconhecidas. Pronto para medir e construir o Precision Lock.","ok");a2PopulateSelect();a2DrawPreview();
+  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length} PNGs`;
+  const ready=files.length>=2;$("a2Process").disabled=!ready;$("a2Export").disabled=true;
+  if(!ready){status("a2Status",files.length?`Pasta carregada com ${files.length} PNG. São necessárias pelo menos 2 imagens.`:"Nenhum PNG encontrado.",files.length?"warn":"");a2DrawPreview();return}
+  status("a2Status",`${files.length} PNGs reconhecidas. Pronto para medir e construir o Precision Lock.`,"ok");a2PopulateSelect();a2DrawPreview();
 }
 function a2PopulateSelect(){const sel=$("a2Current");sel.innerHTML="";A2.files.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${String(i+1).padStart(2,"0")} · ${f.name}`;sel.appendChild(o)})}
 async function a2Process(){
-  if(A2.files.length!==63)return;$("a2Process").disabled=true;$("a2Export").disabled=true;A2.items=[];A2.thumbs=[];$("a2Heads").innerHTML="";
+  if(A2.files.length<2)return;$("a2Process").disabled=true;$("a2Export").disabled=true;A2.items=[];A2.thumbs=[];$("a2Heads").innerHTML="";
   try{
     for(let i=0;i<A2.files.length;i++)A2.items.push(await a2MeasureFile(A2.files[i],i,A2.files.length));
     const dims=A2.items.filter(x=>x.w!==MODEL_EXPORT.width||x.h!==MODEL_EXPORT.height);if(dims.length)throw new Error(`${dims.length} PNG(s) não estão em 1920×1080.`);
     A2.canonical=a2BuildCanonical(A2.items);$("a2TopStat").textContent=`Y ${A2.canonical.targetTop}`;$("a2NeckStat").textContent=`${Math.round(A2.canonical.baseL)} / ${Math.round(A2.canonical.baseR)}`;
-    status("a2Status","Molde construído. Aplicando Precision Lock e verificando as 63 imagens…","warn");
-    for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Lock ${i+1}/63 · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
-    A2.processed=true;const ok=A2.items.filter(x=>x.verify?.ok).length,p90=percentile(A2.items.map(x=>x.verify?.neckP90??99),.90),topMax=Math.max(...A2.items.map(x=>x.verify?.topErr??99));$("a2Precision").textContent=`${ok}/63 LOCK`;
+    status("a2Status",`Molde construído. Aplicando Precision Lock e verificando as ${A2.items.length} imagens…`,"warn");
+    for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Lock ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
+    A2.processed=true;const ok=A2.items.filter(x=>x.verify?.ok).length,p90=percentile(A2.items.map(x=>x.verify?.neckP90??99),.90),topMax=Math.max(...A2.items.map(x=>x.verify?.topErr??99));$("a2Precision").textContent=`${ok}/${A2.items.length} LOCK`;
     $("a2GuideText").textContent=`Topo Y ${A2.canonical.targetTop} · neck-base Y ${A2.canonical.targetBottom} · pescoço base L ${Math.round(A2.canonical.baseL)} / R ${Math.round(A2.canonical.baseR)} · P90 residual ${p90.toFixed(1)} px · erro máximo de topo ${topMax.toFixed(1)} px.`;
-    status("a2Status",ok===63?"Precision Lock concluído: 63/63 dentro da tolerância de verificação.":`Precision Lock concluído: ${ok}/63 dentro da tolerância. Confira as miniaturas marcadas.`,ok===63?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
+    status("a2Status",ok===A2.items.length?`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância de verificação.`:`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância. Confira as miniaturas marcadas.`,ok===A2.items.length?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
   }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false}
 }
 function a2RenderThumbs(){
   const wrap=$("a2Heads");wrap.innerHTML="";A2.items.forEach((it,i)=>{const d=document.createElement("div");d.className="a2Thumb"+(i===A2.currentIndex?" active":"")+(it.verify&&!it.verify.ok?" bad":"");const c=canvas(240,135);c.getContext("2d").drawImage(it.thumb,0,0);d.appendChild(c);const n=document.createElement("div");n.textContent=it.name;d.appendChild(n);if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.verify.ok?"LOCK":"REVISAR";d.appendChild(b)}d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)})
 }
 async function a2DrawPreview(){
-  const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue uma pasta com 63 PNGs",c.width/2,c.height/2);return}
+  const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue a pasta do modelo",c.width/2,c.height/2);return}
   const i=clamp(A2.currentIndex,0,A2.files.length-1),file=A2.files[i],mode=$("a2View").value,bm=await a2Bitmap(file),result=A2.processed&&A2.items[i]?.resultBlob?await createImageBitmap(A2.items[i].resultBlob):null;
   const drawFit=(img,x,w)=>{const sc=Math.min((w-22)/img.width,(c.height-22)/img.height),dw=img.width*sc,dh=img.height*sc;ctx.drawImage(img,x+(w-dw)/2,(c.height-dh)/2,dw,dh)};
   if(mode==="compare"&&result){drawFit(bm,0,c.width/2);drawFit(result,c.width/2,c.width/2);ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("ANTES",15,22);ctx.fillText("DEPOIS",c.width/2+15,22)}
@@ -3414,9 +3423,9 @@ function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex
 function a2Stop(){A2.playing=false;clearInterval(A2.timer);A2.timer=null;if($("a2Play"))$("a2Play").textContent="▶ Play"}
 function a2Start(){if(!A2.files.length)return;a2Stop();A2.playing=true;$("a2Play").textContent="⏸ Pausar";A2.timer=setInterval(()=>a2Step(1),1000/Number($("a2Fps").value||6))}
 async function a2Export(){
-  if(!A2.processed||A2.items.length!==63)return;$("a2Export").disabled=true;try{
-    if("showDirectoryPicker" in window){const dir=await window.showDirectoryPicker({mode:"readwrite",id:"nymi-area2-export"});for(let i=0;i<A2.items.length;i++){status("a2ExportStatus",`Exportando ${i+1}/63 · ${A2.items[i].name}`,"warn");const blob=A2.items[i].resultBlob||(await canvasToBlob(await a2RenderItem(A2.items[i]))),fh=await dir.getFileHandle(A2.items[i].name,{create:true}),wr=await fh.createWritable();await wr.write(blob);await wr.close();if(i%3===2)await sleep(0)}status("a2ExportStatus","Concluído: 63 PNGs pós-alinhados exportados.","ok")}
-    else{for(const it of A2.items){const blob=it.resultBlob||(await canvasToBlob(await a2RenderItem(it))),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=it.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);await sleep(80)}status("a2ExportStatus","Downloads iniciados para os 63 PNGs.","ok")}
+  if(!A2.processed||A2.items.length<2)return;$("a2Export").disabled=true;try{
+    if("showDirectoryPicker" in window){const dir=await window.showDirectoryPicker({mode:"readwrite",id:"nymi-area2-export"});for(let i=0;i<A2.items.length;i++){status("a2ExportStatus",`Exportando ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const blob=A2.items[i].resultBlob||(await canvasToBlob(await a2RenderItem(A2.items[i]))),fh=await dir.getFileHandle(A2.items[i].name,{create:true}),wr=await fh.createWritable();await wr.write(blob);await wr.close();if(i%3===2)await sleep(0)}status("a2ExportStatus",`Concluído: ${A2.items.length} PNGs pós-alinhados exportados.`,"ok")}
+    else{for(const it of A2.items){const blob=it.resultBlob||(await canvasToBlob(await a2RenderItem(it))),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=it.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);await sleep(80)}status("a2ExportStatus",`Downloads iniciados para os ${A2.items.length} PNGs.`,"ok")}
   }catch(e){if(e.name!=="AbortError")status("a2ExportStatus","Erro: "+e.message,"bad")}finally{$("a2Export").disabled=false}
 }
 function switchToArea2(){stopPlayer();document.body.classList.add("area2");a2DrawPreview();window.scrollTo(0,0)}
@@ -3445,6 +3454,7 @@ function init(){
     $("inputEngine").value=$("chroma2Quick").checked?"chroma2":"classic";
     updateBgModeUI();invalidate("segmentation",$("chroma2Quick").checked?"Chroma 2 ativado":"chroma clássico restaurado");
   };
+  $("chroma2ToneRange").oninput=()=>{updateLabels();if(S.heads.length&&usingChroma2())status("detectStatus","Alcance de tons alterado. Detecte novamente as cabeças.","warn")};
   $("expected").addEventListener("change",()=>invalidate("detection","quantidade/schema experimental alterado"));
   $("thr").addEventListener("change",()=>invalidate("segmentation","sensibilidade do chroma clássico alterada"));
   $("autoThr").onchange=()=>invalidate("segmentation","auto threshold alterado");
