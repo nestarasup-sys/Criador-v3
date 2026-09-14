@@ -4,6 +4,14 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { createBaseDadosService } from "../services/base-dados/service.mjs";
+import { isBaseVideoReferencedByScripts } from "../services/base-dados/references.mjs";
+
+test("detecta referências da Base dentro do estado separado de Roteiros", () => {
+  const scripts = [{ tiktoks: [{ video: { libraryVideoId: "video-1" } }] }];
+  assert.equal(isBaseVideoReferencedByScripts(scripts, "video-1"), true);
+  assert.equal(isBaseVideoReferencedByScripts(scripts, "video-2"), false);
+  assert.equal(isBaseVideoReferencedByScripts(undefined, "video-1"), false);
+});
 
 function request(method, pathname, body = Buffer.alloc(0), extraHeaders = {}) {
   const headers = { ...extraHeaders };

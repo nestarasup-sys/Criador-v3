@@ -8,6 +8,7 @@ import JSZip from "jszip";
 import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
+import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
@@ -795,7 +796,7 @@ async function route(request, response) {
   const baseVideoDeleteMatch = url.pathname.match(/^\/base-dados\/videos\/([a-zA-Z0-9_-]{1,160})$/);
   if (baseVideoDeleteMatch && request.method === "DELETE") {
     const videoId = safeId(baseVideoDeleteMatch[1]);
-    const inUse = state.scripts.some((script) => script.tiktoks.some((section) => section.video?.libraryVideoId === videoId));
+    const inUse = isBaseVideoReferencedByScripts(roteirosService.getScripts(), videoId);
     if (inUse) {
       sendJson(response, request, 409, { error: "Este vídeo está sendo usado por um ou mais roteiros. Remova-o dos roteiros antes de excluí-lo da Base." });
       return;
