@@ -1302,6 +1302,7 @@ export default function Home() {
     catalogTombstones: [],
     expressionPackTombstones: [],
   });
+  const retainedAssetUrlsRef = useRef(new Set<string>());
   const dragRef = useRef<{
     pointerId: number;
     mode: "move" | "resize";
@@ -1395,6 +1396,8 @@ export default function Home() {
   const [isSavingModelItem, setIsSavingModelItem] = useState(false);
 
   useEffect(() => () => {
+    retainedAssetUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    retainedAssetUrlsRef.current.clear();
     pageImageCache.clear();
     basePackThumbnailCache.clear();
     colorLayerCacheRef.current.clear();
@@ -1402,6 +1405,25 @@ export default function Home() {
     processedBases.current = {};
     processedBaseExpressions.current = {};
   }, []);
+
+  useEffect(() => {
+    const next = new Set<string>();
+    const rememberCatalog = (items: readonly CatalogItem[]) => items.forEach((item) => {
+      if (item.url?.startsWith("blob:")) next.add(item.url);
+    });
+    const rememberPacks = (packs: readonly ExpressionPack[]) => packs.forEach((pack) => pack.frames.forEach((frame) => {
+      if (frame.url?.startsWith("blob:")) next.add(frame.url);
+    }));
+    rememberCatalog(catalog);
+    rememberPacks(expressionPacks);
+    rememberCatalog(browserMigrationRef.current.catalog);
+    rememberPacks(browserMigrationRef.current.expressionPacks);
+    pendingOutfitPack?.variants.forEach((variant) => next.add(variant.previewUrl));
+    retainedAssetUrlsRef.current.forEach((url) => {
+      if (!next.has(url)) URL.revokeObjectURL(url);
+    });
+    retainedAssetUrlsRef.current = next;
+  }, [catalog, expressionPacks, pendingOutfitPack]);
 
   useEffect(() => {
     window.localStorage.setItem(MANUAL_MODEL_COLOR_MASKS_STORAGE_KEY, JSON.stringify(manualModelColorMasks));
@@ -1533,6 +1555,15 @@ export default function Home() {
             const pcCharacter = pcState.characters.find((entry) => entry.id === character.id);
             return !pcCharacter || new Date(character.updatedAt).getTime() > new Date(pcCharacter.updatedAt).getTime();
           }) || hasCatalogChanges || hasCatalogDeletions || hasPackChanges || hasPackDeletions;
+          if (!hasUnmigratedBrowserData) {
+            browserMigrationRef.current = {
+              characters: [],
+              catalog: [],
+              expressionPacks: [],
+              catalogTombstones: [],
+              expressionPackTombstones: [],
+            };
+          }
           if (pcHasData) {
             const hydrated = await hydratePcState(pcState);
             setCharacters(hydrated.characters);
@@ -4408,6 +4439,13 @@ export default function Home() {
       const mergedPacks = expressionPacks
         .filter((pack) => !packDeletionIds.has(pack.id) && !updatedPackIds.has(pack.id))
         .concat(packUpdatesWithUrls);
+      browserMigrationRef.current = {
+        characters: [],
+        catalog: [],
+        expressionPacks: [],
+        catalogTombstones: [],
+        expressionPackTombstones: [],
+      };
       setCharacters(mergedCharacters);
       setCatalog(mergedCatalog);
       setExpressionPacks(mergedPacks);

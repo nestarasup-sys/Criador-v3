@@ -87,4 +87,7 @@ test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studi
   assert.match(studioRenderer, /export function clearStudioCharacterRenderCaches/);
   assert.match(modelColors, /MAX_MODEL_MASK_CACHE = 12/);
   assert.match(studioPage, /clearStudioCharacterRenderCaches\(\)/);
+  assert.match(studioPage, /Math\.min\(2, queue\.length\)/);
+  assert.match(studioPage, /activeFallbackKeys/);
+  assert.doesNotMatch(studioPage, /requested\.forEach\(\(request, key\) =>/);
 });

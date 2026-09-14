@@ -388,7 +388,6 @@ export default function StudioPage() {
     const activeStudio = studiosRef.current.find((item) => item.id === currentId);
     if (!activeStudio) return;
     let cancelled = false;
-    const tasks: Array<Promise<void>> = [];
     const requested = new Map<string, { character: Character; emotion: string; state: string }>();
     for (const id of activeStudio.rosterIds) {
       const character = charactersById.get(id);
@@ -407,20 +406,40 @@ export default function StudioPage() {
       renderedRef.current = pruned;
       setRendered(pruned);
     }
-    requested.forEach((request, key) => {
-      if (renderedRef.current[key]) return;
-      tasks.push(renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks, modelPacks)
-        .then((src) => {
+    const activeFallbackKeys = new Set([
+      ...activeStudio.rosterIds,
+      ...activeStudio.characters.map((item) => item.characterId),
+      ...activeStudio.characters.map((item) => item.id),
+    ]);
+    renderedFallbackRef.current = Object.fromEntries(
+      Object.entries(renderedFallbackRef.current).filter(([key]) => activeFallbackKeys.has(key)),
+    );
+
+    // Each character render allocates several large 1920x1080/2960x1800
+    // canvases. Starting a whole cast at once creates multi-gigabyte peaks.
+    // Two workers keep the UI responsive without retaining an entire roster's
+    // intermediate canvases simultaneously.
+    const queue = [...requested.entries()].filter(([key]) => !renderedRef.current[key]);
+    let cursor = 0;
+    const worker = async () => {
+      while (!cancelled) {
+        const entry = queue[cursor++];
+        if (!entry) return;
+        const [key, request] = entry;
+        try {
+          const src = await renderStudioCharacter(request.character, expressionKey(request.emotion, request.state), data.catalog, data.expressionPacks, modelPacks);
           if (cancelled) return;
           renderedRef.current[key] = src;
           renderedFallbackRef.current[request.character.id] = src;
           const instance = activeStudio.characters.find((item) => item.characterId === request.character.id);
           if (instance) renderedFallbackRef.current[instance.id] = src;
           setRendered((current) => ({ ...current, [key]: src }));
-        })
-        .catch(() => { if (!cancelled) setNotice(`Não foi possível renderizar ${request.character.name}`); }));
-    });
-    Promise.allSettled(tasks).catch(() => undefined);
+        } catch {
+          if (!cancelled) setNotice(`Não foi possível renderizar ${request.character.name}`);
+        }
+      }
+    };
+    void Promise.allSettled(Array.from({ length: Math.min(2, queue.length) }, worker));
     return () => { cancelled = true; };
   }, [characterRenderSignature, currentId, charactersById, data.catalog, data.expressionPacks, modelPacks, renderCacheKey]);
 
