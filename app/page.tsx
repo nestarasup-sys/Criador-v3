@@ -3265,6 +3265,9 @@ export default function Home() {
   ) {
     if (category !== "roupas" || !selectedOutfit?.url) return false;
     const alignVariantsEnvelope = options.alignVariantsEnvelope === true;
+    // O perfil masculino usa a escala global da cabeça e corrige a gola por
+    // warp local; o feminino mantém o ajuste cervical original, já calibrado.
+    const useBalancedNeck = reference === "neck" && model === "masculino";
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"
@@ -3387,7 +3390,7 @@ export default function Home() {
             },
             headOnly ? { x: activeBasePack.anchorX } : undefined,
             reference,
-            { mode: reference === "neck" ? "balanced-neck" : "default" },
+            { mode: useBalancedNeck ? "balanced-neck" : "default" },
           );
           const standardExistingTransform = standardOutfit.id === selectedOutfit.id
             ? adjustments.roupas
@@ -3428,7 +3431,7 @@ export default function Home() {
           ? { x: activeBasePack.anchorX }
         : undefined,
         reference,
-        { mode: reference === "neck" ? "balanced-neck" : "default" },
+        { mode: useBalancedNeck ? "balanced-neck" : "default" },
       );
       const baselineTransform = normalizeTransform({
         ...fitted,
@@ -3444,7 +3447,7 @@ export default function Home() {
       const headWarp = mergeContourWarps(
         buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
         reference === "neck"
-          ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: "balanced-neck" })
+          ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: useBalancedNeck ? "balanced-neck" : "default" })
           : null,
       );
       const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
@@ -3485,7 +3488,7 @@ export default function Home() {
           },
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           reference,
-          { mode: reference === "neck" ? "balanced-neck" : "default" },
+          { mode: useBalancedNeck ? "balanced-neck" : "default" },
         );
         const variantBaseline = normalizeTransform({
           ...variantFit,
@@ -3504,7 +3507,7 @@ export default function Home() {
         const variantWarp = mergeContourWarps(
           buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
           reference === "neck"
-            ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: "balanced-neck" })
+            ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: useBalancedNeck ? "balanced-neck" : "default" })
             : null,
         );
         variantTransforms[variantKey] = normalizeTransform({ ...envelopeBaseline, headWarp: variantWarp ?? undefined });
