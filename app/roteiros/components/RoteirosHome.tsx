@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createGlobalRule, createId, createNarrativeProfile, createScriptAiContext, createScriptProject, nowIso, PROTECTED_RULES } from "../defaults";
 import { profileCompletion } from "../ai-context";
-import { normalizeRoteirosState } from "../../domain/document-schemas.mjs";
 import { aiRequest, cleanupRoteiroOrphans, createRoteiroBackup, exportJson, listRoteiroBackups, listRoteiroOrphans, removeRoteiro, restoreRoteiroBackup, type RoteiroOrphans } from "../storage";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState, ScriptProject } from "../types";
@@ -282,6 +281,11 @@ function SettingsPage({ state, updateState, pcAvailable, onReload }: { state: Ro
   const selectOpenAi = () => patchSettings({ aiProvider: "openai", openAiModel: state.settings.openAiModel || "gpt-5.6-luna" });
   const loadModels = async () => { setLoading(true); setAiStatus(""); try { const result = await aiRequest<{ models: string[] }>("models", { settings: state.settings }); setModels(result.models); setAiStatus(`${result.models.length} modelo(s) encontrado(s).`); } catch (error) { setAiStatus(error instanceof Error ? error.message : "Não foi possível listar modelos."); } finally { setLoading(false); } };
   const refreshOpenAiStatus = useCallback(async () => { try { const result = await aiRequest<{ configured: boolean; usage?: typeof openAiUsage extends null ? never : NonNullable<typeof openAiUsage>["usage"] }>("status", { settings: state.settings }); setOpenAiUsage(result); } catch { setOpenAiUsage(null); } }, [state.settings]);
+  useEffect(() => {
+    if (state.settings.aiProvider !== "openai" || !pcAvailable) return undefined;
+    const timer = window.setTimeout(() => { void refreshOpenAiStatus(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [pcAvailable, refreshOpenAiStatus, state.settings.aiProvider]);
   const test = async () => { setLoading(true); setAiStatus(""); try { const result = await aiRequest<{ model: string; provider: string; response: string }>("test", { settings: state.settings }); setAiStatus(`✓ Conexão funcionando · modelo usado: ${result.model} · resposta: ${result.response || "OK"}`); if (state.settings.aiProvider === "openai") await refreshOpenAiStatus(); } catch (error) { setAiStatus(error instanceof Error ? error.message : "Falha na conexão."); } finally { setLoading(false); } };
   const updateRule = (id: string, patch: Partial<GlobalRule>) => updateState((current) => ({ ...current, globalRules: current.globalRules.map((rule) => rule.id === id ? { ...rule, ...patch, updatedAt: nowIso() } : rule) }));
   return <main className={styles.settingsPage}>
