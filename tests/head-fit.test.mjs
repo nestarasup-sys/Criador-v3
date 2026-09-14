@@ -272,6 +272,26 @@ test("refina a curva intermediária do pescoço sem mover suas extremidades", ()
   assert.ok(mergeContourWarps(null, warp)?.knots.length === warp.knots.length);
 });
 
+test("preserva a gola masculina larga e evita deslocamento lateral que abre falha", () => {
+  const sourceNeck = Array.from({ length: 25 }, (_, index) => ({
+    y: 180 + index,
+    left: 110,
+    right: 190,
+  }));
+  const targetNeck = Array.from({ length: 25 }, (_, index) => ({
+    y: 180 + index * 0.7,
+    left: 130,
+    right: 170,
+  }));
+  const source = { left: 70, right: 230, top: 0, bottom: 180, width: 161, height: 181, centerX: 150, neckLeft: 110, neckRight: 190, neckWidth: 81, neckCenterX: 150, neckY: 180, neckBottomY: 204, neckContour: sourceNeck };
+  const target = { left: 70, right: 230, top: 0, bottom: 180, width: 161, height: 181, centerX: 150, neckLeft: 130, neckRight: 170, neckWidth: 41, neckCenterX: 150, neckY: 180, neckBottomY: 197, neckContour: targetNeck };
+  const item = { width: 300, height: 420, defaultX: 150, defaultY: 210 };
+  const warp = buildNeckContourWarp(source, target, item, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false }, { mode: "male-neck" });
+  assert.ok(warp, "a diferença vertical deve continuar podendo ser refinada");
+  assert.ok(warp.knots.every((knot) => Math.abs((knot.targetLeft + knot.targetRight) - (knot.sourceLeft + knot.sourceRight)) < 0.01), "a gola larga não deve ser deslocada lateralmente");
+  assert.ok(warp.knots.every((knot) => (knot.targetRight - knot.targetLeft) >= (knot.sourceRight - knot.sourceLeft) - 0.01), "a gola masculina não deve ser estreitada");
+});
+
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
   const root = join(process.cwd(), "dados-locais-premium", "arquivos", "catalogo");
   const cases = [

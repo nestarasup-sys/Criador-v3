@@ -3270,6 +3270,7 @@ export default function Home() {
     // O perfil feminino continua usando o comportamento já validado.
     const neckV2Profile = options.neckV2Profile ?? "feminino";
     const neckV2FitMode = neckV2Profile === "masculino" ? "male-neck" : "default";
+    const maleNeckOnly = reference === "neck" && neckV2FitMode === "male-neck";
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"
@@ -3447,7 +3448,7 @@ export default function Home() {
         defaultY: selectedOutfit.defaultY,
       };
       const headWarp = mergeContourWarps(
-        buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
+        maleNeckOnly ? null : buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
         reference === "neck"
           ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: neckV2FitMode })
           : null,
@@ -3507,7 +3508,7 @@ export default function Home() {
           ? fitVisibleEnvelope(variantScan.envelope, variantsEnvelopeTarget, variantItem, variantBaseline)
           : variantBaseline;
         const variantWarp = mergeContourWarps(
-          buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
+          maleNeckOnly ? null : buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
           reference === "neck"
             ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: neckV2FitMode })
             : null,

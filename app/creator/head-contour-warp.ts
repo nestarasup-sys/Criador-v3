@@ -284,6 +284,14 @@ export function buildNeckContourWarp(
   const sourceNeckWidth = source.neckWidth ?? sourceRows[0].right - sourceRows[0].left;
   const balancedNeck = options.mode === "balanced-neck";
   const maleNeck = options.mode === "male-neck";
+  const projectedSourceNeckWidth = sourceNeckWidth * Math.abs(transform.scale * transform.scaleX);
+  const targetNeckWidth = target.neckWidth ?? targetRows[0].right - targetRows[0].left;
+  // Se a roupa masculina já tem uma gola mais larga que o modelo, a largura
+  // e o centro relativos ao corpo são características válidas. Corrigi-los
+  // lateralmente aqui pode abrir transparência entre a gola e o ombro. Nesse
+  // caso o warp fica limitado ao eixo vertical; expansão para um modelo de
+  // pescoço ainda mais largo continua permitida.
+  const preserveMaleNeckWidth = maleNeck && projectedSourceNeckWidth >= targetNeckWidth * 1.02;
   // Em roupas com gola ou armadura, a largura cervical pode divergir muito
   // da cabeça. Nesse modo a escala global preserva a cabeça/corpo e este warp
   // recebe autorização para corrigir a faixa local com mais liberdade. O
@@ -303,8 +311,12 @@ export function buildNeckContourWarp(
     const sourceSample = contourRowsAtY(sourceRows, sourceY);
     const targetSample = contourRowsAtY(targetRows, targetY);
     if (!sourceSample || !targetSample) continue;
-    const targetLeft = localCoordinateX(targetSample.left, transform, item);
-    const targetRight = localCoordinateX(targetSample.right, transform, item);
+    const targetLeft = preserveMaleNeckWidth
+      ? sourceSample.left
+      : localCoordinateX(targetSample.left, transform, item);
+    const targetRight = preserveMaleNeckWidth
+      ? sourceSample.right
+      : localCoordinateX(targetSample.right, transform, item);
     const outputY = localCoordinateY(targetY, transform, item);
     const rawLeftShift = targetLeft - sourceSample.left;
     const rawRightShift = targetRight - sourceSample.right;
