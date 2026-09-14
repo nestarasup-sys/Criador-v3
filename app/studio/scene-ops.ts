@@ -15,7 +15,9 @@ export function nextZ(studio: Studio) {
 }
 
 export function formatStudioDate(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "data desconhecida";
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 export function wrapCanvasText(context: CanvasRenderingContext2D, text: string, maxWidth: number) {
