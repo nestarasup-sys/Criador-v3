@@ -26,7 +26,11 @@ function visibleBounds(data: Uint8ClampedArray, width: number, height: number) {
 }
 
 const modelMaskCache = new Map<string, HTMLCanvasElement | null>();
-const MAX_MODEL_MASK_CACHE = 96;
+const MAX_MODEL_MASK_CACHE = 12;
+
+export function clearModelColorMaskCache() {
+  modelMaskCache.clear();
+}
 
 function modelMaskCacheKey(sourceKey: string | undefined, width: number, height: number, scope: ModelColorScope, calibration: ModelColorCalibration | null | undefined) {
   if (!sourceKey) return null;

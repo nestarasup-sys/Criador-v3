@@ -7,7 +7,7 @@ import Link from "next/link";
 import styles from "./studio.module.css";
 import { localDataFetch } from "../lib/local-data-client";
 import { NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
-import { expressionKey, renderStudioCharacter } from "./character-renderer";
+import { clearStudioCharacterRenderCaches, expressionKey, renderStudioCharacter } from "./character-renderer";
 import { deleteStudioAsset, loadAppData, migrateBrowserStudiosToPc, mirrorStudios, openStudioPrintsFolder, recordStudioDeletion, saveStudioPrint, saveStudios, uploadStudioAsset } from "./storage";
 import { StudioCanvas } from "./components/StudioCanvas";
 import { StudioInspector } from "./components/StudioInspector";
@@ -171,6 +171,9 @@ export default function StudioPage() {
 
   useEffect(() => () => {
     // Unload the local translation model when the Studio page is left entirely.
+    clearStudioCharacterRenderCaches();
+    renderedRef.current = {};
+    renderedFallbackRef.current = {};
     void localDataFetch("/studio/ai/unload", { method: "POST", keepalive: true }).catch(() => undefined);
   }, []);
 

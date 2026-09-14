@@ -340,10 +340,23 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-const PAGE_IMAGE_CACHE_LIMIT = 128;
+// A decoded 1920x1080 image costs roughly 8 MiB regardless of the compressed
+// PNG size. Keep this cache intentionally short; the browser/network cache can
+// reload cold assets without retaining hundreds of decoded bitmaps in RAM.
+const PAGE_IMAGE_CACHE_LIMIT = 24;
 const pageImageCache = new Map<string, Promise<HTMLImageElement>>();
 
 function loadImage(src: string) {
+  const cacheable = !src.startsWith("blob:") && !src.startsWith("data:");
+  if (!cacheable) {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = () => resolve(image);
+      image.onerror = () => reject(new Error(`Não foi possível carregar ${src}`));
+      image.src = src;
+    });
+  }
   const cached = pageImageCache.get(src);
   if (cached) {
     pageImageCache.delete(src);
@@ -509,7 +522,30 @@ function createCharacterPhotoDataUrl(source: HTMLCanvasElement) {
   return photo.toDataURL("image/png");
 }
 
+const BASE_PACK_THUMBNAIL_CACHE_LIMIT = 24;
 const basePackThumbnailCache = new Map<string, Promise<string>>();
+const MAX_CREATOR_COLOR_CACHE = 16;
+const MAX_CREATOR_HEAD_WARP_CACHE = 8;
+const MAX_PROCESSED_BASE_EXPRESSIONS = 12;
+
+function trimProcessedBaseExpressions(
+  cache: Record<string, Partial<Record<ExpressionKey, HTMLImageElement>>>,
+  preservePackKey: string,
+  preserveExpressionKey: ExpressionKey,
+) {
+  let total = Object.values(cache).reduce((count, expressions) => count + Object.keys(expressions).length, 0);
+  if (total <= MAX_PROCESSED_BASE_EXPRESSIONS) return;
+  for (const packKey of Object.keys(cache)) {
+    const expressions = cache[packKey];
+    for (const expressionKey of Object.keys(expressions) as ExpressionKey[]) {
+      if (total <= MAX_PROCESSED_BASE_EXPRESSIONS) return;
+      if (packKey === preservePackKey && expressionKey === preserveExpressionKey) continue;
+      delete expressions[expressionKey];
+      total -= 1;
+    }
+    if (Object.keys(expressions).length === 0) delete cache[packKey];
+  }
+}
 
 async function createBasePackThumbnail(src: string) {
   const cached = basePackThumbnailCache.get(src);
@@ -534,6 +570,11 @@ async function createBasePackThumbnail(src: string) {
     throw error;
   });
   basePackThumbnailCache.set(src, pending);
+  while (basePackThumbnailCache.size > BASE_PACK_THUMBNAIL_CACHE_LIMIT) {
+    const oldest = basePackThumbnailCache.keys().next().value as string | undefined;
+    if (!oldest || oldest === src) break;
+    basePackThumbnailCache.delete(oldest);
+  }
   return pending;
 }
 
@@ -1353,6 +1394,15 @@ export default function Home() {
   const [outfitProtectionMasksByBasePack, setOutfitProtectionMasksByBasePack] = useState<Record<string, string>>({});
   const [isSavingModelItem, setIsSavingModelItem] = useState(false);
 
+  useEffect(() => () => {
+    pageImageCache.clear();
+    basePackThumbnailCache.clear();
+    colorLayerCacheRef.current.clear();
+    headWarpCacheRef.current.clear();
+    processedBases.current = {};
+    processedBaseExpressions.current = {};
+  }, []);
+
   useEffect(() => {
     window.localStorage.setItem(MANUAL_MODEL_COLOR_MASKS_STORAGE_KEY, JSON.stringify(manualModelColorMasks));
   }, [manualModelColorMasks]);
@@ -1905,7 +1955,7 @@ export default function Home() {
         } else {
           renderSource = await renderColorLayer(image, width, height, color, protectionMask, loadImage);
           colorLayerCacheRef.current.set(cacheKey, renderSource);
-          while (colorLayerCacheRef.current.size > 160) {
+          while (colorLayerCacheRef.current.size > MAX_CREATOR_COLOR_CACHE) {
             const oldest = colorLayerCacheRef.current.keys().next().value;
             if (!oldest) break;
             colorLayerCacheRef.current.delete(oldest);
@@ -1920,7 +1970,7 @@ export default function Home() {
         } else {
           renderSource = renderHeadContourWarp(renderSource, width, height, transform.headWarp);
           headWarpCacheRef.current.set(warpKey, renderSource);
-          while (headWarpCacheRef.current.size > 80) {
+          while (headWarpCacheRef.current.size > MAX_CREATOR_HEAD_WARP_CACHE) {
             const oldest = headWarpCacheRef.current.keys().next().value;
             if (!oldest) break;
             headWarpCacheRef.current.delete(oldest);
@@ -1988,6 +2038,7 @@ export default function Home() {
         const transparentExpression = await removeChroma(baseExpressionSource(currentBasePack, resolvedExpressionKey));
         const expressionUrl = URL.createObjectURL(transparentExpression);
         processedBaseExpressions.current[cacheKey][resolvedExpressionKey] = await loadImage(expressionUrl);
+        trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, resolvedExpressionKey);
         URL.revokeObjectURL(expressionUrl);
       }
       baseImage = processedBaseExpressions.current[cacheKey][resolvedExpressionKey];
@@ -3334,6 +3385,7 @@ export default function Home() {
           const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
           const expressionUrl = URL.createObjectURL(transparentExpression);
           processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, "normal");
           URL.revokeObjectURL(expressionUrl);
         }
         baseImage = processedBaseExpressions.current[cacheKey].normal;
@@ -3653,6 +3705,7 @@ export default function Home() {
           const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
           const expressionUrl = URL.createObjectURL(transparentExpression);
           processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, "normal");
           URL.revokeObjectURL(expressionUrl);
         }
         baseImage = processedBaseExpressions.current[cacheKey].normal;
@@ -3764,6 +3817,7 @@ export default function Home() {
           const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, "normal"));
           const expressionUrl = URL.createObjectURL(transparentExpression);
           processedBaseExpressions.current[cacheKey].normal = await loadImage(expressionUrl);
+          trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, "normal");
           URL.revokeObjectURL(expressionUrl);
         }
         baseImage = processedBaseExpressions.current[cacheKey].normal;
@@ -3879,6 +3933,7 @@ export default function Home() {
           const transparentExpression = await removeChroma(baseExpressionSource(activeBasePack, resolvedExpressionKey));
           const expressionUrl = URL.createObjectURL(transparentExpression);
           processedBaseExpressions.current[cacheKey][resolvedExpressionKey] = await loadImage(expressionUrl);
+          trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, resolvedExpressionKey);
           URL.revokeObjectURL(expressionUrl);
         }
         baseImage = processedBaseExpressions.current[cacheKey][resolvedExpressionKey];

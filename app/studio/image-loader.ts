@@ -1,5 +1,11 @@
-const MAX_CACHED_IMAGES = 96;
+// 24 decoded 1080p images already represent about 190 MiB. The browser HTTP
+// cache makes reloading preferable to holding the whole catalog decoded.
+const MAX_CACHED_IMAGES = 24;
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
+
+export function clearStudioImageCache() {
+  imageCache.clear();
+}
 
 function remember(src: string, image: Promise<HTMLImageElement>) {
   imageCache.set(src, image);

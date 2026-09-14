@@ -9,10 +9,10 @@ import type {
 } from "./types";
 import { processChromaPixels } from "../creator/chroma-worker-client";
 import { estimateChromaKey } from "../chroma-processing.mjs";
-import { loadStudioImage } from "./image-loader";
+import { clearStudioImageCache, loadStudioImage } from "./image-loader";
 import { configureHighQualityContext } from "./render-quality";
 import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "../domain/color-rendering";
-import { createModelColorAdjustedCanvasForScopes, normalizeModelColorAdjustments } from "../domain/model-color-rendering";
+import { clearModelColorMaskCache, createModelColorAdjustedCanvasForScopes, normalizeModelColorAdjustments } from "../domain/model-color-rendering";
 import { getStoredModelColorCalibration } from "../domain/model-color-calibration-storage";
 import { baseExpressionColorMapSource } from "../creator/base-packs";
 import { normalizeBasePackId } from "../domain/base-model.mjs";
@@ -24,11 +24,19 @@ const WIDTH = 1920;
 const HEIGHT = 1080;
 const PADDING = { x: 520, y: 360 };
 const chromaCache = new Map<string, Promise<HTMLCanvasElement>>();
-const MAX_CHROMA_CACHE = 48;
+const MAX_CHROMA_CACHE = 8;
 const colorLayerCache = new Map<string, Promise<CanvasImageSource>>();
-const MAX_COLOR_CACHE = 160;
+const MAX_COLOR_CACHE = 16;
 const headWarpCache = new Map<string, CanvasImageSource>();
-const MAX_HEAD_WARP_CACHE = 80;
+const MAX_HEAD_WARP_CACHE = 8;
+
+export function clearStudioCharacterRenderCaches() {
+  chromaCache.clear();
+  colorLayerCache.clear();
+  headWarpCache.clear();
+  clearModelColorMaskCache();
+  clearStudioImageCache();
+}
 
 function transparentChroma(src: string) {
   if (!chromaCache.has(src)) {

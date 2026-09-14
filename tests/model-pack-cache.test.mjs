@@ -64,3 +64,27 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /expressionAliases\?\.\[key\]/);
   assert.match(renderer, /encodeURIComponent\(resolvedKey\)/);
 });
+
+test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {
+  const [page, studioLoader, studioRenderer, studioPage, modelColors] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/image-loader.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/domain/model-color-rendering.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(page, /PAGE_IMAGE_CACHE_LIMIT = 24/);
+  assert.match(page, /!src\.startsWith\("blob:"\) && !src\.startsWith\("data:"\)/);
+  assert.match(page, /MAX_PROCESSED_BASE_EXPRESSIONS = 12/);
+  assert.match(page, /pageImageCache\.clear\(\)/);
+  assert.match(page, /processedBaseExpressions\.current = \{\}/);
+  assert.match(studioLoader, /MAX_CACHED_IMAGES = 24/);
+  assert.match(studioLoader, /export function clearStudioImageCache/);
+  assert.match(studioRenderer, /MAX_CHROMA_CACHE = 8/);
+  assert.match(studioRenderer, /MAX_COLOR_CACHE = 16/);
+  assert.match(studioRenderer, /MAX_HEAD_WARP_CACHE = 8/);
+  assert.match(studioRenderer, /export function clearStudioCharacterRenderCaches/);
+  assert.match(modelColors, /MAX_MODEL_MASK_CACHE = 12/);
+  assert.match(studioPage, /clearStudioCharacterRenderCaches\(\)/);
+});
