@@ -3580,8 +3580,8 @@ export default function Home() {
       neckV2Profile: "feminino",
     });
     if (!adjusted) return;
-    setCompositionMode("outfit-over-face");
-    setNotice("Ajuste de roupa feminino aplicado: o modelo ficará atrás da roupa e o cabelo frontal continuará na frente.");
+    setCompositionMode("legacy");
+    setNotice("Ajuste de roupa feminino aplicado com a composição normal do personagem.");
   }
 
   async function adjustSelectedOutfitByHeadMasculino() {

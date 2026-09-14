@@ -932,7 +932,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /adjustSelectedOutfitByHeadFeminino/);
   assert.match(page, /adjustSelectedOutfitByHeadMasculino/);
   assert.match(page, /async function adjustSelectedOutfitByHeadFeminino\(\)[\s\S]*?alignVariantsEnvelope: true,\s*neckV2Profile: "feminino"/);
-  assert.match(page, /async function adjustSelectedOutfitByHeadFeminino\(\)[\s\S]*?setCompositionMode\("outfit-over-face"\)/);
+  assert.match(page, /async function adjustSelectedOutfitByHeadFeminino\(\)[\s\S]*?setCompositionMode\("legacy"\)/);
   assert.match(page, /alignVariantsEnvelope: true,\s*neckV2Profile: "masculino"/);
   assert.match(page, /if \(model === "masculino"\) await adjustSelectedOutfitByHeadMasculino\(\)/);
   assert.match(page, /async function adjustSelectedOutfitByHeadMasculino\(\)[\s\S]*?setCompositionMode\("outfit-over-face"\)/);
