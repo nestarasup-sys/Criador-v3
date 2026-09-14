@@ -7,6 +7,7 @@ export const DEFAULT_ROTEIROS_SETTINGS = Object.freeze({
   openAiReasoningEffort: "medium",
   openAiMaxOutputTokens: 2400,
   openAiTimeoutMs: 90_000,
+  generationMode: "faithful",
   fillEmptyPrompt: "",
   defaultBlockCount: 6,
   shortLinesByDefault: false,

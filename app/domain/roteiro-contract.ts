@@ -25,6 +25,7 @@ export type AiProvider = "none" | "lmstudio" | "ollama" | "openai";
 export type RoteirosSettings = {
   aiProvider: AiProvider; aiBaseUrl: string; aiModel: string; temperature: number;
   openAiModel: string; openAiReasoningEffort: "low" | "medium" | "high"; openAiMaxOutputTokens: number; openAiTimeoutMs: number;
+  generationMode: "faithful" | "creative";
   fillEmptyPrompt: string;
   defaultBlockCount: number; shortLinesByDefault: boolean; historyLimit: number;
 };

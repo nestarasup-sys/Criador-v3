@@ -7,7 +7,7 @@ const DEFAULT_TIMEOUT = 90_000;
 const AVAILABLE_MODELS = ["gpt-5.6-luna"];
 
 let usagePath = "";
-let usage = { version: 1, calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, errors: 0, lastCallAt: null, lastModel: null };
+let usage = { version: 1, calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, errors: 0, lastCallAt: null, lastModel: null, lastOperation: null, lastDurationMs: null, lastError: null };
 
 function cleanModel(value) {
   const model = String(value || DEFAULT_MODEL).trim();
@@ -76,7 +76,7 @@ function parseJson(text) {
   }
 }
 
-async function record(callUsage, model, error = false) {
+async function record(callUsage, model, error = false, details = {}) {
   usage = {
     ...usage,
     calls: usage.calls + (error ? 0 : 1),
@@ -86,6 +86,9 @@ async function record(callUsage, model, error = false) {
     totalTokens: usage.totalTokens + Number(callUsage?.total_tokens || 0),
     lastCallAt: new Date().toISOString(),
     lastModel: model || usage.lastModel,
+    lastOperation: details.operation || usage.lastOperation,
+    lastDurationMs: Number.isFinite(details.durationMs) ? details.durationMs : usage.lastDurationMs,
+    lastError: error ? String(details.reason || "Falha na chamada OpenAI").slice(0, 500) : null,
   };
   if (usagePath) await writeJsonAtomic(usagePath, usage).catch(() => undefined);
 }
@@ -110,19 +113,31 @@ export function openAiModels(settings = {}) {
 
 export async function testOpenAi(settings, signal, environment = process.env) {
   const cfg = config(settings); const startedAt = Date.now();
-  const response = await request("https://api.openai.com/v1/responses", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key(environment)}` }, body: JSON.stringify({ model: cfg.model, input: "Responda somente OK.", store: false, max_output_tokens: 16, reasoning: { effort: cfg.reasoningEffort } }) }, 30_000, signal);
+  let response;
+  try {
+    response = await request("https://api.openai.com/v1/responses", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key(environment)}` }, body: JSON.stringify({ model: cfg.model, input: "Responda somente OK.", store: false, max_output_tokens: 16, reasoning: { effort: cfg.reasoningEffort } }) }, 30_000, signal);
+  } catch (error) {
+    await record(null, cfg.model, true, { operation: "test", durationMs: Date.now() - startedAt, reason: error?.message });
+    throw error;
+  }
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) { await record(body.usage, cfg.model, true); throw apiError(response, body); }
-  const text = outputText(body); await record(body.usage, cfg.model);
+  if (!response.ok) { await record(body.usage, cfg.model, true, { operation: "test", durationMs: Date.now() - startedAt, reason: `HTTP ${response.status}` }); throw apiError(response, body); }
+  const text = outputText(body); await record(body.usage, cfg.model, false, { operation: "test", durationMs: Date.now() - startedAt });
   return { ok: true, provider: "openai", model: body.model || cfg.model, response: text, durationMs: Date.now() - startedAt, usage: body.usage || {} };
 }
 
 export async function callOpenAi(settings, { instructions, input, schema, operation = "generate" }, signal, environment = process.env) {
   const cfg = config(settings); const startedAt = Date.now();
   const payload = { model: cfg.model, instructions, input, store: false, max_output_tokens: cfg.maxOutputTokens, reasoning: { effort: cfg.reasoningEffort }, text: { format: { type: "json_schema", name: `nymi_${String(operation).replace(/[^a-z0-9_]+/gi, "_").slice(0, 50)}`, strict: true, schema } } };
-  const response = await request("https://api.openai.com/v1/responses", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key(environment)}` }, body: JSON.stringify(payload) }, cfg.timeoutMs, signal);
+  let response;
+  try {
+    response = await request("https://api.openai.com/v1/responses", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key(environment)}` }, body: JSON.stringify(payload) }, cfg.timeoutMs, signal);
+  } catch (error) {
+    await record(null, cfg.model, true, { operation, durationMs: Date.now() - startedAt, reason: error?.message });
+    throw error;
+  }
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) { await record(body.usage, cfg.model, true); throw apiError(response, body); }
-  const parsed = parseJson(outputText(body)); await record(body.usage, cfg.model);
+  if (!response.ok) { await record(body.usage, cfg.model, true, { operation, durationMs: Date.now() - startedAt, reason: `HTTP ${response.status}` }); throw apiError(response, body); }
+  const parsed = parseJson(outputText(body)); await record(body.usage, cfg.model, false, { operation, durationMs: Date.now() - startedAt });
   return { data: parsed, model: body.model || cfg.model, usage: body.usage || {}, durationMs: Date.now() - startedAt, responseId: body.id || null };
 }

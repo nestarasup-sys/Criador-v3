@@ -49,6 +49,7 @@ async function startDelayedModelStub(delayMs, responsePayload = { reactions: [{ 
   let concurrent = 0;
   let maxConcurrent = 0;
   let aborted = false;
+  let requestCount = 0;
   const server = createServer((request, response) => {
     if (request.url !== "/api/chat") {
       response.writeHead(404);
@@ -57,6 +58,7 @@ async function startDelayedModelStub(delayMs, responsePayload = { reactions: [{ 
     }
     concurrent += 1;
     maxConcurrent = Math.max(maxConcurrent, concurrent);
+    requestCount += 1;
     const finish = () => { concurrent -= 1; };
     request.once("close", () => {
       if (!response.writableEnded) aborted = true;
@@ -65,12 +67,13 @@ async function startDelayedModelStub(delayMs, responsePayload = { reactions: [{ 
     setTimeout(() => {
       if (response.writableEnded || response.destroyed) return;
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: JSON.stringify(responsePayload) } }));
+      const payload = typeof responsePayload === "function" ? responsePayload(requestCount) : responsePayload;
+      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: JSON.stringify(payload) } }));
     }, delayMs);
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address();
-  return { server, baseUrl: `http://127.0.0.1:${port}`, get concurrent() { return concurrent; }, get maxConcurrent() { return maxConcurrent; }, get aborted() { return aborted; } };
+  return { server, baseUrl: `http://127.0.0.1:${port}`, get concurrent() { return concurrent; }, get maxConcurrent() { return maxConcurrent; }, get requests() { return requestCount; }, get aborted() { return aborted; } };
 }
 
 async function startPromptModelStub(responsePayload = { improvedContext: "A pessoa abre a porta azul com cuidado. Em seguida, olha para dentro do cômodo e permanece atenta ao que encontra. A descrição não informa o que acontece depois." }) {
@@ -233,8 +236,28 @@ test("rejeita uma fala vazia retornada pela IA antes de gravar no roteiro", asyn
     const service = createRoteirosService(root);
     await service.init();
     const response = await call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
-    assert.equal(response.status, 400);
+    assert.equal(response.status, 422);
     assert.match(response.value.error, /fala\/pensamento vazio/i);
+    assert.equal(response.value.diagnostics.attempts, 2);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("refaz somente uma saída semanticamente inválida e aceita a segunda tentativa válida", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-retry-"));
+  const stub = await startDelayedModelStub(0, (attempt) => attempt === 1
+    ? { reactions: [{ characterId: "char-1", type: "speech", emotion: "", text: "" }] }
+    : { reactions: [{ characterId: "char-1", type: "speech", emotion: "surpresa", text: "Agora entendi." }] });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
+    assert.equal(response.status, 200);
+    assert.equal(response.value.reactions[0].text, "Agora entendi.");
+    assert.equal(response.value.diagnostics.attempts, 2);
+    assert.equal(stub.requests, 2);
   } finally {
     await new Promise((resolve) => stub.server.close(resolve));
     await rm(root, { recursive: true, force: true });

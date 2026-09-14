@@ -155,6 +155,7 @@ function normalizeRoteirosSettings(value) {
     openAiReasoningEffort: ["low", "medium", "high"].includes(source.openAiReasoningEffort) ? source.openAiReasoningEffort : defaults.openAiReasoningEffort,
     openAiMaxOutputTokens: numeric("openAiMaxOutputTokens", 256, 8000),
     openAiTimeoutMs: numeric("openAiTimeoutMs", 5_000, 180_000),
+    generationMode: source.generationMode === "creative" ? "creative" : defaults.generationMode,
     fillEmptyPrompt: typeof source.fillEmptyPrompt === "string" ? source.fillEmptyPrompt.slice(0, 12_000) : defaults.fillEmptyPrompt,
     defaultBlockCount: Math.round(numeric("defaultBlockCount", 1, 24)),
     historyLimit: Math.round(numeric("historyLimit", 0, 10)),
