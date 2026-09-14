@@ -22,3 +22,8 @@ test("Green BG PRO preserva a proteção topológica e o caminho verde existente
   assert.match(script, /while\(head<tail\)/);
   assert.match(script, /if\(fill\[p\]\)\{d\[i\+3\]=0/);
 });
+
+test("Green BG PRO libera o arquivo temporário depois do upload", () => {
+  assert.match(script, /temporary=src\.startsWith\('blob:'\)/);
+  assert.match(script, /if\(temporary\)URL\.revokeObjectURL\(src\)/);
+});
