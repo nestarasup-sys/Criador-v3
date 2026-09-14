@@ -25,6 +25,15 @@ import styles from "../roteiros.module.css";
 
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência" } as const;
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
+const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
+
+type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
+
+function rememberSentPrompt(preview: Omit<SentPromptPreview, "sentAt">) {
+  const value: SentPromptPreview = { ...preview, sentAt: new Date().toISOString() };
+  window.localStorage.setItem(LAST_FILL_EMPTY_PROMPT_KEY, JSON.stringify(value));
+  window.dispatchEvent(new Event("nymi-roteiros-prompt-updated"));
+}
 
 function CharacterMark({ character }: { character: PremiumCharacter }) {
   const photo = character.photoUrl ?? character.photoDataUrl;
@@ -206,7 +215,8 @@ function TikTokCard({ script, section, sectionIndex, characters, state, patch, m
     beginAiLoading(mode); setMessage("");
     try {
       if (mode === "replace-all") setUndoBlocks(structuredClone(section.reactionBlocks));
-      const result = await requestAi<{ reactions: GeneratedReaction[]; model: string }>("generate", { ...aiPayload, targetIndices: targets, mode });
+      const result = await requestAi<{ reactions: GeneratedReaction[]; model: string; promptPreview?: Omit<SentPromptPreview, "sentAt"> }>("generate", { ...aiPayload, targetIndices: targets, mode });
+      if (mode === "fill-empty" && result.promptPreview) rememberSentPrompt(result.promptPreview);
       const next = [...section.reactionBlocks];
       targets.forEach((targetIndex, resultIndex) => { const generated = result.reactions[resultIndex]; next[targetIndex] = { ...next[targetIndex], ...generated, englishText: "", updatedAt: nowIso() }; });
       patch({ reactionBlocks: next }); setMessage(`${targets.length} bloco(s) gerado(s) com ${result.model}.`);

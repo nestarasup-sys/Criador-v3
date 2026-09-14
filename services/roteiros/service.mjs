@@ -14,6 +14,7 @@ const AI_MAX_GENERATED_TEXT = 2_000;
 const AI_MAX_GENERATED_EMOTION = 600;
 const AI_MAX_CUSTOM_PROMPT = 12_000;
 const AI_MAX_GENERATION_ATTEMPTS = 2;
+const DEFAULT_AI_SYSTEM = "Você escreve roteiros de reação para personagens fictícios. Responda somente com JSON válido.";
 
 const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.
@@ -180,7 +181,7 @@ async function testSelectedModel(settings, signal) {
   return { ok: true, model: data.model || config.model, provider: config.provider, response: String(data.choices[0].message.content).trim() };
 }
 
-async function callAi(settings, prompt, schema, system = "Você escreve roteiros de reação para personagens fictícios. Responda somente com JSON válido.", signal, options = {}) {
+async function callAi(settings, prompt, schema, system = DEFAULT_AI_SYSTEM, signal, options = {}) {
   const config = providerConfig(settings);
   if (config.provider === "openai") return callOpenAi(settings, { instructions: system, input: prompt, schema, operation: options.operation || "generate" }, signal);
   const numPredict = Math.max(64, Math.min(1_200, Number(options.numPredict) || 800));
@@ -607,7 +608,7 @@ REGRAS OBRIGATÓRIAS DA ABERTURA:
       if (reactions.length !== targetIndices.length) throw new Error(`A IA retornou ${reactions.length} bloco(s); eram esperados ${targetIndices.length}.`);
       const normalized = reactions.map((reaction, index) => normalizedReaction(reaction, targets[index].block, characterIds, index));
       validateGeneratedReactions(normalized, targets, characterIds, existing);
-      return { reactions: normalized, model: result.model, usage: totalUsage, durationMs: Date.now() - startedAt, diagnostics: { model: result.model, usage: totalUsage, durationMs: Date.now() - startedAt, attempts: attempt, generationMode: body.settings?.generationMode === "creative" ? "creative" : "faithful", retryReason, failureReason: null } };
+      return { reactions: normalized, model: result.model, usage: totalUsage, durationMs: Date.now() - startedAt, promptPreview: { provider: body.settings?.aiProvider || "none", operation, instructions: DEFAULT_AI_SYSTEM, input: attemptPrompt, model: result.model, attempts: attempt }, diagnostics: { model: result.model, usage: totalUsage, durationMs: Date.now() - startedAt, attempts: attempt, generationMode: body.settings?.generationMode === "creative" ? "creative" : "faithful", retryReason, failureReason: null } };
     } catch (error) {
       if (attempt >= AI_MAX_GENERATION_ATTEMPTS) throw Object.assign(error, { status: error?.status || 422, code: error?.code || "AI_OUTPUT_INVALID", diagnostics: { model: result.model, usage: totalUsage, durationMs: Date.now() - startedAt, attempts: attempt, generationMode: body.settings?.generationMode === "creative" ? "creative" : "faithful", retryReason, failureReason: error?.message || "Falha na validação da resposta" } });
       retryReason = error instanceof Error ? error.message : "falha na validação da resposta";
