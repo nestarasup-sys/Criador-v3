@@ -435,7 +435,10 @@ function compactCharacters(characters) {
 }
 
 function compactHistory(previousSections, limit) {
-  const compact = (previousSections || []).slice(-Math.min(6, Math.max(1, Number(limit) || 5))).map((section, index) => ({
+  const requestedLimit = Number(limit);
+  const historyLimit = Number.isFinite(requestedLimit) ? Math.max(0, Math.min(6, Math.round(requestedLimit))) : 5;
+  const source = historyLimit === 0 ? [] : (previousSections || []).slice(-historyLimit);
+  const compact = source.map((section, index) => ({
     ordem: index + 1,
     titulo: promptText(section.title, 120),
     descricao: promptText(section.description, AI_MAX_PROMPT_FIELD),
@@ -554,6 +557,10 @@ ATENÇÃO: a descrição abaixo NÃO é a descrição de um vídeo. Ela descreve
 MODO:
 ${body.mode === "replace-all" ? "Substituir todos os blocos da abertura." : "Preencher somente os blocos vazios da abertura."}
 
+MODO DE GERAÇÃO:
+${generationMode}
+${orderHint}
+
 PERSONAGENS PRESENTES:
 ${compactCharacters(body.characters)}
 
@@ -589,8 +596,9 @@ REGRAS OBRIGATÓRIAS DA ABERTURA:
 - Use somente speech ou thought; ambos devem conter text.
 - Retorne somente JSON no formato {"reactions":[{"characterId":"id","type":"speech|thought","emotion":"...","text":"..."}]}.` : "";
   const customFillPrompt = promptText(body.settings?.fillEmptyPrompt, AI_MAX_CUSTOM_PROMPT);
-  const editablePrompt = customFillPrompt ? `<INSTRUCOES_PERSONALIZADAS_DO_USUARIO>\n${customFillPrompt}\n</INSTRUCOES_PERSONALIZADAS_DO_USUARIO>\n\n${prompt}` : prompt;
-  const generationPrompt = withoutSilentReactionOption(customFillPrompt ? editablePrompt : opening ? openingPrompt : prompt);
+  const basePrompt = opening ? openingPrompt : prompt;
+  const editablePrompt = opening && customFillPrompt ? `<INSTRUCOES_PERSONALIZADAS_DO_USUARIO>\n${customFillPrompt}\n</INSTRUCOES_PERSONALIZADAS_DO_USUARIO>\n\n${basePrompt}` : basePrompt;
+  const generationPrompt = withoutSilentReactionOption(editablePrompt);
   const generationSchema = reactionSchema(characterIds, targetIndices.length);
   const operation = opening ? "opening" : body.mode === "replace-all" ? "replace-all" : "fill-empty";
   const startedAt = Date.now();
@@ -638,8 +646,9 @@ async function blockAction(body, signal) {
   const instruction = action === "variations"
     ? "Gere EXATAMENTE 3 variações distintas da FRASE ATUAL. Cada variação deve preservar personagem, tipo de bloco, fatos, intenção e sentido, mudando a construção e o ritmo sem inventar informação. Não escolha uma vencedora e não repita a frase original."
     : "Melhore a escrita da FRASE ATUAL em uma única versão. Preserve personagem, tipo de bloco, fatos, intenção e sentido. Corrija clareza, naturalidade, gramática e força da frase sem adicionar informação nova.";
+  const generationMode = generationModeNotice(body.settings?.generationMode);
   const prompt = `${instruction}\n\nFRASE ATUAL — fonte principal da operação:\n${promptText(block.text, AI_MAX_GENERATED_TEXT)}\n\nPERSONAGENS:\n${compactCharacters(body.characters)}\n\nCONTEXTO GERAL:\n${promptText(body.generalContext, 1_000) || "Não informado."}\n\nREGRAS DESTE ROTEIRO:\n${rulesText(body.globalRules)}\n\nHISTÓRICO:\n${compactHistory(body.previousSections, body.settings?.historyLimit)}\n\nDESCRIÇÃO DO VÍDEO:\n${promptText(section.description, 1_400)}\n\nOBJETIVO:\n${promptText(section.sceneGoal, 500) || "Não informado."}\n\nLINHA DO TEMPO:\n${timelineNotice(section.timeline)}\n\nBLOCO ANTERIOR:\n${JSON.stringify(compactBlocks(previous ? [previous] : []))}\n\nBLOCO ALVO:\n${JSON.stringify(compactBlocks([block]))}\n\nBLOCO SEGUINTE:\n${JSON.stringify(compactBlocks(next ? [next] : []))}\n\n${PROTECTED_RULES}\n\nREGRAS FINAIS:\n- Use characterId ${block.characterId}.\n- Preserve o tipo ${block.type === "auto" ? "escolha o tipo mais adequado" : block.type}.\n- Retorne ${variationCount === 3 ? "exatamente 3 reações, em ordem, sem texto extra" : "exatamente 1 reação, sem texto extra"}.\nRetorne somente JSON no formato solicitado.`;
-  const result = await callAi(body.settings, withoutSilentReactionOption(prompt), reactionSchema(characterIds, variationCount), undefined, signal, { numPredict: variationCount === 3 ? 900 : 520, operation: action === "variations" ? "variations" : "improve-sentence" });
+  const result = await callAi(body.settings, withoutSilentReactionOption(`${generationMode}\n\n${prompt}`), reactionSchema(characterIds, variationCount), undefined, signal, { numPredict: variationCount === 3 ? 900 : 520, operation: action === "variations" ? "variations" : "improve-sentence" });
   const reactions = Array.isArray(result.data?.reactions) ? result.data.reactions : [];
   if (reactions.length !== variationCount) throw new Error(`A IA retornou ${reactions.length} opção(ões); eram esperadas ${variationCount}.`);
   const normalized = reactions.map((reaction, index) => normalizedReaction(reaction, block, characterIds, index));
@@ -673,6 +682,11 @@ async function translate(body, signal) {
     const batchTranslations = Array.isArray(result.data?.translations) ? result.data.translations : [];
     if (batchTranslations.length !== batch.length) throw new Error(`A IA retornou ${batchTranslations.length} de ${batch.length} traduções em um lote.`);
     if (batchTranslations.some((item) => !String(item?.id || "").trim() || !String(item?.translatedText || "").trim())) throw new Error("A IA retornou uma tradução vazia ou sem identificador.");
+    const expectedIds = new Set(batch.map((item) => String(item.id)));
+    const returnedIds = batchTranslations.map((item) => String(item.id));
+    if (new Set(returnedIds).size !== batch.length || returnedIds.some((id) => !expectedIds.has(id))) {
+      throw new Error("A IA retornou IDs de tradução duplicados ou que não pertencem aos blocos solicitados.");
+    }
     translations.push(...batchTranslations);
     model = result.model || model;
     for (const key of ["input_tokens", "output_tokens", "total_tokens"]) usage[key] += Number(result.usage?.[key] || 0);

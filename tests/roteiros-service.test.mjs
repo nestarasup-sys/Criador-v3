@@ -92,6 +92,25 @@ async function startPromptModelStub(responsePayload = { improvedContext: "A pess
   return { server, baseUrl: `http://127.0.0.1:${port}`, get prompt() { return lastRequest?.messages?.at(-1)?.content || ""; } };
 }
 
+async function startJsonModelStub(responseFactory) {
+  let requestCount = 0;
+  let lastRequest;
+  const server = createServer((request, response) => {
+    const chunks = [];
+    request.on("data", (chunk) => chunks.push(chunk));
+    request.on("end", () => {
+      lastRequest = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+      requestCount += 1;
+      const payload = responseFactory(lastRequest, requestCount);
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ model: "gemma4:e4b", message: { content: JSON.stringify(payload) } }));
+    });
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address();
+  return { server, baseUrl: `http://127.0.0.1:${port}`, get prompt() { return lastRequest?.messages?.at(-1)?.content || ""; }, get requests() { return requestCount; } };
+}
+
 test("persists the independent Roteiros state in its own PC folder", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-test-"));
   try {
@@ -259,6 +278,59 @@ test("refaz somente uma saída semanticamente inválida e aceita a segunda tenta
     assert.equal(response.value.reactions[0].text, "Agora entendi.");
     assert.equal(response.value.diagnostics.attempts, 2);
     assert.equal(stub.requests, 2);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("aplica o prompt personalizado uma vez e preserva o prompt próprio da abertura", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-custom-prompt-"));
+  const stub = await startJsonModelStub(() => ({ reactions: [{ characterId: "char-1", type: "speech", emotion: "calma", text: "Vamos começar." }] }));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const base = generationPayload(stub.baseUrl);
+    const regular = await call(service, "POST", "/roteiros/ai/generate", { ...base, settings: { ...base.settings, fillEmptyPrompt: "Use uma reação curta e objetiva." } });
+    assert.equal(regular.status, 200);
+    assert.equal((stub.prompt.match(/Use uma reação curta e objetiva\./g) || []).length, 1);
+
+    const opening = await call(service, "POST", "/roteiros/ai/generate", {
+      ...base,
+      opening: true,
+      settings: { ...base.settings, fillEmptyPrompt: "Use uma reação curta e objetiva." },
+      section: { description: "Eles se reúnem antes de apertar o play.", reactionBlocks: [{ id: "opening-1", characterId: "char-1", type: "speech", text: "", emotion: "" }] },
+    });
+    assert.equal(opening.status, 200);
+    assert.equal((stub.prompt.match(/Use uma reação curta e objetiva\./g) || []).length, 1);
+    assert.match(stub.prompt, /CENA DA ABERTURA/);
+    assert.doesNotMatch(stub.prompt, /<DESCRICAO_LITERAL_DO_VIDEO>/);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("respeita historyLimit zero e rejeita IDs de tradução que não pertencem ao lote", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-contracts-"));
+  const stub = await startJsonModelStub((request) => request.messages?.at(-1)?.content?.includes("ITENS:")
+    ? { translations: [{ id: "bloco-errado", translatedText: "Wrong" }] }
+    : { reactions: [{ characterId: "char-1", type: "speech", emotion: "calma", text: "Tudo certo." }] });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const previousSections = [1, 2].map((index) => ({ title: `Histórico ${index}`, description: "Não deveria entrar.", reactionBlocks: [] }));
+    const generated = await call(service, "POST", "/roteiros/ai/generate", { ...generationPayload(stub.baseUrl), settings: { ...generationPayload(stub.baseUrl).settings, historyLimit: 0 }, previousSections });
+    assert.equal(generated.status, 200);
+    assert.doesNotMatch(stub.prompt, /Histórico [12]/);
+
+    const translated = await call(service, "POST", "/roteiros/ai/translate", {
+      settings: { aiProvider: "ollama", aiBaseUrl: stub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+      items: [{ id: "block-1", type: "speech", characterName: "Nymi", text: "Olá." }],
+      sceneDescription: "Uma cena curta.",
+    });
+    assert.equal(translated.status, 400);
+    assert.match(translated.value.error, /IDs de tradução/);
   } finally {
     await new Promise((resolve) => stub.server.close(resolve));
     await rm(root, { recursive: true, force: true });
