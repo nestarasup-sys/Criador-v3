@@ -930,6 +930,11 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /adjustSelectedOutfitByHead\("head"\)/);
   assert.match(page, /adjustSelectedOutfitByHead\("neck"\)/);
   assert.match(page, /Ajustar pescoço V2/);
+  assert.match(page, /alignVariantsEnvelope/);
+  assert.match(page, /topo e base das variantes alinhados à roupa padrão/);
+  const visibleEnvelopeFit = await readFile(new URL("../app/creator/visible-envelope-fit.ts", import.meta.url), "utf8");
+  assert.match(visibleEnvelopeFit, /projectVisibleEnvelope/);
+  assert.match(visibleEnvelopeFit, /fitVisibleEnvelope/);
   assert.match(page, /compositionMode/);
   assert.match(page, /backHairLayer, bodyLayer, faceLayer, outfitLayer/);
   const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");

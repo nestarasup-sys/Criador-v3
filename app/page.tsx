@@ -12,6 +12,7 @@ import { canvasBlob, canvasTouchesEdge, cropCanvasToVisibleContent, normalizeCan
 import { detectHairSheetGrid } from "./creator/hair-sheet-grid";
 import { calculateHeadFit, headContourPolygon, measureHairOpening, measureHeadSilhouette, projectHeadMeasurement } from "./creator/head-fit";
 import type { HeadFitReference, HeadMeasurement } from "./creator/head-fit";
+import { fitVisibleEnvelope, projectVisibleEnvelope, type VisibleEnvelope } from "./creator/visible-envelope-fit";
 import { buildHeadContourWarp, buildNeckContourWarp, contourWarpCacheKey, mergeContourWarps, renderHeadContourWarp } from "./creator/head-contour-warp";
 import { processChromaPixels, type ChromaProcessingOptions } from "./creator/chroma-worker-client";
 import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
@@ -3258,8 +3259,12 @@ export default function Home() {
     setNotice("Encaixe inicial aplicado; arraste e refine se necessário");
   }
 
-  async function adjustSelectedOutfitByHead(reference: HeadFitReference = "head") {
+  async function adjustSelectedOutfitByHead(
+    reference: HeadFitReference = "head",
+    options: { alignVariantsEnvelope?: boolean } = {},
+  ) {
     if (category !== "roupas" || !selectedOutfit?.url) return false;
+    const alignVariantsEnvelope = options.alignVariantsEnvelope === true;
     setIsProcessing(true);
     setNotice(reference === "neck"
       ? "Medindo o pescoço do modelo e ajustando a roupa…"
@@ -3269,16 +3274,39 @@ export default function Home() {
       const outfitHeight = selectedOutfit.height ?? 0;
       if (!outfitWidth || !outfitHeight) throw new Error("Dimensões da roupa indisponíveis");
 
-      const outfitImage = await loadImage(selectedOutfit.url);
-      const outfitScan = document.createElement("canvas");
-      outfitScan.width = outfitWidth;
-      outfitScan.height = outfitHeight;
-      const outfitContext = outfitScan.getContext("2d", { willReadFrequently: true });
-      if (!outfitContext) throw new Error("Canvas da roupa indisponível");
-      outfitContext.clearRect(0, 0, outfitWidth, outfitHeight);
-      outfitContext.drawImage(outfitImage, 0, 0, outfitWidth, outfitHeight);
-      const outfitPixels = outfitContext.getImageData(0, 0, outfitWidth, outfitHeight);
-      const sourceHead = measureHeadSilhouette(outfitPixels.data, outfitWidth, outfitHeight, 0.46);
+      const outfitGroupId = selectedOutfit.outfitGroupId;
+      const outfitVariants = outfitGroupId
+        ? catalog
+            .filter((item) => item.category === "roupas" && item.outfitGroupId === outfitGroupId)
+            .sort((left, right) => (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
+        : [selectedOutfit];
+      const standardOutfit = outfitVariants.find((item) => (item.outfitVariantIndex ?? 0) === 0) ?? outfitVariants[0];
+
+      const scanOutfit = async (item: CatalogItem) => {
+        const width = item.width ?? 0;
+        const height = item.height ?? 0;
+        if (!item.url || !width || !height) return null;
+        const image = await loadImage(item.url);
+        const scan = document.createElement("canvas");
+        scan.width = width;
+        scan.height = height;
+        const scanContext = scan.getContext("2d", { willReadFrequently: true });
+        if (!scanContext) return null;
+        scanContext.clearRect(0, 0, width, height);
+        scanContext.drawImage(image, 0, 0, width, height);
+        const pixels = scanContext.getImageData(0, 0, width, height);
+        const bounds = findVisibleBounds(pixels.data, width, height, { alphaThreshold: 8, padding: 0 });
+        return {
+          width,
+          height,
+          head: measureHeadSilhouette(pixels.data, width, height, 0.46),
+          envelope: bounds ? { top: bounds.y, bottom: bounds.y + bounds.height } satisfies VisibleEnvelope : null,
+        };
+      };
+
+      const selectedScan = await scanOutfit(selectedOutfit);
+      if (!selectedScan) throw new Error("Não foi possível ler os pixels visíveis da roupa");
+      const sourceHead = selectedScan.head;
       if (!sourceHead) {
         throw new Error("Esta roupa não possui uma cabeça detectável; ajuste manualmente pelo decote e pelo pescoço. O corpo não será deformado.");
       }
@@ -3339,6 +3367,53 @@ export default function Home() {
       );
       if (!targetHead) throw new Error("Não foi possível localizar a cabeça do modelo");
 
+      // A V2 usa a própria roupa padrão como molde do corpo. O modelo atual
+      // só fornece a cabeça/pescoço; portanto não há uma falsa linha de pés
+      // no modelo para esticar as variantes.
+      let variantsEnvelopeTarget: VisibleEnvelope | null = null;
+      if (alignVariantsEnvelope && outfitVariants.length > 1 && standardOutfit) {
+        const standardScan = standardOutfit.id === selectedOutfit.id
+          ? selectedScan
+          : await scanOutfit(standardOutfit);
+        if (standardScan?.head && standardScan.envelope) {
+          const standardFit = calculateHeadFit(
+            standardScan.head,
+            targetHead,
+            {
+              width: standardScan.width,
+              height: standardScan.height,
+              defaultX: standardOutfit.defaultX,
+              defaultY: standardOutfit.defaultY,
+            },
+            headOnly ? { x: activeBasePack.anchorX } : undefined,
+            reference,
+          );
+          const standardExistingTransform = standardOutfit.id === selectedOutfit.id
+            ? adjustments.roupas
+            : normalizeTransform(
+                outfitAdjustmentsByBasePack[outfitStateKey(standardOutfit.id, basePackId)]
+                  ?? standardOutfit.fit
+                  ?? suggestedFit(standardOutfit, model),
+              );
+          const standardBaseline = normalizeTransform({
+            ...standardFit,
+            rotation: standardExistingTransform.rotation,
+            flipX: standardExistingTransform.flipX,
+          });
+          if (Math.abs(standardBaseline.rotation) <= 0.25) {
+            variantsEnvelopeTarget = projectVisibleEnvelope(
+              standardScan.envelope,
+              {
+                width: standardScan.width,
+                height: standardScan.height,
+                defaultY: standardOutfit.defaultY,
+              },
+              standardBaseline,
+            );
+          }
+        }
+      }
+
       const fitted = calculateHeadFit(
         sourceHead,
         targetHead,
@@ -3371,12 +3446,6 @@ export default function Home() {
       const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
       const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
       const skippedVariants: string[] = [];
-      const outfitGroupId = selectedOutfit.outfitGroupId;
-      const outfitVariants = outfitGroupId
-        ? catalog
-            .filter((item) => item.category === "roupas" && item.outfitGroupId === outfitGroupId)
-            .sort((left, right) => (left.outfitVariantIndex ?? 0) - (right.outfitVariantIndex ?? 0))
-        : [selectedOutfit];
 
       for (const variant of outfitVariants) {
         const variantWidth = variant.width ?? 0;
@@ -3385,22 +3454,10 @@ export default function Home() {
           skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
           continue;
         }
-        const variantUrl = variant.url;
-
-        const variantHead = variant.id === selectedOutfit.id
-          ? sourceHead
-          : await (async () => {
-              const image = await loadImage(variantUrl);
-              const scan = document.createElement("canvas");
-              scan.width = variantWidth;
-              scan.height = variantHeight;
-              const scanContext = scan.getContext("2d", { willReadFrequently: true });
-              if (!scanContext) return null;
-              scanContext.clearRect(0, 0, variantWidth, variantHeight);
-              scanContext.drawImage(image, 0, 0, variantWidth, variantHeight);
-              const pixels = scanContext.getImageData(0, 0, variantWidth, variantHeight);
-              return measureHeadSilhouette(pixels.data, variantWidth, variantHeight, 0.46);
-            })();
+        const variantScan = variant.id === selectedOutfit.id
+          ? selectedScan
+          : await scanOutfit(variant);
+        const variantHead = variantScan?.head ?? null;
         if (!variantHead) {
           skippedVariants.push(variant.name || `variante ${variant.outfitVariantIndex ?? 1}`);
           continue;
@@ -3436,11 +3493,14 @@ export default function Home() {
           defaultX: variant.defaultX,
           defaultY: variant.defaultY,
         };
+        const envelopeBaseline = variantsEnvelopeTarget && variantScan?.envelope
+          ? fitVisibleEnvelope(variantScan.envelope, variantsEnvelopeTarget, variantItem, variantBaseline)
+          : variantBaseline;
         const variantWarp = mergeContourWarps(
-          buildHeadContourWarp(variantHead, targetHead, variantItem, variantBaseline),
-          reference === "neck" ? buildNeckContourWarp(variantHead, targetHead, variantItem, variantBaseline) : null,
+          buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
+          reference === "neck" ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline) : null,
         );
-        variantTransforms[variantKey] = normalizeTransform({ ...variantBaseline, headWarp: variantWarp ?? undefined });
+        variantTransforms[variantKey] = normalizeTransform({ ...envelopeBaseline, headWarp: variantWarp ?? undefined });
       }
       setHeadFitGuide({
         category: "roupas",
@@ -3453,9 +3513,11 @@ export default function Home() {
         targetAnchorX: headOnly ? activeBasePack.anchorX : undefined,
       });
       const stateKey = outfitStateKey(selectedOutfit.id, basePackId);
-      variantTransforms[stateKey] = nextTransform;
+      const selectedVariantTransform = variantTransforms[stateKey];
+      const appliedTransform = selectedVariantTransform ?? nextTransform;
+      variantTransforms[stateKey] = appliedTransform;
       setOutfitAdjustmentsByBasePack(variantTransforms);
-      setAdjustments((current) => ({ ...current, roupas: nextTransform }));
+      setAdjustments((current) => ({ ...current, roupas: appliedTransform }));
       setFitMode(true);
       const adjustedVariantCount = outfitVariants.length - skippedVariants.length;
       const skippedMessage = skippedVariants.length > 0
@@ -3463,7 +3525,7 @@ export default function Home() {
         : "";
       setNotice(
         outfitVariants.length > 1
-          ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente.${skippedMessage}`
+          ? `${adjustedVariantCount} versões da roupa ajustadas pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${variantsEnvelopeTarget ? "; topo e base das variantes alinhados à roupa padrão" : ""}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente.${skippedMessage}`
           : `Roupa ajustada pela ${reference === "neck" ? "referência do pescoço" : "cabeça do modelo"}${headWarp ? `, com contorno refinado em ${Math.round(headWarp.improvement * 100)}%` : ""}; você ainda pode refinar manualmente`,
       );
       return true;
@@ -3477,7 +3539,7 @@ export default function Home() {
 
   async function adjustSelectedOutfitByNeckV2() {
     if (category !== "roupas" || !selectedOutfit?.url) return;
-    const adjusted = await adjustSelectedOutfitByHead("neck");
+    const adjusted = await adjustSelectedOutfitByHead("neck", { alignVariantsEnvelope: true });
     if (!adjusted) return;
     setCompositionMode("outfit-over-face");
     setNotice("Ajuste de pescoço V2 aplicado: o rosto ficará atrás da roupa e o cabelo frontal continuará na frente.");
