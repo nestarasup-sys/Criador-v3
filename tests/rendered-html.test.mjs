@@ -794,6 +794,7 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(home, /IA e regras/);
   assert.match(home, /Prompt completo enviado/);
   assert.match(home, /nymi-roteiros-last-fill-empty-prompt/);
+  assert.match(service, /leitura silenciosa/);
   assert.match(home, /Personalidade/);
   assert.match(home, /História/);
   assert.match(home, /Relação com FYN/);

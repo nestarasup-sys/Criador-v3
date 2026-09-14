@@ -26,6 +26,8 @@ const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Respeite a linha do tempo. Não trate futuro como fato consumado nem passado como previsão.
 - Os blocos formam uma conversa contínua. Evite repetição, resumo genérico e reações isoladas.
 - Use personalidade, história, relações e estilo de fala sem repetir a ficha artificialmente.
+- O texto final é feito para leitura silenciosa, como em um livro: escreva frases claras, completas e naturais no papel, sem depender de entonação, gritos, sussurros, pausas, respiração ou atuação vocal para funcionar.
+- Preserve fala como fala e pensamento como pensamento; não transforme as reações em narração, rubricas ou instruções de atuação. Evite vícios de oralidade, preenchimentos e repetições que soem naturais apenas quando ouvidos.
 - Não invente fatos, falas, motivos ou conhecimentos que não estejam no contexto fornecido.
 - Personagens presentes devem se tratar como presentes; ao confrontar alguém, use você ou o nome.
 - Não faça todos comentarem a mesma coisa com palavras diferentes.`;
