@@ -243,22 +243,46 @@ export async function deleteCatalogItemFromPc(id: string) {
   await pcRequest(`/catalog/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
-export async function saveExpressionPackToPc(pack: ExpressionPack) {
-  // Each frame updates the same pack entry in state.json. Sending these
-  // requests concurrently makes the server's read-modify-write steps race,
-  // leaving the files present but only a subset of frames indexed. Keep the
-  // upload order deterministic; the individual image request is still
-  // streamed and the next frame starts immediately after its metadata is
-  // persisted.
-  for (const frame of pack.frames) await pcRequest(`/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(frame.key)}`, {
-    method: "POST",
-    headers: { "Content-Type": "image/png", "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name: pack.name, model: pack.model, basePackId: normalizeBasePackId(pack.basePackId), createdAt: pack.createdAt, width: frame.width, height: frame.height })) },
-    body: frame.blob,
+let expressionPackPcQueue: Promise<void> = Promise.resolve();
+
+function enqueueExpressionPackPc<T>(operation: () => Promise<T>) {
+  const result = expressionPackPcQueue.catch(() => undefined).then(operation);
+  expressionPackPcQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
+
+export function expressionPackFrameKeysToDelete(previousKeys: readonly string[], nextKeys: readonly string[]) {
+  const next = new Set(nextKeys);
+  return previousKeys.filter((key) => !next.has(key));
+}
+
+export function saveExpressionPackToPc(pack: ExpressionPack) {
+  // A pack is persisted one frame at a time because each request updates the
+  // same state.json record. Serialize all pack operations and remove frames
+  // that no longer belong to the current snapshot; otherwise editing a pack
+  // from 3 frames to 2 silently leaves the old third frame on disk.
+  return enqueueExpressionPackPc(async () => {
+    const currentState = await loadPcState();
+    const previousPack = currentState.expressionPacks.find((entry) => entry.id === pack.id);
+    const obsoleteKeys = expressionPackFrameKeysToDelete(
+      previousPack?.frames.map((frame) => frame.key) ?? [],
+      pack.frames.map((frame) => frame.key),
+    );
+    for (const key of obsoleteKeys) {
+      await pcRequest(`/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(key)}`, { method: "DELETE" });
+    }
+    for (const frame of pack.frames) await pcRequest(`/packs/${encodeURIComponent(pack.id)}/${encodeURIComponent(frame.key)}`, {
+      method: "POST",
+      headers: { "Content-Type": "image/png", "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name: pack.name, model: pack.model, basePackId: normalizeBasePackId(pack.basePackId), createdAt: pack.createdAt, width: frame.width, height: frame.height })) },
+      body: frame.blob,
+    });
   });
 }
 
-export async function deleteExpressionPackFromPc(id: string) {
-  await pcRequest(`/packs/${encodeURIComponent(id)}`, { method: "DELETE" });
+export function deleteExpressionPackFromPc(id: string) {
+  return enqueueExpressionPackPc(async () => {
+    await pcRequest(`/packs/${encodeURIComponent(id)}`, { method: "DELETE" });
+  });
 }
 
 export async function deleteBaseModelFromPc(gender: Model, id: string) {

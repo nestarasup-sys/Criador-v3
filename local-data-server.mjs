@@ -1610,6 +1610,26 @@ async function route(request, response) {
     return;
   }
 
+  const packFrameDeleteMatch = url.pathname.match(/^\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
+  if (packFrameDeleteMatch && request.method === "DELETE") {
+    const packId = safeId(packFrameDeleteMatch[1]);
+    const key = safeId(packFrameDeleteMatch[2]);
+    const filePath = join(PACKS_ROOT, packId, `${key}.png`);
+    if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
+    await queueStateMutation(async () => {
+      await rm(filePath, { force: true });
+      const existing = state.expressionPacks.find((pack) => pack.id === packId);
+      if (!existing) return;
+      const frames = existing.frames.filter((item) => item.key !== key);
+      state.expressionPacks = frames.length > 0
+        ? [...state.expressionPacks.filter((pack) => pack.id !== packId), { ...existing, frames }]
+        : state.expressionPacks.filter((pack) => pack.id !== packId);
+      await queueStateWrite();
+    });
+    sendJson(response, request, 200, { ok: true });
+    return;
+  }
+
   const packDeleteMatch = url.pathname.match(/^\/packs\/([a-zA-Z0-9_-]+)$/);
   if (packDeleteMatch && request.method === "DELETE") {
     const packId = safeId(packDeleteMatch[1]);
