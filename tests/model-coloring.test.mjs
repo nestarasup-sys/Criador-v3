@@ -64,7 +64,7 @@ test("normaliza escopos e mantém quatro ajustes independentes", () => {
 });
 
 test("máscaras reais da Iris preservam blush e boca ao pintar os olhos", {
-  skip: !existsSync("public/models/modelos/feminino/modelo-13/normal.png"),
+  skip: !["normal.png", "corado.png"].every((file) => existsSync(`public/models/modelos/feminino/modelo-13/${file}`)),
 }, async () => {
   for (const file of ["normal.png", "corado.png"]) {
     const { data, info } = await sharp(`public/models/modelos/feminino/modelo-13/${file}`)
