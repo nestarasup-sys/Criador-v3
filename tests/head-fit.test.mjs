@@ -151,10 +151,6 @@ test("preserva a escala da cabeça quando a gola masculina tem outra proporção
   const warp = buildNeckContourWarp(source, target, item, balanced, { mode: "balanced-neck" });
   assert.ok(warp, "a divergência local da gola deve ser enviada para o warp");
   assert.ok(warp.maxDisplacement > 10, "o warp deve corrigir uma diferença cervical real");
-  const maleWarp = buildNeckContourWarp(source, target, item, male, { mode: "male-neck" });
-  if (maleWarp) {
-    assert.ok(maleWarp.knots.every((k) => (k.targetRight - k.targetLeft) >= (k.sourceRight - k.sourceLeft) - 0.5), "o warp masculino não deve estreitar a gola");
-  }
 });
 
 test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
@@ -272,7 +268,7 @@ test("refina a curva intermediária do pescoço sem mover suas extremidades", ()
   assert.ok(mergeContourWarps(null, warp)?.knots.length === warp.knots.length);
 });
 
-test("preserva a gola masculina larga e evita deslocamento lateral que abre falha", () => {
+test("ajusta a gola masculina localmente sem alterar a escala global da roupa", () => {
   const sourceNeck = Array.from({ length: 25 }, (_, index) => ({
     y: 180 + index,
     left: 110,
@@ -287,9 +283,8 @@ test("preserva a gola masculina larga e evita deslocamento lateral que abre falh
   const target = { left: 70, right: 230, top: 0, bottom: 180, width: 161, height: 181, centerX: 150, neckLeft: 130, neckRight: 170, neckWidth: 41, neckCenterX: 150, neckY: 180, neckBottomY: 197, neckContour: targetNeck };
   const item = { width: 300, height: 420, defaultX: 150, defaultY: 210 };
   const warp = buildNeckContourWarp(source, target, item, { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false }, { mode: "male-neck" });
-  assert.ok(warp, "a diferença vertical deve continuar podendo ser refinada");
-  assert.ok(warp.knots.every((knot) => Math.abs((knot.targetLeft + knot.targetRight) - (knot.sourceLeft + knot.sourceRight)) < 0.01), "a gola larga não deve ser deslocada lateralmente");
-  assert.ok(warp.knots.every((knot) => (knot.targetRight - knot.targetLeft) >= (knot.sourceRight - knot.sourceLeft) - 0.01), "a gola masculina não deve ser estreitada");
+  assert.ok(warp, "a diferença de largura/altura deve gerar refinamento local");
+  assert.ok(warp.knots.some((knot) => (knot.targetRight - knot.targetLeft) < (knot.sourceRight - knot.sourceLeft) * 0.8), "a gola deve poder acompanhar um pescoço masculino mais estreito");
 });
 
 test("mantém os casos reais de roupa com cabeça fora do tronco", async () => {
