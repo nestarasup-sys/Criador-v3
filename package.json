@@ -11,6 +11,7 @@
   },
   "scripts": {
     "dev": "vinext dev --port 6700",
+    "dev:live": "node scripts/live-runner.mjs",
     "data-server": "node local-data-server.mjs",
     "build": "vinext build",
     "start": "node scripts/production-server.mjs 6700",

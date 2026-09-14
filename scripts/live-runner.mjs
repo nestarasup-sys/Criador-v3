@@ -3,15 +3,21 @@ import { watch } from "node:fs";
 import { resolve } from "node:path";
 
 const root = process.cwd();
+const vinextCli = resolve(root, "node_modules", "vinext", "dist", "cli.js");
 let webServer = null;
+let dataServer = null;
 let shuttingDown = false;
-let rebuildTimer = null;
-let rebuilding = false;
-let rebuildQueued = false;
+let webTimer = null;
+let dataTimer = null;
+let refreshingWeb = false;
+let restartingData = false;
+let webQueued = false;
+let dataQueued = false;
+let watchers = [];
 
 function startWebServer() {
   if (shuttingDown) return;
-  webServer = spawn(process.execPath, ["scripts/production-server.mjs", "6700"], {
+  webServer = spawn(process.execPath, [resolve(root, "scripts", "production-server.mjs"), "6700"], {
     cwd: root,
     stdio: "inherit",
     windowsHide: false,
@@ -22,10 +28,22 @@ function startWebServer() {
   });
 }
 
-function stopWebServer() {
+function startDataServer() {
+  if (shuttingDown) return;
+  dataServer = spawn(process.execPath, [resolve(root, "local-data-server.mjs")], {
+    cwd: root,
+    stdio: "inherit",
+    windowsHide: false,
+  });
+  dataServer.on("exit", (code) => {
+    dataServer = null;
+    if (!shuttingDown && code && code !== 0) void shutdown(code);
+  });
+}
+
+function stopChild(child) {
   return new Promise((resolveStop) => {
-    if (!webServer || webServer.exitCode !== null) return resolveStop();
-    const child = webServer;
+    if (!child || child.exitCode !== null) return resolveStop();
     const finish = () => resolveStop();
     child.once("exit", finish);
     child.kill("SIGTERM");
@@ -37,42 +55,67 @@ function stopWebServer() {
 
 function runBuild() {
   return new Promise((resolveBuild, rejectBuild) => {
-    const command = process.platform === "win32" ? "npm.cmd" : "npm";
-    const build = spawn(command, ["run", "build"], { cwd: root, stdio: "inherit", windowsHide: false });
+    const build = spawn(process.execPath, [vinextCli, "build"], {
+      cwd: root,
+      stdio: "inherit",
+      windowsHide: false,
+    });
     build.on("error", rejectBuild);
-    build.on("exit", (code) => code === 0 ? resolveBuild() : rejectBuild(new Error(`Build encerrado com código ${code}.`)));
+    build.on("exit", (code) => code === 0
+      ? resolveBuild()
+      : rejectBuild(new Error(`Build encerrado com código ${code}.`)));
   });
 }
 
-async function rebuild() {
-  if (rebuilding) { rebuildQueued = true; return; }
-  rebuilding = true;
+async function refreshWeb() {
+  if (refreshingWeb) { webQueued = true; return; }
+  refreshingWeb = true;
   try {
-    await stopWebServer();
+    await stopChild(webServer);
     await runBuild();
     startWebServer();
-    console.log("\nAlteração aplicada automaticamente. O servidor web foi atualizado.\n");
+    console.log("\nAlteração da interface aplicada automaticamente. Atualize a página para ver a nova versão.\n");
   } catch (error) {
-    console.error("\nFalha ao atualizar automaticamente:", error.message);
+    console.error("\nFalha ao atualizar a interface automaticamente:", error.message);
     console.error("Corrija o arquivo e salve novamente para tentar outra vez.\n");
   } finally {
-    rebuilding = false;
-    if (rebuildQueued) { rebuildQueued = false; void rebuild(); }
+    refreshingWeb = false;
+    if (webQueued) { webQueued = false; void refreshWeb(); }
   }
 }
 
-function scheduleRebuild(fileName) {
-  if (!fileName || rebuilding || String(fileName).includes("node_modules")) return;
-  clearTimeout(rebuildTimer);
-  rebuildTimer = setTimeout(() => void rebuild(), 450);
+async function restartData() {
+  if (restartingData) { dataQueued = true; return; }
+  restartingData = true;
+  try {
+    await stopChild(dataServer);
+    startDataServer();
+    console.log("\nAlteração do servidor de dados aplicada automaticamente.\n");
+  } finally {
+    restartingData = false;
+    if (dataQueued) { dataQueued = false; void restartData(); }
+  }
+}
+
+function scheduleWebRefresh(fileName) {
+  if (!fileName || String(fileName).includes("node_modules")) return;
+  clearTimeout(webTimer);
+  webTimer = setTimeout(() => void refreshWeb(), 450);
+}
+
+function scheduleDataRestart(fileName) {
+  if (!fileName || String(fileName).includes("node_modules")) return;
+  clearTimeout(dataTimer);
+  dataTimer = setTimeout(() => void restartData(), 250);
 }
 
 async function shutdown(code = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
-  clearTimeout(rebuildTimer);
+  clearTimeout(webTimer);
+  clearTimeout(dataTimer);
   for (const watcher of watchers) watcher.close();
-  await stopWebServer();
+  await Promise.all([stopChild(dataServer), stopChild(webServer)]);
   process.exitCode = code;
 }
 
@@ -80,19 +123,35 @@ process.on("SIGINT", () => void shutdown(0));
 process.on("SIGTERM", () => void shutdown(0));
 process.on("SIGHUP", () => void shutdown(0));
 
-const dataServer = spawn(process.execPath, ["local-data-server.mjs"], { cwd: root, stdio: "inherit", windowsHide: false });
-dataServer.on("exit", (code) => { if (!shuttingDown) void shutdown(code || 0); });
-startWebServer();
+const webWatchRoots = ["app", "worker", "build", "vite.config.ts", "next.config.ts", "postcss.config.mjs"];
+const dataWatchRoots = ["local-data-server.mjs", "services", "app/domain"];
 
-const openBrowser = setTimeout(() => {
-  spawn("cmd.exe", ["/c", "start", "", "http://localhost:6700/"], {
-    cwd: root,
-    stdio: "ignore",
-    windowsHide: true,
-  }).unref();
-}, 2500);
+function createWatcher(entry, callback) {
+  const target = resolve(root, entry);
+  const options = entry.includes(".") ? undefined : { recursive: true };
+  return watch(target, options, (_event, fileName) => callback(fileName));
+}
 
-const watchRoots = ["app", "services", "scripts", "worker", "vite.config.ts", "next.config.ts", "postcss.config.mjs"];
-const watchers = watchRoots.map((entry) => watch(resolve(root, entry), { recursive: true }, (_event, fileName) => scheduleRebuild(fileName)));
-console.log("Modo desenvolvimento automático ativo. Salve um arquivo para atualizar o app sem fechar esta janela.");
-process.on("exit", () => clearTimeout(openBrowser));
+async function main() {
+  console.log("Preparando o build inicial do modo desenvolvimento ao vivo...");
+  await runBuild();
+  watchers = [
+    ...webWatchRoots.map((entry) => createWatcher(entry, scheduleWebRefresh)),
+    ...dataWatchRoots.map((entry) => createWatcher(entry, scheduleDataRestart)),
+  ];
+  startDataServer();
+  startWebServer();
+  console.log("Modo desenvolvimento automático ativo. O CMD permanece aberto; salve arquivos para atualizar o app.");
+  setTimeout(() => {
+    spawn("cmd.exe", ["/c", "start", "", "http://localhost:6700/"], {
+      cwd: root,
+      stdio: "ignore",
+      windowsHide: true,
+    }).unref();
+  }, 2500).unref();
+}
+
+main().catch((error) => {
+  console.error("\nNão foi possível iniciar o modo desenvolvimento:", error.message);
+  void shutdown(1);
+});
