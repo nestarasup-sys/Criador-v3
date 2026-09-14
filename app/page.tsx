@@ -3387,6 +3387,7 @@ export default function Home() {
             },
             headOnly ? { x: activeBasePack.anchorX } : undefined,
             reference,
+            { mode: reference === "neck" ? "balanced-neck" : "default" },
           );
           const standardExistingTransform = standardOutfit.id === selectedOutfit.id
             ? adjustments.roupas
@@ -3427,6 +3428,7 @@ export default function Home() {
           ? { x: activeBasePack.anchorX }
         : undefined,
         reference,
+        { mode: reference === "neck" ? "balanced-neck" : "default" },
       );
       const baselineTransform = normalizeTransform({
         ...fitted,
@@ -3441,7 +3443,9 @@ export default function Home() {
       };
       const headWarp = mergeContourWarps(
         buildHeadContourWarp(sourceHead, targetHead, fitItem, baselineTransform),
-        reference === "neck" ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform) : null,
+        reference === "neck"
+          ? buildNeckContourWarp(sourceHead, targetHead, fitItem, baselineTransform, { mode: "balanced-neck" })
+          : null,
       );
       const nextTransform = normalizeTransform({ ...baselineTransform, headWarp: headWarp ?? undefined });
       const variantTransforms: Record<string, ItemTransform> = { ...outfitAdjustmentsByBasePack };
@@ -3481,6 +3485,7 @@ export default function Home() {
           },
           headOnly ? { x: activeBasePack.anchorX } : undefined,
           reference,
+          { mode: reference === "neck" ? "balanced-neck" : "default" },
         );
         const variantBaseline = normalizeTransform({
           ...variantFit,
@@ -3498,7 +3503,9 @@ export default function Home() {
           : variantBaseline;
         const variantWarp = mergeContourWarps(
           buildHeadContourWarp(variantHead, targetHead, variantItem, envelopeBaseline),
-          reference === "neck" ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline) : null,
+          reference === "neck"
+            ? buildNeckContourWarp(variantHead, targetHead, variantItem, envelopeBaseline, { mode: "balanced-neck" })
+            : null,
         );
         variantTransforms[variantKey] = normalizeTransform({ ...envelopeBaseline, headWarp: variantWarp ?? undefined });
       }

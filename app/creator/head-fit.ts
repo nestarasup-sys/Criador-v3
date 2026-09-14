@@ -37,6 +37,15 @@ export type HeadFitResult = {
 export type HeadFitProjection = HeadMeasurement;
 export type HeadFitReference = "head" | "neck";
 
+export type HeadFitOptions = {
+  /**
+   * Mantém a geometria global da cabeça e deixa a faixa cervical para o warp
+   * local. Isso é importante em roupas com gola/armadura, cuja largura não
+   * representa a largura real da cabeça.
+   */
+  mode?: "default" | "balanced-neck";
+};
+
 /**
  * Medição da abertura interna de um cabelo frontal. Diferente da silhueta
  * externa, esta referência representa o espaço vazio onde a cabeça entra.
@@ -694,6 +703,7 @@ export function calculateHeadFit(
   item: { width: number; height: number; defaultX?: number; defaultY?: number },
   targetAnchor?: { x?: number; y?: number },
   reference: HeadFitReference = "head",
+  options: HeadFitOptions = {},
 ): HeadFitResult {
   const sourceNeckWidth = source.neckWidth;
   const targetNeckWidth = target.neckWidth;
@@ -716,21 +726,34 @@ export function calculateHeadFit(
   const targetStructuralBottom = structuralBottom(target);
   const sourceHeadHeight = Math.max(1, sourceStructuralBottom - source.top);
   const targetHeadHeight = Math.max(1, targetStructuralBottom - target.top);
-  const contourReference = !useNeckReference ? robustContourReference(source, target) : null;
+  const contourReference = robustContourReference(source, target);
+  const headScale = contourReference?.scaleX ?? targetHeadWidth / sourceHeadWidth;
+  const neckScale = useNeckReference
+    ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
+    : headScale;
+  const balancedNeck = useNeckReference && options.mode === "balanced-neck";
+  // Se a proporção cervical diverge muito da proporção da cabeça, ela é uma
+  // característica local da roupa (gola, armadura, cachecol etc.), não uma
+  // boa escala para o corpo inteiro. Perto da proporção esperada ainda
+  // permitimos uma pequena contribuição do pescoço; quando a divergência é
+  // grande, a cabeça passa a comandar a escala e o warp corrige a faixa.
+  const neckAgreement = balancedNeck
+    ? clamp(0.32 - Math.abs(Math.log(Math.max(0.01, neckScale / Math.max(0.01, headScale)))) * 0.42, 0, 0.32)
+    : 1;
   const scaleX = clamp(
     useNeckReference
-      ? (targetNeckWidth! / sourceNeckWidth!) * NECK_FIT_WIDTH_MARGIN
-      : contourReference?.scaleX ?? targetHeadWidth / sourceHeadWidth,
+      ? headScale + (neckScale - headScale) * neckAgreement
+      : headScale,
     0.35,
     2.4,
   );
   const centerX = item.defaultX ?? item.width / 2;
   const centerY = item.defaultY ?? item.height / 2;
   const targetCenterX = targetAnchor?.x
-    ?? (useNeckReference ? target.neckCenterX : undefined)
+    ?? (useNeckReference && !balancedNeck ? target.neckCenterX : undefined)
     ?? contourReference?.targetCenterX
     ?? target.centerX;
-  const sourceCenterX = (useNeckReference ? source.neckCenterX : undefined)
+  const sourceCenterX = (!balancedNeck && useNeckReference ? source.neckCenterX : undefined)
     ?? contourReference?.sourceCenterX
     ?? source.centerX;
   const endpointScaleY = clamp(targetHeadHeight / sourceHeadHeight, 0.35, 2.4);

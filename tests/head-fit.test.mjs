@@ -128,6 +128,29 @@ test("o ajuste de pescoço mantém topo e faixa cervical exatamente ancorados", 
   assert.ok(Math.abs(projected.neckCenterX - target.neckCenterX) < .1, `centro divergente: ${projected.neckCenterX}`);
 });
 
+test("preserva a escala da cabeça quando a gola masculina tem outra proporção", async () => {
+  const modelPath = join(process.cwd(), "public", "models", "modelos", "masculino", "modelo-5", "normal.png");
+  const outfitPath = join(process.cwd(), "dados-locais-premium", "arquivos", "catalogo", "aaafd058-9513-453b-b355-234560e86be0.png");
+  if (!existsSync(modelPath) || !existsSync(outfitPath)) return;
+  const read = async (file) => {
+    const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+    return { data, info };
+  };
+  const model = await read(modelPath);
+  const outfit = await read(outfitPath);
+  const target = measureHeadSilhouette(model.data, model.info.width, model.info.height, 1, false);
+  const source = measureHeadSilhouette(outfit.data, outfit.info.width, outfit.info.height, .46, true);
+  assert.ok(target?.neckWidth && source?.neckWidth, "as duas silhuetas devem ter pescoço mensurável");
+  const item = { width: outfit.info.width, height: outfit.info.height, defaultX: 960, defaultY: 560 };
+  const strict = calculateHeadFit(source, target, item, { x: 960 }, "neck");
+  const balanced = calculateHeadFit(source, target, item, { x: 960 }, "neck", { mode: "balanced-neck" });
+  assert.ok(strict.scaleX < balanced.scaleX - .2, "o modo antigo deveria demonstrar a compressão cervical");
+  assert.ok(Math.abs(balanced.scaleX - target.width / source.width) < .16, "a escala global deve acompanhar a cabeça, não a gola");
+  const warp = buildNeckContourWarp(source, target, item, balanced, { mode: "balanced-neck" });
+  assert.ok(warp, "a divergência local da gola deve ser enviada para o warp");
+  assert.ok(warp.maxDisplacement > 10, "o warp deve corrigir uma diferença cervical real");
+});
+
 test("usa várias linhas do contorno quando a cabeça tem assimetria ou ruído nas bordas", () => {
   const contour = (leftOffset, rightOffset) => Array.from({ length: 101 }, (_, y) => ({
     y,
