@@ -140,6 +140,19 @@ function notifyPcPersistenceRecovered() {
   window.setTimeout(() => window.dispatchEvent(new CustomEvent("nymi:pc-persistence-recovered")), 0);
 }
 
+function notifyPcPersistenceMetric(kind: "character" | "characters" | "character-delete", bytes: number, startedAt: number, status: "ok" | "error", error?: unknown) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("nymi:pc-persistence-metric", {
+    detail: {
+      kind,
+      bytes,
+      durationMs: Math.max(0, Date.now() - startedAt),
+      status,
+      error: status === "error" ? (error instanceof Error ? error.message : "falha de persistência") : undefined,
+    },
+  }));
+}
+
 type PcBasePackDefinition = {
   id: string;
   name: string;
@@ -207,6 +220,14 @@ export function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(it
 let pendingCharacterBody: string | null = null;
 let pendingCharacterWaiters: Array<{ resolve: () => void; reject: (error: unknown) => void }> = [];
 let characterSaveWorker: Promise<void> | null = null;
+let characterItemQueue: Promise<void> = Promise.resolve();
+
+function characterWithoutPhotos(character: Character) {
+  const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...withoutPhotos } = character;
+  void _photoUrl;
+  void _photoDataUrl;
+  return withoutPhotos;
+}
 
 async function flushCharacterSaves() {
   while (pendingCharacterBody !== null) {
@@ -214,14 +235,17 @@ async function flushCharacterSaves() {
     pendingCharacterBody = null;
     const waiters = pendingCharacterWaiters;
     pendingCharacterWaiters = [];
+    const startedAt = Date.now();
     try {
       await pcRequest("/characters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body,
       });
+      notifyPcPersistenceMetric("characters", body.length, startedAt, "ok");
       waiters.forEach(({ resolve }) => resolve());
     } catch (error) {
+      notifyPcPersistenceMetric("characters", body.length, startedAt, "error", error);
       waiters.forEach(({ reject }) => reject(error));
       // Do not immediately replay a known failed snapshot. A later user
       // change may enqueue a newer, valid snapshot and will retry it once.
@@ -243,15 +267,47 @@ function startCharacterSaveWorker() {
 }
 
 export function saveCharactersToPc(characters: Character[]) {
-  const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
-    void _photoUrl;
-    void _photoDataUrl;
-    return character;
-  });
+  const charactersWithoutPhotos = characters.map(characterWithoutPhotos);
   const body = JSON.stringify(charactersWithoutPhotos);
   pendingCharacterBody = body;
   const operation = new Promise<void>((resolve, reject) => pendingCharacterWaiters.push({ resolve, reject }));
   startCharacterSaveWorker();
+  return operation;
+}
+
+/** Persists only one character so routine autosaves never resend the library. */
+export function saveCharacterToPc(character: Character) {
+  const body = JSON.stringify(characterWithoutPhotos(character));
+  const operation = characterItemQueue.catch(() => undefined).then(async () => {
+    const startedAt = Date.now();
+    try {
+      await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      notifyPcPersistenceMetric("character", body.length, startedAt, "ok");
+    } catch (error) {
+      notifyPcPersistenceMetric("character", body.length, startedAt, "error", error);
+      throw error;
+    }
+  });
+  characterItemQueue = operation.then(() => undefined, () => undefined);
+  return operation;
+}
+
+export function deleteCharacterFromPc(id: string) {
+  const operation = characterItemQueue.catch(() => undefined).then(async () => {
+    const startedAt = Date.now();
+    try {
+      await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
+      notifyPcPersistenceMetric("character-delete", 0, startedAt, "ok");
+    } catch (error) {
+      notifyPcPersistenceMetric("character-delete", 0, startedAt, "error", error);
+      throw error;
+    }
+  });
+  characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 

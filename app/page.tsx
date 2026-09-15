@@ -47,7 +47,9 @@ import {
   loadPcState,
   normalizeOutfitCatalog,
   catalogItemNeedsMigration,
+  deleteCharacterFromPc,
   saveCatalogItemToPc,
+  saveCharacterToPc,
   saveCharactersToPc,
   saveExpressionPackToPc,
   saveModelColorMapToPc,
@@ -1606,16 +1608,23 @@ export default function Home() {
     charactersRef.current = characters;
     saveCharactersToBrowser(characters);
     const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
-    if (pcSyncReadyRef.current) {
-      saveCharactersToPc(characters)
-        .then(notifyStudio)
+    const active = activeCharacter ? characters.find((character) => character.id === activeCharacter) : null;
+    if (pcSyncReadyRef.current && active) {
+      saveCharacterToPc(active)
+        .then(() => {
+          notifyStudio();
+          setNotice((current) => current === "Salvando automaticamente…" ? "Salvo automaticamente" : current);
+        })
         .catch((error) => {
           console.error("[creator] Falha no autosave do personagem", error);
           setNotice("Autosave no PC falhou; uma cópia ficou neste navegador");
         });
     }
-    else notifyStudio();
-  }, [characters]);
+    else {
+      notifyStudio();
+      setNotice((current) => current === "Salvando automaticamente…" ? "Salvo neste navegador" : current);
+    }
+  }, [activeCharacter, characters]);
 
   useEffect(() => {
     if (!animationMode) return;
@@ -1744,7 +1753,9 @@ export default function Home() {
       charactersRef.current = nextCharacters;
       saveCharactersToBrowser(nextCharacters);
       if (pcSyncReadyRef.current) {
-        void saveCharactersToPc(nextCharacters).catch((error) => {
+        const character = nextCharacters.find((entry) => entry.id === id);
+        if (!character) return;
+        void saveCharacterToPc(character).catch((error) => {
           console.error("[creator] Falha ao persistir personagem ao sair", error);
         });
       }
@@ -1891,7 +1902,6 @@ export default function Home() {
       if (!activeCharacter) setActiveCharacter(id);
       autoSaveBaselineRef.current = editorSnapshot;
       autoSaveTimerRef.current = null;
-      setNotice("Salvo automaticamente");
     }, 600);
     return () => {
       if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
@@ -4572,7 +4582,9 @@ export default function Home() {
     if (!pcSyncReadyRef.current) return;
     setNotice("Salvando no PC…");
     try {
-      await saveCharactersToPc(nextCharacters);
+      const character = nextCharacters.find((entry) => entry.id === activeCharacter) ?? nextCharacters[0];
+      if (!character) return;
+      await saveCharacterToPc(character);
       setNotice("Alterações salvas no PC");
     } catch (error) {
       console.error("[creator] Falha ao salvar personagem manualmente", error);
@@ -4586,7 +4598,9 @@ export default function Home() {
     if (!pcSyncReadyRef.current) return true;
     try {
       setNotice("Salvando antes de trocar de personagem…");
-      await saveCharactersToPc(nextCharacters);
+      const character = nextCharacters.find((entry) => entry.id === activeCharacter) ?? nextCharacters[0];
+      if (!character) return true;
+      await saveCharacterToPc(character);
       return true;
     } catch (error) {
       console.error("[creator] Falha ao salvar antes de trocar de personagem", error);
@@ -4704,6 +4718,15 @@ export default function Home() {
     if (character?.expressionPackId) {
       await deleteExpressionPack(character.expressionPackId);
       setExpressionPacks((current) => current.filter((pack) => pack.id !== character.expressionPackId));
+    }
+    if (pcSyncReadyRef.current) {
+      try {
+        await deleteCharacterFromPc(id);
+      } catch (error) {
+        console.error("[creator] Falha ao excluir personagem do PC", error);
+        setNotice("Personagem removido desta tela, mas a sincronização com o PC falhou");
+        return;
+      }
     }
     setCharacters((current) => current.filter((entry) => entry.id !== id));
     if (activeCharacter === id) newCharacter(false);

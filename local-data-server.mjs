@@ -43,6 +43,7 @@ const VIDEO_MAKER_TIKTOKS_ROOT = join(VIDEO_MAKER_ROOT, "tiktoks");
 const VIDEO_MAKER_PROJECTS_ROOT = join(VIDEO_MAKER_ROOT, "projects");
 const VIDEO_MAKER_EXPORTS_ROOT = join(VIDEO_MAKER_ROOT, "exports");
 const BACKUPS_ROOT = join(ROOT, "backups");
+const CHARACTERS_PATH = join(ROOT, "characters.json");
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
@@ -183,6 +184,7 @@ function isUiOrigin(origin) {
 }
 
 let state = structuredClone(EMPTY_STATE);
+let characters = [];
 let writeQueue = Promise.resolve();
 let stateMutationQueue = Promise.resolve();
 let lastBackupAt = 0;
@@ -552,7 +554,7 @@ async function loadState() {
   await ensureFolders();
   try {
     const parsed = JSON.parse(await readFile(STATE_PATH, "utf8"));
-    state = normalizeAppState(migrateStateMetadata({
+    const loadedState = normalizeAppState(migrateStateMetadata({
       ...structuredClone(EMPTY_STATE),
       ...parsed,
       version: EMPTY_STATE.version,
@@ -562,11 +564,25 @@ async function loadState() {
       studios: Array.isArray(parsed.studios) ? parsed.studios : [],
       studioAssets: Array.isArray(parsed.studioAssets) ? parsed.studioAssets : [],
     }));
+    const splitCharacters = await readOptionalJson(CHARACTERS_PATH);
+    if (Array.isArray(splitCharacters)) {
+      characters = splitCharacters;
+      state = { ...loadedState, characters: [] };
+    } else {
+      // One-time, non-destructive migration: copy the existing character
+      // snapshot before removing its duplicate from the shared state file.
+      characters = loadedState.characters;
+      await writeJsonAtomic(CHARACTERS_PATH, characters);
+      state = { ...loadedState, characters: [] };
+      await writeJsonAtomic(STATE_PATH, state);
+    }
     await reconcileMissingLocalAssets();
-    await writeJsonAtomic(STATE_PATH, state);
+    if (splitCharacters) await writeJsonAtomic(STATE_PATH, state);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
+    characters = [];
     await writeJsonAtomic(STATE_PATH, state);
+    await writeJsonAtomic(CHARACTERS_PATH, characters);
   }
 }
 
@@ -683,7 +699,7 @@ function queueStateWrite() {
 }
 
 async function publicState() {
-  const characters = await Promise.all(state.characters.map(async (character) => {
+  const publicCharacters = await Promise.all(characters.map(async (character) => {
     const { photoDataUrl: _photoDataUrl, photoUrl: _photoUrl, ...withoutPhotoFields } = character;
     void _photoDataUrl;
     void _photoUrl;
@@ -697,7 +713,7 @@ async function publicState() {
   }));
   return {
     ...state,
-    characters,
+    characters: publicCharacters,
     catalog: state.catalog.map((item) => ({ ...item, fileUrl: `http://${HOST}:${PORT}/files/catalog/${item.id}.png` })),
     expressionPacks: state.expressionPacks.map((pack) => ({
       ...pack,
@@ -988,18 +1004,48 @@ async function route(request, response) {
     });
     return;
   }
-  if (request.method === "POST" && url.pathname === "/characters") {
-    const characters = await requestJson(request, BODY_LIMITS.characters);
-    if (!Array.isArray(characters)) throw new Error("Lista de personagens inválida");
+  const characterItemMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})$/);
+  if (characterItemMatch && request.method === "PUT") {
+    const characterId = safeId(characterItemMatch[1]);
+    const character = await requestJson(request);
+    if (!character || typeof character !== "object" || String(character.id || "") !== characterId) {
+      throw Object.assign(new Error("Personagem inválido."), { status: 400, code: "INVALID_CHARACTER" });
+    }
     await queueStateMutation(async () => {
-      state.characters = characters;
-      const knownCharacterIds = new Set(characters.map((character) => String(character?.id || "")));
+      const index = characters.findIndex((entry) => String(entry?.id || "") === characterId);
+      if (index === -1) characters = [...characters, character];
+      else characters = characters.map((entry, entryIndex) => entryIndex === index ? character : entry);
+      await writeJsonAtomic(CHARACTERS_PATH, characters);
+    });
+    sendJson(response, request, 200, { ok: true, id: characterId });
+    return;
+  }
+  if (characterItemMatch && request.method === "DELETE") {
+    const characterId = safeId(characterItemMatch[1]);
+    await queueStateMutation(async () => {
+      characters = characters.filter((entry) => String(entry?.id || "") !== characterId);
+      await rm(join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`), { force: true });
+      await writeJsonAtomic(CHARACTERS_PATH, characters);
+    });
+    sendJson(response, request, 200, { ok: true, id: characterId });
+    return;
+  }
+  if (request.method === "POST" && url.pathname === "/characters") {
+    const nextCharacters = await requestJson(request, BODY_LIMITS.characters);
+    if (!Array.isArray(nextCharacters)) throw new Error("Lista de personagens inválida");
+    await queueStateMutation(async () => {
+      // Keep the full-list endpoint for migration/import compatibility. The
+      // regular editor path uses PUT /characters/:id and never sends this
+      // potentially huge list.
+      characters = nextCharacters;
+      const knownCharacterIds = new Set(nextCharacters.map((character) => String(character?.id || "")));
       for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
         if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
           await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
         }
       }
-      await queueStateWrite();
+      await writeJsonAtomic(CHARACTERS_PATH, nextCharacters);
+      state.characters = [];
     });
     sendJson(response, request, 200, { ok: true });
     return;
