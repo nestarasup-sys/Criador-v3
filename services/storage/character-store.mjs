@@ -43,6 +43,24 @@ function validateCharacters(value) {
   });
 }
 
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, entry]) => [key, canonicalize(entry)]));
+}
+
+function sameCharacterContent(left, right) {
+  const withoutRevision = (value) => {
+    const copy = { ...value };
+    delete copy.persistenceRevision;
+    delete copy.updatedAt;
+    return canonicalize(copy);
+  };
+  return JSON.stringify(withoutRevision(left)) === JSON.stringify(withoutRevision(right));
+}
+
 function summary(character, revision) {
   return {
     id: character.id,
@@ -212,6 +230,10 @@ export function createCharacterStore(root, options = {}) {
         validateCharacters([character]);
         const current = index.characters.find((entry) => entry.id === character.id);
         if (expectedRevision !== null && current && expectedRevision !== current.revision) {
+          const currentCharacter = await readCharacter(character.id);
+          if (sameCharacterContent(currentCharacter, character)) {
+            return { id: character.id, revision: current.revision, savedAt: currentCharacter.updatedAt ?? new Date().toISOString() };
+          }
           throw storeError("O personagem foi alterado por uma gravação mais recente.", "STALE_CHARACTER_REVISION", 409);
         }
         await backupIndexAndItem(character.id);

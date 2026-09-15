@@ -179,6 +179,13 @@ async function pcRequest(path: string, init?: RequestInit) {
 }
 
 const characterRevisions = new Map<string, { revision: number; updatedAt: string }>();
+type CharacterSaveResult = {
+  status: "pc-saved";
+  entityId: string;
+  revision: number;
+  savedAt: string;
+};
+const inFlightCharacterSaves = new Map<string, { fingerprint: string; operation: Promise<CharacterSaveResult> }>();
 
 export async function loadPcState(): Promise<PcState> {
   const response = await pcRequest("/state");
@@ -297,8 +304,13 @@ export function saveCharactersToPc(characters: Character[]) {
 
 /** Persists only one character so routine autosaves never resend the library. */
 export function saveCharacterToPc(character: Character) {
-  const body = JSON.stringify(characterWithoutPhotos(character));
-  const operation = characterItemQueue.catch(() => undefined).then(async () => {
+  const payload = characterWithoutPhotos(character);
+  const body = JSON.stringify(payload);
+  const fingerprint = JSON.stringify({ ...payload, updatedAt: undefined });
+  const existing = inFlightCharacterSaves.get(character.id);
+  if (existing?.fingerprint === fingerprint) return existing.operation;
+
+  const operation: Promise<CharacterSaveResult> = characterItemQueue.catch(() => undefined).then(async () => {
     const startedAt = Date.now();
     try {
       const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
@@ -311,13 +323,18 @@ export function saveCharacterToPc(character: Character) {
       await markCharacterCheckpointSynced(character.id).catch(() => undefined);
       notifyPcPersistenceRecovered();
       notifyPcPersistenceMetric("character", body.length, startedAt, "ok");
-      return { status: "pc-saved" as const, entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
+        return { status: "pc-saved", entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
     } catch (error) {
       if ((error as { status?: number })?.status !== 409) notifyPcPersistenceFailure("character", error);
       notifyPcPersistenceMetric("character", body.length, startedAt, "error", error);
       throw error;
     }
   });
+  inFlightCharacterSaves.set(character.id, { fingerprint, operation });
+  void operation.then(
+    () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
+    () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
+  );
   characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
