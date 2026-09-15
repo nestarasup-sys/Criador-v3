@@ -460,8 +460,8 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(client, /X-Gacha-Session/);
   assert.match(library, /Migrar dados deste navegador/);
   assert.match(storage, /saveCharactersToPc/);
-  assert.match(storage, /characterSaveQueue/);
-  assert.match(storage, /characterSaveQueue = operation\.then/);
+  assert.match(storage, /pendingCharacterBody/);
+  assert.match(storage, /flushCharacterSaves/);
   assert.match(storage, /saveCatalogItemToPc/);
   assert.match(storage, /saveExpressionPackToPc/);
   assert.match(storage, /CATALOG_TOMBSTONES_KEY/);
