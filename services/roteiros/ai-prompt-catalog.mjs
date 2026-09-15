@@ -59,7 +59,7 @@ export function applyAiPromptOverride(prompt, operation, overrides = {}) {
   return `<INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n${custom}\n</INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n\n${String(prompt)}`;
 }
 
-export function createAiPromptSnapshot({ operation, provider, model, instructions = "", input = "", variables = {}, attempt = 1, status = "sent", error = null, usage = null, durationMs = null, sentAt = new Date().toISOString() }) {
+export function createAiPromptSnapshot({ operation, provider, model, instructions = "", input = "", variables = {}, attempt = 1, attempts = null, status = "sent", error = null, usage = null, durationMs = null, sentAt = new Date().toISOString() }) {
   return {
     operation: normalizeAiPromptOperation(operation),
     provider: String(provider || "unknown"),
@@ -67,7 +67,7 @@ export function createAiPromptSnapshot({ operation, provider, model, instruction
     instructions: String(instructions || ""),
     input: String(input || ""),
     variables: variables && typeof variables === "object" && !Array.isArray(variables) ? structuredClone(variables) : {},
-    attempt: Number.isFinite(Number(attempt)) ? Math.max(1, Math.round(Number(attempt))) : 1,
+    attempt: Number.isFinite(Number(attempts ?? attempt)) ? Math.max(1, Math.round(Number(attempts ?? attempt))) : 1,
     sentAt: String(sentAt),
     durationMs: Number.isFinite(Number(durationMs)) ? Number(durationMs) : null,
     usage: usage && typeof usage === "object" ? structuredClone(usage) : null,

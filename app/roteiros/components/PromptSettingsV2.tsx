@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { loadAiPromptCatalog, resetAiPromptOverride, saveAiPromptOverride, type AiPromptCatalogEntry, type AiPromptSnapshot } from "../storage";
 import styles from "../roteiros.module.css";
 
@@ -30,25 +30,29 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     if (!pcAvailable) { setMessage("O servidor local está indisponível; não é possível carregar o catálogo."); return; }
     setLoading(true); setMessage("");
     try {
       const result = await loadAiPromptCatalog();
       setOperations(result.operations);
-      setSelectedId((current) => result.operations.some((entry) => entry.id === current) ? current : result.operations[0]?.id || "");
+      setSelectedId((current) => {
+        const nextId = result.operations.some((entry) => entry.id === current) ? current : result.operations[0]?.id || "";
+        if (nextId !== current) setDraft(result.operations.find((entry) => entry.id === nextId)?.customPrompt || "");
+        return nextId;
+      });
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível carregar os prompts."); }
     finally { setLoading(false); }
-  };
+  }, [pcAvailable]);
 
-  useEffect(() => { void refresh(); }, [pcAvailable]);
+  useEffect(() => { const timer = window.setTimeout(() => { void refresh(); }, 0); return () => window.clearTimeout(timer); }, [refresh]);
 
   const visible = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("pt-BR");
     return operations.filter((entry) => !normalized || `${entry.label} ${entry.button} ${entry.id}`.toLocaleLowerCase("pt-BR").includes(normalized));
   }, [operations, query]);
   const selected = operations.find((entry) => entry.id === selectedId) || visible[0] || null;
-  useEffect(() => { setDraft(selected?.customPrompt || ""); }, [selectedId, selected?.customPrompt]);
+  const selectOperation = (entry: AiPromptCatalogEntry) => { setSelectedId(entry.id); setDraft(entry.customPrompt || ""); setMessage(""); };
 
   const save = async () => {
     if (!selected || !selected.editable) return;
@@ -56,6 +60,7 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
     try {
       await saveAiPromptOverride(selected.id, draft);
       await refresh();
+      setDraft("");
       setMessage("Prompt personalizado salvo.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o prompt."); }
     finally { setLoading(false); }
@@ -64,7 +69,7 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
   const reset = async () => {
     if (!selected || !selected.editable || !window.confirm(`Restaurar o prompt padrão de “${selected.label}”?`)) return;
     setLoading(true); setMessage("");
-    try { await resetAiPromptOverride(selected.id); await refresh(); setMessage("Prompt padrão restaurado."); }
+    try { await resetAiPromptOverride(selected.id); await refresh(); setDraft(""); setMessage("Prompt padrão restaurado."); }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível restaurar o prompt."); }
     finally { setLoading(false); }
   };
@@ -78,7 +83,7 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
     <section className={styles.heroRow}><div><span className={styles.eyebrow}>INSPEÇÃO DA API</span><h1>Configurações v2</h1><p>Veja e edite os prompts usados pelas operações de IA de Roteiros.</p></div><button className={styles.secondaryButton} onClick={() => void refresh()} disabled={loading}>↻ Atualizar catálogo</button></section>
     {!pcAvailable && <div className={styles.aiWarning} role="status">Servidor local indisponível. O catálogo e as personalizações ficam temporariamente indisponíveis.</div>}
     <div className={styles.promptCatalogLayout}>
-      <aside className={styles.promptOperationList} aria-label="Operações de IA"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar operação…" />{visible.map((entry) => <button key={entry.id} className={entry.id === selected?.id ? styles.active : ""} onClick={() => setSelectedId(entry.id)}><strong>{entry.label}</strong><small>{entry.button} · {entry.promptKind === "none" ? "sem prompt" : entry.promptVersion === "custom" ? "personalizado" : "padrão"}</small></button>)}{!visible.length && <p className={styles.subtleEmpty}>Nenhuma operação encontrada.</p>}</aside>
+      <aside className={styles.promptOperationList} aria-label="Operações de IA"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar operação…" />{visible.map((entry) => <button key={entry.id} className={entry.id === selected?.id ? styles.active : ""} onClick={() => selectOperation(entry)}><strong>{entry.label}</strong><small>{entry.button} · {entry.promptKind === "none" ? "sem prompt" : entry.promptVersion === "custom" ? "personalizado" : "padrão"}</small></button>)}{!visible.length && <p className={styles.subtleEmpty}>Nenhuma operação encontrada.</p>}</aside>
       {selected ? <section className={styles.promptDetail} aria-live="polite">
         <div className={styles.promptDetailHeader}><div><span className={styles.eyebrow}>{selected.id}</span><h2>{selected.label}</h2><p>{selected.description}</p></div><span className={selected.promptVersion === "custom" ? styles.promptBadgeCustom : styles.promptBadge}>{selected.promptVersion === "custom" ? "PERSONALIZADO" : "PADRÃO"}</span></div>
         <div className={styles.promptMeta}><span><strong>Botão:</strong> {selected.button}</span><span><strong>Endpoint:</strong> {selected.endpoint}</span><span><strong>Variáveis:</strong> {selected.variables.length ? selected.variables.join(", ") : "nenhuma"}</span><span><strong>Última execução:</strong> {formatDate(selected.lastExecution?.sentAt)}</span></div>
