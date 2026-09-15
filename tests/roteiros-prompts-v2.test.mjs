@@ -45,6 +45,9 @@ test("catalogo v2 lista operacoes, valida overrides e persiste reset", async () 
     assert.equal(initial.status, 200);
     assert.ok(initial.value.operations.some((entry) => entry.id === "roteiros.translate"));
     assert.ok(initial.value.operations.some((entry) => entry.id === "roteiros.fill-empty"));
+    const individual = await call(service, "GET", "/roteiros/ai/prompts/roteiros.translate");
+    assert.equal(individual.status, 200);
+    assert.equal(individual.value.id, "roteiros.translate");
 
     const saved = await call(service, "PUT", "/roteiros/ai/prompts/roteiros.fill-empty", { prompt: "Priorize continuidade. Contexto: {{generalContext}}" });
     assert.equal(saved.status, 200);

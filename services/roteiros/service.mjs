@@ -21,6 +21,15 @@ function customizedPrompt(body, operation, prompt) {
   return applyAiPromptOverride(prompt, operation, body?.promptOverrides);
 }
 
+function requestedPromptOperation(pathname, body = {}) {
+  if (pathname.endsWith("/test")) return "roteiros.test";
+  if (pathname.endsWith("/translate")) return "roteiros.translate";
+  if (pathname.endsWith("/improve-context")) return body.contextScope === "video-description" ? "roteiros.improve-video-description" : "roteiros.improve-general-context";
+  if (pathname.endsWith("/block")) return body.action === "variations" || body.action === "rewrite" ? "roteiros.variations" : "roteiros.improve-sentence";
+  if (pathname.endsWith("/generate")) return body.opening === true ? "roteiros.opening" : body.mode === "replace-all" ? "roteiros.replace-all" : "roteiros.fill-empty";
+  return null;
+}
+
 const PROTECTED_RULES = `REGRAS ESTRUTURAIS:
 - Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.
 - Uma versão do personagem mostrada no vídeo é diferente do personagem presente na sala.
@@ -1034,6 +1043,7 @@ export function createRoteirosService(rootFolder) {
     if (!isRoteirosRoute && !isStudioAiRoute) return false;
     const headers = corsHeaders(request);
     const client = clientAbortController(response);
+    let activeAiOperation = null;
     try {
       if (request.method === "POST" && url.pathname === "/studio/ai/unload") {
         await enqueueAi(async (signal) => {
@@ -1104,6 +1114,14 @@ export function createRoteirosService(rootFolder) {
         sendJson(response, headers, 200, { version: 1, operations: publicPromptCatalog(aiPromptOverrides, aiPromptSnapshots) });
         return true;
       }
+      if (request.method === "GET" && url.pathname.startsWith("/roteiros/ai/prompts/")) {
+        const operation = decodeURIComponent(url.pathname.slice("/roteiros/ai/prompts/".length));
+        const catalog = publicPromptCatalog(aiPromptOverrides, aiPromptSnapshots);
+        const entry = catalog.find((item) => item.id === operation);
+        if (!entry) throw Object.assign(new Error("Operação de IA desconhecida."), { status: 404 });
+        sendJson(response, headers, 200, entry);
+        return true;
+      }
       if ((request.method === "PUT" || request.method === "POST") && url.pathname.startsWith("/roteiros/ai/prompts/")) {
         const operation = decodeURIComponent(url.pathname.slice("/roteiros/ai/prompts/".length));
         if (request.method === "POST" && operation.endsWith("/reset")) {
@@ -1123,6 +1141,7 @@ export function createRoteirosService(rootFolder) {
       }
       if (request.method === "POST" && url.pathname.startsWith("/roteiros/ai/")) {
         const body = { ...(await readJson(request)), promptOverrides: aiPromptOverrides };
+        activeAiOperation = requestedPromptOperation(url.pathname, body);
         const result = await enqueueAi(async (signal) => {
           if (url.pathname === "/roteiros/ai/status") return openAiStatus(body.settings);
           if (url.pathname === "/roteiros/ai/models") return { models: await listModels(body.settings, signal) };
@@ -1147,7 +1166,7 @@ export function createRoteirosService(rootFolder) {
       return true;
     } catch (error) {
       if (!client.signal.aborted) {
-        await recordPromptResult(error?.diagnostics || error, error?.diagnostics?.promptPreview?.operation || null);
+        await recordPromptResult(error?.diagnostics || error, error?.diagnostics?.promptPreview?.operation || activeAiOperation);
         const payload = { error: error?.message || "Erro no módulo Roteiros" };
         if (error?.diagnostics) payload.diagnostics = error.diagnostics;
         sendJson(response, headers, error?.status || 400, payload);
