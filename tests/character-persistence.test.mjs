@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { emptyAppState } from "../app/domain/document-schemas.mjs";
+import { createCharacterStore } from "../services/storage/character-store.mjs";
 
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
@@ -144,4 +145,37 @@ test("trocar a seleção não salva personagem sem alteração pendente", async 
   assert.match(source, /const character = persistEditorSnapshot\("Salvando automaticamente"\);\s*if \(!character\) return true;/);
   assert.doesNotMatch(source, /persistEditorSnapshot\("Salvando automaticamente"\) \?\? charactersRef\.current/);
   assert.doesNotMatch(source, /\}, \[activeCharacter, characters\]\);/);
+});
+
+test("reconstrói índice corrompido usando documentos individuais intactos", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-character-index-recovery-"));
+  const character = { id: "char-1", name: "Inteiro", model: "feminino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
+  try {
+    const first = createCharacterStore(root);
+    await first.init([character]);
+    await writeFile(join(root, "character-store", "index.json"), "{quebrado", "utf8");
+    const restarted = createCharacterStore(root);
+    await restarted.init([]);
+    assert.equal((await restarted.get("char-1")).name, "Inteiro");
+    assert.equal((await readdir(join(root, "character-store"))).some((name) => name.startsWith("index.corrupt-")), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("recupera documento corrompido pelo backup sem criar personagem vazio", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-character-item-recovery-"));
+  const character = { id: "char-1", name: "Original", model: "feminino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
+  try {
+    const first = createCharacterStore(root);
+    await first.init([character]);
+    await first.save({ ...character, name: "Atualizado", persistenceRevision: 1 }, 1);
+    await writeFile(join(root, "character-store", "items", "char-1.json"), "null", "utf8");
+    const restarted = createCharacterStore(root);
+    await restarted.init([]);
+    assert.equal((await restarted.get("char-1")).name, "Original");
+    assert.equal((await readdir(join(root, "character-store"))).some((name) => name.startsWith("char-1.corrupt-")), true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
 });

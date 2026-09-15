@@ -121,6 +121,58 @@ export function createCharacterStore(root, options = {}) {
     index = parsed;
   }
 
+  async function quarantine(filePath, label) {
+    const target = join(storeRoot, `${label}.corrupt-${Date.now()}.json`);
+    try { await rename(filePath, target); return target; }
+    catch { return null; }
+  }
+
+  async function rebuildIndexFromItems() {
+    const entries = [];
+    for (const name of (await readdir(itemsRoot)).filter((item) => item.endsWith(".json")).sort()) {
+      const id = name.slice(0, -5);
+      if (!validId(id)) continue;
+      const character = await readCharacter(id);
+      entries.push(summary(character, character.persistenceRevision));
+    }
+    if (!entries.length) throw storeError("Nenhum documento válido foi encontrado para reconstruir o índice.", "CHARACTER_RECOVERY_FAILED");
+    index = { version: STORE_VERSION, characters: entries };
+    await writeIndex();
+  }
+
+  async function recoverIndex() {
+    await quarantine(indexPath, "index");
+    const backups = (await readdir(backupsRoot)).filter((name) => name.startsWith("index-") && name.endsWith(".json")).sort().reverse();
+    for (const name of backups) {
+      try {
+        const candidate = await readJsonStrict(join(backupsRoot, name), "CORRUPT_CHARACTER_INDEX_BACKUP");
+        if (candidate?.version !== STORE_VERSION || !Array.isArray(candidate.characters)) continue;
+        index = candidate;
+        await Promise.all(index.characters.map((entry) => readCharacter(entry.id)));
+        const current = await Promise.all(index.characters.map((entry) => readCharacter(entry.id)));
+        index = { version: STORE_VERSION, characters: current.map((character) => summary(character, character.persistenceRevision)) };
+        await writeIndex();
+        return;
+      } catch { /* tenta o backup anterior */ }
+    }
+    await rebuildIndexFromItems();
+  }
+
+  async function recoverCharacter(id) {
+    const path = itemPath(id);
+    await quarantine(path, id);
+    const backups = (await readdir(backupsRoot)).filter((name) => name.startsWith(`${id}-`) && name.endsWith(".json") && !name.includes("deleted-")).sort().reverse();
+    for (const name of backups) {
+      try {
+        const candidate = await readJsonStrict(join(backupsRoot, name), "CORRUPT_CHARACTER_BACKUP");
+        if (candidate?.character?.id !== id || !Number.isInteger(candidate.revision)) continue;
+        await writeJsonAtomic(path, candidate);
+        return readCharacter(id);
+      } catch { /* tenta o backup anterior */ }
+    }
+    throw storeError(`O personagem ${id} está corrompido e não possui backup válido. O original foi preservado em quarentena.`, "CHARACTER_RECOVERY_FAILED");
+  }
+
   async function readCharacter(id) {
     const envelope = await readJsonStrict(itemPath(id), "CORRUPT_CHARACTER_ITEM");
     if (!envelope?.character || envelope.character.id !== id || !Number.isInteger(envelope.revision)) {
@@ -132,9 +184,16 @@ export function createCharacterStore(root, options = {}) {
   return {
     async init(initialCharacters = []) {
       await mkdir(storeRoot, { recursive: true });
-      if (await exists(indexPath)) await loadIndex();
-      else await migrate(initialCharacters);
-      await Promise.all(index.characters.map((entry) => readCharacter(entry.id)));
+      await mkdir(itemsRoot, { recursive: true });
+      await mkdir(backupsRoot, { recursive: true });
+      if (await exists(indexPath)) {
+        try { await loadIndex(); }
+        catch { await recoverIndex(); }
+      } else await migrate(initialCharacters);
+      for (const entry of index.characters) {
+        try { await readCharacter(entry.id); }
+        catch { await recoverCharacter(entry.id); }
+      }
     },
 
     listSummaries() { return structuredClone(index.characters); },
