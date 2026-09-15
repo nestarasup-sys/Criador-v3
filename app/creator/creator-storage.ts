@@ -12,7 +12,7 @@ import type {
 } from "../domain/catalog-contract";
 import type { Model } from "../domain/character-primitives";
 import { localDataFetch } from "../lib/local-data-client";
-import { markCharacterCheckpointSynced } from "./character-checkpoint";
+import { markCharacterCheckpointSynced, markCharacterDeletionSynced } from "./character-checkpoint";
 
 const DB_NAME = "gacha-maker";
 const DB_VERSION = 2;
@@ -328,8 +328,11 @@ export function deleteCharacterFromPc(id: string) {
     try {
       await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
       characterRevisions.delete(id);
+      await markCharacterDeletionSynced(id).catch(() => undefined);
+      notifyPcPersistenceRecovered();
       notifyPcPersistenceMetric("character-delete", 0, startedAt, "ok");
     } catch (error) {
+      notifyPcPersistenceFailure("character", error);
       notifyPcPersistenceMetric("character-delete", 0, startedAt, "error", error);
       throw error;
     }

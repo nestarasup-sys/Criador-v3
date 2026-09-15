@@ -3,7 +3,8 @@ import type { Character } from "../domain/character-contract";
 const DATABASE_NAME = "nymi-gacha-persistence";
 const STORE_NAME = "characters";
 const PENDING_STORE_NAME = "pending-character-sync";
-const DATABASE_VERSION = 2;
+const PENDING_DELETE_STORE_NAME = "pending-character-delete";
+const DATABASE_VERSION = 3;
 const LEGACY_KEY = "gacha-maker-characters";
 
 export type PersistenceResult = {
@@ -47,6 +48,7 @@ function openDatabase() {
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) request.result.createObjectStore(STORE_NAME, { keyPath: "id" });
       if (!request.result.objectStoreNames.contains(PENDING_STORE_NAME)) request.result.createObjectStore(PENDING_STORE_NAME, { keyPath: "id" });
+      if (!request.result.objectStoreNames.contains(PENDING_DELETE_STORE_NAME)) request.result.createObjectStore(PENDING_DELETE_STORE_NAME, { keyPath: "id" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(new PersistenceError("Não foi possível abrir o checkpoint do navegador.", { code: "CHECKPOINT_OPEN_FAILED", stage: "checkpoint", cause: request.error }));
@@ -159,6 +161,46 @@ export async function markCharacterCheckpointSynced(id: string) {
   try {
     const transaction = database.transaction(PENDING_STORE_NAME, "readwrite");
     transaction.objectStore(PENDING_STORE_NAME).delete(id);
+    await transactionDone(transaction);
+  } finally {
+    database.close();
+  }
+}
+
+export async function checkpointCharacterDeletion(id: string) {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction([STORE_NAME, PENDING_STORE_NAME, PENDING_DELETE_STORE_NAME], "readwrite");
+    transaction.objectStore(STORE_NAME).delete(id);
+    transaction.objectStore(PENDING_STORE_NAME).delete(id);
+    transaction.objectStore(PENDING_DELETE_STORE_NAME).put({ id, queuedAt: new Date().toISOString() });
+    await transactionDone(transaction);
+  } finally {
+    database.close();
+  }
+}
+
+export async function listPendingCharacterDeletions() {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(PENDING_DELETE_STORE_NAME, "readonly");
+    const request = transaction.objectStore(PENDING_DELETE_STORE_NAME).getAllKeys();
+    const ids = await new Promise<string[]>((resolve, reject) => {
+      request.onsuccess = () => resolve(request.result.map(String));
+      request.onerror = () => reject(request.error);
+    });
+    await transactionDone(transaction);
+    return ids;
+  } finally {
+    database.close();
+  }
+}
+
+export async function markCharacterDeletionSynced(id: string) {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(PENDING_DELETE_STORE_NAME, "readwrite");
+    transaction.objectStore(PENDING_DELETE_STORE_NAME).delete(id);
     await transactionDone(transaction);
   } finally {
     database.close();

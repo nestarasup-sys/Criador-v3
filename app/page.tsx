@@ -58,7 +58,7 @@ import {
   storeExpressionPack,
   uploadCharacterPhotoToPc,
 } from "./creator/creator-storage";
-import { PersistenceError, checkpointCharacter, checkpointCharacters, listPendingCharacterCheckpoints, loadCharacterCheckpoints } from "./creator/character-checkpoint";
+import { PersistenceError, checkpointCharacter, checkpointCharacterDeletion, checkpointCharacters, listPendingCharacterCheckpoints, listPendingCharacterDeletions, loadCharacterCheckpoints } from "./creator/character-checkpoint";
 import type { BasePackCollection, BasePackDefinition } from "./creator/base-packs";
 import type {
   BasePackId,
@@ -1496,9 +1496,11 @@ export default function Home() {
       if (syncing) return;
       syncing = true;
       try {
+        const pendingDeletions = await listPendingCharacterDeletions();
+        for (const id of pendingDeletions) await deleteCharacterFromPc(id);
         const pending = await listPendingCharacterCheckpoints();
         for (const character of pending) await saveCharacterToPc(character);
-        if (pending.length) setNotice("Alterações pendentes sincronizadas com o PC");
+        if (pending.length || pendingDeletions.length) setNotice("Alterações pendentes sincronizadas com o PC");
       } catch {
         // O checkpoint continua durável e será tentado novamente.
       } finally {
@@ -4738,22 +4740,30 @@ export default function Home() {
     const character = characters.find((entry) => entry.id === id);
     if (!character) return;
     if (!window.confirm(`Excluir o personagem “${character.name}”? Essa ação não pode ser desfeita.`)) return;
-    if (character?.expressionPackId) {
-      await deleteExpressionPack(character.expressionPackId);
-      setExpressionPacks((current) => current.filter((pack) => pack.id !== character.expressionPackId));
+    try {
+      await checkpointCharacterDeletion(id);
+    } catch (error) {
+      console.error("[creator] Falha ao proteger a exclusão do personagem", error);
+      setNotice("Não foi possível registrar a exclusão com segurança");
+      return;
     }
+    let pcDeleted = false;
     if (pcSyncReadyRef.current) {
       try {
         await deleteCharacterFromPc(id);
+        pcDeleted = true;
       } catch (error) {
         console.error("[creator] Falha ao excluir personagem do PC", error);
-        setNotice("Personagem removido desta tela, mas a sincronização com o PC falhou");
-        return;
+        setNotice("Personagem removido desta tela; exclusão no PC pendente");
       }
     }
     setCharacters((current) => current.filter((entry) => entry.id !== id));
     if (activeCharacter === id) newCharacter(false);
-    setNotice("Personagem excluído");
+    if (pcDeleted && character?.expressionPackId) {
+      await deleteExpressionPack(character.expressionPackId);
+      setExpressionPacks((current) => current.filter((pack) => pack.id !== character.expressionPackId));
+    }
+    setNotice(pcDeleted ? "Personagem excluído" : "Personagem removido; exclusão no PC pendente");
   }
 
   function resetAssetDeleteMode() {
