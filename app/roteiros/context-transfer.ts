@@ -51,6 +51,7 @@ export type AiContextSection = {
   timeline: TikTokSection["timeline"];
   specificRules: string;
   userInstruction: string;
+  aiDirectives: string[];
   shortLines: boolean;
   orderLocked: boolean;
   video?: TikTokVideoReference;
@@ -198,6 +199,7 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     timeline: section.timeline,
     specificRules: section.specificRules,
     userInstruction: section.userInstruction,
+    aiDirectives: Array.isArray(section.aiDirectives) ? [...section.aiDirectives] : [],
     shortLines: section.shortLines,
     orderLocked: "orderLocked" in section ? Boolean(section.orderLocked) : false,
     ...('video' in section && section.video ? { video: structuredClone(section.video) } : {}),
@@ -365,6 +367,7 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Linha temporal: ${section.timeline}`,
       `Regras específicas: ${section.specificRules || "Nenhuma."}`,
       `Instrução adicional: ${section.userInstruction || "Nenhuma."}`,
+      `Direções dramáticas: ${section.aiDirectives?.length ? section.aiDirectives.join(", ") : "Nenhuma."}`,
       `Vídeo: ${section.video ? `${section.video.name} — ${section.video.storedPath}` : "Nenhum vídeo informado."}`,
       `Posição fixa: ${section.orderLocked ? "sim" : "não"}`,
       `Blocos existentes: ${JSON.stringify(section.existingBlocks)}`,

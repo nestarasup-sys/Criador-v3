@@ -284,6 +284,7 @@ function normalizeRoteiroSection(value) {
     timeline,
     sceneGoal: typeof source.sceneGoal === "string" ? source.sceneGoal : "",
     userInstruction: typeof source.userInstruction === "string" ? source.userInstruction : "",
+    aiDirectives: Array.isArray(source.aiDirectives) ? [...new Set(source.aiDirectives.map((item) => String(item || "").trim()).filter(Boolean))].slice(0, 20) : [],
     specificRules: typeof source.specificRules === "string" ? source.specificRules : "",
     shortLines: Boolean(source.shortLines),
     ...(typeof source.orderLocked === "boolean" ? { orderLocked: source.orderLocked } : {}),

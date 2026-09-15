@@ -3,6 +3,7 @@ import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { emptyRoteirosState, normalizeRoteirosState as normalizeState, validateRoteirosState } from "../../app/domain/document-schemas.mjs";
 import { AI_SYSTEM_INSTRUCTIONS } from "../../app/domain/roteiro-prompt-contract.mjs";
+import { aiDirectivePrompt } from "../../app/roteiros/ai-directives.mjs";
 import { callOpenAi, configureOpenAiUsage, openAiModels, openAiStatus, testOpenAi } from "./openai-provider.mjs";
 import { appendAiPromptSnapshot, buildAiPrompt, createAiPromptSnapshot, hasAiPromptOperation, normalizeAiPromptOverrides, publicPromptCatalog, resolveAiNarrativePrompt, validateAiPromptOverride } from "./ai-prompt-catalog.mjs";
 
@@ -618,6 +619,7 @@ async function generateReactions(body, signal) {
     narrativePolicy: narrative.text,
     operationRules: [
       generationMode,
+      aiDirectivePrompt(section.aiDirectives) ? `Direções dramáticas selecionadas:\n${aiDirectivePrompt(section.aiDirectives)}` : "Nenhuma direção dramática selecionada.",
       "Para type auto, escolha speech ou thought; para tipo bloqueado, preserve a escolha do usuário.",
       "Se houver um encerramento natural, considere usar thought no último bloco para mostrar o que um personagem pensa sobre o que ouviu, sobre FYN, sobre a situação ou sobre outro personagem. A API pode escolher uma reação criativa, indignada, hostil, debochada, descrente ou admirada, inclusive um julgamento privado duro, desde que continue coerente com a personalidade e não seja tratado como fato confirmado. Não force thought se a sequência terminar melhor em speech.",
       opening ? "Ainda não existe conteúdo exibido: não antecipe nem invente qualquer cena futura." : "Reaja à cena exibida como espectador na sala; trate-a como uma visão/representação, não como uma filmagem. Não coloque os reatores dentro da cena mostrada.",
@@ -705,6 +707,7 @@ async function blockAction(body, signal) {
     narrativePolicy: narrative.text,
     operationRules: [
       generationMode,
+      aiDirectivePrompt(section.aiDirectives) ? `Direções dramáticas selecionadas:\n${aiDirectivePrompt(section.aiDirectives)}` : "Nenhuma direção dramática selecionada.",
       `Use characterId ${block.characterId}.`,
       `Tipo: ${block.type === "auto" ? "escolha speech ou thought conforme a intenção" : `preserve ${block.type}`}.`,
       `Regras globais ativas:\n${rulesText(body.globalRules)}`,

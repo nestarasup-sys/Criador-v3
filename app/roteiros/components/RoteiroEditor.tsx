@@ -14,6 +14,7 @@ import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, copyRoteiroTikTokToBase, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
+import { AI_DIRECTIVES } from "../ai-directives.mjs";
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
 import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
 import { loadBaseDados } from "../../base de dados/storage";
@@ -401,7 +402,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
             <label className={`${styles.field} ${styles.descriptionField}`}><span>Descrição detalhada do vídeo</span><textarea rows={9} value={section.description} maxLength={20000} onChange={(event) => patch({ description: event.target.value })} placeholder="Descreva literalmente o que acontece no vídeo, quem aparece e quais ações ocorrem…" /></label>
             <div className={styles.descriptionSide}>
               {!opening && <label className={styles.field}><span>Linha do tempo</span><select value={section.timeline} onChange={(event) => patch({ timeline: event.target.value as TikTokSection["timeline"] })}><option value="unspecified">Indefinido</option><option value="past">Passado</option><option value="present">Presente</option><option value="future">Futuro</option></select></label>}
-              <label className={styles.field}><span>Instrução adicional para IA</span><input value={section.userInstruction} maxLength={3000} onChange={(event) => patch({ userInstruction: event.target.value })} placeholder="Ex: dê mais foco ao ciúme…" /></label>
+              <div className={styles.directiveField}><div className={styles.directiveHeader}><span>Direções para IA</span><small>Selecione uma ou mais. Clique novamente para remover.</small></div><div className={styles.directivePicker}>{AI_DIRECTIVES.map((directive) => { const selected = (section.aiDirectives || []).includes(directive.id); return <button key={directive.id} type="button" className={`${styles.directiveChip} ${selected ? styles.directiveChipSelected : ""}`} style={{ "--directive-color": directive.color } as React.CSSProperties} aria-pressed={selected} title={directive.prompt} onClick={() => patch({ aiDirectives: selected ? (section.aiDirectives || []).filter((id) => id !== directive.id) : [...new Set([...(section.aiDirectives || []), directive.id])] })}>{directive.label}</button>; })}</div></div>
               <label className={styles.checkField}><input type="checkbox" checked={section.shortLines} onChange={(event) => patch({ shortLines: event.target.checked })} /><span>Falas mais curtas</span></label>
             </div>
           </div>

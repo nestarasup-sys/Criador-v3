@@ -836,6 +836,15 @@
 .railSection.exportTools { gap:7px; }
 .contextRail>.field { margin-bottom:15px; }
 .contextRail textarea { line-height:1.5; }
+.directiveField { display:flex; flex-direction:column; gap:8px; }
+.directiveHeader { display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.directiveHeader>span { font-size:12px; font-weight:850; color:var(--ink); }
+.directiveHeader small { color:var(--muted); font-size:10px; }
+.directivePicker { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; }
+.directiveChip { min-width:0; border:1px solid color-mix(in srgb,var(--directive-color) 35%,#fff); border-radius:9px; padding:8px 5px; background:#fff; color:var(--directive-color); font-size:10px; font-weight:850; cursor:pointer; transition:background .16s ease,color .16s ease,transform .16s ease; }
+.directiveChip:hover { transform:translateY(-1px); }
+.directiveChipSelected { background:var(--directive-color); color:#fff; box-shadow:0 4px 10px color-mix(in srgb,var(--directive-color) 22%,transparent); }
+@media (max-width:700px) { .directivePicker { grid-template-columns:repeat(2,minmax(0,1fr)); } .directiveHeader { align-items:flex-start; flex-direction:column; gap:3px; } }
 .aiContextPanel {
   margin:0 0 16px;
   border:1px solid #ded5fa;

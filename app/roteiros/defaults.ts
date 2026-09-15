@@ -80,6 +80,7 @@ export function createTikTokSection(blockCount = 6, shortLines = false): TikTokS
     timeline: "unspecified",
     sceneGoal: "",
     userInstruction: "",
+    aiDirectives: [],
     specificRules: "",
     shortLines,
     aiUsage: createAiUsageTotals(),
