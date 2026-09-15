@@ -57,8 +57,8 @@ import {
   storeCatalogItem,
   storeExpressionPack,
   uploadCharacterPhotoToPc,
-  CHARACTER_KEY,
 } from "./creator/creator-storage";
+import { checkpointCharacter, checkpointCharacters, loadCharacterCheckpoints } from "./creator/character-checkpoint";
 import type { BasePackCollection, BasePackDefinition } from "./creator/base-packs";
 import type {
   BasePackId,
@@ -241,17 +241,10 @@ function emptyLayerMasks(): LayerMasks {
 }
 
 function saveCharactersToBrowser(characters: Character[]) {
-  if (typeof window === "undefined") return;
-  try {
-    const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
-      void _photoUrl;
-      void _photoDataUrl;
-      return character;
-    });
-    window.localStorage.setItem(CHARACTER_KEY, JSON.stringify(charactersWithoutPhotos));
-  } catch (error) {
+  return checkpointCharacters(characters).catch((error) => {
     console.error("[creator] Não foi possível manter o checkpoint no navegador", error);
-  }
+    throw error;
+  });
 }
 
 function cloneMaskStrokes(strokes: MaskStroke[]) {
@@ -1500,23 +1493,15 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    let browserCharacters: Character[] = [];
-    const saved = localStorage.getItem(CHARACTER_KEY);
-    if (saved) {
-      try {
-        browserCharacters = JSON.parse(saved);
-      } catch {
-        localStorage.removeItem(CHARACTER_KEY);
-      }
-    }
-
     Promise.all([
       loadCatalog(),
       loadExpressionPacks(),
       loadPcState().catch(() => null),
       loadPcModels().catch(() => DEFAULT_BASE_PACKS),
+      loadCharacterCheckpoints().catch(() => []),
     ])
-      .then(async ([items, packs, pcState, discoveredModels]) => {
+      .then(async ([items, packs, pcState, discoveredModels, loadedBrowserCharacters]) => {
+        let browserCharacters = loadedBrowserCharacters;
         setBasePacks(discoveredModels);
         const browserCatalog = normalizeOutfitCatalog(items)
           .map((item) => ({ ...item, url: URL.createObjectURL(item.blob) }));
@@ -1606,7 +1591,7 @@ export default function Home() {
 
   useEffect(() => {
     charactersRef.current = characters;
-    saveCharactersToBrowser(characters);
+    void saveCharactersToBrowser(characters).catch(() => undefined);
     const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
     const active = activeCharacter ? characters.find((character) => character.id === activeCharacter) : null;
     if (pcSyncReadyRef.current && active) {
@@ -1751,7 +1736,7 @@ export default function Home() {
         ? charactersRef.current.map((entry) => entry.id === id ? character : entry)
         : [character, ...charactersRef.current];
       charactersRef.current = nextCharacters;
-      saveCharactersToBrowser(nextCharacters);
+      void saveCharactersToBrowser(nextCharacters).catch(() => undefined);
       if (pcSyncReadyRef.current) {
         const character = nextCharacters.find((entry) => entry.id === id);
         if (!character) return;
@@ -1896,7 +1881,7 @@ export default function Home() {
           ? current.map((entry) => entry.id === id ? character : entry)
           : [character, ...current];
         charactersRef.current = next;
-        saveCharactersToBrowser(next);
+        void saveCharactersToBrowser(next).catch(() => undefined);
         return next;
       });
       if (!activeCharacter) setActiveCharacter(id);
@@ -4399,8 +4384,7 @@ export default function Home() {
       const expressionPackTombstones = loadExpressionPackTombstones();
       let latestBrowserCharacters = browserData.characters;
       try {
-        const storedCharacters = JSON.parse(localStorage.getItem(CHARACTER_KEY) ?? "[]");
-        if (Array.isArray(storedCharacters)) latestBrowserCharacters = storedCharacters;
+        latestBrowserCharacters = await loadCharacterCheckpoints();
       } catch {
         // Mantém o snapshot inicial se o navegador tiver um JSON inválido.
       }
@@ -4568,7 +4552,7 @@ export default function Home() {
       ? charactersRef.current.map((entry) => entry.id === id ? character : entry)
       : [character, ...charactersRef.current];
     charactersRef.current = nextCharacters;
-    saveCharactersToBrowser(nextCharacters);
+    void saveCharactersToBrowser(nextCharacters).catch(() => undefined);
     setCharacters(nextCharacters);
     if (!activeCharacter) setActiveCharacter(id);
     autoSaveBaselineRef.current = editorSnapshot;
@@ -4580,6 +4564,13 @@ export default function Home() {
   async function saveCharacter() {
     const character = persistEditorSnapshot("Alterações salvas", true);
     if (!character) return;
+    try {
+      await checkpointCharacter(character);
+    } catch (error) {
+      console.error("[creator] Falha no checkpoint manual", error);
+      setNotice("Não foi possível criar uma cópia segura no navegador");
+      return;
+    }
     if (!pcSyncReadyRef.current) return;
     setNotice("Salvando no PC…");
     try {
@@ -4587,13 +4578,20 @@ export default function Home() {
       setNotice("Alterações salvas no PC");
     } catch (error) {
       console.error("[creator] Falha ao salvar personagem manualmente", error);
-      setNotice("Não foi possível salvar no PC; uma cópia ficou neste navegador");
+      setNotice("Cópia protegida neste navegador; sincronização com o PC pendente");
     }
   }
 
   async function flushCurrentCharacterBeforeSwitch() {
     const character = persistEditorSnapshot("Salvando automaticamente");
     if (!character) return true;
+    try {
+      await checkpointCharacter(character);
+    } catch (error) {
+      console.error("[creator] Falha no checkpoint antes de trocar de personagem", error);
+      setNotice("Não foi possível proteger as alterações; o personagem atual permaneceu aberto");
+      return false;
+    }
     if (!pcSyncReadyRef.current) return true;
     try {
       setNotice("Salvando antes de trocar de personagem…");
@@ -4601,8 +4599,8 @@ export default function Home() {
       return true;
     } catch (error) {
       console.error("[creator] Falha ao salvar antes de trocar de personagem", error);
-      setNotice("Não foi possível salvar no PC; o personagem atual permaneceu aberto");
-      return false;
+      setNotice("Alterações protegidas neste navegador; sincronização com o PC pendente");
+      return true;
     }
   }
 
