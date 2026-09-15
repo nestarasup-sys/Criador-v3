@@ -27,4 +27,6 @@ test("aplica MIME e limites de upload antes de ler o corpo", () => {
   assert.throws(() => assertMimeType("text/html", IMAGE_MIME_TYPES), (error) => error.code === "UNSUPPORTED_MEDIA_TYPE" && error.status === 415);
   assert.doesNotThrow(() => assertContentLength(request({ "content-length": "1024" }), BODY_LIMITS.image));
   assert.throws(() => assertContentLength(request({ "content-length": String(BODY_LIMITS.image + 1) }), BODY_LIMITS.image), (error) => error.code === "PAYLOAD_TOO_LARGE" && error.status === 413);
+  assert.doesNotThrow(() => assertContentLength(request({ "content-length": 20 * 1024 * 1024 }), BODY_LIMITS.characters));
+  assert.throws(() => assertContentLength(request({ "content-length": String(BODY_LIMITS.characters + 1) }), BODY_LIMITS.characters), (error) => error.code === "PAYLOAD_TOO_LARGE" && error.status === 413);
 });
