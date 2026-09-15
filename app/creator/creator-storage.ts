@@ -231,6 +231,17 @@ async function flushCharacterSaves() {
   }
 }
 
+function startCharacterSaveWorker() {
+  if (characterSaveWorker) return;
+  characterSaveWorker = flushCharacterSaves().finally(() => {
+    characterSaveWorker = null;
+    // A save can arrive in the tiny gap between the final loop check and
+    // finally(). Continue with that newer snapshot instead of leaving it
+    // pending until a later unrelated edit.
+    if (pendingCharacterBody !== null) startCharacterSaveWorker();
+  });
+}
+
 export function saveCharactersToPc(characters: Character[]) {
   const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
     void _photoUrl;
@@ -240,11 +251,7 @@ export function saveCharactersToPc(characters: Character[]) {
   const body = JSON.stringify(charactersWithoutPhotos);
   pendingCharacterBody = body;
   const operation = new Promise<void>((resolve, reject) => pendingCharacterWaiters.push({ resolve, reject }));
-  if (!characterSaveWorker) {
-    characterSaveWorker = flushCharacterSaves().finally(() => {
-      characterSaveWorker = null;
-    });
-  }
+  startCharacterSaveWorker();
   return operation;
 }
 
