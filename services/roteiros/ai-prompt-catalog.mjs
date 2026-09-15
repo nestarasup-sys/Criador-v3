@@ -27,8 +27,28 @@ const VARIATIONS_POLICY = `Crie alternativas realmente distintas da reação ori
 
 const TRANSLATION_POLICY = `Traduza para inglês natural preservando sentido, personalidade, nível de agressividade, humor, subtexto e distinção entre fala e pensamento. Não suavize conflitos, não explique e não acrescente informação.`;
 
-const PROFILE_TRAITS_POLICY = `Converta um texto bruto sobre um personagem em uma ficha narrativa clara para uso por outra IA. Distribua somente informações sustentadas pelo texto nos campos de personalidade, história, relação com FYN, estilo de fala, regras particulares e relações. Preserve contradições e incertezas como incertezas; não invente fatos para preencher campos. Priorize traços, desejos, medos, gatilhos e voz do personagem.`;
-const PROFILE_RELATIONS_POLICY = `Converta um texto bruto sobre um personagem em uma ficha narrativa dramática. Além de distribuir os dados nos campos principais, priorize relações direcionais: quem o personagem deseja, teme, rivaliza, protege, manipula ou despreza. Use somente informações presentes no texto, associe relações aos IDs conhecidos e deixe a descrição vazia quando não houver base suficiente. Não invente romance, gênero, fatos ou sentimentos.`;
+const PROFILE_TRAITS_POLICY = `Você é um editor de fichas de personagens para roteiros de drama, romance sombrio e conflito psicológico. A tarefa NÃO é apenas resumir ou reorganizar o texto bruto: reescreva o conteúdo em uma ficha utilizável pela IA, tornando os traços narrativos mais específicos, intensos e acionáveis.
+
+Use o texto bruto como fonte de verdade. Preserve todos os fatos, contradições e incertezas. Você pode transformar um traço em consequências dramáticas sustentadas por ele: por exemplo, “possessivo” pode virar controle sobre a situação, negação do ciúme e reação à atenção dada a um rival; “fala pouco” pode virar frases curtas, silêncio ameaçador e respostas que não explicam demais. Isso é intensificação de escrita, não autorização para inventar passado, romance, gênero, crimes, sentimentos ou acontecimentos.
+
+Preencha e REESCREVA estes campos:
+- personality: temperamento, desejos, medos, gatilhos, contradições e modo de reagir sob pressão;
+- backstory: passado e fatos que explicam o comportamento, sem criar fatos ausentes;
+- fynRelationship: o que sente, quer, teme ou esconde de FYN, somente quando sustentado pelo texto;
+- speakingStyle: ritmo, tamanho das frases, vocabulário, subtexto, ataques, silêncios e coisas que o personagem não diria;
+- additionalRules: regras comportamentais concretas para manter consistência entre cenas;
+- relationships: relações direcionais com personagens conhecidos, somente se o texto bruto sustentar a relação.
+
+A ficha deve parecer uma instrução dramática pronta para outra IA interpretar o personagem, não um relatório genérico. Dê preferência a formulações concretas como “quando X acontece, reage fazendo Y” em vez de adjetivos soltos. Não use Markdown dentro dos campos e não coloque explicações fora do JSON.`;
+const PROFILE_RELATIONS_POLICY = `Você é um editor de fichas de personagens para roteiros de drama, romance sombrio e conflito psicológico. A tarefa NÃO é apenas resumir ou reorganizar o texto bruto: reescreva-o em uma ficha intensificada, dramática e diretamente utilizável pela IA.
+
+Use o texto bruto como fonte de verdade. Preserve fatos, contradições e incertezas. Intensifique a forma narrativa convertendo traços já presentes em comportamento observável, subtexto, gatilhos e consequências em cena, mas NÃO invente passado, romance, gênero, crimes, sentimentos ou eventos que não estejam sustentados.
+
+Preencha e REESCREVA personality, backstory, fynRelationship, speakingStyle e additionalRules com o mesmo padrão de intensidade da ficha de traços. Além disso, dê prioridade às relações dramáticas direcionais: quem o personagem deseja, teme, rivaliza, protege, manipula, testa ou despreza. Cada relação deve explicar como o personagem enxerga o alvo e como tende a agir com ele. Use os IDs dos personagens conhecidos, nunca nomes inventados, nunca o próprio personagem e nunca relações sem base no texto bruto.
+
+As relações devem ser úteis para gerar briga, ciúme, romance, desconfiança, deboche e intriga quando esses elementos estiverem presentes na fonte. Não transforme toda relação em romance e não suavize conflitos. Dê preferência a regras acionáveis como “quando o alvo desafia sua autoridade, ele...” em vez de “eles não se gostam”.
+
+A ficha deve parecer uma instrução dramática pronta para outra IA interpretar o personagem, não um relatório genérico. Não use Markdown dentro dos campos e não coloque explicações fora do JSON.`;
 
 const entries = [
   { id: "roteiros.test", label: "Testar conexão OpenAI", button: "Testar conexão OpenAI", endpoint: "/roteiros/ai/test", promptKind: "technical", description: "Verifica se o modelo OpenAI responde.", editable: false, variables: [], defaultPrompt: "Responda somente OK." },
@@ -43,7 +63,7 @@ const entries = [
   { id: "roteiros.variations", label: "Gerar variações", button: "Gerar variações", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Gera três versões alternativas de uma reação.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"], defaultPrompt: VARIATIONS_POLICY },
   { id: "roteiros.translate", label: "Traduzir para inglês", button: "Gerar inglês para todos", endpoint: "/roteiros/ai/translate", promptKind: "structured", description: "Traduz falas e pensamentos mantendo IDs e ordem.", editable: true, variables: ["sceneDescription", "items"], defaultPrompt: TRANSLATION_POLICY },
   { id: "roteiros.organize-profile-traits", label: "Organizar ficha — traços", button: "Organizar com Ficha 1", endpoint: "/roteiros/ai/organize-profile", promptKind: "structured", description: "Distribui o texto bruto nos campos principais da ficha.", editable: true, variables: ["rawText", "characterName", "knownCharacters", "profileMode"], defaultPrompt: PROFILE_TRAITS_POLICY },
-  { id: "roteiros.organize-profile-relations", label: "Organizar ficha — relações", button: "Organizar com Ficha 2", endpoint: "/roteiros/ai/organize-profile", promptKind: "structured", description: "Distribui o texto e fortalece relações dramáticas direcionais.", editable: true, variables: ["rawText", "characterName", "knownCharacters", "profileMode"], defaultPrompt: PROFILE_RELATIONS_POLICY },
+  { id: "roteiros.organize-profile-relations", label: "Organizar ficha — relações intensificadas", button: "Organizar com Ficha 3", endpoint: "/roteiros/ai/organize-profile", promptKind: "structured", description: "Reescreve a ficha e fortalece relações dramáticas direcionais.", editable: true, variables: ["rawText", "characterName", "knownCharacters", "profileMode"], defaultPrompt: PROFILE_RELATIONS_POLICY },
 ];
 
 const entryById = new Map(entries.map((entry) => [entry.id, entry]));

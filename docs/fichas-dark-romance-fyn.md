@@ -44,7 +44,7 @@ Estas duas fichas foram usadas nos testes da API. As duas mantêm um elenco com 
 - Estilo de fala: Ironia seca e comentários que desmontam fantasias.
 - Regras: Quando homens chamarem ciúme de proteção, expõe a contradição. Nunca flerta com FYN.
 
-## Ficha 2 — Relações explícitas
+## Ficha 3 — Relações intensificadas e explícitas
 
 Use os mesmos traços da Ficha 1 e adicione estas relações direcionais:
 
@@ -77,7 +77,7 @@ Use os mesmos traços da Ficha 1 e adicione estas relações direcionais:
 
 Cole um texto bruto na ficha de um personagem e use:
 
-- **Organizar com Ficha 1**: prioriza personalidade, história, relação com FYN, voz e regras.
-- **Organizar com Ficha 2**: faz a mesma distribuição e dá prioridade às relações dramáticas direcionais.
+- **Ficha 1 intensificada**: reescreve personalidade, história, relação com FYN, voz e regras em instruções dramáticas concretas. Não é só uma reorganização.
+- **Ficha 3 intensificada**: faz a mesma reescrita e dá prioridade às relações dramáticas direcionais, com rivalidade, ciúme, manipulação e conflito quando o texto bruto sustenta esses elementos.
 
 Os botões não inventam dados ausentes. Relações só são criadas quando o texto bruto sustenta a informação e os IDs conhecidos são preservados.
