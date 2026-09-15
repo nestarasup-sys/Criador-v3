@@ -27,6 +27,9 @@ const VARIATIONS_POLICY = `Crie alternativas realmente distintas da reação ori
 
 const TRANSLATION_POLICY = `Traduza para inglês natural preservando sentido, personalidade, nível de agressividade, humor, subtexto e distinção entre fala e pensamento. Não suavize conflitos, não explique e não acrescente informação.`;
 
+const PROFILE_TRAITS_POLICY = `Converta um texto bruto sobre um personagem em uma ficha narrativa clara para uso por outra IA. Distribua somente informações sustentadas pelo texto nos campos de personalidade, história, relação com FYN, estilo de fala, regras particulares e relações. Preserve contradições e incertezas como incertezas; não invente fatos para preencher campos. Priorize traços, desejos, medos, gatilhos e voz do personagem.`;
+const PROFILE_RELATIONS_POLICY = `Converta um texto bruto sobre um personagem em uma ficha narrativa dramática. Além de distribuir os dados nos campos principais, priorize relações direcionais: quem o personagem deseja, teme, rivaliza, protege, manipula ou despreza. Use somente informações presentes no texto, associe relações aos IDs conhecidos e deixe a descrição vazia quando não houver base suficiente. Não invente romance, gênero, fatos ou sentimentos.`;
+
 const entries = [
   { id: "roteiros.test", label: "Testar conexão OpenAI", button: "Testar conexão OpenAI", endpoint: "/roteiros/ai/test", promptKind: "technical", description: "Verifica se o modelo OpenAI responde.", editable: false, variables: [], defaultPrompt: "Responda somente OK." },
   { id: "roteiros.models", label: "Listar modelos", button: "Atualizar modelos", endpoint: "/roteiros/ai/models", promptKind: "none", description: "Consulta os modelos disponíveis no provedor.", editable: false, variables: [], defaultPrompt: "" },
@@ -39,6 +42,8 @@ const entries = [
   { id: "roteiros.improve-sentence", label: "Melhorar frase", button: "Melhorar frase", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Melhora uma reação preservando seu sentido.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"], defaultPrompt: IMPROVE_SENTENCE_POLICY },
   { id: "roteiros.variations", label: "Gerar variações", button: "Gerar variações", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Gera três versões alternativas de uma reação.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"], defaultPrompt: VARIATIONS_POLICY },
   { id: "roteiros.translate", label: "Traduzir para inglês", button: "Gerar inglês para todos", endpoint: "/roteiros/ai/translate", promptKind: "structured", description: "Traduz falas e pensamentos mantendo IDs e ordem.", editable: true, variables: ["sceneDescription", "items"], defaultPrompt: TRANSLATION_POLICY },
+  { id: "roteiros.organize-profile-traits", label: "Organizar ficha — traços", button: "Organizar com Ficha 1", endpoint: "/roteiros/ai/organize-profile", promptKind: "structured", description: "Distribui o texto bruto nos campos principais da ficha.", editable: true, variables: ["rawText", "characterName", "knownCharacters", "profileMode"], defaultPrompt: PROFILE_TRAITS_POLICY },
+  { id: "roteiros.organize-profile-relations", label: "Organizar ficha — relações", button: "Organizar com Ficha 2", endpoint: "/roteiros/ai/organize-profile", promptKind: "structured", description: "Distribui o texto e fortalece relações dramáticas direcionais.", editable: true, variables: ["rawText", "characterName", "knownCharacters", "profileMode"], defaultPrompt: PROFILE_RELATIONS_POLICY },
 ];
 
 const entryById = new Map(entries.map((entry) => [entry.id, entry]));

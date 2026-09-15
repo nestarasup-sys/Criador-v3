@@ -175,6 +175,9 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
 
 function ProfileEditor({ character, characters, state, updateState }: { character: PremiumCharacter; characters: PremiumCharacter[]; state: RoteirosState; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void }) {
   const profile = state.profiles.find((item) => item.characterId === character.id) ?? createNarrativeProfile(character.id);
+  const [rawText, setRawText] = useState("");
+  const [organizing, setOrganizing] = useState<"traits" | "relations" | "">("");
+  const [organizeMessage, setOrganizeMessage] = useState("");
   const patchProfile = (patch: Partial<NarrativeProfile>) => updateState((current) => {
     const exists = current.profiles.some((item) => item.characterId === character.id);
     const next = { ...profile, ...patch, updatedAt: nowIso() };
@@ -184,8 +187,28 @@ function ProfileEditor({ character, characters, state, updateState }: { characte
     const target = characters.find((item) => item.id !== character.id && !profile.relationships.some((relationship) => relationship.targetCharacterId === item.id));
     if (target) patchProfile({ relationships: [...profile.relationships, { id: createId(), targetCharacterId: target.id, description: "" }] });
   };
+  const organizeWithAi = async (profileMode: "traits" | "relations") => {
+    if (!rawText.trim() || organizing) return;
+    setOrganizing(profileMode); setOrganizeMessage("");
+    try {
+      const result = await aiRequest<{ profile: Omit<NarrativeProfile, "updatedAt" | "relationships"> & { relationships: Array<{ targetCharacterId: string; description: string }> }; model: string }>("organize-profile", {
+        profileMode,
+        characterId: character.id,
+        characterName: character.name,
+        rawText,
+        knownCharacters: characters.map((item) => ({ id: item.id, name: item.name })),
+        settings: state.settings,
+      });
+      patchProfile({ ...result.profile, characterId: character.id, relationships: result.profile.relationships.map((relationship) => ({ ...relationship, id: createId() })) });
+      setRawText("");
+      setOrganizeMessage(`Ficha organizada com ${result.model}.`);
+    } catch (error) {
+      setOrganizeMessage(error instanceof Error ? error.message : "Não foi possível organizar a ficha.");
+    } finally { setOrganizing(""); }
+  };
   return <section className={styles.profileEditor}>
     <div className={styles.profileHero}><CharacterMark character={character} large /><div><span className={styles.eyebrow}>{character.model}</span><h2>{character.name}</h2><p>Modelo global usado ao criar um roteiro ou ao sincronizar manualmente a ficha local dele.</p></div><div className={styles.completion}><strong>{profileCompletion(profile)}%</strong><span>preenchido</span></div></div>
+    <section className={styles.rawProfileCard}><div><span className={styles.eyebrow}>ORGANIZADOR DE FICHA</span><h3>Texto bruto do personagem</h3><p>Cole anotações soltas. A IA distribui o conteúdo nos campos abaixo sem inventar informações.</p></div><textarea value={rawText} onChange={(event) => setRawText(event.target.value)} maxLength={24000} rows={7} placeholder="Ex.: Lucien é possessivo, fala pouco, odeia perder o controle..." /><div className={styles.profileAiActions}><button className={styles.profilePresetOne} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("traits")}>{organizing === "traits" ? "Organizando…" : "✦ Organizar com Ficha 1"}</button><button className={styles.profilePresetTwo} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("relations")}>{organizing === "relations" ? "Organizando…" : "✦ Organizar com Ficha 2"}</button></div>{organizeMessage && <small className={styles.profileAiMessage}>{organizeMessage}</small>}</section>
     <div className={styles.singleFieldStack}>
       <label><span>Personalidade</span><small>Como pensa, reage, se defende, provoca, demonstra ou esconde emoções.</small><textarea rows={7} maxLength={12000} value={profile.personality} onChange={(event) => patchProfile({ personality: event.target.value })} placeholder="Escreva aqui tudo sobre a personalidade do personagem…" /></label>
       <label><span>História</span><small>Passado, traumas, segredos, posição social e o que ele sabe ou desconhece.</small><textarea rows={7} maxLength={12000} value={profile.backstory} onChange={(event) => patchProfile({ backstory: event.target.value })} placeholder="Escreva a história completa do personagem…" /></label>

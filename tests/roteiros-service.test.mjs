@@ -331,6 +331,31 @@ test("configuração v2 substitui a narrativa padrão, interpola dados e mantém
   }
 });
 
+test("organiza ficha bruta e preserva relações conhecidas", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-profile-organizer-"));
+  const stub = await startJsonModelStub(() => ({ personality: "Controlador", backstory: "Um passado difícil.", fynRelationship: "Desconfia de FYN.", speakingStyle: "Frases curtas.", additionalRules: "Não admite medo.", relationships: [{ targetCharacterId: "char-2", description: "Rivaliza com ele." }, { targetCharacterId: "unknown", description: "Não deve entrar." }] }));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/organize-profile", {
+      settings: { aiProvider: "ollama", aiBaseUrl: stub.baseUrl, aiModel: "gemma4:e4b", temperature: 0.45 },
+      profileMode: "relations",
+      characterId: "char-1",
+      characterName: "Lucien",
+      rawText: "Lucien é controlador e rivaliza com Viktor.",
+      knownCharacters: [{ id: "char-1", name: "Lucien" }, { id: "char-2", name: "Viktor" }],
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.value.profile.personality, "Controlador");
+    assert.deepEqual(response.value.profile.relationships, [{ targetCharacterId: "char-2", description: "Rivaliza com ele." }]);
+    assert.match(stub.prompt, /relações dramáticas direcionais/i);
+    assert.match(stub.prompt, /Lucien é controlador/i);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("deixa a API escolher a ordem dos participantes quando os blocos estão livres", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-order-"));
   const stub = await startJsonModelStub(() => ({ reactions: [
