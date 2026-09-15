@@ -133,6 +133,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
         <div className={styles.heroActions}>
           <button className={styles.secondaryButton} onClick={() => void auditOrphans()} disabled={orphanBusy}>⌕ Auditar pastas</button>
           <button className={styles.secondaryButton} onClick={() => exportJson(`gacha-premium-roteiros-${new Date().toISOString().slice(0, 10)}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), data: state })}>↓ Exportar todos</button>
+          <a className={styles.secondaryButton} href="/roteiros/guia-v1-roteiro.md" download="guia-v1-roteiro.md">↓ Baixar Guia V1</a>
           <button className={styles.primaryButton} onClick={() => setCreating(true)}>＋ Criar roteiro</button>
         </div>
       </section>

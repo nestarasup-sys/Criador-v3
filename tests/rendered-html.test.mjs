@@ -536,6 +536,18 @@ test("separates raw profile drafts by character", async () => {
   assert.doesNotMatch(page, /const \[rawText, setRawText\] = useState\(""\)/);
 });
 
+test("offers the external roteiro guide download on the home page", async () => {
+  const [page, guide] = await Promise.all([
+    readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/roteiros/guia-v1-roteiro.md", import.meta.url), "utf8"),
+  ]);
+  assert.match(page, /guia-v1-roteiro\.md/);
+  assert.match(page, /Baixar Guia V1/);
+  assert.match(guide, /# Guia V1 — Roteiro de Reações/);
+  assert.match(guide, /Responda diretamente no chat/);
+  assert.match(guide, /\{\{PERSONAGENS_E_FICHAS\}\}/);
+});
+
 test("preserva referências do Studio quando um arquivo local fica temporariamente ausente", async () => {
   const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
   assert.match(server, /studioAssets\.push\(\{ \.\.\.asset, missingFile: true \}\)/);
