@@ -1068,11 +1068,11 @@ async function route(request, response) {
       }
       const orphanedAssets = state.studioAssets.filter((asset) => !referencedAssets.has(asset.id));
       state.studioAssets = state.studioAssets.filter((asset) => referencedAssets.has(asset.id));
+      await queueStateWrite();
       for (const asset of orphanedAssets) {
         const filePath = join(STUDIO_ASSETS_ROOT, safeId(asset.id));
-        if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
+        if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
       }
-      await queueStateWrite();
     });
     sendJson(response, request, 200, { ok: true });
     return;
@@ -1617,9 +1617,9 @@ async function route(request, response) {
     const id = safeId(studioAssetMatch[1]);
     const filePath = join(STUDIO_ASSETS_ROOT, id);
     await queueStateMutation(async () => {
-      if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true });
       state.studioAssets = state.studioAssets.filter((asset) => asset.id !== id);
       await queueStateWrite();
+      if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
     });
     sendJson(response, request, 200, { ok: true });
     return;
@@ -1645,9 +1645,9 @@ async function route(request, response) {
     const id = safeId(catalogMatch[1]);
     const filePath = join(CATALOG_ROOT, `${id}.png`);
     await queueStateMutation(async () => {
-      if (inside(CATALOG_ROOT, filePath)) await rm(filePath, { force: true });
       state.catalog = state.catalog.filter((item) => item.id !== id);
       await queueStateWrite();
+      if (inside(CATALOG_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
     });
     sendJson(response, request, 200, { ok: true });
     return;
@@ -1690,7 +1690,6 @@ async function route(request, response) {
     const filePath = join(PACKS_ROOT, packId, `${key}.png`);
     if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
     await queueStateMutation(async () => {
-      await rm(filePath, { force: true });
       const existing = state.expressionPacks.find((pack) => pack.id === packId);
       if (!existing) return;
       const frames = existing.frames.filter((item) => item.key !== key);
@@ -1698,6 +1697,7 @@ async function route(request, response) {
         ? [...state.expressionPacks.filter((pack) => pack.id !== packId), { ...existing, frames }]
         : state.expressionPacks.filter((pack) => pack.id !== packId);
       await queueStateWrite();
+      await rm(filePath, { force: true }).catch(() => undefined);
     });
     sendJson(response, request, 200, { ok: true });
     return;
@@ -1708,9 +1708,9 @@ async function route(request, response) {
     const packId = safeId(packDeleteMatch[1]);
     const packFolder = join(PACKS_ROOT, packId);
     await queueStateMutation(async () => {
-      if (inside(PACKS_ROOT, packFolder)) await rm(packFolder, { recursive: true, force: true });
       state.expressionPacks = state.expressionPacks.filter((pack) => pack.id !== packId);
       await queueStateWrite();
+      if (inside(PACKS_ROOT, packFolder)) await rm(packFolder, { recursive: true, force: true }).catch(() => undefined);
     });
     sendJson(response, request, 200, { ok: true });
     return;

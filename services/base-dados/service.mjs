@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { copyFile, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
@@ -298,9 +298,27 @@ export function createBaseDadosService(root) {
         const result = await enqueueMutation(async () => {
           const item = state.videos.find((video) => video.id === id);
           if (!item) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
-          await rm(videoPath(root, item), { force: true });
+          const originalPath = videoPath(root, item);
+          const quarantineRoot = join(root, ".trash");
+          const quarantinePath = join(quarantineRoot, `${item.fileName}.${Date.now()}.pending-delete`);
+          await mkdir(quarantineRoot, { recursive: true });
+          let quarantined = false;
+          try {
+            await rename(originalPath, quarantinePath);
+            quarantined = true;
+          } catch (error) {
+            if (error?.code !== "ENOENT") throw error;
+          }
+          const previousVideos = state.videos;
           state.videos = state.videos.filter((video) => video.id !== id);
-          await persist();
+          try {
+            await persist();
+          } catch (error) {
+            state.videos = previousVideos;
+            if (quarantined) await rename(quarantinePath, originalPath).catch(() => undefined);
+            throw error;
+          }
+          if (quarantined) await rm(quarantinePath, { force: true }).catch(() => undefined);
           return { state };
         });
         sendJson(response, responseHeaders, 200, { ok: true, ...result });
