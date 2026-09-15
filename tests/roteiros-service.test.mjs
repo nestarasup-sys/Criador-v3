@@ -108,7 +108,7 @@ async function startJsonModelStub(responseFactory) {
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address();
-  return { server, baseUrl: `http://127.0.0.1:${port}`, get prompt() { return lastRequest?.messages?.at(-1)?.content || ""; }, get requests() { return requestCount; } };
+  return { server, baseUrl: `http://127.0.0.1:${port}`, get prompt() { return lastRequest?.messages?.at(-1)?.content || ""; }, get request() { return lastRequest; }, get requests() { return requestCount; } };
 }
 
 test("persists the independent Roteiros state in its own PC folder", async () => {
@@ -311,9 +311,29 @@ test("aplica o prompt personalizado uma vez e preserva o prompt próprio da aber
   }
 });
 
+test("configuração v2 substitui a narrativa padrão, interpola dados e mantém proteções no system", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-v2-override-"));
+  const stub = await startJsonModelStub(() => ({ reactions: [{ characterId: "char-1", type: "speech", emotion: "firme", text: "Não vou ignorar isso." }] }));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const saved = await call(service, "PUT", "/roteiros/ai/prompts/roteiros.fill-empty", { prompt: "Use confronto direto no contexto: {{generalContext}}" });
+    assert.equal(saved.status, 200);
+    const generated = await call(service, "POST", "/roteiros/ai/generate", generationPayload(stub.baseUrl));
+    assert.equal(generated.status, 200);
+    assert.match(stub.prompt, /Use confronto direto no contexto: Contexto de teste\./);
+    assert.doesNotMatch(stub.prompt, /Escreva uma sequência de reações destinada/);
+    assert.match(stub.request.messages[0].content, /HIERARQUIA OBRIGATÓRIA/);
+    assert.match(stub.request.messages[0].content, /Pensamentos são privados/);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("respeita historyLimit zero e rejeita IDs de tradução que não pertencem ao lote", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-contracts-"));
-  const stub = await startJsonModelStub((request) => request.messages?.at(-1)?.content?.includes("ITENS:")
+    const stub = await startJsonModelStub((request) => request.messages?.at(-1)?.content?.includes('"items"')
     ? { translations: [{ id: "bloco-errado", translatedText: "Wrong" }] }
     : { reactions: [{ characterId: "char-1", type: "speech", emotion: "calma", text: "Tudo certo." }] });
   try {
@@ -331,6 +351,89 @@ test("respeita historyLimit zero e rejeita IDs de tradução que não pertencem 
     });
     assert.equal(translated.status, 400);
     assert.match(translated.value.error, /IDs de tradução/);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("usa até dez seções de histórico e mantém a ordem original das traduções", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-history-order-"));
+  const stub = await startJsonModelStub((request) => {
+    const prompt = request.messages?.at(-1)?.content || "";
+    if (prompt.includes('"items"')) return { translations: [{ id: "block-2", translatedText: "Second" }, { id: "block-1", translatedText: "First" }] };
+    return { reactions: [{ characterId: "char-1", type: "speech", emotion: "calma", text: "Tudo certo." }] };
+  });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const previousSections = Array.from({ length: 11 }, (_, index) => ({ title: `Marco-${index + 1}`, description: `Cena histórica ${index + 1}.`, reactionBlocks: [] }));
+    const generated = await call(service, "POST", "/roteiros/ai/generate", { ...generationPayload(stub.baseUrl), settings: { ...generationPayload(stub.baseUrl).settings, historyLimit: 10 }, previousSections });
+    assert.equal(generated.status, 200);
+    assert.doesNotMatch(stub.prompt, /"titulo": "Marco-1"/);
+    assert.match(stub.prompt, /"titulo": "Marco-2"/);
+    assert.match(stub.prompt, /"titulo": "Marco-11"/);
+
+    const translated = await call(service, "POST", "/roteiros/ai/translate", {
+      settings: generationPayload(stub.baseUrl).settings,
+      sceneDescription: "Conversa tensa.",
+      items: [
+        { id: "block-1", type: "speech", characterName: "A", text: "Primeiro." },
+        { id: "block-2", type: "thought", characterName: "B", text: "Segundo." },
+      ],
+    });
+    assert.equal(translated.status, 200);
+    assert.deepEqual(translated.value.translations.map((item) => item.id), ["block-1", "block-2"]);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejeita IDs e tipos inválidos antes de gastar uma chamada de tradução", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-translate-preflight-"));
+  const stub = await startJsonModelStub(() => ({ translations: [] }));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const response = await call(service, "POST", "/roteiros/ai/translate", {
+      settings: generationPayload(stub.baseUrl).settings,
+      items: [{ id: "duplicado", type: "speech", text: "Um." }, { id: "duplicado", type: "invalid", text: "Dois." }],
+    });
+    assert.equal(response.status, 400);
+    assert.match(response.value.error, /IDs vazios ou duplicados/);
+    assert.equal(stub.requests, 0);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("detecta repetição semântica e refaz a sequência com outra função dramática", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-semantic-retry-"));
+  const stub = await startDelayedModelStub(0, (attempt) => attempt === 1 ? { reactions: [
+    { characterId: "char-1", type: "speech", emotion: "desconfiança", text: "Ela está escondendo alguma coisa sobre aquela conversa." },
+    { characterId: "char-2", type: "speech", emotion: "suspeita", text: "Sobre aquela conversa, ela claramente está escondendo alguma coisa." },
+  ] } : { reactions: [
+    { characterId: "char-1", type: "speech", emotion: "desconfiança", text: "Ela desviou o olhar quando o assunto apareceu." },
+    { characterId: "char-2", type: "speech", emotion: "deboche", text: "Você chama isso de discrição? Foi quase um anúncio." },
+  ] });
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const base = generationPayload(stub.baseUrl);
+    const response = await call(service, "POST", "/roteiros/ai/generate", {
+      ...base,
+      characters: [{ id: "char-1", name: "A" }, { id: "char-2", name: "B" }],
+      targetIndices: [0, 1],
+      section: { ...base.section, reactionBlocks: [
+        { id: "block-1", characterId: "", type: "auto", text: "", emotion: "" },
+        { id: "block-2", characterId: "", type: "auto", text: "", emotion: "" },
+      ] },
+    });
+    assert.equal(response.status, 200);
+    assert.equal(response.value.diagnostics.attempts, 2);
+    assert.equal(stub.requests, 2);
   } finally {
     await new Promise((resolve) => stub.server.close(resolve));
     await rm(root, { recursive: true, force: true });

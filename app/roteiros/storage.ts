@@ -264,6 +264,9 @@ export type AiPromptCatalogEntry = {
   description: string;
   editable: boolean;
   variables: string[];
+  defaultPrompt: string;
+  customizationMode: "replace-narrative";
+  protectedRules: string[];
   promptVersion: "default" | "custom";
   customPrompt: string;
   lastExecution: AiPromptSnapshot | null;

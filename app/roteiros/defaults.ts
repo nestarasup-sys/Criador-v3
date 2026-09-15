@@ -11,19 +11,9 @@ import type {
   TikTokSection,
 } from "./types";
 import { createDefaultRoteirosSettings } from "../domain/roteiro-defaults.mjs";
+import { PROTECTED_SEMANTIC_RULES } from "../domain/roteiro-prompt-contract.mjs";
 
-export const PROTECTED_RULES = [
-  "Os personagens reatores estão juntos assistindo ao vídeo; eles não estão dentro da cena mostrada.",
-  "Uma versão do personagem mostrada no vídeo é diferente do personagem presente na sala.",
-  "Falas são ouvidas; pensamentos são privados e ninguém pode responder diretamente a eles.",
-  "Cada bloco deve ser uma fala ou um pensamento com texto preenchido; não use reações silenciosas.",
-  "Preserve dúvidas e ambiguidades. Suspeita, ciúme ou medo não transformam hipótese em fato.",
-  "Interprete literalmente quem pratica e quem sofre cada ação. Nunca inverta agressor e vítima.",
-  "Respeite a linha do tempo e não trate futuro como fato consumado nem passado como previsão.",
-  "Os blocos formam uma conversa contínua; evite repetição, resumo genérico e reações isoladas.",
-  "Use personalidade, história, relações e estilo de fala sem repetir a ficha artificialmente.",
-  "Não invente fatos, falas, motivos ou conhecimentos que não estejam no contexto fornecido.",
-] as const;
+export const PROTECTED_RULES = PROTECTED_SEMANTIC_RULES;
 
 export function nowIso() {
   return new Date().toISOString();

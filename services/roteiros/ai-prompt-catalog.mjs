@@ -1,18 +1,42 @@
+import { PROTECTED_SEMANTIC_RULES, PROTECTED_STRUCTURAL_RULES } from "../../app/domain/roteiro-prompt-contract.mjs";
+
 const MAX_OVERRIDE_LENGTH = 12_000;
 const MAX_SNAPSHOTS_PER_OPERATION = 5;
 
+const REACTION_POLICY = `Escreva uma sequência de reações destinada à leitura silenciosa.
+
+Os blocos devem formar uma conversa contínua e progressiva, não uma lista de comentários independentes. Cada novo bloco precisa acrescentar uma perspectiva, dúvida, provocação, contestação, defesa, revelação emocional ou mudança de tensão que ainda não tenha sido usada nesta sequência.
+
+Escolha o participante com maior motivo narrativo para reagir naquele momento. Não trate a ordem da lista de personagens como ordem de fala e não force participação igual. Evite repetir personagem, assunto, posição emocional e construção de frase quando houver alternativa coerente.
+
+Os personagens podem discordar, provocar, debochar, desconfiar, defender, mentir, recuar ou interpretar uma situação incorretamente. Quando o contexto não confirmar uma interpretação, escreva-a como suspeita, pergunta, receio ou opinião — nunca como fato estabelecido.
+
+O diálogo deve funcionar visualmente no papel: natural, claro e completo sem depender de atuação vocal, mas ainda escrito como fala ou pensamento, jamais como narração ou rubrica.`;
+
+const OPENING_POLICY = `Escreva uma cena presencial de abertura destinada à leitura silenciosa. Os personagens estão juntos na sala antes do início de qualquer vídeo.
+
+Faça os blocos progredirem a partir das ações descritas na abertura. Use personalidade, relações e tensão já existentes, sem antecipar ou inventar o conteúdo dos vídeos. Cada bloco deve alterar a conversa, responder a algo audível ou revelar privadamente um pensamento relevante.`;
+
+const IMPROVE_CONTEXT_POLICY = `Reescreva a fonte para que outra IA compreenda os acontecimentos sem ambiguidade acidental. Preserve todos os fatos, agentes, alvos, relações causais, informações desconhecidas e ambiguidades intencionais. Organize a sequência com clareza e acrescente apenas explicitações sustentadas pela própria fonte.`;
+
+const IMPROVE_SENTENCE_POLICY = `Melhore a reação para leitura silenciosa preservando personagem, intenção, fatos, subtexto e tipo do bloco. Fortaleça clareza, naturalidade e impacto sem transformar a frase em narração e sem adicionar informação nova.`;
+
+const VARIATIONS_POLICY = `Crie alternativas realmente distintas da reação original. Preserve personagem, intenção, fatos, subtexto e tipo do bloco, mas varie construção, ritmo e ênfase. As alternativas não podem ser apenas trocas de sinônimos.`;
+
+const TRANSLATION_POLICY = `Traduza para inglês natural preservando sentido, personalidade, nível de agressividade, humor, subtexto e distinção entre fala e pensamento. Não suavize conflitos, não explique e não acrescente informação.`;
+
 const entries = [
-  { id: "roteiros.test", label: "Testar conexão OpenAI", button: "Testar conexão OpenAI", endpoint: "/roteiros/ai/test", promptKind: "technical", description: "Verifica se o modelo OpenAI responde.", editable: false, variables: [] },
-  { id: "roteiros.models", label: "Listar modelos", button: "Atualizar modelos", endpoint: "/roteiros/ai/models", promptKind: "none", description: "Consulta os modelos disponíveis no provedor.", editable: false, variables: [] },
-  { id: "roteiros.status", label: "Status da OpenAI", button: "Status da OpenAI", endpoint: "/roteiros/ai/status", promptKind: "none", description: "Consulta configuração e uso do provedor.", editable: false, variables: [] },
-  { id: "roteiros.fill-empty", label: "Preencher vazios", button: "Preencher vazios", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Preenche apenas os blocos sem conteúdo.", editable: true, variables: ["characters", "generalContext", "previousSections", "section", "globalRules", "targets", "generationMode"] },
-  { id: "roteiros.opening", label: "Gerar abertura", button: "Preencher vazios (abertura)", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Gera reações para a cena presencial de abertura.", editable: true, variables: ["characters", "generalContext", "section", "globalRules", "targets", "generationMode"] },
-  { id: "roteiros.replace-all", label: "Substituir todos os blocos", button: "Substituir todos", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Substitui todos os blocos da seção.", editable: true, variables: ["characters", "generalContext", "previousSections", "section", "globalRules", "targets", "generationMode"] },
-  { id: "roteiros.improve-video-description", label: "Melhorar descrição de vídeo", button: "Melhorar descrição", endpoint: "/roteiros/ai/improve-context", promptKind: "structured", description: "Reescreve a descrição do vídeo para ficar mais clara.", editable: true, variables: ["description", "contextScope"] },
-  { id: "roteiros.improve-general-context", label: "Melhorar contexto geral", button: "Melhorar contexto", endpoint: "/roteiros/ai/improve-context", promptKind: "structured", description: "Reescreve o contexto geral do roteiro.", editable: true, variables: ["description", "contextScope"] },
-  { id: "roteiros.improve-sentence", label: "Melhorar frase", button: "Melhorar frase", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Melhora uma reação preservando seu sentido.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"] },
-  { id: "roteiros.variations", label: "Gerar variações", button: "Gerar variações", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Gera três versões alternativas de uma reação.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"] },
-  { id: "roteiros.translate", label: "Traduzir para inglês", button: "Gerar inglês para todos", endpoint: "/roteiros/ai/translate", promptKind: "structured", description: "Traduz falas e pensamentos mantendo IDs e ordem.", editable: true, variables: ["sceneDescription", "items"] },
+  { id: "roteiros.test", label: "Testar conexão OpenAI", button: "Testar conexão OpenAI", endpoint: "/roteiros/ai/test", promptKind: "technical", description: "Verifica se o modelo OpenAI responde.", editable: false, variables: [], defaultPrompt: "Responda somente OK." },
+  { id: "roteiros.models", label: "Listar modelos", button: "Atualizar modelos", endpoint: "/roteiros/ai/models", promptKind: "none", description: "Consulta os modelos disponíveis no provedor.", editable: false, variables: [], defaultPrompt: "" },
+  { id: "roteiros.status", label: "Status da OpenAI", button: "Status da OpenAI", endpoint: "/roteiros/ai/status", promptKind: "none", description: "Consulta configuração e uso do provedor.", editable: false, variables: [], defaultPrompt: "" },
+  { id: "roteiros.fill-empty", label: "Preencher vazios", button: "Preencher vazios", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Preenche apenas os blocos sem conteúdo.", editable: true, variables: ["characters", "generalContext", "previousSections", "section", "globalRules", "targets", "generationMode"], defaultPrompt: REACTION_POLICY },
+  { id: "roteiros.opening", label: "Gerar abertura", button: "Preencher vazios (abertura)", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Gera reações para a cena presencial de abertura.", editable: true, variables: ["characters", "generalContext", "section", "globalRules", "targets", "generationMode"], defaultPrompt: OPENING_POLICY },
+  { id: "roteiros.replace-all", label: "Substituir todos os blocos", button: "Substituir todos", endpoint: "/roteiros/ai/generate", promptKind: "structured", description: "Substitui todos os blocos da seção.", editable: true, variables: ["characters", "generalContext", "previousSections", "section", "globalRules", "targets", "generationMode"], defaultPrompt: REACTION_POLICY },
+  { id: "roteiros.improve-video-description", label: "Melhorar descrição de vídeo", button: "Melhorar descrição", endpoint: "/roteiros/ai/improve-context", promptKind: "structured", description: "Reescreve a descrição do vídeo para ficar mais clara.", editable: true, variables: ["description", "contextScope"], defaultPrompt: IMPROVE_CONTEXT_POLICY },
+  { id: "roteiros.improve-general-context", label: "Melhorar contexto geral", button: "Melhorar contexto", endpoint: "/roteiros/ai/improve-context", promptKind: "structured", description: "Reescreve o contexto geral do roteiro.", editable: true, variables: ["description", "contextScope"], defaultPrompt: IMPROVE_CONTEXT_POLICY },
+  { id: "roteiros.improve-sentence", label: "Melhorar frase", button: "Melhorar frase", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Melhora uma reação preservando seu sentido.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"], defaultPrompt: IMPROVE_SENTENCE_POLICY },
+  { id: "roteiros.variations", label: "Gerar variações", button: "Gerar variações", endpoint: "/roteiros/ai/block", promptKind: "structured", description: "Gera três versões alternativas de uma reação.", editable: true, variables: ["block", "characters", "generalContext", "previousSections", "section", "globalRules", "generationMode"], defaultPrompt: VARIATIONS_POLICY },
+  { id: "roteiros.translate", label: "Traduzir para inglês", button: "Gerar inglês para todos", endpoint: "/roteiros/ai/translate", promptKind: "structured", description: "Traduz falas e pensamentos mantendo IDs e ordem.", editable: true, variables: ["sceneDescription", "items"], defaultPrompt: TRANSLATION_POLICY },
 ];
 
 const entryById = new Map(entries.map((entry) => [entry.id, entry]));
@@ -53,10 +77,51 @@ export function validateAiPromptOverride(operation, value) {
   return text;
 }
 
-export function applyAiPromptOverride(prompt, operation, overrides = {}) {
-  const custom = normalizeAiPromptOverrides(overrides)[normalizeAiPromptOperation(operation)];
-  if (!custom) return String(prompt);
-  return `<INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n${custom}\n</INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n\n${String(prompt)}`;
+function promptVariableText(value) {
+  if (value === undefined || value === null || value === "") return "Não informado.";
+  if (typeof value === "string") return value;
+  try { return JSON.stringify(value, null, 2); } catch { return String(value); }
+}
+
+export function renderAiPromptTemplate(template, operation, variables = {}) {
+  const entry = entryById.get(normalizeAiPromptOperation(operation));
+  if (!entry) throw Object.assign(new Error("Operação de IA desconhecida."), { status: 404, code: "AI_PROMPT_UNKNOWN_OPERATION" });
+  return String(template || "").replace(/\{\{([^}]+)\}\}/g, (placeholder, rawName) => {
+    const name = String(rawName).trim();
+    if (!entry.variables.includes(name)) return placeholder;
+    return promptVariableText(variables[name]);
+  });
+}
+
+export function resolveAiNarrativePrompt(operation, overrides = {}, variables = {}, legacyPrompt = "") {
+  const normalizedOperation = normalizeAiPromptOperation(operation);
+  const entry = entryById.get(normalizedOperation);
+  if (!entry) throw Object.assign(new Error("Operação de IA desconhecida."), { status: 404, code: "AI_PROMPT_UNKNOWN_OPERATION" });
+  const custom = normalizeAiPromptOverrides(overrides)[normalizedOperation];
+  const legacy = ["roteiros.fill-empty", "roteiros.opening"].includes(normalizedOperation) ? String(legacyPrompt || "").trim().slice(0, MAX_OVERRIDE_LENGTH) : "";
+  const source = custom || legacy || entry.defaultPrompt || "";
+  return {
+    text: renderAiPromptTemplate(source, normalizedOperation, variables),
+    version: custom ? "custom" : legacy ? "legacy" : "default",
+  };
+}
+
+function sectionText(label, value) {
+  const text = typeof value === "string" ? value : JSON.stringify(value ?? null, null, 2);
+  return `<${label}>\n${text}\n</${label}>`;
+}
+
+export function buildAiPrompt({ operation, task, narrativePolicy, operationRules = [], data = {}, plan = null, finalChecks = [] }) {
+  const normalizedOperation = normalizeAiPromptOperation(operation);
+  const sections = [
+    sectionText("POLITICA_NARRATIVA", narrativePolicy || "Nenhuma política narrativa adicional."),
+    sectionText("OPERACAO", { id: normalizedOperation, task }),
+    sectionText("REGRAS_DA_OPERACAO", operationRules.length ? operationRules : ["Nenhuma regra adicional."]),
+    sectionText("DADOS_DO_ROTEIRO", data),
+  ];
+  if (plan) sections.push(sectionText("PLANO_SUGERIDO", plan));
+  if (finalChecks.length) sections.push(sectionText("VERIFICACAO_FINAL", finalChecks));
+  return sections.join("\n\n");
 }
 
 export function createAiPromptSnapshot({ operation, provider, model, instructions = "", input = "", variables = {}, attempt = 1, attempts = null, status = "sent", error = null, usage = null, durationMs = null, sentAt = new Date().toISOString() }) {
@@ -87,7 +152,9 @@ export function publicPromptCatalog(overrides = {}, snapshots = {}) {
   return listAiPromptCatalog().map((entry) => ({
     ...entry,
     promptVersion: normalizedOverrides[entry.id] ? "custom" : "default",
+    customizationMode: "replace-narrative",
     customPrompt: normalizedOverrides[entry.id] || "",
+    protectedRules: [...PROTECTED_SEMANTIC_RULES, ...PROTECTED_STRUCTURAL_RULES],
     lastExecution: Array.isArray(snapshots[entry.id]) ? snapshots[entry.id].at(-1) || null : null,
     executions: Array.isArray(snapshots[entry.id]) ? snapshots[entry.id] : [],
   }));
