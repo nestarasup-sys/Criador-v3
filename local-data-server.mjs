@@ -13,7 +13,7 @@ import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { createCharacterStore } from "./services/storage/character-store.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
-import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
+import { emptyAppState, normalizeAppState, normalizeCharacterDocument } from "./app/domain/document-schemas.mjs";
 import { baseExpressionKeys, collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
 import { normalizeModelColorMapMetadata } from "./app/domain/model-color-map.mjs";
 import {
@@ -190,6 +190,10 @@ let characters = [];
 let writeQueue = Promise.resolve();
 let stateMutationQueue = Promise.resolve();
 let lastBackupAt = 0;
+
+async function loadNormalizedCharacters() {
+  return (await characterStore.list()).map((character) => normalizeCharacterDocument(character));
+}
 
 function queueStateMutation(task) {
   const operation = stateMutationQueue.catch(() => undefined).then(task);
@@ -567,14 +571,14 @@ async function loadState() {
       studioAssets: Array.isArray(parsed.studioAssets) ? parsed.studioAssets : [],
     }));
     await characterStore.init(loadedState.characters);
-    characters = await characterStore.list();
+    characters = await loadNormalizedCharacters();
     state = { ...loadedState, characters: [] };
     await reconcileMissingLocalAssets();
     await writeJsonAtomic(STATE_PATH, state);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
     await characterStore.init([]);
-    characters = await characterStore.list();
+    characters = await loadNormalizedCharacters();
     await writeJsonAtomic(STATE_PATH, state);
   }
 }
@@ -847,7 +851,7 @@ async function route(request, response) {
     const keptCharacterIds = [...importedIds].filter((id) => !removableCharacterIds.includes(id));
     if (removableCharacterIds.length) {
       for (const characterId of removableCharacterIds) await characterStore.remove(characterId);
-      characters = await characterStore.list();
+      characters = await loadNormalizedCharacters();
     }
     sendJson(response, request, 200, { ok: true, scriptId: result.script.id, safetyBackup: result.safetyBackup, removedFolders: [...result.removedFolders, ...exportFolders], removedCharacters: removableCharacterIds, keptCharacters: keptCharacterIds });
     return;
@@ -876,6 +880,29 @@ async function route(request, response) {
   }
   if (request.method === "GET" && url.pathname === "/models") {
     sendJson(response, request, 200, await discoverModels());
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/persistence/diagnostics") {
+    const catalogIds = new Set(state.catalog.map((item) => String(item?.id || "")));
+    const expressionPackIds = new Set(state.expressionPacks.map((pack) => String(pack?.id || "")));
+    const models = await discoverModels();
+    const modelIds = {
+      feminino: new Set((models.feminino ?? []).map((model) => model.id)),
+      masculino: new Set((models.masculino ?? []).map((model) => model.id)),
+    };
+    const issues = [];
+    for (const character of characters) {
+      const gender = character.model === "masculino" ? "masculino" : "feminino";
+      const basePackId = String(character.basePackId || "modelo-1");
+      if (!modelIds[gender].has(basePackId)) issues.push({ entity: "character", id: character.id, field: "basePackId", reference: basePackId, code: "MISSING_MODEL" });
+      for (const [category, reference] of Object.entries(character.selections ?? {})) {
+        if (reference && !catalogIds.has(String(reference))) issues.push({ entity: "character", id: character.id, field: `selections.${category}`, reference: String(reference), code: "MISSING_CATALOG_ITEM" });
+      }
+      if (character.expressionPackId && !expressionPackIds.has(String(character.expressionPackId))) {
+        issues.push({ entity: "character", id: character.id, field: "expressionPackId", reference: String(character.expressionPackId), code: "MISSING_EXPRESSION_PACK" });
+      }
+    }
+    sendJson(response, request, 200, { ok: issues.length === 0, checkedCharacters: characters.length, issues });
     return;
   }
   const nextModelMatch = url.pathname.match(/^\/models\/next\/(feminino|masculino)$/i);
@@ -1004,7 +1031,8 @@ async function route(request, response) {
   }
   if (characterItemMatch && request.method === "GET") {
     const characterId = safeId(characterItemMatch[1]);
-    const character = await characterStore.get(characterId);
+    const storedCharacter = await characterStore.get(characterId);
+    const character = storedCharacter ? normalizeCharacterDocument(storedCharacter) : null;
     if (!character) throw Object.assign(new Error("Personagem não encontrado."), { status: 404, code: "CHARACTER_NOT_FOUND" });
     sendJson(response, request, 200, { character });
     return;
@@ -1018,7 +1046,7 @@ async function route(request, response) {
     await queueStateMutation(async () => {
       const expectedRevision = Number.isInteger(character.persistenceRevision) ? character.persistenceRevision : null;
       await characterStore.save(character, expectedRevision);
-      characters = await characterStore.list();
+      characters = await loadNormalizedCharacters();
     });
     const savedCharacter = characters.find((entry) => entry.id === characterId);
     sendJson(response, request, 200, { ok: true, id: characterId, revision: savedCharacter?.persistenceRevision ?? null, savedAt: new Date().toISOString() });
@@ -1028,7 +1056,7 @@ async function route(request, response) {
     const characterId = safeId(characterItemMatch[1]);
     await queueStateMutation(async () => {
       await characterStore.remove(characterId);
-      characters = await characterStore.list();
+      characters = await loadNormalizedCharacters();
     });
     await rm(join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`), { force: true }).catch(() => undefined);
     sendJson(response, request, 200, { ok: true, id: characterId });
@@ -1042,7 +1070,7 @@ async function route(request, response) {
       // regular editor path uses PUT /characters/:id and never sends this
       // potentially huge list.
       await characterStore.replaceAll(nextCharacters);
-      characters = await characterStore.list();
+      characters = await loadNormalizedCharacters();
       const knownCharacterIds = new Set(nextCharacters.map((character) => String(character?.id || "")));
       for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
         if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {

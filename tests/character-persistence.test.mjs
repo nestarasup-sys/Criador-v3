@@ -72,6 +72,10 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     const afterSave = await withSession(first.baseUrl, "GET", "/state");
     assert.equal(afterSave.value.characters[0].name, "Depois");
     assert.equal(afterSave.value.characters[0].persistenceRevision, saved.value.revision);
+    const diagnostics = await withSession(first.baseUrl, "GET", "/persistence/diagnostics");
+    assert.equal(diagnostics.response.status, 200);
+    assert.equal(diagnostics.value.checkedCharacters, 1);
+    assert.ok(Array.isArray(diagnostics.value.issues));
 
     const stale = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Antigo", persistenceRevision: initialRevision });
     assert.equal(stale.response.status, 409);
