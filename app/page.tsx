@@ -58,7 +58,7 @@ import {
   storeExpressionPack,
   uploadCharacterPhotoToPc,
 } from "./creator/creator-storage";
-import { checkpointCharacter, checkpointCharacters, loadCharacterCheckpoints } from "./creator/character-checkpoint";
+import { PersistenceError, checkpointCharacter, checkpointCharacters, listPendingCharacterCheckpoints, loadCharacterCheckpoints } from "./creator/character-checkpoint";
 import type { BasePackCollection, BasePackDefinition } from "./creator/base-packs";
 import type {
   BasePackId,
@@ -1425,6 +1425,8 @@ export default function Home() {
   }, [manualModelColorMasks]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [activeCharacter, setActiveCharacter] = useState<string | null>(null);
+  const activeCharacterRef = useRef<string | null>(null);
+  activeCharacterRef.current = activeCharacter;
   const [draftStarted, setDraftStarted] = useState(false);
   const [characterName, setCharacterName] = useState("Novo personagem");
   const [characterPhoto, setCharacterPhoto] = useState<string | null>(null);
@@ -1486,9 +1488,28 @@ export default function Home() {
       setPcStorageAvailable(true);
     };
     window.addEventListener("nymi:pc-persistence-recovered", handlePersistenceRecovery);
+    let syncing = false;
+    const syncPending = async () => {
+      if (syncing) return;
+      syncing = true;
+      try {
+        const pending = await listPendingCharacterCheckpoints();
+        for (const character of pending) await saveCharacterToPc(character);
+        if (pending.length) setNotice("Alterações pendentes sincronizadas com o PC");
+      } catch {
+        // O checkpoint continua durável e será tentado novamente.
+      } finally {
+        syncing = false;
+      }
+    };
+    const interval = window.setInterval(() => { void syncPending(); }, 15_000);
+    window.addEventListener("focus", syncPending);
+    void syncPending();
     return () => {
       window.removeEventListener("nymi:pc-persistence-failed", handlePersistenceFailure);
       window.removeEventListener("nymi:pc-persistence-recovered", handlePersistenceRecovery);
+      window.removeEventListener("focus", syncPending);
+      window.clearInterval(interval);
     };
   }, []);
 
@@ -1593,16 +1614,20 @@ export default function Home() {
     charactersRef.current = characters;
     void saveCharactersToBrowser(characters).catch(() => undefined);
     const notifyStudio = () => window.dispatchEvent(new CustomEvent("nymi:characters-updated"));
-    const active = activeCharacter ? characters.find((character) => character.id === activeCharacter) : null;
+    const activeId = activeCharacterRef.current;
+    const active = activeId ? characters.find((character) => character.id === activeId) : null;
     if (pcSyncReadyRef.current && active) {
-      saveCharacterToPc(active)
+      checkpointCharacter(active)
+        .then(() => saveCharacterToPc(active))
         .then(() => {
           notifyStudio();
           setNotice((current) => current === "Salvando automaticamente…" ? "Salvo automaticamente" : current);
         })
         .catch((error) => {
           console.error("[creator] Falha no autosave do personagem", error);
-          setNotice("Autosave no PC falhou; uma cópia ficou neste navegador");
+          setNotice(error instanceof PersistenceError
+            ? "Autosave falhou antes de criar o checkpoint; mantenha esta tela aberta"
+            : "Autosave pendente; as alterações continuam protegidas neste navegador");
         });
     }
     else {

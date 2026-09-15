@@ -12,6 +12,7 @@ import type {
 } from "../domain/catalog-contract";
 import type { Model } from "../domain/character-primitives";
 import { localDataFetch } from "../lib/local-data-client";
+import { markCharacterCheckpointSynced } from "./character-checkpoint";
 
 const DB_NAME = "gacha-maker";
 const DB_VERSION = 2;
@@ -125,7 +126,7 @@ export function expressionPackNeedsMigration(localPack: ExpressionPack, pcPack: 
   return stableSerialize({ ...localPack, frames: localFrames }) !== stableSerialize({ ...pcPack, frames: pcFrames });
 }
 
-function notifyPcPersistenceFailure(kind: "catalog" | "expressionPack", error: unknown) {
+function notifyPcPersistenceFailure(kind: "catalog" | "expressionPack" | "character", error: unknown) {
   if (typeof window === "undefined") return;
   pcPersistenceDegraded = true;
   const message = error instanceof Error ? error.message : "serviço local indisponível";
@@ -177,13 +178,13 @@ async function pcRequest(path: string, init?: RequestInit) {
   return response;
 }
 
-const characterRevisions = new Map<string, number>();
+const characterRevisions = new Map<string, { revision: number; updatedAt: string }>();
 
 export async function loadPcState(): Promise<PcState> {
   const response = await pcRequest("/state");
   const state = await response.json() as PcState;
   for (const character of state.characters ?? []) {
-    if (Number.isInteger(character.persistenceRevision)) characterRevisions.set(character.id, character.persistenceRevision!);
+    if (Number.isInteger(character.persistenceRevision)) characterRevisions.set(character.id, { revision: character.persistenceRevision!, updatedAt: character.updatedAt });
   }
   return state;
 }
@@ -240,7 +241,11 @@ function characterWithoutPhotos(character: Character) {
   void _photoUrl;
   void _photoDataUrl;
   void _revision;
-  const persistenceRevision = characterRevisions.get(character.id) ?? character.persistenceRevision;
+  const known = characterRevisions.get(character.id);
+  const documentIsOlder = Boolean(known?.updatedAt && character.updatedAt && character.updatedAt < known.updatedAt);
+  const persistenceRevision = documentIsOlder
+    ? character.persistenceRevision
+    : known?.revision ?? character.persistenceRevision;
   return { ...withoutPhotos, ...(Number.isInteger(persistenceRevision) ? { persistenceRevision } : {}) };
 }
 
@@ -302,10 +307,13 @@ export function saveCharacterToPc(character: Character) {
         body,
       });
       const result = await response.json() as { revision?: number; savedAt?: string };
-      if (Number.isInteger(result.revision)) characterRevisions.set(character.id, result.revision!);
+      if (Number.isInteger(result.revision)) characterRevisions.set(character.id, { revision: result.revision!, updatedAt: character.updatedAt });
+      await markCharacterCheckpointSynced(character.id).catch(() => undefined);
+      notifyPcPersistenceRecovered();
       notifyPcPersistenceMetric("character", body.length, startedAt, "ok");
       return { status: "pc-saved" as const, entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
     } catch (error) {
+      if ((error as { status?: number })?.status !== 409) notifyPcPersistenceFailure("character", error);
       notifyPcPersistenceMetric("character", body.length, startedAt, "error", error);
       throw error;
     }

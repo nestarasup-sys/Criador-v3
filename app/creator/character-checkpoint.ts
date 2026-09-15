@@ -2,7 +2,8 @@ import type { Character } from "../domain/character-contract";
 
 const DATABASE_NAME = "nymi-gacha-persistence";
 const STORE_NAME = "characters";
-const DATABASE_VERSION = 1;
+const PENDING_STORE_NAME = "pending-character-sync";
+const DATABASE_VERSION = 2;
 const LEGACY_KEY = "gacha-maker-characters";
 
 export type PersistenceResult = {
@@ -45,6 +46,7 @@ function openDatabase() {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) request.result.createObjectStore(STORE_NAME, { keyPath: "id" });
+      if (!request.result.objectStoreNames.contains(PENDING_STORE_NAME)) request.result.createObjectStore(PENDING_STORE_NAME, { keyPath: "id" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(new PersistenceError("Não foi possível abrir o checkpoint do navegador.", { code: "CHECKPOINT_OPEN_FAILED", stage: "checkpoint", cause: request.error }));
@@ -62,8 +64,9 @@ function transactionDone(transaction: IDBTransaction) {
 export async function checkpointCharacter(character: Character): Promise<PersistenceResult> {
   const database = await openDatabase();
   try {
-    const transaction = database.transaction(STORE_NAME, "readwrite");
+    const transaction = database.transaction([STORE_NAME, PENDING_STORE_NAME], "readwrite");
     transaction.objectStore(STORE_NAME).put(durableCharacter(character));
+    transaction.objectStore(PENDING_STORE_NAME).put({ id: character.id, queuedAt: new Date().toISOString() });
     await transactionDone(transaction);
     return {
       status: "checkpointed",
@@ -125,4 +128,39 @@ export async function loadCharacterCheckpoints() {
   }
   // O valor legado permanece intacto como recuperação. Novas gravações usam apenas IndexedDB.
   return verified;
+}
+
+export async function listPendingCharacterCheckpoints() {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction([STORE_NAME, PENDING_STORE_NAME], "readonly");
+    const idsRequest = transaction.objectStore(PENDING_STORE_NAME).getAllKeys();
+    const charactersRequest = transaction.objectStore(STORE_NAME).getAll();
+    const [ids, characters] = await Promise.all([
+      new Promise<IDBValidKey[]>((resolve, reject) => {
+        idsRequest.onsuccess = () => resolve(idsRequest.result);
+        idsRequest.onerror = () => reject(idsRequest.error);
+      }),
+      new Promise<Character[]>((resolve, reject) => {
+        charactersRequest.onsuccess = () => resolve(charactersRequest.result as Character[]);
+        charactersRequest.onerror = () => reject(charactersRequest.error);
+      }),
+    ]);
+    await transactionDone(transaction);
+    const pending = new Set(ids.map(String));
+    return characters.filter((character) => pending.has(character.id));
+  } finally {
+    database.close();
+  }
+}
+
+export async function markCharacterCheckpointSynced(id: string) {
+  const database = await openDatabase();
+  try {
+    const transaction = database.transaction(PENDING_STORE_NAME, "readwrite");
+    transaction.objectStore(PENDING_STORE_NAME).delete(id);
+    await transactionDone(transaction);
+  } finally {
+    database.close();
+  }
 }
