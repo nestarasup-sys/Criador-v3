@@ -970,7 +970,7 @@ async function route(request, response) {
     return;
   }
   if (request.method === "POST" && url.pathname === "/characters") {
-    const characters = await requestJson(request);
+    const characters = await requestJson(request, BODY_LIMITS.characters);
     if (!Array.isArray(characters)) throw new Error("Lista de personagens inválida");
     await queueStateMutation(async () => {
       state.characters = characters;
