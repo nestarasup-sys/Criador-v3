@@ -82,11 +82,21 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     assert.equal(stale.value.code, "STALE_CHARACTER_REVISION");
     assert.equal((await withSession(first.baseUrl, "GET", "/state")).value.characters[0].name, "Depois");
 
+    const currentRevision = saved.value.revision;
+    const concurrent = await Promise.race([
+      Promise.all([
+        withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Concorrente A", persistenceRevision: currentRevision }),
+        withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Concorrente B", persistenceRevision: currentRevision }),
+      ]),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("PUT concorrente travou")), 2_000)),
+    ]);
+    assert.deepEqual(concurrent.map((entry) => entry.response.status).sort(), [200, 409]);
+
     first.child.kill();
     await new Promise((resolve) => first.child.once("exit", resolve));
     second = await startDataServer(root, port);
     const reopened = await withSession(second.baseUrl, "GET", "/state");
-    assert.equal(reopened.value.characters[0].name, "Depois");
+    assert.match(reopened.value.characters[0].name, /^Concorrente [AB]$/);
 
     const removed = await withSession(second.baseUrl, "DELETE", "/characters/char-1");
     assert.equal(removed.response.status, 200);
@@ -145,10 +155,13 @@ test("rejeita IDs duplicados antes de criar o índice por personagem", async () 
 
 test("trocar a seleção não salva personagem sem alteração pendente", async () => {
   const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
   assert.match(source, /function persistEditorSnapshot\([^)]*\): Character \| null/);
-  assert.match(source, /const character = persistEditorSnapshot\("Salvando automaticamente"\);\s*if \(!character\) return true;/);
+  assert.match(source, /const character = persistEditorSnapshot\("Salvando automaticamente", false,/);
+  assert.match(source, /if \(!character\) return true;/);
   assert.doesNotMatch(source, /persistEditorSnapshot\("Salvando automaticamente"\) \?\? charactersRef\.current/);
   assert.doesNotMatch(source, /\}, \[activeCharacter, characters\]\);/);
+  assert.match(server, /Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);
 });
 
 test("reconstrói índice corrompido usando documentos individuais intactos", async () => {

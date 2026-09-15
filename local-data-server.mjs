@@ -285,7 +285,7 @@ function corsHeaders(request) {
   const origin = request.headers.origin;
   return {
     "Access-Control-Allow-Origin": origin && isAllowedOrigin(origin) ? origin : DEFAULT_UI_ORIGIN,
-    "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": `Content-Type,${SESSION_HEADER},X-Gacha-Meta`,
     "Cache-Control": "no-store",
   };

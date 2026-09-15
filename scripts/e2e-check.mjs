@@ -168,6 +168,21 @@ async function seedStudioQualityFixture(currentPage) {
 }
 
 async function seedCreatorAutosaveFixture(currentPage) {
+  const characterWrites = [];
+  const characterWriteStatuses = [];
+  const characterWriteFailures = [];
+  const captureWrite = (request) => {
+    if (request.method() === "PUT" && /\/characters\//.test(request.url())) characterWrites.push(request.postData() || "");
+  };
+  currentPage.on("request", captureWrite);
+  const captureResponse = (response) => {
+    if (response.request().method() === "PUT" && /\/characters\//.test(response.url())) characterWriteStatuses.push(response.status());
+  };
+  currentPage.on("response", captureResponse);
+  const captureFailure = (request) => {
+    if (request.method() === "PUT" && /\/characters\//.test(request.url())) characterWriteFailures.push(request.failure()?.errorText || "falha desconhecida");
+  };
+  currentPage.on("requestfailed", captureFailure);
   const transform = { x: 0, y: 0, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, flipX: false };
   const now = new Date().toISOString();
   const makeCharacter = (id, name) => ({
@@ -203,12 +218,24 @@ async function seedCreatorAutosaveFixture(currentPage) {
   assert.equal(await savedCharacters.count(), 2);
   await savedCharacters.nth(0).click();
   await currentPage.waitForTimeout(400);
+  assert.match(await savedCharacters.nth(0).locator("..").getAttribute("class"), /selected/);
   await currentPage.locator("details.character-settings > summary").click();
   await currentPage.locator("#character-name:visible").fill("Roupa salva pelo autosave");
+  assert.equal(await currentPage.locator("#character-name:visible").inputValue(), "Roupa salva pelo autosave");
   // Switch while the debounce may still be pending. The switch must flush the
   // current snapshot before loading the other character.
   await savedCharacters.nth(1).click();
   await currentPage.waitForTimeout(500);
+  assert.match(await savedCharacters.nth(1).locator("..").getAttribute("class"), /selected/);
+  const persistedName = await currentPage.evaluate(async (dataUrl) => {
+    const session = await fetch(`${dataUrl}/session`, { cache: "no-store" }).then((response) => response.json());
+    const state = await fetch(`${dataUrl}/state`, { headers: { "X-Gacha-Session": session.token }, cache: "no-store" }).then((response) => response.json());
+    return state.characters.find((character) => character.id === "creator-autosave-a")?.name;
+  }, process.env.NYMI_E2E_DATA_URL ?? "http://127.0.0.1:6810");
+  assert.equal(persistedName, "Roupa salva pelo autosave", `PUTs/status/falhas: ${characterWriteStatuses.join(",")} ${characterWriteFailures.join(",")} (${characterWrites.length} envio(s)); aviso: ${await currentPage.locator(".notice-pill").textContent()}`);
+  currentPage.off("request", captureWrite);
+  currentPage.off("response", captureResponse);
+  currentPage.off("requestfailed", captureFailure);
   await currentPage.reload({ waitUntil: "domcontentloaded" });
   await waitForImages(currentPage);
   await currentPage.waitForTimeout(700);

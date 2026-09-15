@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- previews include dynamic Blob/data URLs and local assets. */
 
-import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, PointerEvent as ReactPointerEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createCharacterBundle, createCharacterVariantsBundle, outfitVariantsForExport } from "./studio/character-export";
 import { applyChromaPixels, estimateChromaKey } from "./chroma-processing.mjs";
 import { findVisibleBounds } from "./image-bounds.mjs";
@@ -1471,7 +1471,7 @@ export default function Home() {
   const [migrationAvailable, setMigrationAvailable] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     activeCharacterRef.current = activeCharacter;
   }, [activeCharacter]);
 
@@ -1744,7 +1744,7 @@ export default function Home() {
     || Object.keys(protectionMasks).length > 0
     || Object.keys(outfitProtectionMasksByBasePack).length > 0;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     pendingEditorSnapshotRef.current = { snapshot: editorSnapshot, activeCharacter, hasRealCustomization };
   }, [activeCharacter, editorSnapshot, hasRealCustomization]);
 
@@ -4566,17 +4566,21 @@ export default function Home() {
       : `${item.name} removido do catálogo`);
   }
 
-  function persistEditorSnapshot(message: string, force = false): Character | null {
-    if (!force && !activeCharacter && (!draftStarted || !hasRealCustomization)) {
+  function persistEditorSnapshot(
+    message: string,
+    force = false,
+    pending = { snapshot: editorSnapshot, activeCharacter, hasRealCustomization },
+  ): Character | null {
+    if (!force && !pending.activeCharacter && (!draftStarted || !pending.hasRealCustomization)) {
       if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
-      autoSaveBaselineRef.current = editorSnapshot;
+      autoSaveBaselineRef.current = pending.snapshot;
       return null;
     }
-    if (!force && autoSaveBaselineRef.current === editorSnapshot) return null;
+    if (!force && autoSaveBaselineRef.current === pending.snapshot) return null;
     if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
-    const snapshot = JSON.parse(editorSnapshot) as CharacterSnapshot;
-    const id = activeCharacter ?? crypto.randomUUID();
+    const snapshot = JSON.parse(pending.snapshot) as CharacterSnapshot;
+    const id = pending.activeCharacter ?? crypto.randomUUID();
     const character: Character = { ...(charactersRef.current.find((entry) => entry.id === id) ?? {}), ...snapshot, id, updatedAt: new Date().toISOString() };
     const nextCharacters = charactersRef.current.some((entry) => entry.id === id)
       ? charactersRef.current.map((entry) => entry.id === id ? character : entry)
@@ -4584,8 +4588,8 @@ export default function Home() {
     charactersRef.current = nextCharacters;
     void saveCharactersToBrowser(nextCharacters).catch(() => undefined);
     setCharacters(nextCharacters);
-    if (!activeCharacter) setActiveCharacter(id);
-    autoSaveBaselineRef.current = editorSnapshot;
+    if (!pending.activeCharacter) setActiveCharacter(id);
+    autoSaveBaselineRef.current = pending.snapshot;
     autoSaveTimerRef.current = null;
     setNotice(message);
     return character;
@@ -4613,7 +4617,9 @@ export default function Home() {
   }
 
   async function flushCurrentCharacterBeforeSwitch() {
-    const character = persistEditorSnapshot("Salvando automaticamente");
+    const pending = pendingEditorSnapshotRef.current;
+    if (!pending.snapshot) return true;
+    const character = persistEditorSnapshot("Salvando automaticamente", false, { ...pending, snapshot: pending.snapshot });
     if (!character) return true;
     try {
       await checkpointCharacter(character);
