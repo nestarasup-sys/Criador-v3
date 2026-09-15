@@ -1,6 +1,7 @@
 /** Adaptador público temporário; contratos canônicos vivem em app/domain. */
 export type {
   AiCharacterContext,
+  AiUsageTotals,
   AiProvider,
   GeneratedReaction,
   GlobalRule,

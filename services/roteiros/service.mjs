@@ -204,7 +204,8 @@ async function callAi(settings, prompt, schema, system = DEFAULT_AI_SYSTEM, sign
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.error) throw new Error(data.error || `O Ollama respondeu com erro ${response.status}.`);
     if (!data.message?.content) throw new Error("O Ollama retornou uma resposta vazia.");
-    const result = { data: extractJson(data.message.content), model: data.model || config.model };
+    const usage = { input_tokens: Number(data.prompt_eval_count || 0), output_tokens: Number(data.eval_count || 0), total_tokens: Number(data.prompt_eval_count || 0) + Number(data.eval_count || 0) };
+    const result = { data: extractJson(data.message.content), model: data.model || config.model, usage };
     return { ...result, promptPreview: { ...promptPreview, model: result.model, status: "success" } };
   }
 
@@ -234,7 +235,7 @@ async function callAi(settings, prompt, schema, system = DEFAULT_AI_SYSTEM, sign
   if (!response.ok || detail) throw new Error(detail || `O LM Studio respondeu com erro ${response.status}.`);
   const content = result.choices?.[0]?.message?.content;
   if (!content) throw new Error("O LM Studio retornou uma resposta vazia.");
-  const parsed = { data: extractJson(content), model: result.model || config.model };
+  const parsed = { data: extractJson(content), model: result.model || config.model, usage: result.usage || {} };
   return { ...parsed, promptPreview: { ...promptPreview, model: parsed.model, status: "success" } };
 }
 
@@ -870,12 +871,56 @@ export function createRoteirosService(rootFolder) {
   let studioAiLoaded = null;
   let aiPromptOverrides = {};
   let aiPromptSnapshots = {};
+  let aiUsageTotals = emptyAiUsageTotals();
   let promptConfigWriteQueue = Promise.resolve();
+
+  function emptyAiUsageTotals() {
+    return { calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, lastAt: null, lastOperation: null, lastModel: null };
+  }
+
+  function usageNumbers(value) {
+    const usage = value && typeof value === "object" ? value : {};
+    const inputTokens = Math.max(0, Math.round(Number(usage.input_tokens ?? usage.prompt_tokens ?? usage.prompt_eval_count ?? usage.inputTokens ?? 0) || 0));
+    const outputTokens = Math.max(0, Math.round(Number(usage.output_tokens ?? usage.completion_tokens ?? usage.eval_count ?? usage.outputTokens ?? 0) || 0));
+    return {
+      inputTokens,
+      outputTokens,
+      totalTokens: Math.max(0, Math.round(Number(usage.total_tokens ?? usage.totalTokens ?? (inputTokens + outputTokens)) || 0)),
+    };
+  }
+
+  function addUsageTotals(current, delta) {
+    const next = { ...emptyAiUsageTotals(), ...(current && typeof current === "object" ? current : {}) };
+    return {
+      calls: Math.max(0, Math.round(Number(next.calls) || 0)) + Math.max(0, Math.round(Number(delta.calls) || 0)),
+      inputTokens: Math.max(0, Math.round(Number(next.inputTokens) || 0)) + delta.inputTokens,
+      outputTokens: Math.max(0, Math.round(Number(next.outputTokens) || 0)) + delta.outputTokens,
+      totalTokens: Math.max(0, Math.round(Number(next.totalTokens) || 0)) + delta.totalTokens,
+      lastAt: delta.lastAt || next.lastAt || null,
+      lastOperation: delta.lastOperation || next.lastOperation || null,
+      lastModel: delta.lastModel || next.lastModel || null,
+    };
+  }
+
+  function mergeUsageTotals(left, right) {
+    const a = { ...emptyAiUsageTotals(), ...(left && typeof left === "object" ? left : {}) };
+    const b = { ...emptyAiUsageTotals(), ...(right && typeof right === "object" ? right : {}) };
+    const bIsNewer = String(b.lastAt || "") >= String(a.lastAt || "");
+    return {
+      calls: Math.max(Number(a.calls) || 0, Number(b.calls) || 0),
+      inputTokens: Math.max(Number(a.inputTokens) || 0, Number(b.inputTokens) || 0),
+      outputTokens: Math.max(Number(a.outputTokens) || 0, Number(b.outputTokens) || 0),
+      totalTokens: Math.max(Number(a.totalTokens) || 0, Number(b.totalTokens) || 0),
+      lastAt: bIsNewer ? b.lastAt : a.lastAt,
+      lastOperation: bIsNewer ? b.lastOperation : a.lastOperation,
+      lastModel: bIsNewer ? b.lastModel : a.lastModel,
+    };
+  }
 
   async function saveAiPromptConfig() {
     const snapshot = {};
     for (const [operation, values] of Object.entries(aiPromptSnapshots)) snapshot[operation] = Array.isArray(values) ? values.slice(-5) : [];
-    promptConfigWriteQueue = promptConfigWriteQueue.catch(() => undefined).then(() => writeJsonAtomic(aiPromptConfigPath, { version: 1, overrides: aiPromptOverrides, snapshots: snapshot }));
+    promptConfigWriteQueue = promptConfigWriteQueue.catch(() => undefined).then(() => writeJsonAtomic(aiPromptConfigPath, { version: 2, overrides: aiPromptOverrides, snapshots: snapshot, usageTotals: aiUsageTotals }));
     await promptConfigWriteQueue;
   }
 
@@ -895,13 +940,56 @@ export function createRoteirosService(rootFolder) {
     if (previews.length || fallbackOperation) await saveAiPromptConfig();
   }
 
+  async function recordAiUsage(body, result, fallbackOperation = null) {
+    const usage = usageNumbers(result?.usage || result?.diagnostics?.usage);
+    const operation = result?.promptPreview?.operation || result?.diagnostics?.promptPreview?.operation || fallbackOperation || null;
+    if (!operation && usage.inputTokens === 0 && usage.outputTokens === 0 && usage.totalTokens === 0) return null;
+    if (["roteiros.status", "roteiros.models"].includes(operation) && usage.inputTokens === 0 && usage.outputTokens === 0 && usage.totalTokens === 0) return null;
+    const requestCount = Math.max(1, Math.round(Number(result?.aiCallCount || result?.diagnostics?.aiCallCount || result?.diagnostics?.attempts || result?.promptPreviews?.length || 1)));
+    const delta = { calls: requestCount, ...usage, lastAt: new Date().toISOString(), lastOperation: operation, lastModel: result?.model || result?.diagnostics?.model || null };
+    aiUsageTotals = addUsageTotals(aiUsageTotals, delta);
+
+    let scriptUsage = null;
+    let sectionUsage = null;
+    const scriptId = typeof body?.scriptId === "string" ? body.scriptId : "";
+    const sectionId = typeof body?.sectionId === "string" ? body.sectionId : (typeof body?.section?.id === "string" ? body.section.id : "");
+    if (scriptId) {
+      const nextScripts = state.scripts.map((script) => {
+        if (script.id !== scriptId) return script;
+        scriptUsage = addUsageTotals(script.aiUsage, delta);
+        const nextScript = { ...script, aiUsage: scriptUsage };
+        if (sectionId) {
+          if (body?.opening === true && script.opening?.id === sectionId) {
+            sectionUsage = addUsageTotals(script.opening.aiUsage, delta);
+            nextScript.opening = { ...script.opening, aiUsage: sectionUsage };
+          } else {
+            nextScript.tiktoks = script.tiktoks.map((section) => {
+              if (section.id !== sectionId) return section;
+              sectionUsage = addUsageTotals(section.aiUsage, delta);
+              return { ...section, aiUsage: sectionUsage };
+            });
+          }
+        }
+        return nextScript;
+      });
+      if (scriptUsage) {
+        state = normalizeState({ ...state, scripts: nextScripts });
+        writeQueue = writeQueue.catch(() => undefined).then(() => writeJsonAtomic(statePath, state));
+        await writeQueue;
+      }
+    }
+    await saveAiPromptConfig();
+    return { global: structuredClone(aiUsageTotals), script: scriptUsage ? structuredClone(scriptUsage) : null, section: sectionUsage ? structuredClone(sectionUsage) : null, delta: structuredClone(delta) };
+  }
+
   async function loadAiPromptConfig() {
     try {
       const parsed = JSON.parse(await readFile(aiPromptConfigPath, "utf8"));
       aiPromptOverrides = normalizeAiPromptOverrides(parsed?.overrides);
       aiPromptSnapshots = parsed?.snapshots && typeof parsed.snapshots === "object" ? parsed.snapshots : {};
+      aiUsageTotals = { ...emptyAiUsageTotals(), ...(parsed?.usageTotals && typeof parsed.usageTotals === "object" ? parsed.usageTotals : {}) };
     } catch (error) {
-      if (error?.code !== "ENOENT") { aiPromptOverrides = {}; aiPromptSnapshots = {}; }
+      if (error?.code !== "ENOENT") { aiPromptOverrides = {}; aiPromptSnapshots = {}; aiUsageTotals = emptyAiUsageTotals(); }
       await saveAiPromptConfig();
     }
   }
@@ -1044,7 +1132,20 @@ export function createRoteirosService(rootFolder) {
   }
 
   function save(nextState) {
-    const normalized = normalizeState(nextState);
+    const incoming = normalizeState(nextState);
+    const normalized = normalizeState({ ...incoming, scripts: incoming.scripts.map((script) => {
+      const current = state.scripts.find((item) => item.id === script.id);
+      if (!current) return script;
+      return {
+        ...script,
+        aiUsage: mergeUsageTotals(current.aiUsage, script.aiUsage),
+        ...(script.opening && current.opening ? { opening: { ...script.opening, aiUsage: mergeUsageTotals(current.opening.aiUsage, script.opening.aiUsage) } } : {}),
+        tiktoks: script.tiktoks.map((section) => {
+          const previous = current.tiktoks.find((item) => item.id === section.id);
+          return previous ? { ...section, aiUsage: mergeUsageTotals(previous.aiUsage, section.aiUsage) } : section;
+        }),
+      };
+    }) });
     writeQueue = writeQueue.catch(() => undefined).then(async () => {
       if (Date.now() - lastBackupAt > 5 * 60 * 1000) {
         const created = await createBackup();
@@ -1149,6 +1250,7 @@ export function createRoteirosService(rootFolder) {
     const headers = corsHeaders(request);
     const client = clientAbortController(response);
     let activeAiOperation = null;
+    let aiRequestBody = null;
     try {
       if (request.method === "POST" && url.pathname === "/studio/ai/unload") {
         await enqueueAi(async (signal) => {
@@ -1216,7 +1318,7 @@ export function createRoteirosService(rootFolder) {
         return true;
       }
       if (request.method === "GET" && url.pathname === "/roteiros/ai/prompts") {
-        sendJson(response, headers, 200, { version: 1, operations: publicPromptCatalog(aiPromptOverrides, aiPromptSnapshots) });
+        sendJson(response, headers, 200, { version: 2, usage: structuredClone(aiUsageTotals), operations: publicPromptCatalog(aiPromptOverrides, aiPromptSnapshots) });
         return true;
       }
       if (request.method === "GET" && url.pathname.startsWith("/roteiros/ai/prompts/")) {
@@ -1246,6 +1348,7 @@ export function createRoteirosService(rootFolder) {
       }
       if (request.method === "POST" && url.pathname.startsWith("/roteiros/ai/")) {
         const body = { ...(await readJson(request)), promptOverrides: aiPromptOverrides };
+        aiRequestBody = body;
         activeAiOperation = requestedPromptOperation(url.pathname, body);
         const result = await enqueueAi(async (signal) => {
           if (url.pathname === "/roteiros/ai/status") return openAiStatus(body.settings);
@@ -1264,7 +1367,8 @@ export function createRoteirosService(rootFolder) {
         }, client.signal);
         const resolved = await result;
         await recordPromptResult(resolved);
-        sendJson(response, headers, 200, resolved);
+        const usageMetrics = await recordAiUsage(body, resolved, activeAiOperation);
+        sendJson(response, headers, 200, { ...resolved, usageMetrics });
         return true;
       }
       sendJson(response, headers, 404, { error: "Rota de Roteiros não encontrada" });
@@ -1272,8 +1376,10 @@ export function createRoteirosService(rootFolder) {
     } catch (error) {
       if (!client.signal.aborted) {
         await recordPromptResult(error?.diagnostics || error, error?.diagnostics?.promptPreview?.operation || activeAiOperation);
+        const usageMetrics = await recordAiUsage(aiRequestBody || {}, error?.diagnostics || error, activeAiOperation);
         const payload = { error: error?.message || "Erro no módulo Roteiros" };
         if (error?.diagnostics) payload.diagnostics = error.diagnostics;
+        if (usageMetrics?.delta?.totalTokens || usageMetrics?.delta?.inputTokens || usageMetrics?.delta?.outputTokens) payload.usageMetrics = usageMetrics;
         sendJson(response, headers, error?.status || 400, payload);
       }
       return true;

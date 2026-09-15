@@ -229,6 +229,19 @@ function normalizeReactionBlock(value) {
   };
 }
 
+function normalizeAiUsage(value) {
+  const source = record(value);
+  return {
+    calls: Number.isFinite(Number(source.calls)) ? Math.max(0, Math.round(Number(source.calls))) : 0,
+    inputTokens: Number.isFinite(Number(source.inputTokens)) ? Math.max(0, Math.round(Number(source.inputTokens))) : 0,
+    outputTokens: Number.isFinite(Number(source.outputTokens)) ? Math.max(0, Math.round(Number(source.outputTokens))) : 0,
+    totalTokens: Number.isFinite(Number(source.totalTokens)) ? Math.max(0, Math.round(Number(source.totalTokens))) : 0,
+    lastAt: typeof source.lastAt === "string" ? source.lastAt : null,
+    lastOperation: typeof source.lastOperation === "string" ? source.lastOperation : null,
+    lastModel: typeof source.lastModel === "string" ? source.lastModel : null,
+  };
+}
+
 function normalizeVideoReference(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const source = record(value);
@@ -277,6 +290,7 @@ function normalizeRoteiroSection(value) {
     ...(Number.isFinite(Number(source.sceneEndSeconds)) && Number(source.sceneEndSeconds) >= 0 ? { sceneEndSeconds: Number(source.sceneEndSeconds) } : {}),
     ...(video ? { video } : {}),
     reactionBlocks: list(source.reactionBlocks).map(normalizeReactionBlock),
+    ...(source.aiUsage && typeof source.aiUsage === "object" ? { aiUsage: normalizeAiUsage(source.aiUsage) } : {}),
     createdAt: typeof source.createdAt === "string" ? source.createdAt : "",
     updatedAt: typeof source.updatedAt === "string" ? source.updatedAt : "",
   };
@@ -318,6 +332,7 @@ function normalizeRoteiroScript(value, fallbackAiContext = { profiles: [], rules
     participants,
     ...(["none", "suggest", "apply"].includes(source.aiOrderingMode) ? { aiOrderingMode: source.aiOrderingMode } : {}),
     aiContext: normalizeRoteiroAiContext(source.aiContext, fallbackAiContext, participants.map((participant) => participant.characterId)),
+    ...(source.aiUsage && typeof source.aiUsage === "object" ? { aiUsage: normalizeAiUsage(source.aiUsage) } : {}),
     ...(source.opening ? { opening: normalizeRoteiroOpening(source.opening) } : {}),
     ...(source.background && normalizeBackgroundReference(source.background) ? { background: normalizeBackgroundReference(source.background) } : {}),
     ...(record(source.importOrigin).kind === "ai-json" && typeof source.importOrigin.importId === "string" ? { importOrigin: { kind: "ai-json", importId: source.importOrigin.importId, importedAt: typeof source.importOrigin.importedAt === "string" ? source.importOrigin.importedAt : "", createdCharacterIds: list(source.importOrigin.createdCharacterIds).filter((id) => typeof id === "string"), ...(typeof source.importOrigin.sourceTitle === "string" ? { sourceTitle: source.importOrigin.sourceTitle } : {}) } } : {}),

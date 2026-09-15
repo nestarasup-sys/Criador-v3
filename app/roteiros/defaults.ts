@@ -1,5 +1,6 @@
 import type {
   GlobalRule,
+  AiUsageTotals,
   OpeningSection,
   NarrativeProfile,
   ReactionBlock,
@@ -17,6 +18,10 @@ export const PROTECTED_RULES = PROTECTED_SEMANTIC_RULES;
 
 export function nowIso() {
   return new Date().toISOString();
+}
+
+export function createAiUsageTotals(): AiUsageTotals {
+  return { calls: 0, inputTokens: 0, outputTokens: 0, totalTokens: 0, lastAt: null, lastOperation: null, lastModel: null };
 }
 
 export function createId() {
@@ -77,6 +82,7 @@ export function createTikTokSection(blockCount = 6, shortLines = false): TikTokS
     userInstruction: "",
     specificRules: "",
     shortLines,
+    aiUsage: createAiUsageTotals(),
     reactionBlocks: Array.from({ length: count }, () => createReactionBlock()),
     createdAt: timestamp,
     updatedAt: timestamp,
@@ -97,6 +103,7 @@ export function createScriptProject(title: string, characterIds: string[]): Scri
     title: title.trim() || "Roteiro sem título",
     generalContext: "",
     participants: [...new Set(characterIds)].map((characterId) => ({ characterId, active: true })),
+    aiUsage: createAiUsageTotals(),
     tiktoks: [],
     createdAt: timestamp,
     updatedAt: timestamp,

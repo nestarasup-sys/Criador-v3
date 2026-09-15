@@ -1,5 +1,5 @@
 import { emptyRoteirosState } from "./defaults";
-import type { PremiumCharacter, RoteirosState, RoteiroBackgroundReference, ScriptProject, TikTokVideoReference } from "./types";
+import type { AiUsageTotals, PremiumCharacter, RoteirosState, RoteiroBackgroundReference, ScriptProject, TikTokVideoReference } from "./types";
 import type { Character, PcCatalogItem, PcExpressionPack } from "../studio/types";
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
 import { normalizeRoteirosState as normalizeState } from "../domain/document-schemas.mjs";
@@ -273,8 +273,10 @@ export type AiPromptCatalogEntry = {
   executions: AiPromptSnapshot[];
 };
 
+export type AiUsageSummary = AiUsageTotals;
+
 export async function loadAiPromptCatalog() {
-  return aiRequest<{ version: number; operations: AiPromptCatalogEntry[] }>("prompts", undefined, "GET");
+  return aiRequest<{ version: number; operations: AiPromptCatalogEntry[]; usage?: AiUsageSummary }>("prompts", undefined, "GET");
 }
 
 export async function saveAiPromptOverride(operation: string, prompt: string) {

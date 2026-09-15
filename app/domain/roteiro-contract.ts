@@ -39,6 +39,15 @@ export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;
   size: number; updatedAt: string; durationSeconds?: number; libraryVideoId?: string; contentHash?: string;
 };
+export type AiUsageTotals = {
+  calls: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  lastAt: string | null;
+  lastOperation: string | null;
+  lastModel: string | null;
+};
 export type RoteiroBackgroundReference = {
   name: string; storedPath: string; url?: string; contentType: string; size: number;
   updatedAt: string; exportedPath?: string;
@@ -47,6 +56,7 @@ export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
   sceneGoal: string; sceneEndSeconds?: number; userInstruction: string; specificRules: string; shortLines: boolean; orderLocked?: boolean;
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
+  aiUsage?: AiUsageTotals;
   createdAt: string; updatedAt: string;
 };
 /** Cena opcional antes do primeiro TikTok; usa os mesmos blocos narrativos, mas nunca possui vídeo. */
@@ -59,6 +69,8 @@ export type ScriptProject = {
   aiOrderingMode?: "none" | "suggest" | "apply";
   /** Ausente somente em arquivos antigos; a normalização cria o snapshot automaticamente. */
   aiContext?: ScriptAiContext;
+  /** Contador acumulado de tokens das operações de IA deste roteiro. */
+  aiUsage?: AiUsageTotals;
   background?: RoteiroBackgroundReference;
   importOrigin?: { kind: "ai-json"; importId: string; importedAt: string; createdCharacterIds: string[]; sourceTitle?: string };
 };

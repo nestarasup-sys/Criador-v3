@@ -152,7 +152,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
           <div className={styles.cardAccent} />
           <div className={styles.cardTop}><span>{script.tiktoks.length} TIKTOK{script.tiktoks.length === 1 ? "" : "S"}</span><div className={styles.cardMenu}><button title="Duplicar" onClick={() => duplicate(script.id)}>⧉</button><button title="Exportar" onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, { app: "GACHA_PREMIUM_ROTEIROS_V1", version: 1, exportedAt: nowIso(), script })}>↓</button><button title="Excluir roteiro e pastas" onClick={() => void deleteScript(script)}>×</button></div></div>
           <h2>{script.title}</h2><p>{script.generalContext || "Contexto geral ainda não escrito."}</p>
-          <div className={styles.castRow}>{cast.slice(0, 5).map((character) => <CharacterMark key={character.id} character={character} />)}{cast.length > 5 && <span className={styles.moreCast}>+{cast.length - 5}</span>}<small>{cast.length} personagens · {blockCount} blocos</small></div>
+          <div className={styles.castRow}>{cast.slice(0, 5).map((character) => <CharacterMark key={character.id} character={character} />)}{cast.length > 5 && <span className={styles.moreCast}>+{cast.length - 5}</span>}<small>{cast.length} personagens · {blockCount} blocos · {new Intl.NumberFormat("pt-BR").format(script.aiUsage?.totalTokens || 0)} tokens IA</small></div>
           <div className={styles.cardFooter}><time>{new Date(script.updatedAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</time><a href={`/roteiros/${script.id}`}>Abrir roteiro →</a></div>
         </article>;
       })}</div>}

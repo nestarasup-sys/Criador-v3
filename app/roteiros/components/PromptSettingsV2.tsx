@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadAiPromptCatalog, resetAiPromptOverride, saveAiPromptOverride, type AiPromptCatalogEntry, type AiPromptSnapshot } from "../storage";
+import { loadAiPromptCatalog, resetAiPromptOverride, saveAiPromptOverride, type AiPromptCatalogEntry, type AiPromptSnapshot, type AiUsageSummary } from "../storage";
 import styles from "../roteiros.module.css";
 
 function formatDate(value: string | null | undefined) {
@@ -22,8 +22,11 @@ function snapshotText(snapshot: AiPromptSnapshot | null) {
   return `=== INSTRUCTIONS / SYSTEM ===\n${snapshot.instructions || "(vazio)"}\n\n=== INPUT / PROMPT COMPLETO ===\n${snapshot.input || "(vazio)"}`;
 }
 
+function numberText(value: number) { return new Intl.NumberFormat("pt-BR").format(Math.max(0, Math.round(value || 0))); }
+
 export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean }) {
   const [operations, setOperations] = useState<AiPromptCatalogEntry[]>([]);
+  const [usage, setUsage] = useState<AiUsageSummary | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [draft, setDraft] = useState("");
   const [query, setQuery] = useState("");
@@ -37,6 +40,7 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
     try {
       const result = await loadAiPromptCatalog();
       setOperations(result.operations);
+      setUsage(result.usage ?? null);
       const nextId = result.operations.some((entry) => entry.id === selectedIdRef.current) ? selectedIdRef.current : result.operations[0]?.id || "";
       selectedIdRef.current = nextId;
       setSelectedId(nextId);
@@ -81,6 +85,7 @@ export default function PromptSettingsV2({ pcAvailable }: { pcAvailable: boolean
   return <main className={styles.settingsPage}>
     <section className={styles.heroRow}><div><span className={styles.eyebrow}>INSPEÇÃO DA API</span><h1>Configurações v2</h1><p>Veja e edite os prompts usados pelas operações de IA de Roteiros.</p></div><button className={styles.secondaryButton} onClick={() => void refresh()} disabled={loading}>↻ Atualizar catálogo</button></section>
     {!pcAvailable && <div className={styles.aiWarning} role="status">Servidor local indisponível. O catálogo e as personalizações ficam temporariamente indisponíveis.</div>}
+    {usage && <section className={styles.summaryGrid} aria-label="Uso acumulado da IA"><article><span>TOKENS TOTAIS</span><strong>{numberText(usage.totalTokens)}</strong><small>{numberText(usage.inputTokens)} entrada · {numberText(usage.outputTokens)} saída</small></article><article><span>CHAMADAS</span><strong>{numberText(usage.calls)}</strong><small>inclui tentativas e lotes</small></article><article><span>ÚLTIMA OPERAÇÃO</span><strong>{usage.lastOperation ? usage.lastOperation.replace("roteiros.", "") : "—"}</strong><small>{usage.lastModel || "modelo não informado"}</small></article></section>}
     <div className={styles.promptCatalogLayout}>
       <aside className={styles.promptOperationList} aria-label="Operações de IA"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Pesquisar operação…" />{visible.map((entry) => <button key={entry.id} className={entry.id === selected?.id ? styles.active : ""} onClick={() => selectOperation(entry)}><strong>{entry.label}</strong><small>{entry.button} · {entry.promptKind === "none" ? "sem prompt" : entry.promptVersion === "custom" ? "personalizado" : "padrão"}</small></button>)}{!visible.length && <p className={styles.subtleEmpty}>Nenhuma operação encontrada.</p>}</aside>
       {selected ? <section className={styles.promptDetail} aria-live="polite">
