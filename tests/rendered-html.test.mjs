@@ -527,6 +527,12 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(css, /\.dragging[^}]*will-change:\s*transform/);
 });
 
+test("preserva referências do Studio quando um arquivo local fica temporariamente ausente", async () => {
+  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
+  assert.match(server, /studioAssets\.push\(\{ \.\.\.asset, missingFile: true \}\)/);
+  assert.doesNotMatch(server, /const background = studio\?\.background\?\.assetId.*\? \(studioChanged = true, null\)/s);
+});
+
 test("keeps Studio scene operations, history and print rendering in shared modules", async () => {
   const [page, ops, history, canvas, printRenderer, layout, characterRenderer, css, outfitVariants] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
