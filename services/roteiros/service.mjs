@@ -487,33 +487,17 @@ function continuityState(previousSections, existing, historyLimit) {
 
 const DRAMATIC_FUNCTIONS = ["observar detalhe novo", "formular dúvida", "contestar interpretação", "provocar ou debochar", "defender ou justificar", "revelar reação emocional", "aumentar a tensão", "recuar ou relativizar", "retomar informação pendente"];
 
-function stableOffset(value, length) {
-  let hash = 0;
-  for (const character of String(value || "")) hash = ((hash * 31) + character.charCodeAt(0)) >>> 0;
-  return length ? hash % length : 0;
-}
-
-function blockPlan(characterIds, existing, targets, seed = "") {
-  const counts = new Map(characterIds.map((id) => [id, 0]));
-  for (const block of existing || []) if (counts.has(block.characterId)) counts.set(block.characterId, counts.get(block.characterId) + 1);
-  let lastId = (existing || []).map((block) => block.characterId).filter(Boolean).at(-1) || null;
-  const roleOffset = stableOffset(seed, DRAMATIC_FUNCTIONS.length);
+function blockPlan(targets) {
   return targets.map((target, index) => {
     const lockedId = target.block?.characterId || null;
-    const ranked = characterIds.slice().sort((left, right) => {
-      const leftScore = (counts.get(left) || 0) * 10 + (left === lastId ? 7 : 0) + stableOffset(`${seed}:${left}`, 5);
-      const rightScore = (counts.get(right) || 0) * 10 + (right === lastId ? 7 : 0) + stableOffset(`${seed}:${right}`, 5);
-      return leftScore - rightScore;
-    });
-    const preferredCharacterId = lockedId || ranked[0] || null;
-    if (preferredCharacterId && counts.has(preferredCharacterId)) counts.set(preferredCharacterId, counts.get(preferredCharacterId) + 1);
-    lastId = preferredCharacterId || lastId;
     return {
       targetIndex: target.index,
       characterLocked: Boolean(lockedId),
-      preferredCharacterId,
-      dramaticFunction: DRAMATIC_FUNCTIONS[(roleOffset + index) % DRAMATIC_FUNCTIONS.length],
-      guidance: lockedId ? "Preserve o personagem escolhido." : "Sugestão; troque somente se outro personagem tiver motivo narrativo claramente melhor.",
+      ...(lockedId ? { characterId: lockedId } : {}),
+      dramaticFunction: DRAMATIC_FUNCTIONS[index % DRAMATIC_FUNCTIONS.length],
+      guidance: lockedId
+        ? "Preserve o personagem escolhido pelo usuário neste bloco."
+        : "A API decide livremente qual participante deve reagir agora. Não siga a ordem do elenco e não distribua um personagem por bloco automaticamente.",
     };
   });
 }
@@ -626,7 +610,7 @@ async function generateReactions(body, signal) {
   const operation = opening ? "opening" : body.mode === "replace-all" ? "replace-all" : "fill-empty";
   const variables = { characters: body.characters, generalContext: body.generalContext, previousSections: body.previousSections, section, globalRules: body.globalRules, targets, generationMode: body.settings?.generationMode || "faithful" };
   const narrative = resolveAiNarrativePrompt(operation, body.promptOverrides, variables, ["fill-empty", "opening"].includes(operation) ? body.settings?.fillEmptyPrompt : "");
-  const plan = blockPlan(characterIds, existing, targets, `${section.id || "section"}:${section.description || ""}:${existing.map((block) => block.characterId).join(":")}`);
+  const plan = blockPlan(targets);
   const history = compactHistory(body.previousSections, body.settings?.historyLimit);
   const generationPrompt = withoutSilentReactionOption(buildAiPrompt({
     operation,

@@ -331,6 +331,41 @@ test("configuração v2 substitui a narrativa padrão, interpola dados e mantém
   }
 });
 
+test("deixa a API escolher a ordem dos participantes quando os blocos estão livres", async () => {
+  const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-ai-order-"));
+  const stub = await startJsonModelStub(() => ({ reactions: [
+    { characterId: "char-3", type: "speech", emotion: "atento", text: "Começo pelo detalhe que ninguém comentou." },
+    { characterId: "char-1", type: "speech", emotion: "firme", text: "Isso muda a leitura da cena." },
+    { characterId: "char-2", type: "thought", emotion: "desconfiado", text: "Ainda não estou convencido." },
+  ] }));
+  try {
+    const service = createRoteirosService(root);
+    await service.init();
+    const base = generationPayload(stub.baseUrl);
+    const response = await call(service, "POST", "/roteiros/ai/generate", {
+      ...base,
+      characters: [
+        { id: "char-1", name: "Cael", personality: "calmo" },
+        { id: "char-2", name: "Viktor", personality: "intenso" },
+        { id: "char-3", name: "Julian", personality: "curioso" },
+      ],
+      targetIndices: [0, 1, 2],
+      section: { ...base.section, reactionBlocks: [
+        { id: "block-1", characterId: "", type: "auto", text: "", emotion: "" },
+        { id: "block-2", characterId: "", type: "auto", text: "", emotion: "" },
+        { id: "block-3", characterId: "", type: "auto", text: "", emotion: "" },
+      ] },
+    });
+    assert.equal(response.status, 200);
+    assert.deepEqual(response.value.reactions.map((item) => item.characterId), ["char-3", "char-1", "char-2"]);
+    assert.match(stub.prompt, /A API decide livremente qual participante deve reagir agora/);
+    assert.doesNotMatch(stub.prompt, /preferredCharacterId/);
+  } finally {
+    await new Promise((resolve) => stub.server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("respeita historyLimit zero e rejeita IDs de tradução que não pertencem ao lote", async () => {
   const root = await mkdtemp(join(tmpdir(), "gacha-roteiros-contracts-"));
     const stub = await startJsonModelStub((request) => request.messages?.at(-1)?.content?.includes('"items"')
