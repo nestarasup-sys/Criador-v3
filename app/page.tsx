@@ -1426,7 +1426,6 @@ export default function Home() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [activeCharacter, setActiveCharacter] = useState<string | null>(null);
   const activeCharacterRef = useRef<string | null>(null);
-  activeCharacterRef.current = activeCharacter;
   const [draftStarted, setDraftStarted] = useState(false);
   const [characterName, setCharacterName] = useState("Novo personagem");
   const [characterPhoto, setCharacterPhoto] = useState<string | null>(null);
@@ -1471,6 +1470,10 @@ export default function Home() {
   const [pcStorageAvailable, setPcStorageAvailable] = useState(false);
   const [migrationAvailable, setMigrationAvailable] = useState(false);
   const [isMigrating, setIsMigrating] = useState(false);
+
+  useEffect(() => {
+    activeCharacterRef.current = activeCharacter;
+  }, [activeCharacter]);
 
   useEffect(() => {
     const handlePersistenceFailure = (event: Event) => {
