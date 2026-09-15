@@ -7,7 +7,7 @@ export const BODY_LIMITS = Object.freeze({
   // Character state can contain many normalized mask strokes. Photos are
   // uploaded separately, but the metadata itself may legitimately exceed the
   // generic JSON limit for a large local library.
-  characters: 64 * 1024 * 1024,
+  characters: 300 * 1024 * 1024,
   image: 48 * 1024 * 1024,
   photo: 8 * 1024 * 1024,
   zip: 512 * 1024 * 1024,

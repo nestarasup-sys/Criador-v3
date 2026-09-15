@@ -204,7 +204,32 @@ export function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(it
   });
 }
 
-let characterSaveQueue: Promise<void> = Promise.resolve();
+let pendingCharacterBody: string | null = null;
+let pendingCharacterWaiters: Array<{ resolve: () => void; reject: (error: unknown) => void }> = [];
+let characterSaveWorker: Promise<void> | null = null;
+
+async function flushCharacterSaves() {
+  while (pendingCharacterBody !== null) {
+    const body = pendingCharacterBody;
+    pendingCharacterBody = null;
+    const waiters = pendingCharacterWaiters;
+    pendingCharacterWaiters = [];
+    try {
+      await pcRequest("/characters", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      waiters.forEach(({ resolve }) => resolve());
+    } catch (error) {
+      waiters.forEach(({ reject }) => reject(error));
+      // Do not immediately replay a known failed snapshot. A later user
+      // change may enqueue a newer, valid snapshot and will retry it once.
+      pendingCharacterBody = null;
+      throw error;
+    }
+  }
+}
 
 export function saveCharactersToPc(characters: Character[]) {
   const charactersWithoutPhotos = characters.map(({ photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...character }) => {
@@ -213,16 +238,14 @@ export function saveCharactersToPc(characters: Character[]) {
     return character;
   });
   const body = JSON.stringify(charactersWithoutPhotos);
-  const operation = characterSaveQueue
-    .catch(() => undefined)
-    .then(async () => {
-      await pcRequest("/characters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
+  pendingCharacterBody = body;
+  const operation = new Promise<void>((resolve, reject) => pendingCharacterWaiters.push({ resolve, reject }));
+  if (!characterSaveWorker) {
+    characterSaveWorker = flushCharacterSaves().finally(() => {
+      characterSaveWorker = null;
+      if (pendingCharacterBody !== null) void saveCharactersToPc(characters);
     });
-  characterSaveQueue = operation.then(() => undefined, () => undefined);
+  }
   return operation;
 }
 
