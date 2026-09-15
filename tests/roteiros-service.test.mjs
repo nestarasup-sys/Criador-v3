@@ -359,6 +359,8 @@ test("deixa a API escolher a ordem dos participantes quando os blocos estão liv
     assert.equal(response.status, 200);
     assert.deepEqual(response.value.reactions.map((item) => item.characterId), ["char-3", "char-1", "char-2"]);
     assert.match(stub.prompt, /A API decide livremente qual participante deve reagir agora/);
+    assert.match(stub.prompt, /visão\/representação/);
+    assert.match(stub.prompt, /Não invente câmera, gravação/);
     assert.doesNotMatch(stub.prompt, /preferredCharacterId/);
   } finally {
     await new Promise((resolve) => stub.server.close(resolve));

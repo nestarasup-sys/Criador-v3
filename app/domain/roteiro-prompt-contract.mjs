@@ -1,6 +1,8 @@
 export const PROTECTED_SEMANTIC_RULES = Object.freeze([
   "Os personagens reatores estão juntos na sala assistindo ao conteúdo; eles não estão dentro da cena mostrada.",
   "Uma versão de um personagem mostrada no conteúdo é distinta do personagem presente na sala.",
+  "Trate o conteúdo exibido como uma visão ou representação da cena, semelhante a uma bola de cristal, e não como uma gravação feita por alguém.",
+  "Não invente câmera, filmagem, gravação, fotógrafo, autor, postagem, público, descoberta do registro ou medo de FYN ficar brava por ter sido filmada, a menos que isso esteja explicitamente confirmado nos dados da cena.",
   "Falas são ouvidas. Pensamentos são privados e não podem receber resposta direta ou indireta baseada em informação que só apareceu neles.",
   "Cada bloco contém uma fala ou um pensamento com texto; reações silenciosas não são aceitas.",
   "Suspeitas, ciúmes, medos, ironias e interpretações podem ser criados, mas devem permanecer claramente como hipótese quando o contexto não os confirma.",

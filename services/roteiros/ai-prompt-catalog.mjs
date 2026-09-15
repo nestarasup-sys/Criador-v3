@@ -13,9 +13,9 @@ Os personagens podem discordar, provocar, debochar, desconfiar, defender, mentir
 
 O diálogo deve funcionar visualmente no papel: natural, claro e completo sem depender de atuação vocal, mas ainda escrito como fala ou pensamento, jamais como narração ou rubrica.`;
 
-const OPENING_POLICY = `Escreva uma cena presencial de abertura destinada à leitura silenciosa. Os personagens estão juntos na sala antes do início de qualquer vídeo.
+const OPENING_POLICY = `Escreva uma cena presencial de abertura destinada à leitura silenciosa. Os personagens estão juntos na sala antes do início de qualquer conteúdo exibido.
 
-Faça os blocos progredirem a partir das ações descritas na abertura. Use personalidade, relações e tensão já existentes, sem antecipar ou inventar o conteúdo dos vídeos. Cada bloco deve alterar a conversa, responder a algo audível ou revelar privadamente um pensamento relevante.`;
+Faça os blocos progredirem a partir das ações descritas na abertura. Use personalidade, relações e tensão já existentes, sem antecipar ou inventar o conteúdo que será exibido. Cada bloco deve alterar a conversa, responder a algo audível ou revelar privadamente um pensamento relevante.`;
 
 const IMPROVE_CONTEXT_POLICY = `Reescreva a fonte para que outra IA compreenda os acontecimentos sem ambiguidade acidental. Preserve todos os fatos, agentes, alvos, relações causais, informações desconhecidas e ambiguidades intencionais. Organize a sequência com clareza e acrescente apenas explicitações sustentadas pela própria fonte.`;
 
