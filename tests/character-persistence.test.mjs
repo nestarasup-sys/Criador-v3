@@ -183,3 +183,25 @@ test("recupera documento corrompido pelo backup sem criar personagem vazio", asy
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("recupera state.json corrompido sem tocar na biblioteca de personagens", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-state-recovery-"));
+  const character = { id: "char-1", name: "Preservado", model: "feminino", selections: {}, adjustments: {}, updatedAt: "" };
+  const validState = { ...emptyAppState(), catalog: [{ id: "item-1", name: "Item preservado", category: "roupas" }] };
+  await mkdir(join(root, "backups"), { recursive: true });
+  await writeFile(join(root, "state.json"), "{estado quebrado", "utf8");
+  await writeFile(join(root, "characters.json"), JSON.stringify([character]), "utf8");
+  await writeFile(join(root, "backups", "state-2026-09-15.json"), JSON.stringify(validState), "utf8");
+  const port = 7400 + Math.floor(Math.random() * 100);
+  let server;
+  try {
+    server = await startDataServer(root, port);
+    const loaded = await withSession(server.baseUrl, "GET", "/state");
+    assert.equal(loaded.value.characters[0].name, "Preservado");
+    assert.equal(loaded.value.catalog[0].name, "Item preservado");
+    assert.equal((await readdir(root)).some((name) => name.startsWith("state.corrupt-")), true);
+  } finally {
+    if (server?.child && server.child.exitCode === null) server.child.kill();
+    await rm(root, { recursive: true, force: true });
+  }
+});

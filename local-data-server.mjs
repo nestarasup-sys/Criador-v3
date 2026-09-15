@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
 import JSZip from "jszip";
 import sharp from "sharp";
@@ -558,8 +558,34 @@ async function discoverModels() {
 
 async function loadState() {
   await ensureFolders();
+  let parsed;
   try {
-    const parsed = JSON.parse(await readFile(STATE_PATH, "utf8"));
+    parsed = JSON.parse(await readFile(STATE_PATH, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      await characterStore.init([]);
+      characters = await loadNormalizedCharacters();
+      await writeJsonAtomic(STATE_PATH, state);
+      return;
+    }
+    const backups = (await readdir(BACKUPS_ROOT)).filter((name) => name.startsWith("state-") && name.endsWith(".json")).sort().reverse();
+    let recovered = null;
+    for (const name of backups) {
+      try {
+        const candidate = JSON.parse(await readFile(join(BACKUPS_ROOT, name), "utf8"));
+        if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) { recovered = candidate; break; }
+      } catch { /* tenta o backup anterior */ }
+    }
+    if (!recovered) throw error;
+    const corruptedPath = join(ROOT, `state.corrupt-${Date.now()}.json`);
+    try { await rename(STATE_PATH, corruptedPath); }
+    catch (quarantineError) {
+      throw Object.assign(new Error("O state.json está corrompido e não pôde ser colocado em quarentena; nenhum dado foi sobrescrito."), { code: "STATE_QUARANTINE_FAILED", cause: quarantineError });
+    }
+    parsed = recovered;
+    await writeJsonAtomic(STATE_PATH, parsed);
+  }
+  {
     const loadedState = normalizeAppState(migrateStateMetadata({
       ...structuredClone(EMPTY_STATE),
       ...parsed,
@@ -574,11 +600,6 @@ async function loadState() {
     characters = await loadNormalizedCharacters();
     state = { ...loadedState, characters: [] };
     await reconcileMissingLocalAssets();
-    await writeJsonAtomic(STATE_PATH, state);
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
-    await characterStore.init([]);
-    characters = await loadNormalizedCharacters();
     await writeJsonAtomic(STATE_PATH, state);
   }
 }

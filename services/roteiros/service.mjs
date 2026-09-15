@@ -913,6 +913,7 @@ export function createRoteirosService(rootFolder) {
   const root = resolve(rootFolder);
   const statePath = join(root, "estado.json");
   const aiPromptConfigPath = join(root, "ai-prompts-v2.json");
+  const aiPromptConfigBackupPath = join(root, "backups", "ai-prompts-v2.latest.json");
   const backupsRoot = join(root, "backups");
   const videosRoot = join(root, "videos");
   const backgroundsRoot = join(root, "backgrounds");
@@ -973,7 +974,12 @@ export function createRoteirosService(rootFolder) {
   async function saveAiPromptConfig() {
     const snapshot = {};
     for (const [operation, values] of Object.entries(aiPromptSnapshots)) snapshot[operation] = Array.isArray(values) ? values.slice(-5) : [];
-    promptConfigWriteQueue = promptConfigWriteQueue.catch(() => undefined).then(() => writeJsonAtomic(aiPromptConfigPath, { version: 2, overrides: aiPromptOverrides, snapshots: snapshot, usageTotals: aiUsageTotals }));
+    promptConfigWriteQueue = promptConfigWriteQueue.catch(() => undefined).then(async () => {
+      await mkdir(backupsRoot, { recursive: true });
+      try { await copyFile(aiPromptConfigPath, aiPromptConfigBackupPath); }
+      catch (error) { if (error?.code !== "ENOENT") throw error; }
+      await writeJsonAtomic(aiPromptConfigPath, { version: 2, overrides: aiPromptOverrides, snapshots: snapshot, usageTotals: aiUsageTotals });
+    });
     await promptConfigWriteQueue;
   }
 
@@ -1042,7 +1048,19 @@ export function createRoteirosService(rootFolder) {
       aiPromptSnapshots = parsed?.snapshots && typeof parsed.snapshots === "object" ? parsed.snapshots : {};
       aiUsageTotals = { ...emptyAiUsageTotals(), ...(parsed?.usageTotals && typeof parsed.usageTotals === "object" ? parsed.usageTotals : {}) };
     } catch (error) {
-      if (error?.code !== "ENOENT") { aiPromptOverrides = {}; aiPromptSnapshots = {}; aiUsageTotals = emptyAiUsageTotals(); }
+      if (error?.code !== "ENOENT") {
+        try {
+          const recovered = JSON.parse(await readFile(aiPromptConfigBackupPath, "utf8"));
+          aiPromptOverrides = normalizeAiPromptOverrides(recovered?.overrides);
+          aiPromptSnapshots = recovered?.snapshots && typeof recovered.snapshots === "object" ? recovered.snapshots : {};
+          aiUsageTotals = { ...emptyAiUsageTotals(), ...(recovered?.usageTotals && typeof recovered.usageTotals === "object" ? recovered.usageTotals : {}) };
+        } catch {
+          aiPromptOverrides = {};
+          aiPromptSnapshots = {};
+          aiUsageTotals = emptyAiUsageTotals();
+        }
+        try { await rename(aiPromptConfigPath, join(root, `ai-prompts-v2.corrupt-${Date.now()}.json`)); } catch { /* preserva no lugar se a quarentena falhar */ }
+      }
       await saveAiPromptConfig();
     }
   }
