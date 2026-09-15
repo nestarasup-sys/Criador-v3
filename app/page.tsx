@@ -1624,7 +1624,7 @@ export default function Home() {
       notifyStudio();
       setNotice((current) => current === "Salvando automaticamente…" ? "Salvo neste navegador" : current);
     }
-  }, [activeCharacter, characters]);
+  }, [characters]);
 
   useEffect(() => {
     if (!animationMode) return;
@@ -4552,7 +4552,7 @@ export default function Home() {
       : `${item.name} removido do catálogo`);
   }
 
-  function persistEditorSnapshot(message: string, force = false): Character[] | null {
+  function persistEditorSnapshot(message: string, force = false): Character | null {
     if (!force && !activeCharacter && (!draftStarted || !hasRealCustomization)) {
       if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
       autoSaveTimerRef.current = null;
@@ -4574,16 +4574,15 @@ export default function Home() {
     autoSaveBaselineRef.current = editorSnapshot;
     autoSaveTimerRef.current = null;
     setNotice(message);
-    return nextCharacters;
+    return character;
   }
 
   async function saveCharacter() {
-    const nextCharacters = persistEditorSnapshot("Alterações salvas", true) ?? charactersRef.current;
+    const character = persistEditorSnapshot("Alterações salvas", true);
+    if (!character) return;
     if (!pcSyncReadyRef.current) return;
     setNotice("Salvando no PC…");
     try {
-      const character = nextCharacters.find((entry) => entry.id === activeCharacter) ?? nextCharacters[0];
-      if (!character) return;
       await saveCharacterToPc(character);
       setNotice("Alterações salvas no PC");
     } catch (error) {
@@ -4593,13 +4592,11 @@ export default function Home() {
   }
 
   async function flushCurrentCharacterBeforeSwitch() {
-    const nextCharacters = persistEditorSnapshot("Salvando automaticamente") ?? charactersRef.current;
-    saveCharactersToBrowser(nextCharacters);
+    const character = persistEditorSnapshot("Salvando automaticamente");
+    if (!character) return true;
     if (!pcSyncReadyRef.current) return true;
     try {
       setNotice("Salvando antes de trocar de personagem…");
-      const character = nextCharacters.find((entry) => entry.id === activeCharacter) ?? nextCharacters[0];
-      if (!character) return true;
       await saveCharacterToPc(character);
       return true;
     } catch (error) {
