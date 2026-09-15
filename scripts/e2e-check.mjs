@@ -79,6 +79,26 @@ try {
   await roteiroPage.waitForFunction(() => document.body.innerText.includes("TikTok 1"), undefined, { timeout: 20_000 });
   await assertVisible(roteiroPage.getByText("1 personagens", { exact: true }));
 
+  // Profile drafts must belong to the selected character, not to the shared
+  // ProfileEditor instance. Keep two drafts, switch away and verify both.
+  await roteiroPage.goto(`${baseURL}/roteiros`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await waitForImages(roteiroPage);
+  await roteiroPage.getByRole("button", { name: /Fichas dos personagens/ }).click();
+  await assertVisible(roteiroPage.getByRole("heading", { name: "Personagens" }));
+  const firstProfile = roteiroPage.locator('textarea[aria-label^="Texto bruto de "]').first();
+  await assertVisible(firstProfile);
+  const firstProfileLabel = await firstProfile.getAttribute("aria-label");
+  assert.ok(firstProfileLabel?.startsWith("Texto bruto de "));
+  const firstCharacterName = firstProfileLabel.slice("Texto bruto de ".length);
+  await firstProfile.fill("Texto bruto exclusivo do personagem A.");
+  await roteiroPage.getByRole("button", { name: /Autosave B/ }).click();
+  const secondProfile = roteiroPage.getByLabel("Texto bruto de Autosave B");
+  await assertVisible(secondProfile);
+  assert.equal(await secondProfile.inputValue(), "");
+  await secondProfile.fill("Texto bruto exclusivo do personagem B.");
+  await roteiroPage.getByRole("button", { name: new RegExp(firstCharacterName) }).click();
+  assert.equal(await roteiroPage.getByLabel(`Texto bruto de ${firstCharacterName}`).inputValue(), "Texto bruto exclusivo do personagem A.");
+
   const objectUrlStats = await monitorObjectUrls(roteiroPage, baseURL);
   assert.ok(objectUrlStats.active < 100, `URLs de objeto ativas demais: ${objectUrlStats.active}`);
   console.log(JSON.stringify({ phase: 8, status: "passed", objectUrlStats }));

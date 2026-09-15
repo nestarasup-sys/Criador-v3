@@ -173,9 +173,8 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
   );
 }
 
-function ProfileEditor({ character, characters, state, updateState }: { character: PremiumCharacter; characters: PremiumCharacter[]; state: RoteirosState; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void }) {
+function ProfileEditor({ character, characters, state, updateState, rawText, onRawTextChange }: { character: PremiumCharacter; characters: PremiumCharacter[]; state: RoteirosState; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void; rawText: string; onRawTextChange: (value: string) => void }) {
   const profile = state.profiles.find((item) => item.characterId === character.id) ?? createNarrativeProfile(character.id);
-  const [rawText, setRawText] = useState("");
   const [organizing, setOrganizing] = useState<"traits" | "relations" | "">("");
   const [organizeMessage, setOrganizeMessage] = useState("");
   const patchProfile = (patch: Partial<NarrativeProfile>) => updateState((current) => {
@@ -200,7 +199,7 @@ function ProfileEditor({ character, characters, state, updateState }: { characte
         settings: state.settings,
       });
       patchProfile({ ...result.profile, characterId: character.id, relationships: result.profile.relationships.map((relationship) => ({ ...relationship, id: createId() })) });
-      setRawText("");
+      onRawTextChange("");
       setOrganizeMessage(`Ficha organizada com ${result.model}.`);
     } catch (error) {
       setOrganizeMessage(error instanceof Error ? error.message : "Não foi possível organizar a ficha.");
@@ -208,7 +207,7 @@ function ProfileEditor({ character, characters, state, updateState }: { characte
   };
   return <section className={styles.profileEditor}>
     <div className={styles.profileHero}><CharacterMark character={character} large /><div><span className={styles.eyebrow}>{character.model}</span><h2>{character.name}</h2><p>Modelo global usado ao criar um roteiro ou ao sincronizar manualmente a ficha local dele.</p></div><div className={styles.completion}><strong>{profileCompletion(profile)}%</strong><span>preenchido</span></div></div>
-    <section className={styles.rawProfileCard}><div><span className={styles.eyebrow}>ORGANIZADOR DE FICHA</span><h3>Texto bruto do personagem</h3><p>Cole anotações soltas. A IA vai reescrever e intensificar o material nos campos abaixo, preservando os fatos e sem inventar informações.</p></div><textarea value={rawText} onChange={(event) => setRawText(event.target.value)} maxLength={24000} rows={7} placeholder="Ex.: Lucien é possessivo, fala pouco, odeia perder o controle..." /><div className={styles.profileAiActions}><button className={styles.profilePresetOne} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("traits")}>{organizing === "traits" ? "Reescrevendo…" : "✦ Ficha 1 intensificada"}</button><button className={styles.profilePresetTwo} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("relations")}>{organizing === "relations" ? "Reescrevendo…" : "✦ Ficha 3 intensificada"}</button></div>{organizeMessage && <small className={styles.profileAiMessage}>{organizeMessage}</small>}</section>
+     <section className={styles.rawProfileCard}><div><span className={styles.eyebrow}>ORGANIZADOR DE FICHA</span><h3>Texto bruto de {character.name}</h3><p>Cole anotações soltas. A IA vai reescrever e intensificar o material nos campos abaixo, preservando os fatos e sem inventar informações.</p></div><textarea aria-label={`Texto bruto de ${character.name}`} value={rawText} onChange={(event) => onRawTextChange(event.target.value)} maxLength={24000} rows={7} placeholder={`Ex.: ${character.name} é possessivo, fala pouco, odeia perder o controle...`} /><div className={styles.profileAiActions}><button className={styles.profilePresetOne} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("traits")}>{organizing === "traits" ? "Reescrevendo…" : "✦ Ficha 1 intensificada"}</button><button className={styles.profilePresetTwo} disabled={!rawText.trim() || Boolean(organizing)} onClick={() => void organizeWithAi("relations")}>{organizing === "relations" ? "Reescrevendo…" : "✦ Ficha 3 intensificada"}</button></div>{organizeMessage && <small className={styles.profileAiMessage}>{organizeMessage}</small>}</section>
     <div className={styles.singleFieldStack}>
       <label><span>Personalidade</span><small>Como pensa, reage, se defende, provoca, demonstra ou esconde emoções.</small><textarea rows={7} maxLength={12000} value={profile.personality} onChange={(event) => patchProfile({ personality: event.target.value })} placeholder="Escreva aqui tudo sobre a personalidade do personagem…" /></label>
       <label><span>História</span><small>Passado, traumas, segredos, posição social e o que ele sabe ou desconhece.</small><textarea rows={7} maxLength={12000} value={profile.backstory} onChange={(event) => patchProfile({ backstory: event.target.value })} placeholder="Escreva a história completa do personagem…" /></label>
@@ -223,6 +222,7 @@ function ProfileEditor({ character, characters, state, updateState }: { characte
 
 function ProfilesPage({ state, characters, updateState }: { state: RoteirosState; characters: PremiumCharacter[]; updateState: (recipe: (state: RoteirosState) => RoteirosState) => void }) {
   const [selectedId, setSelectedId] = useState(characters[0]?.id || "");
+  const [rawTextByCharacter, setRawTextByCharacter] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "empty" | "complete">("all");
   const visible = characters.filter((character) => {
@@ -232,7 +232,7 @@ function ProfilesPage({ state, characters, updateState }: { state: RoteirosState
   const selected = visible.find((item) => item.id === selectedId) || visible[0];
   return <main className={styles.profileLayout}>
     <aside className={styles.profileSidebar}><div><span className={styles.eyebrow}>FICHAS NARRATIVAS</span><h1>Personagens</h1><p>As fichas alimentam a IA, sem alterar a aparência no Criador.</p></div><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="⌕ Pesquisar personagem…" /><div className={styles.filterChips}><button className={filter === "all" ? styles.active : ""} onClick={() => setFilter("all")}>Todos</button><button className={filter === "empty" ? styles.active : ""} onClick={() => setFilter("empty")}>Incompletos</button><button className={filter === "complete" ? styles.active : ""} onClick={() => setFilter("complete")}>Completos</button></div><div className={styles.profileCharacterList}>{visible.map((character) => { const completion = profileCompletion(state.profiles.find((item) => item.characterId === character.id)); return <button className={selected?.id === character.id ? styles.selected : ""} key={character.id} onClick={() => setSelectedId(character.id)}><CharacterMark character={character} /><span><strong>{character.name}</strong><small>{completion === 0 ? "Ficha vazia" : `${completion}% preenchido`}</small></span><i style={{ "--progress": `${completion}%` } as React.CSSProperties} /></button>; })}</div></aside>
-    <div className={styles.profileMain}>{selected ? <ProfileEditor character={selected} characters={characters} state={state} updateState={updateState} /> : <div className={styles.emptyState}><span>♙</span><h2>Nenhum personagem encontrado</h2><p>Salve um personagem no Criador do Premium para preencher sua ficha narrativa.</p><Link className={styles.primaryButton} href="/">Abrir Criador</Link></div>}</div>
+     <div className={styles.profileMain}>{selected ? <ProfileEditor key={selected.id} character={selected} characters={characters} state={state} updateState={updateState} rawText={rawTextByCharacter[selected.id] ?? ""} onRawTextChange={(value) => setRawTextByCharacter((current) => ({ ...current, [selected.id]: value }))} /> : <div className={styles.emptyState}><span>♙</span><h2>Nenhum personagem encontrado</h2><p>Salve um personagem no Criador do Premium para preencher sua ficha narrativa.</p><Link className={styles.primaryButton} href="/">Abrir Criador</Link></div>}</div>
   </main>;
 }
 

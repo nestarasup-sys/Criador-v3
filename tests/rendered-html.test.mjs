@@ -527,6 +527,15 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(css, /\.dragging[^}]*will-change:\s*transform/);
 });
 
+test("separates raw profile drafts by character", async () => {
+  const page = await readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8");
+  assert.match(page, /rawTextByCharacter/);
+  assert.match(page, /rawTextByCharacter\[selected\.id\]/);
+  assert.match(page, /Texto bruto de \{character\.name\}/);
+  assert.match(page, /ProfileEditor key=\{selected\.id\}/);
+  assert.doesNotMatch(page, /const \[rawText, setRawText\] = useState\(""\)/);
+});
+
 test("preserva referências do Studio quando um arquivo local fica temporariamente ausente", async () => {
   const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
   assert.match(server, /studioAssets\.push\(\{ \.\.\.asset, missingFile: true \}\)/);
