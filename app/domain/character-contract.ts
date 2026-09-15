@@ -47,6 +47,8 @@ export type ExportFrame = { x: number; y: number; scale: number };
 /** Contrato persistido completo; campos opcionais cobrem documentos históricos. */
 export type Character = {
   id: string;
+  /** Revisão confirmada pelo armazenamento local; ausente em documentos legados. */
+  persistenceRevision?: number;
   name: string;
   model: Model;
   photoUrl?: string;

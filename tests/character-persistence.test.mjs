@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
@@ -48,8 +48,9 @@ async function withSession(baseUrl, method, path, body) {
 test("migra personagens para arquivo próprio e preserva Save após reiniciar o servidor", async () => {
   const root = await mkdtemp(join(tmpdir(), "nymi-character-persistence-"));
   const character = { id: "char-1", name: "Antes", model: "feminino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
-  const seeded = { ...emptyAppState(), characters: [character] };
+  const seeded = { ...emptyAppState(), characters: [] };
   await writeFile(join(root, "state.json"), JSON.stringify(seeded), "utf8");
+  await writeFile(join(root, "characters.json"), JSON.stringify([character]), "utf8");
   const port = 6900 + Math.floor(Math.random() * 200);
   let first;
   let second;
@@ -60,12 +61,21 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     assert.equal(loaded.value.characters[0].name, "Antes");
     const splitCharacters = JSON.parse(await readFile(join(root, "characters.json"), "utf8"));
     assert.equal(splitCharacters[0].id, "char-1");
+    assert.equal(JSON.parse(await readFile(join(root, "character-store", "index.json"), "utf8")).characters[0].id, "char-1");
     assert.deepEqual(JSON.parse(await readFile(join(root, "state.json"), "utf8")).characters, []);
 
-    const saved = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Depois" });
+    const initialRevision = loaded.value.characters[0].persistenceRevision;
+    const saved = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Depois", persistenceRevision: initialRevision });
     assert.equal(saved.response.status, 200);
+    assert.equal(saved.value.revision, initialRevision + 1);
     const afterSave = await withSession(first.baseUrl, "GET", "/state");
     assert.equal(afterSave.value.characters[0].name, "Depois");
+    assert.equal(afterSave.value.characters[0].persistenceRevision, saved.value.revision);
+
+    const stale = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Antigo", persistenceRevision: initialRevision });
+    assert.equal(stale.response.status, 409);
+    assert.equal(stale.value.code, "STALE_CHARACTER_REVISION");
+    assert.equal((await withSession(first.baseUrl, "GET", "/state")).value.characters[0].name, "Depois");
 
     first.child.kill();
     await new Promise((resolve) => first.child.once("exit", resolve));
@@ -81,6 +91,49 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     for (const server of [first, second]) {
       if (server?.child && server.child.exitCode === null) server.child.kill();
     }
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("preserva characters.json corrompido e recusa migração destrutiva", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-character-corrupt-"));
+  const invalid = "{personagens importantes";
+  await writeFile(join(root, "state.json"), JSON.stringify(emptyAppState()), "utf8");
+  await writeFile(join(root, "characters.json"), invalid, "utf8");
+  const port = 7100 + Math.floor(Math.random() * 200);
+  const child = spawn(process.execPath, ["local-data-server.mjs"], {
+    cwd: projectRoot,
+    env: { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: String(port), NYMI_UI_PORT: "6799" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  try {
+    await new Promise((resolve) => child.once("exit", resolve));
+    assert.notEqual(child.exitCode, 0);
+    assert.equal(await readFile(join(root, "characters.json"), "utf8"), invalid);
+  } finally {
+    if (child.exitCode === null) child.kill();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("rejeita IDs duplicados antes de criar o índice por personagem", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-character-duplicate-"));
+  await mkdir(root, { recursive: true });
+  const duplicate = { id: "char-1", name: "Duplicado", model: "feminino", selections: {}, adjustments: {}, updatedAt: "" };
+  await writeFile(join(root, "state.json"), JSON.stringify(emptyAppState()), "utf8");
+  await writeFile(join(root, "characters.json"), JSON.stringify([duplicate, duplicate]), "utf8");
+  const port = 7300 + Math.floor(Math.random() * 100);
+  const child = spawn(process.execPath, ["local-data-server.mjs"], {
+    cwd: projectRoot,
+    env: { ...process.env, GACHA_DATA_ROOT: root, NYMI_DATA_PORT: String(port), NYMI_UI_PORT: "6799" },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  try {
+    await new Promise((resolve) => child.once("exit", resolve));
+    assert.notEqual(child.exitCode, 0);
+    await assert.rejects(() => readFile(join(root, "character-store", "index.json"), "utf8"), { code: "ENOENT" });
+  } finally {
+    if (child.exitCode === null) child.kill();
     await rm(root, { recursive: true, force: true });
   }
 });

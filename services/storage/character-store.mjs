@@ -1,0 +1,209 @@
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
+import { join, resolve, sep } from "node:path";
+import { writeJsonAtomic } from "./atomic-json.mjs";
+
+const STORE_VERSION = 1;
+
+function inside(parent, target) {
+  return resolve(target).startsWith(resolve(parent) + sep);
+}
+
+function validId(value) {
+  return typeof value === "string" && /^[a-zA-Z0-9_-]{1,120}$/.test(value);
+}
+
+function storeError(message, code, status = 500) {
+  return Object.assign(new Error(message), { code, status });
+}
+
+async function exists(filePath) {
+  try { await stat(filePath); return true; }
+  catch (error) { if (error?.code === "ENOENT") return false; throw error; }
+}
+
+async function readJsonStrict(filePath, code) {
+  try {
+    return JSON.parse(await readFile(filePath, "utf8"));
+  } catch (error) {
+    if (error?.code === "ENOENT") throw error;
+    throw storeError(`JSON de personagens inválido em ${filePath}. O arquivo original foi preservado.`, code);
+  }
+}
+
+function validateCharacters(value) {
+  if (!Array.isArray(value)) throw storeError("A biblioteca de personagens não é uma lista.", "INVALID_CHARACTER_LIBRARY");
+  const ids = new Set();
+  return value.map((character) => {
+    if (!character || typeof character !== "object" || !validId(character.id)) {
+      throw storeError("A biblioteca contém um personagem sem ID válido.", "INVALID_CHARACTER");
+    }
+    if (ids.has(character.id)) throw storeError(`ID de personagem duplicado: ${character.id}`, "DUPLICATE_CHARACTER_ID");
+    ids.add(character.id);
+    return character;
+  });
+}
+
+function summary(character, revision) {
+  return {
+    id: character.id,
+    name: typeof character.name === "string" ? character.name : "Personagem",
+    model: character.model === "masculino" ? "masculino" : "feminino",
+    basePackId: typeof character.basePackId === "string" ? character.basePackId : "modelo-1",
+    updatedAt: typeof character.updatedAt === "string" ? character.updatedAt : "",
+    revision,
+  };
+}
+
+export function createCharacterStore(root, options = {}) {
+  const storeRoot = join(root, "character-store");
+  const itemsRoot = join(storeRoot, "items");
+  const backupsRoot = join(storeRoot, "backups");
+  const indexPath = join(storeRoot, "index.json");
+  const legacyPath = options.legacyPath ?? join(root, "characters.json");
+  let index = { version: STORE_VERSION, characters: [] };
+  let writeQueue = Promise.resolve();
+  let lastBackupAt = 0;
+
+  function itemPath(id) {
+    const path = join(itemsRoot, `${id}.json`);
+    if (!validId(id) || !inside(itemsRoot, path)) throw storeError("ID de personagem inválido.", "INVALID_CHARACTER", 400);
+    return path;
+  }
+
+  async function writeIndex() {
+    await writeJsonAtomic(indexPath, index);
+  }
+
+  async function backupIndexAndItem(id) {
+    if (Date.now() - lastBackupAt < 5 * 60 * 1000) return;
+    await mkdir(backupsRoot, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    if (await exists(indexPath)) await copyFile(indexPath, join(backupsRoot, `index-${stamp}.json`));
+    const path = itemPath(id);
+    if (await exists(path)) await copyFile(path, join(backupsRoot, `${id}-${stamp}.json`));
+    lastBackupAt = Date.now();
+    const files = (await readdir(backupsRoot)).filter((name) => name.endsWith(".json")).sort();
+    for (const name of files.slice(0, -40)) await rm(join(backupsRoot, name), { force: true });
+  }
+
+  async function migrate(initialCharacters) {
+    let source = initialCharacters;
+    if (await exists(legacyPath)) source = await readJsonStrict(legacyPath, "CORRUPT_LEGACY_CHARACTERS");
+    const characters = validateCharacters(source ?? []);
+    await mkdir(itemsRoot, { recursive: true });
+    await mkdir(backupsRoot, { recursive: true });
+    if (await exists(legacyPath)) {
+      const migrationBackup = join(backupsRoot, "characters-before-item-store.json");
+      if (!await exists(migrationBackup)) await copyFile(legacyPath, migrationBackup);
+    }
+    const entries = [];
+    for (const character of characters) {
+      const revision = 1;
+      await writeJsonAtomic(itemPath(character.id), { version: STORE_VERSION, revision, character });
+      const verified = await readJsonStrict(itemPath(character.id), "CORRUPT_CHARACTER_ITEM");
+      if (verified?.character?.id !== character.id) throw storeError("A migração de personagens não pôde ser verificada.", "CHARACTER_MIGRATION_FAILED");
+      entries.push(summary(character, revision));
+    }
+    index = { version: STORE_VERSION, characters: entries };
+    await writeIndex();
+  }
+
+  async function loadIndex() {
+    const parsed = await readJsonStrict(indexPath, "CORRUPT_CHARACTER_INDEX");
+    if (parsed?.version !== STORE_VERSION || !Array.isArray(parsed.characters)) {
+      throw storeError("Índice de personagens incompatível.", "INVALID_CHARACTER_INDEX");
+    }
+    const ids = new Set();
+    for (const entry of parsed.characters) {
+      if (!validId(entry?.id) || ids.has(entry.id)) throw storeError("Índice de personagens possui IDs inválidos ou duplicados.", "INVALID_CHARACTER_INDEX");
+      ids.add(entry.id);
+    }
+    index = parsed;
+  }
+
+  async function readCharacter(id) {
+    const envelope = await readJsonStrict(itemPath(id), "CORRUPT_CHARACTER_ITEM");
+    if (!envelope?.character || envelope.character.id !== id || !Number.isInteger(envelope.revision)) {
+      throw storeError(`Documento inválido para o personagem ${id}.`, "INVALID_CHARACTER_ITEM");
+    }
+    return { ...envelope.character, persistenceRevision: envelope.revision };
+  }
+
+  return {
+    async init(initialCharacters = []) {
+      await mkdir(storeRoot, { recursive: true });
+      if (await exists(indexPath)) await loadIndex();
+      else await migrate(initialCharacters);
+      await Promise.all(index.characters.map((entry) => readCharacter(entry.id)));
+    },
+
+    listSummaries() { return structuredClone(index.characters); },
+
+    async list() {
+      return Promise.all(index.characters.map((entry) => readCharacter(entry.id)));
+    },
+
+    async get(id) {
+      if (!index.characters.some((entry) => entry.id === id)) return null;
+      return readCharacter(id);
+    },
+
+    save(character, expectedRevision = null) {
+      const operation = writeQueue.catch(() => undefined).then(async () => {
+        validateCharacters([character]);
+        const current = index.characters.find((entry) => entry.id === character.id);
+        if (expectedRevision !== null && current && expectedRevision !== current.revision) {
+          throw storeError("O personagem foi alterado por uma gravação mais recente.", "STALE_CHARACTER_REVISION", 409);
+        }
+        await backupIndexAndItem(character.id);
+        const revision = (current?.revision ?? 0) + 1;
+        const { persistenceRevision: _revision, ...document } = character;
+        void _revision;
+        await writeJsonAtomic(itemPath(character.id), { version: STORE_VERSION, revision, character: document });
+        const nextEntry = summary(document, revision);
+        index = current
+          ? { ...index, characters: index.characters.map((entry) => entry.id === character.id ? nextEntry : entry) }
+          : { ...index, characters: [nextEntry, ...index.characters] };
+        await writeIndex();
+        return { id: character.id, revision, savedAt: new Date().toISOString() };
+      });
+      writeQueue = operation.then(() => undefined, () => undefined);
+      return operation;
+    },
+
+    remove(id) {
+      const operation = writeQueue.catch(() => undefined).then(async () => {
+        const current = index.characters.find((entry) => entry.id === id);
+        if (!current) return { id, removed: false };
+        await backupIndexAndItem(id);
+        index = { ...index, characters: index.characters.filter((entry) => entry.id !== id) };
+        await writeIndex();
+        const path = itemPath(id);
+        const archived = join(backupsRoot, `${id}-deleted-${Date.now()}.json`);
+        if (await exists(path)) await rename(path, archived);
+        return { id, removed: true };
+      });
+      writeQueue = operation.then(() => undefined, () => undefined);
+      return operation;
+    },
+
+    replaceAll(characters) {
+      const operation = writeQueue.catch(() => undefined).then(async () => {
+        const validated = validateCharacters(characters);
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+        if (await exists(indexPath)) await copyFile(indexPath, join(backupsRoot, `index-before-replace-${stamp}.json`));
+        for (const character of validated) {
+          const current = index.characters.find((entry) => entry.id === character.id);
+          const revision = (current?.revision ?? 0) + 1;
+          const { persistenceRevision: _revision, ...document } = character;
+          void _revision;
+          await writeJsonAtomic(itemPath(character.id), { version: STORE_VERSION, revision, character: document });
+        }
+        index = { version: STORE_VERSION, characters: validated.map((character) => summary(character, (index.characters.find((entry) => entry.id === character.id)?.revision ?? 0) + 1)) };
+        await writeIndex();
+      });
+      writeQueue = operation.then(() => undefined, () => undefined);
+      return operation;
+    },
+  };
+}

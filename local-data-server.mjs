@@ -11,6 +11,7 @@ import { createBaseDadosService } from "./services/base-dados/service.mjs";
 import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
+import { createCharacterStore } from "./services/storage/character-store.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState } from "./app/domain/document-schemas.mjs";
 import { baseExpressionKeys, collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
@@ -44,6 +45,7 @@ const VIDEO_MAKER_PROJECTS_ROOT = join(VIDEO_MAKER_ROOT, "projects");
 const VIDEO_MAKER_EXPORTS_ROOT = join(VIDEO_MAKER_ROOT, "exports");
 const BACKUPS_ROOT = join(ROOT, "backups");
 const CHARACTERS_PATH = join(ROOT, "characters.json");
+const characterStore = createCharacterStore(ROOT, { legacyPath: CHARACTERS_PATH });
 const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
@@ -564,25 +566,16 @@ async function loadState() {
       studios: Array.isArray(parsed.studios) ? parsed.studios : [],
       studioAssets: Array.isArray(parsed.studioAssets) ? parsed.studioAssets : [],
     }));
-    const splitCharacters = await readOptionalJson(CHARACTERS_PATH);
-    if (Array.isArray(splitCharacters)) {
-      characters = splitCharacters;
-      state = { ...loadedState, characters: [] };
-    } else {
-      // One-time, non-destructive migration: copy the existing character
-      // snapshot before removing its duplicate from the shared state file.
-      characters = loadedState.characters;
-      await writeJsonAtomic(CHARACTERS_PATH, characters);
-      state = { ...loadedState, characters: [] };
-      await writeJsonAtomic(STATE_PATH, state);
-    }
+    await characterStore.init(loadedState.characters);
+    characters = await characterStore.list();
+    state = { ...loadedState, characters: [] };
     await reconcileMissingLocalAssets();
-    if (splitCharacters) await writeJsonAtomic(STATE_PATH, state);
+    await writeJsonAtomic(STATE_PATH, state);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
-    characters = [];
+    await characterStore.init([]);
+    characters = await characterStore.list();
     await writeJsonAtomic(STATE_PATH, state);
-    await writeJsonAtomic(CHARACTERS_PATH, characters);
   }
 }
 
@@ -853,8 +846,8 @@ async function route(request, response) {
     const removableCharacterIds = shouldDeleteImportedCharacters ? [...importedIds].filter((id) => !otherScriptCharacterIds.has(id)) : [];
     const keptCharacterIds = [...importedIds].filter((id) => !removableCharacterIds.includes(id));
     if (removableCharacterIds.length) {
-      state.characters = state.characters.filter((character) => !removableCharacterIds.includes(String(character.id)));
-      await queueStateWrite();
+      for (const characterId of removableCharacterIds) await characterStore.remove(characterId);
+      characters = await characterStore.list();
     }
     sendJson(response, request, 200, { ok: true, scriptId: result.script.id, safetyBackup: result.safetyBackup, removedFolders: [...result.removedFolders, ...exportFolders], removedCharacters: removableCharacterIds, keptCharacters: keptCharacterIds });
     return;
@@ -974,7 +967,7 @@ async function route(request, response) {
     const folder = join(MODELS_ROOT, gender, modelId);
     if (!inside(join(MODELS_ROOT, gender), folder)) throw Object.assign(new Error("Modelo inválido."), { status: 400 });
     try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
-    const referenced = state.characters.some((character) =>
+    const referenced = characters.some((character) =>
       String(character?.model || "").toLowerCase() === gender
       && String(character?.basePackId || "modelo-1") === modelId);
     if (referenced) {
@@ -1005,6 +998,17 @@ async function route(request, response) {
     return;
   }
   const characterItemMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})$/);
+  if (request.method === "GET" && url.pathname === "/characters") {
+    sendJson(response, request, 200, { characters: characterStore.listSummaries() });
+    return;
+  }
+  if (characterItemMatch && request.method === "GET") {
+    const characterId = safeId(characterItemMatch[1]);
+    const character = await characterStore.get(characterId);
+    if (!character) throw Object.assign(new Error("Personagem não encontrado."), { status: 404, code: "CHARACTER_NOT_FOUND" });
+    sendJson(response, request, 200, { character });
+    return;
+  }
   if (characterItemMatch && request.method === "PUT") {
     const characterId = safeId(characterItemMatch[1]);
     const character = await requestJson(request);
@@ -1012,21 +1016,21 @@ async function route(request, response) {
       throw Object.assign(new Error("Personagem inválido."), { status: 400, code: "INVALID_CHARACTER" });
     }
     await queueStateMutation(async () => {
-      const index = characters.findIndex((entry) => String(entry?.id || "") === characterId);
-      if (index === -1) characters = [...characters, character];
-      else characters = characters.map((entry, entryIndex) => entryIndex === index ? character : entry);
-      await writeJsonAtomic(CHARACTERS_PATH, characters);
+      const expectedRevision = Number.isInteger(character.persistenceRevision) ? character.persistenceRevision : null;
+      await characterStore.save(character, expectedRevision);
+      characters = await characterStore.list();
     });
-    sendJson(response, request, 200, { ok: true, id: characterId });
+    const savedCharacter = characters.find((entry) => entry.id === characterId);
+    sendJson(response, request, 200, { ok: true, id: characterId, revision: savedCharacter?.persistenceRevision ?? null, savedAt: new Date().toISOString() });
     return;
   }
   if (characterItemMatch && request.method === "DELETE") {
     const characterId = safeId(characterItemMatch[1]);
     await queueStateMutation(async () => {
-      characters = characters.filter((entry) => String(entry?.id || "") !== characterId);
-      await rm(join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`), { force: true });
-      await writeJsonAtomic(CHARACTERS_PATH, characters);
+      await characterStore.remove(characterId);
+      characters = await characterStore.list();
     });
+    await rm(join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`), { force: true }).catch(() => undefined);
     sendJson(response, request, 200, { ok: true, id: characterId });
     return;
   }
@@ -1037,14 +1041,14 @@ async function route(request, response) {
       // Keep the full-list endpoint for migration/import compatibility. The
       // regular editor path uses PUT /characters/:id and never sends this
       // potentially huge list.
-      characters = nextCharacters;
+      await characterStore.replaceAll(nextCharacters);
+      characters = await characterStore.list();
       const knownCharacterIds = new Set(nextCharacters.map((character) => String(character?.id || "")));
       for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
         if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
           await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
         }
       }
-      await writeJsonAtomic(CHARACTERS_PATH, nextCharacters);
       state.characters = [];
     });
     sendJson(response, request, 200, { ok: true });

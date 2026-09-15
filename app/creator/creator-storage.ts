@@ -166,13 +166,26 @@ type PcBasePackCollection = Record<Model, PcBasePackDefinition[]>;
 
 async function pcRequest(path: string, init?: RequestInit) {
   const response = await localDataFetch(path, init);
-  if (!response.ok) throw new Error(`Armazenamento local indisponível (${response.status})`);
+  if (!response.ok) {
+    const details = await response.clone().json().catch(() => ({})) as { error?: string; code?: string; requestId?: string };
+    throw Object.assign(new Error(details.error || `Armazenamento local indisponível (${response.status})`), {
+      code: details.code || "LOCAL_STORAGE_ERROR",
+      requestId: details.requestId,
+      status: response.status,
+    });
+  }
   return response;
 }
 
+const characterRevisions = new Map<string, number>();
+
 export async function loadPcState(): Promise<PcState> {
   const response = await pcRequest("/state");
-  return response.json();
+  const state = await response.json() as PcState;
+  for (const character of state.characters ?? []) {
+    if (Number.isInteger(character.persistenceRevision)) characterRevisions.set(character.id, character.persistenceRevision!);
+  }
+  return state;
 }
 
 export async function loadPcModels(): Promise<BasePackCollection> {
@@ -223,10 +236,12 @@ let characterSaveWorker: Promise<void> | null = null;
 let characterItemQueue: Promise<void> = Promise.resolve();
 
 function characterWithoutPhotos(character: Character) {
-  const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...withoutPhotos } = character;
+  const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, persistenceRevision: _revision, ...withoutPhotos } = character;
   void _photoUrl;
   void _photoDataUrl;
-  return withoutPhotos;
+  void _revision;
+  const persistenceRevision = characterRevisions.get(character.id) ?? character.persistenceRevision;
+  return { ...withoutPhotos, ...(Number.isInteger(persistenceRevision) ? { persistenceRevision } : {}) };
 }
 
 async function flushCharacterSaves() {
@@ -281,12 +296,15 @@ export function saveCharacterToPc(character: Character) {
   const operation = characterItemQueue.catch(() => undefined).then(async () => {
     const startedAt = Date.now();
     try {
-      await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
+      const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body,
       });
+      const result = await response.json() as { revision?: number; savedAt?: string };
+      if (Number.isInteger(result.revision)) characterRevisions.set(character.id, result.revision!);
       notifyPcPersistenceMetric("character", body.length, startedAt, "ok");
+      return { status: "pc-saved" as const, entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
     } catch (error) {
       notifyPcPersistenceMetric("character", body.length, startedAt, "error", error);
       throw error;
@@ -301,6 +319,7 @@ export function deleteCharacterFromPc(id: string) {
     const startedAt = Date.now();
     try {
       await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
+      characterRevisions.delete(id);
       notifyPcPersistenceMetric("character-delete", 0, startedAt, "ok");
     } catch (error) {
       notifyPcPersistenceMetric("character-delete", 0, startedAt, "error", error);
