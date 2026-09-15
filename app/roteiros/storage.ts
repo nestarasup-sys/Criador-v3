@@ -18,7 +18,13 @@ function readMirror() {
 }
 
 export function mirrorRoteirosState(state: RoteirosState) {
-  localStorage.setItem(MIRROR_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(MIRROR_KEY, JSON.stringify(state));
+    return true;
+  } catch (error) {
+    console.error("[roteiros] Checkpoint do navegador indisponível", error);
+    return false;
+  }
 }
 
 export { appendRecoveryJournal, discardPendingRecovery, markRecoverySaved, readRecoveryJournal };
@@ -225,7 +231,7 @@ export async function openRoteiroExportFolder(folderTarget: "characters" | "scri
 }
 
 export function saveRoteirosState(state: RoteirosState) {
-  mirrorRoteirosState(state);
+  const checkpointSaved = mirrorRoteirosState(state);
   const snapshot = structuredClone(state);
   const operation = saveQueue.catch(() => undefined).then(async () => {
     await request("/roteiros/state", {
@@ -235,7 +241,7 @@ export function saveRoteirosState(state: RoteirosState) {
     });
   });
   saveQueue = operation.then(() => undefined, () => undefined);
-  return operation;
+  return operation.catch((error) => { throw Object.assign(error instanceof Error ? error : new Error("Falha ao salvar Roteiros."), { checkpointSaved }); });
 }
 
 export type AiRequestOptions = { signal?: AbortSignal; timeoutMs?: number };

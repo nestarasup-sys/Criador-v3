@@ -22,7 +22,7 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
 }
 
-const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência" } as const;
+const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
 
 function CharacterMark({ character, large = false }: { character: PremiumCharacter; large?: boolean }) {
   const photo = character.photoUrl ?? character.photoDataUrl;

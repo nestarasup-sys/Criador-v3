@@ -272,10 +272,12 @@ export default function StudioPage() {
       setPcStorageAvailable(true);
       setSaveStatus(migrationAvailable ? "Salvo no PC · migração pendente" : "Salvo no PC");
       setNotice(message);
-    } catch {
+    } catch (error) {
       setPcStorageAvailable(false);
       setSaveStatus("Alterações aguardando sincronização");
-      setNotice("O PC está indisponível; a cópia ficou protegida neste navegador");
+      setNotice((error as { checkpointSaved?: boolean })?.checkpointSaved
+        ? "O PC está indisponível; a cópia ficou protegida neste navegador"
+        : "O PC e o checkpoint do navegador falharam; mantenha esta tela aberta");
     }
   }
 

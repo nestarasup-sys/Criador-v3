@@ -26,7 +26,7 @@ import type { AiUsageTotals, GeneratedReaction, NarrativeProfile, OpeningSection
 import { useRoteirosData } from "../useRoteirosData";
 import styles from "../roteiros.module.css";
 
-const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência" } as const;
+const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
 

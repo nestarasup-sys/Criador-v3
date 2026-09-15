@@ -75,7 +75,13 @@ async function pcRequest(path: string, init?: RequestInit) {
 }
 
 export function mirrorStudios(studios: Studio[]) {
-  localStorage.setItem(STUDIO_KEY, JSON.stringify(studios));
+  try {
+    localStorage.setItem(STUDIO_KEY, JSON.stringify(studios));
+    return true;
+  } catch (error) {
+    console.error("[studio] Checkpoint do navegador indisponível", error);
+    return false;
+  }
 }
 
 export function recordStudioDeletion(id: string) {
@@ -189,10 +195,11 @@ export async function loadAppData(): Promise<LoadedAppData> {
 }
 
 export async function saveStudios(studios: Studio[]) {
-  mirrorStudios(studios);
+  const checkpointSaved = mirrorStudios(studios);
   const operation = studioSaveQueue
     .catch(() => undefined)
-    .then(() => saveSnapshotToPc(studios));
+    .then(() => saveSnapshotToPc(studios))
+    .catch((error) => { throw Object.assign(error instanceof Error ? error : new Error("Falha ao salvar o Studio."), { checkpointSaved }); });
   studioSaveQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }

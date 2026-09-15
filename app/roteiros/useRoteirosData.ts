@@ -51,7 +51,10 @@ export function useRoteirosData() {
       appendRecoveryJournal(state, "pending");
       saveRoteirosState(state)
         .then(() => { markRecoverySaved(state); setPcAvailable(true); setSaveStatus("saved"); })
-        .catch(() => { setPcAvailable(false); setSaveStatus("error"); });
+        .catch((error) => {
+          setPcAvailable(false);
+          setSaveStatus((error as { checkpointSaved?: boolean })?.checkpointSaved === false ? "unsafe" : "error");
+        });
     }, 650);
     return () => window.clearTimeout(timer);
   }, [state]);
@@ -82,9 +85,9 @@ export function useRoteirosData() {
       setPcAvailable(true);
       setSaveStatus("saved");
       return true;
-    } catch {
+    } catch (error) {
       setPcAvailable(false);
-      setSaveStatus("error");
+      setSaveStatus((error as { checkpointSaved?: boolean })?.checkpointSaved === false ? "unsafe" : "error");
       return false;
     }
   }, []);

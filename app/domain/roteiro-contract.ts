@@ -81,7 +81,7 @@ export type RoteirosState = {
   globalRules: GlobalRule[];
   settings: RoteirosSettings;
 };
-export type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type SaveStatus = "idle" | "saving" | "saved" | "error" | "unsafe";
 export type GeneratedReaction = { characterId: string; type: ReactionBlockType; emotion: string; text: string };
 export type AiCharacterContext = {
   id: string; name: string; gender: "male" | "female" | "unspecified";
