@@ -407,6 +407,14 @@ async function readModelConfig(folder, modelId) {
   return { config: {}, path: join(folder, "model.json") };
 }
 
+const MODEL_CATALOG_METADATA_FILE = ".catalog.json";
+
+async function readModelCatalogVersion(folder, config) {
+  const metadata = await readOptionalJson(join(folder, MODEL_CATALOG_METADATA_FILE));
+  if (metadata?.catalogVersion === "v0" || metadata?.catalogVersion === "v1") return metadata.catalogVersion;
+  return config?.catalogVersion === "v0" ? "v0" : "v1";
+}
+
 /**
  * Imported head-only models are allowed to omit model.json. Infer that layout
  * from the real alpha bounds instead of silently treating a 1920x1080 head
@@ -465,6 +473,7 @@ async function discoverModels() {
       const pngFiles = files.filter((name) => name.toLowerCase().endsWith(".png"));
       const expressionKeys = collectModelExpressionKeys(pngFiles);
       const { config, path: configPath } = await readModelConfig(folder, entry.name);
+      const catalogVersion = await readModelCatalogVersion(folder, config);
       const availableBaseExpressions = baseExpressionKeys(expressionKeys);
       if (availableBaseExpressions.length === 0) continue;
       const configuredDefault = typeof config?.defaultExpression === "string"
@@ -503,6 +512,9 @@ async function discoverModels() {
         stat(configPath)
           .then((metadata) => `config:${metadata.size}:${metadata.mtimeMs}`)
           .catch(() => "config:none"),
+        stat(join(folder, MODEL_CATALOG_METADATA_FILE))
+          .then((metadata) => `catalog:${metadata.size}:${metadata.mtimeMs}`)
+          .catch(() => "catalog:none"),
       ]);
       const version = createHash("sha1")
         .update(versionParts.sort().join("|"))
@@ -520,7 +532,7 @@ async function discoverModels() {
         ...(expressionAliases ? { expressionAliases } : {}),
         source: `/models/modelos/${gender}/${entry.name}`,
         version,
-        catalogVersion: config?.catalogVersion === "v0" ? "v0" : "v1",
+        catalogVersion,
         ...((config?.type === "head-only" || inferredLayout) ? {
           type: "head-only",
           anchor: config?.anchor === "neck-base" || inferredLayout?.anchor === "neck-base"
@@ -946,6 +958,13 @@ async function route(request, response) {
     const folder = join(MODELS_ROOT, gender, modelId);
     if (!inside(join(MODELS_ROOT, gender), folder)) throw Object.assign(new Error("Modelo inválido."), { status: 400 });
     try { await stat(folder); } catch (error) { if (error?.code === "ENOENT") throw Object.assign(new Error("Modelo não encontrado."), { status: 404 }); throw error; }
+    const referenced = state.characters.some((character) =>
+      String(character?.model || "").toLowerCase() === gender
+      && String(character?.basePackId || "modelo-1") === modelId);
+    if (referenced) {
+      sendJson(response, request, 409, { error: "Este modelo está sendo usado por personagem(s). Troque o modelo dos personagens antes de excluí-lo." });
+      return;
+    }
     await rm(folder, { recursive: true, force: false });
     sendJson(response, request, 200, { ok: true, gender, id: modelId });
     return;
@@ -1041,6 +1060,10 @@ async function route(request, response) {
     if (body?.catalogVersion !== "v0" && body?.catalogVersion !== "v1") throw Object.assign(new Error("Catálogo do modelo inválido."), { status: 400 });
     const { config, path: configPath } = await readModelConfig(folder, modelId);
     await writeJsonAtomic(configPath, { ...config, catalogVersion: body.catalogVersion });
+    await writeJsonAtomic(join(folder, MODEL_CATALOG_METADATA_FILE), {
+      catalogVersion: body.catalogVersion,
+      updatedAt: new Date().toISOString(),
+    });
     sendJson(response, request, 200, { ok: true, gender, id: modelId, catalogVersion: body.catalogVersion });
     return;
   }

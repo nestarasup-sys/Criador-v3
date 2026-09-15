@@ -4928,8 +4928,11 @@ export default function Home() {
     const selectedPacks = visibleBasePacks.filter((pack) => selectedBaseModelIds.includes(pack.id));
     if (!selectedPacks.length) return;
     const users = characters.filter((character) => character.model === model && selectedPacks.some((pack) => normalizeBasePackId(character.basePackId) === pack.id)).length;
-    const warning = users ? ` ${users} personagem(ns) usam esses modelos e poderão ficar sem a referência visual.` : "";
-    if (!window.confirm(`Apagar ${selectedPacks.length} modelo(s) do catálogo local?${warning} Esta ação remove as pastas dos modelos e não pode ser desfeita.`)) return;
+    if (users) {
+      setNotice(`Não é possível apagar: ${users} personagem(ns) ainda usam esse(s) modelo(s)`);
+      return;
+    }
+    if (!window.confirm(`Apagar ${selectedPacks.length} modelo(s) do catálogo local? Esta ação remove as pastas dos modelos e não pode ser desfeita.`)) return;
 
     setIsProcessing(true);
     const deletedIds: string[] = [];
