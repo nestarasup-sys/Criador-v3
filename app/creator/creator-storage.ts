@@ -243,7 +243,6 @@ export function saveCharactersToPc(characters: Character[]) {
   if (!characterSaveWorker) {
     characterSaveWorker = flushCharacterSaves().finally(() => {
       characterSaveWorker = null;
-      if (pendingCharacterBody !== null) void saveCharactersToPc(characters);
     });
   }
   return operation;
