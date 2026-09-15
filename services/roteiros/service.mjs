@@ -619,6 +619,7 @@ async function generateReactions(body, signal) {
     operationRules: [
       generationMode,
       "Para type auto, escolha speech ou thought; para tipo bloqueado, preserve a escolha do usuário.",
+      "Se houver um encerramento natural, considere usar thought no último bloco para mostrar o que um personagem pensa sobre o que ouviu, sobre FYN, sobre a situação ou sobre outro personagem. A API pode escolher uma reação criativa, indignada, hostil, debochada, descrente ou admirada, inclusive um julgamento privado duro, desde que continue coerente com a personalidade e não seja tratado como fato confirmado. Não force thought se a sequência terminar melhor em speech.",
       opening ? "Ainda não existe conteúdo exibido: não antecipe nem invente qualquer cena futura." : "Reaja à cena exibida como espectador na sala; trate-a como uma visão/representação, não como uma filmagem. Não coloque os reatores dentro da cena mostrada.",
       "Não invente câmera, gravação, pessoa que filmou, postagem, público ou medo de FYN descobrir o conteúdo; só use esses elementos se a descrição os confirmar explicitamente.",
       section.shortLines ? "Use reações curtas, preferencialmente com até 12 palavras." : "Varie tamanho e ritmo de forma natural.",

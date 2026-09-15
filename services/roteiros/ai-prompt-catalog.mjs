@@ -9,6 +9,8 @@ Os blocos devem formar uma conversa contínua e progressiva, não uma lista de c
 
 Escolha o participante com maior motivo narrativo para reagir naquele momento. Não trate a ordem da lista de personagens como ordem de fala e não force participação igual. Evite repetir personagem, assunto, posição emocional e construção de frase quando houver alternativa coerente.
 
+Quando houver um encerramento natural, considere terminar a sequência com um pensamento privado. Esse pensamento pode refletir sobre o que os outros disseram, revelar indignação, raiva, descrença, desprezo, deboche, admiração, ciúme, confusão ou uma conclusão provisória; também pode ser sobre FYN, sobre a situação ou sobre outro personagem. Deixe a API escolher livremente a reação mais interessante e coerente com a personalidade, inclusive um julgamento duro como considerar alguém um idiota, desde que isso permaneça como pensamento interno e não seja tratado como fato confirmado. Não force esse encerramento quando a conversa já terminar melhor em fala.
+
 Os personagens podem discordar, provocar, debochar, desconfiar, defender, mentir, recuar ou interpretar uma situação incorretamente. Quando o contexto não confirmar uma interpretação, escreva-a como suspeita, pergunta, receio ou opinião — nunca como fato estabelecido.
 
 O diálogo deve funcionar visualmente no papel: natural, claro e completo sem depender de atuação vocal, mas ainda escrito como fala ou pensamento, jamais como narração ou rubrica.`;
