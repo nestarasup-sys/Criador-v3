@@ -123,7 +123,7 @@ export async function testOpenAi(settings, signal, environment = process.env) {
   const body = await response.json().catch(() => ({}));
   if (!response.ok) { await record(body.usage, cfg.model, true, { operation: "test", durationMs: Date.now() - startedAt, reason: `HTTP ${response.status}` }); throw apiError(response, body); }
   const text = outputText(body); await record(body.usage, cfg.model, false, { operation: "test", durationMs: Date.now() - startedAt });
-  return { ok: true, provider: "openai", model: body.model || cfg.model, response: text, durationMs: Date.now() - startedAt, usage: body.usage || {} };
+  return { ok: true, provider: "openai", model: body.model || cfg.model, response: text, durationMs: Date.now() - startedAt, usage: body.usage || {}, promptPreview: { operation: "roteiros.test", provider: "openai", model: body.model || cfg.model, instructions: "", input: "Responda somente OK.", variables: {}, attempt: 1, status: "success" } };
 }
 
 export async function callOpenAi(settings, { instructions, input, schema, operation = "generate" }, signal, environment = process.env) {

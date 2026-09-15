@@ -240,6 +240,48 @@ export function saveRoteirosState(state: RoteirosState) {
 
 export type AiRequestOptions = { signal?: AbortSignal; timeoutMs?: number };
 
+export type AiPromptSnapshot = {
+  operation: string;
+  provider: string;
+  model: string | null;
+  instructions: string;
+  input: string;
+  variables: Record<string, unknown>;
+  attempt: number;
+  sentAt: string;
+  durationMs: number | null;
+  usage: Record<string, unknown> | null;
+  status: string;
+  error: string | null;
+};
+
+export type AiPromptCatalogEntry = {
+  id: string;
+  label: string;
+  button: string;
+  endpoint: string;
+  promptKind: "technical" | "none" | "structured";
+  description: string;
+  editable: boolean;
+  variables: string[];
+  promptVersion: "default" | "custom";
+  customPrompt: string;
+  lastExecution: AiPromptSnapshot | null;
+  executions: AiPromptSnapshot[];
+};
+
+export async function loadAiPromptCatalog() {
+  return aiRequest<{ version: number; operations: AiPromptCatalogEntry[] }>("prompts", undefined, "GET");
+}
+
+export async function saveAiPromptOverride(operation: string, prompt: string) {
+  return aiRequest<{ operation: string; prompt: string; version: string }>(`prompts/${encodeURIComponent(operation)}`, { prompt }, "PUT");
+}
+
+export async function resetAiPromptOverride(operation: string) {
+  return aiRequest<{ version: number; operations: AiPromptCatalogEntry[] }>(`prompts/${encodeURIComponent(operation)}/reset`, undefined, "POST");
+}
+
 export async function aiRequest<T>(path: string, body?: unknown, method = "POST", options: AiRequestOptions = {}): Promise<T> {
   const controller = new AbortController();
   const timeoutMs = Math.max(5_000, options.timeoutMs ?? 90_000);

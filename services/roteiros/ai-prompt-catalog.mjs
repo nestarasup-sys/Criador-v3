@@ -17,12 +17,17 @@ const entries = [
 
 const entryById = new Map(entries.map((entry) => [entry.id, entry]));
 
+export function normalizeAiPromptOperation(operation) {
+  const value = String(operation || "");
+  return value.startsWith("roteiros.") ? value : `roteiros.${value}`;
+}
+
 export function listAiPromptCatalog() {
   return entries.map((entry) => ({ ...entry, variables: [...entry.variables] }));
 }
 
 export function hasAiPromptOperation(operation) {
-  return entryById.has(String(operation));
+  return entryById.has(normalizeAiPromptOperation(operation));
 }
 
 export function normalizeAiPromptOverrides(value) {
@@ -37,7 +42,7 @@ export function normalizeAiPromptOverrides(value) {
 }
 
 export function validateAiPromptOverride(operation, value) {
-  const entry = entryById.get(String(operation));
+  const entry = entryById.get(normalizeAiPromptOperation(operation));
   if (!entry) throw Object.assign(new Error("Operação de IA desconhecida."), { status: 404, code: "AI_PROMPT_UNKNOWN_OPERATION" });
   if (!entry.editable) throw Object.assign(new Error("Esta operação não possui prompt editável."), { status: 422, code: "AI_PROMPT_NOT_EDITABLE" });
   if (typeof value !== "string") throw Object.assign(new Error("O prompt precisa ser texto."), { status: 422, code: "AI_PROMPT_INVALID" });
@@ -49,14 +54,14 @@ export function validateAiPromptOverride(operation, value) {
 }
 
 export function applyAiPromptOverride(prompt, operation, overrides = {}) {
-  const custom = normalizeAiPromptOverrides(overrides)[String(operation)];
+  const custom = normalizeAiPromptOverrides(overrides)[normalizeAiPromptOperation(operation)];
   if (!custom) return String(prompt);
   return `<INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n${custom}\n</INSTRUCOES_PERSONALIZADAS_DA_OPERACAO>\n\n${String(prompt)}`;
 }
 
 export function createAiPromptSnapshot({ operation, provider, model, instructions = "", input = "", variables = {}, attempt = 1, status = "sent", error = null, usage = null, durationMs = null, sentAt = new Date().toISOString() }) {
   return {
-    operation: String(operation),
+    operation: normalizeAiPromptOperation(operation),
     provider: String(provider || "unknown"),
     model: model ? String(model) : null,
     instructions: String(instructions || ""),

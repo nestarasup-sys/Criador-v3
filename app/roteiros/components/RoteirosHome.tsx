@@ -11,9 +11,10 @@ import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../../shared/Ny
 import type { GlobalRule, NarrativeProfile, PremiumCharacter, RoteirosState, ScriptProject } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
 import RecoveryBanner from "./RecoveryBanner";
+import PromptSettingsV2 from "./PromptSettingsV2";
 import styles from "../roteiros.module.css";
 
-type HomeTab = "scripts" | "profiles" | "settings";
+type HomeTab = "scripts" | "profiles" | "settings" | "prompt-v2";
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
 type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
 
@@ -62,6 +63,7 @@ function Header({ tab, setTab, saveStatus, pcAvailable, saveNow }: { tab: HomeTa
         <button className={tab === "scripts" ? styles.active : ""} onClick={() => setTab("scripts")}><span>▤</span> Meus roteiros</button>
         <button className={tab === "profiles" ? styles.active : ""} onClick={() => setTab("profiles")}><span>♙</span> Fichas dos personagens</button>
         <button className={tab === "settings" ? styles.active : ""} onClick={() => setTab("settings")}><span>⚙</span> IA e regras</button>
+        <button className={tab === "prompt-v2" ? styles.active : ""} onClick={() => setTab("prompt-v2")}><span>⌕</span> Configurações v2</button>
         <div className={styles.navHint}><span>✦</span><div><strong>Nymi Gacha</strong><small>Histórias organizadas e salvas no seu PC.</small></div></div>
       </nav>
     </>
@@ -313,5 +315,5 @@ export default function RoteirosHome() {
   const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveSnapshot, saveNow, reload } = useRoteirosData();
   const [tab, setTab] = useState<HomeTab>("scripts");
   if (!ready || !state) return <div className={styles.loadingPage}><span>✦</span><strong>Abrindo Roteiros…</strong></div>;
-  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} /><RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} saveSnapshot={saveSnapshot} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} pcAvailable={pcAvailable} onReload={reload} />}</div>;
+  return <div className={styles.roteirosShell}><Header tab={tab} setTab={setTab} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} /><RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />{tab === "scripts" && <ScriptList state={state} characters={characters} updateState={updateState} saveSnapshot={saveSnapshot} />}{tab === "profiles" && <ProfilesPage state={state} characters={characters} updateState={updateState} />}{tab === "settings" && <SettingsPage state={state} updateState={updateState} pcAvailable={pcAvailable} onReload={reload} />}{tab === "prompt-v2" && <PromptSettingsV2 pcAvailable={pcAvailable} />}</div>;
 }

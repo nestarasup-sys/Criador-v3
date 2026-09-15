@@ -1379,6 +1379,30 @@
 .backupList article>div { min-width:0; display:grid; gap:3px; }
 .backupList strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#443852; font-size:12px; }
 .backupList small { color:#8b7e91; font-size:11px; }
+.aiWarning { margin:16px 22px 0; padding:12px 14px; border:1px solid #e9c36b; border-radius:12px; background:#fff8e8; color:#76591d; font-size:13px; }
+.promptCatalogLayout { display:grid; grid-template-columns:minmax(220px,280px) minmax(0,1fr); gap:18px; margin:18px 22px 0; align-items:start; }
+.promptOperationList, .promptDetail { min-width:0; padding:16px; border:1px solid #e8e0ec; border-radius:18px; background:#fff; box-shadow:0 10px 30px rgba(41,29,75,.04); }
+.promptOperationList { display:grid; gap:8px; position:sticky; top:16px; }
+.promptOperationList input { width:100%; }
+.promptOperationList button { display:grid; gap:4px; text-align:left; padding:11px 12px; border:1px solid #eee8f1; border-radius:12px; background:#fcfbfd; color:#443852; cursor:pointer; }
+.promptOperationList button:hover, .promptOperationList button.active { border-color:#7654d9; background:#f3efff; }
+.promptOperationList button small { color:#8b7e91; font-size:11px; }
+.promptDetail { display:grid; gap:14px; }
+.promptDetailHeader { display:flex; justify-content:space-between; gap:18px; align-items:flex-start; }
+.promptDetailHeader h2 { margin:4px 0; color:#30273a; }
+.promptDetailHeader p { margin:0; color:#786c80; }
+.promptBadge, .promptBadgeCustom { flex:0 0 auto; padding:6px 9px; border-radius:999px; background:#eef8f0; color:#247346; font-size:10px; font-weight:800; }
+.promptBadgeCustom { background:#fff1d9; color:#8a5b13; }
+.promptMeta { display:flex; flex-wrap:wrap; gap:8px; padding:12px; border:1px solid #eee8f1; border-radius:12px; background:#fcfbfd; color:#6f6175; font-size:12px; }
+.promptEditorCard { min-width:0; padding:15px; border:1px solid #e8e0ec; border-radius:14px; background:#fff; }
+.promptEditorCard h3 { margin:0 0 5px; color:#443852; }
+.promptEditorCard p { color:#786c80; font-size:12px; line-height:1.5; }
+.promptEditorCard textarea { width:100%; min-height:150px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:12px; line-height:1.5; }
+.promptEditorCard summary { cursor:pointer; color:#5542a5; font-weight:800; }
+.promptExecutionRow { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #f0ebf3; color:#6f6175; font-size:12px; }
+.promptExecutionRow strong { color:#443852; }
+.promptExecutionRow span { flex:1; }
+@media (max-width:780px) { .promptCatalogLayout { grid-template-columns:1fr; margin:14px 12px 0; } .promptOperationList { position:static; } .promptDetailHeader { flex-direction:column; } .promptExecutionRow { align-items:flex-start; flex-wrap:wrap; } }
 @media (max-width:700px) {
   .recoveryBanner { align-items:flex-start; flex-wrap:wrap; margin:10px 12px 0; }
   .recoveryActions { width:100%; padding-left:48px; }
