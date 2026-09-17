@@ -120,7 +120,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
     const number = String(index + 1).padStart(2, "0");
     const folder = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${exportPathSegment(script.title, "roteiro")}`;
-    const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Primeira reação em grupo no ${formatSceneEnd(section.firstGroupReactionSeconds)}`, `Descrição: ${section.description}`];
+    const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Duração total do vídeo: ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Primeira reação em grupo no ${formatSceneEnd(section.firstGroupReactionSeconds)}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought"].includes(block.type));
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
