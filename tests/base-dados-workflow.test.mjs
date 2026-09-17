@@ -89,7 +89,7 @@ test("recupera rascunhos locais sem ressuscitar vídeos excluídos", async () =>
 test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSeconds", async () => {
   const { loaded, root } = await bundled("app/roteiros/base-dados-import.ts");
   try {
-    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, createdAt: "", updatedAt: "" }];
+    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 25, createdAt: "", updatedAt: "" }];
     const characters = [{ id: "char-01", name: "Duque", model: "masculino", photoUrl: undefined, updatedAt: "" }];
     const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", englishText: "Hello", startAt: 2 }] };
     const validation = loaded.validateImportableScript(valid, videos, characters);
