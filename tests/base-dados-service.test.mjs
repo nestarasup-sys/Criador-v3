@@ -96,6 +96,37 @@ test("mantém descrição e tempo depois de reiniciar o serviço local", async (
   }
 });
 
+test("preserva campos omitidos e recusa uma gravação com revisão antiga", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-revision-"));
+  try {
+    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
+    const service = createBaseDadosService(root);
+    await service.init();
+    const uploaded = responseCapture();
+    await service.handle(request("POST", "/base-dados/videos", Buffer.from([1, 2, 3]), {
+      "content-type": "video/mp4",
+      "x-gacha-meta": encodeURIComponent(JSON.stringify({ name: "revision.mp4", durationSeconds: 12 })),
+    }), uploaded, new URL("http://local/base-dados/videos"), headers);
+    const video = JSON.parse(uploaded.capture.body).video;
+
+    const first = responseCapture();
+    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
+    const firstResult = JSON.parse(first.capture.body);
+    assert.equal(firstResult.video.metadataRevision, 1);
+
+    const partial = responseCapture();
+    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ sceneEndSeconds: 6 })), { "content-type": "application/json" }), partial, new URL(`http://local/base-dados/videos/${video.id}`), headers);
+    assert.equal(JSON.parse(partial.capture.body).video.description, "Texto confirmado");
+    assert.equal(JSON.parse(partial.capture.body).video.firstGroupReactionSeconds, 2);
+
+    await assert.rejects(
+      service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto antigo", sceneEndSeconds: 7, expectedRevision: 0 })), { "content-type": "application/json" }), responseCapture(), new URL(`http://local/base-dados/videos/${video.id}`), headers),
+      (error) => error?.code === "STALE_BASE_VIDEO_REVISION" && error.status === 409,
+    );
+    assert.equal(service.getVideo(video.id).description, "Texto confirmado");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente", async () => {
   const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-integrity-"));
   try {
