@@ -27,3 +27,10 @@ export type BaseDadosState = {
   videos: BaseDadosVideo[];
   updatedAt: string;
 };
+
+export type BaseDadosDraftState = {
+  app: "NYMI_BASE_DADOS_DRAFTS_V1";
+  version: 1;
+  videos: BaseDadosVideo[];
+  updatedAt: string;
+};

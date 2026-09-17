@@ -1,7 +1,7 @@
 import { LOCAL_DATA_URL, localDataFetch } from "../lib/local-data-client";
 import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
-import type { BaseDadosState, BaseDadosVideo } from "./types";
+import type { BaseDadosDraftState, BaseDadosState, BaseDadosVideo } from "./types";
 
 function metadata(value: unknown) {
   return { "X-Gacha-Meta": encodeURIComponent(JSON.stringify(value)) };
@@ -59,6 +59,31 @@ export async function removeBaseDadosVideo(id: string) {
 export async function openBaseDadosFolder() {
   const result = await request("/base-dados/open-folder", { method: "POST" });
   return String(result.folder || "dados-locais-premium/base-de-dados");
+}
+
+export async function loadBaseDadosDrafts() {
+  const result = await request("/base-dados/drafts/state");
+  return result as unknown as BaseDadosDraftState;
+}
+
+export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
+  const path = `${LOCAL_DATA_URL}/base-dados/drafts/videos/${encodeURIComponent(video.id)}`;
+  return `${path}?v=${encodeURIComponent(video.updatedAt)}`;
+}
+
+export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds">) {
+  const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
+  return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
+}
+
+export async function sendBaseDadosDraft(id: string) {
+  const result = await request(`/base-dados/drafts/${encodeURIComponent(id)}/send`, { method: "POST" });
+  return result as unknown as { duplicate: boolean; video: BaseDadosVideo; state: BaseDadosDraftState };
+}
+
+export async function openBaseDadosDraftsFolder() {
+  const result = await request("/base-dados/drafts/open-folder", { method: "POST" });
+  return String(result.folder || "dados-locais-premium/base-de-dados/rascunhos");
 }
 
 export function downloadText(fileName: string, content: string, type = "text/plain;charset=utf-8") {
