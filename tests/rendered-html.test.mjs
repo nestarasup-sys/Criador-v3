@@ -1097,6 +1097,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /contextScope: "general-context"/);
   assert.match(editor, /Melhorar descrição do vídeo/);
   assert.match(editor, /Melhorar contexto geral/);
+  assert.match(editor, /Primeira reação em grupo no: \$\{formatSceneEnd\(section\.firstGroupReactionSeconds\)\}/);
+  assert.match(editor, /firstGroupReactionSeconds: section\.firstGroupReactionSeconds/);
+  assert.match(editor, /firstGroupReactionSeconds: sourceVideo\.firstGroupReactionSeconds/);
   assert.match(blocks, /aiEnabled/);
   assert.match(blocks, /onMoveBlock/);
   assert.match(blocks, /onDuplicateBlock/);
