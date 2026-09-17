@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { createBaseDadosService } from "../services/base-dados/service.mjs";
+import { createDraftsService } from "../services/base-dados/drafts-service.mjs";
 import { isBaseVideoReferencedByScripts } from "../services/base-dados/references.mjs";
 
 test("detecta referências da Base dentro do estado separado de Roteiros", () => {
@@ -180,4 +181,40 @@ test("serializa importações concorrentes para não reutilizar o mesmo número 
     await rm(root, { recursive: true, force: true });
     await rm(sourceRoot, { recursive: true, force: true });
   }
+});
+
+test("rascunhos detectam vídeos manuais, preservam metadados e enviam para a próxima sequência", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-drafts-"));
+  try {
+    const baseRoot = join(root, "base-de-dados");
+    const base = createBaseDadosService(baseRoot);
+    await base.init();
+    await base.importFile(join(root, "seed.mp4"), { name: "seed.mp4", contentType: "video/mp4" }).catch(async () => {
+      await writeFile(join(root, "seed.mp4"), Buffer.from([1, 2, 3, 4]));
+      return base.importFile(join(root, "seed.mp4"), { name: "seed.mp4", contentType: "video/mp4" });
+    });
+    const draftsRoot = join(baseRoot, "rascunhos");
+    await mkdir(join(draftsRoot, "videos"), { recursive: true });
+    await writeFile(join(draftsRoot, "videos", "cena-final.mp4"), Buffer.from([9, 8, 7, 6]));
+    const drafts = createDraftsService(draftsRoot, base);
+    await drafts.init();
+    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
+    const listed = responseCapture();
+    await drafts.handle(request("GET", "/base-dados/drafts/state"), listed, new URL("http://local/base-dados/drafts/state"), headers);
+    const listedState = JSON.parse(listed.capture.body);
+    assert.equal(listedState.videos.length, 1);
+    const draft = listedState.videos[0];
+
+    const patched = responseCapture();
+    await drafts.handle(request("PATCH", `/base-dados/drafts/videos/${draft.id}`, Buffer.from(JSON.stringify({ description: "A cena termina em silêncio", sceneEndSeconds: 8 })), { "content-type": "application/json" }), patched, new URL(`http://local/base-dados/drafts/videos/${draft.id}`), headers);
+    assert.equal(JSON.parse(patched.capture.body).video.description, "A cena termina em silêncio");
+
+    const sent = responseCapture();
+    await drafts.handle(request("POST", `/base-dados/drafts/${draft.id}/send`), sent, new URL(`http://local/base-dados/drafts/${draft.id}/send`), headers);
+    const sentResult = JSON.parse(sent.capture.body);
+    assert.equal(sentResult.duplicate, false);
+    assert.equal(sentResult.video.sequence, 2);
+    await assert.rejects(stat(join(draftsRoot, "videos", "cena-final.mp4")));
+    assert.equal((await base.getVideo(sentResult.video.id)).description, "A cena termina em silêncio");
+  } finally { await rm(root, { recursive: true, force: true }); }
 });
