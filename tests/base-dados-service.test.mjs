@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -113,6 +113,7 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
     await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
     const firstResult = JSON.parse(first.capture.body);
     assert.equal(firstResult.video.metadataRevision, 1);
+    assert.ok((await readdir(join(root, "backups"))).some((name) => name.startsWith("state-") && name.endsWith(".json")));
 
     const partial = responseCapture();
     await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ sceneEndSeconds: 6 })), { "content-type": "application/json" }), partial, new URL(`http://local/base-dados/videos/${video.id}`), headers);
