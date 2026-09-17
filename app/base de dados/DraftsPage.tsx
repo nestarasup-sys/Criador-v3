@@ -26,13 +26,15 @@ export default function DraftsPage() {
   const dirtyIds = useRef(new Set<string>());
   const revisions = useRef<Record<string, number>>({});
   const saveJobs = useRef(new Map<string, Promise<boolean>>());
+  const saveDraftRef = useRef<((video: BaseDadosVideo, value: DraftValue) => Promise<boolean>) | null>(null);
 
   const refresh = async () => {
     for (const id of dirtyIds.current) {
       const video = database?.videos.find((item) => item.id === id);
       const value = currentDrafts.current[id];
       if (!video || !value) continue;
-      if (!(await save(video, value))) return;
+      const saveDraft = saveDraftRef.current;
+      if (!saveDraft || !(await saveDraft(video, value))) return;
     }
     setLoading(true);
     try {
@@ -81,6 +83,7 @@ export default function DraftsPage() {
     }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
   }
+  saveDraftRef.current = save;
   const enqueueSave = (video: BaseDadosVideo, value: DraftValue, revision: number) => {
     const previous = saveJobs.current.get(video.id) || Promise.resolve(true);
     const job = previous.catch(() => false).then(() => save(video, value, revision));
