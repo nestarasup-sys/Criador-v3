@@ -276,7 +276,13 @@ export default function BaseDadosPage() {
     saveControllersRef.current.get(video.id)?.abort();
     setBusy(`delete:${video.id}`); setMessage("");
     try {
-      await saveJobsRef.current.get(video.id)?.catch(() => undefined);
+      const pendingSave = saveJobsRef.current.get(video.id);
+      if (pendingSave) {
+        // A falha/queda do servidor não pode deixar a exclusão presa para
+        // sempre. O PATCH já foi abortado; se o servidor ainda o concluir,
+        // ele apenas encontrará o registro removido e não recriará dados.
+        await Promise.race([pendingSave.catch(() => undefined), new Promise<void>((resolve) => window.setTimeout(resolve, 1200))]);
+      }
       const result = await removeBaseDadosVideo(video.id);
       databaseRef.current = result.state;
       setDatabase(result.state);
