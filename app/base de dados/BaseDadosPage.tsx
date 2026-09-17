@@ -501,8 +501,8 @@ export default function BaseDadosPage() {
         <div className={styles.actionToolbarGroup}>
           <button className={`${styles.toolbarButton} ${styles.toolbarPrimary}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button>
           <button className={`${styles.toolbarButton} ${styles.toolbarNeutral}`} disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Abrir pasta</button>
-          <button className={`${styles.toolbarButton} ${styles.toolbarPurple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote para IA</button>
-          <button className={`${styles.toolbarButton} ${styles.toolbarGreen}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarPurple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote completo para IA</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarGreen}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
           <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy) || !importedScripts.length} onClick={() => setImportedManagerOpen(true)}>♙ Roteiros importados</button>
           <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
           <Link className={`${styles.toolbarButton} ${styles.toolbarDraft}`} href="/base%20de%20dados/rascunhos">Área de rascunho</Link>
