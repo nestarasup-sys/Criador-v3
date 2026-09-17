@@ -1844,7 +1844,13 @@ const server = createServer({
     sendJson(response, request, 403, { error: "Origem não autorizada" });
     return;
   }
-  const url = new URL(request.url, `http://${HOST}:${PORT}`);
+  let url;
+  try {
+    url = new URL(request.url, `http://${HOST}:${PORT}`);
+  } catch (error) {
+    sendRouteError(response, request, Object.assign(new Error("URL inválida."), { status: 400, code: "INVALID_URL", cause: error }));
+    return;
+  }
   try {
     if (!isPublicRoute(request, url)) assertSession(request, SESSION_TOKEN);
   } catch (error) {
