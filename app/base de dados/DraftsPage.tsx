@@ -9,6 +9,10 @@ import styles from "./base-de-dados.module.css";
 
 type DraftValue = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds: string };
 
+function draftSignature(value: DraftValue) {
+  return `${value.description}\u0000${value.sceneEndSeconds}\u0000${value.firstGroupReactionSeconds}`;
+}
+
 export default function DraftsPage() {
   const [database, setDatabase] = useState<BaseDadosDraftState | null>(null);
   const [drafts, setDrafts] = useState<Record<string, DraftValue>>({});
@@ -19,8 +23,15 @@ export default function DraftsPage() {
   const [message, setMessage] = useState("");
   const timers = useRef(new Map<string, number>());
   const currentDrafts = useRef(drafts);
+  const dirtyIds = useRef(new Set<string>());
 
   const refresh = async () => {
+    for (const id of dirtyIds.current) {
+      const video = database?.videos.find((item) => item.id === id);
+      const value = currentDrafts.current[id];
+      if (!video || !value) continue;
+      if (!(await save(video, value))) return;
+    }
     setLoading(true);
     try {
       const state = await loadBaseDadosDrafts();
@@ -45,11 +56,16 @@ export default function DraftsPage() {
     const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return false; }
-    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds }); return true; }
+    try {
+      await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds });
+      if (draftSignature(currentDrafts.current[video.id] || value) === draftSignature(value)) dirtyIds.current.delete(video.id);
+      return true;
+    }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
     const next = { ...currentDrafts.current, [video.id]: { ...valueFor(video), ...patch } };
+    dirtyIds.current.add(video.id);
     currentDrafts.current = next; setDrafts(next);
     const previous = timers.current.get(video.id); if (previous !== undefined) window.clearTimeout(previous);
     timers.current.set(video.id, window.setTimeout(() => { void save(video, next[video.id]); }, 700));
