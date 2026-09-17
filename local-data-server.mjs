@@ -8,6 +8,7 @@ import JSZip from "jszip";
 import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
+import { createDraftsService } from "./services/base-dados/drafts-service.mjs";
 import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
@@ -170,6 +171,7 @@ const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
 const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
 const baseDadosService = createBaseDadosService(BASE_DADOS_ROOT);
+const draftsService = createDraftsService(join(BASE_DADOS_ROOT, "rascunhos"), baseDadosService);
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
   "http://127.0.0.1:3000",
@@ -338,6 +340,7 @@ function isPublicRoute(request, url) {
   return url.pathname.startsWith("/files/")
     || url.pathname.startsWith("/roteiros/videos/")
     || url.pathname.startsWith("/base-dados/videos/")
+    || url.pathname.startsWith("/base-dados/drafts/videos/")
     || url.pathname.startsWith("/roteiros/backgrounds/")
     || url.pathname.startsWith("/video-maker/characters/")
     || url.pathname.startsWith("/video-maker/tiktoks/");
@@ -374,6 +377,7 @@ async function ensureFolders() {
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
     mkdir(BASE_DADOS_ROOT, { recursive: true }),
+    mkdir(join(BASE_DADOS_ROOT, "rascunhos", "videos"), { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
     mkdir(roteiroVideoExportRoot(), { recursive: true }),
     mkdir(roteiroCharacterExportRoot(), { recursive: true }),
@@ -843,6 +847,7 @@ async function route(request, response) {
       return;
     }
   }
+  if (await draftsService.handle(request, response, url, corsHeaders)) return;
   if (await baseDadosService.handle(request, response, url, corsHeaders)) return;
   const roteiroScriptMatch = url.pathname.match(/^\/roteiros\/scripts\/([a-zA-Z0-9_-]{1,160})$/);
   if (roteiroScriptMatch && request.method === "DELETE") {
@@ -1824,7 +1829,7 @@ async function loadLocalEnvironment() {
 }
 
 await loadLocalEnvironment();
-await Promise.all([loadState(), roteirosService.init(), baseDadosService.init()]);
+await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
 
 const server = createServer({
   requestTimeout: 120_000,
