@@ -1100,6 +1100,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /Primeira reação em grupo no: \$\{formatSceneEnd\(section\.firstGroupReactionSeconds\)\}/);
   assert.match(editor, /firstGroupReactionSeconds: section\.firstGroupReactionSeconds/);
   assert.match(editor, /firstGroupReactionSeconds: sourceVideo\.firstGroupReactionSeconds/);
+  assert.match(home, /if \(copy\.opening\) copy\.opening = \{ \.\.\.copy\.opening, id: createId\(\)/);
   assert.match(blocks, /aiEnabled/);
   assert.match(blocks, /onMoveBlock/);
   assert.match(blocks, /onDuplicateBlock/);
