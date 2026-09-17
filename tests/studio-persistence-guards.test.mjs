@@ -27,6 +27,12 @@ function installStorage({ failWrites = false } = {}) {
   return values;
 }
 
+function installStorageWithRemovalFailure() {
+  const values = installStorage();
+  globalThis.localStorage.removeItem = () => { throw new Error("storage blocked"); };
+  return values;
+}
+
 test("tombstone de exclusão do Studio confirma quando foi persistido", async () => {
   const { root, storage } = await loadStorage();
   const values = installStorage();
@@ -46,4 +52,35 @@ test("falha ao persistir tombstone impede uma exclusão insegura", async () => {
     console.error = originalError;
   }
   await rm(root, { recursive: true, force: true });
+});
+
+test("falha ao limpar tombstone não transforma save confirmado em erro", async () => {
+  const { root, storage } = await loadStorage();
+  installStorageWithRemovalFailure();
+  const originalWarn = console.warn;
+  console.warn = () => undefined;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    if (String(url).endsWith("/session")) return new Response(JSON.stringify({ token: "test-session" }), { status: 200 });
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  };
+  try {
+    const result = await storage.saveStudios([{
+      id: "studio-1",
+      name: "Studio",
+      rosterIds: [],
+      background: null,
+      characters: [],
+      objects: [],
+      bubbles: [],
+      narrators: [],
+      createdAt: "2026-09-17T10:00:00.000Z",
+      updatedAt: "2026-09-17T10:00:00.000Z",
+    }]);
+    assert.equal(result[0].id, "studio-1");
+  } finally {
+    console.warn = originalWarn;
+    globalThis.fetch = originalFetch;
+    await rm(root, { recursive: true, force: true });
+  }
 });

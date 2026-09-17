@@ -140,7 +140,16 @@ async function saveSnapshotToPc(studios: Studio[]) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(synchronized),
   });
-  localStorage.removeItem(STUDIO_DELETION_KEY);
+  // A gravação no PC já foi confirmada. A remoção do tombstone é apenas
+  // limpeza de checkpoint e não pode transformar um save bem-sucedido em
+  // erro (por exemplo, quando o navegador bloqueia localStorage ou está sem
+  // quota). Se falhar, o tombstone permanece e será reaplicado no próximo
+  // merge, mantendo a exclusão segura.
+  try {
+    localStorage.removeItem(STUDIO_DELETION_KEY);
+  } catch (error) {
+    console.warn("[studio] Não foi possível limpar o tombstone do navegador após salvar no PC", error);
+  }
   mirrorStudios(synchronized);
   return synchronized;
 }
