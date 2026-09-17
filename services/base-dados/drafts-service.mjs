@@ -76,8 +76,10 @@ export function createDraftsService(root, baseDadosService) {
   async function syncFiles() {
     await mkdir(videosRoot, { recursive: true });
     const entries = await readdir(videosRoot, { withFileTypes: true });
+    entries.sort((left, right) => left.name.localeCompare(right.name));
     const currentByHash = new Map(state.videos.filter((item) => item.contentHash).map((item) => [item.contentHash, item]));
     const currentByName = new Map(state.videos.map((item) => [item.fileName, item]));
+    const usedIds = new Set();
     const discovered = [];
     for (const entry of entries) {
       if (!entry.isFile() || !EXTENSIONS.has(extname(entry.name).toLowerCase()) || entry.name.startsWith(".")) continue;
@@ -85,10 +87,20 @@ export function createDraftsService(root, baseDadosService) {
       const info = await stat(filePath);
       if (!info.size) continue;
       const contentHash = await hashFile(filePath);
-      const previous = currentByHash.get(contentHash) || currentByName.get(entry.name);
+      const candidate = currentByName.get(entry.name) || currentByHash.get(contentHash);
+      const previous = candidate && !usedIds.has(candidate.id) ? candidate : null;
+      const generatedId = `draft-${createHash("sha256").update(`${contentHash}:${entry.name}`).digest("hex").slice(0, 24)}`;
+      const id = previous?.id || generatedId;
+      usedIds.add(id);
       const now = previous?.createdAt || new Date().toISOString();
+      const unchanged = Boolean(previous
+        && previous.fileName === entry.name
+        && previous.contentHash === contentHash
+        && previous.size === info.size
+        && previous.fileAvailable !== false);
       discovered.push({
         ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0 }),
+        id,
         fileName: entry.name,
         originalName: previous?.originalName || entry.name,
         storedPath: `base-de-dados/rascunhos/videos/${entry.name}`,
@@ -99,14 +111,17 @@ export function createDraftsService(root, baseDadosService) {
         sceneEndSeconds: Number(previous?.sceneEndSeconds) >= 0 ? Number(previous.sceneEndSeconds) : 0,
         firstGroupReactionSeconds: Number(previous?.firstGroupReactionSeconds) >= 0 ? Number(previous.firstGroupReactionSeconds) : 0,
         createdAt: now,
-        updatedAt: new Date().toISOString(),
+        updatedAt: unchanged ? previous.updatedAt : new Date().toISOString(),
         fileAvailable: true,
       });
     }
     const foundNames = new Set(discovered.map((item) => item.fileName));
     const missing = state.videos.filter((item) => !foundNames.has(item.fileName)).map((item) => ({ ...item, fileAvailable: false }));
-    state.videos = [...discovered, ...missing];
-    await persist();
+    const nextVideos = [...discovered, ...missing];
+    if (JSON.stringify(nextVideos) !== JSON.stringify(state.videos)) {
+      state.videos = nextVideos;
+      await persist();
+    }
     return state;
   }
 
