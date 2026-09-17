@@ -1,0 +1,1176 @@
+{
+  "createdAt": "2026-08-25T12:16:30.995Z",
+  "backupPath": "C:\\TRABALHO 2\\NYMI GACHA\\dados-locais-premium\\roteiros\\backups\\roteiros-antes-showcase-v16-2026-08-25T12-16-30-994Z.json",
+  "model": "gpt-5.6-luna",
+  "visibleGenerationsAuthorized": 15,
+  "visibleGenerationsCompleted": 15,
+  "rawApiRequests": 27,
+  "usage": {
+    "inputTokens": 141635,
+    "cachedInputTokens": 0,
+    "outputTokens": 24154,
+    "totalTokens": 165789
+  },
+  "scripts": [
+    {
+      "id": "roteiro-teste-b02e3d82-4f5a-41a0-b60b-01275b0db35c",
+      "title": "TESTE 1 — DRAMA POLÍTICO",
+      "cast": [
+        "Rei - Lucien",
+        "Duque - Alexander",
+        "Capitão - Elias Ward",
+        "Princepe estrangeiro - Cassian",
+        "Princesa - Eleanor"
+      ],
+      "sections": [
+        {
+          "index": 1,
+          "id": "tiktok-1-3e5424be-4072-4dc1-93c9-0e9d839124d6",
+          "title": "A aliança devolvida",
+          "description": "No vídeo, FYN devolve a Alexander o anel de noivado diante de uma mesa de conselho e diz: ‘Não vou me casar com você’. Alexander permanece imóvel e FYN sai da sala.",
+          "timeline": "past",
+          "durationMs": 22727,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 4273,
+            "cachedInputTokens": 0,
+            "outputTokens": 1561,
+            "totalTokens": 5834,
+            "durationMs": 22716,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "characterName": "Princesa - Eleanor",
+              "type": "speech",
+              "emotion": "abalada",
+              "text": "Alexander... ela devolveu o anel. E você não disse nada?",
+              "addresseeId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "replyToTargetId": null,
+              "dialogueAct": "ask",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "characterName": "Duque - Alexander",
+              "type": "speech",
+              "emotion": "contido",
+              "text": "Não havia muito a dizer diante de uma recusa tão clara.",
+              "addresseeId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "replyToTargetId": "bloco-1-a6cd5e24-cdf1-482b-ba16-6063f7f94b4b",
+              "dialogueAct": "answer",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+              "characterName": "Princepe estrangeiro - Cassian",
+              "type": "speech",
+              "emotion": "divertido",
+              "text": "Ainda assim, podia ter piscado. Por educação.",
+              "addresseeId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "replyToTargetId": "bloco-2-b3bb8de8-3656-43c4-8890-1e7c33a96f57",
+              "dialogueAct": "joke",
+              "certainty": "proposal"
+            },
+            {
+              "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "characterName": "Rei - Lucien",
+              "type": "speech",
+              "emotion": "frio",
+              "text": "Ela foi clara.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-d8d912e4-ece1-46f4-b5ba-ef177d8a077c",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+              "characterName": "Capitão - Elias Ward",
+              "type": "speech",
+              "emotion": "sério",
+              "text": "Clara sobre o casamento. Só.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-cd2393fc-a321-40fd-ac9e-134a0a9271ae",
+              "dialogueAct": "reflect",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "id": "tiktok-2-4a38a7df-677d-4302-a75b-993f59fe6cf1",
+          "title": "O portão aberto",
+          "description": "À noite, FYN encontra Elias Ward perto dos estábulos e pede que ele a deixe passar pelo portão. Elias olha para os guardas, abre o portão em silêncio e FYN parte a cavalo.",
+          "timeline": "past",
+          "durationMs": 10672,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 4640,
+            "cachedInputTokens": 0,
+            "outputTokens": 1184,
+            "totalTokens": 5824,
+            "durationMs": 10664,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "characterName": "Princesa - Eleanor",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "Ela pediu passagem... e você abriu.",
+              "addresseeId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "characterName": "Duque - Alexander",
+              "type": "speech",
+              "emotion": "contido",
+              "text": "Depois de olhar para os guardas. Isso não pareceu automático.",
+              "addresseeId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "replyToTargetId": "bloco-1-6d9cda74-f52e-46fa-93a9-a438e2c33432",
+              "dialogueAct": "challenge",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "characterName": "Rei - Lucien",
+              "type": "speech",
+              "emotion": "frio",
+              "text": "Ele poderia tê-la detido.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-30a5ed9b-fab0-4953-b2ec-de8c8a15151a",
+              "dialogueAct": "reflect",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+              "characterName": "Capitão - Elias Ward",
+              "type": "speech",
+              "emotion": "sério",
+              "text": "Ela pediu. Eu abri.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-19f23888-0366-4b26-9791-fa1fe6053eb9",
+              "dialogueAct": "answer",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "id": "tiktok-3-1166dd24-5800-48c1-bba7-0a56f62ec934",
+          "title": "O selo na carta",
+          "description": "Cassian mostra a FYN uma carta fechada com o selo real de Lucien. FYN examina o selo e diz que ele pode ter sido falsificado. Cassian guarda a carta sem responder.",
+          "timeline": "unspecified",
+          "durationMs": 11249,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 5589,
+            "cachedInputTokens": 0,
+            "outputTokens": 1334,
+            "totalTokens": 6923,
+            "durationMs": 11244,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "characterName": "Princesa - Eleanor",
+              "type": "speech",
+              "emotion": "inquieta",
+              "text": "Uma carta com o seu selo, Lucien.",
+              "addresseeId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "characterName": "Rei - Lucien",
+              "type": "speech",
+              "emotion": "contido",
+              "text": "Meu selo não prova que fui eu.",
+              "addresseeId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "replyToTargetId": "bloco-1-dbf8fc2c-8f9a-497b-bb1f-a84d76e82f54",
+              "dialogueAct": "deflect",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "characterName": "Duque - Alexander",
+              "type": "speech",
+              "emotion": "irônico",
+              "text": "Nem a suspeita de FYN prova que foi falsificado.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-ce04317b-8474-4186-aa6e-73d4899691b5",
+              "dialogueAct": "challenge",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+              "characterName": "Princepe estrangeiro - Cassian",
+              "type": "speech",
+              "emotion": "divertido",
+              "text": "Finalmente, alguém aprecia a dúvida.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-b9464234-2a39-4c27-8554-3e53525d6d32",
+              "dialogueAct": "joke",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+              "characterName": "Capitão - Elias Ward",
+              "type": "speech",
+              "emotion": "sério",
+              "text": "Ele guardou a carta sem responder.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-95475c60-341d-4a2f-ab69-5efaacc84b8d",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "id": "tiktok-4-d75536f9-5dc7-432e-bb73-01ac31837ae5",
+          "title": "O reencontro futuro",
+          "description": "Em uma gravação do futuro, Eleanor corre até FYN nos portões do palácio e a abraça. Lucien observa as duas de uma varanda, sem descer nem dizer nada.",
+          "timeline": "future",
+          "durationMs": 20484,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 15748,
+            "cachedInputTokens": 0,
+            "outputTokens": 1791,
+            "totalTokens": 17539,
+            "durationMs": 20477,
+            "requestCount": 3,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": true,
+            "riskScore": 6,
+            "issues": [],
+            "repairedTargetIds": [
+              "bloco-2-46153712-bb5b-4e09-8c6e-b2cdf561e264"
+            ]
+          },
+          "reactions": [
+            {
+              "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "characterName": "Princesa - Eleanor",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "Eu corri até ela?",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "characterName": "Duque - Alexander",
+              "type": "speech",
+              "emotion": "irônico",
+              "text": "E a abraçou. É uma recepção bastante clara.",
+              "addresseeId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "replyToTargetId": "bloco-1-6cf4338e-b4f4-4394-81a8-d4bee201ecc2",
+              "dialogueAct": "observe",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "characterName": "Rei - Lucien",
+              "type": "speech",
+              "emotion": "contido",
+              "text": "Eu não desci.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-46153712-bb5b-4e09-8c6e-b2cdf561e264",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "id": "tiktok-5-c40eb81a-7014-4886-a4f6-0caa99a0e2c2",
+          "title": "O tratado",
+          "description": "No futuro, FYN e Alexander assinam um tratado de paz na mesma mesa. Eles evitam se olhar. Cassian aparece atrás deles com um pequeno sorriso, enquanto Lucien encerra a cerimônia.",
+          "timeline": "future",
+          "durationMs": 23406,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 11000,
+            "cachedInputTokens": 0,
+            "outputTokens": 1531,
+            "totalTokens": 12531,
+            "durationMs": 23400,
+            "requestCount": 2,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": false,
+            "riskScore": 7,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "characterName": "Princesa - Eleanor",
+              "type": "speech",
+              "emotion": "inquieta",
+              "text": "Vocês dois assinaram um tratado.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+              "characterName": "Duque - Alexander",
+              "type": "speech",
+              "emotion": "contido",
+              "text": "Assinamos. Sem nos olhar.",
+              "addresseeId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+              "replyToTargetId": "bloco-1-c164b196-2740-4c3b-8ce3-f856040a662f",
+              "dialogueAct": "answer",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+              "characterName": "Rei - Lucien",
+              "type": "speech",
+              "emotion": "formal",
+              "text": "Eu encerrei a cerimônia.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-94221a5d-d313-4692-92fe-410c6e583627",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+              "characterName": "Capitão - Elias Ward",
+              "type": "speech",
+              "emotion": "atento",
+              "text": "Cassian estava sorrindo.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-486698bc-44de-4df0-9726-369c8d2755b5",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+              "characterName": "Princepe estrangeiro - Cassian",
+              "type": "speech",
+              "emotion": "divertido",
+              "text": "Não tirem conclusões de um sorriso.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-b1a9eac1-dec4-4e79-a721-ca8d3ef3437f",
+              "dialogueAct": "deflect",
+              "certainty": "inference"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roteiro-teste-0470719d-d4f2-4870-9079-2686ddfd6c6e",
+      "title": "TESTE 2 — FAMÍLIA E LEALDADE",
+      "cast": [
+        "THALIA",
+        "EDRICK",
+        "GARETH",
+        "AYLA",
+        "VARKAS"
+      ],
+      "sections": [
+        {
+          "index": 1,
+          "id": "tiktok-1-84b6e399-0ade-43c6-aa4c-eaeb3a28b47b",
+          "title": "A correia da armadura",
+          "description": "Thalia critica Edrick por chegar com a armadura mal presa. Quando ele se vira para buscar o elmo, ela ajusta discretamente a correia solta e se afasta antes que ele perceba.",
+          "timeline": "past",
+          "durationMs": 16493,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 4915,
+            "cachedInputTokens": 0,
+            "outputTokens": 1703,
+            "totalTokens": 6618,
+            "durationMs": 16489,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "characterName": "GARETH",
+              "type": "speech",
+              "emotion": "debochado",
+              "text": "Até criticando, você acaba cuidando dele. Patético.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": null,
+              "dialogueAct": "challenge",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "characterName": "THALIA",
+              "type": "speech",
+              "emotion": "irritada",
+              "text": "Cale-se. A correia estava solta, só isso.",
+              "addresseeId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "replyToTargetId": "bloco-1-3b9db620-9bca-4a9f-b72b-343ab79795aa",
+              "dialogueAct": "deflect",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "characterName": "EDRICK",
+              "type": "speech",
+              "emotion": "sereno",
+              "text": "Eu não havia percebido. Obrigado, Thalia.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": "bloco-2-7c712445-defb-44f5-9837-6482dda0e718",
+              "dialogueAct": "reassure",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "characterName": "AYLA",
+              "type": "speech",
+              "emotion": "curiosa",
+              "text": "Você percebeu rápido, Thalia.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": "bloco-3-48480d3e-8683-4d49-a129-543cda592a01",
+              "dialogueAct": "observe",
+              "certainty": "inference"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "id": "tiktok-2-dba3c747-3fef-45a0-8cad-80e180c9cd8f",
+          "title": "Não foi por dever",
+          "description": "Edrick diz a Thalia: ‘Eu voltei porque quis, não por dever’. Thalia evita encará-lo, responde que ele está atrasado e começa a falar sobre a patrulha.",
+          "timeline": "past",
+          "durationMs": 16672,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 5840,
+            "cachedInputTokens": 0,
+            "outputTokens": 1523,
+            "totalTokens": 7363,
+            "durationMs": 16668,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "characterName": "GARETH",
+              "type": "speech",
+              "emotion": "debochado",
+              "text": "Ele fala uma coisa, e você corre para a patrulha. Conveniente.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": null,
+              "dialogueAct": "challenge",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "characterName": "THALIA",
+              "type": "speech",
+              "emotion": "irritada",
+              "text": "Não lhe devo explicações, Gareth.",
+              "addresseeId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "replyToTargetId": "bloco-1-4d8ca50c-83ac-4845-98c5-f217abe634e7",
+              "dialogueAct": "deflect",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "characterName": "EDRICK",
+              "type": "speech",
+              "emotion": "sereno",
+              "text": "Ela respondeu sobre a patrulha. É o que importa agora.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-48b95f15-b9c7-443c-b094-82bd3277cbb9",
+              "dialogueAct": "support",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "characterName": "AYLA",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "Mas ele foi bastante direto com você.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": "bloco-3-0bfca546-682f-42bc-80ca-e8d8e5915c64",
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
+              "characterName": "VARKAS",
+              "type": "speech",
+              "emotion": "neutro",
+              "text": "Direto, sim. A resposta dela também foi.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-e33167bc-a113-48f6-9abb-32955d655d80",
+              "dialogueAct": "reflect",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "id": "tiktok-3-71e94b5e-a5b4-4e69-afcb-8585e5d29d75",
+          "title": "O insulto no salão",
+          "description": "Durante um jantar, Gareth chama Thalia de vergonha da família. Ayla ri por reflexo, mas para quando percebe que Thalia ficou em silêncio. Varkas continua em posição de guarda e Edrick fecha a mão sobre a mesa.",
+          "timeline": "past",
+          "durationMs": 9889,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 6569,
+            "cachedInputTokens": 0,
+            "outputTokens": 1035,
+            "totalTokens": 7604,
+            "durationMs": 9882,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "characterName": "GARETH",
+              "type": "speech",
+              "emotion": "satisfeito",
+              "text": "Pelo menos eu disse o que todos pensam.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "challenge",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "characterName": "THALIA",
+              "type": "speech",
+              "emotion": "fria",
+              "text": "Que comovente. Ainda tentando se justificar.",
+              "addresseeId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "replyToTargetId": "bloco-1-5fabf758-43a2-4b82-8d72-584b871686c3",
+              "dialogueAct": "challenge",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "characterName": "EDRICK",
+              "type": "speech",
+              "emotion": "firme",
+              "text": "Não há justificativa para humilhá-la.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-634d7b0d-9a15-4abf-ae2b-839b02bcbbb5",
+              "dialogueAct": "support",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "characterName": "AYLA",
+              "type": "speech",
+              "emotion": "constrangida",
+              "text": "Eu ri... e parei quando percebi o silêncio dela.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-27c0533c-a2c4-4c46-9747-7b904a9e915f",
+              "dialogueAct": "confess",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "id": "tiktok-4-1041ac7d-e49f-4d4a-971b-f6398d01854a",
+          "title": "A flecha no portão",
+          "description": "Varkas ordena que Thalia se afaste do portão. Antes que ela responda, uma flecha é disparada de fora e Varkas entra na frente dela. O vídeo corta no instante em que os dois caem no chão.",
+          "timeline": "unspecified",
+          "durationMs": 32249,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 20630,
+            "cachedInputTokens": 0,
+            "outputTokens": 2916,
+            "totalTokens": 23546,
+            "durationMs": 32244,
+            "requestCount": 3,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": true,
+            "riskScore": 6,
+            "issues": [],
+            "repairedTargetIds": [
+              "bloco-3-606b28b2-fad9-46e3-a615-5dd91dca1fd3",
+              "bloco-5-33a4c4cb-6750-4b10-ae64-4f2ce29e8075"
+            ]
+          },
+          "reactions": [
+            {
+              "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "characterName": "THALIA",
+              "type": "speech",
+              "emotion": "desconfiada",
+              "text": "Ele mandou que eu saísse. Então por que entrou na minha frente?",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "ask",
+              "certainty": "question"
+            },
+            {
+              "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "characterName": "GARETH",
+              "type": "speech",
+              "emotion": "debochado",
+              "text": "Talvez tenha sido só reflexo. Não transforme isso em devoção.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": "bloco-1-9e065e36-a12a-45a8-a815-c43d1e4965c9",
+              "dialogueAct": "deflect",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "characterName": "EDRICK",
+              "type": "speech",
+              "emotion": "firme",
+              "text": "Poupe a ironia, Gareth. Varkas se pôs na frente dela.",
+              "addresseeId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "replyToTargetId": "bloco-2-a2f6eedb-bb18-4629-b5c3-e14bbee75f7a",
+              "dialogueAct": "challenge",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "characterName": "AYLA",
+              "type": "speech",
+              "emotion": "insegura",
+              "text": "Varkas... você faria isso por qualquer pessoa?",
+              "addresseeId": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
+              "replyToTargetId": "bloco-3-606b28b2-fad9-46e3-a615-5dd91dca1fd3",
+              "dialogueAct": "ask",
+              "certainty": "question"
+            },
+            {
+              "characterId": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
+              "characterName": "VARKAS",
+              "type": "speech",
+              "emotion": "neutro",
+              "text": "Eu ajo conforme o dever exige. Não há motivo para transformar isso em outra coisa.",
+              "addresseeId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "replyToTargetId": "bloco-4-fe60ca60-148e-4b52-9bc6-08a14712f63c",
+              "dialogueAct": "answer",
+              "certainty": "inference"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "id": "tiktok-5-85957f2e-570f-49c5-b539-f06e59c5b40f",
+          "title": "O trono e a cadeira vazia",
+          "description": "Em uma cerimônia futura, Thalia recebe a coroa. Ao lado do trono existe uma cadeira vazia com o brasão de Edrick. Gareth, Ayla e Varkas aparecem entre os convidados, mas Edrick não é mostrado.",
+          "timeline": "future",
+          "durationMs": 20123,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 13295,
+            "cachedInputTokens": 0,
+            "outputTokens": 1738,
+            "totalTokens": 15033,
+            "durationMs": 20118,
+            "requestCount": 2,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": false,
+            "riskScore": 6,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "characterName": "THALIA",
+              "type": "speech",
+              "emotion": "defensiva",
+              "text": "Uma cadeira com o brasão dele. Que escolha teatral.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "deflect",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "characterName": "EDRICK",
+              "type": "speech",
+              "emotion": "sereno",
+              "text": "Meu brasão não responde por mim.",
+              "addresseeId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
+              "replyToTargetId": "bloco-1-742c4d0a-e974-4284-955d-786fdeb2731d",
+              "dialogueAct": "reflect",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "characterName": "GARETH",
+              "type": "speech",
+              "emotion": "debochado",
+              "text": "Até ausente, o cavaleiro ganha honrarias.",
+              "addresseeId": "777fc438-6582-4d58-b55a-534f8da50204",
+              "replyToTargetId": "bloco-2-78b94de9-1f7b-41b9-826a-8541796d5b96",
+              "dialogueAct": "challenge",
+              "certainty": "inference"
+            },
+            {
+              "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+              "characterName": "AYLA",
+              "type": "speech",
+              "emotion": "cautelosa",
+              "text": "Gareth, isso não explica por que ele não está ali.",
+              "addresseeId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+              "replyToTargetId": "bloco-3-4af334ab-5967-4ba0-90a6-07d72ce85050",
+              "dialogueAct": "challenge",
+              "certainty": "question"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "roteiro-teste-0f7b3344-f45f-4356-aa35-fd08af419187",
+      "title": "TESTE 3 — MISTÉRIO DO ARQUIVO",
+      "cast": [
+        "MILO",
+        "CAEL",
+        "ISOLDE",
+        "Katherine"
+      ],
+      "sections": [
+        {
+          "index": 1,
+          "id": "tiktok-1-90353420-e9a5-4230-9dda-21a851ee6a60",
+          "title": "A caixa selada",
+          "description": "FYN abre uma caixa lacrada no arquivo. Dentro há uma fotografia antiga de Cael. Ela anota a data escrita no verso, guarda a foto no bolso e fecha a caixa.",
+          "timeline": "past",
+          "durationMs": 17238,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 7762,
+            "cachedInputTokens": 0,
+            "outputTokens": 1635,
+            "totalTokens": 9397,
+            "durationMs": 17235,
+            "requestCount": 2,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": false,
+            "riskScore": 4,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "É uma foto antiga do Cael. E FYN anotou a data.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "desconforto",
+              "text": "Sou eu. Mas não sei o que essa data significa.",
+              "addresseeId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "replyToTargetId": "bloco-1-14c985ae-fdb7-439c-b772-e021da032966",
+              "dialogueAct": "reflect",
+              "certainty": "question"
+            },
+            {
+              "characterId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "characterName": "ISOLDE",
+              "type": "speech",
+              "emotion": "cautela",
+              "text": "Ela guardou a foto. O motivo continua desconhecido.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-9cf6b86c-3a21-4c9b-b087-6282d03f82e2",
+              "dialogueAct": "warn",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+              "characterName": "Katherine",
+              "type": "speech",
+              "emotion": "seriedade",
+              "text": "Então precisamos da data. Sem tirar conclusões antes.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-10fd88fe-c4b7-4c92-8724-ba0d97fbbe9a",
+              "dialogueAct": "reassure",
+              "certainty": "proposal"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "determinação",
+              "text": "Certo. Primeiro, descobrimos o que ela anotou.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-3a59e3d7-ad66-4efb-814f-6982d8274f12",
+              "dialogueAct": "decide",
+              "certainty": "proposal"
+            }
+          ]
+        },
+        {
+          "index": 2,
+          "id": "tiktok-2-7a2d9e3d-92df-49a8-ab70-45679843783e",
+          "title": "O frasco trocado",
+          "description": "Uma câmera mostra Milo trocando um frasco por outro na enfermaria enquanto ninguém observa. O rótulo dos dois frascos está borrado e não pode ser lido.",
+          "timeline": "past",
+          "durationMs": 16136,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 12188,
+            "cachedInputTokens": 0,
+            "outputTokens": 1521,
+            "totalTokens": 13709,
+            "durationMs": 16132,
+            "requestCount": 3,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": true,
+            "riskScore": 5,
+            "issues": [],
+            "repairedTargetIds": [
+              "bloco-1-802b1e56-738f-4d03-91bb-d864268b98e2"
+            ]
+          },
+          "reactions": [
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "tensão",
+              "text": "Fui eu. Troquei um frasco pelo outro. E não dá pra ler o rótulo.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "desconfiança",
+              "text": "Então explica por quê.",
+              "addresseeId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "replyToTargetId": "bloco-1-802b1e56-738f-4d03-91bb-d864268b98e2",
+              "dialogueAct": "ask",
+              "certainty": "question"
+            },
+            {
+              "characterId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "characterName": "ISOLDE",
+              "type": "speech",
+              "emotion": "cautela",
+              "text": "Podemos perguntar. Mas os rótulos estão ilegíveis.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-52ef107c-01b4-47bf-8304-832dfaa1fbcb",
+              "dialogueAct": "warn",
+              "certainty": "explicit-fact"
+            }
+          ]
+        },
+        {
+          "index": 3,
+          "id": "tiktok-3-0bae996d-cac1-4842-9d4b-3d985cbd4e6c",
+          "title": "A confissão incompleta",
+          "description": "Isolde olha diretamente para a câmera e diz: ‘Fui eu quem escondeu o mapa’. Antes de explicar o motivo ou o esconderijo, alguém apaga a luz e a gravação termina.",
+          "timeline": "present",
+          "durationMs": 18359,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 14403,
+            "cachedInputTokens": 0,
+            "outputTokens": 1909,
+            "totalTokens": 16312,
+            "durationMs": 18355,
+            "requestCount": 3,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": true,
+            "riskScore": 5,
+            "issues": [],
+            "repairedTargetIds": [
+              "bloco-3-aabf4c77-04ca-44ea-978e-e66a59947fa3"
+            ]
+          },
+          "reactions": [
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "Isolde confessou que escondeu o mapa. Só isso.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "inquietação",
+              "text": "Mas por quê? E onde ela escondeu?",
+              "addresseeId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "replyToTargetId": "bloco-1-3c7df9d9-9874-4bf6-ab70-f7567ce70a44",
+              "dialogueAct": "ask",
+              "certainty": "question"
+            },
+            {
+              "characterId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "characterName": "ISOLDE",
+              "type": "speech",
+              "emotion": "cautela",
+              "text": "O vídeo acaba antes dessa parte.",
+              "addresseeId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "replyToTargetId": "bloco-2-f1fe95a2-8b8f-4d18-8cad-6de8e5a6785f",
+              "dialogueAct": "answer",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+              "characterName": "Katherine",
+              "type": "speech",
+              "emotion": "seriedade",
+              "text": "Então verificamos o mapa. Sem presumir o motivo.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-aabf4c77-04ca-44ea-978e-e66a59947fa3",
+              "dialogueAct": "decide",
+              "certainty": "proposal"
+            }
+          ]
+        },
+        {
+          "index": 4,
+          "id": "tiktok-4-fe5cc4f2-6cf5-4ab3-81dc-0c500a4bcf9d",
+          "title": "A chave no bolso",
+          "description": "Em uma gravação futura, Katherine recusa apertar a mão de FYN diante dos guardas. Ao passar por ela, Katherine coloca discretamente uma pequena chave no bolso do casaco de FYN.",
+          "timeline": "future",
+          "durationMs": 21830,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 10102,
+            "cachedInputTokens": 0,
+            "outputTokens": 1943,
+            "totalTokens": 12045,
+            "durationMs": 21824,
+            "requestCount": 2,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": true,
+            "repaired": false,
+            "riskScore": 7,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "surpresa",
+              "text": "Ela recusou a mão de FYN. Depois, deixou uma chave no bolso dela.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "inquietação",
+              "text": "Na frente dos guardas? O que isso quer dizer?",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-1-c4916134-3738-492e-9159-5221c52b8144",
+              "dialogueAct": "ask",
+              "certainty": "question"
+            },
+            {
+              "characterId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "characterName": "ISOLDE",
+              "type": "speech",
+              "emotion": "cautela",
+              "text": "A recusa foi pública. A chave, discreta. O motivo não aparece.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-0da16d8b-e6f0-4447-8e00-fdca9c99470e",
+              "dialogueAct": "answer",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+              "characterName": "Katherine",
+              "type": "speech",
+              "emotion": "desorientação",
+              "text": "Eu não me lembro dessa cena.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-b5bfc540-a3d7-41d1-98a0-bba11660f36a",
+              "dialogueAct": "reflect",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "atenção",
+              "text": "A chave é a pista concreta. O resto ainda é hipótese.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-4-dc9c845f-bd5f-43e9-8dc4-614d9a5cc272",
+              "dialogueAct": "redirect",
+              "certainty": "inference"
+            }
+          ]
+        },
+        {
+          "index": 5,
+          "id": "tiktok-5-fd267d76-df42-455a-9616-ade912a997bd",
+          "title": "A voz sem rosto",
+          "description": "A tela permanece preta. Uma voz muito parecida com a de Cael diz: ‘Não confiem em mim’. O áudio termina sem mostrar o rosto do falante nem confirmar a identidade da voz.",
+          "timeline": "unspecified",
+          "durationMs": 7164,
+          "usage": {
+            "model": "gpt-5.6-luna",
+            "inputTokens": 4681,
+            "cachedInputTokens": 0,
+            "outputTokens": 830,
+            "totalTokens": 5511,
+            "durationMs": 7160,
+            "requestCount": 1,
+            "retryCount": 0
+          },
+          "review": {
+            "performed": false,
+            "repaired": false,
+            "riskScore": 3,
+            "issues": []
+          },
+          "reactions": [
+            {
+              "characterId": "c542bb2a-e478-4dba-82ca-d542a5405617",
+              "characterName": "MILO",
+              "type": "speech",
+              "emotion": "alerta",
+              "text": "A voz parece a do Cael. Só parece.",
+              "addresseeId": null,
+              "replyToTargetId": null,
+              "dialogueAct": "observe",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "b3b2dc85-54aa-450f-91fd-66d2a45a0a6b",
+              "characterName": "CAEL",
+              "type": "speech",
+              "emotion": "defensividade",
+              "text": "Eu não gravei isso. Pelo menos, não sei se gravei.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-1-2dbf4fa8-96ff-4715-877d-f9e6aba0ef82",
+              "dialogueAct": "deflect",
+              "certainty": "emotional-reaction"
+            },
+            {
+              "characterId": "318c454d-461c-4112-8dd6-f173d80a3e9e",
+              "characterName": "ISOLDE",
+              "type": "speech",
+              "emotion": "cautela",
+              "text": "A identidade da voz não foi confirmada.",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-2-77e9d999-abff-4f43-80ce-0764896a0a34",
+              "dialogueAct": "reflect",
+              "certainty": "explicit-fact"
+            },
+            {
+              "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+              "characterName": "Katherine",
+              "type": "speech",
+              "emotion": "seriedade",
+              "text": "Então a dúvida permanece: quem falou?",
+              "addresseeId": null,
+              "replyToTargetId": "bloco-3-fc0541bf-8a62-48dc-997b-7a8cbfa31f81",
+              "dialogueAct": "ask",
+              "certainty": "question"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "savedToApp": true,
+  "statePath": "C:\\TRABALHO 2\\NYMI GACHA\\dados-locais-premium\\roteiros\\estado.json",
+  "backupFile": "roteiros-antes-showcase-v16-2026-08-25T12-16-30-994Z.json",
+  "completedAt": "2026-08-25T12:20:55.745Z"
+}

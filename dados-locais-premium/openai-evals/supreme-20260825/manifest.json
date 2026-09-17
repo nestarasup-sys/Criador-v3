@@ -1,0 +1,14 @@
+{
+  "runId": "supreme-20260825",
+  "createdAt": "2026-08-25T06:00:00.344Z",
+  "authorizedAttempts": 100,
+  "model": "gpt-5.6-luna",
+  "reasoningEffort": "medium",
+  "verbosity": "low",
+  "store": false,
+  "previousResponseId": false,
+  "protectedHashes": {
+    "C:\\TRABALHO 2\\NYMI GACHA\\dados-locais-premium\\state.json": "2f9971509c198dd86a2dc232b1098405abc5738b1471c91b2baaec412f56e316",
+    "C:\\TRABALHO 2\\NYMI GACHA\\dados-locais-premium\\roteiros\\estado.json": "16f68544b5d1ac92548cc96e5b14fa69a144fb79b2dfbad0735b5724399a1942"
+  }
+}

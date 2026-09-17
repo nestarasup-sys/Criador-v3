@@ -1,0 +1,36 @@
+{
+  "runId": "supreme-20260825",
+  "phaseName": "candidate-c-v12-smoke",
+  "suite": "baseline",
+  "promptVersion": 12,
+  "phaseMetrics": {
+    "attempts": 4,
+    "completed": 4,
+    "failed": 0,
+    "hardFailureEntries": 0,
+    "warningEntries": 2,
+    "averageAutomaticScore": 98.5,
+    "averageDurationMs": 8100,
+    "medianDurationMs": 7465,
+    "p95DurationMs": 9783,
+    "inputTokens": 9348,
+    "outputTokens": 2905,
+    "totalTokens": 12253
+  },
+  "globalMetrics": {
+    "attempts": 52,
+    "completed": 52,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 8,
+    "averageAutomaticScore": 99.1,
+    "averageDurationMs": 7547,
+    "medianDurationMs": 7112,
+    "p95DurationMs": 14701,
+    "inputTokens": 117742,
+    "outputTokens": 32325,
+    "totalTokens": 150067
+  },
+  "protectedDataIntact": true,
+  "generatedAt": "2026-08-25T06:15:52.879Z"
+}

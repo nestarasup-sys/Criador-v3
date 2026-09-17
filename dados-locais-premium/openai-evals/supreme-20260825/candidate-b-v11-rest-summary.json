@@ -1,0 +1,36 @@
+{
+  "runId": "supreme-20260825",
+  "phaseName": "candidate-b-v11-rest",
+  "suite": "baseline",
+  "promptVersion": 11,
+  "phaseMetrics": {
+    "attempts": 12,
+    "completed": 12,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 2,
+    "averageAutomaticScore": 97.7,
+    "averageDurationMs": 6348,
+    "medianDurationMs": 5500,
+    "p95DurationMs": 9827,
+    "inputTokens": 27228,
+    "outputTokens": 6548,
+    "totalTokens": 33776
+  },
+  "globalMetrics": {
+    "attempts": 48,
+    "completed": 48,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 6,
+    "averageAutomaticScore": 99.2,
+    "averageDurationMs": 7501,
+    "medianDurationMs": 7110,
+    "p95DurationMs": 14701,
+    "inputTokens": 108394,
+    "outputTokens": 29420,
+    "totalTokens": 137814
+  },
+  "protectedDataIntact": true,
+  "generatedAt": "2026-08-25T06:12:21.272Z"
+}

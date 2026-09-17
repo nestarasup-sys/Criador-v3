@@ -1,0 +1,36 @@
+{
+  "runId": "supreme-20260825",
+  "phaseName": "generalization-v13",
+  "suite": "generalization",
+  "promptVersion": 13,
+  "phaseMetrics": {
+    "attempts": 20,
+    "completed": 20,
+    "failed": 0,
+    "hardFailureEntries": 0,
+    "warningEntries": 2,
+    "averageAutomaticScore": 99.7,
+    "averageDurationMs": 9247,
+    "medianDurationMs": 8770,
+    "p95DurationMs": 12592,
+    "inputTokens": 49057,
+    "outputTokens": 14999,
+    "totalTokens": 64056
+  },
+  "globalMetrics": {
+    "attempts": 74,
+    "completed": 74,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 10,
+    "averageAutomaticScore": 99.3,
+    "averageDurationMs": 8065,
+    "medianDurationMs": 7465,
+    "p95DurationMs": 14701,
+    "inputTokens": 171599,
+    "outputTokens": 48397,
+    "totalTokens": 219996
+  },
+  "protectedDataIntact": true,
+  "generatedAt": "2026-08-25T06:22:14.077Z"
+}

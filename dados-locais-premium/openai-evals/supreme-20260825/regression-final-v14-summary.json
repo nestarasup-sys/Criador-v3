@@ -1,0 +1,36 @@
+{
+  "runId": "supreme-20260825",
+  "phaseName": "regression-final-v14",
+  "suite": "regression",
+  "promptVersion": 14,
+  "phaseMetrics": {
+    "attempts": 24,
+    "completed": 24,
+    "failed": 0,
+    "hardFailureEntries": 0,
+    "warningEntries": 2,
+    "averageAutomaticScore": 99.8,
+    "averageDurationMs": 9165,
+    "medianDurationMs": 9068,
+    "p95DurationMs": 16307,
+    "inputTokens": 60626,
+    "outputTokens": 18065,
+    "totalTokens": 78691
+  },
+  "globalMetrics": {
+    "attempts": 98,
+    "completed": 98,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 12,
+    "averageAutomaticScore": 99.4,
+    "averageDurationMs": 8334,
+    "medianDurationMs": 8048,
+    "p95DurationMs": 15145,
+    "inputTokens": 232225,
+    "outputTokens": 66462,
+    "totalTokens": 298687
+  },
+  "protectedDataIntact": true,
+  "generatedAt": "2026-08-25T06:26:52.003Z"
+}

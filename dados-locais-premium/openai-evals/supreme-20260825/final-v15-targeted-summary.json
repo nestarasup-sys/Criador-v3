@@ -1,0 +1,36 @@
+{
+  "runId": "supreme-20260825",
+  "phaseName": "final-v15-targeted",
+  "suite": "future-justification",
+  "promptVersion": 15,
+  "phaseMetrics": {
+    "attempts": 2,
+    "completed": 2,
+    "failed": 0,
+    "hardFailureEntries": 0,
+    "warningEntries": 0,
+    "averageAutomaticScore": 100,
+    "averageDurationMs": 5302,
+    "medianDurationMs": 4833,
+    "p95DurationMs": 5771,
+    "inputTokens": 5514,
+    "outputTokens": 901,
+    "totalTokens": 6415
+  },
+  "globalMetrics": {
+    "attempts": 100,
+    "completed": 100,
+    "failed": 0,
+    "hardFailureEntries": 1,
+    "warningEntries": 12,
+    "averageAutomaticScore": 99.4,
+    "averageDurationMs": 8273,
+    "medianDurationMs": 7990,
+    "p95DurationMs": 15075,
+    "inputTokens": 237739,
+    "outputTokens": 67363,
+    "totalTokens": 305102
+  },
+  "protectedDataIntact": true,
+  "generatedAt": "2026-08-25T06:28:07.631Z"
+}

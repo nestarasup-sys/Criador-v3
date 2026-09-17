@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "id": "5114b2c5-0298-47d9-9521-a397594f94ff",
+      "title": "teste",
+      "createdAt": "2026-09-15T05:48:18.367Z",
+      "updatedAt": "2026-09-15T06:02:12.082Z",
+      "continuity": false,
+      "memoryBlocks": 3,
+      "characters": [
+        {
+          "id": "cdd2e914-0795-4228-9494-a0c20e64eeb3",
+          "name": "Novo personagem",
+          "personality": {
+            "calm": "medium",
+            "confident": "medium"
+          },
+          "speechStyles": [
+            "polite",
+            "dry"
+          ],
+          "relations": {
+            "FYN": [
+              "interest"
+            ]
+          }
+        },
+        {
+          "id": "52040285-65b9-488f-b3bd-f3d78d8f5a1d",
+          "name": "Novo personagem",
+          "personality": {
+            "controlling": "medium",
+            "jealous": "medium"
+          },
+          "speechStyles": [
+            "mocking"
+          ],
+          "relations": {
+            "FYN": [
+              "known"
+            ]
+          }
+        },
+        {
+          "id": "dc715d54-d22f-4fa3-a28c-88294e000005",
+          "name": "Novo personagem",
+          "personality": {
+            "cold": "medium",
+            "observant": "medium"
+          },
+          "speechStyles": [
+            "polite"
+          ],
+          "relations": {
+            "FYN": [
+              "in_love",
+              "interest"
+            ]
+          }
+        },
+        {
+          "id": "f7151408-4311-4be1-b3a4-1306abfb92bf",
+          "name": "Novo personagem",
+          "personality": {
+            "competitive": "medium",
+            "suspicious": "medium",
+            "provocative": "medium"
+          },
+          "speechStyles": [
+            "emotive",
+            "mocking"
+          ],
+          "relations": {
+            "FYN": [
+              "ex"
+            ]
+          }
+        }
+      ],
+      "videos": [
+        {
+          "id": "1aab2a8a-b2f1-4c87-a2ea-d7ff00a28b0c",
+          "order": 1,
+          "description": "fyn caminhando pelo reino",
+          "generatedAt": "2026-09-15T06:02:12.082Z",
+          "reactions": [
+            {
+              "id": "df053918-4885-4773-bca2-23cd5790c0de",
+              "characterId": "cdd2e914-0795-4228-9494-a0c20e64eeb3",
+              "type": "speech",
+              "textPt": "Ela parece tranquila. Está apenas observando o reino.",
+              "textEn": null
+            },
+            {
+              "id": "fc672f46-c46f-40d5-b886-41e2c1350422",
+              "characterId": "52040285-65b9-488f-b3bd-f3d78d8f5a1d",
+              "type": "speech",
+              "textPt": "“Apenas” caminhando? Você faz parecer que isso é uma missão importante.",
+              "textEn": null
+            },
+            {
+              "id": "6e825d30-6dd2-4bb4-bc26-dd8aa0ba8842",
+              "characterId": "f7151408-4311-4be1-b3a4-1306abfb92bf",
+              "type": "speech",
+              "textPt": "Você fala como se soubesse exatamente o que ela está fazendo.",
+              "textEn": null
+            },
+            {
+              "id": "8ba8f3a4-ce73-4eaa-ad1e-9c8ca9c2a7b4",
+              "characterId": "dc715d54-d22f-4fa3-a28c-88294e000005",
+              "type": "thought",
+              "textPt": "Ela não parece perdida. Mesmo assim, está prestando atenção em tudo ao redor.",
+              "textEn": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
