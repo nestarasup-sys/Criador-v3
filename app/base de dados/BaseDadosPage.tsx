@@ -72,7 +72,7 @@ export default function BaseDadosPage() {
       draftsRef.current = recoveredDrafts;
       setDatabase(loadedDatabase);
       setDrafts(recoveredDrafts);
-      writeBaseDadosDrafts(window.localStorage, recoveredDrafts);
+      if (!writeBaseDadosDrafts(window.localStorage, recoveredDrafts)) setMessage("O navegador não conseguiu guardar a cópia de recuperação local; o servidor continua sendo usado.");
       setCharacterData(loadedCharacters);
       setRoteirosState(loadedRoteiros.state);
       setMessage("");
@@ -141,7 +141,7 @@ export default function BaseDadosPage() {
     } : { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", changedAt: 0 });
     const next = { ...draftsRef.current, [id]: { ...existing, ...patch, changedAt: existing.changedAt + 1 } };
     draftsRef.current = next;
-    writeBaseDadosDrafts(window.localStorage, next);
+    if (!writeBaseDadosDrafts(window.localStorage, next)) setMessage("O navegador não conseguiu guardar a cópia de recuperação desta edição.");
     setDrafts(next);
   };
 

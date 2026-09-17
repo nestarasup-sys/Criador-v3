@@ -31,12 +31,15 @@ export function readBaseDadosDrafts(storage: StorageLike | null | undefined): Ba
 }
 
 export function writeBaseDadosDrafts(storage: StorageLike | null | undefined, drafts: BaseDadosDrafts) {
-  if (!storage) return;
+  if (!storage) return false;
   try {
     if (Object.keys(drafts).length) storage.setItem(BASE_DADOS_DRAFT_STORAGE_KEY, JSON.stringify(drafts));
     else storage.removeItem(BASE_DADOS_DRAFT_STORAGE_KEY);
+    return true;
   } catch {
-    // A falta de espaço no storage não pode interromper o salvamento no servidor.
+    // The server save may still succeed, but callers must be able to show
+    // that the browser recovery copy was not created.
+    return false;
   }
 }
 
