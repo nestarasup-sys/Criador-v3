@@ -77,7 +77,15 @@ export function appendRecoveryJournal(state, reason = "pending", savedAt = new D
 export function markRecoverySaved(state) {
   const normalized = normalizeRoteirosState(state);
   const fingerprint = recoveryFingerprint(normalized);
-  const entries = readRecoveryJournal().filter((entry) => !(entry.reason === "pending" && recoveryFingerprint(entry.state) === fingerprint));
+  const currentEntries = readRecoveryJournal();
+  // A fila de persistência do PC pode concluir um snapshot antigo enquanto
+  // um snapshot mais novo já foi colocado no journal. Nesse intervalo, não
+  // podemos escrever um checkpoint "pc-saved" que fique depois da pendência
+  // nova, porque o carregamento poderia concluir incorretamente que não há
+  // nada para recuperar.
+  const hasNewerPending = currentEntries.some((entry) => entry.reason === "pending" && recoveryFingerprint(entry.state) !== fingerprint);
+  if (hasNewerPending) return currentEntries.find((entry) => entry.reason === "pending" && recoveryFingerprint(entry.state) === fingerprint) ?? null;
+  const entries = currentEntries.filter((entry) => !(entry.reason === "pending" && recoveryFingerprint(entry.state) === fingerprint));
   const entry = {
     version: RECOVERY_JOURNAL_VERSION,
     id: globalThis.crypto?.randomUUID?.() ?? `recovery-${Date.now()}-${Math.random().toString(16).slice(2)}`,
