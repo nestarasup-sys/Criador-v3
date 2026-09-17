@@ -4,6 +4,7 @@ import test from "node:test";
 
 test("a nova Base de dados possui o layout e os controles básicos independentes", async () => {
   const page = await readFile(new URL("../app/base de dados/BaseDadosPage.tsx", import.meta.url), "utf8");
+  const draftsPage = await readFile(new URL("../app/base de dados/DraftsPage.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/base de dados/base-de-dados.module.css", import.meta.url), "utf8");
   const shell = await readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8");
   const storage = await readFile(new URL("../app/base de dados/storage.ts", import.meta.url), "utf8");
@@ -17,6 +18,9 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(page, /uploadBaseDadosVideo/);
   assert.match(page, /removeBaseDadosVideo/);
   assert.match(page, /baseDadosVideoUrl/);
+  assert.match(draftsPage, /const save = async \(video: BaseDadosVideo, value: DraftValue\): Promise<boolean>/);
+  assert.match(draftsPage, /const saved = await flush\(video\);/);
+  assert.match(draftsPage, /if \(!saved\) return;/);
   assert.match(page, /Buscar cenas/);
   assert.match(page, /Filtros/);
   assert.match(page, /visibleVideos/);
