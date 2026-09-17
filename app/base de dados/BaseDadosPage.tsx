@@ -464,7 +464,7 @@ export default function BaseDadosPage() {
     } finally { setBusy(""); }
   };
 
-  return <div className={styles.app}>
+  return <div className={`${styles.app} ${styles.scaled}`}>
     <header className={`${styles.topbar} topbar`}>
       <div className={styles.topbarBrand}>
         <Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link>
@@ -505,6 +505,7 @@ export default function BaseDadosPage() {
           <button className={`${styles.toolbarButton} ${styles.toolbarGreen}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro</button>
           <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy) || !importedScripts.length} onClick={() => setImportedManagerOpen(true)}>♙ Roteiros importados</button>
           <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
+          <Link className={`${styles.toolbarButton} ${styles.toolbarDraft}`} href="/base%20de%20dados/rascunhos">Área de rascunho</Link>
           <button className={`${styles.toolbarButton} ${styles.toolbarPink}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados</button>
         </div>
       </section>}
