@@ -190,7 +190,7 @@ export async function exportRoteiroVideos(script: ScriptProject) {
   const response = await localDataFetch("/roteiros/export-videos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, video: section.video })) }),
+    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, sceneEndSeconds: section.sceneEndSeconds, firstGroupReactionSeconds: section.firstGroupReactionSeconds, video: section.video })) }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar os vídeos."));

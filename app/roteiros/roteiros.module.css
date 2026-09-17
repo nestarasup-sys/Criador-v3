@@ -231,8 +231,9 @@
 .hiddenFileInput { display:none; }
 .dangerButton { border-color:#f2d2d7!important; color:#c74359!important; background:#fff7f8!important; box-shadow:none; }
 .tiktokBody { padding:22px; }
-.twoColumns, .threeColumns { display:grid; gap:12px; margin-bottom:14px; }
-.twoColumns { grid-template-columns:1fr 1fr; }
+  .twoColumns, .threeColumns { display:grid; gap:12px; margin-bottom:14px; }
+  .twoColumns { grid-template-columns:1fr 1fr; }
+  .timingFields { display:grid; gap:12px; }
 .threeColumns { grid-template-columns:180px 1fr 160px; align-items:end; }
 .contextActions { display:flex; align-items:center; gap:10px; margin:9px 0 15px; }
 .contextActions span { color:var(--muted); font-size:10px; }

@@ -1310,7 +1310,9 @@ async function route(request, response) {
     for (const [index, item] of tiktoks.entries()) {
       const number = String(index + 1).padStart(2, "0");
       const description = String(item?.description ?? "");
-      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\n`);
+      const sceneEnd = Number.isFinite(Number(item?.sceneEndSeconds)) ? `${Number(item.sceneEndSeconds)} segundos` : "não definido";
+      const firstGroupReaction = Number.isFinite(Number(item?.firstGroupReactionSeconds)) ? `${Number(item.firstGroupReactionSeconds)} segundos` : "não definido";
+      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\n`);
       const storedPath = String(item?.video?.storedPath || "").replace(/[\\/]+/g, sep);
       const source = item?.video ? await findVideoReferenceFile(item.video, scriptId, item.id).catch(() => null) : (storedPath ? resolve(ROOT, storedPath) : null);
       const destination = join(folder, `${number}.mp4`);
