@@ -93,6 +93,7 @@ function ScriptList({ state, characters, updateState, saveSnapshot }: { state: R
       const timestamp = nowIso();
       const copy = structuredClone(source);
       copy.id = createId(); copy.title = `${source.title} (cópia)`; copy.createdAt = timestamp; copy.updatedAt = timestamp;
+      if (copy.opening) copy.opening = { ...copy.opening, id: createId(), reactionBlocks: copy.opening.reactionBlocks.map((block) => ({ ...block, id: createId() })) };
       copy.tiktoks = copy.tiktoks.map((section) => ({ ...section, id: createId(), reactionBlocks: section.reactionBlocks.map((block) => ({ ...block, id: createId() })) }));
       return { ...current, scripts: [...current.scripts, copy] };
     });
