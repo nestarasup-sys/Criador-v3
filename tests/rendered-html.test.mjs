@@ -506,6 +506,7 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(storage, /persistEmbeddedAssets/);
   assert.match(storage, /recordStudioDeletion/);
   assert.match(storage, /studioSaveQueue/);
+  assert.match(storage, /characters: Array\.isArray\(data\.characters\)/);
   assert.match(server, /\/studios/);
   assert.match(server, /referencedAssets/);
   assert.match(server, /STUDIO_ASSETS_ROOT/);
