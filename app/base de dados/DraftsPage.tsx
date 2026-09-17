@@ -18,6 +18,9 @@ export default function DraftsPage() {
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
   const timers = useRef(new Map<string, number>());
+  const saveJobs = useRef(new Map<string, Promise<void>>());
+  const runningRevisions = useRef(new Map<string, number>());
+  const revisions = useRef<Record<string, number>>({});
   const currentDrafts = useRef(drafts);
 
   const refresh = async () => {
@@ -40,23 +43,47 @@ export default function DraftsPage() {
   }, []);
 
   const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
-  const save = async (video: BaseDadosVideo, value: DraftValue) => {
+  const save = async (video: BaseDadosVideo, value: DraftValue, revision: number) => {
     const end = Number(value.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return; }
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return; }
-    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds }); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
+    try {
+      const result = await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) });
+      if (revisions.current[video.id] === revision) setDatabase(result.state);
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
+    revisions.current[video.id] = (revisions.current[video.id] || 0) + 1;
+    const revision = revisions.current[video.id];
     const next = { ...currentDrafts.current, [video.id]: { ...valueFor(video), ...patch } };
     currentDrafts.current = next; setDrafts(next);
     const previous = timers.current.get(video.id); if (previous !== undefined) window.clearTimeout(previous);
-    timers.current.set(video.id, window.setTimeout(() => { void save(video, next[video.id]); }, 700));
+    timers.current.set(video.id, window.setTimeout(() => {
+      const previousJob = saveJobs.current.get(video.id) || Promise.resolve();
+      const job = previousJob.catch(() => undefined).then(() => {
+        if (revisions.current[video.id] !== revision) return;
+        return save(video, currentDrafts.current[video.id] || next[video.id], revision);
+      });
+      saveJobs.current.set(video.id, job);
+      runningRevisions.current.set(video.id, revision);
+      void job.finally(() => {
+        if (saveJobs.current.get(video.id) === job) {
+          saveJobs.current.delete(video.id);
+          if (runningRevisions.current.get(video.id) === revision) runningRevisions.current.delete(video.id);
+        }
+      });
+    }, 700));
   };
   const flush = async (video: BaseDadosVideo) => {
     const timer = timers.current.get(video.id); if (timer !== undefined) window.clearTimeout(timer);
-    const value = currentDrafts.current[video.id]; if (value) await save(video, value);
+    timers.current.delete(video.id);
+    const revision = revisions.current[video.id] || 0;
+    const previousJob = saveJobs.current.get(video.id);
+    if (previousJob) await previousJob.catch(() => undefined);
+    if (runningRevisions.current.get(video.id) === revision) return;
+    const value = currentDrafts.current[video.id];
+    if (value && revisions.current[video.id] === revision) await save(video, value, revision);
   };
   const send = async (video: BaseDadosVideo) => {
     await flush(video); setBusy(`send:${video.id}`); setMessage("");

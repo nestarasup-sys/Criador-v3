@@ -130,6 +130,7 @@ export function createDraftsService(root, baseDadosService) {
       try { state = JSON.parse(await readFile(statePath, "utf8")); }
       catch (error) { if (error?.code !== "ENOENT") throw error; state = structuredClone(EMPTY_STATE); }
       if (!Array.isArray(state.videos)) state = structuredClone(EMPTY_STATE);
+      state.videos = state.videos.filter((video) => video && typeof video.id === "string").map((video) => ({ ...video, metadataRevision: Number.isInteger(video.metadataRevision) && video.metadataRevision >= 0 ? video.metadataRevision : 0 }));
       await syncFiles();
     },
     async handle(request, response, url, headers) {
@@ -152,12 +153,16 @@ export function createDraftsService(root, baseDadosService) {
         const result = await queue(async () => {
           const index = state.videos.findIndex((video) => video.id === videoMatch[1]);
           if (index < 0) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
-          const end = Number(body?.sceneEndSeconds);
           const current = state.videos[index];
+          const expectedRevision = body?.expectedRevision === undefined ? undefined : Number(body.expectedRevision);
+          const currentRevision = Number(current.metadataRevision ?? 0);
+          if (expectedRevision !== undefined && (!Number.isInteger(expectedRevision) || expectedRevision !== currentRevision)) throw Object.assign(new Error("Este rascunho foi alterado por outra operação. Recarregue antes de salvar."), { status: 409, code: "STALE_DRAFT_REVISION", entity: "base-draft", entityId: videoMatch[1], currentRevision });
+          const end = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
           if (!Number.isFinite(end) || end < 0) throw Object.assign(new Error("O tempo final precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SCENE_END" });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_GROUP_REACTION_START" });
-          state.videos[index] = { ...current, description: String(body?.description || ""), sceneEndSeconds: end, firstGroupReactionSeconds, updatedAt: new Date().toISOString() };
+          const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
+          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;
