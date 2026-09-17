@@ -99,7 +99,7 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const state = { version: 1, profiles: [{ characterId: "char-01", personality: "Ficha antiga", backstory: "", fynRelationship: "", speakingStyle: "Antigo", relationships: [], additionalRules: "", updatedAt: "" }], scripts: [], globalRules: [], settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: .4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 } };
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
-    assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 12);
+    assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 25);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 10);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].englishText, "Hello");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").personality, "Ficha enviada no JSON");
