@@ -24,7 +24,7 @@ export default function DraftsPage() {
   const currentDrafts = useRef(drafts);
   const databaseRef = useRef<BaseDadosDraftState | null>(null);
 
-  const refresh = async () => {
+  const refresh = async (clearMessage = true) => {
     setLoading(true);
     try {
       const state = await loadBaseDadosDrafts();
@@ -33,7 +33,7 @@ export default function DraftsPage() {
       const next = Object.fromEntries(state.videos.map((video) => [video.id, { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }]));
       currentDrafts.current = next;
       setDrafts(next);
-      setMessage("");
+      if (clearMessage) setMessage("");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível carregar os rascunhos."); }
     finally { setLoading(false); }
   };
@@ -94,7 +94,7 @@ export default function DraftsPage() {
     try {
       const result = await sendBaseDadosDraft(video.id);
       if (result.duplicate) setMessage(`${video.fileName} já existe na Base. O rascunho foi mantido.`);
-      else { setMessage(`${result.video.fileName} enviado para a Base de dados.`); await refresh(); }
+      else { await refresh(false); setMessage(`${result.video.fileName} enviado para a Base de dados.`); }
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível enviar o rascunho."); }
     finally { setBusy(""); }
   };
