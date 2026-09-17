@@ -95,6 +95,7 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const validation = loaded.validateImportableScript(valid, videos, characters);
     assert.equal(validation.success, true);
     assert.equal(validation.issues.some((item) => item.level === "warning"), true);
+    assert.match(validation.issues.map((item) => item.message).join(" "), /primeira reação em grupo.*ultrapassa/);
     const state = { version: 1, profiles: [{ characterId: "char-01", personality: "Ficha antiga", backstory: "", fynRelationship: "", speakingStyle: "Antigo", relationships: [], additionalRules: "", updatedAt: "" }], scripts: [], globalRules: [], settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: .4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 } };
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
