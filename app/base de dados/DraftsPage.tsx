@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import { baseDadosDraftVideoUrl, loadBaseDadosDrafts, openBaseDadosDraftsFolder, patchBaseDadosDraft, sendBaseDadosDraft } from "./storage";
 import type { BaseDadosDraftState, BaseDadosVideo } from "./types";
@@ -33,9 +33,13 @@ export default function DraftsPage() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { void refresh(); return () => timers.current.forEach((timer) => window.clearTimeout(timer)); }, []);
+  useEffect(() => {
+    const timerMap = timers.current;
+    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    return () => { window.clearTimeout(timer); timerMap.forEach((item) => window.clearTimeout(item)); };
+  }, []);
 
-  const valueFor = (video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds) };
+  const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds) }, [drafts]);
   const save = async (video: BaseDadosVideo, value: DraftValue) => {
     const end = Number(value.sceneEndSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return; }
@@ -65,7 +69,7 @@ export default function DraftsPage() {
   const visible = useMemo(() => (database?.videos || []).filter((video) => {
     const value = valueFor(video); const filled = Boolean(value.description.trim());
     return (!query.trim() || `${video.fileName} ${value.description}`.toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR"))) && (filter === "all" || (filter === "filled" ? filled : !filled));
-  }), [database, drafts, filter, query]);
+  }), [database, drafts, filter, query, valueFor]);
 
   return <div className={`${styles.app} ${styles.scaled}`}>
     <header className={`${styles.topbar} topbar`}><div className={styles.topbarBrand}><Link href="/base%20de%20dados" className={`${styles.topbarBack} button secondary`} aria-label="Voltar para a Base de dados">←</Link><NymiBrand /><div className={styles.moduleTitle}><span>BIBLIOTECA</span><strong>ÁREA DE RASCUNHO</strong></div></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /></div></header>
