@@ -18,6 +18,8 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(page, /uploadBaseDadosVideo/);
   assert.match(page, /removeBaseDadosVideo/);
   assert.match(page, /baseDadosVideoUrl/);
+  assert.match(page, /key=\{video\.id\}/);
+  assert.doesNotMatch(page, /key=\{`\$\{video\.id\}-\$\{video\.updatedAt\}`\}/);
   assert.match(draftsPage, /async function save\(video: BaseDadosVideo, value: DraftValue\): Promise<boolean>/);
   assert.match(draftsPage, /const saved = await flush\(video\);/);
   assert.match(draftsPage, /if \(!saved\) return;/);

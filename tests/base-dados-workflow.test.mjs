@@ -80,6 +80,7 @@ test("recupera rascunhos locais sem ressuscitar vídeos excluídos", async () =>
     assert.deepEqual(loaded.readBaseDadosDrafts(storage), drafts);
     const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", contentType: "video/mp4", size: 1, durationSeconds: 10, description: "", sceneEndSeconds: 0, createdAt: "", updatedAt: "" }] };
     assert.deepEqual(loaded.recoverBaseDadosDrafts(database, drafts), drafts);
+    assert.deepEqual(loaded.recoverBaseDadosDrafts(database, {}, drafts), drafts);
     assert.deepEqual(loaded.recoverBaseDadosDrafts({ ...database, videos: [] }, drafts), {});
     loaded.writeBaseDadosDrafts(storage, {});
     assert.equal(storage.getItem(loaded.BASE_DADOS_DRAFT_STORAGE_KEY), null);

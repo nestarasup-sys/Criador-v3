@@ -46,9 +46,10 @@ export function draftDiffersFromVideo(draft: BaseDadosDraft, video: BaseDadosVid
   return draft.description !== video.description || !Number.isFinite(draftEnd) || draftEnd !== video.sceneEndSeconds || !Number.isFinite(draftGroupStart) || draftGroupStart !== video.firstGroupReactionSeconds;
 }
 
-export function recoverBaseDadosDrafts(database: BaseDadosState, drafts: BaseDadosDrafts): BaseDadosDrafts {
+export function recoverBaseDadosDrafts(database: BaseDadosState, drafts: BaseDadosDrafts, activeDrafts: BaseDadosDrafts = {}): BaseDadosDrafts {
   const videos = new Map(database.videos.map((video) => [video.id, video]));
-  return Object.fromEntries(Object.entries(drafts).filter(([id, draft]) => {
+  const combined = { ...drafts, ...activeDrafts };
+  return Object.fromEntries(Object.entries(combined).filter(([id, draft]) => {
     const video = videos.get(id);
     return Boolean(video && draftDiffersFromVideo(draft, video));
   }));
