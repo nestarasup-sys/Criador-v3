@@ -52,6 +52,8 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
   const seeded = { ...emptyAppState(), characters: [] };
   await writeFile(join(root, "state.json"), JSON.stringify(seeded), "utf8");
   await writeFile(join(root, "characters.json"), JSON.stringify([character]), "utf8");
+  await mkdir(join(root, "personagens", "fotos"), { recursive: true });
+  await writeFile(join(root, "personagens", "fotos", "char-1.png"), Buffer.from("thumbnail"));
   const port = 6900 + Math.floor(Math.random() * 200);
   let first;
   let second;
@@ -76,6 +78,7 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     assert.equal(summaries.response.status, 200);
     assert.equal(summaries.value.characters[0].id, "char-1");
     assert.equal("adjustments" in summaries.value.characters[0], false);
+    assert.equal(summaries.value.characters[0].photoUrl, `${first.baseUrl}/files/characters/char-1/photo.png`);
     const duplicate = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Depois", persistenceRevision: initialRevision });
     assert.equal(duplicate.response.status, 200);
     assert.equal(duplicate.value.revision, saved.value.revision);

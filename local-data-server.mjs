@@ -739,6 +739,19 @@ async function publicState() {
   };
 }
 
+async function publicCharacterSummaries() {
+  return Promise.all(characterStore.listSummaries().map(async (character) => {
+    const photoPath = join(CHARACTER_PHOTOS_ROOT, `${character.id}.png`);
+    try {
+      await stat(photoPath);
+      return { ...character, photoUrl: `http://${HOST}:${PORT}/files/characters/${character.id}/photo.png` };
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+      return character;
+    }
+  }));
+}
+
 async function serveFile(response, request, filePath) {
   const fileInfo = await stat(filePath);
   const fileSize = fileInfo.size;
@@ -1041,7 +1054,7 @@ async function route(request, response) {
   }
   const characterItemMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})$/);
   if (request.method === "GET" && url.pathname === "/characters") {
-    sendJson(response, request, 200, { characters: characterStore.listSummaries() });
+    sendJson(response, request, 200, { characters: await publicCharacterSummaries() });
     return;
   }
   if (characterItemMatch && request.method === "GET") {
