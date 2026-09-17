@@ -40,13 +40,13 @@ export default function DraftsPage() {
   }, []);
 
   const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
-  const save = async (video: BaseDadosVideo, value: DraftValue) => {
+  const save = async (video: BaseDadosVideo, value: DraftValue): Promise<boolean> => {
     const end = Number(value.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
-    if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return; }
-    if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return; }
-    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds }); }
-    catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
+    if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
+    if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return false; }
+    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds }); return true; }
+    catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
     const next = { ...currentDrafts.current, [video.id]: { ...valueFor(video), ...patch } };
@@ -54,12 +54,15 @@ export default function DraftsPage() {
     const previous = timers.current.get(video.id); if (previous !== undefined) window.clearTimeout(previous);
     timers.current.set(video.id, window.setTimeout(() => { void save(video, next[video.id]); }, 700));
   };
-  const flush = async (video: BaseDadosVideo) => {
+  const flush = async (video: BaseDadosVideo): Promise<boolean> => {
     const timer = timers.current.get(video.id); if (timer !== undefined) window.clearTimeout(timer);
-    const value = currentDrafts.current[video.id]; if (value) await save(video, value);
+    const value = currentDrafts.current[video.id];
+    return !value || await save(video, value);
   };
   const send = async (video: BaseDadosVideo) => {
-    await flush(video); setBusy(`send:${video.id}`); setMessage("");
+    const saved = await flush(video);
+    if (!saved) return;
+    setBusy(`send:${video.id}`); setMessage("");
     try {
       const result = await sendBaseDadosDraft(video.id);
       if (result.duplicate) setMessage(`${video.fileName} já existe na Base. O rascunho foi mantido.`);
