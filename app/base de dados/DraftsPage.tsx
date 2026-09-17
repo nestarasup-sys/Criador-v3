@@ -24,26 +24,19 @@ export default function DraftsPage() {
   const timers = useRef(new Map<string, number>());
   const currentDrafts = useRef(drafts);
   const dirtyIds = useRef(new Set<string>());
-  const revisions = useRef<Record<string, number>>({});
-  const saveJobs = useRef(new Map<string, Promise<boolean>>());
-  const saveDraftRef = useRef<((video: BaseDadosVideo, value: DraftValue) => Promise<boolean>) | null>(null);
 
   const refresh = async () => {
     for (const id of dirtyIds.current) {
       const video = database?.videos.find((item) => item.id === id);
       const value = currentDrafts.current[id];
       if (!video || !value) continue;
-      const saveDraft = saveDraftRef.current;
-      if (!saveDraft || !(await saveDraft(video, value))) return;
+      if (!(await save(video, value))) return;
     }
     setLoading(true);
     try {
       const state = await loadBaseDadosDrafts();
       setDatabase(state);
-      const next = Object.fromEntries(state.videos.map((video) => {
-        const pending = dirtyIds.current.has(video.id) ? currentDrafts.current[video.id] : undefined;
-        return [video.id, pending || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }];
-      }));
+      const next = Object.fromEntries(state.videos.map((video) => [video.id, { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }]));
       currentDrafts.current = next;
       setDrafts(next);
       setMessage("");
@@ -63,51 +56,29 @@ export default function DraftsPage() {
   }, []);
 
   const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
-  async function save(video: BaseDadosVideo, value: DraftValue, revision = revisions.current[video.id] || 0): Promise<boolean> {
-    if (revisions.current[video.id] !== revision) return true;
-    const latest = currentDrafts.current[video.id] || value;
-    const firstGroupReactionSeconds = Number(latest.firstGroupReactionSeconds);
-    const currentValue = latest;
-    const currentEnd = Number(currentValue.sceneEndSeconds);
-    if (!Number.isFinite(currentEnd) || currentEnd < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
+  async function save(video: BaseDadosVideo, value: DraftValue): Promise<boolean> {
+    const end = Number(value.sceneEndSeconds);
+    const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
+    if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return false; }
     try {
-      const result = await patchBaseDadosDraft(video.id, { description: currentValue.description, sceneEndSeconds: currentEnd, firstGroupReactionSeconds });
-      if (revisions.current[video.id] !== revision) return true;
-      if (!result.video || result.video.description !== currentValue.description || result.video.sceneEndSeconds !== currentEnd || result.video.firstGroupReactionSeconds !== firstGroupReactionSeconds) {
-        setMessage(`${video.fileName} não confirmou a última edição; o rascunho foi mantido para tentar novamente.`);
-        return false;
-      }
-      if (draftSignature(currentDrafts.current[video.id] || currentValue) === draftSignature(currentValue)) dirtyIds.current.delete(video.id);
+      await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds });
+      if (draftSignature(currentDrafts.current[video.id] || value) === draftSignature(value)) dirtyIds.current.delete(video.id);
       return true;
     }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
   }
-  useEffect(() => {
-    saveDraftRef.current = save;
-  });
-  const enqueueSave = (video: BaseDadosVideo, value: DraftValue, revision: number) => {
-    const previous = saveJobs.current.get(video.id) || Promise.resolve(true);
-    const job = previous.catch(() => false).then(() => save(video, value, revision));
-    saveJobs.current.set(video.id, job);
-    void job.finally(() => {
-      if (saveJobs.current.get(video.id) === job) saveJobs.current.delete(video.id);
-    });
-    return job;
-  };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
     const next = { ...currentDrafts.current, [video.id]: { ...valueFor(video), ...patch } };
-    revisions.current[video.id] = (revisions.current[video.id] || 0) + 1;
     dirtyIds.current.add(video.id);
     currentDrafts.current = next; setDrafts(next);
     const previous = timers.current.get(video.id); if (previous !== undefined) window.clearTimeout(previous);
-    const revision = revisions.current[video.id];
-    timers.current.set(video.id, window.setTimeout(() => { void enqueueSave(video, currentDrafts.current[video.id] || next[video.id], revision); }, 700));
+    timers.current.set(video.id, window.setTimeout(() => { void save(video, next[video.id]); }, 700));
   };
   const flush = async (video: BaseDadosVideo): Promise<boolean> => {
     const timer = timers.current.get(video.id); if (timer !== undefined) window.clearTimeout(timer);
     const value = currentDrafts.current[video.id];
-    return !value || await enqueueSave(video, value, revisions.current[video.id] || 0);
+    return !value || await save(video, value);
   };
   const send = async (video: BaseDadosVideo) => {
     const saved = await flush(video);

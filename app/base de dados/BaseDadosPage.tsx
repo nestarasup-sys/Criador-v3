@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../shared/NymiShell";
 import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
-import { draftDiffersFromVideo, readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
+import { readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
 import { buildBaseDadosExportText, buildBaseDadosGuide, buildBaseDadosSimpleExportText, mergeBaseDadosDrafts } from "./export-contract";
 import { downloadText, loadBaseDados, loadBaseDadosCharacterData, loadBaseDadosCharacterSummaries, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl, type BaseDadosCharacterSummary } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
@@ -64,7 +64,6 @@ export default function BaseDadosPage() {
   const saveRevisionRef = useRef<Record<string, number>>({});
   const scheduledRevisionRef = useRef<Record<string, number>>({});
   const busyOperationsRef = useRef(new Map<string, string>());
-  const refreshGenerationRef = useRef(0);
 
   const beginBusy = useCallback((key: string, label: string) => {
     setBusy(beginBusyOperation(busyOperationsRef.current, key, label));
@@ -75,12 +74,10 @@ export default function BaseDadosPage() {
   }, []);
 
   const refresh = async () => {
-    const refreshGeneration = ++refreshGenerationRef.current;
     setLoading(true);
     try {
       const [loadedDatabase, characterSummaries, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterSummaries(), loadRoteirosState()]);
-      if (refreshGeneration !== refreshGenerationRef.current) return;
-      const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage), draftsRef.current);
+      const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
       databaseRef.current = loadedDatabase;
       draftsRef.current = recoveredDrafts;
       setDatabase(loadedDatabase);
@@ -183,10 +180,6 @@ export default function BaseDadosPage() {
       if (saveRevisionRef.current[video.id] !== revision) return;
       databaseRef.current = result.state;
       setDatabase(result.state);
-      if (!result.video || draftDiffersFromVideo(draft, result.video)) {
-        setMessage(`${video.fileName} não confirmou a última edição; o rascunho foi mantido para tentar novamente.`);
-        return;
-      }
       const currentDraft = draftsRef.current[video.id];
       const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}\u0000${draft.firstGroupReactionSeconds ?? "0"}`;
       const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}\u0000${currentDraft.firstGroupReactionSeconds ?? "0"}` : savedSignature;
@@ -546,7 +539,7 @@ export default function BaseDadosPage() {
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
       {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const groupStart = Number(draft.firstGroupReactionSeconds); const hasKnownDuration = Number.isFinite(video.durationSeconds) && video.durationSeconds > 0; const warning = hasKnownDuration && Number.isFinite(end) && end > video.durationSeconds; const groupWarning = hasKnownDuration && Number.isFinite(groupStart) && groupStart > video.durationSeconds; return <article className={styles.card} key={video.id}>
-        <div className={styles.player}><video key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
+        <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
         <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>
         <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.firstGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label></div><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}

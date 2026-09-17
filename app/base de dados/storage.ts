@@ -40,11 +40,7 @@ export async function loadBaseDadosCharacterSummaries(): Promise<BaseDadosCharac
 
 export function baseDadosVideoUrl(video: BaseDadosVideo) {
   const path = video.url || `${LOCAL_DATA_URL}/base-dados/videos/${encodeURIComponent(video.id)}`;
-  // Metadata autosaves update updatedAt, but never change the video bytes.
-  // Use a content-stable key so editing a description does not reload/blink
-  // every player on the page.
-  const contentKey = video.contentHash || video.fileName || video.id;
-  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(contentKey)}`;
+  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(video.updatedAt)}`;
 }
 
 export async function uploadBaseDadosVideo(file: File, durationSeconds: number) {
@@ -80,8 +76,7 @@ export async function loadBaseDadosDrafts() {
 
 export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
   const path = `${LOCAL_DATA_URL}/base-dados/drafts/videos/${encodeURIComponent(video.id)}`;
-  const contentKey = video.contentHash || video.fileName || video.id;
-  return `${path}?v=${encodeURIComponent(contentKey)}`;
+  return `${path}?v=${encodeURIComponent(video.updatedAt)}`;
 }
 
 export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">) {
