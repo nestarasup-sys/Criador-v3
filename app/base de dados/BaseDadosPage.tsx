@@ -285,7 +285,7 @@ export default function BaseDadosPage() {
       draftsRef.current = next;
       writeBaseDadosDrafts(window.localStorage, next);
       setDrafts(next);
-      setMessage(`${video.fileName} excluído.`);
+      setMessage(result.cleanupPending ? `${video.fileName} excluído da lista. O arquivo está preservado na quarentena e será limpo quando deixar de estar em uso.` : `${video.fileName} excluído.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível excluir o vídeo.");
     } finally { setBusy(""); }

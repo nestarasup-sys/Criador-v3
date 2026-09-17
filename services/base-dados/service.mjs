@@ -325,11 +325,19 @@ export function createBaseDadosService(root) {
           const quarantinePath = join(quarantineRoot, `${item.fileName}.${Date.now()}.pending-delete`);
           await mkdir(quarantineRoot, { recursive: true });
           let quarantined = false;
+          let cleanupPending = false;
           try {
             await rename(originalPath, quarantinePath);
             quarantined = true;
           } catch (error) {
-            if (error?.code !== "ENOENT") throw error;
+            if (error?.code !== "ENOENT") {
+              // A mídia pode estar aberta pelo player no Windows. Preserve uma
+              // cópia recuperável e não bloqueie a remoção do metadado.
+              try { await copyFile(originalPath, quarantinePath); } catch { cleanupPending = true; }
+              if (!cleanupPending) {
+                try { await rm(originalPath, { force: false }); } catch { cleanupPending = true; }
+              }
+            }
           }
           const previousVideos = state.videos;
           state.videos = state.videos.filter((video) => video.id !== id);
@@ -341,7 +349,8 @@ export function createBaseDadosService(root) {
             throw error;
           }
           if (quarantined) await rm(quarantinePath, { force: true }).catch(() => undefined);
-          return { state };
+          if (!cleanupPending) await rm(quarantinePath, { force: true }).catch(() => undefined);
+          return { state, cleanupPending };
         });
         sendJson(response, responseHeaders, 200, { ok: true, ...result });
         return true;

@@ -62,7 +62,7 @@ export async function patchBaseDadosVideo(id: string, patch: Partial<Pick<BaseDa
 
 export async function removeBaseDadosVideo(id: string) {
   const result = await request(`/base-dados/videos/${encodeURIComponent(id)}`, { method: "DELETE" });
-  return result as unknown as { state: BaseDadosState };
+  return result as unknown as { state: BaseDadosState; cleanupPending?: boolean };
 }
 
 export async function openBaseDadosFolder() {
