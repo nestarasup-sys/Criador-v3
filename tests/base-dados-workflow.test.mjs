@@ -89,17 +89,16 @@ test("recupera rascunhos locais sem ressuscitar vídeos excluídos", async () =>
 test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSeconds", async () => {
   const { loaded, root } = await bundled("app/roteiros/base-dados-import.ts");
   try {
-    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 25, createdAt: "", updatedAt: "" }];
+    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, createdAt: "", updatedAt: "" }];
     const characters = [{ id: "char-01", name: "Duque", model: "masculino", photoUrl: undefined, updatedAt: "" }];
     const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", englishText: "Hello", startAt: 2 }] };
     const validation = loaded.validateImportableScript(valid, videos, characters);
     assert.equal(validation.success, true);
     assert.equal(validation.issues.some((item) => item.level === "warning"), true);
-    assert.match(validation.issues.map((item) => item.message).join(" "), /primeira reação em grupo.*ultrapassa/);
     const state = { version: 1, profiles: [{ characterId: "char-01", personality: "Ficha antiga", backstory: "", fynRelationship: "", speakingStyle: "Antigo", relationships: [], additionalRules: "", updatedAt: "" }], scripts: [], globalRules: [], settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: .4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 } };
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
-    assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 25);
+    assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 12);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 10);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].englishText, "Hello");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").personality, "Ficha enviada no JSON");

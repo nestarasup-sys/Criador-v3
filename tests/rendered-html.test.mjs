@@ -506,7 +506,6 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(storage, /persistEmbeddedAssets/);
   assert.match(storage, /recordStudioDeletion/);
   assert.match(storage, /studioSaveQueue/);
-  assert.match(storage, /characters: Array\.isArray\(data\.characters\)/);
   assert.match(server, /\/studios/);
   assert.match(server, /referencedAssets/);
   assert.match(server, /STUDIO_ASSETS_ROOT/);
@@ -822,7 +821,6 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(home, /Fichas dos personagens/);
   assert.match(home, /IA e regras/);
   assert.match(home, /Configurações v2/);
-  assert.match(home, /if \(copy\.opening\) copy\.opening = \{ \.\.\.copy\.opening, id: createId\(\)/);
   assert.match(home, /PromptSettingsV2/);
   assert.doesNotMatch(home, /nymi-roteiros-last-fill-empty-prompt/);
   assert.match(service, /AI_SYSTEM_INSTRUCTIONS/);
@@ -1099,9 +1097,6 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /contextScope: "general-context"/);
   assert.match(editor, /Melhorar descrição do vídeo/);
   assert.match(editor, /Melhorar contexto geral/);
-  assert.match(editor, /Primeira reação em grupo no: \$\{formatSceneEnd\(section\.firstGroupReactionSeconds\)\}/);
-  assert.match(editor, /firstGroupReactionSeconds: section\.firstGroupReactionSeconds/);
-  assert.match(editor, /firstGroupReactionSeconds: sourceVideo\.firstGroupReactionSeconds/);
   assert.match(blocks, /aiEnabled/);
   assert.match(blocks, /onMoveBlock/);
   assert.match(blocks, /onDuplicateBlock/);

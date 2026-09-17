@@ -75,7 +75,6 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
       if (localVideo.fileAvailable === false) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O arquivo local do vídeo ${videoId} não existe mais na Base de dados.` });
       if (!Number.isFinite(localVideo.sceneEndSeconds) || localVideo.sceneEndSeconds < 0) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O tempo final da cena do vídeo ${videoId} é inválido.` });
       else if (localVideo.sceneEndSeconds > localVideo.durationSeconds) issues.push({ level: "warning", path: `videos[${index}].videoId`, message: `O fim da descrição do vídeo ${videoId} ultrapassa sua duração total.` });
-      if (Number.isFinite(localVideo.firstGroupReactionSeconds) && localVideo.firstGroupReactionSeconds > localVideo.durationSeconds) issues.push({ level: "warning", path: `videos[${index}].videoId`, message: `A primeira reação em grupo do vídeo ${videoId} ultrapassa sua duração total.` });
     }
     if (videoId && Number.isInteger(order) && order > 0 && localVideo) normalizedVideos.push({ videoId, order });
   });

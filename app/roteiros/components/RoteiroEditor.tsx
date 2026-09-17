@@ -299,8 +299,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
   const copyTikTok = async () => {
     const lines = section.reactionBlocks.filter((block) => block.characterId && (block.text.trim() || block.emotion.trim())).map((block, index) => `${index + 1}. ${characterName(block.characterId)} — ${typeLabel[block.type]}${block.emotion ? ` (${block.emotion})` : ""}\n${block.text}${block.englishText ? `\nEnglish: ${block.englishText}` : ""}`);
     if (!lines.length) return setMessage("Não há conteúdo para copiar.");
-    const timing = opening ? "" : `\n\nCena da descrição termina no: ${formatSceneEnd(section.sceneEndSeconds)}\nPrimeira reação em grupo no: ${formatSceneEnd(section.firstGroupReactionSeconds)}`;
-    await navigator.clipboard.writeText(`${opening ? "Abertura" : section.title || `TikTok ${sectionIndex + 1}`}\n\n${section.description}${timing}\n\n${lines.join("\n\n")}`);
+    await navigator.clipboard.writeText(`${opening ? "Abertura" : section.title || `TikTok ${sectionIndex + 1}`}\n\n${section.description}\n\n${lines.join("\n\n")}`);
     setMessage(`Conteúdo da ${opening ? "abertura" : "TikTok"} copiado.`);
   };
 
@@ -353,7 +352,6 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         name: section.video.name,
         description: section.description,
         sceneEndSeconds: section.sceneEndSeconds,
-        firstGroupReactionSeconds: section.firstGroupReactionSeconds,
         durationSeconds: section.video.durationSeconds,
       });
       setMessage(result.duplicate
@@ -610,7 +608,6 @@ export default function RoteiroEditor() {
             title: `Vídeo ${String(sourceVideo.sequence).padStart(2, "0")}`,
             description: sourceVideo.description,
             sceneEndSeconds: sourceVideo.sceneEndSeconds,
-            firstGroupReactionSeconds: sourceVideo.firstGroupReactionSeconds,
             reactionBlocks: [],
             video,
             updatedAt: nowIso(),
@@ -626,7 +623,7 @@ export default function RoteiroEditor() {
         setActiveSectionId(nextState.scripts.find((item) => item.id === script.id)?.tiktoks.at(-1)?.id || "");
         setOpeningActive(false);
       }
-      setExportMessage(`Base de dados importada: ${imported.length}/${database.videos.length} vídeo(s), com descrições e tempos da cena e da primeira reação.${skipped.length ? ` Ignorados por já estarem neste roteiro: ${skipped.join(", ")}.` : ""}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+      setExportMessage(`Base de dados importada: ${imported.length}/${database.videos.length} vídeo(s), com descrições e tempos da cena.${skipped.length ? ` Ignorados por já estarem neste roteiro: ${skipped.join(", ")}.` : ""}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível importar a Base de dados."); }
     finally { setExportLoading(""); }
   };

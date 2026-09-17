@@ -167,7 +167,7 @@ export async function loadAppData(): Promise<LoadedAppData> {
     const studios = migrationAvailable ? mergeStudios(pcStudios, browserStudios, browserDeletions) : pcStudios;
     mirrorStudios(studios);
     return {
-      characters: Array.isArray(data.characters) ? normalizeCharacterModels(data.characters) : localCharacters,
+      characters: data.characters?.length ? normalizeCharacterModels(data.characters) : localCharacters,
       catalog: data.catalog ?? [],
       expressionPacks: data.expressionPacks ?? [],
       modelPacks,
