@@ -18,13 +18,14 @@ async function bundled(modulePath) {
 test("exporta a base completa e o tempo final da cena com personagens selecionados", async () => {
   const { loaded, root } = await bundled("app/base de dados/export-contract.ts");
   try {
-    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, createdAt: "", updatedAt: "" }] };
+    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, createdAt: "", updatedAt: "" }] };
     const text = loaded.buildBaseDadosExportText(database, [{ characterId: "char-01", name: "Duque", narrativeProfile: { characterId: "char-01", personality: "Reservado", backstory: "História do Duque", fynRelationship: "Aliado", speakingStyle: "Formal", additionalRules: "Não inventa fatos", relationships: [{ id: "rel-01", targetCharacterId: "char-02", description: "Confia pouco" }], updatedAt: "" } }], "2026-01-01T00:00:00.000Z");
     assert.match(text, /NYMI_BASE_DATABASE_EXPORT_V2/);
     assert.match(text, /CAMINHO ABSOLUTO: C:\\NYMI\\01\.mp4/);
     assert.match(text, /REFERÊNCIA CANÔNICA: video-01/);
     assert.match(text, /HASH SHA-256: não calculado/);
     assert.match(text, /TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: 10\.00 segundos/);
+    assert.match(text, /TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: 12\.00 segundos/);
     assert.match(text, /TEMPO TOTAL DO VÍDEO: 20\.00 segundos/);
     assert.match(text, /ID: char-01/);
     assert.match(text, /FICHA DO ROTEIROS \(JSON\):/);
@@ -37,6 +38,7 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
     assert.match(guide, /Não crie blocos em excesso/);
     assert.match(guide, /NYMI_IMPORTABLE_SCRIPT_V1/);
     assert.match(guide, /Não inclua uma seção de abertura/);
+    assert.match(loaded.buildBaseDadosSimpleExportText(database, []), /TEMPO DA PRIMEIRA REAÇÃO EM GRUPO/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -87,7 +89,7 @@ test("recupera rascunhos locais sem ressuscitar vídeos excluídos", async () =>
 test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSeconds", async () => {
   const { loaded, root } = await bundled("app/roteiros/base-dados-import.ts");
   try {
-    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, createdAt: "", updatedAt: "" }];
+    const videos = [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, createdAt: "", updatedAt: "" }];
     const characters = [{ id: "char-01", name: "Duque", model: "masculino", photoUrl: undefined, updatedAt: "" }];
     const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", englishText: "Hello", startAt: 2 }] };
     const validation = loaded.validateImportableScript(valid, videos, characters);
@@ -96,6 +98,7 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const state = { version: 1, profiles: [{ characterId: "char-01", personality: "Ficha antiga", backstory: "", fynRelationship: "", speakingStyle: "Antigo", relationships: [], additionalRules: "", updatedAt: "" }], scripts: [], globalRules: [], settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: .4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 } };
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
+    assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 12);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 10);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].englishText, "Hello");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").personality, "Ficha enviada no JSON");
