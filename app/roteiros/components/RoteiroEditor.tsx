@@ -456,7 +456,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
 
 export default function RoteiroEditor() {
   const params = useParams<{ id: string }>();
-  const { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow } = useRoteirosData();
+  const { ready, state, characters, characterLoadError, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveNow } = useRoteirosData();
   const [castOpen, setCastOpen] = useState(false);
   const [improvedGeneral, setImprovedGeneral] = useState("");
   const [generalLoading, setGeneralLoading] = useState(false);
@@ -709,6 +709,7 @@ export default function RoteiroEditor() {
 
   return <div className={styles.editorShell}>
     <RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />
+    {characterLoadError && <div className={styles.aiWarning} role="alert">Os personagens do Criador não puderam ser carregados: {characterLoadError} A edição continua aberta, mas as fichas e o elenco podem estar incompletos.</div>}
     <RoteiroHeader script={script} saveStatus={saveStatus} pcAvailable={pcAvailable} saveNow={() => void saveNow()} addTikTok={addTikTok} />
     <div className={styles.editorLayout}>
       <aside className={styles.tiktokIndex}>

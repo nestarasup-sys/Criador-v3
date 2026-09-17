@@ -71,7 +71,10 @@ export async function restoreRoteiroBackup(fileName: string) {
 
 export async function loadPremiumCharacters(): Promise<PremiumCharacter[]> {
   const result = await request("/state");
-  return Array.isArray(result.characters) ? result.characters as PremiumCharacter[] : [];
+  if (!Array.isArray(result.characters)) {
+    throw Object.assign(new Error("A biblioteca de personagens retornou um formato inválido."), { code: "INVALID_CHARACTER_LIBRARY" });
+  }
+  return result.characters as PremiumCharacter[];
 }
 
 export async function loadPremiumStudioData(): Promise<{
