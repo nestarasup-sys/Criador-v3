@@ -37,7 +37,7 @@ function scriptFixture() {
     aiContext: { profiles: [profile("char-duque", "Local do roteiro"), profile("char-fyn", "Fyn local")], rules: [{ id: "rule-local", title: "Regra local", description: "Não inventar", enabled: true, priority: "high", createdAt: "", updatedAt: "" }] },
     opening: { id: "opening-transfer", title: "Abertura", description: "Eles se reúnem.", timeline: "present", sceneGoal: "Preparar a sala", userInstruction: "", specificRules: "", shortLines: false, reactionBlocks: [], createdAt: "", updatedAt: "" },
     tiktoks: [
-      { id: "tiktok-1", title: "Primeiro", description: "A cena começa.", sceneEndSeconds: 7, timeline: "present", sceneGoal: "Apresentar o conflito", userInstruction: "", specificRules: "", shortLines: false, video: { name: "01.mp4", storedPath: "videos/01.mp4", contentType: "video/mp4", size: 1, updatedAt: "", durationSeconds: 15 }, reactionBlocks: [block("empty-1", "char-duque", "auto", ""), block("manual-1", "char-fyn", "speech", "Já escrevi manualmente.", "firme")], createdAt: "", updatedAt: "" },
+      { id: "tiktok-1", title: "Primeiro", description: "A cena começa.", sceneEndSeconds: 7, firstGroupReactionSeconds: 9.5, timeline: "present", sceneGoal: "Apresentar o conflito", userInstruction: "", specificRules: "", shortLines: false, video: { name: "01.mp4", storedPath: "videos/01.mp4", contentType: "video/mp4", size: 1, updatedAt: "", durationSeconds: 15 }, reactionBlocks: [block("empty-1", "char-duque", "auto", ""), block("manual-1", "char-fyn", "speech", "Já escrevi manualmente.", "firme")], createdAt: "", updatedAt: "" },
       { id: "tiktok-2", title: "Segundo", description: "O conflito aumenta.", timeline: "past", sceneGoal: "Aumentar a tensão", userInstruction: "", specificRules: "", shortLines: false, reactionBlocks: [], createdAt: "", updatedAt: "" },
     ],
     createdAt: "",
@@ -54,6 +54,7 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.equal(context.instructions.minimumBlockSeconds, 3.2);
   assert.deepEqual(context.tiktoks[0].durationSeconds, 15);
   assert.deepEqual(context.tiktoks[0].reactionStartSeconds, 7);
+  assert.deepEqual(context.tiktoks[0].firstGroupReactionSeconds, 9.5);
   assert.deepEqual(context.tiktoks[0].reactionWindowSeconds, 8);
   assert.deepEqual(context.tiktoks[0].recommendedBlockCount, 3);
   assert.deepEqual(context.tiktoks[0].recommendedBlockRange, { min: 2, max: 4 });
@@ -69,6 +70,7 @@ test("exporta um único contexto de texto com duração, abertura, fichas locais
   assert.match(text, /# CONTEXTO COMPLETO DO ROTEIRO/);
   assert.match(text, /3,2 segundos/);
   assert.match(text, /Janela disponível para reações: 8 segundos/);
+  assert.match(text, /Primeira reação em grupo pode começar no segundo: 9\.5/);
   assert.match(text, /Blocos recomendados: 2–4 \(alvo 3\)/);
   assert.match(text, /REGRAS ESTRUTURAIS PROTEGIDAS/);
   assert.match(text, /Falas são ouvidas/);
