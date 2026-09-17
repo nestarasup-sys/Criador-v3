@@ -122,9 +122,9 @@ export function buildBaseDadosSimpleExportText(
 }
 
 export function buildBaseDadosGuide() {
-  return `# Guia V5 — criar roteiro importável para o Nymi Gacha
+  return `# Guia V6 — criar roteiro importável para o Nymi Gacha
 
-> Versão do guia: V5. Este guia permite importar personagens novos, contexto geral, uma abertura antes do TikTok 01 e o texto em inglês de cada bloco.
+> Versão do guia: V6. Este guia permite importar personagens novos, contexto geral, uma abertura antes do TikTok 01 e o texto em inglês de cada bloco. O pacote inclui todos os vídeos atualmente cadastrados na Base de dados no momento da exportação.
 
 ## Objetivo
 
@@ -140,6 +140,7 @@ Você receberá dados exportados da **Base de dados** com vídeos e personagens.
 ## Fonte de verdade e isolamento
 
 - Use somente os dados presentes no TXT recebido nesta solicitação.
+- O pacote completo contém todos os vídeos atuais da Base de dados; não assuma que a numeração termina em um valor fixo e não descarte vídeos válidos por aparecerem depois dos exemplos.
 - Use os IDs exatos dos vídeos. Para personagens, reutilize um \`characterId\` listado ou crie um ID novo e único quando quiser que o Nymi crie esse personagem automaticamente.
 - Um personagem novo precisa trazer \`characterId\`, \`name\` e \`model\` (\`feminino\` ou \`masculino\`). Inclua \`aliases\` e \`narrativeProfile\` completo para que ele seja utilizável no roteiro.
 - Nunca use o ID de um personagem existente para representar outro personagem: IDs existentes reutilizam o personagem já salvo no app.
@@ -175,7 +176,7 @@ Esses números são referências de economia, não uma autorização para apagar
 
 - Diferencie sempre entre descrição de vídeo e roteiro já escrito.
 - Se a entrada contiver blocos de fala ou pensamento, eles são conteúdo autoral do usuário e devem ser mantidos integralmente.
-- O Guia V4 não exige reduzir a quantidade de blocos de um roteiro existente.
+- O Guia V6 não exige reduzir a quantidade de blocos de um roteiro existente.
 - Só faça alterações em blocos existentes se o usuário pedir explicitamente para revisar, melhorar, substituir ou reorganizar.
 - Se o JSON estiver sendo montado a partir de um roteiro fornecido, copie cada bloco válido para o JSON e preserve seu personagem, tipo, texto e vínculo com o vídeo.
 
