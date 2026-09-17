@@ -69,7 +69,7 @@ export default function DraftsPage() {
   const visible = useMemo(() => (database?.videos || []).filter((video) => {
     const value = valueFor(video); const filled = Boolean(value.description.trim());
     return (!query.trim() || `${video.fileName} ${value.description}`.toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR"))) && (filter === "all" || (filter === "filled" ? filled : !filled));
-  }), [database, drafts, filter, query, valueFor]);
+  }), [database, filter, query, valueFor]);
 
   return <div className={`${styles.app} ${styles.scaled}`}>
     <header className={`${styles.topbar} topbar`}><div className={styles.topbarBrand}><Link href="/base%20de%20dados" className={`${styles.topbarBack} button secondary`} aria-label="Voltar para a Base de dados">←</Link><NymiBrand /><div className={styles.moduleTitle}><span>BIBLIOTECA</span><strong>ÁREA DE RASCUNHO</strong></div></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /></div></header>
