@@ -174,8 +174,8 @@ export default function BaseDadosPage() {
     setBusy(`save:${latestVideo.id}`); setMessage("");
     try {
       const result = await patchBaseDadosVideo(latestVideo.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(latestVideo.metadataRevision ?? 0) }, controller.signal);
-      if (saveRevisionRef.current[latestVideo.id] !== revision) return;
       databaseRef.current = result.state;
+      if (saveRevisionRef.current[latestVideo.id] !== revision) return;
       setDatabase(result.state);
       const currentDraft = draftsRef.current[latestVideo.id];
       const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}\u0000${draft.firstGroupReactionSeconds ?? "0"}`;

@@ -53,7 +53,8 @@ export default function DraftsPage() {
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return; }
     try {
       const result = await patchBaseDadosDraft(latestVideo.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds, expectedRevision: Number(latestVideo.metadataRevision ?? 0) });
-      if (revisions.current[latestVideo.id] === revision) { databaseRef.current = result.state; setDatabase(result.state); }
+      databaseRef.current = result.state;
+      if (revisions.current[latestVideo.id] === revision) setDatabase(result.state);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
