@@ -9,7 +9,7 @@ import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import { readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
 import { buildBaseDadosExportText, buildBaseDadosGuide, buildBaseDadosSimpleExportText, mergeBaseDadosDrafts } from "./export-contract";
-import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
+import { downloadText, loadBaseDados, loadBaseDadosCharacterData, loadBaseDadosCharacterSummaries, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl, type BaseDadosCharacterSummary } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
 import { beginBusyOperation, endBusyOperation } from "./busy-tracker";
 import { createScriptFromImport, validateImportableScript, type ImportValidation } from "../roteiros/base-dados-import";
@@ -38,7 +38,7 @@ function readVideoDuration(file: File) {
 
 export default function BaseDadosPage() {
   const [database, setDatabase] = useState<BaseDadosState | null>(null);
-  const [characterData, setCharacterData] = useState<{ characters: Character[]; profiles: NarrativeProfile[] }>({ characters: [], profiles: [] });
+  const [characterData, setCharacterData] = useState<{ characters: BaseDadosCharacterSummary[]; profiles: NarrativeProfile[] }>({ characters: [], profiles: [] });
   const [roteirosState, setRoteirosState] = useState<RoteirosState | null>(null);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
@@ -76,14 +76,14 @@ export default function BaseDadosPage() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const [loadedDatabase, loadedCharacters, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterData(), loadRoteirosState()]);
+      const [loadedDatabase, characterSummaries, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterSummaries(), loadRoteirosState()]);
       const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
       databaseRef.current = loadedDatabase;
       draftsRef.current = recoveredDrafts;
       setDatabase(loadedDatabase);
       setDrafts(recoveredDrafts);
       writeBaseDadosDrafts(window.localStorage, recoveredDrafts);
-      setCharacterData(loadedCharacters);
+      setCharacterData({ characters: characterSummaries, profiles: Array.isArray(loadedRoteiros.state.profiles) ? loadedRoteiros.state.profiles : [] });
       setRoteirosState(loadedRoteiros.state);
       setMessage("");
     } catch (error) {
@@ -392,7 +392,10 @@ export default function BaseDadosPage() {
     });
     try {
       await createRoteiroBackup();
-      if (createdCharacters.length) await savePremiumCharacters([...createdCharacters, ...characterData.characters]);
+      if (createdCharacters.length) {
+        const fullCharacterData = await loadBaseDadosCharacterData();
+        await savePremiumCharacters([...createdCharacters, ...fullCharacterData.characters]);
+      }
       for (const item of draft.sections) {
         item.section.video = await importBaseDadosVideoIntoRoteiro(draft.script.id, item.section.id, item.sourceVideo.id);
         copiedSectionIds.push(item.section.id);

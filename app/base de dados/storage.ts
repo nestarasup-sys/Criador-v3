@@ -3,6 +3,8 @@ import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import type { BaseDadosDraftState, BaseDadosState, BaseDadosVideo } from "./types";
 
+export type BaseDadosCharacterSummary = Pick<Character, "id" | "name" | "model" | "updatedAt"> & Partial<Pick<Character, "photoUrl" | "photoDataUrl">>;
+
 function metadata(value: unknown) {
   return { "X-Gacha-Meta": encodeURIComponent(JSON.stringify(value)) };
 }
@@ -28,6 +30,12 @@ export async function loadBaseDadosCharacterData() {
     characters: Array.isArray(appState.characters) ? appState.characters as Character[] : [],
     profiles: Array.isArray(roteirosState.profiles) ? roteirosState.profiles as NarrativeProfile[] : [],
   };
+}
+
+export async function loadBaseDadosCharacterSummaries(): Promise<BaseDadosCharacterSummary[]> {
+  const result = await request("/characters");
+  if (!Array.isArray(result.characters)) throw new Error("A biblioteca de personagens retornou um formato inválido.");
+  return result.characters as BaseDadosCharacterSummary[];
 }
 
 export function baseDadosVideoUrl(video: BaseDadosVideo) {
