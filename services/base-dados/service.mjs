@@ -6,6 +6,7 @@ import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
 import { BODY_LIMITS, VIDEO_MIME_TYPES, assertContentLength, assertMimeType, contentTypeOf } from "../security/local-security.mjs";
+import { probeVideoDuration } from "../media/video-metadata.mjs";
 
 const EMPTY_STATE = { app: "NYMI_BASE_DADOS_V1", version: 1, nextSequence: 1, videos: [], updatedAt: new Date(0).toISOString() };
 
@@ -195,11 +196,14 @@ export function createBaseDadosService(root) {
     if (sourceInfo.size > BODY_LIMITS.video) throw Object.assign(new Error("Arquivo grande demais para esta operação."), { status: 413 });
     const contentType = String(metadata.contentType || contentTypeOf({ headers: { "content-type": "application/octet-stream" } }, metadata));
     assertMimeType(contentType, VIDEO_MIME_TYPES, "A Base aceita somente vídeos MP4, WebM ou MOV.");
+    const suppliedDuration = Number(metadata.durationSeconds);
+    const detectedDuration = Number.isFinite(suppliedDuration) && suppliedDuration > 0 ? suppliedDuration : await probeVideoDuration(sourcePath);
+    const resolvedMetadata = detectedDuration === null ? metadata : { ...metadata, durationSeconds: detectedDuration };
     const contentHash = await hashFile(sourcePath);
     const existingResult = await findVideoByHash(contentHash);
     if (existingResult.changed && !existingResult.item) await persist();
     if (existingResult.item) {
-      const updated = await updateImportedMetadata(existingResult.item, metadata);
+      const updated = await updateImportedMetadata(existingResult.item, resolvedMetadata);
       return { duplicate: true, video: await withFileStatus(root, updated), state };
     }
 
@@ -215,7 +219,7 @@ export function createBaseDadosService(root) {
       storedPath: `base-de-dados/videos/${fileName}`,
       absolutePath: videoPath(root, { fileName }), fileAvailable: true,
       contentType, size: sourceInfo.size, contentHash,
-      durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
+      durationSeconds: Number(resolvedMetadata.durationSeconds) >= 0 ? Number(resolvedMetadata.durationSeconds) : 0,
       description: String(metadata.description || ""),
       sceneEndSeconds: Number(metadata.sceneEndSeconds) >= 0 ? Number(metadata.sceneEndSeconds) : 0,
       firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) >= 0 ? Number(metadata.firstGroupReactionSeconds) : 0,
@@ -240,7 +244,16 @@ export function createBaseDadosService(root) {
       await mkdir(backupsRoot, { recursive: true });
       try {
         state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
-        state.videos = await Promise.all(state.videos.map((item) => withFileStatus(root, item)));
+        let durationBackfill = false;
+        state.videos = await Promise.all(state.videos.map(async (item) => {
+          const current = await withFileStatus(root, item);
+          if (!current.fileAvailable || Number(current.durationSeconds) > 0) return current;
+          const duration = await probeVideoDuration(videoPath(root, current));
+          if (duration === null) return current;
+          durationBackfill = true;
+          return { ...current, durationSeconds: duration, updatedAt: new Date().toISOString() };
+        }));
+        if (durationBackfill) await persist();
       } catch (error) {
         if (error?.code !== "ENOENT") throw error;
         await writeJsonAtomic(statePath, state);
