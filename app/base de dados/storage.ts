@@ -10,7 +10,14 @@ function metadata(value: unknown) {
 async function request(path: string, init?: RequestInit) {
   const response = await localDataFetch(path, { cache: "no-store", ...init });
   const result = await response.json().catch(() => ({})) as Record<string, unknown>;
-  if (!response.ok) throw new Error(String(result.error || `Serviço local indisponível (${response.status})`));
+  if (!response.ok) {
+    const error = Object.assign(new Error(String(result.error || `Serviço local indisponível (${response.status})`)), {
+      code: typeof result.code === "string" ? result.code : undefined,
+      requestId: typeof result.requestId === "string" ? result.requestId : undefined,
+      status: response.status,
+    });
+    throw error;
+  }
   return result;
 }
 
@@ -32,7 +39,9 @@ export async function loadBaseDadosCharacterData() {
 
 export function baseDadosVideoUrl(video: BaseDadosVideo) {
   const path = video.url || `${LOCAL_DATA_URL}/base-dados/videos/${encodeURIComponent(video.id)}`;
-  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(video.updatedAt)}`;
+  // Metadata updates must not invalidate the media resource. The content hash
+  // changes only when the underlying video changes.
+  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(video.contentHash || video.fileName)}`;
 }
 
 export async function uploadBaseDadosVideo(file: File, durationSeconds: number) {
@@ -46,7 +55,7 @@ export async function uploadBaseDadosVideo(file: File, durationSeconds: number) 
   return { video: result.video, state: result.state };
 }
 
-export async function patchBaseDadosVideo(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">, signal?: AbortSignal) {
+export async function patchBaseDadosVideo(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">> & { expectedRevision?: number }, signal?: AbortSignal) {
   const result = await request(`/base-dados/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch), signal });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosState };
 }
@@ -68,10 +77,10 @@ export async function loadBaseDadosDrafts() {
 
 export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
   const path = `${LOCAL_DATA_URL}/base-dados/drafts/videos/${encodeURIComponent(video.id)}`;
-  return `${path}?v=${encodeURIComponent(video.updatedAt)}`;
+  return `${path}?v=${encodeURIComponent(video.contentHash || video.fileName)}`;
 }
 
-export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">) {
+export async function patchBaseDadosDraft(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">> & { expectedRevision?: number }) {
   const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
 }

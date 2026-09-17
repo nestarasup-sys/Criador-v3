@@ -53,7 +53,7 @@ function sendJson(response, headers, status, value) {
 }
 
 function normalizeState(value) {
-  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0 })) : [];
+  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, metadataRevision: Number.isInteger(item.metadataRevision) && item.metadataRevision >= 0 ? item.metadataRevision : 0, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0 })) : [];
   const highestSequence = videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0);
   const requestedNext = Number(value?.nextSequence);
   const nextSequence = Number.isInteger(requestedNext) && requestedNext > highestSequence ? requestedNext : highestSequence + 1;
@@ -209,6 +209,7 @@ export function createBaseDadosService(root) {
       description: String(metadata.description || ""),
       sceneEndSeconds: Number(metadata.sceneEndSeconds) >= 0 ? Number(metadata.sceneEndSeconds) : 0,
       firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) >= 0 ? Number(metadata.firstGroupReactionSeconds) : 0,
+      metadataRevision: 0,
       createdAt: now, updatedAt: now,
     };
     await mkdir(videosRoot, { recursive: true });
@@ -283,15 +284,21 @@ export function createBaseDadosService(root) {
         const result = await enqueueMutation(async () => {
           const index = state.videos.findIndex((video) => video.id === id);
           if (index < 0) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
-          const sceneEndSeconds = Number(body?.sceneEndSeconds);
           const current = state.videos[index];
+          const expectedRevision = body?.expectedRevision === undefined ? undefined : Number(body.expectedRevision);
+          const currentRevision = Number(current.metadataRevision ?? 0);
+          if (expectedRevision !== undefined && (!Number.isInteger(expectedRevision) || expectedRevision !== currentRevision)) {
+            throw Object.assign(new Error("Este vídeo foi alterado por outra operação. Recarregue antes de salvar."), { status: 409, code: "STALE_BASE_VIDEO_REVISION", entity: "base-video", entityId: id, currentRevision });
+          }
+          const sceneEndSeconds = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
           if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
-          const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, firstGroupReactionSeconds, updatedAt: new Date().toISOString() };
+          const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
+          const updated = { ...current, description, sceneEndSeconds, firstGroupReactionSeconds, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           state.videos = state.videos.map((video) => video.id === id ? updated : video);
           await persist();
-          return { video: await withFileStatus(root, updated), state };
+          return { video: await withFileStatus(root, updated), state, revision: updated.metadataRevision };
         });
         sendJson(response, responseHeaders, 200, { ok: true, ...result });
         return true;

@@ -17,6 +17,8 @@ export type BaseDadosVideo = {
   sceneEndSeconds: number;
   /** Segundo em que a primeira reação coletiva pode começar. */
   firstGroupReactionSeconds: number;
+  /** Incremented by the local server for every metadata commit. */
+  metadataRevision?: number;
   createdAt: string;
   updatedAt: string;
 };

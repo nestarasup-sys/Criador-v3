@@ -49,7 +49,7 @@ export default function BaseDadosPage() {
   const [drafts, setDrafts] = useState<Record<string, VideoDraft>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
-  const [, setMessage] = useState("");
+  const [message, setMessage] = useState("");
   const [importPreview, setImportPreview] = useState<{ validation: ImportValidation; database: BaseDadosState; roteiroState: RoteirosState } | null>(null);
   const [importing, setImporting] = useState(false);
   const databaseRef = useRef<BaseDadosState | null>(null);
@@ -132,7 +132,14 @@ export default function BaseDadosPage() {
     // next request race and potentially restore an older draft. saveJobsRef
     // serializes revisions for each video; cancellation remains reserved for
     // unmount and deletion.
-    const next = { ...draftsRef.current, [id]: { ...(draftsRef.current[id] ?? { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", changedAt: 0 }), ...patch, changedAt: (draftsRef.current[id]?.changedAt ?? 0) + 1 } };
+    const sourceVideo = databaseRef.current?.videos.find((video) => video.id === id);
+    const existing = draftsRef.current[id] ?? (sourceVideo ? {
+      description: sourceVideo.description,
+      sceneEndSeconds: String(sourceVideo.sceneEndSeconds),
+      firstGroupReactionSeconds: String(sourceVideo.firstGroupReactionSeconds),
+      changedAt: 0,
+    } : { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", changedAt: 0 });
+    const next = { ...draftsRef.current, [id]: { ...existing, ...patch, changedAt: existing.changedAt + 1 } };
     draftsRef.current = next;
     writeBaseDadosDrafts(window.localStorage, next);
     setDrafts(next);
@@ -165,7 +172,7 @@ export default function BaseDadosPage() {
     saveControllersRef.current.set(video.id, controller);
     setBusy(`save:${video.id}`); setMessage("");
     try {
-      const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds }, controller.signal);
+      const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) }, controller.signal);
       if (saveRevisionRef.current[video.id] !== revision) return;
       databaseRef.current = result.state;
       setDatabase(result.state);
@@ -182,6 +189,10 @@ export default function BaseDadosPage() {
       setMessage(`${video.fileName} salvo.`);
     } catch (error) {
       if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+      if (error instanceof Error && (error as Error & { code?: string }).code === "STALE_BASE_VIDEO_REVISION") {
+        setMessage(`${video.fileName} foi alterado por outra operação. Sua edição continua preservada neste navegador; atualize antes de salvar novamente.`);
+        return;
+      }
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar as alterações.");
     } finally {
       if (saveControllersRef.current.get(video.id) === controller) saveControllersRef.current.delete(video.id);
@@ -514,10 +525,11 @@ export default function BaseDadosPage() {
       {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
       {importedManagerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setImportedManagerOpen(false); }}><section className={`${styles.characterPickerPanel} ${styles.importedManagerPanel}`} role="dialog" aria-modal="true" aria-labelledby="base-dados-imported-title"><header><div><span className={styles.eyebrow}>BIBLIOTECA DE ELENCOS</span><h2 id="base-dados-imported-title">Roteiros importados</h2><p>Personagens criados automaticamente a partir dos seus roteiros.</p></div><button className={styles.closeButton} onClick={() => setImportedManagerOpen(false)} aria-label="Fechar">×</button></header><div className={styles.importedManagerList}>{importedScripts.map((script) => { const importedCharacters = importedCharactersFor(script); return <article className={styles.importedScriptCard} key={script.id}><div className={styles.importedScriptHeading}><span className={styles.importedScriptIcon}>✦</span><div><strong>{script.title}</strong><small>{importedCharacters.length} personagem(ns) criado(s)</small></div></div><div className={styles.importedCharacterChips}>{importedCharacters.length ? importedCharacters.map((character) => <span key={character.id}>{character.name}</span>) : <span>Nenhum personagem novo neste roteiro</span>}</div><div className={styles.importedScriptActions}><button className={styles.secondaryButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, false)}>Manter personagens</button><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, true)}>Excluir roteiro e personagens</button></div></article>; })}</div><footer><span>Personagens utilizados em outros roteiros serão mantidos automaticamente.</span><button className={styles.actionButtonPrimary} onClick={() => setImportedManagerOpen(false)}>Fechar</button></footer></section></div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
+      {message && <p className={styles.message} role="status">{message}</p>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
       {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const groupStart = Number(draft.firstGroupReactionSeconds); const hasKnownDuration = Number.isFinite(video.durationSeconds) && video.durationSeconds > 0; const warning = hasKnownDuration && Number.isFinite(end) && end > video.durationSeconds; const groupWarning = hasKnownDuration && Number.isFinite(groupStart) && groupStart > video.durationSeconds; return <article className={styles.card} key={video.id}>
-        <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
+        <div className={styles.player}><video key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
         <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>
         <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.firstGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label></div><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}
