@@ -21,6 +21,9 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(draftsPage, /const save = async \(video: BaseDadosVideo, value: DraftValue\): Promise<boolean>/);
   assert.match(draftsPage, /const saved = await flush\(video\);/);
   assert.match(draftsPage, /if \(!saved\) return;/);
+  assert.match(draftsPage, /const dirtyIds = useRef\(new Set<string>\(\)\)/);
+  assert.match(draftsPage, /for \(const id of dirtyIds\.current\)/);
+  assert.match(draftsPage, /if \(!\(await save\(video, value\)\)\) return;/);
   assert.match(page, /Buscar cenas/);
   assert.match(page, /Filtros/);
   assert.match(page, /visibleVideos/);
