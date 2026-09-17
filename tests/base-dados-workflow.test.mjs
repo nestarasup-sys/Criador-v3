@@ -94,12 +94,12 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     const valid = { format: "NYMI_IMPORTABLE_SCRIPT_V1", title: "Teste", videos: [{ videoId: "video-01", order: 1 }], characters: [{ characterId: "char-01", narrativeProfile: { personality: "Ficha enviada no JSON", speakingStyle: "Direto" } }], blocks: [{ type: "speech", characterId: "char-01", videoId: "video-01", text: "Olá", englishText: "Hello", startAt: 2 }] };
     const validation = loaded.validateImportableScript(valid, videos, characters);
     assert.equal(validation.success, true);
-    assert.equal(validation.issues.some((item) => item.level === "warning"), true);
+    assert.equal(validation.issues.some((item) => item.level === "warning"), false);
     const state = { version: 1, profiles: [{ characterId: "char-01", personality: "Ficha antiga", backstory: "", fynRelationship: "", speakingStyle: "Antigo", relationships: [], additionalRules: "", updatedAt: "" }], scripts: [], globalRules: [], settings: { aiProvider: "none", aiBaseUrl: "", aiModel: "", temperature: .4, defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 3 } };
     const draft = loaded.createScriptFromImport(validation.data, videos, characters, state);
     assert.equal(draft.script.tiktoks[0].sceneEndSeconds, 10);
     assert.equal(draft.script.tiktoks[0].firstGroupReactionSeconds, 12);
-    assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 10);
+    assert.equal(draft.script.tiktoks[0].reactionBlocks[0].startAt, 2);
     assert.equal(draft.script.tiktoks[0].reactionBlocks[0].englishText, "Hello");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").personality, "Ficha enviada no JSON");
     assert.equal(draft.script.aiContext.profiles.find((profile) => profile.characterId === "char-01").speakingStyle, "Direto");
@@ -117,8 +117,10 @@ test("valida JSON importável, rejeita repetição e cria TikTok com sceneEndSec
     assert.equal(unavailable.success, false);
     assert.match(unavailable.issues.map((item) => item.message).join(" "), /não existe mais/);
     const withoutDuration = loaded.validateImportableScript(valid, [{ ...videos[0], durationSeconds: 0 }], characters);
-    assert.equal(withoutDuration.success, false);
-    assert.match(withoutDuration.issues.map((item) => item.message).join(" "), /duração calculada/);
+    assert.equal(withoutDuration.success, true);
+    assert.doesNotMatch(withoutDuration.issues.map((item) => item.message).join(" "), /duração calculada|ultrapassa sua duração/);
+    const outOfDescriptionWindow = loaded.createScriptFromImport({ ...valid, blocks: [{ ...valid.blocks[0], startAt: 999 }] }, videos, characters, state);
+    assert.equal(outOfDescriptionWindow.script.tiktoks[0].reactionBlocks[0].startAt, 999);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -153,7 +155,7 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /createScriptFromImport/);
   assert.match(basePage, /Confirmar e criar roteiro/);
   assert.match(basePage, /Pacote completo para IA/);
-  assert.match(basePage, /Guia V5\.md/);
+  assert.match(basePage, /Guia V6\.md/);
   assert.match(basePage, /dados para fazer roteiro\.txt/);
   assert.match(roteiroHome, /Auditar pastas/);
   assert.match(roteiroHome, /Excluir roteiro e pastas/);

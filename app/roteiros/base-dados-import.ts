@@ -70,11 +70,9 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     if (Number.isInteger(order) && order > 0) seenOrders.add(order);
     const localVideo = videoId ? videoMap.get(videoId) : undefined;
     if (localVideo) {
-      if (!Number.isFinite(localVideo.durationSeconds) || localVideo.durationSeconds <= 0) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O vídeo ${videoId} não possui duração calculada localmente.` });
       if (!isAbsolutePath(localVideo.absolutePath)) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O caminho local absoluto do vídeo ${videoId} não está disponível.` });
       if (localVideo.fileAvailable === false) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O arquivo local do vídeo ${videoId} não existe mais na Base de dados.` });
       if (!Number.isFinite(localVideo.sceneEndSeconds) || localVideo.sceneEndSeconds < 0) issues.push({ level: "error", path: `videos[${index}].videoId`, message: `O tempo final da cena do vídeo ${videoId} é inválido.` });
-      else if (localVideo.sceneEndSeconds > localVideo.durationSeconds) issues.push({ level: "warning", path: `videos[${index}].videoId`, message: `O fim da descrição do vídeo ${videoId} ultrapassa sua duração total.` });
     }
     if (videoId && Number.isInteger(order) && order > 0 && localVideo) normalizedVideos.push({ videoId, order });
   });
@@ -130,12 +128,6 @@ export function validateImportableScript(value: unknown, videos: BaseDadosVideo[
     if (type && text && allowedCharacterIds.has(characterId)) normalizedOpeningBlocks.push({ type, characterId, text, ...(englishText ? { englishText } : {}) });
   });
 
-  const selectedVideoMap = new Map(videos.filter((video) => allowedVideoIds.has(video.id)).map((video) => [video.id, video]));
-  normalizedBlocks.forEach((block, index) => {
-    const video = block.videoId ? selectedVideoMap.get(block.videoId) : undefined;
-    if (video && block.startAt !== undefined && block.startAt < video.sceneEndSeconds) issues.push({ level: "warning", path: `blocks[${index}].startAt`, message: `O bloco começará no fim da descrição do vídeo (${video.sceneEndSeconds.toFixed(2)}s), porque o horário informado é anterior.` });
-  });
-
   normalizedVideos.sort((left, right) => left.order - right.order);
   const data: ImportableScriptDocument = { format: IMPORTABLE_SCRIPT_FORMAT, title, videos: normalizedVideos, characters: normalizedCharacters, blocks: normalizedBlocks, ...(stringValue(source.generalContext) ? { generalContext: stringValue(source.generalContext) } : {}), ...(source.opening !== undefined ? { opening: { blocks: normalizedOpeningBlocks } } : {}) };
   return { success: !issues.some((issue) => issue.level === "error"), data, issues };
@@ -157,7 +149,10 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
       const rightTime = right.block.startAt ?? sourceVideo.sceneEndSeconds;
       return leftTime - rightTime || left.index - right.index;
     }).map(({ block }) => {
-      const startAt = Math.max(sourceVideo.sceneEndSeconds, block.startAt ?? sourceVideo.sceneEndSeconds);
+      // O JSON importado é a fonte de verdade. O tempo da descrição serve para
+      // edição futura no app, mas não pode deslocar nem cortar um bloco enviado
+      // explicitamente pela IA/usuário.
+      const startAt = block.startAt ?? sourceVideo.sceneEndSeconds;
       return { id: createId(), characterId: block.characterId, type: block.type, emotion: "", text: block.text, englishText: block.englishText || "", startAt, createdAt: timestamp, updatedAt: timestamp };
     });
     const section: TikTokSection = {
