@@ -193,6 +193,10 @@ export default function BaseDadosPage() {
       setMessage(`${video.fileName} salvo.`);
     } catch (error) {
       if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+      if (error instanceof Error && (error as Error & { code?: string }).code === "STALE_BASE_VIDEO_REVISION") {
+        setMessage(`${video.fileName} foi alterado por outra operação. Sua edição continua preservada neste navegador; atualize a página antes de tentar salvar novamente.`);
+        return;
+      }
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar as alterações.");
     } finally {
       if (saveControllersRef.current.get(video.id) === controller) saveControllersRef.current.delete(video.id);

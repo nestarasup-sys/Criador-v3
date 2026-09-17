@@ -366,6 +366,9 @@ function sendRouteError(response, request, error) {
     error: publicErrorMessage(error),
     code: error?.code || "LOCAL_ERROR",
     requestId,
+    ...(Number.isInteger(error?.currentRevision) ? { currentRevision: error.currentRevision } : {}),
+    ...(error?.entity ? { entity: error.entity } : {}),
+    ...(error?.entityId ? { entityId: error.entityId } : {}),
   });
 }
 
