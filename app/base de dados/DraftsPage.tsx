@@ -44,14 +44,19 @@ export default function DraftsPage() {
     finally { setLoading(false); }
   };
 
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  });
+
   useEffect(() => {
     const timerMap = timers.current;
-    const timer = window.setTimeout(() => { void refresh(); }, 0);
+    const timer = window.setTimeout(() => { void refreshRef.current(); }, 0);
     return () => { window.clearTimeout(timer); timerMap.forEach((item) => window.clearTimeout(item)); };
   }, []);
 
   const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
-  const save = async (video: BaseDadosVideo, value: DraftValue): Promise<boolean> => {
+  async function save(video: BaseDadosVideo, value: DraftValue): Promise<boolean> {
     const end = Number(value.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
@@ -62,7 +67,7 @@ export default function DraftsPage() {
       return true;
     }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
-  };
+  }
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
     const next = { ...currentDrafts.current, [video.id]: { ...valueFor(video), ...patch } };
     dirtyIds.current.add(video.id);
