@@ -397,7 +397,13 @@ export default function BaseDadosPage() {
       window.location.href = `/roteiros/${importedScript.id}`;
     } catch (error) {
       await Promise.all(copiedSectionIds.map((sectionId) => removeRoteiroVideo(draft.script.id, sectionId).catch(() => undefined)));
-      if (createdCharacters.length) await savePremiumCharacters(characterData.characters).catch(() => undefined);
+      if (createdCharacters.length) {
+        const createdIds = new Set(createdCharacters.map((character) => character.id));
+        const currentCharacters = await loadBaseDadosCharacterData().then((data) => data.characters).catch(() => null);
+        // Never restore a stale snapshot over edits made after the import began.
+        // If a safe read is unavailable, keep the imported records recoverable.
+        if (currentCharacters) await savePremiumCharacters(currentCharacters.filter((character) => !createdIds.has(character.id))).catch(() => undefined);
+      }
       setMessage(error instanceof Error ? error.message : "Não foi possível criar o roteiro importado.");
     } finally { setImporting(false); }
   };
