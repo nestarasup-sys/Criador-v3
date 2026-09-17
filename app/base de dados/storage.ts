@@ -40,7 +40,9 @@ export async function loadBaseDadosCharacterSummaries(): Promise<BaseDadosCharac
 
 export function baseDadosVideoUrl(video: BaseDadosVideo) {
   const path = video.url || `${LOCAL_DATA_URL}/base-dados/videos/${encodeURIComponent(video.id)}`;
-  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(video.updatedAt)}`;
+  // Metadata edits must not recreate the video element or restart playback.
+  // The content hash changes only when the underlying file changes.
+  return `${path}${path.includes("?") ? "&" : "?"}v=${encodeURIComponent(video.contentHash || video.fileName)}`;
 }
 
 export async function uploadBaseDadosVideo(file: File, durationSeconds: number) {
@@ -54,7 +56,7 @@ export async function uploadBaseDadosVideo(file: File, durationSeconds: number) 
   return { video: result.video, state: result.state };
 }
 
-export async function patchBaseDadosVideo(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">, signal?: AbortSignal) {
+export async function patchBaseDadosVideo(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds"> & { expectedRevision?: number }, signal?: AbortSignal) {
   const result = await request(`/base-dados/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch), signal });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosState };
 }
