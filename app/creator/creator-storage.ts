@@ -241,7 +241,13 @@ export function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(it
 let pendingCharacterBody: string | null = null;
 let pendingCharacterWaiters: Array<{ resolve: () => void; reject: (error: unknown) => void }> = [];
 let characterSaveWorker: Promise<void> | null = null;
-let characterItemQueue: Promise<void> = Promise.resolve();
+let characterPersistenceQueue: Promise<void> = Promise.resolve();
+
+function enqueueCharacterPersistence<T>(operation: () => Promise<T>) {
+  const result = characterPersistenceQueue.catch(() => undefined).then(operation);
+  characterPersistenceQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
 
 function characterWithoutPhotos(character: Character) {
   const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, persistenceRevision: _revision, ...withoutPhotos } = character;
@@ -284,7 +290,7 @@ async function flushCharacterSaves() {
 
 function startCharacterSaveWorker() {
   if (characterSaveWorker) return;
-  characterSaveWorker = flushCharacterSaves().finally(() => {
+  characterSaveWorker = enqueueCharacterPersistence(flushCharacterSaves).finally(() => {
     characterSaveWorker = null;
     // A save can arrive in the tiny gap between the final loop check and
     // finally(). Continue with that newer snapshot instead of leaving it
@@ -310,7 +316,7 @@ export function saveCharacterToPc(character: Character) {
   const existing = inFlightCharacterSaves.get(character.id);
   if (existing?.fingerprint === fingerprint) return existing.operation;
 
-  const operation: Promise<CharacterSaveResult> = characterItemQueue.catch(() => undefined).then(async () => {
+  const operation: Promise<CharacterSaveResult> = enqueueCharacterPersistence(async () => {
     const startedAt = Date.now();
     try {
       const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
@@ -335,12 +341,11 @@ export function saveCharacterToPc(character: Character) {
     () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
     () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
   );
-  characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 
 export function deleteCharacterFromPc(id: string) {
-  const operation = characterItemQueue.catch(() => undefined).then(async () => {
+  const operation = enqueueCharacterPersistence(async () => {
     const startedAt = Date.now();
     try {
       await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -354,7 +359,6 @@ export function deleteCharacterFromPc(id: string) {
       throw error;
     }
   });
-  characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 
