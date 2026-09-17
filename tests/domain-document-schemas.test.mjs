@@ -92,11 +92,14 @@ test("estado de Roteiros v1 moderno faz round-trip e mantém campos futuros", ()
     version: 1,
     futureRootField: "keep",
     profiles: [{ characterId: "char-1", personality: "Calma", backstory: "", fynRelationship: "", speakingStyle: "", relationships: [], additionalRules: "", updatedAt: "2026-08-02T00:00:00.000Z" }],
-    scripts: [{ id: "script-1", title: "Teste", generalContext: "", participants: [{ characterId: "char-1", active: true }], aiContext: { profiles: [{ characterId: "char-1", personality: "Local", backstory: "", fynRelationship: "", speakingStyle: "", relationships: [], additionalRules: "", updatedAt: "2026-08-02T00:00:00.000Z" }], rules: [] }, tiktoks: [{ id: "tiktok-1", title: "", description: "", timeline: "present", sceneGoal: "", userInstruction: "", aiDirectives: [], specificRules: "", shortLines: false, reactionBlocks: [], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
+    scripts: [{ id: "script-1", title: "Teste", generalContext: "", participants: [{ characterId: "char-1", active: true }], aiContext: { profiles: [{ characterId: "char-1", personality: "Local", backstory: "", fynRelationship: "", speakingStyle: "", relationships: [], additionalRules: "", updatedAt: "2026-08-02T00:00:00.000Z" }], rules: [] }, tiktoks: [{ id: "tiktok-1", title: "", description: "", timeline: "present", sceneGoal: "", userInstruction: "", aiDirectives: [], specificRules: "", shortLines: false, sceneEndSeconds: "7.5", firstGroupReactionSeconds: "9.25", reactionBlocks: [], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }], createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
     globalRules: [],
     settings: { aiProvider: "none", aiBaseUrl: "http://127.0.0.1:1234/v1", aiModel: "", temperature: 0.45, openAiModel: "gpt-5.6-luna", openAiReasoningEffort: "medium", openAiMaxOutputTokens: 2400, openAiTimeoutMs: 90000, generationMode: "faithful", fillEmptyPrompt: "", defaultBlockCount: 6, shortLinesByDefault: false, historyLimit: 5 },
   };
-  assert.deepEqual(normalizeRoteirosState(JSON.parse(JSON.stringify(document))), document);
+  const normalized = normalizeRoteirosState(JSON.parse(JSON.stringify(document)));
+  assert.equal(normalized.scripts[0].tiktoks[0].sceneEndSeconds, 7.5);
+  assert.equal(normalized.scripts[0].tiktoks[0].firstGroupReactionSeconds, 9.25);
+  assert.deepEqual(normalized, { ...document, scripts: [{ ...document.scripts[0], tiktoks: [{ ...document.scripts[0].tiktoks[0], sceneEndSeconds: 7.5, firstGroupReactionSeconds: 9.25 }] }] });
   assert.equal(parseRoteirosState(document).success, true);
 });
 
