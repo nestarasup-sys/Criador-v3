@@ -1080,20 +1080,14 @@ async function route(request, response) {
   if (request.method === "POST" && url.pathname === "/characters") {
     const nextCharacters = await requestJson(request, BODY_LIMITS.characters);
     if (!Array.isArray(nextCharacters)) throw new Error("Lista de personagens inválida");
-    await queueStateMutation(async () => {
-      // Keep the full-list endpoint for migration/import compatibility. The
-      // regular editor path uses PUT /characters/:id and never sends this
-      // potentially huge list.
-      await characterStore.replaceAll(nextCharacters);
-      characters = await loadNormalizedCharacters();
-      const knownCharacterIds = new Set(nextCharacters.map((character) => String(character?.id || "")));
-      for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
-        if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
-          await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
-        }
-      }
-      state.characters = [];
-    });
+      await queueStateMutation(async () => {
+        // Keep the full-list endpoint for migration/import compatibility. The
+        // regular editor path uses PUT /characters/:id and never sends this
+        // potentially huge list.
+        await characterStore.replaceAll(nextCharacters);
+        characters = await loadNormalizedCharacters();
+        state.characters = [];
+      });
     sendJson(response, request, 200, { ok: true });
     return;
   }

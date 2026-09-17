@@ -160,6 +160,23 @@ test("rejeita IDs duplicados antes de criar o índice por personagem", async () 
   }
 });
 
+test("snapshot parcial de lista não interpreta personagens omitidos como exclusão", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-character-partial-list-"));
+  const first = { id: "char-1", name: "Primeiro", model: "feminino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
+  const second = { id: "char-2", name: "Segundo", model: "masculino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
+  try {
+    const store = createCharacterStore(root);
+    await store.init([first, second]);
+    await store.replaceAll([{ ...first, name: "Primeiro atualizado" }]);
+    const reopened = createCharacterStore(root);
+    await reopened.init([]);
+    const characters = await reopened.list();
+    assert.deepEqual(characters.map((character) => character.id), ["char-1", "char-2"]);
+    assert.equal(characters[0].name, "Primeiro atualizado");
+    assert.equal(characters[1].name, "Segundo");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("trocar a seleção não salva personagem sem alteração pendente", async () => {
   const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const creatorStorage = await readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8");
