@@ -85,14 +85,8 @@ export function mirrorStudios(studios: Studio[]) {
 }
 
 export function recordStudioDeletion(id: string) {
-  try {
-    const deletions = readLocal<StudioDeletion[]>(STUDIO_DELETION_KEY, []).filter((entry) => entry.id !== id);
-    localStorage.setItem(STUDIO_DELETION_KEY, JSON.stringify([...deletions, { id, deletedAt: new Date().toISOString() }]));
-    return true;
-  } catch (error) {
-    console.error("[studio] Não foi possível registrar a exclusão no navegador", error);
-    return false;
-  }
+  const deletions = readLocal<StudioDeletion[]>(STUDIO_DELETION_KEY, []).filter((entry) => entry.id !== id);
+  localStorage.setItem(STUDIO_DELETION_KEY, JSON.stringify([...deletions, { id, deletedAt: new Date().toISOString() }]));
 }
 
 async function uploadAssetPayload(id: string, body: Blob, name: string, contentType: string, kind?: StudioAsset["kind"]) {
@@ -140,16 +134,7 @@ async function saveSnapshotToPc(studios: Studio[]) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(synchronized),
   });
-  // A gravação no PC já foi confirmada. A remoção do tombstone é apenas
-  // limpeza de checkpoint e não pode transformar um save bem-sucedido em
-  // erro (por exemplo, quando o navegador bloqueia localStorage ou está sem
-  // quota). Se falhar, o tombstone permanece e será reaplicado no próximo
-  // merge, mantendo a exclusão segura.
-  try {
-    localStorage.removeItem(STUDIO_DELETION_KEY);
-  } catch (error) {
-    console.warn("[studio] Não foi possível limpar o tombstone do navegador após salvar no PC", error);
-  }
+  localStorage.removeItem(STUDIO_DELETION_KEY);
   mirrorStudios(synchronized);
   return synchronized;
 }

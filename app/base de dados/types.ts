@@ -12,8 +12,6 @@ export type BaseDadosVideo = {
   size: number;
   /** SHA-256 do conteúdo; impede cópias físicas do mesmo vídeo. */
   contentHash?: string;
-  /** Revisão de metadados confirmada pelo servidor. */
-  metadataRevision?: number;
   durationSeconds: number;
   description: string;
   sceneEndSeconds: number;

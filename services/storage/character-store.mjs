@@ -280,16 +280,7 @@ export function createCharacterStore(root, options = {}) {
           void _revision;
           await writeJsonAtomic(itemPath(character.id), { version: STORE_VERSION, revision, character: document });
         }
-        const incomingIds = new Set(validated.map((character) => character.id));
-        const preservedEntries = index.characters.filter((entry) => !incomingIds.has(entry.id));
-        // O endpoint de lista completa é usado por migração/importação. A
-        // ausência de um item em um payload pode ser causada por um snapshot
-        // parcial e não equivale a uma exclusão explícita. Remoções passam
-        // pelo endpoint dedicado e deixam um backup próprio.
-        index = { version: STORE_VERSION, characters: [
-          ...validated.map((character) => summary(character, (index.characters.find((entry) => entry.id === character.id)?.revision ?? 0) + 1)),
-          ...preservedEntries,
-        ] };
+        index = { version: STORE_VERSION, characters: validated.map((character) => summary(character, (index.characters.find((entry) => entry.id === character.id)?.revision ?? 0) + 1)) };
         await writeIndex();
       });
       writeQueue = operation.then(() => undefined, () => undefined);

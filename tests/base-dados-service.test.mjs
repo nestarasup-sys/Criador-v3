@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -94,43 +94,6 @@ test("mantém descrição e tempo depois de reiniciar o serviço local", async (
   } finally {
     await rm(root, { recursive: true, force: true });
   }
-});
-
-test("recusa save atrasado, preserva descrição e recupera o último estado válido", async () => {
-  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-recovery-"));
-  try {
-    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
-    const service = createBaseDadosService(root);
-    await service.init();
-    const uploaded = responseCapture();
-    await service.handle(request("POST", "/base-dados/videos", Buffer.from([4, 5, 6]), {
-      "content-type": "video/mp4",
-      "x-gacha-meta": encodeURIComponent(JSON.stringify({ name: "recovery.mp4", durationSeconds: 18 })),
-    }), uploaded, new URL("http://local/base-dados/videos"), headers);
-    const video = JSON.parse(uploaded.capture.body).video;
-
-    const firstSave = responseCapture();
-    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 8, expectedRevision: 0 })), { "content-type": "application/json" }), firstSave, new URL(`http://local/base-dados/videos/${video.id}`), headers);
-    const revision = JSON.parse(firstSave.capture.body).video.metadataRevision;
-    assert.equal(revision, 1);
-    assert.ok((await readdir(join(root, "backups"))).some((name) => name.endsWith(".json")));
-
-    const stale = responseCapture();
-    await assert.rejects(service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "", sceneEndSeconds: 8, expectedRevision: 0 })), { "content-type": "application/json" }), stale, new URL(`http://local/base-dados/videos/${video.id}`), headers), (error) => error.code === "STALE_BASE_VIDEO_REVISION" && error.status === 409);
-
-    const legacyEmpty = responseCapture();
-    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ sceneEndSeconds: 9 })), { "content-type": "application/json" }), legacyEmpty, new URL(`http://local/base-dados/videos/${video.id}`), headers);
-    assert.equal(JSON.parse(legacyEmpty.capture.body).video.description, "Texto confirmado");
-
-    await writeFile(join(root, "state.json"), "{corrompido", "utf8");
-    const recovered = createBaseDadosService(root);
-    await recovered.init();
-    const stateCapture = responseCapture();
-    await recovered.handle(request("GET", "/base-dados/state"), stateCapture, new URL("http://local/base-dados/state"), headers);
-    const state = JSON.parse(stateCapture.capture.body);
-    assert.equal(state.videos[0].description, "Texto confirmado");
-    assert.equal(state.videos[0].sceneEndSeconds, 8);
-  } finally { await rm(root, { recursive: true, force: true }); }
 });
 
 test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente", async () => {
@@ -253,33 +216,5 @@ test("rascunhos detectam vídeos manuais, preservam metadados e enviam para a pr
     assert.equal(sentResult.video.sequence, 2);
     await assert.rejects(stat(join(draftsRoot, "videos", "cena-final.mp4")));
     assert.equal((await base.getVideo(sentResult.video.id)).description, "A cena termina em silêncio");
-  } finally { await rm(root, { recursive: true, force: true }); }
-});
-
-test("rascunhos não regravam refreshes sem mudança e não duplicam IDs por hash", async () => {
-  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-drafts-refresh-"));
-  try {
-    const base = createBaseDadosService(join(root, "base-de-dados"));
-    await base.init();
-    const draftsRoot = join(root, "base-de-dados", "rascunhos");
-    await mkdir(join(draftsRoot, "videos"), { recursive: true });
-    const bytes = Buffer.from([4, 5, 6, 7]);
-    await writeFile(join(draftsRoot, "videos", "a.mp4"), bytes);
-    await writeFile(join(draftsRoot, "videos", "b.mp4"), bytes);
-    const drafts = createDraftsService(draftsRoot, base);
-    await drafts.init();
-    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
-    const readState = async () => {
-      const capture = responseCapture();
-      await drafts.handle(request("GET", "/base-dados/drafts/state"), capture, new URL("http://local/base-dados/drafts/state"), headers);
-      return JSON.parse(capture.capture.body);
-    };
-    const first = await readState();
-    assert.equal(first.videos.length, 2);
-    assert.notEqual(first.videos[0].id, first.videos[1].id);
-    const firstUpdatedAt = first.updatedAt;
-    const second = await readState();
-    assert.equal(second.updatedAt, firstUpdatedAt);
-    assert.deepEqual(second.videos.map((video) => video.id), first.videos.map((video) => video.id));
   } finally { await rm(root, { recursive: true, force: true }); }
 });

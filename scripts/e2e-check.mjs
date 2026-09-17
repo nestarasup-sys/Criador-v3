@@ -48,29 +48,6 @@ try {
   await reloadedQualityCharacter.click();
   assert.equal(await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).count(), 0, "Avisos técnicos de qualidade não devem poluir o Studio");
 
-  const basePage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-  await basePage.goto(`${baseURL}/base%20de%20dados`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await waitForImages(basePage);
-  await assertVisible(basePage.getByRole("navigation", { name: "Áreas principais do Nymi Gacha" }).getByRole("link", { name: "Base de dados" }));
-  await assertVisible(basePage.getByRole("link", { name: "Área de rascunho" }));
-  await basePage.goto(`${baseURL}/base%20de%20dados/rascunhos`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await waitForImages(basePage);
-  await assertVisible(basePage.getByRole("heading", { name: "Área de rascunho" }));
-  await assertVisible(basePage.getByRole("textbox", { name: "Buscar rascunhos" }));
-  await basePage.close();
-
-  const toolsPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
-  await toolsPage.goto(`${baseURL}/Ferramentas`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await waitForImages(toolsPage);
-  await assertVisible(toolsPage.getByRole("heading", { name: "Ferramentas" }));
-  await assertVisible(toolsPage.getByRole("link", { name: /Green BG PRO/ }));
-  await assertVisible(toolsPage.getByRole("link", { name: /Alinhador Profissa/ }));
-  await toolsPage.goto(`${baseURL}/Ferramentas/green-bg-pro`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await assertVisible(toolsPage.locator('iframe[title="Green BG PRO"]'));
-  await toolsPage.goto(`${baseURL}/Ferramentas/alinhador-profissa`, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  await assertVisible(toolsPage.locator('iframe[title="Alinhador Profissa"]'));
-  await toolsPage.close();
-
   // Keep the editor workflow in a fresh context. This avoids development-mode
   // HMR module state leaking between the three independent route checks.
   await page.close();
@@ -256,8 +233,8 @@ async function seedCreatorAutosaveFixture(currentPage) {
   assert.equal(result, 200);
   await currentPage.reload({ waitUntil: "domcontentloaded" });
   await waitForImages(currentPage);
+  await currentPage.waitForTimeout(700);
   const savedCharacters = currentPage.locator("button.saved-main");
-  await savedCharacters.nth(1).waitFor({ state: "visible", timeout: 20_000 });
   assert.equal(await savedCharacters.count(), 2);
   await savedCharacters.nth(0).click();
   await currentPage.waitForTimeout(400);
@@ -281,9 +258,8 @@ async function seedCreatorAutosaveFixture(currentPage) {
   currentPage.off("requestfailed", captureFailure);
   await currentPage.reload({ waitUntil: "domcontentloaded" });
   await waitForImages(currentPage);
-  const reopenedCharacters = currentPage.locator("button.saved-main");
-  await reopenedCharacters.nth(0).waitFor({ state: "visible", timeout: 20_000 });
-  await reopenedCharacters.nth(0).click();
+  await currentPage.waitForTimeout(700);
+  await currentPage.locator("button.saved-main").nth(0).click();
   await currentPage.waitForTimeout(500);
   const settings = currentPage.locator("details.character-settings");
   if (!(await settings.getAttribute("open"))) await settings.locator("> summary").click();

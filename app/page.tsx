@@ -1524,16 +1524,10 @@ export default function Home() {
       loadExpressionPacks(),
       loadPcState().catch(() => null),
       loadPcModels().catch(() => DEFAULT_BASE_PACKS),
-      loadCharacterCheckpoints()
-        .then((characters) => ({ characters, error: null as unknown }))
-        .catch((error: unknown) => ({ characters: [] as Character[], error })),
+      loadCharacterCheckpoints().catch(() => []),
     ])
-      .then(async ([items, packs, pcState, discoveredModels, checkpoint]) => {
-        let browserCharacters = checkpoint.characters;
-        const checkpointNotice = checkpoint.error
-          ? " O checkpoint deste navegador não pôde ser lido; os dados do PC foram preservados e a recuperação local será tentada novamente."
-          : "";
-        const setLoadNotice = (message: string) => setNotice(`${message}${checkpointNotice}`);
+      .then(async ([items, packs, pcState, discoveredModels, loadedBrowserCharacters]) => {
+        let browserCharacters = loadedBrowserCharacters;
         setBasePacks(discoveredModels);
         const browserCatalog = normalizeOutfitCatalog(items)
           .map((item) => ({ ...item, url: URL.createObjectURL(item.blob) }));
@@ -1590,7 +1584,7 @@ export default function Home() {
             setExpressionPacks(hydrated.expressionPacks);
             setMigrationAvailable(hasUnmigratedBrowserData);
             const missingCount = hydrated.missingCatalogIds.length + hydrated.missingExpressionPackFrames.length;
-            setLoadNotice(missingCount > 0
+            setNotice(missingCount > 0
               ? `${missingCount} asset(s) do PC não foram encontrados; os metadados foram preservados`
               : hasUnmigratedBrowserData ? "Há dados deste navegador para migrar" : "Dados carregados do PC");
           } else {
@@ -1599,7 +1593,7 @@ export default function Home() {
             setCatalog(browserCatalog);
             setExpressionPacks(browserPacks);
             setMigrationAvailable(browserHasData);
-            setLoadNotice(browserHasData
+            setNotice(browserHasData
               ? "Dados antigos encontrados; migre-os para o PC"
               : "Armazenamento do PC pronto");
             pcSyncReadyRef.current = !browserHasData;
@@ -1610,7 +1604,7 @@ export default function Home() {
         setCharacters(browserCharacters);
         setCatalog(browserCatalog);
         setExpressionPacks(browserPacks);
-        setLoadNotice("Serviço do PC indisponível; usando este navegador");
+        setNotice("Serviço do PC indisponível; usando este navegador");
       })
       .catch(() => setNotice("Não foi possível carregar todos os dados locais"));
   }, []);

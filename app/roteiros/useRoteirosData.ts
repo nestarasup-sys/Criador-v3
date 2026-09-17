@@ -9,30 +9,17 @@ export function useRoteirosData() {
   const [ready, setReady] = useState(false);
   const [state, setState] = useState<RoteirosState | null>(null);
   const [characters, setCharacters] = useState<PremiumCharacter[]>([]);
-  const [characterLoadError, setCharacterLoadError] = useState<string | null>(null);
   const [pcAvailable, setPcAvailable] = useState(false);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [recoveryCandidate, setRecoveryCandidate] = useState<RecoveryJournalEntry | null>(null);
   const latestRef = useRef<RoteirosState | null>(null);
   const loadedRef = useRef(false);
 
-  const loadPageData = useCallback(async () => {
-    const loaded = await loadRoteirosState();
-    let loadedCharacters: PremiumCharacter[] = [];
-    let loadedCharactersError: string | null = null;
-    try {
-      loadedCharacters = await loadPremiumCharacters();
-    } catch (error) {
-      loadedCharactersError = error instanceof Error ? error.message : "Não foi possível carregar os personagens do Criador.";
-    }
-    return { loaded, loadedCharacters, loadedCharactersError };
-  }, []);
-
-  const applyLoadedPageData = useCallback(({ loaded, loadedCharacters, loadedCharactersError }: Awaited<ReturnType<typeof loadPageData>>) => {
+  const reload = useCallback(async () => {
+    const [loaded, loadedCharacters] = await Promise.all([loadRoteirosState(), loadPremiumCharacters().catch(() => [])]);
     latestRef.current = loaded.state;
     setState(loaded.state);
     setCharacters(loadedCharacters);
-    setCharacterLoadError(loadedCharactersError);
     setPcAvailable(loaded.pcAvailable);
     setRecoveryCandidate(loaded.recoveryCandidate ?? null);
     setSaveStatus(loaded.pcAvailable ? "saved" : "error");
@@ -40,17 +27,21 @@ export function useRoteirosData() {
     setReady(true);
   }, []);
 
-  const reload = useCallback(async () => {
-    applyLoadedPageData(await loadPageData());
-  }, [applyLoadedPageData, loadPageData]);
-
   useEffect(() => {
     let active = true;
-    loadPageData().then((pageData) => {
-      if (active) applyLoadedPageData(pageData);
+    Promise.all([loadRoteirosState(), loadPremiumCharacters().catch(() => [])]).then(([loaded, loadedCharacters]) => {
+      if (!active) return;
+      latestRef.current = loaded.state;
+      setState(loaded.state);
+      setCharacters(loadedCharacters);
+      setPcAvailable(loaded.pcAvailable);
+      setRecoveryCandidate(loaded.recoveryCandidate ?? null);
+      setSaveStatus(loaded.pcAvailable ? "saved" : "error");
+      loadedRef.current = true;
+      setReady(true);
     }).catch(() => { if (active) { setReady(true); setSaveStatus("error"); } });
     return () => { active = false; };
-  }, [applyLoadedPageData, loadPageData]);
+  }, []);
 
   useEffect(() => {
     if (!state || !loadedRef.current) return;
@@ -117,5 +108,5 @@ export function useRoteirosData() {
     setRecoveryCandidate(null);
   }, []);
 
-  return { ready, state, characters, characterLoadError, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveSnapshot, saveNow, reload };
+  return { ready, state, characters, pcAvailable, saveStatus, recoveryCandidate, restoreRecovery, dismissRecovery, updateState, saveSnapshot, saveNow, reload };
 }

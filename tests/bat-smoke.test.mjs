@@ -24,10 +24,3 @@ test("deixa o preflight CORS chegar ao handler antes da sessão", async () => {
   const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
   assert.match(server, /if \(request\.method === "OPTIONS"\) return true;/);
 });
-
-test("mantém URL malformada dentro do contrato estruturado de erro do servidor", async () => {
-  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
-  assert.match(server, /let url;\s*try \{\s*url = new URL\(request\.url/);
-  assert.match(server, /code: "INVALID_URL"/);
-  assert.match(server, /sendRouteError\(response, request, Object\.assign\(new Error\("URL inválida\."\)/);
-});

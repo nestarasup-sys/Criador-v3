@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
 import { mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import { extname, join, sep } from "node:path";
-import { readJsonDurable, writeJsonDurable } from "../storage/durable-json.mjs";
+import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
 import { BODY_LIMITS, assertContentLength } from "../security/local-security.mjs";
 
@@ -53,7 +53,6 @@ export function createDraftsService(root, baseDadosService) {
   const videosRoot = join(root, "videos");
   const trashRoot = join(root, ".trash");
   const statePath = join(root, "state.json");
-  const backupsRoot = join(root, "backups");
   let state = structuredClone(EMPTY_STATE);
   let mutationQueue = Promise.resolve();
   const queue = (task) => {
@@ -71,18 +70,14 @@ export function createDraftsService(root, baseDadosService) {
 
   async function persist() {
     state.updatedAt = new Date().toISOString();
-    await writeJsonDurable(statePath, structuredClone(state), { backupRoot: backupsRoot, keep: 40, validate: (value) => {
-      if (!value || typeof value !== "object" || !Array.isArray(value.videos)) throw Object.assign(new Error("Estado de rascunhos inválido."), { code: "DRAFT_STATE_INVALID" });
-    } });
+    await writeJsonAtomic(statePath, state);
   }
 
   async function syncFiles() {
     await mkdir(videosRoot, { recursive: true });
     const entries = await readdir(videosRoot, { withFileTypes: true });
-    entries.sort((left, right) => left.name.localeCompare(right.name));
     const currentByHash = new Map(state.videos.filter((item) => item.contentHash).map((item) => [item.contentHash, item]));
     const currentByName = new Map(state.videos.map((item) => [item.fileName, item]));
-    const usedIds = new Set();
     const discovered = [];
     for (const entry of entries) {
       if (!entry.isFile() || !EXTENSIONS.has(extname(entry.name).toLowerCase()) || entry.name.startsWith(".")) continue;
@@ -90,20 +85,10 @@ export function createDraftsService(root, baseDadosService) {
       const info = await stat(filePath);
       if (!info.size) continue;
       const contentHash = await hashFile(filePath);
-      const candidate = currentByName.get(entry.name) || currentByHash.get(contentHash);
-      const previous = candidate && !usedIds.has(candidate.id) ? candidate : null;
-      const generatedId = `draft-${createHash("sha256").update(`${contentHash}:${entry.name}`).digest("hex").slice(0, 24)}`;
-      const id = previous?.id || generatedId;
-      usedIds.add(id);
+      const previous = currentByHash.get(contentHash) || currentByName.get(entry.name);
       const now = previous?.createdAt || new Date().toISOString();
-      const unchanged = Boolean(previous
-        && previous.fileName === entry.name
-        && previous.contentHash === contentHash
-        && previous.size === info.size
-        && previous.fileAvailable !== false);
       discovered.push({
-        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0, metadataRevision: 0 }),
-        id,
+        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0 }),
         fileName: entry.name,
         originalName: previous?.originalName || entry.name,
         storedPath: `base-de-dados/rascunhos/videos/${entry.name}`,
@@ -114,17 +99,14 @@ export function createDraftsService(root, baseDadosService) {
         sceneEndSeconds: Number(previous?.sceneEndSeconds) >= 0 ? Number(previous.sceneEndSeconds) : 0,
         firstGroupReactionSeconds: Number(previous?.firstGroupReactionSeconds) >= 0 ? Number(previous.firstGroupReactionSeconds) : 0,
         createdAt: now,
-        updatedAt: unchanged ? previous.updatedAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         fileAvailable: true,
       });
     }
     const foundNames = new Set(discovered.map((item) => item.fileName));
     const missing = state.videos.filter((item) => !foundNames.has(item.fileName)).map((item) => ({ ...item, fileAvailable: false }));
-    const nextVideos = [...discovered, ...missing];
-    if (JSON.stringify(nextVideos) !== JSON.stringify(state.videos)) {
-      state.videos = nextVideos;
-      await persist();
-    }
+    state.videos = [...discovered, ...missing];
+    await persist();
     return state;
   }
 
@@ -145,15 +127,9 @@ export function createDraftsService(root, baseDadosService) {
     async init() {
       await mkdir(videosRoot, { recursive: true });
       await mkdir(trashRoot, { recursive: true });
-      await mkdir(backupsRoot, { recursive: true });
-      if (!(await exists(statePath))) {
-        state = structuredClone(EMPTY_STATE);
-        await persist();
-      } else {
-        const loaded = await readJsonDurable(statePath, { backupRoot: backupsRoot, validate: (value) => { if (!value || typeof value !== "object" || !Array.isArray(value.videos)) throw Object.assign(new Error("Estado de rascunhos inválido."), { code: "DRAFT_STATE_INVALID" }); } });
-        state = loaded.value;
-        if (loaded.recovered) await persist();
-      }
+      try { state = JSON.parse(await readFile(statePath, "utf8")); }
+      catch (error) { if (error?.code !== "ENOENT") throw error; state = structuredClone(EMPTY_STATE); }
+      if (!Array.isArray(state.videos)) state = structuredClone(EMPTY_STATE);
       await syncFiles();
     },
     async handle(request, response, url, headers) {
@@ -178,14 +154,10 @@ export function createDraftsService(root, baseDadosService) {
           if (index < 0) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
           const end = Number(body?.sceneEndSeconds);
           const current = state.videos[index];
-          const expectedRevision = body?.expectedRevision === undefined ? undefined : Number(body.expectedRevision);
-          if (expectedRevision !== undefined && (!Number.isInteger(expectedRevision) || expectedRevision !== Number(current.metadataRevision ?? 0))) throw Object.assign(new Error("Este rascunho foi alterado por outra operação. Recarregue antes de salvar."), { status: 409, code: "STALE_DRAFT_REVISION", currentRevision: Number(current.metadataRevision ?? 0) });
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
           if (!Number.isFinite(end) || end < 0) throw Object.assign(new Error("O tempo final precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SCENE_END" });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_GROUP_REACTION_START" });
-          const incomingDescription = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : current.description;
-          const description = expectedRevision === undefined && !incomingDescription.trim() && String(current.description || "").trim() ? current.description : incomingDescription;
-          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, metadataRevision: Number(current.metadataRevision ?? 0) + 1, updatedAt: new Date().toISOString() };
+          state.videos[index] = { ...current, description: String(body?.description || ""), sceneEndSeconds: end, firstGroupReactionSeconds, updatedAt: new Date().toISOString() };
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;

@@ -241,13 +241,7 @@ export function normalizeOutfitCatalog<T extends CatalogItem | PcCatalogItem>(it
 let pendingCharacterBody: string | null = null;
 let pendingCharacterWaiters: Array<{ resolve: () => void; reject: (error: unknown) => void }> = [];
 let characterSaveWorker: Promise<void> | null = null;
-let characterPersistenceQueue: Promise<void> = Promise.resolve();
-
-function enqueueCharacterPersistence<T>(operation: () => Promise<T>) {
-  const result = characterPersistenceQueue.catch(() => undefined).then(operation);
-  characterPersistenceQueue = result.then(() => undefined, () => undefined);
-  return result;
-}
+let characterItemQueue: Promise<void> = Promise.resolve();
 
 function characterWithoutPhotos(character: Character) {
   const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, persistenceRevision: _revision, ...withoutPhotos } = character;
@@ -260,21 +254,6 @@ function characterWithoutPhotos(character: Character) {
     ? character.persistenceRevision
     : known?.revision ?? character.persistenceRevision;
   return { ...withoutPhotos, ...(Number.isInteger(persistenceRevision) ? { persistenceRevision } : {}) };
-}
-
-function characterContentFingerprint(character: Character) {
-  const {
-    photoUrl: _photoUrl,
-    photoDataUrl: _photoDataUrl,
-    persistenceRevision: _revision,
-    updatedAt: _updatedAt,
-    ...content
-  } = character;
-  void _photoUrl;
-  void _photoDataUrl;
-  void _revision;
-  void _updatedAt;
-  return JSON.stringify(content);
 }
 
 async function flushCharacterSaves() {
@@ -305,7 +284,7 @@ async function flushCharacterSaves() {
 
 function startCharacterSaveWorker() {
   if (characterSaveWorker) return;
-  characterSaveWorker = enqueueCharacterPersistence(flushCharacterSaves).finally(() => {
+  characterSaveWorker = flushCharacterSaves().finally(() => {
     characterSaveWorker = null;
     // A save can arrive in the tiny gap between the final loop check and
     // finally(). Continue with that newer snapshot instead of leaving it
@@ -325,18 +304,13 @@ export function saveCharactersToPc(characters: Character[]) {
 
 /** Persists only one character so routine autosaves never resend the library. */
 export function saveCharacterToPc(character: Character) {
-  // The fingerprint deliberately excludes revision/timestamp. Multiple UI
-  // paths can request the same content while a previous PUT is in flight.
-  // The request body itself is built inside the queue, after earlier saves
-  // have updated characterRevisions, so a queued newer edit never reuses a
-  // stale expected revision.
-  const fingerprint = characterContentFingerprint(character);
+  const payload = characterWithoutPhotos(character);
+  const body = JSON.stringify(payload);
+  const fingerprint = JSON.stringify({ ...payload, updatedAt: undefined });
   const existing = inFlightCharacterSaves.get(character.id);
   if (existing?.fingerprint === fingerprint) return existing.operation;
 
-  const operation: Promise<CharacterSaveResult> = enqueueCharacterPersistence(async () => {
-    const payload = characterWithoutPhotos(character);
-    const body = JSON.stringify(payload);
+  const operation: Promise<CharacterSaveResult> = characterItemQueue.catch(() => undefined).then(async () => {
     const startedAt = Date.now();
     try {
       const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
@@ -361,11 +335,12 @@ export function saveCharacterToPc(character: Character) {
     () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
     () => { if (inFlightCharacterSaves.get(character.id)?.operation === operation) inFlightCharacterSaves.delete(character.id); },
   );
+  characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 
 export function deleteCharacterFromPc(id: string) {
-  const operation = enqueueCharacterPersistence(async () => {
+  const operation = characterItemQueue.catch(() => undefined).then(async () => {
     const startedAt = Date.now();
     try {
       await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -379,6 +354,7 @@ export function deleteCharacterFromPc(id: string) {
       throw error;
     }
   });
+  characterItemQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 

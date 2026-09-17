@@ -26,24 +26,6 @@ test("mantém um journal versionado de recovery e encontra alterações que aind
   } finally { globalThis.localStorage = previous; }
 });
 
-test("não deixa um save antigo esconder uma pendência mais nova", () => {
-  const previous = globalThis.localStorage;
-  globalThis.localStorage = makeStorage();
-  try {
-    const older = state("antigo");
-    const newer = state("novo");
-    appendRecoveryJournal(older, "pending", "2026-08-03T10:00:00.000Z");
-    appendRecoveryJournal(newer, "pending", "2026-08-03T10:00:01.000Z");
-
-    markRecoverySaved(older);
-
-    const entries = readRecoveryJournal();
-    const candidate = findRecoveryCandidate(entries, older);
-    assert.equal(candidate?.state.scripts[0]?.title, "novo");
-    assert.equal(entries.filter((entry) => entry.reason === "pc-saved").length, 0);
-  } finally { globalThis.localStorage = previous; }
-});
-
 test("descarta somente entradas pendentes sem quebrar um storage corrompido", () => {
   const previous = globalThis.localStorage;
   globalThis.localStorage = makeStorage();

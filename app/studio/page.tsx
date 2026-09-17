@@ -505,10 +505,7 @@ export default function StudioPage() {
   }
 
   function deleteStudio(id: string) {
-    if (!recordStudioDeletion(id)) {
-      setNotice("Não foi possível proteger a exclusão neste navegador; o Studio não foi removido.");
-      return;
-    }
+    recordStudioDeletion(id);
     const nextStudios = studiosRef.current.filter((entry) => entry.id !== id);
     studiosRef.current = nextStudios;
     mirrorStudios(nextStudios);

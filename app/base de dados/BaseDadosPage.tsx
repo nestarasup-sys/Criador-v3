@@ -9,9 +9,8 @@ import type { Character } from "../domain/character-contract";
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import { readBaseDadosDrafts, recoverBaseDadosDrafts, writeBaseDadosDrafts, type BaseDadosDraft } from "./draft-storage";
 import { buildBaseDadosExportText, buildBaseDadosGuide, buildBaseDadosSimpleExportText, mergeBaseDadosDrafts } from "./export-contract";
-import { downloadText, loadBaseDados, loadBaseDadosCharacterData, loadBaseDadosCharacterSummaries, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl, type BaseDadosCharacterSummary } from "./storage";
+import { downloadText, loadBaseDados, loadBaseDadosCharacterData, openBaseDadosFolder, patchBaseDadosVideo, removeBaseDadosVideo, uploadBaseDadosVideo, baseDadosVideoUrl } from "./storage";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
-import { beginBusyOperation, endBusyOperation } from "./busy-tracker";
 import { createScriptFromImport, validateImportableScript, type ImportValidation } from "../roteiros/base-dados-import";
 import { createRoteiroBackup, importBaseDadosVideoIntoRoteiro, loadRoteirosState, removeRoteiro, removeRoteiroVideo, savePremiumCharacters, saveRoteirosState } from "../roteiros/storage";
 import { createId, nowIso } from "../roteiros/defaults";
@@ -38,7 +37,7 @@ function readVideoDuration(file: File) {
 
 export default function BaseDadosPage() {
   const [database, setDatabase] = useState<BaseDadosState | null>(null);
-  const [characterData, setCharacterData] = useState<{ characters: BaseDadosCharacterSummary[]; profiles: NarrativeProfile[] }>({ characters: [], profiles: [] });
+  const [characterData, setCharacterData] = useState<{ characters: Character[]; profiles: NarrativeProfile[] }>({ characters: [], profiles: [] });
   const [roteirosState, setRoteirosState] = useState<RoteirosState | null>(null);
   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [characterPickerOpen, setCharacterPickerOpen] = useState(false);
@@ -63,27 +62,18 @@ export default function BaseDadosPage() {
   const saveControllersRef = useRef(new Map<string, AbortController>());
   const saveRevisionRef = useRef<Record<string, number>>({});
   const scheduledRevisionRef = useRef<Record<string, number>>({});
-  const busyOperationsRef = useRef(new Map<string, string>());
-
-  const beginBusy = useCallback((key: string, label: string) => {
-    setBusy(beginBusyOperation(busyOperationsRef.current, key, label));
-  }, []);
-
-  const endBusy = useCallback((key: string) => {
-    setBusy(endBusyOperation(busyOperationsRef.current, key));
-  }, []);
 
   const refresh = async () => {
     setLoading(true);
     try {
-      const [loadedDatabase, characterSummaries, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterSummaries(), loadRoteirosState()]);
+      const [loadedDatabase, loadedCharacters, loadedRoteiros] = await Promise.all([loadBaseDados(), loadBaseDadosCharacterData(), loadRoteirosState()]);
       const recoveredDrafts = recoverBaseDadosDrafts(loadedDatabase, readBaseDadosDrafts(window.localStorage));
       databaseRef.current = loadedDatabase;
       draftsRef.current = recoveredDrafts;
       setDatabase(loadedDatabase);
       setDrafts(recoveredDrafts);
       writeBaseDadosDrafts(window.localStorage, recoveredDrafts);
-      setCharacterData({ characters: characterSummaries, profiles: Array.isArray(loadedRoteiros.state.profiles) ? loadedRoteiros.state.profiles : [] });
+      setCharacterData(loadedCharacters);
       setRoteirosState(loadedRoteiros.state);
       setMessage("");
     } catch (error) {
@@ -151,7 +141,7 @@ export default function BaseDadosPage() {
   const addVideo = async (file?: File) => {
     if (!file) return;
     if (!["video/mp4", "video/webm", "video/quicktime"].includes(file.type) && !/\.(mp4|webm|mov)$/i.test(file.name)) return setMessage("Selecione um vídeo MP4, WebM ou MOV.");
-    beginBusy("upload", "upload"); setMessage("");
+    setBusy("upload"); setMessage("");
     try {
       const durationSeconds = await readVideoDuration(file);
       const result = await uploadBaseDadosVideo(file, durationSeconds);
@@ -161,7 +151,7 @@ export default function BaseDadosPage() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível adicionar o vídeo.");
     } finally {
-      endBusy("upload");
+      setBusy("");
       if (uploadRef.current) uploadRef.current.value = "";
     }
   };
@@ -173,10 +163,9 @@ export default function BaseDadosPage() {
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) return setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero.");
     const controller = new AbortController();
     saveControllersRef.current.set(video.id, controller);
-    const busyKey = `save:${video.id}`;
-    beginBusy(busyKey, busyKey); setMessage("");
+    setBusy(`save:${video.id}`); setMessage("");
     try {
-      const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) }, controller.signal);
+      const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds }, controller.signal);
       if (saveRevisionRef.current[video.id] !== revision) return;
       databaseRef.current = result.state;
       setDatabase(result.state);
@@ -193,16 +182,12 @@ export default function BaseDadosPage() {
       setMessage(`${video.fileName} salvo.`);
     } catch (error) {
       if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
-      if (error instanceof Error && (error as Error & { code?: string }).code === "STALE_BASE_VIDEO_REVISION") {
-        setMessage(`${video.fileName} foi alterado por outra operação. Sua edição continua preservada neste navegador; atualize a página antes de tentar salvar novamente.`);
-        return;
-      }
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar as alterações.");
     } finally {
       if (saveControllersRef.current.get(video.id) === controller) saveControllersRef.current.delete(video.id);
-      endBusy(busyKey);
+      setBusy("");
     }
-  }, [beginBusy, endBusy]);
+  }, []);
 
   useEffect(() => {
     const timers = saveTimersRef.current;
@@ -277,8 +262,7 @@ export default function BaseDadosPage() {
     const timer = saveTimersRef.current.get(video.id);
     if (timer !== undefined) window.clearTimeout(timer);
     saveControllersRef.current.get(video.id)?.abort();
-    const busyKey = `delete:${video.id}`;
-    beginBusy(busyKey, busyKey); setMessage("");
+    setBusy(`delete:${video.id}`); setMessage("");
     try {
       await saveJobsRef.current.get(video.id)?.catch(() => undefined);
       const result = await removeBaseDadosVideo(video.id);
@@ -292,7 +276,7 @@ export default function BaseDadosPage() {
       setMessage(`${video.fileName} excluído.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível excluir o vídeo.");
-    } finally { endBusy(busyKey); }
+    } finally { setBusy(""); }
   };
 
   const selectedCharactersForExport = () => characterData.characters
@@ -306,7 +290,7 @@ export default function BaseDadosPage() {
   const exportPackage = async () => {
     const currentDatabase = databaseRef.current;
     if (!currentDatabase?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar o pacote.");
-    beginBusy("package", "package"); setMessage("");
+    setBusy("package"); setMessage("");
     try {
       await flushPendingDrafts();
       const exportedDatabase = mergeBaseDadosDrafts(currentDatabase, draftsRef.current);
@@ -316,13 +300,13 @@ export default function BaseDadosPage() {
       setMessage("Pacote completo exportado: guia e dados técnicos reunidos em um único arquivo.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível exportar o pacote completo.");
-    } finally { endBusy("package"); }
+    } finally { setBusy(""); }
   };
 
   const exportSimpleData = async () => {
     const currentDatabase = databaseRef.current;
     if (!currentDatabase?.videos.length) return setMessage("Adicione pelo menos um vídeo antes de exportar os dados.");
-    beginBusy("export-simple", "export-simple"); setMessage("");
+    setBusy("export-simple"); setMessage("");
     try {
       await flushPendingDrafts();
       const exportedDatabase = mergeBaseDadosDrafts(currentDatabase, draftsRef.current);
@@ -336,12 +320,12 @@ export default function BaseDadosPage() {
       setMessage("Dados simples exportados.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível exportar os dados simples.");
-    } finally { endBusy("export-simple"); }
+    } finally { setBusy(""); }
   };
 
   const importRoteiroFromAi = async (file?: File) => {
     if (!file) return;
-    setImportPreview(null); beginBusy("import-preview", "import-preview"); setMessage("");
+    setImportPreview(null); setBusy("import-preview"); setMessage("");
     try {
       const raw = JSON.parse(await file.text()) as unknown;
       // A descrição pode ainda estar no debounce/local draft quando o usuário importa.
@@ -357,7 +341,7 @@ export default function BaseDadosPage() {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível ler o JSON da IA.");
     } finally {
-      endBusy("import-preview");
+      setBusy("");
       if (importRef.current) importRef.current.value = "";
     }
   };
@@ -396,10 +380,7 @@ export default function BaseDadosPage() {
     });
     try {
       await createRoteiroBackup();
-      if (createdCharacters.length) {
-        const fullCharacterData = await loadBaseDadosCharacterData();
-        await savePremiumCharacters([...createdCharacters, ...fullCharacterData.characters]);
-      }
+      if (createdCharacters.length) await savePremiumCharacters([...createdCharacters, ...characterData.characters]);
       for (const item of draft.sections) {
         item.section.video = await importBaseDadosVideoIntoRoteiro(draft.script.id, item.section.id, item.sourceVideo.id);
         copiedSectionIds.push(item.section.id);
@@ -434,14 +415,13 @@ export default function BaseDadosPage() {
   };
   const deleteImportedScript = async (script: RoteirosState["scripts"][number], deleteCharacters: boolean) => {
     if (!window.confirm(deleteCharacters ? `Excluir “${script.title}” e os personagens criados por essa importação? Personagens usados em outros roteiros serão preservados.` : `Excluir somente “${script.title}”? Os personagens serão preservados.`)) return;
-    const busyKey = `delete-script:${script.id}`;
-    beginBusy(busyKey, busyKey); setMessage("");
+    setBusy(`delete-script:${script.id}`); setMessage("");
     try {
       const result = await removeRoteiro(script.id, { deleteImportedCharacters: deleteCharacters });
       setMessage(deleteCharacters ? `Roteiro excluído. ${result.removedCharacters?.length || 0} personagem(ns) removido(s).` : "Roteiro excluído; personagens preservados.");
       await refresh();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível excluir o roteiro."); }
-    finally { endBusy(busyKey); }
+    finally { setBusy(""); }
   };
 
   const visibleCharacters = useMemo(() => {
@@ -483,13 +463,13 @@ export default function BaseDadosPage() {
   }, [database, draftFor, videoFilter, videoQuery]);
 
   const openDataFolder = async () => {
-    beginBusy("folder", "folder"); setMessage("");
+    setBusy("folder"); setMessage("");
     try {
       await openBaseDadosFolder();
       setMessage("Pasta dos dados aberta no Explorador de Arquivos.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível abrir a pasta dos dados.");
-    } finally { endBusy("folder"); }
+    } finally { setBusy(""); }
   };
 
   return <div className={`${styles.app} ${styles.scaled}`}>
@@ -543,7 +523,7 @@ export default function BaseDadosPage() {
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
       {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const groupStart = Number(draft.firstGroupReactionSeconds); const hasKnownDuration = Number.isFinite(video.durationSeconds) && video.durationSeconds > 0; const warning = hasKnownDuration && Number.isFinite(end) && end > video.durationSeconds; const groupWarning = hasKnownDuration && Number.isFinite(groupStart) && groupStart > video.durationSeconds; return <article className={styles.card} key={video.id}>
-        <div className={styles.player}><video key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
+        <div className={styles.player}><video key={`${video.id}-${video.updatedAt}`} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
         <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>
         <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.firstGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label></div><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}

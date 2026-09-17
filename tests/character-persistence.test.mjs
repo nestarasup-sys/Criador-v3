@@ -52,8 +52,6 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
   const seeded = { ...emptyAppState(), characters: [] };
   await writeFile(join(root, "state.json"), JSON.stringify(seeded), "utf8");
   await writeFile(join(root, "characters.json"), JSON.stringify([character]), "utf8");
-  await mkdir(join(root, "personagens", "fotos"), { recursive: true });
-  await writeFile(join(root, "personagens", "fotos", "char-1.png"), Buffer.from("thumbnail"));
   const port = 6900 + Math.floor(Math.random() * 200);
   let first;
   let second;
@@ -74,11 +72,6 @@ test("migra personagens para arquivo próprio e preserva Save após reiniciar o 
     const afterSave = await withSession(first.baseUrl, "GET", "/state");
     assert.equal(afterSave.value.characters[0].name, "Depois");
     assert.equal(afterSave.value.characters[0].persistenceRevision, saved.value.revision);
-    const summaries = await withSession(first.baseUrl, "GET", "/characters");
-    assert.equal(summaries.response.status, 200);
-    assert.equal(summaries.value.characters[0].id, "char-1");
-    assert.equal("adjustments" in summaries.value.characters[0], false);
-    assert.equal(summaries.value.characters[0].photoUrl, `${first.baseUrl}/files/characters/char-1/photo.png`);
     const duplicate = await withSession(first.baseUrl, "PUT", "/characters/char-1", { ...character, name: "Depois", persistenceRevision: initialRevision });
     assert.equal(duplicate.response.status, 200);
     assert.equal(duplicate.value.revision, saved.value.revision);
@@ -163,39 +156,14 @@ test("rejeita IDs duplicados antes de criar o índice por personagem", async () 
   }
 });
 
-test("snapshot parcial de lista não interpreta personagens omitidos como exclusão", async () => {
-  const root = await mkdtemp(join(tmpdir(), "nymi-character-partial-list-"));
-  const first = { id: "char-1", name: "Primeiro", model: "feminino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
-  const second = { id: "char-2", name: "Segundo", model: "masculino", selections: {}, adjustments: {}, updatedAt: "2026-09-15T10:00:00.000Z" };
-  try {
-    const store = createCharacterStore(root);
-    await store.init([first, second]);
-    await store.replaceAll([{ ...first, name: "Primeiro atualizado" }]);
-    const reopened = createCharacterStore(root);
-    await reopened.init([]);
-    const characters = await reopened.list();
-    assert.deepEqual(characters.map((character) => character.id), ["char-1", "char-2"]);
-    assert.equal(characters[0].name, "Primeiro atualizado");
-    assert.equal(characters[1].name, "Segundo");
-  } finally { await rm(root, { recursive: true, force: true }); }
-});
-
 test("trocar a seleção não salva personagem sem alteração pendente", async () => {
   const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  const creatorStorage = await readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8");
   const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
   assert.match(source, /function persistEditorSnapshot\([^)]*\): Character \| null/);
   assert.match(source, /const character = persistEditorSnapshot\("Salvando automaticamente", false,/);
   assert.match(source, /if \(!character\) return true;/);
   assert.doesNotMatch(source, /persistEditorSnapshot\("Salvando automaticamente"\) \?\? charactersRef\.current/);
   assert.doesNotMatch(source, /\}, \[activeCharacter, characters\]\);/);
-  assert.match(creatorStorage, /let characterPersistenceQueue: Promise<void> = Promise\.resolve\(\)/);
-  assert.match(creatorStorage, /enqueueCharacterPersistence/);
-  assert.doesNotMatch(creatorStorage, /characterItemQueue/);
-  assert.match(creatorStorage, /const operation: Promise<CharacterSaveResult> = enqueueCharacterPersistence\(async \(\) => \{\s+const payload = characterWithoutPhotos\(character\)/);
-  assert.match(creatorStorage, /characterContentFingerprint/);
-  assert.doesNotMatch(source, /loadCharacterCheckpoints\(\)\.catch\(\(\) => \[\]\)/);
-  assert.match(source, /O checkpoint deste navegador não pôde ser lido/);
   assert.match(server, /Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);
 });
 

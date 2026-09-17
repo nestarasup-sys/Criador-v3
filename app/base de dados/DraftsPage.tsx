@@ -62,8 +62,7 @@ export default function DraftsPage() {
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return false; }
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return false; }
     try {
-      const result = await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) });
-      setDatabase((current) => current ? { ...current, videos: current.videos.map((item) => item.id === video.id ? result.video : item) } : current);
+      await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds });
       if (draftSignature(currentDrafts.current[video.id] || value) === draftSignature(value)) dirtyIds.current.delete(video.id);
       return true;
     }
