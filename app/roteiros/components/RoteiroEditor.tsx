@@ -59,7 +59,7 @@ function readableExpression(key: string) {
 }
 
 function formatTikTokDuration(seconds: number | undefined) {
-  if (!Number.isFinite(seconds) || seconds === undefined) return "duração não disponível";
+  if (!Number.isFinite(seconds) || seconds === undefined || seconds <= 0) return "duração não disponível";
   return `${seconds.toFixed(2).replace(".", ",")} segundos`;
 }
 

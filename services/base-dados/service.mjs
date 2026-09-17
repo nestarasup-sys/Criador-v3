@@ -375,6 +375,9 @@ export function createBaseDadosService(root) {
       const item = state.videos.find((video) => video.id === String(id));
       return item ? structuredClone(item) : null;
     },
+    getVideos() {
+      return state.videos.map((item) => structuredClone(item));
+    },
     importFile,
   };
 }

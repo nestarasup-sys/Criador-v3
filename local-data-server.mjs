@@ -8,6 +8,7 @@ import JSZip from "jszip";
 import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
+import { probeVideoDuration } from "./services/media/video-metadata.mjs";
 import { createDraftsService } from "./services/base-dados/drafts-service.mjs";
 import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
@@ -1261,6 +1262,7 @@ async function route(request, response) {
     await mkdir(folder, { recursive: true });
     await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.filter((item) => item !== extension).map((item) => rm(join(folder, `${tiktokId}${item}`), { force: true })));
     await writeFile(filePath, body);
+    const durationSeconds = await probeVideoDuration(filePath);
     sendJson(response, request, 200, {
       ok: true,
       video: {
@@ -1269,6 +1271,7 @@ async function route(request, response) {
         url: `http://${HOST}:${PORT}/roteiros/videos/${scriptId}/${tiktokId}`,
         contentType,
         size: body.length,
+        ...(durationSeconds === null ? {} : { durationSeconds }),
         updatedAt: new Date().toISOString(),
       },
     });
@@ -1312,7 +1315,8 @@ async function route(request, response) {
       const description = String(item?.description ?? "");
       const sceneEnd = Number.isFinite(Number(item?.sceneEndSeconds)) ? `${Number(item.sceneEndSeconds)} segundos` : "não definido";
       const firstGroupReaction = Number.isFinite(Number(item?.firstGroupReactionSeconds)) ? `${Number(item.firstGroupReactionSeconds)} segundos` : "não definido";
-      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\n`);
+      const duration = Number(item?.video?.durationSeconds) > 0 ? `${Number(item.video.durationSeconds)} segundos` : "não disponível";
+      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nDuração total do vídeo: ${duration}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\n`);
       const storedPath = String(item?.video?.storedPath || "").replace(/[\\/]+/g, sep);
       const source = item?.video ? await findVideoReferenceFile(item.video, scriptId, item.id).catch(() => null) : (storedPath ? resolve(ROOT, storedPath) : null);
       const destination = join(folder, `${number}.mp4`);
@@ -1833,6 +1837,7 @@ async function loadLocalEnvironment() {
 
 await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
+await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({
   requestTimeout: 120_000,

@@ -1292,6 +1292,28 @@ export function createRoteirosService(rootFolder) {
     return state.scripts.map((script) => script.title);
   }
 
+  async function syncLibraryVideoDurations(videos) {
+    const durationById = new Map((Array.isArray(videos) ? videos : [])
+      .filter((video) => video && typeof video.id === "string" && Number(video.durationSeconds) > 0)
+      .map((video) => [video.id, Number(video.durationSeconds)]));
+    let changed = false;
+    let changedCount = 0;
+    const nextScripts = state.scripts.map((script) => ({
+      ...script,
+      tiktoks: script.tiktoks.map((section) => {
+        const libraryId = section.video?.libraryVideoId;
+        const duration = libraryId ? durationById.get(libraryId) : undefined;
+        if (!section.video || duration === undefined || section.video.durationSeconds === duration) return section;
+        changed = true;
+        changedCount += 1;
+        return { ...section, video: { ...section.video, durationSeconds: duration }, updatedAt: new Date().toISOString() };
+      }),
+    }));
+    if (!changed) return 0;
+    await save({ ...state, scripts: nextScripts });
+    return changedCount;
+  }
+
   async function linkVideo(scriptId, tiktokId, video) {
     const id = safeScriptId(scriptId);
     const sectionId = String(tiktokId || "");
@@ -1469,5 +1491,5 @@ export function createRoteirosService(rootFolder) {
     return structuredClone(state.scripts);
   }
 
-  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript, getScripts, linkVideo };
+  return { init, handle, removeScript, listOrphanScriptFolders, removeOrphanScriptFolders, getScriptIds, getScriptTitles, getScript, getScripts, linkVideo, syncLibraryVideoDurations };
 }

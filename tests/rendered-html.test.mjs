@@ -1117,6 +1117,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(service, /FONTE ÚNICA/);
   assert.match(service, /validateMeaningfulContextRewrite/);
   assert.match(server, /export-videos/);
+  assert.match(server, /Duração total do vídeo/);
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
