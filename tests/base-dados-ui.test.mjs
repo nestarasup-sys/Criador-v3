@@ -28,7 +28,7 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(draftsPage, /const saveJobs = useRef\(new Map<string, Promise<boolean>>\(\)\)/);
   assert.match(draftsPage, /pending = dirtyIds\.current\.has\(video\.id\)/);
   assert.match(draftsPage, /for \(const id of dirtyIds\.current\)/);
-  assert.match(draftsPage, /if \(!\(await save\(video, value\)\)\) return;/);
+  assert.match(draftsPage, /const saveDraft = saveDraftRef\.current/);
   assert.match(page, /Buscar cenas/);
   assert.match(page, /Filtros/);
   assert.match(page, /visibleVideos/);

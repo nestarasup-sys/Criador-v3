@@ -83,7 +83,9 @@ export default function DraftsPage() {
     }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); return false; }
   }
-  saveDraftRef.current = save;
+  useEffect(() => {
+    saveDraftRef.current = save;
+  });
   const enqueueSave = (video: BaseDadosVideo, value: DraftValue, revision: number) => {
     const previous = saveJobs.current.get(video.id) || Promise.resolve(true);
     const job = previous.catch(() => false).then(() => save(video, value, revision));
