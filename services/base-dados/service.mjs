@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
-import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
@@ -125,6 +125,7 @@ async function serveVideo(response, request, headers, filePath, contentType = "v
 export function createBaseDadosService(root) {
   const videosRoot = join(root, "videos");
   const statePath = join(root, "state.json");
+  const backupsRoot = join(root, "backups");
   let state = structuredClone(EMPTY_STATE);
   let writeQueue = Promise.resolve();
   let mutationQueue = Promise.resolve();
@@ -137,7 +138,16 @@ export function createBaseDadosService(root) {
 
   async function persist() {
     state.updatedAt = new Date().toISOString();
-    writeQueue = writeQueue.catch(() => undefined).then(() => writeJsonAtomic(statePath, state));
+    const snapshot = structuredClone(state);
+    writeQueue = writeQueue.catch(() => undefined).then(async () => {
+      await mkdir(backupsRoot, { recursive: true });
+      if (await fileExists(statePath)) {
+        await copyFile(statePath, join(backupsRoot, `state-${Date.now()}-${Math.random().toString(36).slice(2)}.json`));
+        const backups = (await readdir(backupsRoot)).filter((name) => name.startsWith("state-") && name.endsWith(".json")).sort().reverse();
+        await Promise.all(backups.slice(40).map((name) => rm(join(backupsRoot, name), { force: true })));
+      }
+      await writeJsonAtomic(statePath, snapshot);
+    });
     return writeQueue;
   }
 
@@ -227,6 +237,7 @@ export function createBaseDadosService(root) {
   return {
     async init() {
       await mkdir(videosRoot, { recursive: true });
+      await mkdir(backupsRoot, { recursive: true });
       try {
         state = normalizeState(JSON.parse(await readFile(statePath, "utf8")));
         state.videos = await Promise.all(state.videos.map((item) => withFileStatus(root, item)));
