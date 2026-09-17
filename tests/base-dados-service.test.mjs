@@ -250,3 +250,22 @@ test("rascunhos detectam vídeos manuais, preservam metadados e enviam para a pr
     assert.equal((await base.getVideo(sentResult.video.id)).description, "A cena termina em silêncio");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("exclui rascunho com confirmação persistida e mantém o arquivo na quarentena", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-draft-delete-"));
+  try {
+    const base = createBaseDadosService(join(root, "base-de-dados")); await base.init();
+    const draftsRoot = join(root, "base-de-dados", "rascunhos");
+    await mkdir(join(draftsRoot, "videos"), { recursive: true });
+    await writeFile(join(draftsRoot, "videos", "remover.mp4"), Buffer.from([4, 5, 6]));
+    const drafts = createDraftsService(draftsRoot, base); await drafts.init();
+    const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
+    const listed = responseCapture(); await drafts.handle(request("GET", "/base-dados/drafts/state"), listed, new URL("http://local/base-dados/drafts/state"), headers);
+    const draft = JSON.parse(listed.capture.body).videos[0];
+    const deleted = responseCapture(); await drafts.handle(request("DELETE", `/base-dados/drafts/videos/${draft.id}`), deleted, new URL(`http://local/base-dados/drafts/videos/${draft.id}`), headers);
+    assert.equal(JSON.parse(deleted.capture.body).state.videos.length, 0);
+    await assert.rejects(stat(join(draftsRoot, "videos", "remover.mp4")));
+    assert.equal((await readdir(join(draftsRoot, ".trash"))).length, 1);
+    const persisted = JSON.parse(await readFile(join(draftsRoot, "state.json"), "utf8")); assert.deepEqual(persisted.videos, []);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

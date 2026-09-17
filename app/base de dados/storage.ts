@@ -85,6 +85,11 @@ export async function patchBaseDadosDraft(id: string, patch: Partial<Pick<BaseDa
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
 }
 
+export async function removeBaseDadosDraft(id: string) {
+  const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return result as unknown as { deleted: string; state: BaseDadosDraftState };
+}
+
 export async function sendBaseDadosDraft(id: string) {
   const result = await request(`/base-dados/drafts/${encodeURIComponent(id)}/send`, { method: "POST" });
   return result as unknown as { duplicate: boolean; video: BaseDadosVideo; state: BaseDadosDraftState };

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, rm, stat } from "node:fs/promises";
 import { extname, join, sep } from "node:path";
 import { writeJsonAtomic } from "../storage/atomic-json.mjs";
 import { resolveByteRange } from "../storage/file-range.mjs";
@@ -166,6 +166,29 @@ export function createDraftsService(root, baseDadosService) {
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;
+      }
+      if (videoMatch && request.method === "DELETE") {
+        const result = await queue(async () => {
+          const index = state.videos.findIndex((video) => video.id === videoMatch[1]);
+          if (index < 0) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
+          const item = state.videos[index];
+          const source = draftPath(item);
+          if (!(await exists(source))) throw Object.assign(new Error("O arquivo do rascunho não está na pasta."), { status: 409, code: "DRAFT_FILE_MISSING" });
+          const trashName = `${Date.now().toString(36)}-${safeFileName(item.fileName)}`;
+          const trashed = join(trashRoot, trashName);
+          await rename(source, trashed);
+          const previousVideos = state.videos;
+          state.videos = state.videos.filter((video) => video.id !== item.id);
+          try {
+            await persist();
+          } catch (error) {
+            state.videos = previousVideos;
+            try { await rename(trashed, source); } catch { /* preserve o arquivo na quarentena se o rollback falhar */ }
+            throw error;
+          }
+          return { deleted: item.id, state };
+        });
+        sendJson(response, responseHeaders, 200, { ok: true, ...result }); return true;
       }
       const sendMatch = url.pathname.match(/^\/base-dados\/drafts\/([a-zA-Z0-9_-]{1,160})\/send$/);
       if (sendMatch && request.method === "POST") {
