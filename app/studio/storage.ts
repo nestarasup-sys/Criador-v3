@@ -85,8 +85,14 @@ export function mirrorStudios(studios: Studio[]) {
 }
 
 export function recordStudioDeletion(id: string) {
-  const deletions = readLocal<StudioDeletion[]>(STUDIO_DELETION_KEY, []).filter((entry) => entry.id !== id);
-  localStorage.setItem(STUDIO_DELETION_KEY, JSON.stringify([...deletions, { id, deletedAt: new Date().toISOString() }]));
+  try {
+    const deletions = readLocal<StudioDeletion[]>(STUDIO_DELETION_KEY, []).filter((entry) => entry.id !== id);
+    localStorage.setItem(STUDIO_DELETION_KEY, JSON.stringify([...deletions, { id, deletedAt: new Date().toISOString() }]));
+    return true;
+  } catch (error) {
+    console.error("[studio] Não foi possível registrar a exclusão no navegador", error);
+    return false;
+  }
 }
 
 async function uploadAssetPayload(id: string, body: Blob, name: string, contentType: string, kind?: StudioAsset["kind"]) {
