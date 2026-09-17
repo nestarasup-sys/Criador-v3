@@ -189,6 +189,8 @@ test("trocar a seleção não salva personagem sem alteração pendente", async 
   assert.match(creatorStorage, /let characterPersistenceQueue: Promise<void> = Promise\.resolve\(\)/);
   assert.match(creatorStorage, /enqueueCharacterPersistence/);
   assert.doesNotMatch(creatorStorage, /characterItemQueue/);
+  assert.match(creatorStorage, /const operation: Promise<CharacterSaveResult> = enqueueCharacterPersistence\(async \(\) => \{\s+const payload = characterWithoutPhotos\(character\)/);
+  assert.match(creatorStorage, /characterContentFingerprint/);
   assert.doesNotMatch(source, /loadCharacterCheckpoints\(\)\.catch\(\(\) => \[\]\)/);
   assert.match(source, /O checkpoint deste navegador não pôde ser lido/);
   assert.match(server, /Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);

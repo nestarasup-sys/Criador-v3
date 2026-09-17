@@ -262,6 +262,21 @@ function characterWithoutPhotos(character: Character) {
   return { ...withoutPhotos, ...(Number.isInteger(persistenceRevision) ? { persistenceRevision } : {}) };
 }
 
+function characterContentFingerprint(character: Character) {
+  const {
+    photoUrl: _photoUrl,
+    photoDataUrl: _photoDataUrl,
+    persistenceRevision: _revision,
+    updatedAt: _updatedAt,
+    ...content
+  } = character;
+  void _photoUrl;
+  void _photoDataUrl;
+  void _revision;
+  void _updatedAt;
+  return JSON.stringify(content);
+}
+
 async function flushCharacterSaves() {
   while (pendingCharacterBody !== null) {
     const body = pendingCharacterBody;
@@ -310,13 +325,18 @@ export function saveCharactersToPc(characters: Character[]) {
 
 /** Persists only one character so routine autosaves never resend the library. */
 export function saveCharacterToPc(character: Character) {
-  const payload = characterWithoutPhotos(character);
-  const body = JSON.stringify(payload);
-  const fingerprint = JSON.stringify({ ...payload, updatedAt: undefined });
+  // The fingerprint deliberately excludes revision/timestamp. Multiple UI
+  // paths can request the same content while a previous PUT is in flight.
+  // The request body itself is built inside the queue, after earlier saves
+  // have updated characterRevisions, so a queued newer edit never reuses a
+  // stale expected revision.
+  const fingerprint = characterContentFingerprint(character);
   const existing = inFlightCharacterSaves.get(character.id);
   if (existing?.fingerprint === fingerprint) return existing.operation;
 
   const operation: Promise<CharacterSaveResult> = enqueueCharacterPersistence(async () => {
+    const payload = characterWithoutPhotos(character);
+    const body = JSON.stringify(payload);
     const startedAt = Date.now();
     try {
       const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
