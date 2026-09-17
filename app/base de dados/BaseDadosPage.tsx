@@ -469,31 +469,17 @@ export default function BaseDadosPage() {
       <div className={styles.topbarBrand}>
         <Link href="/" className={`${styles.topbarBack} button secondary`} aria-label="Voltar ao criador">←</Link>
         <NymiBrand />
+        <div className={styles.moduleTitle}><span>BIBLIOTECA</span><strong>BASE DE DADOS</strong></div>
       </div>
       <div className="top-actions">
         <NymiConnectionStatus connected={Boolean(database)} />
         <NymiNavigation active="base-dados" compact />
-        <button className={`button secondary ${styles.actionFolder}`} disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Ir aos dados</button>
-        <button className={`button secondary ${styles.actionAdd}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar</button>
-        <button className={`button secondary ${styles.actionPackage}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote completo para IA</button>
-        <button className={`button secondary ${styles.actionImport}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro da IA</button>
-        <button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy) || !importedScripts.length} onClick={() => setImportedManagerOpen(true)}>♙ Roteiros importados</button>
-        <button className={`button secondary ${styles.actionCharacters}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Selecionar personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
-        <button className={`button secondary ${styles.actionSimple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados simples</button>
       </div>
     </header>
     <main className={styles.content}>
       <input ref={uploadRef} hidden type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov" onChange={(event) => void addVideo(event.target.files?.[0])} />
       <input ref={importRef} hidden type="file" accept="application/json,.json" disabled={Boolean(busy) || importing} onChange={(event) => void importRoteiroFromAi(event.target.files?.[0])} />
-      {!loading && database && <section className={styles.pageHeader}>
-        <div className={styles.pageHeading}>
-          <span className={styles.pageIcon} aria-hidden="true">▤</span>
-          <div>
-            <span className={styles.eyebrow}>BIBLIOTECA LOCAL</span>
-            <h1>Base de dados</h1>
-            <p>Gerencie e organize as cenas de vídeo que você pode reutilizar nos seus roteiros.</p>
-          </div>
-        </div>
+      {!loading && database && <section className={styles.pageHeader} aria-label="Busca e filtros da Base de dados">
         <div className={styles.pageTools}>
           <div className={styles.counter}><strong>{database.videos.length}</strong><span>vídeos cadastrados</span></div>
           <label className={styles.searchWrap}>
@@ -508,6 +494,18 @@ export default function BaseDadosPage() {
               <button className={videoFilter === "pending" ? styles.filterActive : ""} onClick={() => { setVideoFilter("pending"); setFiltersOpen(false); }}>Pendentes</button>
             </div>}
           </div>
+        </div>
+      </section>}
+      {!loading && database && <section className={styles.actionToolbar} aria-label="Ações da Base de dados">
+        <div className={styles.actionToolbarIntro}><span className={styles.actionToolbarIcon} aria-hidden="true">✦</span><div><strong>Ações da biblioteca</strong><small>Adicione, importe e exporte cenas sem poluir a busca.</small></div></div>
+        <div className={styles.actionToolbarGroup}>
+          <button className={`${styles.toolbarButton} ${styles.toolbarPrimary}`} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarNeutral}`} disabled={Boolean(busy)} onClick={() => void openDataFolder()}>↗ Abrir pasta</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarPurple}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportPackage}>✦ Pacote para IA</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarGreen}`} disabled={Boolean(busy) || importing} onClick={() => importRef.current?.click()}>↑ Importar roteiro</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy) || !importedScripts.length} onClick={() => setImportedManagerOpen(true)}>♙ Roteiros importados</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarBlue}`} disabled={Boolean(busy)} onClick={() => setCharacterPickerOpen(true)}>♙ Personagens{selectedCharacterIds.length ? ` (${selectedCharacterIds.length})` : ""}</button>
+          <button className={`${styles.toolbarButton} ${styles.toolbarPink}`} disabled={Boolean(busy) || !database?.videos.length} onClick={exportSimpleData}>↓ Exportar dados</button>
         </div>
       </section>}
       {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
