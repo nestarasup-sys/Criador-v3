@@ -46,7 +46,7 @@ export async function uploadBaseDadosVideo(file: File, durationSeconds: number) 
   return { video: result.video, state: result.state };
 }
 
-export async function patchBaseDadosVideo(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds">, signal?: AbortSignal) {
+export async function patchBaseDadosVideo(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">, signal?: AbortSignal) {
   const result = await request(`/base-dados/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch), signal });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosState };
 }
@@ -71,7 +71,7 @@ export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
   return `${path}?v=${encodeURIComponent(video.updatedAt)}`;
 }
 
-export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds">) {
+export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">) {
   const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
 }

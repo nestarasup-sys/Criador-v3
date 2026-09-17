@@ -9,7 +9,7 @@ export type BaseDadosCharacterExport = {
   narrativeProfile?: NarrativeProfile;
 };
 
-export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string };
+export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string };
 
 /** Mescla alterações ainda não confirmadas pelo autosave no snapshot exportado. */
 export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<string, BaseDadosVideoDraft>) {
@@ -19,7 +19,10 @@ export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<st
       const draft = drafts[video.id];
       if (!draft) return video;
       const sceneEndSeconds = Number(draft.sceneEndSeconds);
-      return Number.isFinite(sceneEndSeconds) && sceneEndSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds } : video;
+      if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return video;
+      if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds };
+      const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
+      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds } : video;
     }),
   };
 }
@@ -60,6 +63,7 @@ export function buildBaseDadosExportText(
     "DESCRIÇÃO:",
     video.description.trim() || "Não preenchida.",
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
+    `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
     `TEMPO TOTAL DO VÍDEO: ${formatSeconds(video.durationSeconds)} segundos`,
   ].join("\n"));
 
@@ -71,6 +75,7 @@ export function buildBaseDadosExportText(
     "INSTRUÇÕES DE FONTE",
     "Use somente os IDs existentes neste documento. A IA pode escolher e reorganizar vídeos, mas não pode repetir o mesmo ID.",
     "O tempo final da cena da descrição deve ser usado como início mínimo das falas e pensamentos no roteiro.",
+    "O tempo da primeira reação em grupo indica a partir de qual segundo a primeira reação coletiva pode começar; respeite-o quando houver reação em grupo.",
     "",
     "VÍDEOS",
     "======",
@@ -93,6 +98,8 @@ export function buildBaseDadosSimpleExportText(
     `TIKTOK ${String(video.sequence).padStart(2, "0")}`,
     "DESCRIÇÃO:",
     video.description.trim() || "Não preenchida.",
+    `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
+    `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
   ].join("\n"));
   const narrativeProfile = (profile: NarrativeProfile | undefined) => profile ? {
     personality: profile.personality,

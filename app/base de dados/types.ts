@@ -15,6 +15,8 @@ export type BaseDadosVideo = {
   durationSeconds: number;
   description: string;
   sceneEndSeconds: number;
+  /** Segundo em que a primeira reação coletiva pode começar. */
+  firstGroupReactionSeconds: number;
   createdAt: string;
   updatedAt: string;
 };

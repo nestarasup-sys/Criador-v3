@@ -816,6 +816,7 @@ async function route(request, response) {
       durationSeconds: body?.durationSeconds ?? section.video.durationSeconds,
       description: body?.description ?? section.description,
       sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
+      firstGroupReactionSeconds: body?.firstGroupReactionSeconds ?? section.firstGroupReactionSeconds,
     });
     const sharedVideo = {
       name: imported.video.originalName,

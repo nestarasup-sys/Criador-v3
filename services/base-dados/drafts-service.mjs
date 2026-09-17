@@ -88,7 +88,7 @@ export function createDraftsService(root, baseDadosService) {
       const previous = currentByHash.get(contentHash) || currentByName.get(entry.name);
       const now = previous?.createdAt || new Date().toISOString();
       discovered.push({
-        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0 }),
+        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0 }),
         fileName: entry.name,
         originalName: previous?.originalName || entry.name,
         storedPath: `base-de-dados/rascunhos/videos/${entry.name}`,
@@ -97,6 +97,7 @@ export function createDraftsService(root, baseDadosService) {
         contentHash,
         durationSeconds: Number(previous?.durationSeconds) >= 0 ? Number(previous.durationSeconds) : 0,
         sceneEndSeconds: Number(previous?.sceneEndSeconds) >= 0 ? Number(previous.sceneEndSeconds) : 0,
+        firstGroupReactionSeconds: Number(previous?.firstGroupReactionSeconds) >= 0 ? Number(previous.firstGroupReactionSeconds) : 0,
         createdAt: now,
         updatedAt: new Date().toISOString(),
         fileAvailable: true,
@@ -152,8 +153,11 @@ export function createDraftsService(root, baseDadosService) {
           const index = state.videos.findIndex((video) => video.id === videoMatch[1]);
           if (index < 0) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
           const end = Number(body?.sceneEndSeconds);
+          const current = state.videos[index];
+          const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
           if (!Number.isFinite(end) || end < 0) throw Object.assign(new Error("O tempo final precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SCENE_END" });
-          state.videos[index] = { ...state.videos[index], description: String(body?.description || ""), sceneEndSeconds: end, updatedAt: new Date().toISOString() };
+          if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_GROUP_REACTION_START" });
+          state.videos[index] = { ...current, description: String(body?.description || ""), sceneEndSeconds: end, firstGroupReactionSeconds, updatedAt: new Date().toISOString() };
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;
@@ -165,7 +169,7 @@ export function createDraftsService(root, baseDadosService) {
           if (!item) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
           const source = draftPath(item);
           if (!(await exists(source))) throw Object.assign(new Error("O arquivo do rascunho não está na pasta."), { status: 409, code: "DRAFT_FILE_MISSING" });
-          const imported = await baseDadosService.importFile(source, { name: item.originalName || item.fileName, contentType: item.contentType, durationSeconds: item.durationSeconds, description: item.description, sceneEndSeconds: item.sceneEndSeconds });
+          const imported = await baseDadosService.importFile(source, { name: item.originalName || item.fileName, contentType: item.contentType, durationSeconds: item.durationSeconds, description: item.description, sceneEndSeconds: item.sceneEndSeconds, firstGroupReactionSeconds: item.firstGroupReactionSeconds });
           if (imported.duplicate) return { duplicate: true, video: imported.video, state };
           if (!(await exists(imported.video.absolutePath))) throw Object.assign(new Error("A Base não confirmou o arquivo importado."), { status: 500, code: "DRAFT_IMPORT_UNCONFIRMED" });
           await rm(source, { force: false });

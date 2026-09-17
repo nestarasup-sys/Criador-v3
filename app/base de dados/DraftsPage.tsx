@@ -7,7 +7,7 @@ import { baseDadosDraftVideoUrl, loadBaseDadosDrafts, openBaseDadosDraftsFolder,
 import type { BaseDadosDraftState, BaseDadosVideo } from "./types";
 import styles from "./base-de-dados.module.css";
 
-type DraftValue = { description: string; sceneEndSeconds: string };
+type DraftValue = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds: string };
 
 export default function DraftsPage() {
   const [database, setDatabase] = useState<BaseDadosDraftState | null>(null);
@@ -25,7 +25,7 @@ export default function DraftsPage() {
     try {
       const state = await loadBaseDadosDrafts();
       setDatabase(state);
-      const next = Object.fromEntries(state.videos.map((video) => [video.id, { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds) }]));
+      const next = Object.fromEntries(state.videos.map((video) => [video.id, { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }]));
       currentDrafts.current = next;
       setDrafts(next);
       setMessage("");
@@ -39,11 +39,13 @@ export default function DraftsPage() {
     return () => { window.clearTimeout(timer); timerMap.forEach((item) => window.clearTimeout(item)); };
   }, []);
 
-  const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds) }, [drafts]);
+  const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
   const save = async (video: BaseDadosVideo, value: DraftValue) => {
     const end = Number(value.sceneEndSeconds);
+    const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return; }
-    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end }); }
+    if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return; }
+    try { await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds }); }
     catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {
@@ -79,7 +81,7 @@ export default function DraftsPage() {
       {message && <p className={styles.message} role="status">{message}</p>}
       {loading && <div className={styles.emptyState}><span>…</span><h2>Carregando rascunhos</h2></div>}
       {!loading && !visible.length && <div className={styles.emptyState}><span>＋</span><h2>Nenhum rascunho encontrado</h2><p>Coloque vídeos MP4, WebM ou MOV em <code>base-de-dados/rascunhos/videos</code> e atualize esta página.</p><button className={styles.actionButtonPrimary} onClick={() => void refresh()}>Atualizar</button></div>}
-      {Boolean(visible.length) && <section className={styles.grid}>{visible.map((video) => { const value = valueFor(video); const warning = Number(value.sceneEndSeconds) > video.durationSeconds && video.durationSeconds > 0; return <article className={styles.card} key={video.id}><div className={styles.player}><video src={baseDadosDraftVideoUrl(video)} controls playsInline preload="metadata" /></div><div className={styles.cardHeader}><div className={styles.sequence}>R</div><div className={styles.cardTitle}><strong>{video.fileName}</strong><small>{video.contentHash?.slice(0, 12) || "aguardando hash"}</small></div><span className={value.description.trim() ? styles.ready : styles.pending}>{value.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div><div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={value.description} onChange={(event) => update(video, { description: event.target.value })} onBlur={() => void flush(video)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={value.sceneEndSeconds} onChange={(event) => update(video, { sceneEndSeconds: event.target.value })} onBlur={() => void flush(video)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Esse tempo ultrapassa a duração total do vídeo.</small>}</label><div className={styles.cardActions}><button className={styles.actionButtonPrimary} disabled={Boolean(busy) || video.fileAvailable === false} onClick={() => void send(video)}>Enviar para base de dados</button></div></div></article>; })}</section>}
+      {Boolean(visible.length) && <section className={styles.grid}>{visible.map((video) => { const value = valueFor(video); const warning = Number(value.sceneEndSeconds) > video.durationSeconds && video.durationSeconds > 0; const groupWarning = Number(value.firstGroupReactionSeconds) > video.durationSeconds && video.durationSeconds > 0; return <article className={styles.card} key={video.id}><div className={styles.player}><video src={baseDadosDraftVideoUrl(video)} controls playsInline preload="metadata" /></div><div className={styles.cardHeader}><div className={styles.sequence}>R</div><div className={styles.cardTitle}><strong>{video.fileName}</strong><small>{video.contentHash?.slice(0, 12) || "aguardando hash"}</small></div><span className={value.description.trim() ? styles.ready : styles.pending}>{value.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div><div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={value.description} onChange={(event) => update(video, { description: event.target.value })} onBlur={() => void flush(video)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={value.sceneEndSeconds} onChange={(event) => update(video, { sceneEndSeconds: event.target.value })} onBlur={() => void flush(video)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={value.firstGroupReactionSeconds} onChange={(event) => update(video, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flush(video)} /><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label></div><div className={styles.cardActions}><button className={styles.actionButtonPrimary} disabled={Boolean(busy) || video.fileAvailable === false} onClick={() => void send(video)}>Enviar para base de dados</button></div></div></article>; })}</section>}
     </main>
   </div>;
 }

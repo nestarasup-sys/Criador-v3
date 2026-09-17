@@ -5,6 +5,7 @@ export const BASE_DADOS_DRAFT_STORAGE_KEY = "nymi-base-dados-drafts-v2";
 export type BaseDadosDraft = {
   description: string;
   sceneEndSeconds: string;
+  firstGroupReactionSeconds?: string;
   changedAt: number;
 };
 
@@ -22,7 +23,7 @@ export function readBaseDadosDrafts(storage: StorageLike | null | undefined): Ba
       const draft = value as Partial<BaseDadosDraft>;
       if (typeof draft.description !== "string" || typeof draft.sceneEndSeconds !== "string") return [];
       const changedAt = Number(draft.changedAt);
-      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
+      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, ...(typeof draft.firstGroupReactionSeconds === "string" ? { firstGroupReactionSeconds: draft.firstGroupReactionSeconds } : {}), changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
     }));
   } catch {
     return {};
@@ -41,7 +42,8 @@ export function writeBaseDadosDrafts(storage: StorageLike | null | undefined, dr
 
 export function draftDiffersFromVideo(draft: BaseDadosDraft, video: BaseDadosVideo) {
   const draftEnd = Number(draft.sceneEndSeconds);
-  return draft.description !== video.description || !Number.isFinite(draftEnd) || draftEnd !== video.sceneEndSeconds;
+  const draftGroupStart = draft.firstGroupReactionSeconds === undefined ? video.firstGroupReactionSeconds : Number(draft.firstGroupReactionSeconds);
+  return draft.description !== video.description || !Number.isFinite(draftEnd) || draftEnd !== video.sceneEndSeconds || !Number.isFinite(draftGroupStart) || draftGroupStart !== video.firstGroupReactionSeconds;
 }
 
 export function recoverBaseDadosDrafts(database: BaseDadosState, drafts: BaseDadosDrafts): BaseDadosDrafts {

@@ -53,7 +53,7 @@ function sendJson(response, headers, status, value) {
 }
 
 function normalizeState(value) {
-  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string") : [];
+  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0 })) : [];
   const highestSequence = videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0);
   const requestedNext = Number(value?.nextSequence);
   const nextSequence = Number.isInteger(requestedNext) && requestedNext > highestSequence ? requestedNext : highestSequence + 1;
@@ -170,6 +170,7 @@ export function createBaseDadosService(root) {
       ...item,
       ...(description ? { description } : {}),
       ...(Number.isFinite(sceneEnd) && sceneEnd >= 0 ? { sceneEndSeconds: sceneEnd } : {}),
+      ...(Number.isFinite(Number(metadata.firstGroupReactionSeconds)) && Number(metadata.firstGroupReactionSeconds) >= 0 ? { firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) } : {}),
       ...(Number.isFinite(duration) && duration >= 0 ? { durationSeconds: duration } : {}),
       updatedAt: new Date().toISOString(),
     };
@@ -207,6 +208,7 @@ export function createBaseDadosService(root) {
       durationSeconds: Number(metadata.durationSeconds) >= 0 ? Number(metadata.durationSeconds) : 0,
       description: String(metadata.description || ""),
       sceneEndSeconds: Number(metadata.sceneEndSeconds) >= 0 ? Number(metadata.sceneEndSeconds) : 0,
+      firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) >= 0 ? Number(metadata.firstGroupReactionSeconds) : 0,
       createdAt: now, updatedAt: now,
     };
     await mkdir(videosRoot, { recursive: true });
@@ -282,9 +284,11 @@ export function createBaseDadosService(root) {
           const index = state.videos.findIndex((video) => video.id === id);
           if (index < 0) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
           const sceneEndSeconds = Number(body?.sceneEndSeconds);
-          if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
           const current = state.videos[index];
-          const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, updatedAt: new Date().toISOString() };
+          const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
+          if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
+          if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
+          const updated = { ...current, description: String(body?.description || ""), sceneEndSeconds, firstGroupReactionSeconds, updatedAt: new Date().toISOString() };
           state.videos = state.videos.map((video) => video.id === id ? updated : video);
           await persist();
           return { video: await withFileStatus(root, updated), state };

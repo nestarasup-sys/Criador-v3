@@ -47,6 +47,7 @@ export type AiContextSection = {
   title: string;
   description: string;
   sceneEndSeconds?: number;
+  firstGroupReactionSeconds?: number;
   sceneGoal: string;
   timeline: TikTokSection["timeline"];
   specificRules: string;
@@ -195,6 +196,7 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     title: section.title,
     description: section.description,
     ...(section.sceneEndSeconds === undefined ? {} : { sceneEndSeconds: section.sceneEndSeconds }),
+    ...(section.firstGroupReactionSeconds === undefined ? {} : { firstGroupReactionSeconds: section.firstGroupReactionSeconds }),
     sceneGoal: section.sceneGoal,
     timeline: section.timeline,
     specificRules: section.specificRules,
@@ -358,6 +360,7 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Descrição: ${section.description || "Não informada."}`,
       `Duração do vídeo: ${section.video?.durationSeconds === undefined ? "não disponível" : `${section.video.durationSeconds} segundos`}`,
       `Cena da descrição termina no segundo: ${section.sceneEndSeconds === undefined ? "não definido" : section.sceneEndSeconds}`,
+      `Primeira reação em grupo pode começar no segundo: ${section.firstGroupReactionSeconds === undefined ? "não definido" : section.firstGroupReactionSeconds}`,
       `Início das falas/pensamentos: ${section.reactionStartSeconds === null ? "não definido" : `${section.reactionStartSeconds} segundos`}`,
       `Janela disponível para reações: ${section.reactionWindowSeconds === null ? "não calculável" : `${section.reactionWindowSeconds} segundos`}`,
       `Blocos recomendados: ${section.recommendedBlockCount === null ? "não calculável" : `${section.recommendedBlockRange?.min}–${section.recommendedBlockRange?.max} (alvo ${section.recommendedBlockCount})`}`,
