@@ -84,7 +84,7 @@ export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
   return `${path}?v=${encodeURIComponent(video.updatedAt)}`;
 }
 
-export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">) {
+export async function patchBaseDadosDraft(id: string, patch: Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds"> & { expectedRevision?: number }) {
   const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
 }

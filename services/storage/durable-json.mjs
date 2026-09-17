@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { open } from "node:fs/promises";
-import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 
 function digest(value) {
