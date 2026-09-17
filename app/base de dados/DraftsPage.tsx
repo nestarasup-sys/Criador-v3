@@ -22,11 +22,13 @@ export default function DraftsPage() {
   const runningRevisions = useRef(new Map<string, number>());
   const revisions = useRef<Record<string, number>>({});
   const currentDrafts = useRef(drafts);
+  const databaseRef = useRef<BaseDadosDraftState | null>(null);
 
   const refresh = async () => {
     setLoading(true);
     try {
       const state = await loadBaseDadosDrafts();
+      databaseRef.current = state;
       setDatabase(state);
       const next = Object.fromEntries(state.videos.map((video) => [video.id, { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }]));
       currentDrafts.current = next;
@@ -44,13 +46,14 @@ export default function DraftsPage() {
 
   const valueFor = useCallback((video: BaseDadosVideo) => drafts[video.id] || { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds) }, [drafts]);
   const save = async (video: BaseDadosVideo, value: DraftValue, revision: number) => {
+    const latestVideo = databaseRef.current?.videos.find((item) => item.id === video.id) || video;
     const end = Number(value.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(value.firstGroupReactionSeconds);
     if (!Number.isFinite(end) || end < 0) { setMessage("O tempo final precisa ser igual ou maior que zero."); return; }
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) { setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."); return; }
     try {
-      const result = await patchBaseDadosDraft(video.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) });
-      if (revisions.current[video.id] === revision) setDatabase(result.state);
+      const result = await patchBaseDadosDraft(latestVideo.id, { description: value.description, sceneEndSeconds: end, firstGroupReactionSeconds, expectedRevision: Number(latestVideo.metadataRevision ?? 0) });
+      if (revisions.current[latestVideo.id] === revision) { databaseRef.current = result.state; setDatabase(result.state); }
     } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível salvar o rascunho."); }
   };
   const update = (video: BaseDadosVideo, patch: Partial<DraftValue>) => {

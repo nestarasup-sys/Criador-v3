@@ -164,38 +164,39 @@ export default function BaseDadosPage() {
   };
 
   const saveVideo = useCallback(async (video: BaseDadosVideo, draft: VideoDraft, revision: number) => {
+    const latestVideo = databaseRef.current?.videos.find((item) => item.id === video.id) || video;
     const sceneEndSeconds = Number(draft.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
     if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return setMessage("O tempo final precisa ser um número igual ou maior que zero.");
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) return setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero.");
     const controller = new AbortController();
-    saveControllersRef.current.set(video.id, controller);
-    setBusy(`save:${video.id}`); setMessage("");
+    saveControllersRef.current.set(latestVideo.id, controller);
+    setBusy(`save:${latestVideo.id}`); setMessage("");
     try {
-      const result = await patchBaseDadosVideo(video.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(video.metadataRevision ?? 0) }, controller.signal);
-      if (saveRevisionRef.current[video.id] !== revision) return;
+      const result = await patchBaseDadosVideo(latestVideo.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(latestVideo.metadataRevision ?? 0) }, controller.signal);
+      if (saveRevisionRef.current[latestVideo.id] !== revision) return;
       databaseRef.current = result.state;
       setDatabase(result.state);
-      const currentDraft = draftsRef.current[video.id];
+      const currentDraft = draftsRef.current[latestVideo.id];
       const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}\u0000${draft.firstGroupReactionSeconds ?? "0"}`;
       const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}\u0000${currentDraft.firstGroupReactionSeconds ?? "0"}` : savedSignature;
       if (currentSignature === savedSignature) {
         const next = { ...draftsRef.current };
-        delete next[video.id];
+        delete next[latestVideo.id];
         draftsRef.current = next;
         writeBaseDadosDrafts(window.localStorage, next);
         setDrafts(next);
       }
-      setMessage(`${video.fileName} salvo.`);
+      setMessage(`${latestVideo.fileName} salvo.`);
     } catch (error) {
       if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
       if (error instanceof Error && (error as Error & { code?: string }).code === "STALE_BASE_VIDEO_REVISION") {
-        setMessage(`${video.fileName} foi alterado por outra operação. Sua edição continua preservada neste navegador; atualize antes de salvar novamente.`);
+        setMessage(`${latestVideo.fileName} foi alterado por outra operação. Sua edição continua preservada neste navegador; atualize antes de salvar novamente.`);
         return;
       }
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar as alterações.");
     } finally {
-      if (saveControllersRef.current.get(video.id) === controller) saveControllersRef.current.delete(video.id);
+      if (saveControllersRef.current.get(latestVideo.id) === controller) saveControllersRef.current.delete(latestVideo.id);
       setBusy("");
     }
   }, []);
