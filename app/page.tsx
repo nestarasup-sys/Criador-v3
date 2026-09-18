@@ -4503,11 +4503,12 @@ export default function Home() {
     const groupName = items[0].outfitGroupName ?? items[0].name;
     if (!options.skipConfirm && !window.confirm(`Excluir “${groupName}” e todas as suas variantes?`)) return;
     const deleteResults = await Promise.all(items.map((item) => deleteCatalogItem(item.id)));
-    items.forEach((item) => {
+    const deletedIds = new Set(items.filter((_, index) => deleteResults[index]?.pcSaved).map((item) => item.id));
+    items.filter((item) => deletedIds.has(item.id)).forEach((item) => {
       if (item.url) URL.revokeObjectURL(item.url);
     });
-    const selectedBelongsToGroup = items.some((item) => item.id === selections.roupas);
-    setCatalog((current) => current.filter((item) => item.outfitGroupId !== groupId));
+    const selectedBelongsToGroup = deletedIds.has(selections.roupas ?? "");
+    setCatalog((current) => current.filter((item) => !deletedIds.has(item.id)));
     setOutfitColorAdjustmentsByGroup((current) => Object.fromEntries(
       Object.entries(current).filter(([key]) => key !== groupId),
     ));
@@ -4526,7 +4527,7 @@ export default function Home() {
     }
     setOutfitGroupViewId((current) => current === groupId ? null : current);
     setNotice(deleteResults.some((result) => !result.pcSaved)
-      ? `${groupName} removida localmente; exclusão no PC pendente`
+      ? `${deletedIds.size} de ${items.length} itens de ${groupName} foram removidos; os demais continuam no catálogo`
       : `${groupName} e suas variantes foram removidas`);
   }
 
@@ -4536,6 +4537,10 @@ export default function Home() {
       : "";
     if (!options.skipConfirm && !window.confirm(`Excluir “${item.name}” do catálogo?${extraMessage}`)) return;
     const deleteResult = await deleteCatalogItem(item.id);
+    if (!deleteResult.pcSaved) {
+      setNotice(`${item.name} não foi removido: o PC não confirmou a exclusão.`);
+      return;
+    }
     const unlinkedBackHairs = item.category === "cabelos"
       ? catalog
           .filter((entry) => entry.category === "cabelosTras" && entry.linkedHairId === item.id)

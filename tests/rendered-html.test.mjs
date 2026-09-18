@@ -474,7 +474,9 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(page, /pc-persistence-recovered/);
   assert.match(page, /deleteCatalogItemFromPc/);
   assert.match(storage, /Promise\.race\(\[remoteDeletion, timeoutPromise\]\)/);
-  assert.match(storage, /Sincronização do catálogo demorou mais que o esperado/);
+  assert.match(storage, /O PC é a fonte persistida do catálogo/);
+  assert.match(page, /o PC não confirmou a exclusão/);
+  assert.match(storage, /Não foi possível confirmar a exclusão no PC/);
   assert.match(page, /sincronização com o PC pendente/);
   assert.match(server, /missingFile: true/);
   assert.match(server, /const HOST = "127\.0\.0\.1"/);

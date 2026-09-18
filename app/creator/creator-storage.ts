@@ -548,19 +548,24 @@ export async function storeCatalogItem(item: CatalogItem): Promise<CatalogItem &
 }
 
 export async function deleteCatalogItem(id: string): Promise<LocalPersistenceResult> {
-  const db = await openDatabase();
-  await new Promise<void>((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    transaction.objectStore(STORE_NAME).delete(id);
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
-  });
-  recordTombstone(CATALOG_TOMBSTONES_KEY, id);
-  let timedOut = false;
-  let timeout = 0;
+  const removeFromBrowser = async () => {
+    const db = await openDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, "readwrite");
+      transaction.objectStore(STORE_NAME).delete(id);
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  };
+
+  // O PC é a fonte persistida do catálogo. Só removemos a cópia local depois
+  // da confirmação do servidor para evitar o falso sucesso "sumiu e voltou"
+  // quando a requisição falha ou expira.
   const remoteDeletion = deleteCatalogItemFromPc(id)
     .then(() => true)
     .catch(() => false);
+  let timedOut = false;
+  let timeout = 0;
   try {
     const timeoutPromise = new Promise<boolean>((resolve) => {
       timeout = window.setTimeout(() => {
@@ -571,16 +576,16 @@ export async function deleteCatalogItem(id: string): Promise<LocalPersistenceRes
     const pcSaved = await Promise.race([remoteDeletion, timeoutPromise]);
     if (!pcSaved) {
       if (timedOut) {
-        void remoteDeletion.then((saved) => {
-          if (saved) {
-            clearCatalogTombstone(id);
-            notifyPcPersistenceRecovered();
-          }
+        void remoteDeletion.then(async (saved) => {
+          if (!saved) return;
+          await removeFromBrowser().catch(() => undefined);
+          notifyPcPersistenceRecovered();
         });
       }
-      notifyPcPersistenceFailure("catalog", new Error("Sincronização do catálogo demorou mais que o esperado."));
+      notifyPcPersistenceFailure("catalog", new Error("Não foi possível confirmar a exclusão no PC."));
       return { pcSaved: false };
     }
+    await removeFromBrowser();
     clearCatalogTombstone(id);
     notifyPcPersistenceRecovered();
     return { pcSaved: true };
