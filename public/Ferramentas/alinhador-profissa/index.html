@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V8.5 — Alinhador Profissa · Finish Lock Integrado + Área 2 Precision Lock</title>
+<title>V9.1 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -315,7 +315,7 @@ button:disabled{opacity:.42;cursor:not-allowed;transform:none;box-shadow:none}
 
 .kpis{
   display:grid;
-  grid-template-columns:repeat(5,minmax(105px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(105px,1fr));
   gap:10px;
   margin:16px 0;
 }
@@ -495,15 +495,18 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V8.5 · Alinhador Profissa</h1>
-  <div class="small">Pipeline de produção com chroma clássico como base, Chroma 2 opcional, força extra para fundos difíceis, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock final integrado diretamente na Área 1.</div>
+  <h1>V9.1 · Alinhador Profissa</h1>
+  <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
   <div class="card">
     <h2>1. Carregar e detectar</h2>
     <label>Folha A</label><input id="fileA" type="file" accept="image/*">
+    <label>Folha A-PT</label><input id="fileAPT" type="file" accept="image/*">
     <label>Folha B</label><input id="fileB" type="file" accept="image/*">
+    <label>Folha B-PT</label><input id="fileBPT" type="file" accept="image/*">
     <label>Folha C</label><input id="fileC" type="file" accept="image/*">
+    <label>Folha C-PT</label><input id="fileCPT" type="file" accept="image/*">
 
     <label><input id="chroma2Quick" type="checkbox" style="width:auto"> Chroma 2</label>
     <label>Alcance de tons do fundo <span class="value" id="chroma2ToneV">52</span></label>
@@ -541,13 +544,13 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>Na V8.5:</b> quando você conclui <b>Construir molde e alinhar tudo</b> — inclusive via <b>⚡ Processar tudo</b> — o <b>Finish Lock</b> é aplicado automaticamente como última etapa.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V9.1:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
 
     <div class="row" style="margin-top:8px">
-      <button id="canonicalExtra" class="good">Construir molde, alinhar tudo e aplicar Finish Lock</button>
+      <button id="canonicalExtra" class="good">Construir molde e alinhar tudo</button>
       <button id="playExtra">▶ Play</button>
     </div>
     <button id="redoCurrent" style="margin-top:8px">↻ Refazer expressão selecionada</button>
@@ -579,11 +582,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V8.5 SmartLock</b><span>estável</span></div>
+        <div><b>V9.1 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V8.5 preserva os defaults calibrados do V7.5. O chroma clássico continua como base, o Smart Remap mantém 6% nas cabeças boas e o Finish Lock final refina topo e laterais do pescoço automaticamente no fim do alinhamento.</div>
+      <div class="small" style="margin-top:5px">V9.1 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -596,7 +599,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V8.5 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V9.1 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -632,6 +635,8 @@ body.area2 .sidebar{height:100vh}
     <input id="innerRigidity" type="range" min="60" max="98" step="1" value="88">
 
     <button id="canonical" class="good">Construir molde e alinhar tudo</button>
+    <button id="finishLockBtn" style="margin-top:8px" disabled>Aplicar Finish Lock final</button>
+    <div id="finishLockStatus" class="status" style="margin-top:8px">Finish Lock indisponível até o molde ser criado.</div>
     <div id="canonicalStatus" class="status" style="margin-top:8px">Molde ainda não criado.</div>
   </div>
 
@@ -641,8 +646,11 @@ body.area2 .sidebar{height:100vh}
     <select id="scope">
       <option value="all">Todas</option>
       <option value="A">Folha A</option>
+      <option value="APT">Folha A-PT</option>
       <option value="B">Folha B</option>
+      <option value="BPT">Folha B-PT</option>
       <option value="C">Folha C</option>
+      <option value="CPT">Folha C-PT</option>
     </select>
 
     <label>Expressão atual</label>
@@ -687,9 +695,9 @@ body.area2 .sidebar{height:100vh}
     <div id="modelPreview" class="status">
 Pasta: modelo-13
 JSON: modelo-13.json
-63 PNGs separados · schema 7×3 por folha
-Folha 2: sorriso_maligno / nojo / orgulhosa / cansada / animada / ciumenta / aliviada
-Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta
+126 PNGs separados · 6 folhas · schema 7×3 por folha
+A / A-PT / B / B-PT / C / C-PT
+Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     </div>
 
     <button id="chooseModelsDir">Escolher / trocar pasta de modelos</button>
@@ -721,12 +729,24 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
         <canvas id="debugA" width="500" height="280"></canvas>
       </div>
       <div class="debugCard">
+        <b>Detecção — Folha A-PT</b><div class="small" id="debugAPTTxt">—</div>
+        <canvas id="debugAPT" width="500" height="280"></canvas>
+      </div>
+      <div class="debugCard">
         <b>Detecção — Folha B</b><div class="small" id="debugBTxt">—</div>
         <canvas id="debugB" width="500" height="280"></canvas>
       </div>
       <div class="debugCard">
+        <b>Detecção — Folha B-PT</b><div class="small" id="debugBPTTxt">—</div>
+        <canvas id="debugBPT" width="500" height="280"></canvas>
+      </div>
+      <div class="debugCard">
         <b>Detecção — Folha C</b><div class="small" id="debugCTxt">—</div>
         <canvas id="debugC" width="500" height="280"></canvas>
+      </div>
+      <div class="debugCard">
+        <b>Detecção — Folha C-PT</b><div class="small" id="debugCPTTxt">—</div>
+        <canvas id="debugCPT" width="500" height="280"></canvas>
       </div>
       <div class="debugCard">
         <b>Molde canônico</b><div class="small" id="canonicalTxt">—</div>
@@ -741,7 +761,7 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V8.5 pipeline</span>
+    <span class="tag">V9.1 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -750,8 +770,11 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
   <div class="kpis">
     <div class="kpi"><span class="small">Total</span><b id="kTotal">0</b></div>
     <div class="kpi"><span class="small">Folha A</span><b id="kA">0</b></div>
+    <div class="kpi"><span class="small">Folha A-PT</span><b id="kAPT">0</b></div>
     <div class="kpi"><span class="small">Folha B</span><b id="kB">0</b></div>
+    <div class="kpi"><span class="small">Folha B-PT</span><b id="kBPT">0</b></div>
     <div class="kpi"><span class="small">Folha C</span><b id="kC">0</b></div>
+    <div class="kpi"><span class="small">Folha C-PT</span><b id="kCPT">0</b></div>
     <div class="kpi"><span class="small">Maior / escala</span><b id="kLargest">—</b></div>
   </div>
 
@@ -760,11 +783,11 @@ Folha 3: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_
 </div>
 
 <!-- =======================================================
-     V8.5 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V9.1 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V8.5 · Área 2</h1>
+    <h1>V9.1 · Área 2</h1>
     <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando os PNGs transparentes disponíveis.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -836,16 +859,32 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V8.5 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V9.1 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"8.5",
-  sheets:["A","B","C"],rows:3,cols:7,headsPerSheet:21,
+  version:"9.1",
+  sheets:["A","APT","B","BPT","C","CPT"],
+  rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
+  sheetLabels:Object.freeze({
+    A:"Folha A",APT:"Folha A-PT",
+    B:"Folha B",BPT:"Folha B-PT",
+    C:"Folha C",CPT:"Folha C-PT"
+  }),
+  fileInputs:Object.freeze({
+    A:"fileA",APT:"fileAPT",
+    B:"fileB",BPT:"fileBPT",
+    C:"fileC",CPT:"fileCPT"
+  }),
   emotions:Object.freeze({
     A:["normal","sorrindo_de_canto","surpresa","envergonhada","impressionada","indignada","desconfiada"],
+    APT:["pt_normal","pt_sorrindo_de_canto","pt_surpresa","pt_envergonhada","pt_impressionada","pt_indignada","pt_desconfiada"],
+
     B:["sorriso_maligno","nojo","orgulhosa","cansada","animada","ciumenta","aliviada"],
-    C:["pt_desconfiada","pt_surpresa","pt_impressionada","pt_envergonhada","pt_sorrindo_de_canto","pt_sorriso_maligno_de_canto","pt_ciumenta"]
+    BPT:["pt_sorriso_maligno","pt_nojo","pt_orgulhosa","pt_cansada","pt_animada","pt_ciumenta","pt_aliviada"],
+
+    C:["seria","preocupada","triste_magoada","irritada","confusa","decepcionada","apaixonada"],
+    CPT:["pt_seria","pt_preocupada","pt_triste_magoada","pt_irritada","pt_confusa","pt_decepcionada","pt_apaixonada"]
   }),
   export:Object.freeze({width:1920,height:1080,anchorX:960,anchorY:346,baseScale:1.1,anchor:"neck-base"})
 });
@@ -879,14 +918,20 @@ function invalidateFrom(name,reason="configuração alterada"){
   for(let n=i;n<PIPE_STAGES.length;n++){const st=S.pipeline.stages[PIPE_STAGES[n]];st.valid=false;st.meta=null}
   S.pipeline.dirtyFrom=name;S.pipeline.lastReason=reason;S.pipeline.exportReady=false;
   if(i<=stageIndex("canonical")){S.canonical=null;S.qualitySummary=null;S.finishLock=null}
-  if(i<=stageIndex("render"))for(const h of S.heads){h.warpStats=null;h.quality=null;h.reviewResolved=false;h.reviewResolvedRevision=0;h.repairCandidate=null;h.exportFrameBase=null;h.exportFrame=null;h.finishLockVerify=null;h.finishLockRevision=0;if(i<=stageIndex("canonical")){h.warped=null;h.geomWarp=null;h.geomFixInfo=null;h.manualRedo=false;h.lastRedoBackup=null;h.remapPlan=null}}
-  updatePipelineUI();updatePreflight();renderThumbs();drawPreview();
+  if(i<=stageIndex("render")){
+    S.finishLock=null;
+    for(const h of S.heads){
+      h.warpStats=null;h.quality=null;h.reviewResolved=false;h.reviewResolvedRevision=0;h.repairCandidate=null;h.exportFrameBase=null;h.exportFrame=null;h.finishLockVerify=null;h.finishLockRevision=0;
+      if(i<=stageIndex("canonical")){h.warped=null;h.geomWarp=null;h.geomFixInfo=null;h.manualRedo=false;h.lastRedoBackup=null;h.remapPlan=null}
+    }
+  }
+  updatePipelineUI();updatePreflight();updateFinishLockUI(i<=stageIndex("render")?"Finish Lock removido porque o alinhamento base mudou. Reaplique manualmente se quiser usá-lo no export.":null);renderThumbs();drawPreview();
 }
 function pipelineValid(name){return !!S.pipeline.stages[name]?.valid}
 function setEngineConfig(){S.engineConfig=getConfigSnapshot();S.pipeline.snapshots.current=S.engineConfig;return S.engineConfig}
 function v8ReviewDetection(){document.body.classList.add("advanced");$("advancedMode")?.classList.add("primary");$("productionMode")?.classList.remove("primary");if($("advancedInput"))$("advancedInput").open=true;status("detectStatus","Revise as caixas de detecção e, se necessário, force CLASSIC / CHROMA 2 / ALPHA em Ajustes avançados.","warn")}
 function stageNeedsAction(){
-  const hasInput=["fileA","fileB","fileC"].some(id=>$(id)?.files?.length);if(!hasInput&&!pipelineValid("input"))return null;
+  const hasInput=MODEL_SCHEMA.sheets.some(k=>$(MODEL_SCHEMA.fileInputs[k])?.files?.length);if(!hasInput&&!pipelineValid("input"))return null;
   const badGrid=MODEL_SCHEMA.sheets.find(k=>S.sheets?.[k]&&!S.sheets[k].grid?.valid);if(badGrid)return {label:`REVISAR DETECÇÃO ${badGrid}`,fn:v8ReviewDetection};
   const d=S.pipeline.dirtyFrom;
   if(!d||pipelineValid("qa"))return null;
@@ -909,7 +954,7 @@ function updatePipelineUI(){
 }
 
 const S={
-  sheets:{A:null,B:null,C:null},
+  sheets:Object.fromEntries(MODEL_SCHEMA.sheets.map(k=>[k,null])),
   heads:[],
   canonical:null,
   currentIndex:0,
@@ -936,7 +981,30 @@ function log(msg){
   el.textContent+=`[${t}] ${msg}\n`; el.scrollTop=el.scrollHeight;
 }
 function status(id,msg,type=""){
-  const el=$(id);el.textContent=msg;el.className="status"+(type?" "+type:"");
+  const el=$(id);if(!el)return;el.textContent=msg;el.className="status"+(type?" "+type:"");
+}
+function updateFinishLockUI(message=null,type=""){
+  const btn=$("finishLockBtn");
+  if(btn) btn.disabled=!(S.canonical&&S.heads.length);
+  if(!$("finishLockStatus")) return;
+  if(message){status("finishLockStatus",message,type);return}
+  if(!(S.canonical&&S.heads.length)){status("finishLockStatus","Finish Lock indisponível até o molde ser criado.");return}
+  if(S.finishLock?.summary){
+    const s=S.finishLock.summary;
+    status("finishLockStatus",`Finish Lock aplicado manualmente · ${s.ok}/${s.count} LOCK · P90 ${s.p90.toFixed(1)} px · topo máx ${s.topMax.toFixed(1)} px.`,s.ok===s.count?"ok":"warn");
+    return;
+  }
+  status("finishLockStatus","Finish Lock não aplicado nesta rodada. O export vai usar o alinhamento base atual.");
+}
+function clearFinishLockState(message=null){
+  S.finishLock=null;
+  for(const h of S.heads){
+    h.exportFrameBase=null;
+    h.exportFrame=null;
+    h.finishLockVerify=null;
+    h.finishLockRevision=0;
+  }
+  updateFinishLockUI(message||((S.canonical&&S.heads.length)?"Finish Lock não aplicado nesta rodada. O export vai usar o alinhamento base atual.":"Finish Lock indisponível até o molde ser criado."));
 }
 function canvas(w,h){const c=document.createElement("canvas");c.width=w;c.height=h;return c}
 function median(v){
@@ -1358,7 +1426,9 @@ async function detectSheet(im,name){
     chroma2Mode:best.engine==="chroma2",chroma2Mask:chroma2Full?.mask||null,chroma2Processed:chroma2Full?.processed||null,chroma2Info:chroma2Full?{bg:chroma2Full.bg,removedRatio:chroma2Full.removedRatio}:null};
 }
 function drawDetectionDebug(name,c,boxes,engine,grid,chroma2Removed=null){
-  const out=$(`debug${name}`),txt=$(`debug${name}Txt`);out.width=500;out.height=Math.round(500*c.height/c.width);
+  const out=$(`debug${name}`),txt=$(`debug${name}Txt`);
+  if(!out||!txt)return;
+  out.width=500;out.height=Math.round(500*c.height/c.width);
   const ctx=out.getContext("2d");ctx.drawImage(c,0,0,out.width,out.height);const sx=out.width/c.width,sy=out.height/c.height;ctx.lineWidth=2;ctx.font="12px system-ui";
   boxes.forEach((b,i)=>{ctx.strokeStyle=grid?.valid?"#67d59a":"#ffbd5b";ctx.strokeRect(b.minX*sx,b.minY*sy,b.w*sx,b.h*sy);ctx.fillStyle="#07131a";ctx.fillRect(b.minX*sx,b.minY*sy,36,17);ctx.fillStyle="#fff";ctx.fillText(`${b.gridRow??"?"},${b.gridCol??"?"}`,b.minX*sx+3,b.minY*sy+13)});
   txt.textContent=`${boxes.length} detectadas · ${engine.toUpperCase()} · grid ${Math.round(grid?.confidence||0)}/100${grid?.valid?" OK":" REVISAR"}${Number.isFinite(chroma2Removed)?` · fundo ${(chroma2Removed*100).toFixed(1)}%`:""}`;
@@ -1983,8 +2053,8 @@ function v8AcceptCandidate(){
   if(c.baseCanonicalRevision!==(S.canonical?.revision||0)){status("canonicalStatus","Candidata ficou stale após mudança do molde. Gere novamente.","warn");h.repairCandidate=null;return}
   h.lastRedoBackup={geomWarp:h.geomWarp?{...h.geomWarp}:null,geomFixInfo:h.geomFixInfo?{...h.geomFixInfo}:null,manualRedo:!!h.manualRedo,warpStats:h.warpStats?{...h.warpStats}:null,warped:h.warped};
   h.geomWarp=c.geom;h.geomFixInfo={manual:true,mode:"candidate",candidateScore:c.score,canonicalRevision:S.canonical.revision};h.manualRedo=true;h.warpStats=c.warpStats;h.warped=c.warped;h.repairCandidate=null;h.reviewResolved=true;h.reviewResolvedRevision=S.canonical.revision;
-  v83ApplyFinishLockArea1();
-  v8AnalyzeQuality({focus:false});drawPreview();updateThumbAt(S.reviewIndex,true);updateDiagnostics();v71UpdateUndoButton();$("reviewPanel").hidden=true;updatePreflight();status("canonicalStatus",`${h.label}: candidata aceita e Finish Lock reaplicado.`,"ok");
+  clearFinishLockState("Finish Lock removido porque uma expressão foi corrigida. Reaplique manualmente se quiser usá-lo no export.");
+  v8AnalyzeQuality({focus:false});drawPreview();updateThumbAt(S.reviewIndex,true);updateDiagnostics();v71UpdateUndoButton();$("reviewPanel").hidden=true;updatePreflight();status("canonicalStatus",`${h.label}: candidata aceita. O alinhamento base foi atualizado.`,"ok");
 }
 function v8KeepCurrent(){const h=S.heads[S.reviewIndex];if(h){h.repairCandidate=null;h.reviewResolved=true;h.reviewResolvedRevision=S.canonical?.revision||0}$("reviewPanel").hidden=true;updatePreflight()}
 
@@ -2003,11 +2073,11 @@ function v71UndoCurrentRedo(){
   h.warpStats=b.warpStats;
   h.warped=b.warped;
   h.lastRedoBackup=null;h.reviewResolved=false;h.reviewResolvedRevision=0;
-  v83ApplyFinishLockArea1();
+  clearFinishLockState("Finish Lock removido porque uma correção foi desfeita. Reaplique manualmente se quiser usá-lo no export.");
   v8AnalyzeQuality({focus:false});
   drawPreview();updateThumbAt(S.currentIndex,true);updateDiagnostics();v71UpdateUndoButton();updatePreflight();
-  status('canonicalStatus',`Desfiz a última correção de ${h.label} e reapliquei o Finish Lock.`,'ok');
-  log(`V8: correção de ${h.label} desfeita.`);
+  status('canonicalStatus',`Desfiz a última correção de ${h.label}.`,'ok');
+  log(`V8.5.1: correção de ${h.label} desfeita.`);
 }
 function v633ConsensusJawGeom(h){
   const others=S.heads.filter(x=>x!==h && x.quality?.level!=='OUT');
@@ -2162,9 +2232,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V8.5 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V8.5 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V8.5 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V9.1 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V9.1 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V9.1 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2173,11 +2243,11 @@ async function buildCanonical(){
       if(i%2===1){status("canonicalStatus",`Renderizando… ${i+1}/${S.heads.length}`,"warn");await sleep(0)}
     }
 
-    const finish=v83ApplyFinishLockArea1();
+    clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V8.5 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""}${finish?` · Finish Lock aplicado ${finish.ok}/${finish.count} · P90 ${finish.p90.toFixed(1)} px`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
-    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();
+    status("canonicalStatus",`V9.1 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
     status("canonicalStatus","Erro: "+e.message,"bad");
@@ -2649,7 +2719,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V8.5 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V9.1 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2710,9 +2780,10 @@ function renderThumbs(force=false){
 function updateActiveThumb(oldIndex=null,newIndex=S.currentIndex){if(Number.isInteger(oldIndex)&&S.thumbNodes[oldIndex])updateThumbAt(oldIndex);if(S.thumbNodes[newIndex])updateThumbAt(newIndex)}
 function updateKPIs(){
   $("kTotal").textContent=S.heads.length;
-  $("kA").textContent=S.heads.filter(h=>h.sheet==="A").length;
-  $("kB").textContent=S.heads.filter(h=>h.sheet==="B").length;
-  $("kC").textContent=S.heads.filter(h=>h.sheet==="C").length;
+  for(const k of MODEL_SCHEMA.sheets){
+    const el=$("k"+k);
+    if(el)el.textContent=S.heads.filter(h=>h.sheet===k).length;
+  }
   $("kLargest").textContent=S.heads[S.largestIndex]?.label||"—";
 }
 
@@ -2722,36 +2793,88 @@ function updateKPIs(){
 async function detectAll(){
   stopPlayer();setEngineConfig();
   S.canonical=null;S.qualitySummary=null;S.reviewIndex=-1;if($("reviewPanel"))$("reviewPanel").hidden=true;
-  const fa=$("fileA").files[0],fb=$("fileB").files[0],fc=$("fileC").files[0];
-  if(!fa&&!fb&&!fc){status("detectStatus","Escolha pelo menos uma folha.","bad");S.pipeline.lastReason="nenhuma folha carregada";updatePipelineUI();return}
+
+  const files=Object.fromEntries(MODEL_SCHEMA.sheets.map(k=>[
+    k,
+    $(MODEL_SCHEMA.fileInputs[k])?.files?.[0]||null
+  ]));
+  const loadedKeys=MODEL_SCHEMA.sheets.filter(k=>files[k]);
+  if(!loadedKeys.length){
+    status("detectStatus","Escolha pelo menos uma folha.","bad");
+    S.pipeline.lastReason="nenhuma folha carregada";
+    updatePipelineUI();
+    return;
+  }
+
   $("detect").disabled=true;
   try{
-    S.pipeline=newPipeline();setEngineConfig();markStage("input",{files:[!!fa,!!fb,!!fc]});
-    status("detectStatus",cfg("inputEngine","classic")==="auto"?"AUTO experimental: avaliando segmentação e grid…":`Detectando com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");log(`V8.5 detecção: modo ${cfg("inputEngine","classic")}.`);
-    const [ia,ib,ic]=await Promise.all([loadFile(fa),loadFile(fb),loadFile(fc)]);
-    S.sheets={A:null,B:null,C:null};S.heads=[];
-    if(ia){S.sheets.A=await detectSheet(ia,"A");log(`A: ${S.sheets.A.count} · ${S.sheets.A.engine} · grid ${S.sheets.A.grid.confidence.toFixed(0)}`)}
-    if(ib){S.sheets.B=await detectSheet(ib,"B");log(`B: ${S.sheets.B.count} · ${S.sheets.B.engine} · grid ${S.sheets.B.grid.confidence.toFixed(0)}`)}
-    if(ic){S.sheets.C=await detectSheet(ic,"C");log(`C: ${S.sheets.C.count} · ${S.sheets.C.engine} · grid ${S.sheets.C.grid.confidence.toFixed(0)}`)}
+    S.pipeline=newPipeline();setEngineConfig();
+    markStage("input",{files:Object.fromEntries(MODEL_SCHEMA.sheets.map(k=>[k,!!files[k]]))});
+    status("detectStatus",cfg("inputEngine","classic")==="auto"
+      ?"AUTO experimental: avaliando segmentação e grid…"
+      :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
+    log(`V9.1 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+
+    const images=Object.fromEntries(
+      await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
+    );
+
+    S.sheets=Object.fromEntries(MODEL_SCHEMA.sheets.map(k=>[k,null]));
+    S.heads=[];
+
+    for(const k of MODEL_SCHEMA.sheets){
+      if(!images[k])continue;
+      status("detectStatus",`Detectando ${MODEL_SCHEMA.sheetLabels[k]}…`,"warn");
+      S.sheets[k]=await detectSheet(images[k],k);
+      log(`${MODEL_SCHEMA.sheetLabels[k]}: ${S.sheets[k].count} · ${S.sheets[k].engine} · grid ${S.sheets[k].grid.confidence.toFixed(0)}`);
+      await sleep(0);
+    }
+
     markStage("segmentation",{engines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>[k,S.sheets[k].engine]))});
     markStage("detection",{grids:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>[k,S.sheets[k].grid.confidence]))});
 
-    for(const name of MODEL_SCHEMA.sheets){const sh=S.sheets[name];if(!sh)continue;for(let i=0;i<sh.boxes.length;i++){try{S.heads.push(cropHead(sh,sh.boxes[i],i))}catch(e){log(`${name}-${i+1}: ${e.message}`)}if(i%4===3)await sleep(0)}}
-    v8SelectGeometryEngines();markStage("geometry",{v2:S.heads.filter(h=>h.geometryEngine==="v2").length,v75:S.heads.filter(h=>h.geometryEngine==="v75").length});markStage("profile",{});
-    S.currentIndex=0;S.largestIndex=largestHeadIndex();S.smallestHorizIndex=smallestHorizontalHeadIndex();
-    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();
+    for(const name of MODEL_SCHEMA.sheets){
+      const sh=S.sheets[name];
+      if(!sh)continue;
+      for(let i=0;i<sh.boxes.length;i++){
+        try{S.heads.push(cropHead(sh,sh.boxes[i],i))}
+        catch(e){log(`${MODEL_SCHEMA.sheetLabels[name]}-${i+1}: ${e.message}`)}
+        if(i%4===3)await sleep(0);
+      }
+    }
+
+    v8SelectGeometryEngines();
+    markStage("geometry",{v2:S.heads.filter(h=>h.geometryEngine==="v2").length,v75:S.heads.filter(h=>h.geometryEngine==="v75").length});
+    markStage("profile",{});
+
+    S.currentIndex=0;
+    S.largestIndex=largestHeadIndex();
+    S.smallestHorizIndex=smallestHorizontalHeadIndex();
+    refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();updateModelPreview();
+
     const expected=cfg("expected",MODEL_SCHEMA.headsPerSheet),problems=[];
-    for(const k of MODEL_SCHEMA.sheets){const sh=S.sheets[k];if(!sh)continue;if(sh.count!==expected)problems.push(`${k}=${sh.count}/${expected}`);if(expected===MODEL_SCHEMA.headsPerSheet&&!sh.grid.valid)problems.push(`${k}: grid ${Math.round(sh.grid.confidence)}/100`)}
-    const eng=MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>`${k} ${S.sheets[k].engine.toUpperCase()} (${Math.round(S.sheets[k].grid.confidence)})`).join(" · ");
+    for(const k of MODEL_SCHEMA.sheets){
+      const sh=S.sheets[k];if(!sh)continue;
+      if(sh.count!==expected)problems.push(`${MODEL_SCHEMA.sheetLabels[k]}=${sh.count}/${expected}`);
+      if(expected===MODEL_SCHEMA.headsPerSheet&&!sh.grid.valid)problems.push(`${MODEL_SCHEMA.sheetLabels[k]}: grid ${Math.round(sh.grid.confidence)}/100`);
+    }
+    const eng=MODEL_SCHEMA.sheets.filter(k=>S.sheets[k]).map(k=>`${MODEL_SCHEMA.sheetLabels[k]} ${S.sheets[k].engine.toUpperCase()} (${Math.round(S.sheets[k].grid.confidence)})`).join(" · ");
     if($("inputEngineStatus"))$("inputEngineStatus").textContent=(cfg("inputEngine","classic")==="auto"?"Escolha automática: ":"Engine usada: ")+eng;
+
     if(!S.heads.length)status("detectStatus","Nenhuma cabeça detectada.","bad");
     else if(problems.length)status("detectStatus",`Detecção concluída, mas exige revisão: ${problems.join(" · ")}.`,"warn");
-    else status("detectStatus",`Pronto: ${S.heads.length} cabeças · grid estrutural validado.`,"ok");
+    else status("detectStatus",`Pronto: ${S.heads.length} cabeças em ${loadedKeys.length} folha(s) · todas passaram pelo mesmo pipeline de detecção.`,`ok`);
+
     S.pipeline.lastReason=problems.length?"detecção/grid precisa de revisão":"detecção pronta; construir canonical";
-    invalidateFrom("canonical",S.pipeline.lastReason); // preserva input→profile, invalida somente o que vem depois
+    invalidateFrom("canonical",S.pipeline.lastReason);
     status("canonicalStatus","Clique em “Construir molde e alinhar tudo” ou use Processar tudo.",problems.length?"warn":"");
-  }catch(e){console.error(e);log("ERRO DETECT: "+(e.stack||e.message));status("detectStatus","Erro: "+e.message,"bad");S.pipeline.lastReason=e.message;updatePipelineUI()}
-  finally{$("detect").disabled=false;updatePreflight()}
+  }catch(e){
+    console.error(e);log("ERRO DETECT: "+(e.stack||e.message));
+    status("detectStatus","Erro: "+e.message,"bad");
+    S.pipeline.lastReason=e.message;updatePipelineUI()
+  }finally{
+    $("detect").disabled=false;updatePreflight()
+  }
 }
 
 async function v71QuickProcess(){
@@ -2805,11 +2928,10 @@ function expressionMeta(h){
     suffix:MODEL_EXPORT.variants[row]??`_${row}`
   };
 }
-function findNormalReferenceForVariant(row){
-  // Nova referência normal: primeira expressão da Folha A.
+function findNormalReferenceForVariant(row,sheet="A"){
   let idx=S.heads.findIndex(h=>{
     const m=expressionMeta(h);
-    return h.sheet==="A" && m.emotion==="normal" && m.row===row;
+    return h.sheet===sheet && m.col===0 && m.row===row;
   });
   if(idx>=0)return idx;
   idx=S.heads.findIndex(h=>{
@@ -2904,9 +3026,13 @@ function prepareExperimentalFaceAlign(){
   if(!S.canonical||!S.heads.length||!enabled||!useEye){S.faceAlign=null;return null}
 
   const refs={};
-  for(let row=0;row<MODEL_SCHEMA.rows;row++){
-    const idx=findNormalReferenceForVariant(row),h=S.heads[idx];
-    refs[row]={idx,label:h.label,eye:featureInkProfile(h,"eye"),mouth:featureInkProfile(h,"mouth")};
+  for(const sheet of MODEL_SCHEMA.sheets){
+    if(!S.sheets[sheet])continue;
+    refs[sheet]={};
+    for(let row=0;row<MODEL_SCHEMA.rows;row++){
+      const idx=findNormalReferenceForVariant(row,sheet),h=S.heads[idx];
+      refs[sheet][row]={idx,label:h.label,eye:featureInkProfile(h,"eye"),mouth:featureInkProfile(h,"mouth")};
+    }
   }
   const rigCfg={
     enabled:true,useEye,useMouth,
@@ -2919,7 +3045,7 @@ function prepareExperimentalFaceAlign(){
   };
 
   for(const h of S.heads){
-    const meta=expressionMeta(h),row=clamp(meta.row,0,2),ref=refs[row];
+    const meta=expressionMeta(h),row=clamp(meta.row,0,2),ref=refs[h.sheet]?.[row]||refs.A?.[row]||Object.values(refs)[0]?.[row];
     const eye=featureInkProfile(h,"eye"),eyeMatch=profileBestShift(ref.eye,eye,9);
     let deltaRel=eyeMatch.deltaRel;
     let confidence=faceRigConfidenceFromMatch(eyeMatch);
@@ -2945,7 +3071,7 @@ function prepareExperimentalFaceAlign(){
     h.faceRig={enabled:true,row,refLabel:ref.label,delta,deltaRel,confidence,eyeMatch,mouthMatch,mouthAgreement};
     if(delta)rigCfg.activeCount++;
   }
-  rigCfg.refLabel=`${refs[0].label} / ${refs[1].label} / ${refs[2].label}`;
+  rigCfg.refLabel=Object.entries(refs).map(([sheet,r])=>`${sheet}: ${r[0]?.label||"—"}/${r[1]?.label||"—"}/${r[2]?.label||"—"}`).join(" · ");
   S.faceAlign=rigCfg;
   return rigCfg;
 }
@@ -2961,21 +3087,21 @@ function modelMetadata(gender=getModelGender()){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"8.5",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"9.1",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
   if(!$("modelPreview"))return;
   const folder=getModelFolderName();
-  const sheetCount=["A","B","C"].filter(k=>S.sheets?.[k]).length || 3;
-  const pngCount=sheetCount*MODEL_SCHEMA.headsPerSheet;
+  const loaded=MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]);
+  const shown=loaded.length?loaded:MODEL_SCHEMA.sheets;
+  const pngCount=shown.length*MODEL_SCHEMA.headsPerSheet;
   $("modelPreview").textContent=
     `Pasta: ${folder}\n`+
     `JSON: ${folder}.json\n`+
-    `${pngCount} PNGs: expressão / _blink / _talk`+
-    `\nFolha C: pt_desconfiada / pt_surpresa / pt_impressionada / pt_envergonhada / pt_sorrindo_de_canto / pt_sorriso_maligno_de_canto / pt_ciumenta`;
+    `${pngCount} PNGs · ${shown.length} folha(s) × 21 sprites\n`+
+    shown.map(k=>`${MODEL_SCHEMA.sheetLabels[k]}: ${MODEL_SCHEMA.emotions[k].join(" / ")}`).join("\n");
 }
-
 function v8Preflight(){
   const issues=[],warnings=[],loaded=MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]);
   if(!loaded.length)issues.push("nenhuma folha carregada");
@@ -3137,7 +3263,7 @@ async function exportToCatalogV1(){
   const pf=updatePreflight(),override=!!$("exportOverride")?.checked;
   if(!pf.ready&&!override){status("catalogExportStatus","EXPORT DIRETO BLOQUEADO. Resolva o Preflight ou use o override consciente no modo avançado.","bad");return}
   if(!S.canonical||!S.heads.length){status("catalogExportStatus","Primeiro processe o modelo.","bad");return}
-  const gender=getModelGender(),loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length,expectedExportHeads=loadedSheets*MODEL_SCHEMA.headsPerSheet;
+  const gender=getModelGender(),loadedSheets=MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).length,expectedExportHeads=loadedSheets*MODEL_SCHEMA.headsPerSheet;
   if(expectedExportHeads&&S.heads.length!==expectedExportHeads&&!override){status("catalogExportStatus",`Detectei ${S.heads.length}/${expectedExportHeads} cabeças. Corrija a detecção antes de exportar.`,`bad`);return}
   const button=$("exportToCatalogV1");let createdTarget=null;button.disabled=true;
   try{
@@ -3203,7 +3329,7 @@ async function exportFullModelPackage(){
   const pf=updatePreflight(),override=!!$("exportOverride")?.checked;
   if(!pf.ready&&!override){status("exportStatus","EXPORT BLOQUEADO. Resolva o Preflight ou use o override consciente no modo avançado.","bad");return}
   if(!S.canonical || !S.heads.length){status("exportStatus","Primeiro processe o modelo.","bad");return}
-  const loadedSheets=["A","B","C"].filter(k=>S.sheets?.[k]).length;
+  const loadedSheets=MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).length;
   const expectedExportHeads=loadedSheets*MODEL_SCHEMA.headsPerSheet;
   if(expectedExportHeads && S.heads.length!==expectedExportHeads){
     status("exportStatus",`Há ${S.heads.length} cabeças. Para ${loadedSheets} folha(s), o esperado é ${expectedExportHeads}; confira a detecção antes de exportar.`,"warn");
@@ -3271,7 +3397,7 @@ let rebuildAllWarpToken=0;
 function rebuildAllWarpNow(reason="ajuste"){
   if(!S.canonical||!S.heads.length)return;setEngineConfig();prepareExperimentalFaceAlign();const token=++rebuildAllWarpToken;status("canonicalStatus",`Aplicando ${reason} em todas as expressões…`,"warn");let i=0;
   const processBatch=()=>{if(token!==rebuildAllWarpToken)return;const end=Math.min(S.heads.length,i+3);for(;i<end;i++){const h=S.heads[i];h.warped=makeWarpedCanvas(h,720);h.warpStats=computeWarpStats(h)}drawPreview();
-    if(i<S.heads.length)requestAnimationFrame(processBatch);else{const finish=v83ApplyFinishLockArea1();markStage("render",{reason});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;const q=v8AnalyzeQuality({focus:false});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;renderThumbs();updateDiagnostics();updatePreflight();status("canonicalStatus",`Render, Finish Lock e QA atualizados em ${S.heads.length} expressões${finish?` · ${finish.ok}/${finish.count} LOCK · P90 ${finish.p90.toFixed(1)} px`:""} · ${q.REVIEW||0} revisar.`,q.REVIEW?"warn":"ok")}}
+    if(i<S.heads.length)requestAnimationFrame(processBatch);else{clearFinishLockState("Finish Lock removido porque o render foi atualizado. Reaplique manualmente se quiser usá-lo no export.");markStage("render",{reason});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;const q=v8AnalyzeQuality({focus:false});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;renderThumbs();updateDiagnostics();updatePreflight();status("canonicalStatus",`Render e QA atualizados em ${S.heads.length} expressões · ${q.REVIEW||0} revisar.`,q.REVIEW?"warn":"ok")}}
   requestAnimationFrame(processBatch);
 }
 
@@ -3297,7 +3423,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V8.5 — FINISH LOCK DA ÁREA 2 DENTRO DA ÁREA 1
+   V9.1 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3348,9 +3474,18 @@ function v83ApplyFinishLockArea1(){
   S.finishLock={canonical,summary,count:items.length,canonicalRevision:S.canonical.revision};
   return summary;
 }
+function applyFinishLockManual(){
+  if(!S.canonical||!S.heads.length){updateFinishLockUI("Primeiro crie o molde canônico.","warn");return}
+  status("finishLockStatus","Aplicando Finish Lock final nas imagens de export…","warn");
+  const summary=v83ApplyFinishLockArea1();
+  if(!summary){updateFinishLockUI("Não foi possível aplicar o Finish Lock nesta rodada.","bad");return}
+  updateFinishLockUI();
+  updatePreflight();
+  log(`Finish Lock manual aplicado: ${summary.ok}/${summary.count} LOCK · P90 ${summary.p90.toFixed(1)} px · topo máx ${summary.topMax.toFixed(1)} px.`);
+}
 
 /* =========================================================
-   V8.5 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V9.1 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
@@ -3529,7 +3664,7 @@ function init(){
   labelInputs.forEach(id=>$(id)?.addEventListener("input",()=>{updateLabels();if(id==="smartRemapMax"||id==="warpStrength")v81UpdateSmartRemapStatus();if(id==="fps"&&S.playing)startPlayer()}));
 
   const invalidate=(stage,reason,{autoRender=false}={})=>{setEngineConfig();invalidateFrom(stage,reason);if(autoRender&&S.canonical)scheduleRebuildAllWarp(reason)};
-  ["fileA","fileB","fileC"].forEach(id=>$(id).addEventListener("change",()=>invalidate("input","arquivos de entrada alterados")));
+  MODEL_SCHEMA.sheets.forEach(k=>$(MODEL_SCHEMA.fileInputs[k]).addEventListener("change",()=>invalidate("input","arquivos de entrada alterados")));
   $("inputEngine").onchange=()=>{updateBgModeUI();invalidate("segmentation","engine de entrada alterada")};
   $("chroma2Quick").onchange=()=>{
     $("inputEngine").value=$("chroma2Quick").checked?"chroma2":"classic";
@@ -3556,14 +3691,15 @@ function init(){
   $("currentSel").onchange=()=>{const old=S.currentIndex;S.currentIndex=Number($("currentSel").value);drawPreview();updateActiveThumb(old,S.currentIndex);updateDiagnostics();v71UpdateUndoButton()};
   $("scope").onchange=()=>{applyScope();const a=visibleIndices(),old=S.currentIndex;if(a.length&&!a.includes(S.currentIndex)){S.currentIndex=a[0];$("currentSel").value=String(a[0])}drawPreview();updateActiveThumb(old,S.currentIndex);v71UpdateUndoButton()};
   $("prev").onclick=()=>{stopPlayer();step(-1)};$("next").onclick=()=>{stopPlayer();step(1)};$("play").onclick=()=>S.playing?stopPlayer():startPlayer();
-  $("showContour").onchange=drawPreview;$("showAnchors").onchange=drawPreview;$("chooseModelsDir").onclick=chooseModelsDirectory;$("exportModelPackage").onclick=exportFullModelPackage;$("exportToCatalogV1").onclick=exportToCatalogV1;
+  $("showContour").onchange=drawPreview;$("showAnchors").onchange=drawPreview;$("finishLockBtn").onclick=applyFinishLockManual;$("chooseModelsDir").onclick=chooseModelsDirectory;$("exportModelPackage").onclick=exportFullModelPackage;$("exportToCatalogV1").onclick=exportToCatalogV1;
   $("modelNumber").addEventListener("input",()=>{updateModelPreview();updatePreflight()});
   $("modelGender").addEventListener("change",()=>{updateModelPreview();updatePreflight()});
 
   loadDirectoryHandle().then(h=>{if(h)$("dirStatus").textContent=`Pasta lembrada: ${h.name}`});
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
-  log("V8.5 iniciada. Área 1 preserva Chroma + Smart Remap, restaura a força extra sobre fundos difíceis e aplica Finish Lock final; exportação direta para o Catálogo V1 disponível.");
+  updateFinishLockUI();
+  log("V9.1 iniciada. 6 folhas funcionais: A, A-PT, B, B-PT, C e C-PT. Todas usam o mesmo pipeline completo; Finish Lock continua manual.");
 }
 init();
 </script>
