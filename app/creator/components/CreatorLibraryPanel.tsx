@@ -19,11 +19,14 @@ type CreatorLibraryPanelProps = {
   onCopyAppearance: (character: Character) => void;
   onOpenCharacter: (character: Character) => void;
   onRemoveCharacter: (id: string) => void;
+  onRemoveCharacters: (ids: string[]) => Promise<void>;
   onNewCharacter: () => void;
 };
 
-export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, getPackName, onNameChange, onChangeModel, onMigrate, onCopyAppearance, onOpenCharacter, onRemoveCharacter, onNewCharacter }: CreatorLibraryPanelProps) {
+export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, characterName, model, migrationAvailable, migrating, getPackName, onNameChange, onChangeModel, onMigrate, onCopyAppearance, onOpenCharacter, onRemoveCharacter, onRemoveCharacters, onNewCharacter }: CreatorLibraryPanelProps) {
   const [copyAppearanceOpen, setCopyAppearanceOpen] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const copySources = characters.filter((character) => character.id !== activeCharacter);
   const [copySourceId, setCopySourceId] = useState("");
   const selectedCopySource = copySources.find((character) => character.id === copySourceId) ?? copySources[0] ?? null;
@@ -36,10 +39,29 @@ export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, 
     onCopyAppearance(selectedCopySource);
     setCopyAppearanceOpen(false);
   };
+  const toggleDeleteMode = () => {
+    setDeleteMode((current) => {
+      if (current) setSelectedCharacterIds([]);
+      return !current;
+    });
+  };
+  const toggleCharacterSelection = (id: string) => {
+    setSelectedCharacterIds((current) => current.includes(id) ? current.filter((entry) => entry !== id) : [...current, id]);
+  };
+  const removeSelectedCharacters = async () => {
+    if (!selectedCharacterIds.length) return;
+    await onRemoveCharacters(selectedCharacterIds);
+    setSelectedCharacterIds([]);
+    setDeleteMode(false);
+  };
   return <aside className="sidebar left-panel">
     <div className="panel-heading">
       <div><span>MEUS PERSONAGENS</span><small>{characters.length} salvos</small></div>
-      <button className="new-character-header-button" onClick={onNewCharacter}>＋ Novo personagem</button>
+      <div className="character-library-actions">
+        <button className="character-delete-toggle" onClick={toggleDeleteMode} disabled={characters.length === 0} aria-pressed={deleteMode}>{deleteMode ? "Cancelar" : "Excluir"}</button>
+        {deleteMode && <button className="character-delete-selected" onClick={() => void removeSelectedCharacters()} disabled={selectedCharacterIds.length === 0}>Apagar{selectedCharacterIds.length ? ` · ${selectedCharacterIds.length}` : ""}</button>}
+        {!deleteMode && <button className="new-character-header-button" onClick={onNewCharacter}>＋ Novo personagem</button>}
+      </div>
     </div>
     <details className="character-settings">
       <summary>Editar personagem atual</summary>
@@ -63,12 +85,13 @@ export function CreatorLibraryPanel({ characters, activeCharacter, activePhoto, 
     <div className="saved-list">
       {characters.length === 0 ? <div className="empty-saved">Seus personagens salvos aparecerão aqui.</div> : characters.map((character) => {
         const photo = activeCharacter === character.id ? activePhoto ?? character.photoUrl ?? character.photoDataUrl : character.photoUrl ?? character.photoDataUrl;
-        return <div className={`saved-card ${activeCharacter === character.id ? "selected" : ""}`} key={character.id}>
-          <button className="saved-main" onClick={() => onOpenCharacter(character)}>
+        const selectedForDelete = selectedCharacterIds.includes(character.id);
+        return <div className={`saved-card ${activeCharacter === character.id ? "selected" : ""} ${selectedForDelete ? "delete-selected" : ""}`} key={character.id}>
+          <button className="saved-main" onClick={() => deleteMode ? toggleCharacterSelection(character.id) : onOpenCharacter(character)} aria-pressed={deleteMode ? selectedForDelete : undefined}>
             <span className="saved-avatar">{photo ? <img src={photo} alt={`Foto de ${character.name}`} /> : character.model === "feminino" ? "F" : "M"}</span>
             <span><strong>{character.name}</strong><small>{character.model} · {getPackName(character)}</small></span>
           </button>
-          <button className="icon-button danger" title="Excluir personagem" onClick={() => onRemoveCharacter(character.id)}>×</button>
+          {deleteMode ? <span className="character-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span> : <button className="icon-button danger" title="Excluir personagem" onClick={() => onRemoveCharacter(character.id)}>×</button>}
         </div>;
       })}
     </div>

@@ -25,6 +25,21 @@ test("renders the Nymi Gacha application shell", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
 
+test("permite selecionar e excluir vários personagens de uma vez", async () => {
+  const [panel, page, css] = await Promise.all([
+    readFile(new URL("../app/creator/components/CreatorLibraryPanel.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+  assert.match(panel, /character-delete-toggle/);
+  assert.match(panel, /selectedCharacterIds/);
+  assert.match(panel, /onRemoveCharacters\(selectedCharacterIds\)/);
+  assert.match(page, /async function removeCharacters\(ids: string\[\]\)/);
+  assert.match(page, /checkpointCharacterDeletion\(character\.id\)/);
+  assert.match(page, /deleteCharacterFromPc\(character\.id\)/);
+  assert.match(css, /\.character-delete-selected/);
+});
+
 test("keeps the nine-expression pack contract in the editor", async () => {
   const [page, expressions] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

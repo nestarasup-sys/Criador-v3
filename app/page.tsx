@@ -4777,6 +4777,40 @@ export default function Home() {
     setNotice(pcDeleted ? "Personagem excluído" : "Personagem removido; exclusão no PC pendente");
   }
 
+  async function removeCharacters(ids: string[]) {
+    const uniqueIds = [...new Set(ids)];
+    const targets = characters.filter((character) => uniqueIds.includes(character.id));
+    if (!targets.length) return;
+    if (!window.confirm(`Excluir ${targets.length} personagem(ns) selecionado(s)? Essa ação não pode ser desfeita.`)) return;
+    setIsProcessing(true);
+    const removedIds: string[] = [];
+    try {
+      for (const character of targets) {
+        try {
+          await checkpointCharacterDeletion(character.id);
+          if (pcSyncReadyRef.current) await deleteCharacterFromPc(character.id);
+          removedIds.push(character.id);
+          if (pcSyncReadyRef.current && character.expressionPackId) {
+            await deleteExpressionPack(character.expressionPackId).catch(() => undefined);
+          }
+        } catch (error) {
+          console.error("[creator] Falha ao excluir personagem em lote", error);
+        }
+      }
+      if (!removedIds.length) {
+        setNotice("Nenhum personagem foi excluído; confira a conexão com o PC");
+        return;
+      }
+      setCharacters((current) => current.filter((character) => !removedIds.includes(character.id)));
+      if (activeCharacter && removedIds.includes(activeCharacter)) newCharacter(false);
+      setNotice(removedIds.length === targets.length
+        ? `${removedIds.length} personagem(ns) excluído(s)`
+        : `${removedIds.length} de ${targets.length} personagem(ns) excluído(s); os demais falharam`);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   function resetAssetDeleteMode() {
     setAssetDeleteMode(false);
     setSelectedCatalogAssetIds([]);
@@ -5813,6 +5847,7 @@ export default function Home() {
           onCopyAppearance={copyCharacterAppearance}
           onOpenCharacter={openCharacter}
           onRemoveCharacter={removeCharacter}
+          onRemoveCharacters={removeCharacters}
           onNewCharacter={() => newCharacter()}
         />
 
