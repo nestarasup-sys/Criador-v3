@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V9.4 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
+<title>V9.5 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -496,7 +496,7 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V9.4 · Alinhador Profissa</h1>
+  <h1>V9.5 · Alinhador Profissa</h1>
   <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
@@ -545,7 +545,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>V9.4:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V9.5:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -583,11 +583,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V9.4 SmartLock</b><span>estável</span></div>
+        <div><b>V9.5 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V9.4 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
+      <div class="small" style="margin-top:5px">V9.5 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -600,7 +600,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V9.4 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V9.5 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -762,7 +762,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V9.4 pipeline</span>
+    <span class="tag">V9.5 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -784,11 +784,11 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
 </div>
 
 <!-- =======================================================
-     V9.4 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V9.5 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V9.4 · Área 2</h1>
+    <h1>V9.5 · Área 2</h1>
     <div class="small">Fluxo simples: primeiro use o <b>processamento normal</b> (topo + pescoço). Abaixo dele existe o <b>processamento experimental</b> opcional (queixo + corte do pescoço). O export usa automaticamente o último processamento concluído.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -828,7 +828,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
       <label>Velocidade <span class="value" id="a2FpsV">6 fps</span></label><input id="a2Fps" type="range" min="1" max="20" value="6">
       <label>Visualização</label>
       <select id="a2View"><option value="current">Resultado atual</option><option value="original">Original processado</option><option value="compare">Comparar normal / experimental</option></select>
-      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído.</div>
+      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído. <b>V9.5:</b> a preview detecta a área ocupada pela cabeça e aplica zoom automático, sem enquadrar os 1920×1080 inteiros.</div>
       <label><input id="a2ShowGuide" type="checkbox" checked style="width:auto"> Mostrar molde perfeito / âncoras</label>
     </div>
 
@@ -880,10 +880,10 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V9.4 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V9.5 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"9.4",
+  version:"9.5",
   sheets:["A","APT","B","BPT","C","CPT"],
   rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
@@ -2340,9 +2340,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V9.4 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V9.4 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V9.4 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V9.5 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V9.5 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V9.5 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2354,7 +2354,7 @@ async function buildCanonical(){
     clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V9.4 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V9.5 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2827,7 +2827,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V9.4 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V9.5 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2921,7 +2921,7 @@ async function detectAll(){
     status("detectStatus",cfg("inputEngine","classic")==="auto"
       ?"AUTO experimental: avaliando segmentação e grid…"
       :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
-    log(`V9.4 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+    log(`V9.5 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
 
     const images=Object.fromEntries(
       await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
@@ -3195,7 +3195,7 @@ function modelMetadata(gender=getModelGender()){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"9.4",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"9.5",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
@@ -3531,7 +3531,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V9.4 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
+   V9.5 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3593,11 +3593,12 @@ function applyFinishLockManual(){
 }
 
 /* =========================================================
-   V9.4 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V9.5 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
   chinProcessed:false,chinCanonical:null,chinSummary:null,activeOutput:null,
+  previewBoundsCache:new Map(),
   work:document.createElement("canvas"),workCtx:null
 };
 A2.workCtx=A2.work.getContext("2d",{willReadFrequently:true});
@@ -3724,7 +3725,7 @@ async function a2CreateThumb(item){
 
 
 /* =========================================================
-   V9.4 — CHIN LOCK EXPERIMENTAL
+   V9.5 — CHIN LOCK EXPERIMENTAL
    Topo fixo. Correção vertical começa abaixo dos olhos,
    cresce nas bochechas/mandíbula e chega a 100% no queixo.
    O pescoço acompanha o queixo por translação; depois o
@@ -3850,7 +3851,7 @@ async function a2ProcessChinLock(){
   finally{btn.disabled=!A2.processed;$("a2Export").disabled=!A2.processed}
 }
 async function a2LoadFolder(){
-  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length} PNGs`;
+  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;A2.currentIndex=0;A2.thumbs=[];A2.previewBoundsCache.clear();$("a2Count").textContent=`${files.length} PNGs`;
   a2SetActiveOutput(null);
   $("a2ChinProcess").disabled=true;$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Primeiro execute o processamento normal.");
   const ready=files.length>=2;$("a2Process").disabled=!ready;$("a2Export").disabled=true;
@@ -3883,6 +3884,81 @@ function a2RenderThumbs(){
     d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)
   })
 }
+function a2AlphaBoundsFromImage(img,cacheKey=""){
+  if(cacheKey&&A2.previewBoundsCache.has(cacheKey))return A2.previewBoundsCache.get(cacheKey);
+  const maxDim=960,scale=Math.min(1,maxDim/Math.max(img.width,img.height));
+  const w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+  const tmp=canvas(w,h),tctx=tmp.getContext("2d",{willReadFrequently:true});
+  tctx.clearRect(0,0,w,h);tctx.drawImage(img,0,0,w,h);
+  const d=tctx.getImageData(0,0,w,h).data;
+  let minX=w,minY=h,maxX=-1,maxY=-1;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const a=d[(y*w+x)*4+3];
+    if(a<18)continue;
+    if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+  }
+  let b;
+  if(maxX<minX||maxY<minY)b={x:0,y:0,w:img.width,h:img.height};
+  else{
+    const inv=1/scale;
+    b={x:minX*inv,y:minY*inv,w:(maxX-minX+1)*inv,h:(maxY-minY+1)*inv};
+  }
+  if(cacheKey)A2.previewBoundsCache.set(cacheKey,b);
+  return b;
+}
+function a2SessionHeadBounds(fallbackImg=null,cacheKey=""){
+  const measured=A2.items.filter(it=>it?.measure&&Number.isFinite(it.measure.left)&&Number.isFinite(it.measure.right));
+  if(measured.length){
+    let left=Infinity,right=-Infinity,top=Infinity,bottom=-Infinity;
+    for(const it of measured){
+      left=Math.min(left,it.measure.left);right=Math.max(right,it.measure.right);
+      top=Math.min(top,it.measure.top);bottom=Math.max(bottom,it.measure.bottom);
+    }
+    if(Number.isFinite(left)&&right>left&&bottom>top)return {x:left,y:top,w:right-left+1,h:bottom-top+1};
+  }
+  return fallbackImg?a2AlphaBoundsFromImage(fallbackImg,cacheKey):{x:0,y:0,w:MODEL_EXPORT.width,h:MODEL_EXPORT.height};
+}
+function a2FocusRect(img,targetW,targetH,cacheKey=""){
+  const b=a2SessionHeadBounds(img,cacheKey);
+  // Espaço ao redor da cabeça para não deixar cabelo/queixo colados na moldura.
+  const mx=Math.max(24,b.w*.20),my=Math.max(20,b.h*.15);
+  let x=b.x-mx,y=b.y-my,w=b.w+mx*2,h=b.h+my*2;
+  const targetAspect=Math.max(.2,targetW/Math.max(1,targetH));
+  const aspect=w/Math.max(1,h);
+  if(aspect<targetAspect){
+    const nw=h*targetAspect;x-=(nw-w)/2;w=nw;
+  }else{
+    const nh=w/targetAspect;y-=(nh-h)/2;h=nh;
+  }
+  // Mantém o enquadramento dentro do PNG sem perder o centro da cabeça.
+  if(w>img.width){x=0;w=img.width}
+  else x=clamp(x,0,img.width-w);
+  if(h>img.height){y=0;h=img.height}
+  else y=clamp(y,0,img.height-h);
+  return {x,y,w,h};
+}
+function a2UnionFocusRect(a,b,imgW,imgH,targetW,targetH){
+  let x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),r=Math.max(a.x+a.w,b.x+b.w),bt=Math.max(a.y+a.h,b.y+b.h);
+  let w=r-x,h=bt-y;
+  const targetAspect=Math.max(.2,targetW/Math.max(1,targetH)),aspect=w/Math.max(1,h);
+  if(aspect<targetAspect){const nw=h*targetAspect;x-=(nw-w)/2;w=nw}
+  else{const nh=w/targetAspect;y-=(nh-h)/2;h=nh}
+  if(w>imgW){x=0;w=imgW}else x=clamp(x,0,imgW-w);
+  if(h>imgH){y=0;h=imgH}else y=clamp(y,0,imgH-h);
+  return {x,y,w,h};
+}
+function a2DrawFocused(ctx,img,paneX,paneW,canvasH,focusRect){
+  const pad=16,dstX=paneX+pad,dstY=pad,dstW=Math.max(1,paneW-pad*2),dstH=Math.max(1,canvasH-pad*2);
+  const sc=Math.min(dstW/focusRect.w,dstH/focusRect.h);
+  const dw=focusRect.w*sc,dh=focusRect.h*sc;
+  const dx=paneX+(paneW-dw)/2,dy=(canvasH-dh)/2;
+  ctx.save();ctx.beginPath();ctx.rect(paneX,0,paneW,canvasH);ctx.clip();
+  ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  ctx.drawImage(img,focusRect.x,focusRect.y,focusRect.w,focusRect.h,dx,dy,dw,dh);
+  ctx.restore();
+  // ox/oy representam onde a origem 0,0 do PNG inteiro cairia nessa transformação.
+  return {sc,ox:dx-focusRect.x*sc,oy:dy-focusRect.y*sc,dw:img.width*sc,dh:img.height*sc,viewLeft:paneX,viewRight:paneX+paneW,focusRect};
+}
 async function a2DrawPreview(){
   const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);
   if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue a pasta do modelo",c.width/2,c.height/2);return}
@@ -3890,26 +3966,42 @@ async function a2DrawPreview(){
   const finish=A2.processed&&A2.items[i]?.resultBlob?await createImageBitmap(A2.items[i].resultBlob):null;
   const chin=A2.chinProcessed&&A2.items[i]?.chinBlob?await createImageBitmap(A2.items[i].chinBlob):null;
   const current=A2.activeOutput==="chin"&&chin?chin:(finish||bm);
-  const drawFit=(img,x,w)=>{const sc=Math.min((w-22)/img.width,(c.height-22)/img.height),dw=img.width*sc,dh=img.height*sc,ox=x+(w-dw)/2,oy=(c.height-dh)/2;ctx.drawImage(img,ox,oy,dw,dh);return {sc,dw,dh,ox,oy}};
-  let currentFit=null,chinFit=null;
 
+  let currentFit=null,chinFit=null;
   if(mode==="compare"&&finish&&chin){
-    drawFit(finish,0,c.width/2);chinFit=drawFit(chin,c.width/2,c.width/2);
-    ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("NORMAL",15,22);ctx.fillText("EXPERIMENTAL",c.width/2+15,22);
+    const paneW=c.width/2;
+    const baseFocus=a2FocusRect(finish,paneW,c.height,`finish:${i}`);
+    const chinFocus=a2FocusRect(chin,paneW,c.height,`chin:${i}`);
+    const shared=a2UnionFocusRect(baseFocus,chinFocus,finish.width,finish.height,paneW,c.height);
+    a2DrawFocused(ctx,finish,0,paneW,c.height,shared);
+    chinFit=a2DrawFocused(ctx,chin,paneW,paneW,c.height,shared);
+    ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("NORMAL",15,22);ctx.fillText("EXPERIMENTAL",paneW+15,22);
   }else if(mode==="original"){
-    drawFit(bm,0,c.width);
+    const focus=a2FocusRect(bm,c.width,c.height,`original:${file.name}`);
+    a2DrawFocused(ctx,bm,0,c.width,c.height,focus);
   }else{
-    currentFit=drawFit(current,0,c.width);
+    const key=A2.activeOutput==="chin"?`chin:${i}`:A2.activeOutput==="result"?`finish:${i}`:`original:${file.name}`;
+    const focus=a2FocusRect(current,c.width,c.height,key);
+    currentFit=a2DrawFocused(ctx,current,0,c.width,c.height,focus);
   }
 
   if($("a2ShowGuide").checked){
     if(currentFit&&A2.activeOutput!=="chin"&&finish){
-      const cc=A2.canonical,sc=currentFit.sc,ox=currentFit.ox,oy=currentFit.oy,dw=currentFit.dw;
-      ctx.save();ctx.strokeStyle="#7c3aed";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox,oy+cc.targetTop*sc);ctx.lineTo(ox+dw,oy+cc.targetTop*sc);ctx.stroke();ctx.strokeStyle="#18794e";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);if(d===0)ctx.moveTo(ox+p.l*sc,y);else ctx.lineTo(ox+p.l*sc,y)}for(let d=cc.depth;d>=0;d--){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,y)}ctx.stroke();ctx.restore();
+      const cc=A2.canonical,sc=currentFit.sc,ox=currentFit.ox,oy=currentFit.oy;
+      ctx.save();ctx.beginPath();ctx.rect(currentFit.viewLeft,0,currentFit.viewRight-currentFit.viewLeft,c.height);ctx.clip();
+      ctx.strokeStyle="#7c3aed";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(currentFit.viewLeft,oy+cc.targetTop*sc);ctx.lineTo(currentFit.viewRight,oy+cc.targetTop*sc);ctx.stroke();
+      ctx.strokeStyle="#18794e";ctx.beginPath();
+      for(let d=0;d<=cc.depth;d++){const yy=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d),xx=ox+p.l*sc;if(d===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy)}
+      for(let d=cc.depth;d>=0;d--){const yy=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,yy)}
+      ctx.stroke();ctx.restore();
     }
     const guideFit=(mode==="compare"&&chinFit)?chinFit:(A2.activeOutput==="chin"?currentFit:null);
     if(guideFit&&A2.chinCanonical){
-      const cc=A2.chinCanonical;ctx.save();ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.strokeStyle="#d97706";ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.targetChin*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.targetChin*guideFit.sc);ctx.stroke();ctx.strokeStyle="#dc2626";ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.cutY*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.cutY*guideFit.sc);ctx.stroke();ctx.strokeStyle="#6d28d9";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.protectY*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.protectY*guideFit.sc);ctx.stroke();ctx.restore();
+      const cc=A2.chinCanonical;ctx.save();ctx.beginPath();ctx.rect(guideFit.viewLeft,0,guideFit.viewRight-guideFit.viewLeft,c.height);ctx.clip();
+      ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+      ctx.strokeStyle="#d97706";ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.targetChin*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.targetChin*guideFit.sc);ctx.stroke();
+      ctx.strokeStyle="#dc2626";ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.cutY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.cutY*guideFit.sc);ctx.stroke();
+      ctx.strokeStyle="#6d28d9";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.protectY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.protectY*guideFit.sc);ctx.stroke();ctx.restore();
     }
   }
   bm.close?.();finish?.close?.();chin?.close?.();
@@ -4001,7 +4093,7 @@ function init(){
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   updateFinishLockUI();
-  log("V9.4 iniciada. Área 2 simplificada: botão normal + botão experimental; export automático do último processamento concluído.");
+  log("V9.5 iniciada. Área 2 com zoom automático de preview na cabeça; botão normal + experimental e export automático do último processamento concluído.");
 }
 init();
 </script>
