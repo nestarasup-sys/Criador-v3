@@ -556,16 +556,34 @@ export async function deleteCatalogItem(id: string): Promise<LocalPersistenceRes
     transaction.onerror = () => reject(transaction.error);
   });
   recordTombstone(CATALOG_TOMBSTONES_KEY, id);
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 5000);
+  let timedOut = false;
+  let timeout = 0;
+  const remoteDeletion = deleteCatalogItemFromPc(id)
+    .then(() => true)
+    .catch(() => false);
   try {
-    await deleteCatalogItemFromPc(id, controller.signal);
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      timeout = window.setTimeout(() => {
+        timedOut = true;
+        resolve(false);
+      }, 5000);
+    });
+    const pcSaved = await Promise.race([remoteDeletion, timeoutPromise]);
+    if (!pcSaved) {
+      if (timedOut) {
+        void remoteDeletion.then((saved) => {
+          if (saved) {
+            clearCatalogTombstone(id);
+            notifyPcPersistenceRecovered();
+          }
+        });
+      }
+      notifyPcPersistenceFailure("catalog", new Error("Sincronização do catálogo demorou mais que o esperado."));
+      return { pcSaved: false };
+    }
     clearCatalogTombstone(id);
     notifyPcPersistenceRecovered();
     return { pcSaved: true };
-  } catch (error) {
-    notifyPcPersistenceFailure("catalog", error);
-    return { pcSaved: false };
   } finally {
     window.clearTimeout(timeout);
   }
