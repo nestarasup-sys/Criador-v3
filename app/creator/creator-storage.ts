@@ -371,8 +371,8 @@ export async function saveCatalogItemToPc(item: CatalogItem) {
   await pcRequest(`/catalog/${encodeURIComponent(item.id)}`, { method: "POST", headers: { "Content-Type": "image/png", "X-Gacha-Meta": encodeURIComponent(JSON.stringify(metadata)) }, body: blob });
 }
 
-export async function deleteCatalogItemFromPc(id: string) {
-  await pcRequest(`/catalog/${encodeURIComponent(id)}`, { method: "DELETE" });
+export async function deleteCatalogItemFromPc(id: string, signal?: AbortSignal) {
+  await pcRequest(`/catalog/${encodeURIComponent(id)}`, { method: "DELETE", ...(signal ? { signal } : {}) });
 }
 
 let expressionPackPcQueue: Promise<void> = Promise.resolve();
@@ -556,14 +556,18 @@ export async function deleteCatalogItem(id: string): Promise<LocalPersistenceRes
     transaction.onerror = () => reject(transaction.error);
   });
   recordTombstone(CATALOG_TOMBSTONES_KEY, id);
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 5000);
   try {
-    await deleteCatalogItemFromPc(id);
+    await deleteCatalogItemFromPc(id, controller.signal);
     clearCatalogTombstone(id);
     notifyPcPersistenceRecovered();
     return { pcSaved: true };
   } catch (error) {
     notifyPcPersistenceFailure("catalog", error);
     return { pcSaved: false };
+  } finally {
+    window.clearTimeout(timeout);
   }
 }
 

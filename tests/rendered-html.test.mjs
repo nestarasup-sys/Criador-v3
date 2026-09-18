@@ -371,6 +371,7 @@ test("uses an explicit selection mode instead of destructive asset delete button
   assert.match(page, /selectedCatalogAssetIds/);
   assert.match(page, /selectedBaseModelIds/);
   assert.match(page, /removeSelectedAssets/);
+  assert.match(page, /Não foi possível apagar as seleções do catálogo/);
   assert.match(page, /toggleCatalogAssetSelection/);
   assert.match(page, /toggleBaseModelSelection/);
   assert.doesNotMatch(page, /className="base-pack-delete"/);
@@ -472,6 +473,8 @@ test("shares characters and imported assets through the local PC service", async
   assert.match(page, /loadCatalogTombstones/);
   assert.match(page, /pc-persistence-recovered/);
   assert.match(page, /deleteCatalogItemFromPc/);
+  assert.match(storage, /AbortController/);
+  assert.match(storage, /setTimeout\(\(\) => controller\.abort\(\), 5000\)/);
   assert.match(page, /sincronização com o PC pendente/);
   assert.match(server, /missingFile: true/);
   assert.match(server, /const HOST = "127\.0\.0\.1"/);

@@ -5039,6 +5039,8 @@ export default function Home() {
       setSelectedCatalogAssetIds([]);
       setAssetDeleteMode(false);
       setNotice(`${targetCount} seleção(ões) apagada(s) do catálogo`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Não foi possível apagar as seleções do catálogo.");
     } finally {
       setIsProcessing(false);
     }
