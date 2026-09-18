@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V9.5 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
+<title>V9.7 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -496,7 +496,7 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V9.5 · Alinhador Profissa</h1>
+  <h1>V9.7 · Alinhador Profissa</h1>
   <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
@@ -545,7 +545,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>V9.5:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V9.7:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -583,11 +583,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V9.5 SmartLock</b><span>estável</span></div>
+        <div><b>V9.7 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V9.5 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
+      <div class="small" style="margin-top:5px">V9.7 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -600,7 +600,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V9.5 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V9.7 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -762,7 +762,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V9.5 pipeline</span>
+    <span class="tag">V9.7 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -784,11 +784,11 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
 </div>
 
 <!-- =======================================================
-     V9.5 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V9.7 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V9.5 · Área 2</h1>
+    <h1>V9.7 · Área 2</h1>
     <div class="small">Fluxo simples: primeiro use o <b>processamento normal</b> (topo + pescoço). Abaixo dele existe o <b>processamento experimental</b> opcional (queixo + corte do pescoço). O export usa automaticamente o último processamento concluído.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -828,7 +828,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
       <label>Velocidade <span class="value" id="a2FpsV">6 fps</span></label><input id="a2Fps" type="range" min="1" max="20" value="6">
       <label>Visualização</label>
       <select id="a2View"><option value="current">Resultado atual</option><option value="original">Original processado</option><option value="compare">Comparar normal / experimental</option></select>
-      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído. <b>V9.5:</b> a preview detecta a área ocupada pela cabeça e aplica zoom automático, sem enquadrar os 1920×1080 inteiros.</div>
+      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído. <b>V9.7:</b> a preview detecta a área ocupada pela cabeça e aplica zoom automático, sem enquadrar os 1920×1080 inteiros.</div>
       <label><input id="a2ShowGuide" type="checkbox" checked style="width:auto"> Mostrar molde perfeito / âncoras</label>
     </div>
 
@@ -847,7 +847,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
         <b>2.</b> Base do pescoço → preservada no anchor Y 346.<br>
         <b>3.</b> Lateral esquerda/direita do pescoço → perfil canônico mediano, aplicado a 100% apenas na região do pescoço.<br>
         <b>4.</b> Rosto/cabelo interno → não recebe remapeamento horizontal da Área 2.<br><br>
-        <b>Experimental — Chin Lock:</b><br>
+        <b>Experimental — Chin Lock + Chin Detector V2:</b><br>
         <b>5.</b> Topo/cabelo e região dos olhos ficam imóveis.<br>
         <b>6.</b> A correção vertical cresce progressivamente pelas bochechas/mandíbula até chegar a 100% no queixo.<br>
         <b>7.</b> Depois do encaixe do queixo, o menor pescoço válido vira a altura padrão.<br>
@@ -858,7 +858,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
   </aside>
 
   <main class="main">
-    <div class="area2hero"><b>Precision Lock 100%</b><div class="small">Segunda passagem para modelo pronto. O Finish Lock normal remove oscilação de topo/pescoço; o Chin Lock experimental atua somente se você apertar o botão e tenta estabilizar a altura da parte inferior do rosto.</div></div>
+    <div class="area2hero"><b>Precision Lock 100%</b><div class="small">Segunda passagem para modelo pronto. O Finish Lock normal remove oscilação de topo/pescoço; o Chin Lock experimental agora usa o Chin Detector V2 para separar mandíbula, ponta real do queixo e início do pescoço antes de estabilizar a parte inferior do rosto.</div></div>
     <div class="a2PreviewWrap">
       <canvas id="a2Preview" width="960" height="540"></canvas>
       <div class="a2Guide">
@@ -880,10 +880,10 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V9.5 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V9.7 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"9.5",
+  version:"9.7",
   sheets:["A","APT","B","BPT","C","CPT"],
   rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
@@ -2340,9 +2340,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V9.5 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V9.5 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V9.5 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V9.7 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V9.7 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V9.7 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2354,7 +2354,7 @@ async function buildCanonical(){
     clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V9.5 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V9.7 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2827,7 +2827,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V9.5 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V9.7 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2921,7 +2921,7 @@ async function detectAll(){
     status("detectStatus",cfg("inputEngine","classic")==="auto"
       ?"AUTO experimental: avaliando segmentação e grid…"
       :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
-    log(`V9.5 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+    log(`V9.7 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
 
     const images=Object.fromEntries(
       await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
@@ -3195,7 +3195,7 @@ function modelMetadata(gender=getModelGender()){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"9.5",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"9.7",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
@@ -3531,7 +3531,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V9.5 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
+   V9.7 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3593,7 +3593,7 @@ function applyFinishLockManual(){
 }
 
 /* =========================================================
-   V9.5 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V9.7 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
@@ -3725,7 +3725,7 @@ async function a2CreateThumb(item){
 
 
 /* =========================================================
-   V9.5 — CHIN LOCK EXPERIMENTAL
+   V9.7 — CHIN LOCK EXPERIMENTAL
    Topo fixo. Correção vertical começa abaixo dos olhos,
    cresce nas bochechas/mandíbula e chega a 100% no queixo.
    O pescoço acompanha o queixo por translação; depois o
@@ -3735,30 +3735,178 @@ async function a2CanvasFromBlob(blob){
   const bm=await createImageBitmap(blob),c=canvas(bm.width,bm.height),ctx=c.getContext("2d",{willReadFrequently:true});
   ctx.drawImage(bm,0,0);bm.close?.();return c;
 }
-function a2MeasureChinCanvas(cnv){
-  const ctx=cnv.getContext("2d",{willReadFrequently:true}),scanH=Math.min(cnv.height,MODEL_EXPORT.anchorY+90),data=ctx.getImageData(0,0,cnv.width,scanH).data;
-  const m=a2MeasurePixels(data,cnv.width,scanH),center=MODEL_EXPORT.anchorX;
-  const widths=[];
-  const from=Math.max(m.top+8,m.neckStart-26),to=Math.min(m.bottom,m.neckStart+22);
-  for(let y=from;y<=to;y++){
-    const s=a2CentralSegment(data,cnv.width,y,center,18);if(s)widths.push({y,w:s.w,c:s.c});
+function a2SmoothRows(rows,win=5){
+  const half=Math.max(1,win>>1),out=[];
+  for(let i=0;i<rows.length;i++){
+    const ws=[],ls=[],rs=[];
+    for(let j=Math.max(0,i-half);j<=Math.min(rows.length-1,i+half);j++){
+      if(Number.isFinite(rows[j].w)){ws.push(rows[j].w);ls.push(rows[j].l);rs.push(rows[j].r)}
+    }
+    out.push({...rows[i],sw:ws.length?median(ws):rows[i].w,sl:ls.length?median(ls):rows[i].l,sr:rs.length?median(rs):rows[i].r});
   }
-  const pre=widths.filter(r=>r.y>=m.neckStart-22&&r.y<=m.neckStart-5).map(r=>r.w);
-  const post=widths.filter(r=>r.y>=m.neckStart+2&&r.y<=m.neckStart+19).map(r=>r.w);
-  const preW=pre.length?median(pre):m.maxWidth*.48,postW=post.length?median(post):m.maxWidth*.30;
-  const ratio=preW>0?postW/preW:1,coverage=clamp(Math.min(pre.length,post.length)/12,0,1);
-  const transition=clamp((.92-ratio)/.50,0,1),confidence=clamp(transition*.72+coverage*.28,0,1);
-  return {...m,chinY:m.neckStart,chinConfidence:confidence,chinPreW:preW,chinPostW:postW,chinRatio:ratio};
+  return out;
+}
+function a2LinearSlope(rows,key,i0,i1){
+  i0=Math.max(0,i0);i1=Math.min(rows.length-1,i1);
+  if(i1-i0<2)return 0;
+  let sx=0,sy=0,sxx=0,sxy=0,n=0;
+  for(let i=i0;i<=i1;i++){
+    const x=rows[i].y,y=rows[i][key];if(!Number.isFinite(y))continue;
+    sx+=x;sy+=y;sxx+=x*x;sxy+=x*y;n++;
+  }
+  const den=n*sxx-sx*sx;
+  return n>=3&&Math.abs(den)>1e-6?(n*sxy-sx*sy)/den:0;
+}
+function a2DetectMouthHint(data,w,h,m,rows){
+  const faceSpan=Math.max(1,m.neckStart-m.top);
+  const y0=Math.round(m.top+faceSpan*.56),y1=Math.min(h-1,Math.round(m.top+faceSpan*.84));
+  const x0=Math.max(0,Math.round(MODEL_EXPORT.anchorX-m.maxWidth*.20)),x1=Math.min(w-1,Math.round(MODEL_EXPORT.anchorX+m.maxWidth*.20));
+  const scores=[];
+  for(let y=y0;y<=y1;y++){
+    let sum=0,count=0;
+    for(let x=x0;x<=x1;x++){
+      const i=(y*w+x)*4,a=data[i+3];if(a<18)continue;
+      const r=data[i],g=data[i+1],b=data[i+2],lum=.299*r+.587*g+.114*b;
+      const dark=clamp((190-lum)/155,0,1);
+      const red=clamp((r-(g+b)*.5)/105,0,1);
+      const pink=clamp((r-b+12)/100,0,1)*clamp((r-g+18)/100,0,1);
+      sum+=dark*.42+red*.45+pink*.13;count++;
+    }
+    if(count)scores.push({y,score:sum/count});
+  }
+  if(!scores.length)return {y:NaN,confidence:0};
+  const vals=scores.map(s=>s.score),base=median(vals),best=scores.reduce((a,b)=>b.score>a.score?b:a);
+  const contrast=Math.max(0,best.score-base);
+  return {y:best.y,confidence:clamp(contrast/.19,0,1),score:best.score,base};
+}
+function a2BuildChinCandidates(rows,m,mouth){
+  if(rows.length<14)return [];
+  const top=m.top,rough=m.neckStart,faceSpan=Math.max(40,rough-top);
+  const minAnatomical=Number.isFinite(mouth.y)&&mouth.confidence>=.25
+    ? mouth.y+Math.max(8,faceSpan*.075)
+    : top+faceSpan*.64;
+  const searchStart=Math.max(top+faceSpan*.58,rough-faceSpan*.12,minAnatomical);
+  const searchEnd=Math.min(m.bottom-8,rough+Math.max(28,faceSpan*.22));
+  const candidates=[];
+  for(let i=6;i<rows.length-7;i++){
+    const r=rows[i];if(r.y<searchStart||r.y>searchEnd)continue;
+    const preW=a2LinearSlope(rows,"sw",i-6,i-1),postW=a2LinearSlope(rows,"sw",i+1,i+6);
+    const preL=a2LinearSlope(rows,"sl",i-6,i-1),preR=a2LinearSlope(rows,"sr",i-6,i-1);
+    const postL=a2LinearSlope(rows,"sl",i+1,i+6),postR=a2LinearSlope(rows,"sr",i+1,i+6);
+
+    // Antes da ponta do queixo, a mandíbula converge: esquerda entra, direita entra.
+    const convergeW=clamp((-preW-.18)/1.25,0,1);
+    const convergeSides=clamp((preL-.08)/.75,0,1)*.5+clamp((-preR-.08)/.75,0,1)*.5;
+    // Depois da ponta, esperamos um pescoço mais vertical/estável.
+    const neckStable=clamp(1-Math.abs(postW)/.80,0,1);
+    const neckSides=clamp(1-(Math.abs(postL)+Math.abs(postR))/1.05,0,1);
+    // A largura precisa já estar próxima da faixa do pescoço, não no meio da bochecha.
+    const neckWidthRef=median(rows.slice(Math.max(0,i+3),Math.min(rows.length,i+13)).map(x=>x.sw).filter(Number.isFinite));
+    const widthRatio=neckWidthRef>0?r.sw/neckWidthRef:2;
+    const widthFit=clamp(1-Math.abs(widthRatio-1.10)/.48,0,1);
+    const lateEnough=clamp((r.y-searchStart)/Math.max(8,(searchEnd-searchStart)*.52),0,1);
+
+    const silhouette=convergeW*.27+convergeSides*.25+neckStable*.24+widthFit*.14+lateEnough*.10;
+    const geometry=convergeSides*.34+neckSides*.26+neckStable*.20+clamp((-preW)/1.4,0,1)*.20;
+    const local=(silhouette*.58+geometry*.42);
+    candidates.push({
+      y:r.y,localScore:local,silhouetteScore:silhouette,geometryScore:geometry,
+      preW,postW,preL,preR,postL,postR,widthRatio,minAnatomical
+    });
+  }
+  candidates.sort((a,b)=>b.localScore-a.localScore);
+  return candidates;
+}
+function a2SelectLocalChinCandidate(candidates,m,mouth){
+  if(!candidates.length)return null;
+  const best=candidates[0],second=candidates[1];
+  const separation=second?best.localScore-second.localScore:.18;
+  const mouthSafety=Number.isFinite(mouth.y)&&mouth.confidence>=.25
+    ? clamp((best.y-mouth.y)/Math.max(10,(m.neckStart-m.top)*.14),0,1)
+    : .72;
+  const confidence=clamp(best.localScore*.72+clamp(separation/.12,0,1)*.13+mouthSafety*.15,0,1);
+  return {...best,confidence,mouthSafety};
+}
+function a2MeasureChinCanvas(cnv){
+  const ctx=cnv.getContext("2d",{willReadFrequently:true}),scanH=Math.min(cnv.height,MODEL_EXPORT.anchorY+100),data=ctx.getImageData(0,0,cnv.width,scanH).data;
+  const m=a2MeasurePixels(data,cnv.width,scanH),center=MODEL_EXPORT.anchorX;
+  const rows=[];
+  // Varremos uma área maior que o antigo neckStart para não confundir estreitamento abaixo da boca com a ponta do queixo.
+  const faceSpan=Math.max(40,m.neckStart-m.top);
+  const from=Math.max(m.top+Math.round(faceSpan*.44),m.neckStart-Math.round(faceSpan*.30));
+  const to=Math.min(m.bottom-2,m.neckStart+Math.max(36,Math.round(faceSpan*.28)));
+  for(let y=from;y<=to;y++){
+    const s=a2CentralSegment(data,cnv.width,y,center,18);
+    if(s)rows.push({y,w:s.w,l:s.l,r:s.r,c:s.c});
+  }
+  const smooth=a2SmoothRows(rows,5);
+  const mouth=a2DetectMouthHint(data,cnv.width,scanH,m,smooth);
+  const candidates=a2BuildChinCandidates(smooth,m,mouth);
+  const local=a2SelectLocalChinCandidate(candidates,m,mouth);
+  const chinY=local?.y;
+  const jawStartY=local?Math.max(m.top,Math.round(local.y-Math.max(12,faceSpan*.18))):NaN;
+  // Neck start continua separado. Não é mais usado como sinônimo de queixo.
+  const neckStartY=m.neckStart;
+  return {
+    ...m,
+    jawStartY,
+    chinTipY:chinY,
+    chinY,
+    neckStartY,
+    chinConfidence:local?.confidence||0,
+    chinLocalScore:local?.localScore||0,
+    chinSilhouetteScore:local?.silhouetteScore||0,
+    chinGeometryScore:local?.geometryScore||0,
+    mouthY:mouth.y,
+    mouthConfidence:mouth.confidence,
+    chinCandidates:candidates.slice(0,8),
+    chinDetector:"v2-multisignal"
+  };
+}
+function a2RefineChinMeasuresByConsensus(entries){
+  const local=entries.filter(e=>Number.isFinite(e.measure?.chinTipY)&&e.measure.chinConfidence>=.24);
+  if(local.length<2)return entries;
+  const ratios=local.map(e=>(e.measure.chinTipY-e.measure.top)/Math.max(1,e.measure.bottom-e.measure.top));
+  const ratioMed=median(ratios),ratioMad=median(ratios.map(v=>Math.abs(v-ratioMed)))||.006;
+  for(const e of entries){
+    const m=e.measure,cands=m.chinCandidates||[];
+    if(!cands.length)continue;
+    let best=null;
+    for(const c of cands){
+      const ratio=(c.y-m.top)/Math.max(1,m.bottom-m.top);
+      const consensusDist=Math.abs(ratio-ratioMed);
+      const consensusScore=clamp(1-consensusDist/Math.max(.025,ratioMad*4.5),0,1);
+      const score=c.localScore*.72+consensusScore*.28;
+      if(!best||score>best.score)best={...c,score,ratio,consensusScore};
+    }
+    if(!best)continue;
+    const deviation=Math.abs(best.ratio-ratioMed);
+    const consensusConfidence=clamp(1-deviation/Math.max(.035,ratioMad*5.5),0,1);
+    const finalConfidence=clamp((m.chinConfidence||0)*.68+consensusConfidence*.32,0,1);
+    m.chinTipY=best.y;m.chinY=best.y;m.jawStartY=Math.max(m.top,Math.round(best.y-Math.max(12,(m.neckStart-m.top)*.18)));
+    m.chinConsensusRatio=ratioMed;m.chinConsensusScore=best.consensusScore;m.chinConsensusDeviation=deviation;
+    m.chinConfidence=finalConfidence;m.chinChosen=best;
+  }
+  return entries;
 }
 function a2ChinCanonicalFromMeasures(entries){
-  const confident=entries.filter(x=>x.measure&&x.measure.chinConfidence>=.28&&Number.isFinite(x.measure.chinY));
-  if(confident.length<2)throw new Error("Não houve queixos confiáveis suficientes para construir o molde experimental.");
-  const ys=confident.map(x=>x.measure.chinY),med=median(ys),dev=ys.map(y=>Math.abs(y-med)),mad=median(dev)||1;
-  const trusted=confident.length>=5?confident.filter(x=>Math.abs(x.measure.chinY-med)<=Math.max(7,mad*3.5)):confident;
-  const targetChin=median((trusted.length>=2?trusted:confident).map(x=>x.measure.chinY));
+  a2RefineChinMeasuresByConsensus(entries);
+  const confident=entries.filter(x=>x.measure&&x.measure.chinConfidence>=.42&&Number.isFinite(x.measure.chinTipY));
+  if(confident.length<2)throw new Error("Chin Detector V2: não houve pontas de queixo confiáveis suficientes para construir o molde experimental.");
+  const ys=confident.map(x=>x.measure.chinTipY),med=median(ys),dev=ys.map(y=>Math.abs(y-med)),mad=median(dev)||1;
+  const trusted=confident.length>=5?confident.filter(x=>Math.abs(x.measure.chinTipY-med)<=Math.max(6,mad*3.2)):confident;
+  const source=trusted.length>=2?trusted:confident;
+  const targetChin=median(source.map(x=>x.measure.chinTipY));
   const targetTop=A2.canonical?.targetTop??median(entries.map(x=>x.measure?.top).filter(Number.isFinite));
-  const protectY=Math.round(targetTop+(targetChin-targetTop)*.57);
-  return {targetChin,protectY,targetTop,mad,count:trusted.length,total:entries.length,maxCorrection:18,lockCorrection:9};
+  const jawStarts=source.map(x=>x.measure.jawStartY).filter(Number.isFinite);
+  const targetJawStart=jawStarts.length?median(jawStarts):Math.round(targetTop+(targetChin-targetTop)*.62);
+  // Região superior fica realmente imóvel; a correção começa perto do jaw start consensual.
+  const protectY=Math.round(clamp(targetJawStart,targetTop+(targetChin-targetTop)*.52,targetChin-14));
+  return {
+    targetChin,targetJawStart,protectY,targetTop,mad,count:source.length,total:entries.length,
+    maxCorrection:18,lockCorrection:9,detector:"Chin Detector V2",
+    confidenceMedian:median(source.map(x=>x.measure.chinConfidence))
+  };
 }
 function a2LowerFaceEase(t){
   t=clamp(t,0,1);const s=t*t*(3-2*t);return Math.pow(s,1.18);
@@ -3785,7 +3933,7 @@ function a2RenderChinWarp(src,measure,canonical,applyWarp=true){
   const W=src.width,H=src.height,out=canvas(W,H),ctx=out.getContext("2d");
   ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
   if(!applyWarp){ctx.drawImage(src,0,0);return out}
-  const srcChin=measure.chinY,targetChin=canonical.targetChin,protectY=canonical.protectY;
+  const srcChin=measure.chinTipY,targetChin=canonical.targetChin,protectY=canonical.protectY;
   for(let y=0;y<H;y++){
     const sy=clamp(a2ChinInverseY(y,srcChin,targetChin,protectY),0,H-1);
     ctx.drawImage(src,0,sy,W,1,0,y,W,1);
@@ -3803,6 +3951,33 @@ function a2CutBelow(cnv,cutY){
 function a2ChinRank(level){return level==="REVIEW"?2:level==="WARN"?1:0}
 function a2ChinWorst(a,b){return a2ChinRank(a)>=a2ChinRank(b)?a:b}
 async function a2MakeSmallThumb(full){const thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);return thumb}
+function a2NeckLengthSample(w,canonical){
+  if(!w?.measure||!Number.isFinite(w.measure.chinTipY))return NaN;
+
+  // Depois do warp, a ponta do queixo desejada é o chin canônico.
+  // Para a base do pescoço usamos primeiro o bottom realmente opaco do canvas
+  // já deformado. Se ele falhar, usamos o bottom estrutural medido antes.
+  let bottom=Number.isFinite(w.bottom)&&w.bottom>=0?w.bottom:w.measure.bottom;
+
+  // O Finish Lock normal já ancora a base em targetBottom. Isto é um fallback
+  // geométrico seguro caso o alpha do pescoço seja muito fino e aOpaqueBottom falhe.
+  if(!Number.isFinite(bottom)||bottom<=canonical.targetChin){
+    bottom=A2.canonical?.targetBottom;
+  }
+  const len=bottom-canonical.targetChin;
+  return Number.isFinite(len)&&len>=3?len:NaN;
+}
+function a2RobustShortestNeck(samples){
+  const clean=samples.filter(Number.isFinite).sort((a,b)=>a-b);
+  if(!clean.length)return NaN;
+  if(clean.length<=3)return clean[0];
+
+  // Regra principal continua sendo "usar o menor pescoço".
+  // Só descartamos o mínimo se ele for um outlier isolado grotesco.
+  const med=median(clean),mad=median(clean.map(v=>Math.abs(v-med)))||1;
+  if(clean[1]-clean[0]>Math.max(10,mad*5))return clean[1];
+  return clean[0];
+}
 async function a2ProcessChinLock(){
   if(!A2.processed||A2.items.length<2){status("a2ChinStatus","Execute primeiro o Precision Lock normal.","warn");return}
   const btn=$("a2ChinProcess");btn.disabled=true;$("a2Export").disabled=true;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;
@@ -3810,7 +3985,7 @@ async function a2ProcessChinLock(){
   try{
     const entries=[];
     for(let i=0;i<A2.items.length;i++){
-      status("a2ChinStatus",`Medindo queixo ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");
+      status("a2ChinStatus",`Chin Detector V2 ${i+1}/${A2.items.length} · mandíbula / ponta do queixo / pescoço · ${A2.items[i].name}`,"warn");
       const src=await a2CanvasFromBlob(A2.items[i].resultBlob),measure=a2MeasureChinCanvas(src);
       entries.push({item:A2.items[i],src,measure});
       if(i%4===3)await sleep(0);
@@ -3819,7 +3994,7 @@ async function a2ProcessChinLock(){
     const warped=[];
     let blocked=0,warns=0;
     for(let i=0;i<entries.length;i++){
-      const e=entries[i],delta=cc.targetChin-e.measure.chinY,abs=Math.abs(delta),lowConf=e.measure.chinConfidence<.28;
+      const e=entries[i],delta=cc.targetChin-e.measure.chinTipY,abs=Math.abs(delta),lowConf=e.measure.chinConfidence<.42;
       let level=lowConf||abs>cc.maxCorrection?"REVIEW":abs>cc.lockCorrection?"WARN":"LOCK";
       const apply=level!=="REVIEW";
       if(level==="REVIEW")blocked++;else if(level==="WARN")warns++;
@@ -3828,24 +4003,42 @@ async function a2ProcessChinLock(){
       warped.push({...e,canvas:cnv,delta,level,applied:apply,bottom,neckLen});
       if(i%4===3)await sleep(0);
     }
-    const validNecks=warped.filter(x=>x.applied&&Number.isFinite(x.neckLen)&&x.neckLen>=22).map(x=>x.neckLen);
-    if(validNecks.length<2)throw new Error("Não houve pescoços válidos suficientes depois do encaixe do queixo.");
-    const shortestNeck=Math.min(...validNecks),cutY=Math.round(cc.targetChin+shortestNeck);cc.shortestNeck=shortestNeck;cc.cutY=cutY;$("a2CutStat").textContent=`Y ${cutY}`;
+    // V9.7: uma cabeça não precisa ter sofrido deformação para participar da
+    // medição do pescoço. REVIEW também pode fornecer uma base válida.
+    // O erro anterior exigia x.applied e >=22 px, descartando cabeças visualmente OK.
+    const neckSamples=warped.map(w=>a2NeckLengthSample(w,cc)).filter(Number.isFinite);
+    let shortestNeck=a2RobustShortestNeck(neckSamples);
+
+    // Fallback: o Precision Lock normal já deixa a base estrutural alinhada.
+    // Se o alpha visual não fornecer amostra suficiente, usamos targetBottom-chinTip
+    // em vez de abortar o Chin Lock inteiro.
+    if(!Number.isFinite(shortestNeck)){
+      const structuralBottom=A2.canonical?.targetBottom;
+      const fallback=Number.isFinite(structuralBottom)?structuralBottom-cc.targetChin:NaN;
+      if(!Number.isFinite(fallback)||fallback<3)throw new Error("Chin Lock: não foi possível determinar a base estrutural do pescoço.");
+      shortestNeck=fallback;
+    }
+
+    const cutY=Math.round(cc.targetChin+shortestNeck);
+    cc.shortestNeck=shortestNeck;cc.cutY=cutY;cc.neckSamples=neckSamples.length;
+    $("a2CutStat").textContent=`Y ${cutY}`;
     let ok=0,review=0,warning=0;const chinErrs=[];
     for(let i=0;i<warped.length;i++){
-      const w=warped[i],final=a2CutBelow(w.canvas,cutY),verifyMeasure=a2MeasureChinCanvas(final),finalBottom=a2OpaqueBottom(final),chinErr=Math.abs(verifyMeasure.chinY-cc.targetChin),bottomErr=Math.abs(finalBottom-cutY);
-      let verifyLevel=chinErr<=1.5&&bottomErr<=1?"LOCK":chinErr<=3.2&&bottomErr<=2?"WARN":"REVIEW";
+      const w=warped[i],final=a2CutBelow(w.canvas,cutY),verifyMeasure=a2MeasureChinCanvas(final),finalBottom=a2OpaqueBottom(final);
+      const verifiedChin=Number.isFinite(verifyMeasure.chinTipY)?verifyMeasure.chinTipY:cc.targetChin;
+      const chinErr=Math.abs(verifiedChin-cc.targetChin),bottomErr=finalBottom>=0?Math.abs(finalBottom-cutY):0;
+      let verifyLevel=verifyMeasure.chinConfidence<.30?"REVIEW":chinErr<=1.5&&bottomErr<=1?"LOCK":chinErr<=3.2&&bottomErr<=2?"WARN":"REVIEW";
       const level=a2ChinWorst(w.level,verifyLevel);
       if(level==="LOCK")ok++;else if(level==="WARN")warning++;else review++;
       chinErrs.push(chinErr);
-      w.item.chinBlob=await canvasToBlob(final);w.item.chinThumb=await a2MakeSmallThumb(final);w.item.chinVerify={level,ok:level==="LOCK",delta:w.delta,applied:w.applied,confidence:w.measure.chinConfidence,sourceChin:w.measure.chinY,targetChin:cc.targetChin,chinErr,bottom:finalBottom,cutY,bottomErr};
+      w.item.chinBlob=await canvasToBlob(final);w.item.chinThumb=await a2MakeSmallThumb(final);w.item.chinMeasure=w.measure;w.item.chinVerify={level,ok:level==="LOCK",delta:w.delta,applied:w.applied,confidence:w.measure.chinConfidence,sourceChin:w.measure.chinTipY,jawStart:w.measure.jawStartY,neckStart:w.measure.neckStartY,mouthY:w.measure.mouthY,targetChin:cc.targetChin,chinErr,bottom:finalBottom,cutY,bottomErr,detector:w.measure.chinDetector};
       status("a2ChinStatus",`Verificando ${i+1}/${warped.length} · ${w.item.name}`,"warn");if(i%3===2)await sleep(0);
     }
-    A2.chinProcessed=true;A2.chinSummary={ok,warn:warning,review,count:warped.length,blocked,targetChin:cc.targetChin,cutY,shortestNeck,p90:percentile(chinErrs,.90)};
+    A2.chinProcessed=true;A2.chinSummary={ok,warn:warning,review,count:warped.length,blocked,targetChin:cc.targetChin,cutY,shortestNeck,neckSamples:neckSamples.length,p90:percentile(chinErrs,.90)};
     a2SetActiveOutput("chin");$("a2View").value="current";
-    const msg=`Chin Lock concluído · ${ok} LOCK / ${warning} WARN / ${review} REVISAR · queixo Y ${cc.targetChin.toFixed(1)} · corte Y ${cutY} · menor pescoço ${shortestNeck.toFixed(1)} px.`;
+    const msg=`Chin Detector V2 + Lock concluído · ${ok} LOCK / ${warning} WARN / ${review} REVISAR · ponta do queixo Y ${cc.targetChin.toFixed(1)} · corte Y ${cutY} · menor pescoço ${shortestNeck.toFixed(1)} px · ${neckSamples.length} amostra(s) de pescoço.`;
     status("a2ChinStatus",msg,review?"warn":"ok");
-    $("a2GuideText").textContent+=` · CHIN LOCK: queixo Y ${cc.targetChin.toFixed(1)}, proteção até Y ${cc.protectY}, corte horizontal Y ${cutY}, P90 do queixo ${A2.chinSummary.p90.toFixed(1)} px.`;
+    $("a2GuideText").textContent+=` · CHIN V2: jaw-start Y ${cc.targetJawStart.toFixed(1)}, chin-tip Y ${cc.targetChin.toFixed(1)}, proteção até Y ${cc.protectY}, corte horizontal Y ${cutY}, confiança mediana ${(cc.confidenceMedian*100).toFixed(0)}%, P90 ${A2.chinSummary.p90.toFixed(1)} px.`;
     a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
   }catch(e){console.error(e);status("a2ChinStatus","Erro no Chin Lock experimental: "+e.message,"bad")}
   finally{btn.disabled=!A2.processed;$("a2Export").disabled=!A2.processed}
@@ -3994,6 +4187,13 @@ async function a2DrawPreview(){
       for(let d=0;d<=cc.depth;d++){const yy=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d),xx=ox+p.l*sc;if(d===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy)}
       for(let d=cc.depth;d>=0;d--){const yy=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,yy)}
       ctx.stroke();ctx.restore();
+      const detected=A2.items[i]?.chinMeasure?.chinTipY;
+      if(Number.isFinite(detected)){
+        ctx.save();ctx.beginPath();ctx.rect(currentFit.viewLeft,0,currentFit.viewRight-currentFit.viewLeft,c.height);ctx.clip();
+        ctx.strokeStyle="#f59e0b";ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.beginPath();
+        ctx.moveTo(currentFit.viewLeft,currentFit.oy+detected*currentFit.sc);ctx.lineTo(currentFit.viewRight,currentFit.oy+detected*currentFit.sc);ctx.stroke();
+        ctx.fillStyle="#b45309";ctx.font="bold 10px system-ui";ctx.fillText("CHIN TIP DETECTADO",currentFit.viewLeft+10,currentFit.oy+detected*currentFit.sc-5);ctx.restore();
+      }
     }
     const guideFit=(mode==="compare"&&chinFit)?chinFit:(A2.activeOutput==="chin"?currentFit:null);
     if(guideFit&&A2.chinCanonical){
@@ -4010,7 +4210,7 @@ function a2DrawGuide(){
   const c=$("a2GuideCanvas"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#101216";ctx.fillRect(0,0,c.width,c.height);if(!A2.canonical)return;
   const cc=A2.canonical,sx=.20,sy=.65,ox=c.width/2-MODEL_EXPORT.anchorX*sx,oy=20;ctx.strokeStyle="#9d7bd0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,oy+cc.targetTop*sy);ctx.lineTo(c.width-20,oy+cc.targetTop*sy);ctx.stroke();ctx.strokeStyle="#67d59a";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy,x=ox+p.l*sx;if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}for(let d=cc.depth;d>=0;d--){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy;ctx.lineTo(ox+p.r*sx,y)}ctx.stroke();
   ctx.fillStyle="#ddd";ctx.font="11px system-ui";ctx.fillText(`TOPO Y ${cc.targetTop}`,12,16);ctx.fillText(`NECK-BASE Y ${cc.targetBottom}`,12,c.height-12);
-  if(A2.chinCanonical){const ch=A2.chinCanonical;ctx.setLineDash([6,4]);ctx.strokeStyle="#f59e0b";ctx.beginPath();ctx.moveTo(20,oy+ch.targetChin*sy);ctx.lineTo(c.width-20,oy+ch.targetChin*sy);ctx.stroke();ctx.strokeStyle="#ef4444";ctx.beginPath();ctx.moveTo(20,oy+ch.cutY*sy);ctx.lineTo(c.width-20,oy+ch.cutY*sy);ctx.stroke();ctx.strokeStyle="#a78bfa";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(20,oy+ch.protectY*sy);ctx.lineTo(c.width-20,oy+ch.protectY*sy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#f5c36a";ctx.fillText(`QUEIXO Y ${ch.targetChin.toFixed(1)}`,12,34);ctx.fillStyle="#ff8f8f";ctx.fillText(`CORTE Y ${ch.cutY}`,12,49);ctx.fillStyle="#c4b5fd";ctx.fillText(`PROTEÇÃO Y ${ch.protectY}`,12,64)}
+  if(A2.chinCanonical){const ch=A2.chinCanonical;ctx.setLineDash([6,4]);ctx.strokeStyle="#f59e0b";ctx.beginPath();ctx.moveTo(20,oy+ch.targetChin*sy);ctx.lineTo(c.width-20,oy+ch.targetChin*sy);ctx.stroke();ctx.strokeStyle="#ef4444";ctx.beginPath();ctx.moveTo(20,oy+ch.cutY*sy);ctx.lineTo(c.width-20,oy+ch.cutY*sy);ctx.stroke();ctx.strokeStyle="#a78bfa";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(20,oy+ch.protectY*sy);ctx.lineTo(c.width-20,oy+ch.protectY*sy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#f5c36a";ctx.fillText(`CHIN TIP Y ${ch.targetChin.toFixed(1)}`,12,34);ctx.fillStyle="#ff8f8f";ctx.fillText(`CORTE Y ${ch.cutY}`,12,49);ctx.fillStyle="#c4b5fd";ctx.fillText(`JAW/PROTEÇÃO Y ${ch.protectY}`,12,64)}
 }
 function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex+dir+A2.files.length)%A2.files.length;$("a2Current").value=String(A2.currentIndex);a2RenderThumbs();a2DrawPreview()}
 function a2Stop(){A2.playing=false;clearInterval(A2.timer);A2.timer=null;if($("a2Play"))$("a2Play").textContent="▶ Play"}
@@ -4093,7 +4293,7 @@ function init(){
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   updateFinishLockUI();
-  log("V9.5 iniciada. Área 2 com zoom automático de preview na cabeça; botão normal + experimental e export automático do último processamento concluído.");
+  log("V9.7 iniciada. Chin Detector V2 mantido; medição do menor pescoço corrigida para aceitar todas as cabeças válidas, inclusive delta zero/REVIEW, com fallback estrutural do Precision Lock.");
 }
 init();
 </script>
