@@ -40,6 +40,14 @@ test("permite selecionar e excluir vários personagens de uma vez", async () => 
   assert.match(css, /\.character-delete-selected/);
 });
 
+test("trocar V0 e V1 não troca o modelo ativo automaticamente", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const changeVersion = page.match(/function changeCatalogVersion\(nextVersion: OutfitCatalogVersion\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+  assert.match(changeVersion, /setOutfitCatalogVersion\(nextVersion\)/);
+  assert.match(changeVersion, /só muda quando o usuário seleciona explicitamente outro card/);
+  assert.doesNotMatch(changeVersion, /setBasePackId\(/);
+});
+
 test("keeps the nine-expression pack contract in the editor", async () => {
   const [page, expressions] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),

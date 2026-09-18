@@ -4898,10 +4898,8 @@ export default function Home() {
     resetAssetDeleteMode();
     setOutfitCatalogVersion(nextVersion);
     setOutfitGroupViewId(null);
-    if (category === "rostos" && faceMode === "base") {
-      const nextPack = (basePacks[model] ?? []).find((pack) => (pack.catalogVersion ?? "v1") === nextVersion);
-      if (nextPack) setBasePackId(nextPack.id);
-    }
+    // Trocar V0/V1 altera somente o filtro visual do catálogo. O modelo/base
+    // em edição só muda quando o usuário seleciona explicitamente outro card.
   }
 
   function toggleV0TransferSelection(item: CatalogItem | BasePackDefinition) {
