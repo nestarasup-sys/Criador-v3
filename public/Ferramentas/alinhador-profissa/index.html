@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V9.1 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
+<title>V9.2 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -495,7 +495,7 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V9.1 · Alinhador Profissa</h1>
+  <h1>V9.2 · Alinhador Profissa</h1>
   <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
@@ -513,8 +513,8 @@ body.area2 .sidebar{height:100vh}
     <input id="chroma2ToneRange" type="range" min="20" max="90" value="52" disabled>
     <label><input id="chroma2Hard" type="checkbox" style="width:auto" disabled> Força extra sobre o fundo (fundo difícil)</label>
     <div class="small">Ative somente quando o fundo tiver sombras, gradientes ou tons muito variados. O modo amplia a remoção conectada sem liberar áreas internas do personagem.</div>
-    <div id="bgModeHint" class="small">Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.</div>
-    <div class="small">O <b>chroma clássico é o padrão</b>, como no V7.5. Ative Chroma 2 somente quando quiser substituir o chroma base nesta detecção.</div>
+    <div id="bgModeHint" class="small">Chroma clássico ativo. A detecção escolhe a grade e o matte clássico faz o recorte final com feather só na borda do contorno. Ative o Chroma 2 para fundos difíceis.</div>
+    <div class="small">O <b>chroma clássico é o padrão</b>, como no V7.5, agora com matte separado da detecção para recorte mais limpo. Ative Chroma 2 somente quando quiser substituir o chroma base nesta detecção.</div>
     <div id="inputEngineStatus" class="status">Chroma clássico ativo · Chroma 2 opcional.</div>
     <details class="detailsAdvanced advancedOnly" id="advancedInput"><summary>Entrada / segmentação</summary>
       <label>Engine de entrada</label>
@@ -544,7 +544,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>V9.1:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V9.2:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -582,11 +582,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V9.1 SmartLock</b><span>estável</span></div>
+        <div><b>V9.2 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V9.1 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
+      <div class="small" style="margin-top:5px">V9.2 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -599,7 +599,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V9.1 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V9.2 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -761,7 +761,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V9.1 pipeline</span>
+    <span class="tag">V9.2 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -783,11 +783,11 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
 </div>
 
 <!-- =======================================================
-     V9.1 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V9.2 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V9.1 · Área 2</h1>
+    <h1>V9.2 · Área 2</h1>
     <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando os PNGs transparentes disponíveis.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -859,7 +859,7 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V9.1 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V9.2 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
   version:"9.1",
@@ -1059,14 +1059,79 @@ function imageToCanvas(im,maxDim=0){
   c.getContext("2d",{willReadFrequently:true}).drawImage(im,0,0,c.width,c.height);
   return {canvas:c,scale};
 }
-function greenMask(c,thr){
-  const d=c.getContext("2d",{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
-  const out=new Uint8Array(c.width*c.height);
+function edgeBandPixels(w,h,ratio=.028,minBand=4){
+  return Math.max(minBand,Math.floor(Math.min(w,h)*ratio));
+}
+function classicBorderStatsFromData(d,w,h){
+  const doms=[],greens=[],reds=[],blues=[],diffRG=[],diffBG=[];
+  const band=edgeBandPixels(w,h,.03,4),step=Math.max(1,Math.floor(Math.min(w,h)/320));
+  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){
+    if(!(x<band||y<band||x>=w-band||y>=h-band))continue;
+    const i=(y*w+x)*4,r=d[i],g=d[i+1],b=d[i+2],mx=Math.max(r,g,b),mn=Math.min(r,g,b),sat=mx-mn,dom=g-Math.max(r,b);
+    if(g<32||sat<10)continue;
+    if(dom<4&&!(g>r+6&&g>b+6))continue;
+    doms.push(dom);greens.push(g);reds.push(r);blues.push(b);diffRG.push(g-r);diffBG.push(g-b);
+  }
+  if(!doms.length)return null;
+  return {
+    domP15:percentile(doms,.15),domP25:percentile(doms,.25),domP50:percentile(doms,.50),domP85:percentile(doms,.85),
+    gP15:percentile(greens,.15),gP50:percentile(greens,.50),
+    rgP20:percentile(diffRG,.20),bgP20:percentile(diffBG,.20),
+    rP50:percentile(reds,.50),bP50:percentile(blues,.50),samples:doms.length
+  };
+}
+function buildClassicChromaProfileFromStats(stats,detectThr=35){
+  const fallback={detectThr:detectThr,maskThr:clamp(detectThr,14,60),softStart:clamp(detectThr-8,8,52),softWidth:18,greenFloor:56,rgFloor:10,bgFloor:10,despill:.34,bgR:92,bgG:160,bgB:92};
+  if(!stats||!stats.samples)return fallback;
+  const maskThr=clamp(Math.min(detectThr,stats.domP25-1,stats.domP50*.92),14,58);
+  const softStart=clamp(Math.min(maskThr-2,stats.domP15-2),7,46);
+  const softWidth=clamp(Math.max(14,Math.min(30,(stats.domP85-softStart)*.78)),14,30);
+  const greenFloor=clamp(Math.min(stats.gP15-8,stats.gP50-18),42,96);
+  const rgFloor=clamp(Math.min(stats.rgP20-2,maskThr*.70),7,52);
+  const bgFloor=clamp(Math.min(stats.bgP20-2,maskThr*.70),7,52);
+  const despill=clamp(.26+(stats.domP50/110)*.16,.24,.46);
+  return {detectThr,maskThr,softStart,softWidth,greenFloor,rgFloor,bgFloor,despill,bgR:stats.rP50,bgG:stats.gP50,bgB:stats.bP50,samples:stats.samples};
+}
+function buildClassicChromaProfile(c,detectThr=35){
+  const ctx=c.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,c.width,c.height);
+  const stats=classicBorderStatsFromData(img.data,c.width,c.height);
+  const profile=buildClassicChromaProfileFromStats(stats,detectThr);
+  profile.stats=stats;
+  return profile;
+}
+function classicPixelBg(r,g,b,profile,thrOverride=null){
+  const thr=thrOverride==null?profile.maskThr:thrOverride;
+  const dom=g-Math.max(r,b),rg=g-r,bg=g-b;
+  if(g<profile.greenFloor)return false;
+  if(dom<thr)return false;
+  if(rg<Math.min(profile.rgFloor,thr))return false;
+  if(bg<Math.min(profile.bgFloor,thr))return false;
+  return true;
+}
+function classicMaskFromImageData(d,w,h,profile,thrOverride=null){
+  const out=new Uint8Array(w*h);
   for(let p=0,i=0;p<out.length;p++,i+=4){
-    const r=d[i],g=d[i+1],b=d[i+2];
-    out[p]=(g>60 && g-Math.max(r,b)>thr)?0:1;
+    const r=d[i],g=d[i+1],b=d[i+2],a=d[i+3];
+    out[p]=(a<=10||classicPixelBg(r,g,b,profile,thrOverride))?0:1;
   }
   return out;
+}
+function greenMask(c,thr){
+  const ctx=c.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,c.width,c.height);
+  const profile=buildClassicChromaProfileFromStats(classicBorderStatsFromData(img.data,c.width,c.height),thr);
+  return classicMaskFromImageData(img.data,c.width,c.height,profile,thr);
+}
+function mainMaskEdgeBand(mainMask,w,h,rad=1){
+  const near=new Uint8Array(mainMask.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const p=y*w+x;if(!mainMask[p])continue;
+    let edge=false;
+    for(let yy=Math.max(0,y-rad);yy<=Math.min(h-1,y+rad)&&!edge;yy++)for(let xx=Math.max(0,x-rad);xx<=Math.min(w-1,x+rad);xx++){
+      if(!mainMask[yy*w+xx]){edge=true;break}
+    }
+    if(edge)near[p]=1;
+  }
+  return near;
 }
 function alphaMask(c,alphaThr=10){
   const d=c.getContext("2d",{willReadFrequently:true}).getImageData(0,0,c.width,c.height).data;
@@ -1083,12 +1148,12 @@ function updateBgModeUI(){
   const el=$("inputEngineStatus");
   const hint=$("bgModeHint");
   if(el){
-    if(mode==="classic")el.textContent="Chroma clássico ativo · base V7.5. Chroma 2 está desligado.";
+    if(mode==="classic")el.textContent="Chroma clássico ativo · base V7.5 aprimorada. Detecção e matte usam calibração separada; Chroma 2 está desligado.";
     else if(mode==="chroma2")el.textContent="Chroma 2 ATIVO · substituindo o chroma clássico nesta detecção.";
     else if(mode==="alpha")el.textContent="ALPHA forçado · usa transparência existente.";
     else el.textContent="AUTO experimental · Alpha / Classic / Chroma 2 competem em baixa resolução.";
   }
-  if(hint)hint.textContent=mode==="chroma2"?($("chroma2Hard")?.checked?"Chroma 2 + força extra ativos: o fundo difícil recebe alcance ampliado, sempre limitado ao fundo conectado às bordas.":"Chroma 2 ativo: ajuste o alcance para incluir variações de iluminação do fundo sem ampliar a remoção sobre o personagem."):"Chroma clássico ativo. Ative o Chroma 2 para controlar o alcance de tons do fundo conectado às bordas.";
+  if(hint)hint.textContent=mode==="chroma2"?($("chroma2Hard")?.checked?"Chroma 2 + força extra ativos: o fundo difícil recebe alcance ampliado, sempre limitado ao fundo conectado às bordas.":"Chroma 2 ativo: ajuste o alcance para incluir variações de iluminação do fundo sem ampliar a remoção sobre o personagem."):"Chroma clássico ativo. A detecção escolhe a grade e o matte clássico faz o recorte final com feather só na borda do contorno. Ative o Chroma 2 para fundos difíceis.";
 }
 /* =========================================================
    CHROMA 2 — integrado do GreenCut Pro
@@ -1395,8 +1460,17 @@ function scoreDetectionCandidate(boxes,grid,expected,extraPenalty=0){
 }
 function classicCandidate(c,expected,forcedThr=null){
   const tests=forcedThr!=null?[forcedThr]:(cfg("autoThreshold",true)?[18,22,26,30,34,38,42,46,50,55,60,66,72,80]:[cfg("greenThreshold",35)]);
+  const profile=buildClassicChromaProfile(c,cfg("greenThreshold",35));
   let best=null;
-  for(const thr of tests){const mask=greenMask(c,thr),boxes=filterHeads(components(mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected),score=scoreDetectionCandidate(boxes,grid,expected);const cand={engine:"classic",thr,boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score};if(!best||cand.score>best.score)best=cand}
+  for(const thr of tests){
+    const mask=greenMask(c,thr),boxes=filterHeads(components(mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected),score=scoreDetectionCandidate(boxes,grid,expected);
+    const cand={engine:"classic",thr,boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score,classicProfile:profile};
+    if(!best||cand.score>best.score)best=cand;
+  }
+  if(best){
+    const p=best.classicProfile||profile;
+    best.classicProfile={...p,detectThr:best.thr,maskThr:clamp(Math.min(p.maskThr,best.thr),14,58),softStart:clamp(Math.min(p.softStart,best.thr-2),7,46)};
+  }
   return best;
 }
 function chroma2Candidate(c,expected){const ch2=chroma2ProcessCanvas(c,{processed:false}),boxes=filterHeads(components(ch2.mask,c.width,c.height),c.width,c.height,expected),grid=validateGrid(boxes,c.width,c.height,expected);return {engine:"chroma2",thr:"chroma2",boxes:grid.ordered.length?grid.ordered:sortReadingOrder(boxes),grid,score:scoreDetectionCandidate(boxes,grid,expected),ch2Small:ch2}}
@@ -1422,8 +1496,11 @@ async function detectSheet(im,name){
     w:Math.round(b.w*inv),h:Math.round(b.h*inv),cx:b.cx*inv,cy:b.cy*inv,area:b.area/(small.scale*small.scale),gridRow:b.gridRow,gridCol:b.gridCol
   }));
   drawDetectionDebug(name,small.canvas,best.boxes,best.engine,best.grid,best.ch2Small?.removedRatio);
+  const classicProfile=best.engine==="classic"?buildClassicChromaProfile(full,Number(best.thr)||cfg("greenThreshold",35)):null;
+  if(classicProfile){classicProfile.detectThr=Number(best.thr)||classicProfile.detectThr;classicProfile.maskThr=clamp(Math.min(classicProfile.maskThr,classicProfile.detectThr),14,58);classicProfile.softStart=clamp(Math.min(classicProfile.softStart,classicProfile.detectThr-2),7,46)}
   return {name,im,full,thr:best.thr,boxes,count:boxes.length,engine:best.engine,grid:best.grid,inputCandidates:candidates.map(c=>({engine:c.engine,score:c.score,grid:c.grid.confidence,count:c.boxes.length})),
-    chroma2Mode:best.engine==="chroma2",chroma2Mask:chroma2Full?.mask||null,chroma2Processed:chroma2Full?.processed||null,chroma2Info:chroma2Full?{bg:chroma2Full.bg,removedRatio:chroma2Full.removedRatio}:null};
+    chroma2Mode:best.engine==="chroma2",chroma2Mask:chroma2Full?.mask||null,chroma2Processed:chroma2Full?.processed||null,chroma2Info:chroma2Full?{bg:chroma2Full.bg,removedRatio:chroma2Full.removedRatio}:null,
+    classicProfile};
 }
 function drawDetectionDebug(name,c,boxes,engine,grid,chroma2Removed=null){
   const out=$(`debug${name}`),txt=$(`debug${name}Txt`);
@@ -1456,13 +1533,15 @@ function cropHead(sheet,b,index){
   const original=canvas(w,h),octx=original.getContext("2d",{willReadFrequently:true});
   octx.drawImage(sheet.full,x,y,w,h,0,0,w,h);
 
-  const d=octx.getImageData(0,0,w,h).data,mask=new Uint8Array(w*h);
+  const srcData=octx.getImageData(0,0,w,h),d=srcData.data,mask=new Uint8Array(w*h);
+  const classicProfile=sheet.engine==="classic"?(sheet.classicProfile||buildClassicChromaProfile(original,Number(sheet.thr)||35)):null;
   if(sheet.engine==="chroma2"&&sheet.chroma2Mask){
     const fw=sheet.full.width;for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++)mask[yy*w+xx]=sheet.chroma2Mask[(y+yy)*fw+(x+xx)]?1:0;
   }else if(sheet.engine==="alpha"){
     for(let p=0,i=0;p<mask.length;p++,i+=4)mask[p]=d[i+3]>10?1:0;
   }else{
-    for(let p=0,i=0;p<mask.length;p++,i+=4){const r=d[i],g=d[i+1],bb=d[i+2];mask[p]=(g>55&&g-Math.max(r,bb)>sheet.thr)?0:1}
+    const cm=classicMaskFromImageData(d,w,h,classicProfile,classicProfile?.maskThr);
+    for(let i=0;i<mask.length;i++)mask[i]=cm[i];
   }
 
   const comps=components(mask,w,h).sort((a,b)=>b.area-a.area);
@@ -1475,14 +1554,22 @@ function cropHead(sheet,b,index){
   }else{
     tctx.drawImage(original,0,0);
   }
-  const td=tctx.getImageData(0,0,w,h);
+  const td=tctx.getImageData(0,0,w,h),edgeBand=sheet.engine==="classic"?mainMaskEdgeBand(mainMask,w,h,1):null;
   for(let p=0,i=0;p<mainMask.length;p++,i+=4){
     if(!mainMask[p]){
       td.data[i+3]=0;
-    }else if(sheet.engine==="classic"){
-      const r=td.data[i],g=td.data[i+1],bb=td.data[i+2];
-      const dom=g-Math.max(r,bb);
-      if(g>55&&dom>sheet.thr-8)td.data[i+3]=clamp(Math.round(255*(1-(dom-(sheet.thr-8))/18)),0,255);
+    }else if(sheet.engine==="classic"&&edgeBand&&edgeBand[p]){
+      const r=td.data[i],g=td.data[i+1],bb=td.data[i+2],dom=g-Math.max(r,bb),rg=g-r,bg=g-bb;
+      const start=classicProfile.softStart,width=Math.max(1,classicProfile.softWidth);
+      const closeToBg=(g>=classicProfile.greenFloor-6&&rg>=classicProfile.rgFloor-6&&bg>=classicProfile.bgFloor-6);
+      if(closeToBg&&dom>start){
+        const soft=clamp(1-(dom-start)/width,0,1),target=Math.round(255*Math.max(.18,soft));
+        td.data[i+3]=Math.min(td.data[i+3],target);
+      }
+      if(closeToBg&&classicProfile.despill>0){
+        const mx=Math.max(r,bb),spill=Math.max(0,g-mx);
+        td.data[i+1]=Math.round(g-spill*classicProfile.despill);
+      }
     }
   }
   tctx.putImageData(td,0,0);
@@ -2232,9 +2319,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V9.1 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V9.1 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V9.1 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V9.2 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V9.2 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V9.2 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2246,7 +2333,7 @@ async function buildCanonical(){
     clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V9.1 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V9.2 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2719,7 +2806,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V9.1 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V9.2 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2813,7 +2900,7 @@ async function detectAll(){
     status("detectStatus",cfg("inputEngine","classic")==="auto"
       ?"AUTO experimental: avaliando segmentação e grid…"
       :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
-    log(`V9.1 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+    log(`V9.2 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
 
     const images=Object.fromEntries(
       await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
@@ -3423,7 +3510,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V9.1 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
+   V9.2 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3485,7 +3572,7 @@ function applyFinishLockManual(){
 }
 
 /* =========================================================
-   V9.1 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V9.2 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
@@ -3699,7 +3786,7 @@ function init(){
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   updateFinishLockUI();
-  log("V9.1 iniciada. 6 folhas funcionais: A, A-PT, B, B-PT, C e C-PT. Todas usam o mesmo pipeline completo; Finish Lock continua manual.");
+  log("V9.2 iniciada. 6 folhas funcionais: A, A-PT, B, B-PT, C e C-PT. Chroma clássico restaurado com matte separado da detecção; Finish Lock continua manual.");
 }
 init();
 </script>
