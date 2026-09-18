@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V9.7 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
+<title>V10.3 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -496,7 +496,7 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V9.7 · Alinhador Profissa</h1>
+  <h1>V10.3 · Alinhador Profissa</h1>
   <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
@@ -545,7 +545,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>V9.7:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V10.3:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -583,11 +583,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V9.7 SmartLock</b><span>estável</span></div>
+        <div><b>V10.3 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V9.7 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
+      <div class="small" style="margin-top:5px">V10.3 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -600,7 +600,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V9.7 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V10.3 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -762,7 +762,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V9.7 pipeline</span>
+    <span class="tag">V10.3 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -784,11 +784,11 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
 </div>
 
 <!-- =======================================================
-     V9.7 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V10.3 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V9.7 · Área 2</h1>
+    <h1>V10.3 · Área 2</h1>
     <div class="small">Fluxo simples: primeiro use o <b>processamento normal</b> (topo + pescoço). Abaixo dele existe o <b>processamento experimental</b> opcional (queixo + corte do pescoço). O export usa automaticamente o último processamento concluído.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
@@ -801,14 +801,31 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
       </div>
       <div style="margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fbfaff">
         <b>Processamento normal</b>
-        <div class="small">É o Precision Lock original da Área 2: trava topo + pescoço como antes.</div>
+        <div class="small">V10.3: Precision Mold. O rosto deixa de ser escalado de topo até a última linha do pescoço. O molde protege o face core/lower-face e o pescoço é ajustado em uma zona separada. Se houver risco de deformação, usa SAFE PASS automaticamente.</div>
         <button id="a2Process" class="primary" style="margin-top:8px" disabled>◎ Processar normal — topo + pescoço</button>
         <div id="a2Status" class="status" style="margin-top:8px">Aguardando pasta.</div>
       </div>
       <div style="margin-top:10px;padding:10px;border:1px dashed #b896d8;border-radius:12px;background:#fcf9ff">
         <b>🧪 Processamento experimental</b>
-        <div class="small">Opcional. Usa o resultado normal como base, estabiliza a parte inferior do rosto/queixo e depois corta todos os pescoços pela menor altura válida.</div>
-        <button id="a2ChinProcess" style="margin-top:8px" disabled>🧪 Processar experimental — queixo + corte do pescoço</button>
+        <div class="small">Opcional. V10.3 usa proteção anatômica por expressão: LOCK aplica normal, SOFT aplica parcialmente e SKIP preserva o Finish Lock quando houver risco de distorcer o queixo. O corte do pescoço continua independente.</div>
+        <button id="a2ChinProcess" style="margin-top:8px" disabled>🧪 Processar experimental — Chin Lock puro + Neck Crop</button>
+        <button id="a2RedoChin" style="margin-top:8px" disabled>↻ Refazer chin lock</button>
+        <button id="a2RedoChinV2" style="margin-top:7px" disabled>↻ Refazer chin lock V2</button>
+        <div class="small" style="margin-top:6px"><b>Refazer</b> usa uma segunda tentativa conservadora e recalcula o queixo da expressão. <b>V2</b> usa outro método: deslocamento rígido da região inferior com transição suave, evitando comprimir a anatomia como o warp normal.</div>
+        <div style="margin-top:10px;padding:10px;border:1px dashed #9ed6ff;border-radius:12px;background:#f6fbff">
+          <b>🎯 Ajuste manual da linha do queixo</b>
+          <div class="small">Use a expressão selecionada como base do queixo e mova a linha manualmente. Você pode preparar isso <b>antes</b> do experimental ou reajustar <b>depois</b>. Ao aplicar, a expressão escolhida vira a referência das outras.</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+            <button id="a2ChinBaseCurrent" disabled>Usar atual como base</button>
+            <button id="a2ChinUp3" disabled>↑ 3 px</button>
+            <button id="a2ChinUp1" disabled>↑ 1 px</button>
+            <button id="a2ChinDown1" disabled>↓ 1 px</button>
+            <button id="a2ChinDown3" disabled>↓ 3 px</button>
+            <button id="a2ApplyManualChin" disabled>Aplicar ao experimental</button>
+            <button id="a2ClearManualChin" disabled>Limpar ajuste</button>
+          </div>
+          <div id="a2ManualChinStatus" class="status" style="margin-top:8px">Nenhum ajuste manual do queixo definido.</div>
+        </div>
         <div id="a2ChinStatus" class="status" style="margin-top:8px">Primeiro execute o processamento normal.</div>
       </div>
       <div class="a2Stats">
@@ -828,7 +845,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
       <label>Velocidade <span class="value" id="a2FpsV">6 fps</span></label><input id="a2Fps" type="range" min="1" max="20" value="6">
       <label>Visualização</label>
       <select id="a2View"><option value="current">Resultado atual</option><option value="original">Original processado</option><option value="compare">Comparar normal / experimental</option></select>
-      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído. <b>V9.7:</b> a preview detecta a área ocupada pela cabeça e aplica zoom automático, sem enquadrar os 1920×1080 inteiros.</div>
+      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído. <b>V10.3:</b> a preview detecta a área ocupada pela cabeça e aplica zoom automático, sem enquadrar os 1920×1080 inteiros.</div>
       <label><input id="a2ShowGuide" type="checkbox" checked style="width:auto"> Mostrar molde perfeito / âncoras</label>
     </div>
 
@@ -880,10 +897,10 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V9.7 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V10.3 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"9.7",
+  version:"10.3",
   sheets:["A","APT","B","BPT","C","CPT"],
   rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
@@ -2340,9 +2357,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V9.7 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V9.7 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V9.7 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V10.3 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V10.3 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V10.3 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2354,7 +2371,7 @@ async function buildCanonical(){
     clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V9.7 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V10.3 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2827,7 +2844,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V9.7 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V10.3 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2921,7 +2938,7 @@ async function detectAll(){
     status("detectStatus",cfg("inputEngine","classic")==="auto"
       ?"AUTO experimental: avaliando segmentação e grid…"
       :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
-    log(`V9.7 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+    log(`V10.3 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
 
     const images=Object.fromEntries(
       await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
@@ -3195,7 +3212,7 @@ function modelMetadata(gender=getModelGender()){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"9.7",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"10.3",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
@@ -3531,7 +3548,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V9.7 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
+   V10.3 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3593,10 +3610,10 @@ function applyFinishLockManual(){
 }
 
 /* =========================================================
-   V9.7 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V10.3 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
-  files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
+  files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,manualChin:{enabled:false,baseIndex:null,baseName:"",offset:0,targetY:null},
   chinProcessed:false,chinCanonical:null,chinSummary:null,activeOutput:null,
   previewBoundsCache:new Map(),
   work:document.createElement("canvas"),workCtx:null
@@ -3607,7 +3624,7 @@ function a2SetActiveOutput(mode){
   const el=$("a2ActiveOutput");
   if(el){
     if(mode==="chin")status("a2ActiveOutput","Resultado atual: 🧪 processamento experimental — queixo + corte do pescoço.","ok");
-    else if(mode==="result")status("a2ActiveOutput","Resultado atual: processamento normal — Precision Lock topo + pescoço.","ok");
+    else if(mode==="result")status("a2ActiveOutput","Resultado atual: processamento normal — Precision Mold + Face Guard.","ok");
     else status("a2ActiveOutput","Resultado atual: nenhum processamento concluído.");
   }
   if($("a2View")&&$("a2View").value!=="original"&&$("a2View").value!=="compare")$("a2View").value="current";
@@ -3667,7 +3684,10 @@ function a2MeasurePixels(data,w,h){
 }
 async function a2MeasureFile(file,index,total){
   const bm=await a2Bitmap(file),w=bm.width,h=bm.height;A2.work.width=w;A2.work.height=h;A2.workCtx.clearRect(0,0,w,h);A2.workCtx.drawImage(bm,0,0);const data=A2.workCtx.getImageData(0,0,w,h).data;
-  const m=a2MeasurePixels(data,w,h);bm.close?.();status("a2Status",`Medindo ${index+1}/${total} · ${file.name}`,"warn");await sleep(0);return {file,name:file.name,w,h,measure:m,thumb:null,verify:null}
+  const m=a2MeasurePixels(data,w,h);
+  const chinMeasure=a2MeasureChinCanvas(A2.work);
+  bm.close?.();status("a2Status",`Medindo ${index+1}/${total} · ${file.name}`,"warn");await sleep(0);
+  return {file,name:file.name,w,h,measure:m,chinMeasure,thumb:null,verify:null,normalMethod:null,distortionScore:0}
 }
 function a2SmoothSeries(a,win=5){
   const out=[];for(let i=0;i<a.length;i++){const v=[];for(let k=Math.max(0,i-(win>>1));k<=Math.min(a.length-1,i+(win>>1));k++)if(Number.isFinite(a[k]))v.push(a[k]);out[i]=v.length?median(v):NaN}return out;
@@ -3686,7 +3706,9 @@ function a2BuildCanonical(items){
   for(const arr of [sl,sr])for(let i=0;i<arr.length;i++)if(!Number.isFinite(arr[i])){let v=NaN;for(let r=1;r<arr.length;r++){if(i-r>=0&&Number.isFinite(arr[i-r])){v=arr[i-r];break}if(i+r<arr.length&&Number.isFinite(arr[i+r])){v=arr[i+r];break}}arr[i]=v}
   const baseL=Math.round(median(valid.map(x=>x.measure.baseL))),baseR=Math.round(median(valid.map(x=>x.measure.baseR)));
   if(!Number.isFinite(sl[0]))sl[0]=baseL;if(!Number.isFinite(sr[0]))sr[0]=baseR;
-  return {targetTop,targetBottom,depth:startDepth,left:sl,right:sr,baseL,baseR,width:MODEL_EXPORT.width,height:MODEL_EXPORT.height,count:valid.length};
+  const faceValid=valid.filter(x=>x.chinMeasure&&Number.isFinite(x.chinMeasure.chinTipY));
+  const faceMold=faceValid.length?{chinFromTop:median(faceValid.map(x=>x.chinMeasure.chinTipY-x.chinMeasure.top)),jawFromTop:median(faceValid.map(x=>x.chinMeasure.jawStartY-x.chinMeasure.top).filter(Number.isFinite)),mouthFromTop:median(faceValid.map(x=>x.chinMeasure.mouthY-x.chinMeasure.top).filter(Number.isFinite)),count:faceValid.length}:null;
+  return {targetTop,targetBottom,depth:startDepth,left:sl,right:sr,baseL,baseR,width:MODEL_EXPORT.width,height:MODEL_EXPORT.height,count:valid.length,faceMold};
 }
 function a2ProfileAt(c,depth){
   const d=clamp(depth,0,c.depth),i0=Math.floor(d),i1=Math.min(c.depth,i0+1),t=d-i0;return {l:lerp(c.left[i0],c.left[i1],t),r:lerp(c.right[i0],c.right[i1],t)};
@@ -3695,7 +3717,7 @@ function a2SourceProfileAt(item,srcY){
   const m=item.measure,d=m.bottom-srcY;let p=m.profile.get(Math.round(d));if(p)return p;
   for(let r=1;r<10;r++){p=m.profile.get(Math.round(d-r))||m.profile.get(Math.round(d+r));if(p)return p}return {l:m.baseL,r:m.baseR};
 }
-async function a2RenderItem(item,{previewScale=1}={}){
+async function a2RenderItemLegacy(item,{previewScale=1}={}){
   const c=A2.canonical,bm=await a2Bitmap(item.file),W=item.w,H=item.h,out=canvas(W,H),ctx=out.getContext("2d");ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
   const m=item.measure,srcTop=m.top,srcBottom=m.bottom,tTop=c.targetTop,tBottom=c.targetBottom,srcSpan=Math.max(1,srcBottom-srcTop),dstSpan=Math.max(1,tBottom-tTop);
   // Render por scanline. Verticalmente, topo e neck-base são âncoras exatas.
@@ -3712,6 +3734,29 @@ async function a2RenderItem(item,{previewScale=1}={}){
   }
   bm.close?.();return out;
 }
+
+async function a2RenderSafePass(item){
+  const c=A2.canonical,bm=await a2Bitmap(item.file),out=canvas(item.w,item.h),ctx=out.getContext("2d");ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  const shift=c.targetTop-item.measure.top;ctx.drawImage(bm,0,shift);bm.close?.();ctx.clearRect(0,c.targetBottom+1,out.width,out.height-c.targetBottom-1);return out;
+}
+async function a2RenderPrecisionMold(item){
+  const c=A2.canonical,bm=await a2Bitmap(item.file),W=item.w,H=item.h,out=canvas(W,H),ctx=out.getContext("2d");ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  const m=item.measure,cm=item.chinMeasure||{},shift=c.targetTop-m.top,srcChin=Number.isFinite(cm.chinTipY)?cm.chinTipY:m.neckStart-12,srcNeck=Math.max(srcChin+3,m.neckStart),dstChin=srcChin+shift,dstNeck=srcNeck+shift,srcBottom=m.bottom,tBottom=c.targetBottom;
+  const faceEnd=Math.min(H-1,Math.round(dstChin+2));
+  for(let y=c.targetTop;y<=Math.min(faceEnd,tBottom);y++){const sy=clamp(y-shift,0,H-1);ctx.drawImage(bm,0,sy,W,1,0,y,W,1)}
+  const blendStart=Math.min(tBottom,faceEnd+1),blendEnd=Math.min(tBottom,Math.max(blendStart+1,Math.round(dstNeck+4)));
+  for(let y=blendStart;y<=blendEnd;y++){const syRigid=y-shift,rel=clamp((y-blendStart)/Math.max(1,blendEnd-blendStart),0,1),s=rel*rel*(3-2*rel),neckRel=clamp((y-dstNeck)/Math.max(1,tBottom-dstNeck),0,1),syNeck=srcNeck+neckRel*Math.max(1,srcBottom-srcNeck),sy=lerp(syRigid,syNeck,s);ctx.drawImage(bm,0,clamp(sy,0,H-1),W,1,0,y,W,1)}
+  for(let y=Math.max(blendEnd+1,Math.round(dstNeck));y<=tBottom;y++){const rel=clamp((y-dstNeck)/Math.max(1,tBottom-dstNeck),0,1),sy=srcNeck+rel*Math.max(1,srcBottom-srcNeck),depth=tBottom-y,srcP=a2SourceProfileAt(item,sy),target=a2ProfileAt(c,depth),neckLock=clamp((y-dstNeck)/Math.max(10,(tBottom-dstNeck)*.22),0,1),lock=neckLock*neckLock*(3-2*neckLock),tl=lerp(srcP.l,target.l,lock),tr=lerp(srcP.r,target.r,lock),srcL=srcP.l,srcR=Math.max(srcP.l+1,srcP.r);if(srcL>0)ctx.drawImage(bm,0,sy,srcL,1,0,y,tl,1);ctx.drawImage(bm,srcL,sy,srcR-srcL,1,tl,y,Math.max(1,tr-tl),1);if(srcR<W)ctx.drawImage(bm,srcR,sy,W-srcR,1,tr,y,W-tr,1)}
+  bm.close?.();return out;
+}
+function a2NormalDistortionScore(item,cnv){
+  const before=item.chinMeasure;if(!before||!Number.isFinite(before.chinTipY))return {score:0,reason:"sem chin guard",after:null};const after=a2MeasureChinCanvas(cnv),b=a2ChinAnatomy(before),a=a2ChinAnatomy(after),rel=(x,y)=>Number.isFinite(x)&&Number.isFinite(y)&&Math.abs(y)>2?Math.abs(x-y)/Math.abs(y):0,faceSpanB=before.chinTipY-before.top,faceSpanA=after.chinTipY-after.top,faceChange=rel(faceSpanA,faceSpanB),mouthChange=rel(a.mouthToChin,b.mouthToChin),jawChange=rel(a.jawToChin,b.jawToChin),score=faceChange*.40+mouthChange*.34+jawChange*.26;return {score,faceChange,mouthChange,jawChange,after,reason:`face ${(faceChange*100).toFixed(1)}% · boca→chin ${(mouthChange*100).toFixed(1)}% · jaw→chin ${(jawChange*100).toFixed(1)}%`};
+}
+async function a2RenderItem(item,{previewScale=1}={}){
+  const mold=await a2RenderPrecisionMold(item),moldQ=a2NormalDistortionScore(item,mold);
+  if(moldQ.score<=.075){item.normalMethod="MOLD";item.distortionScore=moldQ.score;item.distortionDetail=moldQ;return mold}
+  const safe=await a2RenderSafePass(item),safeQ=a2NormalDistortionScore(item,safe);item.normalMethod="SAFE";item.distortionScore=safeQ.score;item.distortionDetail=safeQ;return safe;
+}
 async function a2VerifyCanvas(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true}),data=ctx.getImageData(0,0,cnv.width,Math.min(cnv.height,MODEL_EXPORT.anchorY+45)).data,m=a2MeasurePixels(data,cnv.width,Math.min(cnv.height,MODEL_EXPORT.anchorY+45));
   const c=A2.canonical,topErr=Math.abs(m.top-c.targetTop),depth=Math.min(c.depth,m.bottom-m.neckStart),errs=[];
@@ -3720,12 +3765,12 @@ async function a2VerifyCanvas(cnv){
   return {topErr,neckP90:errs.length?percentile(errs,.90):99,neckMax:errs.length?Math.max(...errs):99,ok:topErr<=1&&(errs.length?percentile(errs,.90)<=2:false)};
 }
 async function a2CreateThumb(item){
-  const full=await a2RenderItem(item),thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);item.verify=await a2VerifyCanvas(full);item.resultBlob=await canvasToBlob(full);return thumb;
+  const full=await a2RenderItem(item),thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);item.verify=await a2VerifyCanvas(full);item.verify.faceGuard=item.distortionScore;item.verify.normalMethod=item.normalMethod;if(item.normalMethod==="SAFE"&&item.verify.topErr<=1)item.verify.ok=true;item.resultBlob=await canvasToBlob(full);return thumb;
 }
 
 
 /* =========================================================
-   V9.7 — CHIN LOCK EXPERIMENTAL
+   V10.3 — CHIN LOCK EXPERIMENTAL
    Topo fixo. Correção vertical começa abaixo dos olhos,
    cresce nas bochechas/mandíbula e chega a 100% no queixo.
    O pescoço acompanha o queixo por translação; depois o
@@ -3929,11 +3974,11 @@ function a2ChinInverseY(dy,srcChin,targetChin,protectY){
   }
   return (lo+hi)/2;
 }
-function a2RenderChinWarp(src,measure,canonical,applyWarp=true){
+function a2RenderChinWarp(src,measure,canonical,applyWarp=true,effectiveTarget=null){
   const W=src.width,H=src.height,out=canvas(W,H),ctx=out.getContext("2d");
   ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
   if(!applyWarp){ctx.drawImage(src,0,0);return out}
-  const srcChin=measure.chinTipY,targetChin=canonical.targetChin,protectY=canonical.protectY;
+  const srcChin=measure.chinTipY,targetChin=Number.isFinite(effectiveTarget)?effectiveTarget:canonical.targetChin,protectY=canonical.protectY;
   for(let y=0;y<H;y++){
     const sy=clamp(a2ChinInverseY(y,srcChin,targetChin,protectY),0,H-1);
     ctx.drawImage(src,0,sy,W,1,0,y,W,1);
@@ -3948,35 +3993,225 @@ function a2OpaqueBottom(cnv,alpha=18){
 function a2CutBelow(cnv,cutY){
   const out=canvas(cnv.width,cnv.height),ctx=out.getContext("2d");ctx.drawImage(cnv,0,0);ctx.clearRect(0,Math.floor(cutY)+1,cnv.width,cnv.height-Math.floor(cutY)-1);return out;
 }
-function a2ChinRank(level){return level==="REVIEW"?2:level==="WARN"?1:0}
+function a2ChinRank(level){return level==="SKIP"?4:level==="REVIEW"?3:level==="SOFT"?2:level==="WARN"?1:0}
 function a2ChinWorst(a,b){return a2ChinRank(a)>=a2ChinRank(b)?a:b}
-async function a2MakeSmallThumb(full){const thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);return thumb}
+function a2ChinAnatomy(m){
+  const faceH=Math.max(1,m.chinTipY-m.top),mouthToChin=Number.isFinite(m.mouthY)?m.chinTipY-m.mouthY:NaN;
+  const jawToChin=Number.isFinite(m.jawStartY)?m.chinTipY-m.jawStartY:NaN;
+  const chinToNeck=Number.isFinite(m.neckStartY)?m.neckStartY-m.chinTipY:NaN;
+  return {faceH,mouthToChin,jawToChin,chinToNeck,
+    mouthRatio:Number.isFinite(mouthToChin)?mouthToChin/faceH:NaN,
+    jawRatio:Number.isFinite(jawToChin)?jawToChin/faceH:NaN,
+    neckRatio:Number.isFinite(chinToNeck)?chinToNeck/faceH:NaN};
+}
+function a2RobustCenterStats(values){
+  const v=values.filter(Number.isFinite);if(!v.length)return {med:NaN,mad:NaN,n:0};
+  const med=median(v),mad=median(v.map(x=>Math.abs(x-med)))||.004;return {med,mad,n:v.length};
+}
+function a2BuildChinSafetyConsensus(entries){
+  const anatomies=entries.map(e=>a2ChinAnatomy(e.measure));
+  return {
+    // V10.3: o Chin Lock não usa mais o pescoço como parte da decisão do warp.
+    // A proteção anatômica olha apenas para relações do rosto inferior.
+    mouth:a2RobustCenterStats(anatomies.map(a=>a.mouthRatio)),
+    jaw:a2RobustCenterStats(anatomies.map(a=>a.jawRatio))
+  };
+}
+function a2RatioDeviation(value,stats,floor=.035){
+  if(!Number.isFinite(value)||!Number.isFinite(stats?.med))return .55;
+  return Math.abs(value-stats.med)/Math.max(floor,(stats.mad||0)*4.5);
+}
+function a2ChinWarpDecision(measure,delta,consensus,canonical){
+  const a=a2ChinAnatomy(measure),abs=Math.abs(delta),conf=measure.chinConfidence||0;
+  const mouthDev=a2RatioDeviation(a.mouthRatio,consensus.mouth,.045);
+  const jawDev=a2RatioDeviation(a.jawRatio,consensus.jaw,.05);
+  // V10.3: risco do Chin Lock é decidido só por sinais do rosto inferior.
+  // O pescoço deixa de influenciar a aceitação do warp do queixo.
+  const anatomyRisk=mouthDev*.55+jawDev*.45;
+  const mouthTooShort=Number.isFinite(a.mouthToChin)&&a.mouthToChin<Math.max(8,a.faceH*.105);
+  const jawTooShort=Number.isFinite(a.jawToChin)&&a.jawToChin<Math.max(10,a.faceH*.12);
+  const severe=conf<.30||abs>canonical.maxCorrection||mouthTooShort||jawTooShort||anatomyRisk>1.22;
+  const cautious=conf<.52||abs>canonical.lockCorrection||anatomyRisk>.68;
+  let mode='LOCK',factor=1;
+  if(severe){mode='SKIP';factor=0}
+  else if(cautious){mode='SOFT';factor=clamp(.40+(conf-.30)*.72-.12*Math.max(0,anatomyRisk-.68),.35,.64)}
+  const effectiveDelta=delta*factor;
+  return {mode,factor,effectiveDelta,effectiveTarget:measure.chinTipY+effectiveDelta,anatomy:a,anatomyRisk,mouthDev,jawDev,mouthTooShort,jawTooShort,confidence:conf,chinOnly:true};
+}
+function a2PostWarpSafety(before,after,decision){
+  const b=a2ChinAnatomy(before),a=a2ChinAnatomy(after);
+  const rel=(x,y)=>Number.isFinite(x)&&Number.isFinite(y)&&Math.abs(y)>1?Math.abs(x-y)/Math.abs(y):0;
+  const mouthChange=rel(a.mouthToChin,b.mouthToChin),jawChange=rel(a.jawToChin,b.jawToChin);
+  const suspicious=after.chinConfidence<.25||mouthChange>.22||jawChange>.24;
+  return {suspicious,mouthChange,jawChange};
+}
 function a2NeckLengthSample(w,canonical){
-  if(!w?.measure||!Number.isFinite(w.measure.chinTipY))return NaN;
-
-  // Depois do warp, a ponta do queixo desejada é o chin canônico.
-  // Para a base do pescoço usamos primeiro o bottom realmente opaco do canvas
-  // já deformado. Se ele falhar, usamos o bottom estrutural medido antes.
-  let bottom=Number.isFinite(w.bottom)&&w.bottom>=0?w.bottom:w.measure.bottom;
-
-  // O Finish Lock normal já ancora a base em targetBottom. Isto é um fallback
-  // geométrico seguro caso o alpha do pescoço seja muito fino e aOpaqueBottom falhe.
-  if(!Number.isFinite(bottom)||bottom<=canonical.targetChin){
-    bottom=A2.canonical?.targetBottom;
-  }
-  const len=bottom-canonical.targetChin;
-  return Number.isFinite(len)&&len>=3?len:NaN;
+  // V10.3: neck crop é uma segunda etapa. Ele só mede a distância do chin final até a base
+  // realmente opaca do sprite já processado. Essa medição NÃO volta para alterar o warp do queixo.
+  const chin=Number.isFinite(w.effectiveTarget)?w.effectiveTarget:w.measure?.chinTipY;
+  if(!Number.isFinite(chin))return NaN;
+  let bottom=Number.isFinite(w.bottom)&&w.bottom>=0?w.bottom:w.measure?.bottom;
+  if(!Number.isFinite(bottom)||bottom<=chin)bottom=A2.canonical?.targetBottom;
+  const len=bottom-chin;return Number.isFinite(len)&&len>=3?len:NaN;
 }
 function a2RobustShortestNeck(samples){
-  const clean=samples.filter(Number.isFinite).sort((a,b)=>a-b);
-  if(!clean.length)return NaN;
-  if(clean.length<=3)return clean[0];
-
-  // Regra principal continua sendo "usar o menor pescoço".
-  // Só descartamos o mínimo se ele for um outlier isolado grotesco.
+  const clean=samples.filter(Number.isFinite).sort((a,b)=>a-b);if(!clean.length)return NaN;if(clean.length<=3)return clean[0];
   const med=median(clean),mad=median(clean.map(v=>Math.abs(v-med)))||1;
   if(clean[1]-clean[0]>Math.max(10,mad*5))return clean[1];
   return clean[0];
+}
+async function a2MakeSmallThumb(full){const thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);return thumb}
+
+function a2RebuildChinSummary(){
+  let ok=0,soft=0,skip=0,review=0,total=0;
+  for(const item of A2.items){
+    const level=item?.chinVerify?.level;
+    if(!level)continue;
+    total++;
+    if(level==="LOCK")ok++;
+    else if(level==="SOFT"){soft++;review++;}
+    else {skip++;review++;}
+  }
+  A2.chinSummary={
+    ok,soft,skip,review,count:total,
+    targetChin:A2.chinCanonical?.targetChin,
+    cutY:A2.chinCanonical?.cutY,
+    shortestNeck:A2.chinCanonical?.shortestNeck,
+    neckSamples:A2.chinCanonical?.neckSamples
+  };
+  return A2.chinSummary;
+}
+
+function a2RedoFindAlternativeChin(measure,cc){
+  const cands=(measure.chinCandidates||[]).filter(c=>Number.isFinite(c.y));
+  if(!cands.length)return measure;
+  // Refazer 1 prioriza o candidato mais próximo do consenso global, e não o maior score local.
+  let best=null;
+  for(const c of cands){
+    const dist=Math.abs(c.y-cc.targetChin),score=(c.localScore||0)*.38+clamp(1-dist/18,0,1)*.62;
+    if(!best||score>best.score)best={c,score};
+  }
+  if(!best)return measure;
+  const m={...measure};m.chinTipY=best.c.y;m.chinY=best.c.y;
+  m.jawStartY=Math.max(m.top,Math.round(best.c.y-Math.max(12,(m.neckStart-m.top)*.18)));
+  m.chinConfidence=clamp((m.chinConfidence||0)*.55+best.score*.45,0,1);
+  m.chinChosen={...best.c,redoAlternative:true};return m;
+}
+function a2RedoConservativeDecision(measure,cc,safety){
+  const delta=cc.targetChin-measure.chinTipY,base=a2ChinWarpDecision(measure,delta,safety,cc);
+  // Segunda tentativa conservadora: nunca mais que 58% do deslocamento e no máximo 8 px.
+  const maxPx=8,raw=clamp(delta,-maxPx,maxPx),factor=Math.min(.58,Math.max(.30,base.factor||.42));
+  const effectiveDelta=raw*factor;
+  return {...base,mode:"REDO",factor,effectiveDelta,effectiveTarget:measure.chinTipY+effectiveDelta,redoMethod:"candidate-consensus-soft"};
+}
+function a2RenderChinRigidBlend(src,measure,cc){
+  // Refazer V2: método diferente. Não comprime progressivamente todo o lower-face.
+  // Mantém a região superior intacta e move a região inferior quase como um bloco,
+  // usando apenas uma faixa curta de blend na mandíbula.
+  const W=src.width,H=src.height,out=canvas(W,H),ctx=out.getContext("2d");
+  ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  const delta=clamp(cc.targetChin-measure.chinTipY,-7,7);
+  const jaw=Number.isFinite(measure.jawStartY)?measure.jawStartY:cc.protectY;
+  const blendStart=Math.max(measure.top,Math.round(jaw-8)),blendEnd=Math.min(measure.chinTipY-3,Math.round(jaw+10));
+  for(let y=0;y<H;y++){
+    let shift=0;
+    if(y<=blendStart)shift=0;
+    else if(y>=blendEnd)shift=delta;
+    else{const t=(y-blendStart)/Math.max(1,blendEnd-blendStart),s=t*t*(3-2*t);shift=delta*s;}
+    const sy=clamp(y-shift,0,H-1);ctx.drawImage(src,0,sy,W,1,0,y,W,1);
+  }
+  return {canvas:out,delta,effectiveTarget:measure.chinTipY+delta,blendStart,blendEnd,redoMethod:"rigid-lower-face-blend"};
+}
+async function a2CommitRedoResult(item,src,measure,cnv,meta,label){
+  const cc=A2.chinCanonical,cutY=Number.isFinite(cc.cutY)?cc.cutY:Math.round(cc.targetChin+(cc.shortestNeck||0));
+  const final=a2CutBelow(cnv,cutY),verify=a2MeasureChinCanvas(final),finalBottom=a2OpaqueBottom(final);
+  const detected=Number.isFinite(verify.chinTipY)?verify.chinTipY:meta.effectiveTarget;
+  const chinErr=Math.abs(detected-cc.targetChin),bottomErr=finalBottom>=0?Math.abs(finalBottom-cutY):0;
+  item.chinBlob=await canvasToBlob(final);item.chinThumb=await a2MakeSmallThumb(final);item.chinMeasure=measure;
+  item.chinVerify={level:label,ok:false,delta:meta.delta,effectiveDelta:meta.effectiveDelta??meta.delta,factor:meta.factor??1,applied:true,confidence:measure.chinConfidence,anatomyRisk:meta.anatomyRisk||0,sourceChin:measure.chinTipY,jawStart:measure.jawStartY,neckStart:measure.neckStartY,mouthY:measure.mouthY,targetChin:cc.targetChin,effectiveTarget:meta.effectiveTarget,chinErr,bottom:finalBottom,cutY,bottomErr,fallback:false,detector:measure.chinDetector,redoMethod:meta.redoMethod,chinOnly:true,neckCropOnly:true};
+  A2.chinProcessed=true;a2SetActiveOutput("chin");$("a2View").value="current";
+  a2RenderThumbs();a2DrawGuide();await a2DrawPreview();return {chinErr,bottomErr};
+}
+async function a2RedoCurrentChinLock(){
+  if(!A2.chinProcessed||!A2.chinCanonical){status("a2ChinStatus","Execute primeiro o Chin Lock experimental.","warn");return}
+  const idx=clamp(Number(A2.currentIndex||0),0,A2.items.length-1),item=A2.items[idx],btn=$("a2RedoChin");
+  btn.disabled=true;$("a2RedoChinV2").disabled=true;$("a2Export").disabled=true;
+  try{
+    status("a2ChinStatus",`Refazer chin lock · etapa 1: recalculando apenas o queixo de ${item.name}...`,"warn");
+    const src=await a2CanvasFromBlob(item.resultBlob),raw=a2MeasureChinCanvas(src),measure=a2RedoFindAlternativeChin(raw,A2.chinCanonical);
+    const safety=A2.chinCanonical.safety||a2BuildChinSafetyConsensus(A2.items.filter(x=>x.chinMeasure).map(x=>({measure:x.chinMeasure})));
+    const decision=a2RedoConservativeDecision(measure,A2.chinCanonical,safety);
+    const cnv=a2RenderChinWarp(src,measure,A2.chinCanonical,true,decision.effectiveTarget);
+    const result=await a2CommitRedoResult(item,src,measure,cnv,decision,"REDO 1");
+    status("a2ChinStatus",`Refazer 1 concluído: ${item.name} · queixo corrigido sem usar a base do pescoço como âncora · erro final ${result.chinErr.toFixed(1)} px.`,"ok");
+  }catch(e){console.error(e);status("a2ChinStatus","Erro no Refazer chin lock: "+e.message,"bad")}
+  finally{btn.disabled=!A2.chinProcessed;$("a2RedoChinV2").disabled=!A2.chinProcessed;$("a2Export").disabled=!A2.processed}
+}
+async function a2RedoCurrentChinLockV2(){
+  if(!A2.chinProcessed||!A2.chinCanonical){status("a2ChinStatus","Execute primeiro o Chin Lock experimental.","warn");return}
+  const idx=clamp(Number(A2.currentIndex||0),0,A2.items.length-1),item=A2.items[idx],btn=$("a2RedoChinV2");
+  btn.disabled=true;$("a2RedoChin").disabled=true;$("a2Export").disabled=true;
+  try{
+    status("a2ChinStatus",`Refazer V2 · etapa 1: método rígido só no lower-face de ${item.name}...`,"warn");
+    const src=await a2CanvasFromBlob(item.resultBlob),measure=a2MeasureChinCanvas(src);
+    const alt=a2RenderChinRigidBlend(src,measure,A2.chinCanonical);
+    const meta={delta:alt.delta,effectiveDelta:alt.delta,effectiveTarget:alt.effectiveTarget,factor:1,redoMethod:alt.redoMethod};
+    const result=await a2CommitRedoResult(item,src,measure,alt.canvas,meta,"REDO V2");
+    status("a2ChinStatus",`Refazer V2 concluído: ${item.name} · método rígido no lower-face, ainda sem ancorar na última linha do pescoço · erro final ${result.chinErr.toFixed(1)} px.`,"ok");
+  }catch(e){console.error(e);status("a2ChinStatus","Erro no Refazer chin lock V2: "+e.message,"bad")}
+  finally{btn.disabled=!A2.chinProcessed;$("a2RedoChin").disabled=!A2.chinProcessed;$("a2Export").disabled=!A2.processed}
+}
+
+async function a2RefreshManualChinTarget(){
+  const m=A2.manualChin;
+  if(!m.enabled||m.baseIndex==null||!A2.items[m.baseIndex]){m.targetY=null;return null}
+  const item=A2.items[m.baseIndex];
+  let measure=null;
+  try{
+    const blob=(A2.activeOutput==="chin"&&item.chinBlob)?item.chinBlob:item.resultBlob;
+    if(blob){const cnv=await a2CanvasFromBlob(blob);measure=a2MeasureChinCanvas(cnv)}
+  }catch(e){console.warn('manual chin target measure fallback',e)}
+  if(!measure&&item.chinMeasure)measure=item.chinMeasure;
+  m.baseName=item.name||`#${m.baseIndex+1}`;
+  m.targetY=measure&&Number.isFinite(measure.chinTipY)?measure.chinTipY+(m.offset||0):null;
+  return m.targetY;
+}
+function a2SetManualButtonsEnabled(on){
+  ["a2ChinBaseCurrent","a2ChinUp3","a2ChinUp1","a2ChinDown1","a2ChinDown3","a2ApplyManualChin","a2ClearManualChin"].forEach(id=>{$(id).disabled=!on});
+}
+async function a2UpdateManualChinUI(){
+  const m=A2.manualChin;
+  const ready=!!A2.processed&&A2.items.length>0;
+  a2SetManualButtonsEnabled(ready);
+  if(!ready){status("a2ManualChinStatus","Execute primeiro o processamento normal para habilitar o ajuste manual.");return}
+  if(!m.enabled||m.baseIndex==null){status("a2ManualChinStatus","Nenhum ajuste manual do queixo definido.");return}
+  await a2RefreshManualChinTarget();
+  const who=A2.items[m.baseIndex]?.name||m.baseName||`#${m.baseIndex+1}`;
+  const target=Number.isFinite(m.targetY)?` · linha alvo Y ${m.targetY.toFixed(1)}`:"";
+  const phase=A2.chinProcessed?"Ajuste pronto para reaplicar o experimental.":"Ajuste salvo para a próxima execução experimental.";
+  status("a2ManualChinStatus",`Base: ${who} · offset ${m.offset>=0?'+':''}${m.offset}px${target} · ${phase}`,"ok");
+}
+async function a2UseCurrentAsManualBase(){
+  if(!A2.processed||!A2.items[A2.currentIndex]){status("a2ManualChinStatus","Execute primeiro o processamento normal.","warn");return}
+  A2.manualChin.enabled=true;A2.manualChin.baseIndex=A2.currentIndex;A2.manualChin.baseName=A2.items[A2.currentIndex].name;A2.manualChin.offset=0;
+  await a2UpdateManualChinUI();a2DrawGuide();await a2DrawPreview();
+}
+async function a2NudgeManualChin(delta){
+  if(!A2.processed){status("a2ManualChinStatus","Execute primeiro o processamento normal.","warn");return}
+  if(!A2.manualChin.enabled||A2.manualChin.baseIndex==null){A2.manualChin.enabled=true;A2.manualChin.baseIndex=A2.currentIndex;A2.manualChin.baseName=A2.items[A2.currentIndex]?.name||'';A2.manualChin.offset=0}
+  A2.manualChin.offset=clamp((A2.manualChin.offset||0)+delta,-60,60);
+  await a2UpdateManualChinUI();a2DrawGuide();await a2DrawPreview();
+}
+async function a2ClearManualChin(){
+  A2.manualChin={enabled:false,baseIndex:null,baseName:"",offset:0,targetY:null};
+  await a2UpdateManualChinUI();a2DrawGuide();await a2DrawPreview();
+}
+async function a2ApplyManualChinNow(){
+  if(!A2.processed){status("a2ManualChinStatus","Execute primeiro o processamento normal.","warn");return}
+  if(!A2.manualChin.enabled){status("a2ManualChinStatus","Defina primeiro uma base manual do queixo.","warn");return}
+  await a2UpdateManualChinUI();
+  status("a2ManualChinStatus",A2.chinProcessed?"Reaplicando experimental com a linha manual do queixo...":"Aplicando linha manual na próxima execução experimental...","warn");
+  await a2ProcessChinLock();
 }
 async function a2ProcessChinLock(){
   if(!A2.processed||A2.items.length<2){status("a2ChinStatus","Execute primeiro o Precision Lock normal.","warn");return}
@@ -3985,86 +4220,91 @@ async function a2ProcessChinLock(){
   try{
     const entries=[];
     for(let i=0;i<A2.items.length;i++){
-      status("a2ChinStatus",`Chin Detector V2 ${i+1}/${A2.items.length} · mandíbula / ponta do queixo / pescoço · ${A2.items[i].name}`,"warn");
+      status("a2ChinStatus",`Chin puro ${i+1}/${A2.items.length} · medindo topo/mandíbula/queixo · ${A2.items[i].name}`,"warn");
       const src=await a2CanvasFromBlob(A2.items[i].resultBlob),measure=a2MeasureChinCanvas(src);
-      entries.push({item:A2.items[i],src,measure});
-      if(i%4===3)await sleep(0);
+      entries.push({item:A2.items[i],src,measure});if(i%4===3)await sleep(0);
     }
-    const cc=a2ChinCanonicalFromMeasures(entries);A2.chinCanonical=cc;$("a2ChinStat").textContent=`Y ${cc.targetChin.toFixed(1)}`;
-    const warped=[];
-    let blocked=0,warns=0;
+    const cc=a2ChinCanonicalFromMeasures(entries),safety=a2BuildChinSafetyConsensus(entries);
+    if(A2.manualChin.enabled){
+      const manualY=await a2RefreshManualChinTarget();
+      if(Number.isFinite(manualY)){
+        cc.targetChin=manualY;cc.manual=true;cc.manualBaseIndex=A2.manualChin.baseIndex;cc.manualOffset=A2.manualChin.offset||0;
+      }
+    }
+    A2.chinCanonical=cc;cc.safety=safety;
+    $("a2ChinStat").textContent=`Y ${cc.targetChin.toFixed(1)}`;
+    const warped=[];let soft=0,skip=0,locked=0;
     for(let i=0;i<entries.length;i++){
-      const e=entries[i],delta=cc.targetChin-e.measure.chinTipY,abs=Math.abs(delta),lowConf=e.measure.chinConfidence<.42;
-      let level=lowConf||abs>cc.maxCorrection?"REVIEW":abs>cc.lockCorrection?"WARN":"LOCK";
-      const apply=level!=="REVIEW";
-      if(level==="REVIEW")blocked++;else if(level==="WARN")warns++;
-      status("a2ChinStatus",`Ajustando face inferior ${i+1}/${entries.length} · ${e.item.name} · ${delta>=0?"+":""}${delta.toFixed(1)} px`,"warn");
-      const cnv=a2RenderChinWarp(e.src,e.measure,cc,apply),bottom=a2OpaqueBottom(cnv),neckLen=bottom-cc.targetChin;
-      warped.push({...e,canvas:cnv,delta,level,applied:apply,bottom,neckLen});
+      const e=entries[i],delta=cc.targetChin-e.measure.chinTipY,decision=a2ChinWarpDecision(e.measure,delta,safety,cc);
+      if(decision.mode==="LOCK")locked++;else if(decision.mode==="SOFT")soft++;else skip++;
+      status("a2ChinStatus",`Proteção anatômica ${i+1}/${entries.length} · ${e.item.name} · ${decision.mode} · ${decision.effectiveDelta>=0?"+":""}${decision.effectiveDelta.toFixed(1)} px`,"warn");
+      let cnv=a2RenderChinWarp(e.src,e.measure,cc,decision.factor>0,decision.effectiveTarget);
+      let postMeasure=a2MeasureChinCanvas(cnv),post=a2PostWarpSafety(e.measure,postMeasure,decision),fallback=false;
+      // Fail-safe: se o warp deformar a anatomia detectável, não insistimos. Voltamos ao Finish Lock normal.
+      if(decision.factor>0&&post.suspicious){
+        cnv=a2RenderChinWarp(e.src,e.measure,cc,false);postMeasure=e.measure;decision.mode="SKIP";decision.factor=0;decision.effectiveDelta=0;decision.effectiveTarget=e.measure.chinTipY;fallback=true;skip++;if(locked>0)locked--;else if(soft>0)soft--;
+      }
+      const bottom=a2OpaqueBottom(cnv),neckLen=bottom-decision.effectiveTarget;
+      warped.push({...e,canvas:cnv,delta,decision,mode:decision.mode,applied:decision.factor>0,effectiveTarget:decision.effectiveTarget,bottom,neckLen,post,fallback});
       if(i%4===3)await sleep(0);
     }
-    // V9.7: uma cabeça não precisa ter sofrido deformação para participar da
-    // medição do pescoço. REVIEW também pode fornecer uma base válida.
-    // O erro anterior exigia x.applied e >=22 px, descartando cabeças visualmente OK.
+
+    // V10.3 mantém a correção da 9.7: medir pescoço não depende de ter recebido warp completo.
     const neckSamples=warped.map(w=>a2NeckLengthSample(w,cc)).filter(Number.isFinite);
     let shortestNeck=a2RobustShortestNeck(neckSamples);
-
-    // Fallback: o Precision Lock normal já deixa a base estrutural alinhada.
-    // Se o alpha visual não fornecer amostra suficiente, usamos targetBottom-chinTip
-    // em vez de abortar o Chin Lock inteiro.
     if(!Number.isFinite(shortestNeck)){
-      const structuralBottom=A2.canonical?.targetBottom;
-      const fallback=Number.isFinite(structuralBottom)?structuralBottom-cc.targetChin:NaN;
+      const structuralBottom=A2.canonical?.targetBottom,fallback=Number.isFinite(structuralBottom)?structuralBottom-cc.targetChin:NaN;
       if(!Number.isFinite(fallback)||fallback<3)throw new Error("Chin Lock: não foi possível determinar a base estrutural do pescoço.");
       shortestNeck=fallback;
     }
+    const cutY=Math.round(cc.targetChin+shortestNeck);cc.shortestNeck=shortestNeck;cc.cutY=cutY;cc.neckSamples=neckSamples.length;$("a2CutStat").textContent=`Y ${cutY}`;
 
-    const cutY=Math.round(cc.targetChin+shortestNeck);
-    cc.shortestNeck=shortestNeck;cc.cutY=cutY;cc.neckSamples=neckSamples.length;
-    $("a2CutStat").textContent=`Y ${cutY}`;
-    let ok=0,review=0,warning=0;const chinErrs=[];
+    let ok=0,softCount=0,skipCount=0,review=0;const chinErrs=[];
     for(let i=0;i<warped.length;i++){
       const w=warped[i],final=a2CutBelow(w.canvas,cutY),verifyMeasure=a2MeasureChinCanvas(final),finalBottom=a2OpaqueBottom(final);
-      const verifiedChin=Number.isFinite(verifyMeasure.chinTipY)?verifyMeasure.chinTipY:cc.targetChin;
+      const verifiedChin=Number.isFinite(verifyMeasure.chinTipY)?verifyMeasure.chinTipY:w.effectiveTarget;
       const chinErr=Math.abs(verifiedChin-cc.targetChin),bottomErr=finalBottom>=0?Math.abs(finalBottom-cutY):0;
-      let verifyLevel=verifyMeasure.chinConfidence<.30?"REVIEW":chinErr<=1.5&&bottomErr<=1?"LOCK":chinErr<=3.2&&bottomErr<=2?"WARN":"REVIEW";
-      const level=a2ChinWorst(w.level,verifyLevel);
-      if(level==="LOCK")ok++;else if(level==="WARN")warning++;else review++;
+      let level=w.mode;
+      if(w.mode==="LOCK"&&(verifyMeasure.chinConfidence<.30||chinErr>3.2))level="SOFT";
+      if(w.mode==="SOFT"&&(verifyMeasure.chinConfidence<.22||w.post?.suspicious))level="SKIP";
+      if(level==="LOCK")ok++;else if(level==="SOFT")softCount++;else skipCount++;
+      if(level!=="LOCK")review++;
       chinErrs.push(chinErr);
-      w.item.chinBlob=await canvasToBlob(final);w.item.chinThumb=await a2MakeSmallThumb(final);w.item.chinMeasure=w.measure;w.item.chinVerify={level,ok:level==="LOCK",delta:w.delta,applied:w.applied,confidence:w.measure.chinConfidence,sourceChin:w.measure.chinTipY,jawStart:w.measure.jawStartY,neckStart:w.measure.neckStartY,mouthY:w.measure.mouthY,targetChin:cc.targetChin,chinErr,bottom:finalBottom,cutY,bottomErr,detector:w.measure.chinDetector};
-      status("a2ChinStatus",`Verificando ${i+1}/${warped.length} · ${w.item.name}`,"warn");if(i%3===2)await sleep(0);
+      w.item.chinBlob=await canvasToBlob(final);w.item.chinThumb=await a2MakeSmallThumb(final);w.item.chinMeasure=w.measure;
+      w.item.chinVerify={level,ok:level==="LOCK",delta:w.delta,effectiveDelta:w.decision.effectiveDelta,factor:w.decision.factor,applied:w.applied,confidence:w.measure.chinConfidence,anatomyRisk:w.decision.anatomyRisk,sourceChin:w.measure.chinTipY,jawStart:w.measure.jawStartY,neckStart:w.measure.neckStartY,mouthY:w.measure.mouthY,targetChin:cc.targetChin,effectiveTarget:w.effectiveTarget,chinErr,bottom:finalBottom,cutY,bottomErr,fallback:w.fallback,detector:w.measure.chinDetector};
+      status("a2ChinStatus",`Verificando ${i+1}/${warped.length} · ${w.item.name} · ${level}`,"warn");if(i%3===2)await sleep(0);
     }
-    A2.chinProcessed=true;A2.chinSummary={ok,warn:warning,review,count:warped.length,blocked,targetChin:cc.targetChin,cutY,shortestNeck,neckSamples:neckSamples.length,p90:percentile(chinErrs,.90)};
+    A2.chinProcessed=true;A2.chinSummary={ok,soft:softCount,skip:skipCount,review,count:warped.length,targetChin:cc.targetChin,cutY,shortestNeck,neckSamples:neckSamples.length,p90:percentile(chinErrs,.90)};$("a2RedoChin").disabled=false;$("a2RedoChinV2").disabled=false;
     a2SetActiveOutput("chin");$("a2View").value="current";
-    const msg=`Chin Detector V2 + Lock concluído · ${ok} LOCK / ${warning} WARN / ${review} REVISAR · ponta do queixo Y ${cc.targetChin.toFixed(1)} · corte Y ${cutY} · menor pescoço ${shortestNeck.toFixed(1)} px · ${neckSamples.length} amostra(s) de pescoço.`;
-    status("a2ChinStatus",msg,review?"warn":"ok");
-    $("a2GuideText").textContent+=` · CHIN V2: jaw-start Y ${cc.targetJawStart.toFixed(1)}, chin-tip Y ${cc.targetChin.toFixed(1)}, proteção até Y ${cc.protectY}, corte horizontal Y ${cutY}, confiança mediana ${(cc.confidenceMedian*100).toFixed(0)}%, P90 ${A2.chinSummary.p90.toFixed(1)} px.`;
+    const manualTxt=cc.manual?` · base manual ${A2.items[cc.manualBaseIndex]?.name||("#"+(cc.manualBaseIndex+1))} (${cc.manualOffset>=0?"+":""}${cc.manualOffset}px)`:""; const msg=`Chin puro + Neck Crop concluído · ${ok} LOCK / ${softCount} SOFT / ${skipCount} SKIP · etapa 1: chin Y ${cc.targetChin.toFixed(1)}${manualTxt} · etapa 2: corte Y ${cutY} · ${neckSamples.length} amostra(s) de pescoço.`;
+    status("a2ChinStatus",msg,skipCount?"warn":"ok");
+    $("a2GuideText").textContent+=` · CHIN PURO: topo fixo + jaw/chin alinhados sem ancorar na base do pescoço. Depois: neck crop em Y ${cutY}.`;
     a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
-  }catch(e){console.error(e);status("a2ChinStatus","Erro no Chin Lock experimental: "+e.message,"bad")}
-  finally{btn.disabled=!A2.processed;$("a2Export").disabled=!A2.processed}
+  }catch(e){console.error(e);status("a2ChinStatus","Erro no Chin Lock puro + Neck Crop: "+e.message,"bad");$("a2RedoChin").disabled=true}
+  finally{btn.disabled=!A2.processed;$("a2RedoChin").disabled=!A2.chinProcessed;$("a2RedoChinV2").disabled=!A2.chinProcessed;$("a2Export").disabled=!A2.processed}
 }
 async function a2LoadFolder(){
-  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;A2.currentIndex=0;A2.thumbs=[];A2.previewBoundsCache.clear();$("a2Count").textContent=`${files.length} PNGs`;
+  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;A2.currentIndex=0;A2.thumbs=[];A2.previewBoundsCache.clear();A2.manualChin={enabled:false,baseIndex:null,baseName:"",offset:0,targetY:null};$("a2Count").textContent=`${files.length} PNGs`;
   a2SetActiveOutput(null);
-  $("a2ChinProcess").disabled=true;$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Primeiro execute o processamento normal.");
-  const ready=files.length>=2;$("a2Process").disabled=!ready;$("a2Export").disabled=true;
+  $("a2ChinProcess").disabled=true;$("a2RedoChin").disabled=true;$("a2RedoChinV2").disabled=true;$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Primeiro execute o processamento normal.");a2UpdateManualChinUI();
+  const ready=files.length>=2;$("a2Process").disabled=!ready;$("a2Export").disabled=true;$("a2RedoChin").disabled=true;$("a2RedoChinV2").disabled=true;
   if(!ready){status("a2Status",files.length?`Pasta carregada com ${files.length} PNG. São necessárias pelo menos 2 imagens.`:"Nenhum PNG encontrado.",files.length?"warn":"");a2DrawPreview();return}
-  status("a2Status",`${files.length} PNGs reconhecidas. Pronto para medir e construir o Precision Lock.`,"ok");a2PopulateSelect();a2DrawPreview();
+  status("a2Status",`${files.length} PNGs reconhecidas. Pronto para medir e construir o Precision Mold.`,"ok");a2PopulateSelect();a2DrawPreview();
 }
 function a2PopulateSelect(){const sel=$("a2Current");sel.innerHTML="";A2.files.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${String(i+1).padStart(2,"0")} · ${f.name}`;sel.appendChild(o)})}
 async function a2Process(){
-  if(A2.files.length<2)return;$("a2Process").disabled=true;$("a2Export").disabled=true;$("a2ChinProcess").disabled=true;A2.items=[];A2.thumbs=[];A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;a2SetActiveOutput(null);$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Aguardando o processamento normal terminar.");$("a2Heads").innerHTML="";
+  if(A2.files.length<2)return;$("a2Process").disabled=true;$("a2Export").disabled=true;$("a2ChinProcess").disabled=true;$("a2RedoChin").disabled=true;$("a2RedoChinV2").disabled=true;A2.items=[];A2.thumbs=[];A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;a2SetActiveOutput(null);$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Aguardando o Precision Mold normal terminar.");a2UpdateManualChinUI();$("a2Heads").innerHTML="";
   try{
     for(let i=0;i<A2.files.length;i++)A2.items.push(await a2MeasureFile(A2.files[i],i,A2.files.length));
     const dims=A2.items.filter(x=>x.w!==MODEL_EXPORT.width||x.h!==MODEL_EXPORT.height);if(dims.length)throw new Error(`${dims.length} PNG(s) não estão em 1920×1080.`);
     A2.canonical=a2BuildCanonical(A2.items);$("a2TopStat").textContent=`Y ${A2.canonical.targetTop}`;$("a2NeckStat").textContent=`${Math.round(A2.canonical.baseL)} / ${Math.round(A2.canonical.baseR)}`;
-    status("a2Status",`Molde construído. Aplicando Precision Lock e verificando as ${A2.items.length} imagens…`,"warn");
-    for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Lock ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
+    status("a2Status",`Molde estrutural construído. Aplicando Precision Mold + Face Guard nas ${A2.items.length} imagens…`,"warn");
+    for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Mold ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
     A2.processed=true;const ok=A2.items.filter(x=>x.verify?.ok).length,p90=percentile(A2.items.map(x=>x.verify?.neckP90??99),.90),topMax=Math.max(...A2.items.map(x=>x.verify?.topErr??99));$("a2Precision").textContent=`${ok}/${A2.items.length} LOCK`;
     $("a2GuideText").textContent=`Topo Y ${A2.canonical.targetTop} · neck-base Y ${A2.canonical.targetBottom} · pescoço base L ${Math.round(A2.canonical.baseL)} / R ${Math.round(A2.canonical.baseR)} · P90 residual ${p90.toFixed(1)} px · erro máximo de topo ${topMax.toFixed(1)} px.`;
     a2SetActiveOutput("result");$("a2View").value="current";
-    status("a2Status",ok===A2.items.length?`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância de verificação.`:`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância. Confira as miniaturas marcadas.`,ok===A2.items.length?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;$("a2ChinProcess").disabled=false;status("a2ChinStatus","Processamento normal pronto. Se quiser, aplique agora o experimental.","ok");a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
-  }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false;$("a2ChinProcess").disabled=true}
+    const safeCount=A2.items.filter(x=>x.normalMethod==="SAFE").length,moldCount=A2.items.filter(x=>x.normalMethod==="MOLD").length;status("a2Status",`Precision Mold concluído · ${moldCount} MOLD / ${safeCount} SAFE PASS · ${ok}/${A2.items.length} aprovadas. SAFE PASS preserva a anatomia quando o Face Guard detecta risco.`,ok===A2.items.length?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;$("a2ChinProcess").disabled=false;$("a2RedoChin").disabled=true;$("a2RedoChinV2").disabled=true;status("a2ChinStatus","Processamento normal pronto. Se quiser, aplique agora o Chin puro + Neck Crop.","ok");await a2UpdateManualChinUI();a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
+  }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false;$("a2ChinProcess").disabled=true;$("a2RedoChin").disabled=true;$("a2RedoChinV2").disabled=true;a2UpdateManualChinUI()}
 }
 function a2RenderThumbs(){
   const wrap=$("a2Heads");wrap.innerHTML="";A2.items.forEach((it,i)=>{
@@ -4072,9 +4312,9 @@ function a2RenderThumbs(){
     d.className="a2Thumb"+(i===A2.currentIndex?" active":"")+((chinV&&chinV.level==="REVIEW")||(!chinV&&it.verify&&!it.verify.ok)?" bad":"");
     const c=canvas(240,135),src=A2.activeOutput==="chin"&&A2.chinProcessed&&it.chinThumb?it.chinThumb:it.thumb;if(src)c.getContext("2d").drawImage(src,0,0);d.appendChild(c);
     const n=document.createElement("div");n.textContent=it.name;d.appendChild(n);
-    if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.verify.ok?"FINISH LOCK":"FINISH REVISAR";d.appendChild(b)}
-    if(chinV){const b=document.createElement("span");b.className="a2ChinBadge"+(chinV.level==="WARN"?" warn":chinV.level==="REVIEW"?" review":"");b.textContent=`CHIN ${chinV.level}`;d.appendChild(b)}
-    d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)
+    if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.normalMethod==="SAFE"?"SAFE PASS":it.verify.ok?"PRECISION MOLD":"MOLD REVISAR";b.title=`método ${it.normalMethod||"—"} · distorção facial ${(Number(it.distortionScore||0)*100).toFixed(1)}%`;d.appendChild(b)}
+    if(chinV){const b=document.createElement("span");const redo=String(chinV.level||"").startsWith("REDO");b.className="a2ChinBadge"+(redo?" soft":chinV.level==="SOFT"?" soft":chinV.level==="SKIP"?" skip":chinV.level==="WARN"?" warn":chinV.level==="REVIEW"?" review":"");b.textContent=redo?chinV.level:`CHIN ${chinV.level}`;b.title=`delta ${Number(chinV.delta||0).toFixed(1)} px · aplicado ${Math.round((chinV.factor??(chinV.applied?1:0))*100)}% · método ${chinV.redoMethod||"chin-puro"}`;d.appendChild(b)}
+    d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2UpdateManualChinUI();a2DrawPreview()};wrap.appendChild(d)
   })
 }
 function a2AlphaBoundsFromImage(img,cacheKey=""){
@@ -4201,7 +4441,13 @@ async function a2DrawPreview(){
       ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
       ctx.strokeStyle="#d97706";ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.targetChin*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.targetChin*guideFit.sc);ctx.stroke();
       ctx.strokeStyle="#dc2626";ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.cutY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.cutY*guideFit.sc);ctx.stroke();
-      ctx.strokeStyle="#6d28d9";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.protectY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.protectY*guideFit.sc);ctx.stroke();ctx.restore();
+      ctx.strokeStyle="#6d28d9";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+cc.protectY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+cc.protectY*guideFit.sc);ctx.stroke();
+      if(A2.manualChin.enabled&&Number.isFinite(A2.manualChin.targetY)){
+        ctx.strokeStyle="#0ea5e9";ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(guideFit.viewLeft,guideFit.oy+A2.manualChin.targetY*guideFit.sc);ctx.lineTo(guideFit.viewRight,guideFit.oy+A2.manualChin.targetY*guideFit.sc);ctx.stroke();
+      }
+      ctx.restore();
+    } else if($("a2ShowGuide").checked&&currentFit&&A2.manualChin.enabled&&Number.isFinite(A2.manualChin.targetY)){
+      ctx.save();ctx.beginPath();ctx.rect(currentFit.viewLeft,0,currentFit.viewRight-currentFit.viewLeft,c.height);ctx.clip();ctx.strokeStyle="#0ea5e9";ctx.lineWidth=1.5;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(currentFit.viewLeft,currentFit.oy+A2.manualChin.targetY*currentFit.sc);ctx.lineTo(currentFit.viewRight,currentFit.oy+A2.manualChin.targetY*currentFit.sc);ctx.stroke();ctx.restore();
     }
   }
   bm.close?.();finish?.close?.();chin?.close?.();
@@ -4210,9 +4456,9 @@ function a2DrawGuide(){
   const c=$("a2GuideCanvas"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#101216";ctx.fillRect(0,0,c.width,c.height);if(!A2.canonical)return;
   const cc=A2.canonical,sx=.20,sy=.65,ox=c.width/2-MODEL_EXPORT.anchorX*sx,oy=20;ctx.strokeStyle="#9d7bd0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,oy+cc.targetTop*sy);ctx.lineTo(c.width-20,oy+cc.targetTop*sy);ctx.stroke();ctx.strokeStyle="#67d59a";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy,x=ox+p.l*sx;if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}for(let d=cc.depth;d>=0;d--){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy;ctx.lineTo(ox+p.r*sx,y)}ctx.stroke();
   ctx.fillStyle="#ddd";ctx.font="11px system-ui";ctx.fillText(`TOPO Y ${cc.targetTop}`,12,16);ctx.fillText(`NECK-BASE Y ${cc.targetBottom}`,12,c.height-12);
-  if(A2.chinCanonical){const ch=A2.chinCanonical;ctx.setLineDash([6,4]);ctx.strokeStyle="#f59e0b";ctx.beginPath();ctx.moveTo(20,oy+ch.targetChin*sy);ctx.lineTo(c.width-20,oy+ch.targetChin*sy);ctx.stroke();ctx.strokeStyle="#ef4444";ctx.beginPath();ctx.moveTo(20,oy+ch.cutY*sy);ctx.lineTo(c.width-20,oy+ch.cutY*sy);ctx.stroke();ctx.strokeStyle="#a78bfa";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(20,oy+ch.protectY*sy);ctx.lineTo(c.width-20,oy+ch.protectY*sy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#f5c36a";ctx.fillText(`CHIN TIP Y ${ch.targetChin.toFixed(1)}`,12,34);ctx.fillStyle="#ff8f8f";ctx.fillText(`CORTE Y ${ch.cutY}`,12,49);ctx.fillStyle="#c4b5fd";ctx.fillText(`JAW/PROTEÇÃO Y ${ch.protectY}`,12,64)}
+  if(A2.chinCanonical){const ch=A2.chinCanonical;ctx.setLineDash([6,4]);ctx.strokeStyle="#f59e0b";ctx.beginPath();ctx.moveTo(20,oy+ch.targetChin*sy);ctx.lineTo(c.width-20,oy+ch.targetChin*sy);ctx.stroke();ctx.strokeStyle="#ef4444";ctx.beginPath();ctx.moveTo(20,oy+ch.cutY*sy);ctx.lineTo(c.width-20,oy+ch.cutY*sy);ctx.stroke();ctx.strokeStyle="#a78bfa";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(20,oy+ch.protectY*sy);ctx.lineTo(c.width-20,oy+ch.protectY*sy);ctx.stroke();if(A2.manualChin.enabled&&Number.isFinite(A2.manualChin.targetY)){ctx.strokeStyle="#0ea5e9";ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(20,oy+A2.manualChin.targetY*sy);ctx.lineTo(c.width-20,oy+A2.manualChin.targetY*sy);ctx.stroke();}ctx.setLineDash([]);ctx.fillStyle="#f5c36a";ctx.fillText(`CHIN TIP Y ${ch.targetChin.toFixed(1)}`,12,34);ctx.fillStyle="#ff8f8f";ctx.fillText(`CORTE Y ${ch.cutY}`,12,49);ctx.fillStyle="#c4b5fd";ctx.fillText(`JAW/PROTEÇÃO Y ${ch.protectY}`,12,64);if(A2.manualChin.enabled&&Number.isFinite(A2.manualChin.targetY)){ctx.fillStyle="#67c8ff";ctx.fillText(`MANUAL Y ${A2.manualChin.targetY.toFixed(1)} · base ${A2.items[A2.manualChin.baseIndex]?.name||'#'+(A2.manualChin.baseIndex+1)}`,12,79)}} else if(A2.manualChin.enabled&&Number.isFinite(A2.manualChin.targetY)){ctx.setLineDash([2,3]);ctx.strokeStyle="#0ea5e9";ctx.beginPath();ctx.moveTo(20,oy+A2.manualChin.targetY*sy);ctx.lineTo(c.width-20,oy+A2.manualChin.targetY*sy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#67c8ff";ctx.fillText(`MANUAL Y ${A2.manualChin.targetY.toFixed(1)} · base ${A2.items[A2.manualChin.baseIndex]?.name||'#'+(A2.manualChin.baseIndex+1)}`,12,34)}
 }
-function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex+dir+A2.files.length)%A2.files.length;$("a2Current").value=String(A2.currentIndex);a2RenderThumbs();a2DrawPreview()}
+function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex+dir+A2.files.length)%A2.files.length;$("a2Current").value=String(A2.currentIndex);a2RenderThumbs();a2UpdateManualChinUI();a2DrawPreview()}
 function a2Stop(){A2.playing=false;clearInterval(A2.timer);A2.timer=null;if($("a2Play"))$("a2Play").textContent="▶ Play"}
 function a2Start(){if(!A2.files.length)return;a2Stop();A2.playing=true;$("a2Play").textContent="⏸ Pausar";A2.timer=setInterval(()=>a2Step(1),1000/Number($("a2Fps").value||6))}
 async function a2Export(){
@@ -4248,9 +4494,9 @@ function init(){
   updateLabels();updateBgModeUI();updateFaceRigControls();drawPreview();setEngineConfig();v81UpdateSmartRemapStatus();updatePipelineUI();updateModelPreview();updatePreflight();
   $("productionMode").onclick=()=>{document.body.classList.remove("advanced");$("productionMode").classList.add("primary");$("advancedMode").classList.remove("primary")};
   $("area2Mode").onclick=switchToArea2;$("area1Back").onclick=switchToArea1;
-  $("a2Folder").onchange=a2LoadFolder;$("a2Process").onclick=a2Process;$("a2ChinProcess").onclick=a2ProcessChinLock;$("a2Export").onclick=a2Export;
+  $("a2Folder").onchange=a2LoadFolder;$("a2Process").onclick=a2Process;$("a2ChinProcess").onclick=a2ProcessChinLock;$("a2RedoChin").onclick=a2RedoCurrentChinLock;$("a2RedoChinV2").onclick=a2RedoCurrentChinLockV2;$("a2ChinBaseCurrent").onclick=a2UseCurrentAsManualBase;$("a2ChinUp3").onclick=()=>a2NudgeManualChin(-3);$("a2ChinUp1").onclick=()=>a2NudgeManualChin(-1);$("a2ChinDown1").onclick=()=>a2NudgeManualChin(1);$("a2ChinDown3").onclick=()=>a2NudgeManualChin(3);$("a2ApplyManualChin").onclick=a2ApplyManualChinNow;$("a2ClearManualChin").onclick=a2ClearManualChin;$("a2Export").onclick=a2Export;
   $("a2Prev").onclick=()=>{a2Stop();a2Step(-1)};$("a2Next").onclick=()=>{a2Stop();a2Step(1)};$("a2Play").onclick=()=>A2.playing?a2Stop():a2Start();
-  $("a2Current").onchange=()=>{A2.currentIndex=Number($("a2Current").value||0);a2RenderThumbs();a2DrawPreview()};
+  $("a2Current").onchange=()=>{A2.currentIndex=Number($("a2Current").value||0);a2RenderThumbs();a2UpdateManualChinUI();a2DrawPreview()};
   $("a2View").onchange=a2DrawPreview;$("a2ShowGuide").onchange=a2DrawPreview;$("a2Fps").oninput=()=>{$("a2FpsV").textContent=$("a2Fps").value+" fps";if(A2.playing)a2Start()};
   $("advancedMode").onclick=()=>{document.body.classList.add("advanced");$("advancedMode").classList.add("primary");$("productionMode").classList.remove("primary")};
 
@@ -4293,7 +4539,7 @@ function init(){
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   updateFinishLockUI();
-  log("V9.7 iniciada. Chin Detector V2 mantido; medição do menor pescoço corrigida para aceitar todas as cabeças válidas, inclusive delta zero/REVIEW, com fallback estrutural do Precision Lock.");
+  log("V10.3 iniciada. Chin Lock V3 protegido: decisão por expressão LOCK/SOFT/SKIP, checks anatômicos boca→queixo/jaw→queixo/queixo→pescoço, fallback automático e medição de pescoço independente do warp.");
 }
 init();
 </script>
