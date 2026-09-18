@@ -5,14 +5,14 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 
-test("Alinhador Profissa V9.2 mantém as seis folhas, Finish Lock, Chroma 2 e a Área 2", async () => {
+test("Alinhador Profissa V9.4 mantém as seis folhas, Finish Lock, Chroma 2 e a Área 2 simplificada", async () => {
   const [html, route, runner] = await Promise.all([
     read("public/Ferramentas/alinhador-profissa/index.html"),
     read("app/Ferramentas/alinhador-profissa/page.tsx"),
     read("scripts/apply-finish-lock-v84.mjs"),
   ]);
 
-  assert.match(html, /V9\.2.*6 Folhas \+ Finish Lock Manual/);
+  assert.match(html, /V9\.4.*6 Folhas \+ Finish Lock Manual/);
   assert.match(html, /A-PT, B, B-PT, C e C-PT/);
   assert.match(html, /id="chroma2Hard"/);
   assert.match(html, /hardMode=!!\$\("chroma2Hard"\)\?\.checked/);
@@ -21,13 +21,17 @@ test("Alinhador Profissa V9.2 mantém as seis folhas, Finish Lock, Chroma 2 e a 
   assert.match(html, /function localDataBaseUrl\(\)/);
   assert.match(html, /models\/next\/\$\{gender\}/);
   assert.match(html, /models\/modelos\/\$\{createdTarget\.gender\}\/\$\{createdTarget\.folderName\}/);
-  assert.match(html, /aligner:\{version:"9\.1"/);
+  assert.match(html, /aligner:\{version:"9\.4"/);
   assert.match(html, /id="a2Folder"[^>]+webkitdirectory/);
+  assert.match(html, /id="area2Mode"/);
+  assert.match(html, /id="a2ChinProcess"/);
+  assert.match(html, /function a2ProcessChinLock\(\)/);
+  assert.match(html, /aligner:\{version:"9\.4"/);
   assert.match(html, /function v83ApplyFinishLockArea1/);
   assert.match(html, /function a2BuildCanonical/);
   assert.match(html, /const ready=files\.length>=2/);
   assert.doesNotMatch(html, /A2\.files\.length!==63/);
-  assert.match(route, /rev=v9-2-classic-chroma/);
+  assert.match(route, /rev=v9-4-area2-simplificada/);
   assert.match(runner, /\["feminino", 11\]/);
   assert.match(runner, /\["masculino", 15\]/);
   assert.doesNotMatch(runner, /\["feminino", 16\]/);

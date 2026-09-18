@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V9.2 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
+<title>V9.4 — Alinhador Profissa · 6 Folhas + Finish Lock Manual</title>
 
 <style>
 :root{
@@ -484,6 +484,7 @@ body.area2 #area2{display:grid}
 .a2Thumb.active{outline:2px solid var(--purple-3)}.a2Thumb.bad{box-shadow:inset 0 0 0 2px var(--warn)}
 .a2Thumb canvas{display:block;width:100%;aspect-ratio:16/9;background:#f2f2f4;border-radius:7px;margin-bottom:4px}
 .a2LockBadge{display:inline-block;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:900;background:var(--ok-bg);color:var(--ok);border:1px solid #bfe3d1;margin-top:3px}
+.a2ChinBadge{display:inline-block;border-radius:999px;padding:2px 5px;font-size:8px;font-weight:900;margin:3px 0 0 3px;border:1px solid #d9c9ec;background:#f5effb;color:#5d2d83}.a2ChinBadge.warn{border-color:#eedda9;background:var(--warn-bg);color:var(--warn)}.a2ChinBadge.review{border-color:#f2c2bd;background:var(--bad-bg);color:var(--bad)}
 #a2Folder{padding:8px}
 body.area2 .sidebar{height:100vh}
 @media(max-width:1180px){.a2PreviewWrap{grid-template-columns:1fr}}
@@ -495,7 +496,7 @@ body.area2 .sidebar{height:100vh}
 <body>
 <div class="app" id="area1">
 <aside class="sidebar">
-  <h1>V9.2 · Alinhador Profissa</h1>
+  <h1>V9.4 · Alinhador Profissa</h1>
   <div class="small">Pipeline de produção com 6 folhas independentes — A, A-PT, B, B-PT, C e C-PT — mantendo Chroma clássico, Chroma 2 opcional, validação 7×3, Geometry/Contour V2, QA, Preflight, Smart Remap 3X e Finish Lock manual.</div>
   <div class="modebar"><button id="productionMode" class="primary">Produção</button><button id="advancedMode">Ajustes avançados</button><button id="area2Mode">Área 2</button></div>
 
@@ -544,7 +545,7 @@ body.area2 .sidebar{height:100vh}
     </details>
     <button id="quickProcess" class="primary">⚡ Processar tudo (detectar + molde)</button>
     <div class="small quickNote">Usa exatamente as configurações atuais. É o atalho para o seu fluxo normal.</div>
-    <div class="small quickNote" style="margin-top:4px"><b>V9.2:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
+    <div class="small quickNote" style="margin-top:4px"><b>V9.4:</b> A, A-PT, B, B-PT, C e C-PT usam o <b>mesmo pipeline completo</b>. O <b>Finish Lock</b> permanece manual e separado.</div>
     <div id="pipelineBox" class="pipelineBox dirty"><b id="pipelineHeadline">AGUARDANDO ENTRADA</b><div id="pipelineMessage" class="small">Carregue uma ou mais folhas.</div><div id="pipelineSteps" class="pipelineSteps"></div><div id="pipelineEngineLine" class="engineLine"></div><button id="pipelineAction" style="margin-top:8px" hidden></button></div>
     <div id="smartRemapStatus" class="status" style="margin-top:8px">Smart Remap 3X ativo · 6% base · força sobe automaticamente apenas nas cabeças/regiões que realmente divergem do molde.</div>
     <button id="detect" style="margin-top:8px">Detectar cabeças</button>
@@ -582,11 +583,11 @@ body.area2 .sidebar{height:100vh}
 
     <div class="v6box">
       <div class="v6head">
-        <div><b>V9.2 SmartLock</b><span>estável</span></div>
+        <div><b>V9.4 SmartLock</b><span>estável</span></div>
         <label class="switchline"><input id="v6Smart" type="checkbox" checked style="width:auto"> Ativo</label>
       </div>
       <div class="small">Evita correções desnecessárias, ignora contornos fora do padrão, escolhe uma cabeça-base limpa e agora corrige casos raros de achatamento vertical em cabeças isoladas.</div>
-      <div class="small" style="margin-top:5px">V9.2 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
+      <div class="small" style="margin-top:5px">V9.4 preserva os defaults calibrados do V7.5. As seis folhas passam pelo mesmo detector, geometria, canonical, Smart Remap, QA e export. As folhas -PT não são especiais no pipeline: funcionam exatamente como suas folhas normais.</div>
 
       <label><input id="v6Robust" type="checkbox" checked style="width:auto"> Molde por consenso robusto / rejeitar outliers</label>
       <label><input id="v6SafeScale" type="checkbox" checked style="width:auto"> Proteger escala contra cabeça gigante acidental</label>
@@ -599,7 +600,7 @@ body.area2 .sidebar{height:100vh}
       <label>Zona morta do contorno <span class="value" id="v6DeadV">0.8 px</span></label>
       <input id="v6Dead" type="range" min="0" max="3" step="0.1" value="0.8">
 
-      <label>Limite de correção V9.2 <span class="value" id="v6CapV">3.0%</span></label>
+      <label>Limite de correção V9.4 <span class="value" id="v6CapV">3.0%</span></label>
       <input id="v6Cap" type="range" min="1" max="8" step="0.25" value="3">
 
       <label>Estabilidade subpixel <span class="value" id="v6SnapV">1/8 px</span></label>
@@ -761,7 +762,7 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
     <span class="tag">cabeça/pescoço separados</span>
     <span class="tag">anti-cílio/outlier</span>
     <span class="tag">preserva rosto interno</span>
-    <span class="tag">V9.2 pipeline</span>
+    <span class="tag">V9.4 pipeline</span>
     <span class="tag">Chroma base + Chroma 2 opcional</span>
     <span class="tag">Smart Remap 3X</span>
     <span class="tag">deadzone + subpixel</span>
@@ -783,12 +784,12 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
 </div>
 
 <!-- =======================================================
-     V9.2 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
+     V9.4 · ÁREA 2 — PRECISION LOCK DE MODELO PROCESSADO
 ======================================================== -->
 <div class="app" id="area2">
   <aside class="sidebar">
-    <h1>V9.2 · Área 2</h1>
-    <div class="small">Pós-alinhamento de precisão para um modelo que já saiu da Área 1. Não usa chroma e não reconstrói expressão: trava o <b>topo da cabeça</b> e as <b>duas laterais do pescoço</b> usando os PNGs transparentes disponíveis.</div>
+    <h1>V9.4 · Área 2</h1>
+    <div class="small">Fluxo simples: primeiro use o <b>processamento normal</b> (topo + pescoço). Abaixo dele existe o <b>processamento experimental</b> opcional (queixo + corte do pescoço). O export usa automaticamente o último processamento concluído.</div>
     <div class="modebar"><button id="area1Back">Área 1</button><button class="primary">Área 2</button></div>
 
     <div class="card">
@@ -798,13 +799,25 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
         <input id="a2Folder" type="file" webkitdirectory multiple accept="image/png">
         <div class="small">Selecione a pasta <b>modelo-N</b>. JSON e outros arquivos são ignorados; os nomes dos PNGs são preservados. Modelos com grades diferentes também são aceitos.</div>
       </div>
-      <button id="a2Process" class="primary" style="margin-top:9px" disabled>◎ Construir molde perfeito e alinhar 100% (topo + pescoço)</button>
-      <div id="a2Status" class="status" style="margin-top:8px">Aguardando pasta.</div>
+      <div style="margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fbfaff">
+        <b>Processamento normal</b>
+        <div class="small">É o Precision Lock original da Área 2: trava topo + pescoço como antes.</div>
+        <button id="a2Process" class="primary" style="margin-top:8px" disabled>◎ Processar normal — topo + pescoço</button>
+        <div id="a2Status" class="status" style="margin-top:8px">Aguardando pasta.</div>
+      </div>
+      <div style="margin-top:10px;padding:10px;border:1px dashed #b896d8;border-radius:12px;background:#fcf9ff">
+        <b>🧪 Processamento experimental</b>
+        <div class="small">Opcional. Usa o resultado normal como base, estabiliza a parte inferior do rosto/queixo e depois corta todos os pescoços pela menor altura válida.</div>
+        <button id="a2ChinProcess" style="margin-top:8px" disabled>🧪 Processar experimental — queixo + corte do pescoço</button>
+        <div id="a2ChinStatus" class="status" style="margin-top:8px">Primeiro execute o processamento normal.</div>
+      </div>
       <div class="a2Stats">
 <div class="a2Stat"><span>Imagens</span><b id="a2Count">0 PNGs</b></div>
         <div class="a2Stat"><span>Topo alvo</span><b id="a2TopStat">—</b></div>
         <div class="a2Stat"><span>Pescoço L/R</span><b id="a2NeckStat">—</b></div>
         <div class="a2Stat"><span>Precisão</span><b id="a2Precision">—</b></div>
+        <div class="a2Stat"><span>Queixo alvo</span><b id="a2ChinStat">—</b></div>
+        <div class="a2Stat"><span>Corte do pescoço</span><b id="a2CutStat">—</b></div>
       </div>
     </div>
 
@@ -814,14 +827,16 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
       <div class="row3"><button id="a2Prev">◀</button><button id="a2Play">▶ Play</button><button id="a2Next">▶</button></div>
       <label>Velocidade <span class="value" id="a2FpsV">6 fps</span></label><input id="a2Fps" type="range" min="1" max="20" value="6">
       <label>Visualização</label>
-      <select id="a2View"><option value="result">Resultado alinhado</option><option value="original">Original processado</option><option value="compare">Antes / Depois</option></select>
+      <select id="a2View"><option value="current">Resultado atual</option><option value="original">Original processado</option><option value="compare">Comparar normal / experimental</option></select>
+      <div class="small">“Resultado atual” acompanha automaticamente o último processamento concluído.</div>
       <label><input id="a2ShowGuide" type="checkbox" checked style="width:auto"> Mostrar molde perfeito / âncoras</label>
     </div>
 
     <div class="card">
       <h2>3. Exportar pós-alinhamento</h2>
-      <div class="small">Exporta os mesmos nomes PNG para uma pasta escolhida por você. O modelo original não é sobrescrito automaticamente.</div>
-      <button id="a2Export" class="good" disabled>Exportar conjunto alinhado</button>
+      <div class="small">Sem seletor de modo: o export usa automaticamente <b>o último processamento concluído</b>.</div>
+      <div id="a2ActiveOutput" class="status" style="margin-top:8px">Resultado atual: nenhum processamento concluído.</div>
+      <button id="a2Export" class="good" disabled>Exportar resultado atual</button>
       <div id="a2ExportStatus" class="status" style="margin-top:8px">Nada exportado.</div>
     </div>
 
@@ -831,13 +846,19 @@ Cada folha PT exporta os mesmos nomes da folha parceira com prefixo pt_.
         <b>1.</b> Topo útil da cabeça → mesma coordenada em todas.<br>
         <b>2.</b> Base do pescoço → preservada no anchor Y 346.<br>
         <b>3.</b> Lateral esquerda/direita do pescoço → perfil canônico mediano, aplicado a 100% apenas na região do pescoço.<br>
-        <b>4.</b> Rosto/cabelo interno → não recebe remapeamento horizontal da Área 2.
+        <b>4.</b> Rosto/cabelo interno → não recebe remapeamento horizontal da Área 2.<br><br>
+        <b>Experimental — Chin Lock:</b><br>
+        <b>5.</b> Topo/cabelo e região dos olhos ficam imóveis.<br>
+        <b>6.</b> A correção vertical cresce progressivamente pelas bochechas/mandíbula até chegar a 100% no queixo.<br>
+        <b>7.</b> Depois do encaixe do queixo, o menor pescoço válido vira a altura padrão.<br>
+        <b>8.</b> Tudo que ultrapassa essa nova base recebe corte horizontal; nenhuma imagem ganha pescoço artificial.<br>
+        <b>9.</b> Correções excessivas não são esmagadas silenciosamente: ficam marcadas como REVISAR.
       </div>
     </div>
   </aside>
 
   <main class="main">
-    <div class="area2hero"><b>Precision Lock 100%</b><div class="small">Segunda passagem para modelo pronto. O objetivo aqui não é “embelezar” a cabeça: é remover a pequena oscilação residual entre sprites já processados.</div></div>
+    <div class="area2hero"><b>Precision Lock 100%</b><div class="small">Segunda passagem para modelo pronto. O Finish Lock normal remove oscilação de topo/pescoço; o Chin Lock experimental atua somente se você apertar o botão e tenta estabilizar a altura da parte inferior do rosto.</div></div>
     <div class="a2PreviewWrap">
       <canvas id="a2Preview" width="960" height="540"></canvas>
       <div class="a2Guide">
@@ -859,10 +880,10 @@ const lerp=(a,b,t)=>a+(b-a)*t;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* =========================================================
-   V9.2 — SCHEMA / BASELINE / CONFIG / PIPELINE
+   V9.4 — SCHEMA / BASELINE / CONFIG / PIPELINE
 ========================================================= */
 const MODEL_SCHEMA=Object.freeze({
-  version:"9.1",
+  version:"9.4",
   sheets:["A","APT","B","BPT","C","CPT"],
   rows:3,cols:7,headsPerSheet:21,
   variants:["","_blink","_talk"],variantNames:["normal","blink","talk"],
@@ -2319,9 +2340,9 @@ async function buildCanonical(){
     drawCanonicalDebug();
     const expInfo=S.faceAlign?` · Face Rig refs ${S.faceAlign.refLabel}`:"";
     status("canonicalStatus",`Molde criado. Cabeça-base: ${baseHead.label}${expInfo}. Renderizando ${S.heads.length} expressões…`,"warn");
-    log(`V9.2 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
-    if(consensus.keep.length<S.heads.length)log(`V9.2 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
-    if(v6Scale.clipped)log("V9.2 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
+    log(`V9.4 molde: ${S.heads.length} cabeças; base limpa ${baseHead.label}; consenso ${consensus.keep.length}/${S.heads.length}; força ${$("warpStrength").value}%${S.faceAlign?`; Face Rig refs ${S.faceAlign.refLabel} · ativos ${S.faceAlign.activeCount}`:""}.`);
+    if(consensus.keep.length<S.heads.length)log(`V9.4 filtro: ${S.heads.length-consensus.keep.length} cabeça(s) ficaram fora do consenso por contorno ruim/saliência.`);
+    if(v6Scale.clipped)log("V9.4 SafeScale: a cabeça-base foi limitada por ser um outlier de escala.");
 
     for(let i=0;i<S.heads.length;i++){
       const h=S.heads[i];
@@ -2333,7 +2354,7 @@ async function buildCanonical(){
     clearFinishLockState();
     markStage("render",{});for(const h of S.heads)h.renderRevision=S.pipeline.stages.render.rev;
     const q=v8AnalyzeQuality({focus:true});markStage("qa",{});for(const h of S.heads)h.qaRevision=S.pipeline.stages.qa.rev;
-    status("canonicalStatus",`V9.2 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
+    status("canonicalStatus",`V9.4 pronta · base ${baseHead.label} · SmartLock ${cfg("smartLock",true)?"ATIVO":"desligado"} · remap ${cfg("warpStrength",6)}%${cfg("smartRemap",true)?`→até ${cfg("smartRemapMax",24)}%`:""} · ${q?.OK||0} OK / ${q?.WARN||0} atenção / ${q?.REVIEW||0} revisar`,q?.REVIEW?"warn":"ok");
     refreshSelectors();renderThumbs(true);drawPreview();updateKPIs();v71UpdateUndoButton();updatePreflight();updateFinishLockUI();
   }catch(e){
     console.error(e);log("ERRO CANÔNICO: "+(e.stack||e.message));
@@ -2806,7 +2827,7 @@ function updateDiagnostics(){
     `Y cabeça: ${d.yHead.toFixed(4)} · Y pescoço: ${d.yNeck.toFixed(4)}\n`+
     `Proteção do miolo: ${$("coreProtect").value}% · clamp X: ${Number($("maxLocalX").value).toFixed(1)}%\n`+
     `Modo borda: ${$("preserveInnerFace").checked?"ligado":"desligado"} · faixa ${$("edgeBand").value}% · rigidez ${$("innerRigidity").value}%\n`+
-    `V9.2 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
+    `V9.4 SmartLock: ${$("v6Smart")?.checked?"ON":"OFF"} · deadzone ${$("v6Dead")?.value||0}px · cap ${$("v6Cap")?.value||0}% · snap 1/${$("v6Snap")?.value||1}px\n`+
     `${h.quality?`QA V8.5: ${h.quality.level} · causa ${h.quality.reason} · score ${h.quality.score.toFixed(2)}\n`:""}`+
     `${h.geomFixInfo?.manual?`Último refazer: consenso ${Number(h.geomFixInfo.currentScore||0).toFixed(2)} → ${Number(h.geomFixInfo.candidateScore||0).toFixed(2)}\n`:""}`+
     `Queixo: ${h.geom.chinSource} · altura original ${h.geom.totalHeight.toFixed(1)} px`;
@@ -2900,7 +2921,7 @@ async function detectAll(){
     status("detectStatus",cfg("inputEngine","classic")==="auto"
       ?"AUTO experimental: avaliando segmentação e grid…"
       :`Detectando ${loadedKeys.length} folha(s) com ${cfg("inputEngine","classic").toUpperCase()}…`,"warn");
-    log(`V9.2 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
+    log(`V9.4 detecção: ${loadedKeys.map(k=>MODEL_SCHEMA.sheetLabels[k]).join(", ")} · modo ${cfg("inputEngine","classic")}.`);
 
     const images=Object.fromEntries(
       await Promise.all(MODEL_SCHEMA.sheets.map(async k=>[k,await loadFile(files[k])]))
@@ -3174,7 +3195,7 @@ function modelMetadata(gender=getModelGender()){
     baseScale:MODEL_EXPORT.baseScale,
     width:MODEL_EXPORT.width,
     height:MODEL_EXPORT.height,
-    aligner:{version:"9.1",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
+    aligner:{version:"9.4",canonicalRevision:S.canonical?.revision||0,inputEngines:Object.fromEntries(MODEL_SCHEMA.sheets.filter(k=>S.sheets?.[k]).map(k=>[k,S.sheets[k].engine])),qa:S.qualitySummary?{ok:S.qualitySummary.OK,warn:S.qualitySummary.WARN,review:S.qualitySummary.REVIEW}:null,finishLock:S.finishLock?{enabled:true,count:S.finishLock.count,top:S.finishLock.canonical?.targetTop,p90:S.finishLock.summary?.p90,maxTopErr:S.finishLock.summary?.topMax}:null}
   };
 }
 function updateModelPreview(){
@@ -3510,7 +3531,7 @@ function updateFaceRigControls(){
 }
 
 /* =========================================================
-   V9.2 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
+   V9.4 — FINISH LOCK MANUAL DA ÁREA 2 DENTRO DA ÁREA 1
 ========================================================= */
 function v83MeasureCanvasForFinishLock(cnv){
   const ctx=cnv.getContext("2d",{willReadFrequently:true});
@@ -3572,13 +3593,24 @@ function applyFinishLockManual(){
 }
 
 /* =========================================================
-   V9.2 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
+   V9.4 — ÁREA 2 · PRECISION LOCK PÓS-PROCESSAMENTO
 ========================================================= */
 const A2={
   files:[],items:[],canonical:null,currentIndex:0,playing:false,timer:null,thumbs:[],processed:false,
+  chinProcessed:false,chinCanonical:null,chinSummary:null,activeOutput:null,
   work:document.createElement("canvas"),workCtx:null
 };
 A2.workCtx=A2.work.getContext("2d",{willReadFrequently:true});
+function a2SetActiveOutput(mode){
+  A2.activeOutput=mode;
+  const el=$("a2ActiveOutput");
+  if(el){
+    if(mode==="chin")status("a2ActiveOutput","Resultado atual: 🧪 processamento experimental — queixo + corte do pescoço.","ok");
+    else if(mode==="result")status("a2ActiveOutput","Resultado atual: processamento normal — Precision Lock topo + pescoço.","ok");
+    else status("a2ActiveOutput","Resultado atual: nenhum processamento concluído.");
+  }
+  if($("a2View")&&$("a2View").value!=="original"&&$("a2View").value!=="compare")$("a2View").value="current";
+}
 
 function a2ExpectedNames(){
   const out=[];
@@ -3689,15 +3721,145 @@ async function a2VerifyCanvas(cnv){
 async function a2CreateThumb(item){
   const full=await a2RenderItem(item),thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);item.verify=await a2VerifyCanvas(full);item.resultBlob=await canvasToBlob(full);return thumb;
 }
+
+
+/* =========================================================
+   V9.4 — CHIN LOCK EXPERIMENTAL
+   Topo fixo. Correção vertical começa abaixo dos olhos,
+   cresce nas bochechas/mandíbula e chega a 100% no queixo.
+   O pescoço acompanha o queixo por translação; depois o
+   menor pescoço válido vira a linha de corte global.
+========================================================= */
+async function a2CanvasFromBlob(blob){
+  const bm=await createImageBitmap(blob),c=canvas(bm.width,bm.height),ctx=c.getContext("2d",{willReadFrequently:true});
+  ctx.drawImage(bm,0,0);bm.close?.();return c;
+}
+function a2MeasureChinCanvas(cnv){
+  const ctx=cnv.getContext("2d",{willReadFrequently:true}),scanH=Math.min(cnv.height,MODEL_EXPORT.anchorY+90),data=ctx.getImageData(0,0,cnv.width,scanH).data;
+  const m=a2MeasurePixels(data,cnv.width,scanH),center=MODEL_EXPORT.anchorX;
+  const widths=[];
+  const from=Math.max(m.top+8,m.neckStart-26),to=Math.min(m.bottom,m.neckStart+22);
+  for(let y=from;y<=to;y++){
+    const s=a2CentralSegment(data,cnv.width,y,center,18);if(s)widths.push({y,w:s.w,c:s.c});
+  }
+  const pre=widths.filter(r=>r.y>=m.neckStart-22&&r.y<=m.neckStart-5).map(r=>r.w);
+  const post=widths.filter(r=>r.y>=m.neckStart+2&&r.y<=m.neckStart+19).map(r=>r.w);
+  const preW=pre.length?median(pre):m.maxWidth*.48,postW=post.length?median(post):m.maxWidth*.30;
+  const ratio=preW>0?postW/preW:1,coverage=clamp(Math.min(pre.length,post.length)/12,0,1);
+  const transition=clamp((.92-ratio)/.50,0,1),confidence=clamp(transition*.72+coverage*.28,0,1);
+  return {...m,chinY:m.neckStart,chinConfidence:confidence,chinPreW:preW,chinPostW:postW,chinRatio:ratio};
+}
+function a2ChinCanonicalFromMeasures(entries){
+  const confident=entries.filter(x=>x.measure&&x.measure.chinConfidence>=.28&&Number.isFinite(x.measure.chinY));
+  if(confident.length<2)throw new Error("Não houve queixos confiáveis suficientes para construir o molde experimental.");
+  const ys=confident.map(x=>x.measure.chinY),med=median(ys),dev=ys.map(y=>Math.abs(y-med)),mad=median(dev)||1;
+  const trusted=confident.length>=5?confident.filter(x=>Math.abs(x.measure.chinY-med)<=Math.max(7,mad*3.5)):confident;
+  const targetChin=median((trusted.length>=2?trusted:confident).map(x=>x.measure.chinY));
+  const targetTop=A2.canonical?.targetTop??median(entries.map(x=>x.measure?.top).filter(Number.isFinite));
+  const protectY=Math.round(targetTop+(targetChin-targetTop)*.57);
+  return {targetChin,protectY,targetTop,mad,count:trusted.length,total:entries.length,maxCorrection:18,lockCorrection:9};
+}
+function a2LowerFaceEase(t){
+  t=clamp(t,0,1);const s=t*t*(3-2*t);return Math.pow(s,1.18);
+}
+function a2ChinForwardY(sy,srcChin,targetChin,protectY){
+  if(sy<=protectY)return sy;
+  const delta=targetChin-srcChin;
+  if(sy>=srcChin)return sy+delta;
+  const t=(sy-protectY)/Math.max(1,srcChin-protectY);
+  return sy+delta*a2LowerFaceEase(t);
+}
+function a2ChinInverseY(dy,srcChin,targetChin,protectY){
+  if(dy<=protectY)return dy;
+  const delta=targetChin-srcChin;
+  if(dy>=targetChin)return dy-delta;
+  let lo=protectY,hi=srcChin;
+  for(let i=0;i<14;i++){
+    const mid=(lo+hi)/2,f=a2ChinForwardY(mid,srcChin,targetChin,protectY);
+    if(f<dy)lo=mid;else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+function a2RenderChinWarp(src,measure,canonical,applyWarp=true){
+  const W=src.width,H=src.height,out=canvas(W,H),ctx=out.getContext("2d");
+  ctx.imageSmoothingEnabled=true;if("imageSmoothingQuality" in ctx)ctx.imageSmoothingQuality="high";
+  if(!applyWarp){ctx.drawImage(src,0,0);return out}
+  const srcChin=measure.chinY,targetChin=canonical.targetChin,protectY=canonical.protectY;
+  for(let y=0;y<H;y++){
+    const sy=clamp(a2ChinInverseY(y,srcChin,targetChin,protectY),0,H-1);
+    ctx.drawImage(src,0,sy,W,1,0,y,W,1);
+  }
+  return out;
+}
+function a2OpaqueBottom(cnv,alpha=18){
+  const ctx=cnv.getContext("2d",{willReadFrequently:true}),img=ctx.getImageData(0,0,cnv.width,cnv.height),d=img.data,w=cnv.width,h=cnv.height;
+  for(let y=h-1;y>=0;y--){let count=0;for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>=alpha){count++;if(count>=3)return y}}
+  return -1;
+}
+function a2CutBelow(cnv,cutY){
+  const out=canvas(cnv.width,cnv.height),ctx=out.getContext("2d");ctx.drawImage(cnv,0,0);ctx.clearRect(0,Math.floor(cutY)+1,cnv.width,cnv.height-Math.floor(cutY)-1);return out;
+}
+function a2ChinRank(level){return level==="REVIEW"?2:level==="WARN"?1:0}
+function a2ChinWorst(a,b){return a2ChinRank(a)>=a2ChinRank(b)?a:b}
+async function a2MakeSmallThumb(full){const thumb=canvas(240,135),ctx=thumb.getContext("2d");ctx.clearRect(0,0,240,135);ctx.drawImage(full,0,0,full.width,full.height,0,0,240,135);return thumb}
+async function a2ProcessChinLock(){
+  if(!A2.processed||A2.items.length<2){status("a2ChinStatus","Execute primeiro o Precision Lock normal.","warn");return}
+  const btn=$("a2ChinProcess");btn.disabled=true;$("a2Export").disabled=true;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;
+  $("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";
+  try{
+    const entries=[];
+    for(let i=0;i<A2.items.length;i++){
+      status("a2ChinStatus",`Medindo queixo ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");
+      const src=await a2CanvasFromBlob(A2.items[i].resultBlob),measure=a2MeasureChinCanvas(src);
+      entries.push({item:A2.items[i],src,measure});
+      if(i%4===3)await sleep(0);
+    }
+    const cc=a2ChinCanonicalFromMeasures(entries);A2.chinCanonical=cc;$("a2ChinStat").textContent=`Y ${cc.targetChin.toFixed(1)}`;
+    const warped=[];
+    let blocked=0,warns=0;
+    for(let i=0;i<entries.length;i++){
+      const e=entries[i],delta=cc.targetChin-e.measure.chinY,abs=Math.abs(delta),lowConf=e.measure.chinConfidence<.28;
+      let level=lowConf||abs>cc.maxCorrection?"REVIEW":abs>cc.lockCorrection?"WARN":"LOCK";
+      const apply=level!=="REVIEW";
+      if(level==="REVIEW")blocked++;else if(level==="WARN")warns++;
+      status("a2ChinStatus",`Ajustando face inferior ${i+1}/${entries.length} · ${e.item.name} · ${delta>=0?"+":""}${delta.toFixed(1)} px`,"warn");
+      const cnv=a2RenderChinWarp(e.src,e.measure,cc,apply),bottom=a2OpaqueBottom(cnv),neckLen=bottom-cc.targetChin;
+      warped.push({...e,canvas:cnv,delta,level,applied:apply,bottom,neckLen});
+      if(i%4===3)await sleep(0);
+    }
+    const validNecks=warped.filter(x=>x.applied&&Number.isFinite(x.neckLen)&&x.neckLen>=22).map(x=>x.neckLen);
+    if(validNecks.length<2)throw new Error("Não houve pescoços válidos suficientes depois do encaixe do queixo.");
+    const shortestNeck=Math.min(...validNecks),cutY=Math.round(cc.targetChin+shortestNeck);cc.shortestNeck=shortestNeck;cc.cutY=cutY;$("a2CutStat").textContent=`Y ${cutY}`;
+    let ok=0,review=0,warning=0;const chinErrs=[];
+    for(let i=0;i<warped.length;i++){
+      const w=warped[i],final=a2CutBelow(w.canvas,cutY),verifyMeasure=a2MeasureChinCanvas(final),finalBottom=a2OpaqueBottom(final),chinErr=Math.abs(verifyMeasure.chinY-cc.targetChin),bottomErr=Math.abs(finalBottom-cutY);
+      let verifyLevel=chinErr<=1.5&&bottomErr<=1?"LOCK":chinErr<=3.2&&bottomErr<=2?"WARN":"REVIEW";
+      const level=a2ChinWorst(w.level,verifyLevel);
+      if(level==="LOCK")ok++;else if(level==="WARN")warning++;else review++;
+      chinErrs.push(chinErr);
+      w.item.chinBlob=await canvasToBlob(final);w.item.chinThumb=await a2MakeSmallThumb(final);w.item.chinVerify={level,ok:level==="LOCK",delta:w.delta,applied:w.applied,confidence:w.measure.chinConfidence,sourceChin:w.measure.chinY,targetChin:cc.targetChin,chinErr,bottom:finalBottom,cutY,bottomErr};
+      status("a2ChinStatus",`Verificando ${i+1}/${warped.length} · ${w.item.name}`,"warn");if(i%3===2)await sleep(0);
+    }
+    A2.chinProcessed=true;A2.chinSummary={ok,warn:warning,review,count:warped.length,blocked,targetChin:cc.targetChin,cutY,shortestNeck,p90:percentile(chinErrs,.90)};
+    a2SetActiveOutput("chin");$("a2View").value="current";
+    const msg=`Chin Lock concluído · ${ok} LOCK / ${warning} WARN / ${review} REVISAR · queixo Y ${cc.targetChin.toFixed(1)} · corte Y ${cutY} · menor pescoço ${shortestNeck.toFixed(1)} px.`;
+    status("a2ChinStatus",msg,review?"warn":"ok");
+    $("a2GuideText").textContent+=` · CHIN LOCK: queixo Y ${cc.targetChin.toFixed(1)}, proteção até Y ${cc.protectY}, corte horizontal Y ${cutY}, P90 do queixo ${A2.chinSummary.p90.toFixed(1)} px.`;
+    a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
+  }catch(e){console.error(e);status("a2ChinStatus","Erro no Chin Lock experimental: "+e.message,"bad")}
+  finally{btn.disabled=!A2.processed;$("a2Export").disabled=!A2.processed}
+}
 async function a2LoadFolder(){
-  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length} PNGs`;
+  a2Stop();const files=a2SortFiles($("a2Folder").files);A2.files=files;A2.items=[];A2.canonical=null;A2.processed=false;A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;A2.currentIndex=0;A2.thumbs=[];$("a2Count").textContent=`${files.length} PNGs`;
+  a2SetActiveOutput(null);
+  $("a2ChinProcess").disabled=true;$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Primeiro execute o processamento normal.");
   const ready=files.length>=2;$("a2Process").disabled=!ready;$("a2Export").disabled=true;
   if(!ready){status("a2Status",files.length?`Pasta carregada com ${files.length} PNG. São necessárias pelo menos 2 imagens.`:"Nenhum PNG encontrado.",files.length?"warn":"");a2DrawPreview();return}
   status("a2Status",`${files.length} PNGs reconhecidas. Pronto para medir e construir o Precision Lock.`,"ok");a2PopulateSelect();a2DrawPreview();
 }
 function a2PopulateSelect(){const sel=$("a2Current");sel.innerHTML="";A2.files.forEach((f,i)=>{const o=document.createElement("option");o.value=i;o.textContent=`${String(i+1).padStart(2,"0")} · ${f.name}`;sel.appendChild(o)})}
 async function a2Process(){
-  if(A2.files.length<2)return;$("a2Process").disabled=true;$("a2Export").disabled=true;A2.items=[];A2.thumbs=[];$("a2Heads").innerHTML="";
+  if(A2.files.length<2)return;$("a2Process").disabled=true;$("a2Export").disabled=true;$("a2ChinProcess").disabled=true;A2.items=[];A2.thumbs=[];A2.chinProcessed=false;A2.chinCanonical=null;A2.chinSummary=null;a2SetActiveOutput(null);$("a2ChinStat").textContent="—";$("a2CutStat").textContent="—";status("a2ChinStatus","Aguardando o processamento normal terminar.");$("a2Heads").innerHTML="";
   try{
     for(let i=0;i<A2.files.length;i++)A2.items.push(await a2MeasureFile(A2.files[i],i,A2.files.length));
     const dims=A2.items.filter(x=>x.w!==MODEL_EXPORT.width||x.h!==MODEL_EXPORT.height);if(dims.length)throw new Error(`${dims.length} PNG(s) não estão em 1920×1080.`);
@@ -3706,30 +3868,83 @@ async function a2Process(){
     for(let i=0;i<A2.items.length;i++){status("a2Status",`Precision Lock ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const thumb=await a2CreateThumb(A2.items[i]);A2.items[i].thumb=thumb;if(i%3===2)await sleep(0)}
     A2.processed=true;const ok=A2.items.filter(x=>x.verify?.ok).length,p90=percentile(A2.items.map(x=>x.verify?.neckP90??99),.90),topMax=Math.max(...A2.items.map(x=>x.verify?.topErr??99));$("a2Precision").textContent=`${ok}/${A2.items.length} LOCK`;
     $("a2GuideText").textContent=`Topo Y ${A2.canonical.targetTop} · neck-base Y ${A2.canonical.targetBottom} · pescoço base L ${Math.round(A2.canonical.baseL)} / R ${Math.round(A2.canonical.baseR)} · P90 residual ${p90.toFixed(1)} px · erro máximo de topo ${topMax.toFixed(1)} px.`;
-    status("a2Status",ok===A2.items.length?`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância de verificação.`:`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância. Confira as miniaturas marcadas.`,ok===A2.items.length?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
-  }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false}
+    a2SetActiveOutput("result");$("a2View").value="current";
+    status("a2Status",ok===A2.items.length?`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância de verificação.`:`Precision Lock concluído: ${ok}/${A2.items.length} dentro da tolerância. Confira as miniaturas marcadas.`,ok===A2.items.length?"ok":"warn");$("a2Export").disabled=false;$("a2Process").disabled=false;$("a2ChinProcess").disabled=false;status("a2ChinStatus","Processamento normal pronto. Se quiser, aplique agora o experimental.","ok");a2RenderThumbs();a2DrawGuide();await a2DrawPreview();
+  }catch(e){console.error(e);status("a2Status","Erro na Área 2: "+e.message,"bad");$("a2Process").disabled=false;$("a2ChinProcess").disabled=true}
 }
 function a2RenderThumbs(){
-  const wrap=$("a2Heads");wrap.innerHTML="";A2.items.forEach((it,i)=>{const d=document.createElement("div");d.className="a2Thumb"+(i===A2.currentIndex?" active":"")+(it.verify&&!it.verify.ok?" bad":"");const c=canvas(240,135);c.getContext("2d").drawImage(it.thumb,0,0);d.appendChild(c);const n=document.createElement("div");n.textContent=it.name;d.appendChild(n);if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.verify.ok?"LOCK":"REVISAR";d.appendChild(b)}d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)})
+  const wrap=$("a2Heads");wrap.innerHTML="";A2.items.forEach((it,i)=>{
+    const d=document.createElement("div");const chinV=it.chinVerify;
+    d.className="a2Thumb"+(i===A2.currentIndex?" active":"")+((chinV&&chinV.level==="REVIEW")||(!chinV&&it.verify&&!it.verify.ok)?" bad":"");
+    const c=canvas(240,135),src=A2.activeOutput==="chin"&&A2.chinProcessed&&it.chinThumb?it.chinThumb:it.thumb;if(src)c.getContext("2d").drawImage(src,0,0);d.appendChild(c);
+    const n=document.createElement("div");n.textContent=it.name;d.appendChild(n);
+    if(it.verify){const b=document.createElement("span");b.className="a2LockBadge";b.textContent=it.verify.ok?"FINISH LOCK":"FINISH REVISAR";d.appendChild(b)}
+    if(chinV){const b=document.createElement("span");b.className="a2ChinBadge"+(chinV.level==="WARN"?" warn":chinV.level==="REVIEW"?" review":"");b.textContent=`CHIN ${chinV.level}`;d.appendChild(b)}
+    d.onclick=()=>{A2.currentIndex=i;$("a2Current").value=String(i);a2RenderThumbs();a2DrawPreview()};wrap.appendChild(d)
+  })
 }
 async function a2DrawPreview(){
-  const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue a pasta do modelo",c.width/2,c.height/2);return}
-  const i=clamp(A2.currentIndex,0,A2.files.length-1),file=A2.files[i],mode=$("a2View").value,bm=await a2Bitmap(file),result=A2.processed&&A2.items[i]?.resultBlob?await createImageBitmap(A2.items[i].resultBlob):null;
-  const drawFit=(img,x,w)=>{const sc=Math.min((w-22)/img.width,(c.height-22)/img.height),dw=img.width*sc,dh=img.height*sc;ctx.drawImage(img,x+(w-dw)/2,(c.height-dh)/2,dw,dh)};
-  if(mode==="compare"&&result){drawFit(bm,0,c.width/2);drawFit(result,c.width/2,c.width/2);ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("ANTES",15,22);ctx.fillText("DEPOIS",c.width/2+15,22)}
-  else drawFit(mode==="original"||!result?bm:result,0,c.width);
-  if(result&&$("a2ShowGuide").checked&&mode!=="original"){const cc=A2.canonical,sc=Math.min((c.width-22)/MODEL_EXPORT.width,(c.height-22)/MODEL_EXPORT.height),dw=MODEL_EXPORT.width*sc,dh=MODEL_EXPORT.height*sc,ox=(c.width-dw)/2,oy=(c.height-dh)/2;ctx.save();ctx.strokeStyle="#7c3aed";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox,oy+cc.targetTop*sc);ctx.lineTo(ox+dw,oy+cc.targetTop*sc);ctx.stroke();ctx.strokeStyle="#18794e";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);if(d===0)ctx.moveTo(ox+p.l*sc,y);else ctx.lineTo(ox+p.l*sc,y)}for(let d=cc.depth;d>=0;d--){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,y)}ctx.stroke();ctx.restore()}
-  bm.close?.();result?.close?.();
+  const c=$("a2Preview"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);
+  if(!A2.files.length){ctx.fillStyle="#6e6875";ctx.font="16px system-ui";ctx.textAlign="center";ctx.fillText("Área 2 · carregue a pasta do modelo",c.width/2,c.height/2);return}
+  const i=clamp(A2.currentIndex,0,A2.files.length-1),file=A2.files[i],mode=$("a2View").value,bm=await a2Bitmap(file);
+  const finish=A2.processed&&A2.items[i]?.resultBlob?await createImageBitmap(A2.items[i].resultBlob):null;
+  const chin=A2.chinProcessed&&A2.items[i]?.chinBlob?await createImageBitmap(A2.items[i].chinBlob):null;
+  const current=A2.activeOutput==="chin"&&chin?chin:(finish||bm);
+  const drawFit=(img,x,w)=>{const sc=Math.min((w-22)/img.width,(c.height-22)/img.height),dw=img.width*sc,dh=img.height*sc,ox=x+(w-dw)/2,oy=(c.height-dh)/2;ctx.drawImage(img,ox,oy,dw,dh);return {sc,dw,dh,ox,oy}};
+  let currentFit=null,chinFit=null;
+
+  if(mode==="compare"&&finish&&chin){
+    drawFit(finish,0,c.width/2);chinFit=drawFit(chin,c.width/2,c.width/2);
+    ctx.fillStyle="#2f124d";ctx.font="bold 12px system-ui";ctx.textAlign="left";ctx.fillText("NORMAL",15,22);ctx.fillText("EXPERIMENTAL",c.width/2+15,22);
+  }else if(mode==="original"){
+    drawFit(bm,0,c.width);
+  }else{
+    currentFit=drawFit(current,0,c.width);
+  }
+
+  if($("a2ShowGuide").checked){
+    if(currentFit&&A2.activeOutput!=="chin"&&finish){
+      const cc=A2.canonical,sc=currentFit.sc,ox=currentFit.ox,oy=currentFit.oy,dw=currentFit.dw;
+      ctx.save();ctx.strokeStyle="#7c3aed";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox,oy+cc.targetTop*sc);ctx.lineTo(ox+dw,oy+cc.targetTop*sc);ctx.stroke();ctx.strokeStyle="#18794e";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);if(d===0)ctx.moveTo(ox+p.l*sc,y);else ctx.lineTo(ox+p.l*sc,y)}for(let d=cc.depth;d>=0;d--){const y=oy+(cc.targetBottom-d)*sc,p=a2ProfileAt(cc,d);ctx.lineTo(ox+p.r*sc,y)}ctx.stroke();ctx.restore();
+    }
+    const guideFit=(mode==="compare"&&chinFit)?chinFit:(A2.activeOutput==="chin"?currentFit:null);
+    if(guideFit&&A2.chinCanonical){
+      const cc=A2.chinCanonical;ctx.save();ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.strokeStyle="#d97706";ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.targetChin*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.targetChin*guideFit.sc);ctx.stroke();ctx.strokeStyle="#dc2626";ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.cutY*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.cutY*guideFit.sc);ctx.stroke();ctx.strokeStyle="#6d28d9";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(guideFit.ox,guideFit.oy+cc.protectY*guideFit.sc);ctx.lineTo(guideFit.ox+guideFit.dw,guideFit.oy+cc.protectY*guideFit.sc);ctx.stroke();ctx.restore();
+    }
+  }
+  bm.close?.();finish?.close?.();chin?.close?.();
 }
-function a2DrawGuide(){const c=$("a2GuideCanvas"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#101216";ctx.fillRect(0,0,c.width,c.height);if(!A2.canonical)return;const cc=A2.canonical,sx=.20,sy=.65,ox=c.width/2-MODEL_EXPORT.anchorX*sx,oy=20;ctx.strokeStyle="#9d7bd0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,oy+cc.targetTop*sy);ctx.lineTo(c.width-20,oy+cc.targetTop*sy);ctx.stroke();ctx.strokeStyle="#67d59a";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy,x=ox+p.l*sx;if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}for(let d=cc.depth;d>=0;d--){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy;ctx.lineTo(ox+p.r*sx,y)}ctx.stroke();ctx.fillStyle="#ddd";ctx.font="11px system-ui";ctx.fillText(`TOPO Y ${cc.targetTop}`,12,16);ctx.fillText(`NECK-BASE Y ${cc.targetBottom}`,12,c.height-12)}
+function a2DrawGuide(){
+  const c=$("a2GuideCanvas"),ctx=c.getContext("2d");ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="#101216";ctx.fillRect(0,0,c.width,c.height);if(!A2.canonical)return;
+  const cc=A2.canonical,sx=.20,sy=.65,ox=c.width/2-MODEL_EXPORT.anchorX*sx,oy=20;ctx.strokeStyle="#9d7bd0";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(20,oy+cc.targetTop*sy);ctx.lineTo(c.width-20,oy+cc.targetTop*sy);ctx.stroke();ctx.strokeStyle="#67d59a";ctx.beginPath();for(let d=0;d<=cc.depth;d++){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy,x=ox+p.l*sx;if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}for(let d=cc.depth;d>=0;d--){const p=a2ProfileAt(cc,d),y=oy+(cc.targetBottom-d)*sy;ctx.lineTo(ox+p.r*sx,y)}ctx.stroke();
+  ctx.fillStyle="#ddd";ctx.font="11px system-ui";ctx.fillText(`TOPO Y ${cc.targetTop}`,12,16);ctx.fillText(`NECK-BASE Y ${cc.targetBottom}`,12,c.height-12);
+  if(A2.chinCanonical){const ch=A2.chinCanonical;ctx.setLineDash([6,4]);ctx.strokeStyle="#f59e0b";ctx.beginPath();ctx.moveTo(20,oy+ch.targetChin*sy);ctx.lineTo(c.width-20,oy+ch.targetChin*sy);ctx.stroke();ctx.strokeStyle="#ef4444";ctx.beginPath();ctx.moveTo(20,oy+ch.cutY*sy);ctx.lineTo(c.width-20,oy+ch.cutY*sy);ctx.stroke();ctx.strokeStyle="#a78bfa";ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(20,oy+ch.protectY*sy);ctx.lineTo(c.width-20,oy+ch.protectY*sy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#f5c36a";ctx.fillText(`QUEIXO Y ${ch.targetChin.toFixed(1)}`,12,34);ctx.fillStyle="#ff8f8f";ctx.fillText(`CORTE Y ${ch.cutY}`,12,49);ctx.fillStyle="#c4b5fd";ctx.fillText(`PROTEÇÃO Y ${ch.protectY}`,12,64)}
+}
 function a2Step(dir){if(!A2.files.length)return;A2.currentIndex=(A2.currentIndex+dir+A2.files.length)%A2.files.length;$("a2Current").value=String(A2.currentIndex);a2RenderThumbs();a2DrawPreview()}
 function a2Stop(){A2.playing=false;clearInterval(A2.timer);A2.timer=null;if($("a2Play"))$("a2Play").textContent="▶ Play"}
 function a2Start(){if(!A2.files.length)return;a2Stop();A2.playing=true;$("a2Play").textContent="⏸ Pausar";A2.timer=setInterval(()=>a2Step(1),1000/Number($("a2Fps").value||6))}
 async function a2Export(){
-  if(!A2.processed||A2.items.length<2)return;$("a2Export").disabled=true;try{
-    if("showDirectoryPicker" in window){const dir=await window.showDirectoryPicker({mode:"readwrite",id:"nymi-area2-export"});for(let i=0;i<A2.items.length;i++){status("a2ExportStatus",`Exportando ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const blob=A2.items[i].resultBlob||(await canvasToBlob(await a2RenderItem(A2.items[i]))),fh=await dir.getFileHandle(A2.items[i].name,{create:true}),wr=await fh.createWritable();await wr.write(blob);await wr.close();if(i%3===2)await sleep(0)}status("a2ExportStatus",`Concluído: ${A2.items.length} PNGs pós-alinhados exportados.`,"ok")}
-    else{for(const it of A2.items){const blob=it.resultBlob||(await canvasToBlob(await a2RenderItem(it))),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=it.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);await sleep(80)}status("a2ExportStatus",`Downloads iniciados para os ${A2.items.length} PNGs.`,"ok")}
-  }catch(e){if(e.name!=="AbortError")status("a2ExportStatus","Erro: "+e.message,"bad")}finally{$("a2Export").disabled=false}
+  if(!A2.processed||A2.items.length<2||!A2.activeOutput)return;
+  const mode=A2.activeOutput;
+  if(mode==="chin"&&!A2.chinProcessed){status("a2ExportStatus","O resultado experimental não está disponível.","warn");return}
+  $("a2Export").disabled=true;
+  const getBlob=async it=>{
+    if(mode==="chin"&&it.chinBlob)return it.chinBlob;
+    if(it.resultBlob)return it.resultBlob;
+    return await canvasToBlob(await a2RenderItem(it));
+  };
+  try{
+    const label=mode==="chin"?"processamento experimental":"processamento normal";
+    if("showDirectoryPicker" in window){
+      const dir=await window.showDirectoryPicker({mode:"readwrite",id:"nymi-area2-export"});
+      for(let i=0;i<A2.items.length;i++){status("a2ExportStatus",`Exportando ${label} ${i+1}/${A2.items.length} · ${A2.items[i].name}`,"warn");const blob=await getBlob(A2.items[i]),fh=await dir.getFileHandle(A2.items[i].name,{create:true}),wr=await fh.createWritable();await wr.write(blob);await wr.close();if(i%3===2)await sleep(0)}
+      status("a2ExportStatus",`Concluído: ${A2.items.length} PNGs exportados exatamente como o último processamento (${label}).`,"ok")
+    }else{
+      for(const it of A2.items){const blob=await getBlob(it),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=it.name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);await sleep(80)}
+      status("a2ExportStatus",`Downloads iniciados para ${A2.items.length} PNGs do ${label}.`,"ok")
+    }
+  }catch(e){if(e.name!=="AbortError")status("a2ExportStatus","Erro: "+e.message,"bad")}
+  finally{$("a2Export").disabled=false}
 }
 function switchToArea2(){stopPlayer();document.body.classList.add("area2");a2DrawPreview();window.scrollTo(0,0)}
 function switchToArea1(){a2Stop();document.body.classList.remove("area2");window.scrollTo(0,0)}
@@ -3741,7 +3956,7 @@ function init(){
   updateLabels();updateBgModeUI();updateFaceRigControls();drawPreview();setEngineConfig();v81UpdateSmartRemapStatus();updatePipelineUI();updateModelPreview();updatePreflight();
   $("productionMode").onclick=()=>{document.body.classList.remove("advanced");$("productionMode").classList.add("primary");$("advancedMode").classList.remove("primary")};
   $("area2Mode").onclick=switchToArea2;$("area1Back").onclick=switchToArea1;
-  $("a2Folder").onchange=a2LoadFolder;$("a2Process").onclick=a2Process;$("a2Export").onclick=a2Export;
+  $("a2Folder").onchange=a2LoadFolder;$("a2Process").onclick=a2Process;$("a2ChinProcess").onclick=a2ProcessChinLock;$("a2Export").onclick=a2Export;
   $("a2Prev").onclick=()=>{a2Stop();a2Step(-1)};$("a2Next").onclick=()=>{a2Stop();a2Step(1)};$("a2Play").onclick=()=>A2.playing?a2Stop():a2Start();
   $("a2Current").onchange=()=>{A2.currentIndex=Number($("a2Current").value||0);a2RenderThumbs();a2DrawPreview()};
   $("a2View").onchange=a2DrawPreview;$("a2ShowGuide").onchange=a2DrawPreview;$("a2Fps").oninput=()=>{$("a2FpsV").textContent=$("a2Fps").value+" fps";if(A2.playing)a2Start()};
@@ -3786,7 +4001,7 @@ function init(){
   document.addEventListener("keydown",e=>{if(["INPUT","SELECT"].includes(document.activeElement.tagName))return;const area2=document.body.classList.contains("area2");if(e.code==="Space"){e.preventDefault();if(area2){A2.playing?a2Stop():a2Start()}else{S.playing?stopPlayer():startPlayer()}}if(e.code==="ArrowLeft"){e.preventDefault();if(area2){a2Stop();a2Step(-1)}else{stopPlayer();step(-1)}}if(e.code==="ArrowRight"){e.preventDefault();if(area2){a2Stop();a2Step(1)}else{stopPlayer();step(1)}}});
   window.addEventListener("error",e=>{log("ERRO JS: "+e.message);status("detectStatus","Erro JavaScript: "+e.message,"bad")});window.addEventListener("unhandledrejection",e=>log("PROMISE: "+(e.reason?.stack||e.reason)));
   updateFinishLockUI();
-  log("V9.2 iniciada. 6 folhas funcionais: A, A-PT, B, B-PT, C e C-PT. Chroma clássico restaurado com matte separado da detecção; Finish Lock continua manual.");
+  log("V9.4 iniciada. Área 2 simplificada: botão normal + botão experimental; export automático do último processamento concluído.");
 }
 init();
 </script>
