@@ -20,8 +20,23 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
     read("local-data-server.mjs"),
   ]);
 
-  assert.match(page, /<strong>02<\/strong>/);
+  assert.match(page, /<strong>03<\/strong>/);
+  assert.match(page, /area2-final-head-lock/);
   assert.doesNotMatch(page, /alinhador-profissional-v2|laboratorio-cor-modelo|teste-controles-cor/);
   assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
   assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
+});
+
+test("Área 2 Final Head Lock é registrada como ferramenta legada independente", async () => {
+  const [page, html] = await Promise.all([
+    read("app/Ferramentas/area2-final-head-lock/page.tsx"),
+    read("public/Ferramentas/area2-final-head-lock/index.html"),
+  ]);
+
+  assert.match(page, /LegacyToolPage/);
+  assert.match(page, /area2-final-head-lock\/index\.html\?rev=final-head-lock-v1/);
+  assert.match(html, /ÁREA 2 — FINAL HEAD LOCK/);
+  assert.match(html, /id="btnProc"/);
+  assert.match(html, /id="btnFix"/);
+  assert.match(html, /id="btnZip"/);
 });
