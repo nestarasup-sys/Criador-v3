@@ -10,4 +10,4 @@ essa integração seja planejada explicitamente.
 
 - `public/Ferramentas/green-bg-pro/index.html` — Green BG PRO, ferramenta integrada em modo legado.
 - `public/Ferramentas/alinhador-profissa/index.html` — Alinhador Profissa, ferramenta integrada em modo legado.
-- `public/Ferramentas/area2-final-head-lock/index.html` — Área 2 — Final Head Lock, ferramenta independente de travamento e revisão de cabeças.
+- `public/Ferramentas/area2-final-head-lock/index.html` — PROCESSADOR V2, ferramenta independente de travamento e revisão de cabeças.
