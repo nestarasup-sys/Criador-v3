@@ -34,10 +34,11 @@ test("PROCESSADOR V2 é registrado como ferramenta legada independente", async (
   ]);
 
   assert.match(page, /LegacyToolPage/);
-  assert.match(page, /area2-final-head-lock\/index\.html\?rev=processador-v2/);
+  assert.match(page, /area2-final-head-lock\/index\.html\?rev=processador-v2-head-lock-v2/);
   assert.match(page, /PROCESSADOR V2/);
-  assert.match(html, /PROCESSADOR V2/);
-  assert.match(html, /id="btnProc"/);
+  assert.match(html, /ÁREA 2 — FINAL HEAD LOCK v2/);
+  assert.match(html, /id="m7"/);
+  assert.match(html, /id="btnAutoCut"/);
   assert.match(html, /id="btnFix"/);
   assert.match(html, /id="btnZip"/);
 });

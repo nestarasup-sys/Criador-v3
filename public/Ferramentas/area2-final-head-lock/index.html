@@ -3,59 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PROCESSADOR V2</title>
+<title>ÁREA 2 — FINAL HEAD LOCK v2</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#16171a;color:#e6e6e6;height:100vh;overflow:hidden}
-#app{display:grid;grid-template-columns:300px 1fr 190px;height:100vh}
-.panel{background:#1d1f23;border-right:1px solid #2c2f35;overflow-y:auto;padding:14px}
-#right{border-right:none;border-left:1px solid #2c2f35;padding:10px}
-h1{font-size:14px;letter-spacing:.06em;font-weight:600;color:#fff;margin-bottom:2px}
-.sub{font-size:11px;color:#7d8590;margin-bottom:14px}
-.grp{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #2a2d33}
+body{font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#141518;color:#e6e6e6;height:100vh;overflow:hidden}
+#app{display:grid;grid-template-columns:286px 1fr 176px;height:100vh}
+.panel{background:#1c1e22;border-right:1px solid #2b2e34;overflow-y:auto;padding:12px}
+#right{border-right:none;border-left:1px solid #2b2e34;padding:9px}
+h1{font-size:13px;letter-spacing:.05em;font-weight:600;color:#fff}
+.sub{font-size:10px;color:#6e7681;margin-bottom:12px}
+.grp{margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid #282b31}
 .grp:last-child{border-bottom:none}
-.lbl{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#7d8590;margin-bottom:7px;font-weight:600}
-button{width:100%;padding:9px 12px;border:1px solid #3a3f47;border-radius:6px;background:#252931;color:#e6e6e6;font:inherit;font-weight:500;cursor:pointer;margin-bottom:6px;transition:.12s}
-button:hover:not(:disabled){background:#2f343d;border-color:#4a515b}
-button:disabled{opacity:.35;cursor:not-allowed}
+.lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#6e7681;margin-bottom:6px;font-weight:700}
+button{width:100%;padding:7px 9px;border:1px solid #383d45;border-radius:5px;background:#232830;color:#e6e6e6;font:inherit;font-size:12px;font-weight:500;cursor:pointer;margin-bottom:4px;transition:.1s;text-align:left}
+button:hover:not(:disabled){background:#2d333c;border-color:#49505a}
+button:disabled{opacity:.32;cursor:not-allowed}
 button.pri{background:#2d6a4f;border-color:#3a8a66}
 button.pri:hover:not(:disabled){background:#357d5d}
 button.sec{background:#2b4a6b;border-color:#3a6a94}
 button.sec:hover:not(:disabled){background:#33587e}
-button.sm{width:auto;padding:6px 10px;margin:0;font-size:12px}
-.row{display:flex;gap:6px;align-items:center}
-select,input[type=range]{width:100%;background:#252931;border:1px solid #3a3f47;color:#e6e6e6;border-radius:6px;padding:6px;font:inherit}
-input[type=range]{padding:0;height:22px}
-#drop{border:2px dashed #3a3f47;border-radius:8px;padding:18px 10px;text-align:center;cursor:pointer;color:#8b949e;font-size:12px}
+button.done{border-color:#4d9e7a;box-shadow:inset 3px 0 0 #4d9e7a}
+button.act{background:#2d6a4f;border-color:#6fd3a5;box-shadow:inset 3px 0 0 #8ce5bb}
+button.c{text-align:center}
+.mbtn{display:flex;justify-content:space-between;gap:6px;align-items:baseline}
+.mbtn i{font-style:normal;font-size:10px;color:#8b949e;font-variant-numeric:tabular-nums}
+button.act i{color:#bff0d8}
+.row{display:flex;gap:5px}
+.row button{margin-bottom:0}
+select,input[type=range]{width:100%;background:#232830;border:1px solid #383d45;color:#e6e6e6;border-radius:5px;padding:5px;font:inherit;font-size:12px}
+input[type=range]{padding:0;height:20px;border:none}
+#drop{border:2px dashed #383d45;border-radius:7px;padding:15px 8px;text-align:center;cursor:pointer;color:#8b949e;font-size:11px}
 #drop:hover{border-color:#3a8a66;color:#bfc7d1}
-#stage{position:relative;display:flex;flex-direction:column;background:#0f1013;min-width:0}
-#cv{flex:1;min-height:0;width:100%;display:block}
-#bar{padding:8px 12px;background:#1d1f23;border-top:1px solid #2c2f35;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-#topbar{padding:8px 12px;background:#1d1f23;border-bottom:1px solid #2c2f35;display:flex;gap:10px;align-items:center;font-size:12px}
-.pill{background:#252931;border:1px solid #3a3f47;border-radius:20px;padding:3px 10px;font-size:11px;color:#9aa4af}
-.pill b{color:#e6e6e6;font-weight:600}
-#thumbs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.th{position:relative;aspect-ratio:3/4;background:#111;border:2px solid transparent;border-radius:4px;overflow:hidden;cursor:pointer}
+#stage{position:relative;display:flex;flex-direction:column;background:#0d0e11;min-width:0}
+#cvwrap{flex:1;min-height:0;position:relative}
+#cv{width:100%;height:100%;display:block}
+#bar,#topbar{padding:6px 10px;background:#1c1e22;display:flex;gap:7px;align-items:center;font-size:12px;flex-wrap:wrap}
+#topbar{border-bottom:1px solid #2b2e34}
+#bar{border-top:1px solid #2b2e34}
+.pill{background:#232830;border:1px solid #383d45;border-radius:14px;padding:2px 9px;font-size:11px;color:#9aa4af;white-space:nowrap}
+.pill b{color:#e6e6e6;font-weight:600;font-variant-numeric:tabular-nums}
+#thumbs{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.th{position:relative;aspect-ratio:3/4;background:#111;border:2px solid transparent;border-radius:3px;overflow:hidden;cursor:pointer}
 .th canvas{width:100%;height:100%;display:block}
-.th.sel{border-color:#4d9e7a}
-.th .bg{position:absolute;left:2px;bottom:2px;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:700;letter-spacing:.03em}
-.ok{background:#1e5c40;color:#8ce5bb}
-.rv{background:#6b3a1e;color:#ffc79a}
-.th .sc{position:absolute;right:2px;bottom:2px;font-size:8px;color:#aab;background:#0009;padding:1px 3px;border-radius:3px}
-#prog{height:3px;background:#2a2d33;border-radius:2px;overflow:hidden;margin-top:8px}
-#progf{height:100%;width:0;background:#4d9e7a;transition:width .15s}
-#log{font-size:11px;color:#8b949e;margin-top:6px;min-height:16px}
-.kv{display:flex;justify-content:space-between;font-size:11px;color:#8b949e;padding:2px 0}
+.th.sel{border-color:#6fd3a5}
+.th .bg{position:absolute;left:1px;bottom:1px;font-size:8px;padding:0 3px;border-radius:2px;font-weight:700}
+.ok{background:#1e5c40;color:#8ce5bb}.rv{background:#6b3a1e;color:#ffc79a}
+.th .sc{position:absolute;right:1px;bottom:1px;font-size:8px;color:#aab;background:#000a;padding:0 2px;border-radius:2px}
+#prog{height:3px;background:#282b31;border-radius:2px;overflow:hidden;margin:6px 0 4px}
+#progf{height:100%;width:0;background:#4d9e7a;transition:width .12s}
+#log{font-size:10px;color:#8b949e;min-height:26px}
+.kv{display:flex;justify-content:space-between;font-size:11px;color:#8b949e;padding:1px 0}
 .kv b{color:#d7dde4;font-weight:500;font-variant-numeric:tabular-nums}
-#dbg{font-size:11px;font-family:ui-monospace,Menlo,monospace;color:#9aa4af;white-space:pre-wrap;margin-top:8px;display:none}
-label.ck{display:flex;gap:7px;align-items:center;font-size:12px;color:#b6bec7;cursor:pointer;margin-bottom:5px}
+label.ck{display:flex;gap:6px;align-items:center;font-size:11px;color:#b6bec7;cursor:pointer;margin-bottom:3px}
+.sl{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.sl span{font-size:10px;color:#8b949e;width:58px}
+.sl b{font-size:10px;color:#d7dde4;width:34px;text-align:right;font-variant-numeric:tabular-nums}
+#dbg{font-size:10px;font-family:ui-monospace,Menlo,monospace;color:#9aa4af;white-space:pre-wrap;display:none;margin-top:5px}
+#flick{width:100%;height:42px;display:block;background:#15171a;border-radius:4px;margin-top:4px}
+#mag{position:absolute;right:10px;top:10px;width:190px;height:190px;border:1px solid #49505a;border-radius:6px;background:#0d0e11;display:none;pointer-events:none}
+#magc{width:100%;height:100%;display:block;border-radius:5px}
+.hintbar{position:absolute;left:10px;bottom:10px;font-size:10px;color:#6e7681;background:#0d0e11cc;padding:3px 7px;border-radius:4px;pointer-events:none}
 </style>
 </head>
 <body>
 <div id="app">
 
 <div class="panel" id="left">
-  <h1>PROCESSADOR V2</h1>
+  <h1>ÁREA 2 — FINAL HEAD LOCK <span style="color:#6fd3a5">v2</span></h1>
   <div class="sub">Travamento final de cabeças</div>
 
   <div class="grp">
@@ -63,31 +77,58 @@ label.ck{display:flex;gap:7px;align-items:center;font-size:12px;color:#b6bec7;cu
     <div id="drop">Selecionar pasta com os PNGs</div>
     <input type="file" id="fin" webkitdirectory directory multiple accept="image/*" style="display:none">
     <input type="file" id="fin2" multiple accept="image/*" style="display:none">
-    <button class="sm" id="btnFiles" style="width:100%;margin-top:6px">…ou selecionar arquivos soltos</button>
+    <button class="c" id="btnFiles" style="margin-top:5px">…ou arquivos soltos</button>
   </div>
 
   <div class="grp">
-    <div class="lbl">2 · Processar</div>
-    <button class="pri" id="btnProc" disabled>PROCESSAR 1</button>
-    <button class="sec" id="btnFix" disabled>CORRIGIR REVISAR</button>
+    <div class="lbl">2 · Corte comum (base e topo)</div>
+    <div class="sl"><span>Base</span><input type="range" id="slBot" min="0" max="60" value="0"><b id="vBot">0%</b></div>
+    <div class="sl"><span>Topo</span><input type="range" id="slTop" min="0" max="40" value="0"><b id="vTop">0%</b></div>
+    <button class="c" id="btnAutoCut" disabled>CORTE AUTOMÁTICO</button>
+    <div style="font-size:10px;color:#6e7681">Corta na altura comum a todas. A zona cortada sai também do cálculo do encaixe.</div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">3 · Métodos — clique pra testar</div>
+    <button id="m1" disabled><span class="mbtn"><span>1 · SILHUETA</span><i id="s1">—</i></span></button>
+    <button id="m2" disabled><span class="mbtn"><span>2 · TINTA DENSA</span><i id="s2">—</i></span></button>
+    <button id="m3" disabled><span class="mbtn"><span>3 · ADAPTATIVO</span><i id="s3">—</i></span></button>
+    <button id="m4" disabled><span class="mbtn"><span>4 · ÂNCORA INFERIOR</span><i id="s4">—</i></span></button>
+    <button id="m5" disabled><span class="mbtn"><span>5 · WARP SUAVE</span><i id="s5">—</i></span></button>
+    <button id="m6" disabled><span class="mbtn"><span>6 · ANTI-FLICKER</span><i id="s6">—</i></span></button>
+    <button id="m7" class="pri" disabled><span class="mbtn"><span>7 · AUTO (melhor por imagem)</span><i id="s7">—</i></span></button>
+    <button class="sec" id="btnFix" disabled><span class="mbtn"><span>CORRIGIR REVISAR</span><i id="sFix">—</i></span></button>
     <div id="prog"><div id="progf"></div></div>
     <div id="log">Aguardando imagens.</div>
   </div>
 
   <div class="grp">
-    <div class="lbl">Resultado</div>
+    <div class="lbl">Resultado · <span id="curMethod">nenhum</span></div>
     <div class="kv"><span>Imagens</span><b id="kN">0</b></div>
-    <div class="kv"><span>OK</span><b id="kOK">0</b></div>
-    <div class="kv"><span>Revisar</span><b id="kRV">0</b></div>
-    <div class="kv"><span>Tremor médio</span><b id="kJ">—</b></div>
+    <div class="kv"><span>OK / Revisar</span><b id="kOK">0 / 0</b></div>
+    <div class="kv"><span>Desvio médio</span><b id="kJ">—</b></div>
     <div class="kv"><span>Pior caso</span><b id="kW">—</b></div>
-    <div class="kv"><span>Tremor original</span><b id="kB">—</b></div>
+    <div class="kv"><span>Flicker médio</span><b id="kF">—</b></div>
+    <div class="kv"><span>Flicker original</span><b id="kB">—</b></div>
+    <canvas id="flick"></canvas>
+    <div style="font-size:10px;color:#6e7681">Flicker = tremor entre frames vizinhos, em px. É o que o olho vê no player.</div>
   </div>
 
   <div class="grp">
-    <div class="lbl">3 · Exportar</div>
-    <button id="btnZip" disabled>EXPORTAR TODAS (.zip)</button>
-    <button id="btnDir" disabled>Salvar direto em pasta</button>
+    <div class="lbl">Molde na preview</div>
+    <label class="ck"><input type="checkbox" id="ckMold" checked> Contorno do molde</label>
+    <label class="ck"><input type="checkbox" id="ckFill"> Molde preenchido</label>
+    <label class="ck"><input type="checkbox" id="ckGuides" checked> Linhas-guia (queixo, mandíbula, pescoço)</label>
+    <label class="ck"><input type="checkbox" id="ckOnion"> Onion skin (frame anterior)</label>
+    <div class="sl"><span>Opacidade</span><input type="range" id="slMold" min="10" max="100" value="70"><b id="vMold">70%</b></div>
+  </div>
+
+  <div class="grp">
+    <div class="lbl">4 · Exportar</div>
+    <button class="c" id="btnZip" disabled>EXPORTAR TODAS (.zip)</button>
+    <button class="c" id="btnDir" disabled>Salvar direto em pasta</button>
+    <div class="row"><button class="c" id="btnSave" disabled>Salvar sessão</button><button class="c" id="btnLoad">Carregar sessão</button></div>
+    <input type="file" id="finSess" accept=".json" style="display:none">
   </div>
 
   <div class="grp">
@@ -99,31 +140,37 @@ label.ck{display:flex;gap:7px;align-items:center;font-size:12px;color:#b6bec7;cu
 
 <div id="stage">
   <div id="topbar">
-    <span class="lbl" style="margin:0">Vista</span>
-    <select id="view" style="width:210px">
+    <select id="view" style="width:198px">
       <option value="proc">Processado</option>
       <option value="orig">Original</option>
       <option value="cmp">Comparar original / processado</option>
       <option value="ovl">Overlay de todas (processado)</option>
       <option value="ovlo">Overlay de todas (original)</option>
       <option value="cnt">Somente contornos</option>
-      <option value="ref">Referência + resultado</option>
-      <option value="dif">Diferença / heatmap</option>
+      <option value="var">Mapa de variância (prova final)</option>
+      <option value="dif">Diferença vs molde</option>
     </select>
     <span class="pill" id="pName">—</span>
     <span class="pill" id="pScore">—</span>
     <span style="flex:1"></span>
-    <label class="ck" style="margin:0"><input type="checkbox" id="ckZoom" checked> Zoom na zona crítica</label>
+    <label class="ck" style="margin:0"><input type="checkbox" id="ckZoom" checked> Zoom zona crítica</label>
+    <label class="ck" style="margin:0"><input type="checkbox" id="ckMag"> Lupa 4×</label>
   </div>
-  <canvas id="cv"></canvas>
+  <div id="cvwrap">
+    <canvas id="cv"></canvas>
+    <div id="mag"><canvas id="magc" width="380" height="380"></canvas></div>
+    <div class="hintbar" id="hint">← → troca · Espaço play · Shift+setas empurra 0.1px · clique fixa a lupa</div>
+  </div>
   <div id="bar">
-    <button class="sm" id="btnPrev">◀ Anterior</button>
-    <button class="sm" id="btnPlay" style="min-width:92px">▶ Play</button>
-    <button class="sm" id="btnNext">Próximo ▶</button>
-    <span class="lbl" style="margin:0 0 0 10px">FPS</span>
-    <input type="range" id="fps" min="1" max="20" value="12" step="1" style="width:130px">
+    <button class="c" id="btnPrev" style="width:auto">◀</button>
+    <button class="c" id="btnPlay" style="width:86px">▶ Play</button>
+    <button class="c" id="btnNext" style="width:auto">▶</button>
+    <span class="lbl" style="margin:0 0 0 8px">FPS</span>
+    <input type="range" id="fps" min="1" max="30" value="12" style="width:110px">
     <span class="pill"><b id="fpsv">12</b> fps</span>
     <span class="pill" id="pIdx">0 / 0</span>
+    <span class="pill" id="pNudge">nudge 0.0, 0.0</span>
+    <button class="c" id="btnReset" style="width:auto">zerar nudge</button>
   </div>
 </div>
 
@@ -135,365 +182,530 @@ label.ck{display:flex;gap:7px;align-items:center;font-size:12px;color:#b6bec7;cu
 </div>
 <script>
 "use strict";
-/* ============================================================
-   PROCESSADOR V2
-   Pipeline:
-     máscara de silhueta -> perfil por linha L(y)/R(y)
-     -> referência de consenso (mediana iterativa)
-     -> solver global (dx,dy,sx,sy) custo Huber ponderado
-     -> warp local suave só se compensar (score em pixels)
-     -> avaliação em px -> OK / REVISAR
-   ============================================================ */
+/* ==========================================================================
+   ÁREA 2 — FINAL HEAD LOCK v2
+   --------------------------------------------------------------------------
+   Sinal      : canal de TINTA (traço escuro) + alpha, suavizado -> Uint8
+   Registro   : Gauss-Newton denso em pirâmide, 4 params (dx,dy,sx,sy)
+   Pesos      : 1/(variancia da pilha) -> aprende sozinho o que é estrutura
+   Referência : média groupwise iterativa (ninguém é "a escolhida")
+   Corte      : base/topo comuns, removidos TAMBÉM do custo
+   Métrica    : desvio vs molde + FLICKER entre frames vizinhos (o que o olho vê)
+   ========================================================================== */
 
 const $ = id => document.getElementById(id);
 const S = {
-  items: [], W:0, H:0, fx:0, fy:0, fw:0, fh:0,   // work frame
-  ref: null, refMask:null, cur:0, playing:false, timer:null,
-  baselineJitter: null, processed:false
+  items: [], W:0, H:0, fx:0, fy:0, fw:0, fh:0,
+  mold:null, wmap:null, varmap:null, meanImg:null,
+  cur:0, playing:false, timer:null,
+  method:null, baseFlicker:null, cutTop:0, cutBot:0,
+  magPin:null, cache:{}
 };
+const METHODS = ['m1','m2','m3','m4','m5','m6','m7'];
+const MNAME = {m1:'SILHUETA',m2:'TINTA DENSA',m3:'ADAPTATIVO',m4:'ÂNCORA INFERIOR',
+               m5:'WARP SUAVE',m6:'ANTI-FLICKER',m7:'AUTO'};
 
-/* ---------- utilitários ---------- */
 const yieldUI = () => new Promise(r => setTimeout(r, 0));
-function setProg(p, txt){ $('progf').style.width = (p*100).toFixed(1)+'%'; if(txt!==undefined) $('log').textContent = txt; }
+function setProg(p, txt){ $('progf').style.width=(p*100).toFixed(1)+'%'; if(txt!==undefined) $('log').textContent=txt; }
 function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
-function smoothstep(e0,e1,x){ const t=clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); }
-
-function gauss1d(arr, sigma){
-  const n = arr.length; if(sigma<=0.3) return arr.slice();
-  const r = Math.max(1, Math.ceil(sigma*3));
-  const k = new Float64Array(2*r+1); let s=0;
-  for(let i=-r;i<=r;i++){ const v=Math.exp(-(i*i)/(2*sigma*sigma)); k[i+r]=v; s+=v; }
+function smoothstep(a,b,x){ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); }
+function median(a){ if(!a.length) return NaN; const b=Array.from(a).sort((x,y)=>x-y); const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
+function pct(a,p){ if(!a.length) return NaN; const b=Array.from(a).sort((x,y)=>x-y); return b[clamp(Math.round((b.length-1)*p),0,b.length-1)]; }
+function gauss1d(arr,sig){
+  const n=arr.length; if(sig<=.3) return Float64Array.from(arr);
+  const r=Math.max(1,Math.ceil(sig*3)), k=new Float64Array(2*r+1); let s=0;
+  for(let i=-r;i<=r;i++){ const v=Math.exp(-i*i/(2*sig*sig)); k[i+r]=v; s+=v; }
   for(let i=0;i<k.length;i++) k[i]/=s;
-  const out = new Float64Array(n);
-  for(let i=0;i<n;i++){
-    let acc=0;
-    for(let j=-r;j<=r;j++){ const idx=clamp(i+j,0,n-1); acc += arr[idx]*k[j+r]; }
-    out[i]=acc;
-  }
-  return out;
+  const o=new Float64Array(n);
+  for(let i=0;i<n;i++){ let a=0; for(let j=-r;j<=r;j++) a+=arr[clamp(i+j,0,n-1)]*k[j+r]; o[i]=a; }
+  return o;
 }
-function medianOf(a){ if(!a.length) return NaN; const b=Array.from(a).sort((x,y)=>x-y); const m=b.length>>1; return b.length%2?b[m]:(b[m-1]+b[m])/2; }
 
-/* ---------- carregamento ---------- */
-$('drop').onclick = () => $('fin').click();
-$('btnFiles').onclick = () => $('fin2').click();
-$('fin').onchange = e => loadFiles(e.target.files);
-$('fin2').onchange = e => loadFiles(e.target.files);
-$('drop').addEventListener('dragover', e=>{e.preventDefault();});
-$('drop').addEventListener('drop', e=>{e.preventDefault(); loadFiles(e.dataTransfer.files);});
+/* ====================== CARREGAMENTO ====================== */
+$('drop').onclick=()=>$('fin').click();
+$('btnFiles').onclick=()=>$('fin2').click();
+$('fin').onchange=e=>loadFiles(e.target.files);
+$('fin2').onchange=e=>loadFiles(e.target.files);
+$('drop').addEventListener('dragover',e=>e.preventDefault());
+$('drop').addEventListener('drop',e=>{e.preventDefault();loadFiles(e.dataTransfer.files);});
 
-async function loadFiles(fileList){
-  const files = Array.from(fileList).filter(f => /\.(png|webp|jpe?g)$/i.test(f.name) && f.size>0);
-  files.sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:'base'}));
-  if(!files.length){ $('log').textContent = 'Nenhuma imagem válida encontrada.'; return; }
-  S.items = []; S.processed=false; S.ref=null; S.baselineJitter=null;
-  S.ovlP=null; S.ovlO=null; S.refMaskCache=null; S.W=0; S.H=0;
+async function loadFiles(list){
+  const files=Array.from(list).filter(f=>/\.(png|webp|jpe?g)$/i.test(f.name)&&f.size>0);
+  files.sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+  if(!files.length){ $('log').textContent='Nenhuma imagem válida.'; return; }
   stopPlay();
-  $('btnProc').disabled = true; $('btnFix').disabled=true; $('btnZip').disabled=true; $('btnDir').disabled=true;
+  S.items=[]; S.mold=null; S.method=null; S.baseFlicker=null; S.W=0; S.H=0; S.cache={};
+  METHODS.forEach(m=>{ $(m).disabled=true; $(m).className=$(m).className.replace(/ ?(done|act)/g,''); $('s'+m[1]).textContent='—'; });
   $('thumbs').innerHTML='';
 
-  // passo A: decodifica cada imagem, acha bbox grosseira em baixa resolução
-  const tmp = document.createElement('canvas'), tc = tmp.getContext('2d', {willReadFrequently:true});
-  const boxes = [];
+  const t=document.createElement('canvas'), tc=t.getContext('2d',{willReadFrequently:true});
+  const keep=[];
   for(let i=0;i<files.length;i++){
-    setProg(i/files.length, `Lendo ${i+1}/${files.length} — ${files[i].name}`);
-    if(i%6===0) await yieldUI();
-    let bmp;
-    try { bmp = await createImageBitmap(files[i]); } catch(e){ boxes.push(null); continue; }
-    if(!S.W){ S.W = bmp.width; S.H = bmp.height; }
-    const sc = Math.min(1, 256/Math.max(bmp.width,bmp.height));
-    tmp.width = Math.max(2,Math.round(bmp.width*sc)); tmp.height = Math.max(2,Math.round(bmp.height*sc));
-    tc.clearRect(0,0,tmp.width,tmp.height); tc.drawImage(bmp,0,0,tmp.width,tmp.height);
-    const d = tc.getImageData(0,0,tmp.width,tmp.height);
-    const bb = roughBox(d, tmp.width, tmp.height);
-    bmp.close && bmp.close();
-    if(!bb){ boxes.push(null); continue; }
-    boxes.push({ x0: bb.x0/sc, y0: bb.y0/sc, x1: bb.x1/sc, y1: bb.y1/sc, whiteBG: bb.whiteBG });
-    S.items.push({ name: files[i].name, file: files[i], box: boxes[boxes.length-1] });
+    if(i%6===0){ setProg(i/files.length/2,`Lendo ${i+1}/${files.length}`); await yieldUI(); }
+    let bmp; try{ bmp=await createImageBitmap(files[i]); }catch(e){ continue; }
+    if(!S.W){ S.W=bmp.width; S.H=bmp.height; }
+    const sc=Math.min(1,256/Math.max(bmp.width,bmp.height));
+    t.width=Math.max(2,Math.round(bmp.width*sc)); t.height=Math.max(2,Math.round(bmp.height*sc));
+    tc.clearRect(0,0,t.width,t.height); tc.drawImage(bmp,0,0,t.width,t.height);
+    const bb=roughBox(tc.getImageData(0,0,t.width,t.height),t.width,t.height);
+    bmp.close&&bmp.close();
+    if(bb) keep.push({name:files[i].name,file:files[i],
+      box:{x0:bb.x0/sc,y0:bb.y0/sc,x1:bb.x1/sc,y1:bb.y1/sc,whiteBG:bb.whiteBG}});
   }
-  S.items = S.items.filter(it => it.box);
-  if(S.items.length < 2){ setProg(0,'Precisa de pelo menos 2 imagens válidas.'); return; }
+  if(keep.length<2){ setProg(0,'Precisa de ao menos 2 imagens válidas.'); return; }
 
-  // work frame = união + margem
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-  for(const it of S.items){ x0=Math.min(x0,it.box.x0); y0=Math.min(y0,it.box.y0); x1=Math.max(x1,it.box.x1); y1=Math.max(y1,it.box.y1); }
-  const mw = (x1-x0)*0.22 + 12, mh = (y1-y0)*0.18 + 12;
-  S.fx = Math.max(0, Math.floor(x0-mw)); S.fy = Math.max(0, Math.floor(y0-mh));
-  S.fw = Math.min(S.W-S.fx, Math.ceil(x1+mw)-S.fx); S.fh = Math.min(S.H-S.fy, Math.ceil(y1+mh)-S.fy);
+  for(const k of keep){ x0=Math.min(x0,k.box.x0); y0=Math.min(y0,k.box.y0); x1=Math.max(x1,k.box.x1); y1=Math.max(y1,k.box.y1); }
+  const mw=(x1-x0)*0.24+14, mh=(y1-y0)*0.20+14;
+  S.fx=Math.max(0,Math.floor(x0-mw)); S.fy=Math.max(0,Math.floor(y0-mh));
+  S.fw=Math.min(S.W-S.fx,Math.ceil(x1+mw)-S.fx); S.fh=Math.min(S.H-S.fy,Math.ceil(y1+mh)-S.fy);
 
-  // passo B: recorta em resolução total + máscara + perfil
-  const cc = document.createElement('canvas'); cc.width=S.fw; cc.height=S.fh;
-  const cx2 = cc.getContext('2d',{willReadFrequently:true});
-  for(let i=0;i<S.items.length;i++){
-    const it = S.items[i];
-    setProg(i/S.items.length, `Analisando ${i+1}/${S.items.length} — ${it.name}`);
-    if(i%4===0) await yieldUI();
-    const bmp = await createImageBitmap(it.file);
-    cx2.clearRect(0,0,S.fw,S.fh);
-    cx2.drawImage(bmp, S.fx, S.fy, S.fw, S.fh, 0, 0, S.fw, S.fh);
-    bmp.close && bmp.close();
-    it.crop = cx2.getImageData(0,0,S.fw,S.fh);
-    it.mask = buildMask(it.crop, S.fw, S.fh, it.box.whiteBG);
-    it.prof = rowProfile(it.mask, S.fw, S.fh);
-    it.P = {dx:0,dy:0,sx:1,sy:1}; it.field=null; it.status='—'; it.score=null;
+  const c=document.createElement('canvas'); c.width=S.fw; c.height=S.fh;
+  const cc=c.getContext('2d',{willReadFrequently:true});
+  for(let i=0;i<keep.length;i++){
+    const it=keep[i];
+    if(i%4===0){ setProg(.5+i/keep.length/2,`Analisando ${i+1}/${keep.length} — ${it.name}`); await yieldUI(); }
+    const bmp=await createImageBitmap(it.file);
+    cc.clearRect(0,0,S.fw,S.fh);
+    cc.drawImage(bmp,S.fx,S.fy,S.fw,S.fh,0,0,S.fw,S.fh);
+    bmp.close&&bmp.close();
+    it.crop=cc.getImageData(0,0,S.fw,S.fh);
+    const mask=buildMask(it.crop,S.fw,S.fh,it.box.whiteBG);
+    it.prof=rowProfile(mask,S.fw,S.fh);
+    it.F=buildFeature(it.crop,mask,S.fw,S.fh);
+    it.pyr=buildPyr(it.F,S.fw,S.fh,3);
+    it.mask=mask;
+    it.m={}; it.nudge={x:0,y:0}; it.status='—'; it.ev=null;
+    if(it.prof && it.prof.bot-it.prof.top>14) S.items.push(it);
   }
-  S.items = S.items.filter(it => it.prof && it.prof.top >= 0 && (it.prof.bot - it.prof.top) > 12);
-  setProg(1, `${S.items.length} cabeças prontas. Frame ${S.fw}×${S.fh}px.`);
-  $('kN').textContent = S.items.length;
-  $('btnProc').disabled = false;
-  S.cur = 0; buildThumbs(); draw();
+  const mb=Math.round(S.items.length*S.fw*S.fh*11/1048576);
+  setProg(1,`${S.items.length} cabeças · frame ${S.fw}×${S.fh}px · ~${mb}MB em RAM · pronto.`);
+  $('kN').textContent=S.items.length;
+  METHODS.forEach(m=>$(m).disabled=false);
+  $('btnAutoCut').disabled=false; $('btnLoad').disabled=false;
+  S.cur=0; buildThumbs(); fitCanvas(); draw();
 }
 
-function roughBox(d, w, h){
-  const p = d.data;
-  // detecta fundo branco opaco
-  const corners = [0, (w-1)*4, (h-1)*w*4, ((h-1)*w + w-1)*4];
-  let opaque=0, bright=0;
-  for(const c of corners){ if(p[c+3]>250){opaque++; if(p[c]>244&&p[c+1]>244&&p[c+2]>244) bright++; } }
-  const whiteBG = (opaque===4 && bright===4);
+function roughBox(d,w,h){
+  const p=d.data, cs=[0,(w-1)*4,(h-1)*w*4,((h-1)*w+w-1)*4];
+  let op=0,br=0;
+  for(const i of cs){ if(p[i+3]>250){ op++; if(p[i]>244&&p[i+1]>244&&p[i+2]>244) br++; } }
+  const whiteBG=(op===4&&br===4);
   let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   for(let y=0;y<h;y++) for(let x=0;x<w;x++){
-    const i=(y*w+x)*4; let on;
-    if(whiteBG) on = p[i+3]>128 && !(p[i]>242&&p[i+1]>242&&p[i+2]>242);
-    else on = p[i+3]>40;
+    const i=(y*w+x)*4;
+    const on = whiteBG ? (p[i+3]>128 && !(p[i]>242&&p[i+1]>242&&p[i+2]>242)) : p[i+3]>40;
     if(on){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; }
   }
-  if(x1<0) return null;
-  return {x0,y0,x1:x1+1,y1:y1+1,whiteBG};
+  return x1<0?null:{x0,y0,x1:x1+1,y1:y1+1,whiteBG};
 }
 
-/* ---------- máscara de silhueta ---------- */
-function buildMask(imgData, w, h, whiteBG){
-  const p = imgData.data, m = new Uint8Array(w*h);
-  for(let i=0,j=0;i<m.length;i++,j+=4){
-    if(whiteBG) m[i] = (p[j+3]>140 && !(p[j]>240&&p[j+1]>240&&p[j+2]>240)) ? 1:0;
-    else m[i] = p[j+3] >= 96 ? 1:0;
-  }
-  const r = Math.max(2, Math.round(Math.min(w,h)*0.008));
-  openVertical(m, w, h, r);   // remove cílios / traços finos horizontais
-  largestCC(m, w, h);         // remove corações, gotas, respingos soltos
-  fillHoles(m, w, h);
+/* ====================== MÁSCARA ====================== */
+function buildMask(img,w,h,whiteBG){
+  const p=img.data, m=new Uint8Array(w*h);
+  for(let i=0,j=0;i<m.length;i++,j+=4)
+    m[i]= whiteBG ? ((p[j+3]>140 && !(p[j]>240&&p[j+1]>240&&p[j+2]>240))?1:0)
+                  : (p[j+3]>=96?1:0);
+  openVert(m,w,h,Math.max(2,Math.round(Math.min(w,h)*0.008)));
+  largestCC(m,w,h); fillHoles(m,w,h);
   return m;
 }
-function openVertical(m,w,h,r){
-  const tmp = new Uint8Array(w*h);
-  for(let x=0;x<w;x++){                       // erosão vertical
-    for(let y=0;y<h;y++){
-      let v=1;
-      for(let k=-r;k<=r;k++){ const yy=y+k; if(yy<0||yy>=h||!m[yy*w+x]){ v=0; break; } }
-      tmp[y*w+x]=v;
-    }
+function openVert(m,w,h,r){
+  const t=new Uint8Array(w*h);
+  for(let x=0;x<w;x++) for(let y=0;y<h;y++){
+    let v=1; for(let k=-r;k<=r;k++){ const yy=y+k; if(yy<0||yy>=h||!m[yy*w+x]){v=0;break;} }
+    t[y*w+x]=v;
   }
-  for(let x=0;x<w;x++){                       // dilatação vertical
-    for(let y=0;y<h;y++){
-      let v=0;
-      for(let k=-r;k<=r;k++){ const yy=y+k; if(yy>=0&&yy<h&&tmp[yy*w+x]){ v=1; break; } }
-      m[y*w+x]=v;
-    }
+  for(let x=0;x<w;x++) for(let y=0;y<h;y++){
+    let v=0; for(let k=-r;k<=r;k++){ const yy=y+k; if(yy>=0&&yy<h&&t[yy*w+x]){v=1;break;} }
+    m[y*w+x]=v;
   }
 }
 function largestCC(m,w,h){
-  const lab = new Int32Array(w*h).fill(-1);
-  const stack = new Int32Array(w*h);
-  let best=-1, bestN=0;
+  const lab=new Int32Array(w*h).fill(-1), st=new Int32Array(w*h);
+  let best=-1,bn=0;
   for(let s=0;s<m.length;s++){
     if(!m[s]||lab[s]>=0) continue;
-    let sp=0; stack[sp++]=s; lab[s]=s; let n=0;
-    while(sp){
-      const i=stack[--sp]; n++;
-      const x=i%w, y=(i/w)|0;
-      if(x>0   && m[i-1] && lab[i-1]<0){ lab[i-1]=s; stack[sp++]=i-1; }
-      if(x<w-1 && m[i+1] && lab[i+1]<0){ lab[i+1]=s; stack[sp++]=i+1; }
-      if(y>0   && m[i-w] && lab[i-w]<0){ lab[i-w]=s; stack[sp++]=i-w; }
-      if(y<h-1 && m[i+w] && lab[i+w]<0){ lab[i+w]=s; stack[sp++]=i+w; }
+    let sp=0; st[sp++]=s; lab[s]=s; let n=0;
+    while(sp){ const i=st[--sp]; n++; const x=i%w,y=(i/w)|0;
+      if(x>0&&m[i-1]&&lab[i-1]<0){lab[i-1]=s;st[sp++]=i-1;}
+      if(x<w-1&&m[i+1]&&lab[i+1]<0){lab[i+1]=s;st[sp++]=i+1;}
+      if(y>0&&m[i-w]&&lab[i-w]<0){lab[i-w]=s;st[sp++]=i-w;}
+      if(y<h-1&&m[i+w]&&lab[i+w]<0){lab[i+w]=s;st[sp++]=i+w;}
     }
-    if(n>bestN){ bestN=n; best=s; }
+    if(n>bn){bn=n;best=s;}
   }
   if(best<0) return;
-  for(let i=0;i<m.length;i++) if(m[i] && lab[i]!==best) m[i]=0;
+  for(let i=0;i<m.length;i++) if(m[i]&&lab[i]!==best) m[i]=0;
 }
 function fillHoles(m,w,h){
-  const vis = new Uint8Array(w*h); const st=new Int32Array(w*h); let sp=0;
-  for(let x=0;x<w;x++){ if(!m[x]&&!vis[x]){vis[x]=1;st[sp++]=x;} const b=(h-1)*w+x; if(!m[b]&&!vis[b]){vis[b]=1;st[sp++]=b;} }
-  for(let y=0;y<h;y++){ const a=y*w, b=y*w+w-1; if(!m[a]&&!vis[a]){vis[a]=1;st[sp++]=a;} if(!m[b]&&!vis[b]){vis[b]=1;st[sp++]=b;} }
-  while(sp){ const i=st[--sp]; const x=i%w,y=(i/w)|0;
-    if(x>0&&!m[i-1]&&!vis[i-1]){vis[i-1]=1;st[sp++]=i-1;}
-    if(x<w-1&&!m[i+1]&&!vis[i+1]){vis[i+1]=1;st[sp++]=i+1;}
-    if(y>0&&!m[i-w]&&!vis[i-w]){vis[i-w]=1;st[sp++]=i-w;}
-    if(y<h-1&&!m[i+w]&&!vis[i+w]){vis[i+w]=1;st[sp++]=i+w;}
+  const v=new Uint8Array(w*h), st=new Int32Array(w*h); let sp=0;
+  for(let x=0;x<w;x++){ const a=x,b=(h-1)*w+x; if(!m[a]&&!v[a]){v[a]=1;st[sp++]=a;} if(!m[b]&&!v[b]){v[b]=1;st[sp++]=b;} }
+  for(let y=0;y<h;y++){ const a=y*w,b=y*w+w-1; if(!m[a]&&!v[a]){v[a]=1;st[sp++]=a;} if(!m[b]&&!v[b]){v[b]=1;st[sp++]=b;} }
+  while(sp){ const i=st[--sp], x=i%w, y=(i/w)|0;
+    if(x>0&&!m[i-1]&&!v[i-1]){v[i-1]=1;st[sp++]=i-1;}
+    if(x<w-1&&!m[i+1]&&!v[i+1]){v[i+1]=1;st[sp++]=i+1;}
+    if(y>0&&!m[i-w]&&!v[i-w]){v[i-w]=1;st[sp++]=i-w;}
+    if(y<h-1&&!m[i+w]&&!v[i+w]){v[i+w]=1;st[sp++]=i+w;}
   }
-  for(let i=0;i<m.length;i++) if(!m[i]&&!vis[i]) m[i]=1;
+  for(let i=0;i<m.length;i++) if(!m[i]&&!v[i]) m[i]=1;
 }
 
-/* ---------- perfil por linha ---------- */
+/* ====================== PERFIL L/R ====================== */
 function rowProfile(m,w,h){
-  const L=new Float64Array(h).fill(NaN), R=new Float64Array(h).fill(NaN), N=new Float64Array(h);
-  let top=-1,bot=-1, maxW=0, maxWy=0;
+  const L=new Float64Array(h).fill(NaN),R=new Float64Array(h).fill(NaN);
+  let top=-1,bot=-1,mw=0,mwy=0;
   for(let y=0;y<h;y++){
-    let l=-1,r=-1,n=0;
-    for(let x=0;x<w;x++){ if(m[y*w+x]){ if(l<0)l=x; r=x; n++; } }
-    if(l>=0){ L[y]=l; R[y]=r+1; N[y]=n; if(top<0)top=y; bot=y;
-      const ww=r+1-l; if(ww>maxW){maxW=ww;maxWy=y;} }
+    let l=-1,r=-1;
+    for(let x=0;x<w;x++) if(m[y*w+x]){ if(l<0)l=x; r=x; }
+    if(l>=0){ L[y]=l; R[y]=r+1; if(top<0)top=y; bot=y; if(r+1-l>mw){mw=r+1-l;mwy=y;} }
   }
-  if(top<0) return null;
-  return {L,R,N,top,bot:bot+1,maxW,maxWy,h};
+  return top<0?null:{L,R,top,bot:bot+1,maxW:mw,maxWy:mwy};
 }
-function sampleProf(prof, y){
-  const {L,R,top,bot} = prof;
-  if(y < top || y > bot-1) return null;
-  const y0 = Math.floor(y), y1 = Math.min(bot-1, y0+1), t = y-y0;
-  if(isNaN(L[y0])||isNaN(L[y1])) return null;
-  return { L: L[y0]*(1-t)+L[y1]*t, R: R[y0]*(1-t)+R[y1]*t };
+function sampleProf(p,y){
+  if(!p||y<p.top||y>p.bot-1) return null;
+  const a=Math.floor(y), b=Math.min(p.bot-1,a+1), t=y-a;
+  if(isNaN(p.L[a])||isNaN(p.L[b])) return null;
+  return {L:p.L[a]*(1-t)+p.L[b]*t, R:p.R[a]*(1-t)+p.R[b]*t};
 }
 
-/* ---------- pesos de prioridade (do meio pra baixo) ---------- */
-function makeWeights(refTop, refBot){
-  const n = S.fh, w = new Float64Array(n), H = refBot-refTop;
+/* ====================== CANAL DE TINTA + PIRÂMIDE ======================
+   F = 0.72*tinta + 0.28*alpha, borrado (sigma~1). Tinta = alpha*(1-luma).
+   O traço escuro (queixo, mandíbula, orelha, pescoço) é o sinal mais estável
+   que existe nessas imagens — é ele que trava o registro em sub-pixel.       */
+function buildFeature(img,mask,w,h){
+  const p=img.data, f=new Float32Array(w*h);
+  for(let i=0,j=0;i<f.length;i++,j+=4){
+    const a=p[j+3]/255;
+    if(a<=0.02){ f[i]=0; continue; }
+    const lum=(0.299*p[j]+0.587*p[j+1]+0.114*p[j+2])/255;
+    f[i]=0.72*(a*(1-lum))+0.28*a;
+  }
+  blurSep(f,w,h,1.0);
+  const o=new Uint8Array(w*h);
+  for(let i=0;i<f.length;i++) o[i]=clamp(Math.round(f[i]*255),0,255);
+  return o;
+}
+function blurSep(f,w,h,sig){
+  const r=Math.max(1,Math.ceil(sig*3)), k=new Float32Array(2*r+1); let s=0;
+  for(let i=-r;i<=r;i++){ const v=Math.exp(-i*i/(2*sig*sig)); k[i+r]=v; s+=v; }
+  for(let i=0;i<k.length;i++) k[i]/=s;
+  const t=new Float32Array(w*h);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    let a=0; for(let j=-r;j<=r;j++) a+=f[y*w+clamp(x+j,0,w-1)]*k[j+r];
+    t[y*w+x]=a;
+  }
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    let a=0; for(let j=-r;j<=r;j++) a+=t[clamp(y+j,0,h-1)*w+x]*k[j+r];
+    f[y*w+x]=a;
+  }
+}
+function buildPyr(F,w,h,levels){
+  const p=[{d:F,w,h,s:1}];
+  for(let l=1;l<levels;l++){
+    const pw=Math.max(4,pw2(p[l-1].w)), ph=Math.max(4,pw2(p[l-1].h));
+    const src=p[l-1], d=new Uint8Array(pw*ph);
+    for(let y=0;y<ph;y++) for(let x=0;x<pw;x++){
+      const x0=Math.min(src.w-1,x*2), x1=Math.min(src.w-1,x*2+1);
+      const y0=Math.min(src.h-1,y*2), y1=Math.min(src.h-1,y*2+1);
+      d[y*pw+x]=(src.d[y0*src.w+x0]+src.d[y0*src.w+x1]+src.d[y1*src.w+x0]+src.d[y1*src.w+x1])>>2;
+    }
+    p.push({d,w:pw,h:ph,s:Math.pow(2,l)});
+  }
+  return p;
+}
+function pw2(n){ return Math.floor(n/2); }
+function bil(d,w,h,x,y){
+  if(x<0||y<0||x>w-1||y>h-1) return -1;
+  const x0=Math.floor(x),y0=Math.floor(y),tx=x-x0,ty=y-y0;
+  const x1=Math.min(w-1,x0+1), y1=Math.min(h-1,y0+1);
+  const a=d[y0*w+x0],b=d[y0*w+x1],c=d[y1*w+x0],e=d[y1*w+x1];
+  return (a*(1-tx)+b*tx)*(1-ty)+(c*(1-tx)+e*tx)*ty;
+}
+/* ====================== REGIÃO ÚTIL / CORTE ======================
+   O corte não é só cosmético: a faixa cortada sai do custo, então o solver
+   deixa de torcer a mandíbula pra acertar um pescoço que nem vai aparecer. */
+function cutLines(){
+  const ref=S.mold||S.items[0]&&alignedProfile(S.items[0].prof,{dx:0,dy:0,sx:1,sy:1});
+  if(!ref) return {top:0,bot:S.fh};
+  const H=ref.bot-ref.top;
+  return { top: ref.top + H*S.cutTop, bot: ref.bot - H*S.cutBot };
+}
+function bandWeights(top,bot,band){
+  const n=S.fh,w=new Float64Array(n),H=bot-top;
+  const cut=cutLines();
   for(let y=0;y<n;y++){
-    const t = (y-refTop)/H;
-    if(t<0||t>1.02){ w[y]=0; continue; }
+    if(y<cut.top-1||y>cut.bot) { w[y]=0; continue; }
+    const t=(y-top)/H;
+    if(t<-.02||t>1.04){ w[y]=0; continue; }
     let v;
-    if(t < 0.40) v = 0.12;
-    else if(t < 0.56) v = 0.12 + 0.88*smoothstep(0.40,0.56,t);
-    else v = 1.0;
-    if(t > 0.965) v *= 0.55;            // base cortada varia, não é confiável
+    if(band){ v = (t<band[0]||t>band[1]) ? 0 : smoothstep(band[0],band[0]+.06,t); }
+    else v = t<0.40 ? 0.12 : (t<0.56 ? 0.12+0.88*smoothstep(0.40,0.56,t) : 1);
     w[y]=v;
+  }
+  // suaviza a borda do corte pra não criar degrau no custo
+  const f=Math.max(2,Math.round(H*0.02));
+  for(let y=0;y<n;y++){
+    if(w[y]<=0) continue;
+    w[y]*=smoothstep(cut.top-1,cut.top-1+f,y)*(1-smoothstep(cut.bot-f,cut.bot,y));
   }
   return w;
 }
 
-/* ---------- custo + solver ---------- */
-const HUB = 2.0;
-function huber(r){ const a=Math.abs(r); return a<=HUB ? r*r : HUB*(2*a-HUB); }
-
-function cost(prof, P, ref, W){
-  const cx = S.fw/2, cy = S.fh/2;
-  let acc=0, wsum=0;
-  for(let Y=ref.top; Y<ref.bot; Y++){
-    const wy = W[Y]; if(wy<=0) continue;
-    const Lr = ref.L[Y], Rr = ref.R[Y]; if(isNaN(Lr)) continue;
-    const y = cy + (Y - cy - P.dy)/P.sy;
-    const s = sampleProf(prof, y); if(!s) continue;
-    const Lp = cx + P.sx*(s.L-cx) + P.dx;
-    const Rp = cx + P.sx*(s.R-cx) + P.dx;
-    acc += wy*(huber(Lp-Lr) + huber(Rp-Rr)); wsum += wy*2;
+/* ====================== MAPA DE PESOS 2D ======================
+   variance mode: peso = 1/(sigma^2+eps). Pixel que muda com a expressão
+   (olho, boca, blush) perde voz; estrutura (mandíbula, orelha, pescoço) manda. */
+function buildWeightMap(mode, band){
+  const w=S.fw,h=S.fh,n=w*h;
+  const W=new Float32Array(n);
+  const rw=S.mold?bandWeights(S.mold.top,S.mold.bot,band):null;
+  const cut=cutLines();
+  for(let y=0;y<h;y++){
+    const ry = rw ? rw[y] : ((y>=cut.top&&y<=cut.bot)?1:0);
+    if(ry<=0) continue;
+    for(let x=0;x<w;x++) W[y*w+x]=ry;
   }
-  if(wsum < 1) return 1e9;
-  let c = acc/wsum;
-  c += 500*(P.sx-P.sy)*(P.sx-P.sy);                       // prefere isotropia
-  c += 60*((P.sx-1)*(P.sx-1) + (P.sy-1)*(P.sy-1));        // prefere não mexer
-  return c;
+  if(mode==='variance' && S.varmap){
+    let mx=0;
+    for(let i=0;i<n;i++) if(S.varmap[i]>mx) mx=S.varmap[i];
+    const eps=Math.max(4, mx*0.02);
+    for(let i=0;i<n;i++) if(W[i]>0) W[i]*= 1/(S.varmap[i]+eps);
+  }
+  let mx=0; for(let i=0;i<n;i++) if(W[i]>mx) mx=W[i];
+  if(mx>0) for(let i=0;i<n;i++) W[i]/=mx;
+  return W;
+}
+function downW(W,w,h,levels){
+  const p=[{d:W,w,h}];
+  for(let l=1;l<levels;l++){
+    const s=p[l-1], pw=Math.max(4,Math.floor(s.w/2)), ph=Math.max(4,Math.floor(s.h/2));
+    const d=new Float32Array(pw*ph);
+    for(let y=0;y<ph;y++) for(let x=0;x<pw;x++){
+      const x0=Math.min(s.w-1,x*2),x1=Math.min(s.w-1,x*2+1),y0=Math.min(s.h-1,y*2),y1=Math.min(s.h-1,y*2+1);
+      d[y*pw+x]=(s.d[y0*s.w+x0]+s.d[y0*s.w+x1]+s.d[y1*s.w+x0]+s.d[y1*s.w+x1])/4;
+    }
+    p.push({d,w:pw,h:ph});
+  }
+  return p;
 }
 
-function solve(prof, ref, W, P0, steps0){
-  let P = {...P0};
-  let step = steps0 ? {...steps0} : {dx:5, dy:5, sx:.05, sy:.05};
-  const min = {dx:.02, dy:.02, sx:.0003, sy:.0003};
-  let c = cost(prof,P,ref,W), guard=0;
-  while(guard++ < 900){
-    let improved=false;
-    for(const k of ['dx','dy','sx','sy']){
-      for(const s of [+1,-1]){
-        const Q = {...P}; Q[k] = P[k] + s*step[k];
-        if((k==='sx'||k==='sy') && (Q[k]<0.80 || Q[k]>1.25)) continue;
-        const cq = cost(prof,Q,ref,W);
-        if(cq < c-1e-9){ P=Q; c=cq; improved=true; }
+/* ====================== GAUSS-NEWTON DENSO ======================
+   4 params (dx,dy,sx,sy) em unidades de pixel full-res.
+   Pirâmide 3 níveis, perda de Huber, amortecimento de Levenberg.       */
+function solve4(A,b){
+  const n=4, M=[];
+  for(let i=0;i<n;i++){ M.push([]); for(let j=0;j<n;j++) M[i].push(A[i*n+j]); M[i].push(b[i]); }
+  for(let c=0;c<n;c++){
+    let p=c; for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[p][c])) p=r;
+    if(Math.abs(M[p][c])<1e-12) return null;
+    const t=M[c]; M[c]=M[p]; M[p]=t;
+    for(let r=0;r<n;r++){
+      if(r===c) continue;
+      const f=M[r][c]/M[c][c];
+      for(let k=c;k<=n;k++) M[r][k]-=f*M[c][k];
+    }
+  }
+  const x=new Float64Array(n);
+  for(let i=0;i<n;i++) x[i]=M[i][n]/M[i][i];
+  return x;
+}
+
+function gnFit(srcPyr, refPyr, wPyr, P0, iters){
+  let P={...P0};
+  const HUB=14;
+  for(let lv=refPyr.length-1; lv>=0; lv--){
+    const R=refPyr[lv], Sc=srcPyr[lv], Wl=wPyr[lv];
+    const s=Math.pow(2,lv), cx=(S.fw/2)/s, cy=(S.fh/2)/s;
+    const stride = lv===0?2:1;
+    let lam=1e-3;
+    for(let it=0; it<(iters||10); it++){
+      const A=new Float64Array(16), b=new Float64Array(4);
+      let used=0, err=0;
+      for(let Y=0;Y<R.h;Y+=stride){
+        for(let X=0;X<R.w;X+=stride){
+          const wi=Wl.d[Y*Wl.w+X]; if(wi<=0.004) continue;
+          const rv=R.d[Y*R.w+X];
+          const xs=cx+(X-cx-P.dx/s)/P.sx, ys=cy+(Y-cy-P.dy/s)/P.sy;
+          if(xs<1||ys<1||xs>Sc.w-2||ys>Sc.h-2){ if(rv>3){ used++; err+=rv*rv; } continue; }
+          const sv=bil(Sc.d,Sc.w,Sc.h,xs,ys);
+          if(sv<0) continue;
+          if(rv<3&&sv<3) continue;
+          const gx=(bil(Sc.d,Sc.w,Sc.h,xs+1,ys)-bil(Sc.d,Sc.w,Sc.h,xs-1,ys))/2;
+          const gy=(bil(Sc.d,Sc.w,Sc.h,xs,ys+1)-bil(Sc.d,Sc.w,Sc.h,xs,ys-1))/2;
+          const r=sv-rv, ar=Math.abs(r);
+          const rw = ar<=HUB ? 1 : HUB/ar;
+          const ww = wi*rw;
+          const j0=gx*(-1/(s*P.sx)), j1=gy*(-1/(s*P.sy));
+          const j2=gx*(-(xs-cx)/P.sx), j3=gy*(-(ys-cy)/P.sy);
+          const J=[j0,j1,j2,j3];
+          for(let a=0;a<4;a++){
+            b[a]-=ww*J[a]*r;
+            for(let c=0;c<4;c++) A[a*4+c]+=ww*J[a]*J[c];
+          }
+          used++; err+=ww*r*r;
+        }
       }
-    }
-    if(!improved){
-      let done=true;
-      for(const k of ['dx','dy','sx','sy']){ step[k]*=0.5; if(step[k]>min[k]) done=false; }
-      if(done) break;
+      if(used<40) break;
+      // prior suave: prefere isotropia e prefere não mexer na escala
+      const iso=used*0.00004;
+      A[2*4+2]+=iso*2; A[3*4+3]+=iso*2;
+      A[2*4+3]-=iso;   A[3*4+2]-=iso;
+      b[2]-=iso*2*(P.sx-1)-iso*(P.sy-1);
+      b[3]-=iso*2*(P.sy-1)-iso*(P.sx-1);
+      for(let a=0;a<4;a++) A[a*4+a]*=(1+lam);
+      const d=solve4(A,b);
+      if(!d) break;
+      const Q={dx:P.dx+d[0], dy:P.dy+d[1], sx:P.sx+d[2], sy:P.sy+d[3]};
+      if(!isFinite(Q.dx)||!isFinite(Q.sx)) break;
+      Q.sx=clamp(Q.sx,0.80,1.25); Q.sy=clamp(Q.sy,0.80,1.25);
+      Q.dx=clamp(Q.dx,-S.fw*0.4,S.fw*0.4); Q.dy=clamp(Q.dy,-S.fh*0.4,S.fh*0.4);
+      P=Q; lam*=0.7;
+      const step=Math.abs(d[0])+Math.abs(d[1])+Math.abs(d[2])*S.fw+Math.abs(d[3])*S.fh;
+      if(step<0.004) break;
     }
   }
-  return {P, c};
+  return P;
 }
 
-/* ---------- perfil alinhado ---------- */
-function alignedProfile(prof, P){
-  const cx=S.fw/2, cy=S.fh/2, n=S.fh;
-  const L=new Float64Array(n).fill(NaN), R=new Float64Array(n).fill(NaN);
+/* ====================== SOLVER DE SILHUETA (método 1) ====================== */
+const HUB2=2.0;
+function hub(r){ const a=Math.abs(r); return a<=HUB2?r*r:HUB2*(2*a-HUB2); }
+function profCost(prof,P,ref,W){
+  const cx=S.fw/2, cy=S.fh/2; let acc=0,ws=0;
+  for(let Y=ref.top;Y<ref.bot;Y++){
+    const wy=W[Y]; if(wy<=0||isNaN(ref.L[Y])) continue;
+    const y=cy+(Y-cy-P.dy)/P.sy, sp=sampleProf(prof,y); if(!sp) continue;
+    acc+=wy*(hub(cx+P.sx*(sp.L-cx)+P.dx-ref.L[Y])+hub(cx+P.sx*(sp.R-cx)+P.dx-ref.R[Y]));
+    ws+=wy*2;
+  }
+  if(ws<1) return 1e9;
+  return acc/ws + 500*(P.sx-P.sy)**2 + 60*((P.sx-1)**2+(P.sy-1)**2);
+}
+function profSolve(prof,ref,W,P0,st0){
+  let P={...P0}, st=st0?{...st0}:{dx:5,dy:5,sx:.05,sy:.05};
+  const mn={dx:.02,dy:.02,sx:.0003,sy:.0003};
+  let c=profCost(prof,P,ref,W), g=0;
+  while(g++<800){
+    let imp=false;
+    for(const k of ['dx','dy','sx','sy']) for(const s of [1,-1]){
+      const Q={...P}; Q[k]=P[k]+s*st[k];
+      if((k==='sx'||k==='sy')&&(Q[k]<.8||Q[k]>1.25)) continue;
+      const cq=profCost(prof,Q,ref,W);
+      if(cq<c-1e-9){ P=Q; c=cq; imp=true; }
+    }
+    if(!imp){ let done=true; for(const k in st){ st[k]*=.5; if(st[k]>mn[k]) done=false; } if(done) break; }
+  }
+  return P;
+}
+function alignedProfile(prof,P){
+  const cx=S.fw/2,cy=S.fh/2,n=S.fh;
+  const L=new Float64Array(n).fill(NaN),R=new Float64Array(n).fill(NaN);
   let top=-1,bot=-1;
   for(let Y=0;Y<n;Y++){
-    const y = cy + (Y - cy - P.dy)/P.sy;
-    const s = sampleProf(prof,y); if(!s) continue;
-    L[Y] = cx + P.sx*(s.L-cx) + P.dx;
-    R[Y] = cx + P.sx*(s.R-cx) + P.dx;
-    if(top<0) top=Y; bot=Y;
+    const sp=sampleProf(prof,cy+(Y-cy-P.dy)/P.sy); if(!sp) continue;
+    L[Y]=cx+P.sx*(sp.L-cx)+P.dx; R[Y]=cx+P.sx*(sp.R-cx)+P.dx;
+    if(top<0)top=Y; bot=Y;
   }
-  if(top<0) return null;
-  return {L,R,top,bot:bot+1};
+  return top<0?null:{L,R,top,bot:bot+1};
 }
-
-/* ---------- referência de consenso ---------- */
 function consensus(profs){
-  const n=S.fh;
-  const L=new Float64Array(n).fill(NaN), R=new Float64Array(n).fill(NaN);
-  let top=-1,bot=-1;
+  const n=S.fh, L=new Float64Array(n).fill(NaN), R=new Float64Array(n).fill(NaN);
+  let top=-1,bot=-1, valid=profs.filter(Boolean).length;
   for(let y=0;y<n;y++){
-    const ls=[], rs=[];
-    for(const p of profs){ if(p && !isNaN(p.L[y])){ ls.push(p.L[y]); rs.push(p.R[y]); } }
-    if(ls.length >= profs.length*0.5){
-      L[y]=medianOf(ls); R[y]=medianOf(rs);
-      if(top<0) top=y; bot=y;
-    }
+    const ls=[],rs=[];
+    for(const p of profs) if(p&&!isNaN(p.L[y])){ ls.push(p.L[y]); rs.push(p.R[y]); }
+    if(ls.length>=valid*0.5){ L[y]=median(ls); R[y]=median(rs); if(top<0)top=y; bot=y; }
   }
   if(top<0) return null;
-  // preenche NaN internos pelo vizinho válido antes de suavizar
   for(const A of [L,R]){
     let last=NaN;
     for(let y=top;y<=bot;y++){ if(!isNaN(A[y])) last=A[y]; else if(!isNaN(last)) A[y]=last; }
     last=NaN;
     for(let y=bot;y>=top;y--){ if(!isNaN(A[y])) last=A[y]; else if(!isNaN(last)) A[y]=last; }
   }
-  // suaviza levemente (mediana por linha pode gerar degrau de 1px)
   const Ls=gauss1d(L.slice(top,bot+1),1.2), Rs=gauss1d(R.slice(top,bot+1),1.2);
   for(let i=0;i<Ls.length;i++){ L[top+i]=Ls[i]; R[top+i]=Rs[i]; }
   return {L,R,top,bot:bot+1};
 }
-
-/* ---------- inicialização por âncora (linha mais larga) ---------- */
-function bootstrapInit(prof, anchor){
-  const cx=S.fw/2, cy=S.fh/2;
-  const s = prof.maxW>0 ? anchor.maxW/prof.maxW : 1;
-  const c0 = (prof.L[prof.maxWy]+prof.R[prof.maxWy])/2;
-  const cRef = anchor.cx;
-  return {
-    sx: s, sy: s,
-    dx: cRef - (cx + s*(c0-cx)),
-    dy: anchor.maxWy - (cy + s*(prof.maxWy-cy))
-  };
+function bootstrap(prof,anc){
+  const cx=S.fw/2,cy=S.fh/2, s=prof.maxW>0?anc.maxW/prof.maxW:1;
+  const c0=(prof.L[prof.maxWy]+prof.R[prof.maxWy])/2;
+  return {sx:s,sy:s, dx:anc.cx-(cx+s*(c0-cx)), dy:anc.maxWy-(cy+s*(prof.maxWy-cy))};
+}
+function anchorOf(){
+  return { maxW:median(S.items.map(i=>i.prof.maxW)),
+           maxWy:Math.round(median(S.items.map(i=>i.prof.maxWy))),
+           cx:median(S.items.map(i=>(i.prof.L[i.prof.maxWy]+i.prof.R[i.prof.maxWy])/2)) };
 }
 
-/* ---------- campo de warp local ---------- */
-function buildField(ap, ref, W, limits){
-  const n=S.fh;
-  const lo=Math.max(ap.top, ref.top), hi=Math.min(ap.bot, ref.bot);
-  if(hi-lo < 10) return null;
-  const H = ref.bot-ref.top;
+/* ====================== MÉDIA + VARIÂNCIA DA PILHA ====================== */
+function stackStats(getP){
+  const w=S.fw,h=S.fh,n=w*h;
+  const sum=new Float64Array(n), sq=new Float64Array(n), cnt=new Float64Array(n);
+  const cx=w/2, cy=h/2;
+  for(const it of S.items){
+    const P=getP(it); if(!P) continue;
+    for(let Y=0;Y<h;Y++){
+      const ys=cy+(Y-cy-P.dy)/P.sy; if(ys<0||ys>h-1) continue;
+      for(let X=0;X<w;X++){
+        const xs=cx+(X-cx-P.dx)/P.sx; if(xs<0||xs>w-1) continue;
+        const v=bil(it.F,w,h,xs,ys); if(v<0) continue;
+        const i=Y*w+X; sum[i]+=v; sq[i]+=v*v; cnt[i]++;
+      }
+    }
+  }
+  const mean=new Float32Array(n), vr=new Float32Array(n);
+  for(let i=0;i<n;i++){
+    if(cnt[i]<2){ mean[i]=0; vr[i]=1e6; continue; }
+    const m=sum[i]/cnt[i]; mean[i]=m;
+    vr[i]=Math.max(0, sq[i]/cnt[i]-m*m);
+    if(cnt[i]<S.items.length*0.6) vr[i]+=400;
+  }
+  return {mean,vr};
+}
+function meanToPyr(mean){
+  const u=new Uint8Array(mean.length);
+  for(let i=0;i<u.length;i++) u[i]=clamp(Math.round(mean[i]),0,255);
+  return buildPyr(u,S.fw,S.fh,3);
+}
+
+/* ====================== NORMALIZAÇÃO (mediana = identidade) ====================== */
+function normalize(getP,setP){
+  const msx=median(S.items.map(i=>getP(i).sx)), msy=median(S.items.map(i=>getP(i).sy));
+  const mdx=median(S.items.map(i=>getP(i).dx)), mdy=median(S.items.map(i=>getP(i).dy));
+  for(const it of S.items){
+    const P=getP(it);
+    setP(it,{ sx:P.sx/msx, sy:P.sy/msy, dx:(P.dx-mdx)/msx, dy:(P.dy-mdy)/msy });
+  }
+}
+/* ====================== WARP LOCAL (método 5) ======================
+   Campo por linha: k(y) largura, ec(y) centro, ey(y) vertical.
+   Gaussiana larga + clamp + re-suavização => jacobiano sempre positivo,
+   sem costura, sem buraco, sem ondulação.                                   */
+function buildField(ap,ref,lim){
+  const n=S.fh, lo=Math.max(ap.top,ref.top), hi=Math.min(ap.bot,ref.bot);
+  if(hi-lo<10) return null;
+  const H=ref.bot-ref.top;
   const ecR=new Float64Array(n), kR=new Float64Array(n).fill(1), Ca=new Float64Array(n).fill(NaN);
   for(let y=lo;y<hi;y++){
     if(isNaN(ap.L[y])||isNaN(ref.L[y])) continue;
     const ca=(ap.L[y]+ap.R[y])/2, cr=(ref.L[y]+ref.R[y])/2;
     const wa=ap.R[y]-ap.L[y], wr=ref.R[y]-ref.L[y];
-    Ca[y]=ca; ecR[y]=cr-ca; kR[y]= wa>3 ? wr/wa : 1;
+    Ca[y]=ca; ecR[y]=cr-ca; kR[y]=wa>3?wr/wa:1;
   }
-  // preenche buracos por vizinho válido
   let last=NaN;
   for(let y=0;y<n;y++){ if(!isNaN(Ca[y])) last=Ca[y]; else if(!isNaN(last)) Ca[y]=last; }
-  last=NaN; for(let y=n-1;y>=0;y--){ if(!isNaN(Ca[y])) last=Ca[y]; else if(!isNaN(last)) Ca[y]=last; }
+  last=NaN;
+  for(let y=n-1;y>=0;y--){ if(!isNaN(Ca[y])) last=Ca[y]; else if(!isNaN(last)) Ca[y]=last; }
   for(let y=0;y<n;y++) if(isNaN(Ca[y])) Ca[y]=S.fw/2;
 
-  let ec = gauss1d(ecR, 14), k = gauss1d(kR, 14);
-
-  // campo vertical: casa alturas onde a largura cruza frações do máximo
-  const ey = new Float64Array(n);
-  if(limits.ey){
-    const ctrl=[];
-    const maxWr = maxWidth(ref), maxWa = maxWidth(ap);
-    for(const f of [0.95,0.85,0.72,0.58,0.45]){
-      const yr = crossRow(ref, maxWr*f), ya = crossRow(ap, maxWa*f);
-      if(yr!=null && ya!=null) ctrl.push([yr, clamp(yr-ya,-limits.ey,limits.ey)]);
+  const ec=gauss1d(ecR,14), k=gauss1d(kR,14);
+  const ey=new Float64Array(n);
+  if(lim.ey>0){
+    const ctrl=[], mr=maxW(ref), ma=maxW(ap);
+    for(const f of [.95,.85,.72,.58,.45]){
+      const yr=crossRow(ref,mr*f), ya=crossRow(ap,ma*f);
+      if(yr!=null&&ya!=null) ctrl.push([yr,clamp(yr-ya,-lim.ey,lim.ey)]);
     }
     if(ctrl.length>=2){
       ctrl.sort((a,b)=>a[0]-b[0]);
@@ -501,522 +713,758 @@ function buildField(ap, ref, W, limits){
         let v;
         if(y<=ctrl[0][0]) v=ctrl[0][1];
         else if(y>=ctrl[ctrl.length-1][0]) v=ctrl[ctrl.length-1][1];
-        else { let i=0; while(i<ctrl.length-1 && ctrl[i+1][0]<y) i++;
+        else { let i=0; while(i<ctrl.length-1&&ctrl[i+1][0]<y) i++;
                const t=(y-ctrl[i][0])/(ctrl[i+1][0]-ctrl[i][0]); v=ctrl[i][1]*(1-t)+ctrl[i+1][1]*t; }
         ey[y]=v;
       }
     }
   }
-  const eyS = gauss1d(ey, 18);
-
-  // rampa de prioridade: zero em cima, 1 do meio pra baixo
-  const out = { ec:new Float64Array(n), k:new Float64Array(n).fill(1), ey:new Float64Array(n), Ca,
-                maxK:0, maxEc:0, maxEy:0 };
+  const eyS=gauss1d(ey,18);
+  const o={ec:new Float64Array(n),k:new Float64Array(n).fill(1),ey:new Float64Array(n),Ca,maxK:0,maxEc:0,maxEy:0};
   for(let y=0;y<n;y++){
-    const t=(y-ref.top)/H;
-    const ramp = t<0.42 ? 0 : smoothstep(0.42,0.60,t);
-    let e = clamp(ec[y]*ramp, -limits.ec, limits.ec);
-    let kk = 1 + clamp((k[y]-1)*ramp, -limits.k, limits.k);
-    let v = clamp(eyS[y]*ramp, -limits.ey, limits.ey);
-    out.ec[y]=e; out.k[y]=kk; out.ey[y]=v;
+    const t=(y-ref.top)/H, ramp = t<0.42?0:smoothstep(0.42,0.60,t);
+    o.ec[y]=clamp(ec[y]*ramp,-lim.ec,lim.ec);
+    o.k[y]=1+clamp((k[y]-1)*ramp,-lim.k,lim.k);
+    o.ey[y]=clamp(eyS[y]*ramp,-lim.ey,lim.ey);
   }
-  // re-suaviza após clamp (elimina qualquer quina)
-  const e2=gauss1d(out.ec,7), k2=gauss1d(out.k,7), y2=gauss1d(out.ey,9);
+  const e2=gauss1d(o.ec,7), k2=gauss1d(o.k,7), y2=gauss1d(o.ey,9);
   for(let y=0;y<n;y++){
-    out.ec[y]=e2[y]; out.k[y]=k2[y]; out.ey[y]=y2[y];
-    out.maxEc=Math.max(out.maxEc,Math.abs(e2[y]));
-    out.maxK =Math.max(out.maxK, Math.abs(k2[y]-1));
-    out.maxEy=Math.max(out.maxEy,Math.abs(y2[y]));
+    o.ec[y]=e2[y]; o.k[y]=k2[y]; o.ey[y]=y2[y];
+    o.maxEc=Math.max(o.maxEc,Math.abs(e2[y]));
+    o.maxK=Math.max(o.maxK,Math.abs(k2[y]-1));
+    o.maxEy=Math.max(o.maxEy,Math.abs(y2[y]));
   }
-  return out;
+  return o;
 }
-function maxWidth(p){ let m=0; for(let y=p.top;y<p.bot;y++){ if(!isNaN(p.L[y])) m=Math.max(m,p.R[y]-p.L[y]); } return m; }
-function crossRow(p, target){   // primeira linha ABAIXO do máximo onde a largura cai de target
+function maxW(p){ let m=0; for(let y=p.top;y<p.bot;y++) if(!isNaN(p.L[y])) m=Math.max(m,p.R[y]-p.L[y]); return m; }
+function crossRow(p,tg){
   let my=-1,mw=0;
   for(let y=p.top;y<p.bot;y++){ if(isNaN(p.L[y]))continue; const w=p.R[y]-p.L[y]; if(w>mw){mw=w;my=y;} }
   if(my<0) return null;
   for(let y=my;y<p.bot;y++){
     if(isNaN(p.L[y])) continue;
     const w=p.R[y]-p.L[y];
-    if(w<=target){
-      const wp = (y>my && !isNaN(p.L[y-1])) ? p.R[y-1]-p.L[y-1] : w;
-      const t = (wp-w)>1e-6 ? (wp-target)/(wp-w) : 0;
-      return y-1+t;
-    }
+    if(w<=tg){ const wp=(y>my&&!isNaN(p.L[y-1]))?p.R[y-1]-p.L[y-1]:w;
+      return y-1+((wp-w)>1e-6?(wp-tg)/(wp-w):0); }
   }
   return null;
 }
-function warpProfile(ap, F){
-  const n=S.fh;
-  const L=new Float64Array(n).fill(NaN), R=new Float64Array(n).fill(NaN);
+function warpProfile(ap,F){
+  const n=S.fh, L=new Float64Array(n).fill(NaN), R=new Float64Array(n).fill(NaN);
   let top=-1,bot=-1;
   for(let y=ap.top;y<ap.bot;y++){
     if(isNaN(ap.L[y])) continue;
-    const Y = Math.round(y + F.ey[y]);
-    if(Y<0||Y>=n) continue;
-    const ca=F.Ca[y], k=F.k[y], e=F.ec[y];
+    const Y=Math.round(y+F.ey[y]); if(Y<0||Y>=n) continue;
+    const ca=F.Ca[y],k=F.k[y],e=F.ec[y];
     L[Y]=ca+e+(ap.L[y]-ca)*k; R[Y]=ca+e+(ap.R[y]-ca)*k;
     if(top<0)top=Y; bot=Y;
   }
-  for(let y=top+1;y<bot;y++) if(isNaN(L[y])){ L[y]=(L[y-1]+L[y+1])/2; R[y]=(R[y-1]+R[y+1])/2; }
   if(top<0) return ap;
+  for(let y=top+1;y<bot;y++) if(isNaN(L[y])){ L[y]=(L[y-1]+L[y+1])/2; R[y]=(R[y-1]+R[y+1])/2; }
   return {L,R,top,bot:bot+1};
 }
 
-/* ---------- avaliação em pixels ---------- */
-function evaluate(p, ref, W){
-  let s=0, wsum=0, mx=0, mxLow=0;
-  const H=ref.bot-ref.top;
+/* ====================== AVALIAÇÃO ====================== */
+function evalProf(p,ref,W){
+  if(!p||!ref) return {rms:99,max:99};
+  let s=0,ws=0,mx=0; const H=ref.bot-ref.top;
   for(let Y=ref.top;Y<ref.bot;Y++){
-    const wy=W[Y]; if(wy<=0) continue;
-    if(isNaN(p.L[Y])||isNaN(ref.L[Y])) continue;
+    const wy=W[Y]; if(wy<=0||isNaN(p.L[Y])||isNaN(ref.L[Y])) continue;
     const a=Math.abs(p.L[Y]-ref.L[Y]), b=Math.abs(p.R[Y]-ref.R[Y]);
-    s += wy*(a*a+b*b); wsum += wy*2;
+    s+=wy*(a*a+b*b); ws+=wy*2;
     const t=(Y-ref.top)/H;
-    if(t>0.52 && t<0.96){ mxLow=Math.max(mxLow,a,b); }
-    mx=Math.max(mx,a,b);
+    if(t>0.52) mx=Math.max(mx,a,b);
   }
-  const rms = wsum>0 ? Math.sqrt(s/wsum) : 99;
-  return { rms, max: mxLow || mx };
+  return {rms:ws>0?Math.sqrt(s/ws):99, max:mx};
 }
-function distortionPenalty(F){
-  if(!F) return 0;
-  return F.maxK*100*0.35 + F.maxEc*0.10 + F.maxEy*0.10;
+function distPen(F){ return F ? F.maxK*100*0.35+F.maxEc*0.10+F.maxEy*0.10 : 0; }
+const OK_RMS=0.70, OK_MAX=1.80;
+function isOK(ev,F){ return ev.rms<=OK_RMS && ev.max<=OK_MAX && (!F||(F.maxK<=.045&&F.maxEc<=7&&F.maxEy<=7)); }
+
+/* ====================== FLICKER (o que o olho vê) ======================
+   Deslocamento estimado entre frames vizinhos, por mínimos quadrados sobre
+   o gradiente, restrito à ZONA DE ESTRUTURA (baixa variância).            */
+function inkOf(img,w,h){
+  const p=img.data,f=new Uint8Array(w*h);
+  for(let i=0,j=0;i<f.length;i++,j+=4){
+    const a=p[j+3]/255;
+    if(a<=0.02){ f[i]=0; continue; }
+    const lum=(.299*p[j]+.587*p[j+1]+.114*p[j+2])/255;
+    f[i]=clamp(Math.round((0.72*(a*(1-lum))+0.28*a)*255),0,255);
+  }
+  return f;
 }
-const OK_RMS = 0.70, OK_MAX = 1.80;
-function isOK(ev, F){
-  return ev.rms <= OK_RMS && ev.max <= OK_MAX && (!F || (F.maxK<=0.045 && F.maxEc<=6 && F.maxEy<=6));
+function structMask(){
+  const n=S.fw*S.fh, m=new Float32Array(n);
+  if(!S.varmap) { m.fill(1); return m; }
+  const vs=[]; for(let i=0;i<n;i+=7) if(S.varmap[i]<1e5) vs.push(S.varmap[i]);
+  const lim=pct(vs,0.55)||100;
+  const cut=cutLines();
+  for(let y=0;y<S.fh;y++){
+    if(y<cut.top||y>cut.bot) continue;
+    for(let x=0;x<S.fw;x++){ const i=y*S.fw+x; m[i]= S.varmap[i]<=lim?1:0; }
+  }
+  return m;
 }
-
-/* ============================================================
-   PROCESSAR 1
-   ============================================================ */
-$('btnProc').onclick = processAll;
-
-async function processAll(){
-  if(!S.items.length) return;
-  stopPlay();
-  $('btnProc').disabled=true; $('btnFix').disabled=true;
-
-  // tremor original (baseline) — só pra comparar no final
-  if(S.baselineJitter===null){
-    const p0 = consensus(S.items.map(i=>i.prof));
-    const W0 = makeWeights(p0.top, p0.bot);
-    let acc=0; for(const it of S.items) acc += evaluate(it.prof, p0, W0).rms;
-    S.baselineJitter = acc/S.items.length;
-    $('kB').textContent = S.baselineJitter.toFixed(2)+' px';
+function flickerPair(A,B,M){
+  const w=S.fw,h=S.fh;
+  let a11=0,a12=0,a22=0,b1=0,b2=0,n=0;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    const i=y*w+x; if(M[i]<=0) continue;
+    const av=A[i]; if(av<6&&B[i]<6) continue;
+    const gx=(A[i+1]-A[i-1])/2, gy=(A[i+w]-A[i-w])/2;
+    if(Math.abs(gx)<1&&Math.abs(gy)<1) continue;
+    const d=B[i]-av;
+    a11+=gx*gx; a12+=gx*gy; a22+=gy*gy; b1+=gx*d; b2+=gy*d; n++;
   }
-
-  // ---- iteração 0: âncora pela linha mais larga mediana
-  const mws = S.items.map(i=>i.prof.maxW);
-  const anchor = { maxW: medianOf(mws), maxWy: Math.round(medianOf(S.items.map(i=>i.prof.maxWy))),
-                   cx: medianOf(S.items.map(i=>(i.prof.L[i.prof.maxWy]+i.prof.R[i.prof.maxWy])/2)) };
-  for(const it of S.items) it.P = bootstrapInit(it.prof, anchor);
-
-  let ref = consensus(S.items.map(it => alignedProfile(it.prof, it.P)));
-  let W = makeWeights(ref.top, ref.bot);
-
-  // ---- refinamento groupwise (3 passadas)
-  for(let iter=0; iter<3; iter++){
-    for(let i=0;i<S.items.length;i++){
-      const it=S.items[i];
-      setProg((iter*S.items.length+i)/(3*S.items.length), `Registro ${iter+1}/3 — ${i+1}/${S.items.length}`);
-      if(i%8===0) await yieldUI();
-      it.P = solve(it.prof, ref, W, it.P, iter===0?{dx:5,dy:5,sx:.05,sy:.05}:{dx:1.2,dy:1.2,sx:.012,sy:.012}).P;
-    }
-    ref = consensus(S.items.map(it => alignedProfile(it.prof, it.P)));
-    W = makeWeights(ref.top, ref.bot);
-  }
-
-  // ---- re-ancora: transformação MEDIANA vira identidade (preserva a cabeça típica)
-  const msx=medianOf(S.items.map(i=>i.P.sx)), msy=medianOf(S.items.map(i=>i.P.sy));
-  const mdx=medianOf(S.items.map(i=>i.P.dx)), mdy=medianOf(S.items.map(i=>i.P.dy));
-  const cx=S.fw/2, cy=S.fh/2, n=S.fh;
-  const L2=new Float64Array(n).fill(NaN), R2=new Float64Array(n).fill(NaN);
-  let t2=-1,b2=-1;
-  // inverso da transformação mediana aplicado à referência
-  for(let Y=0;Y<n;Y++){
-    const yr = cy + (Y - cy)*msy + mdy;         // linha da ref correspondente
-    const sp = sampleProf(ref, yr);
-    if(!sp) continue;
-    L2[Y] = cx + (sp.L - cx - mdx)/msx;
-    R2[Y] = cx + (sp.R - cx - mdx)/msx;
-    if(t2<0) t2=Y; b2=Y;
-  }
-  if(t2>=0){
-    ref = {L:L2,R:R2,top:t2,bot:b2+1};
-    W = makeWeights(ref.top, ref.bot);
-    for(const it of S.items){
-      it.P = { sx: it.P.sx/msx, sy: it.P.sy/msy,
-               dx: (it.P.dx - mdx)/msx, dy: (it.P.dy - mdy)/msy };
-    }
-    for(let i=0;i<S.items.length;i++){
-      const it=S.items[i];
-      if(i%10===0){ setProg(i/S.items.length,`Ajuste fino ${i+1}/${S.items.length}`); await yieldUI(); }
-      it.P = solve(it.prof, ref, W, it.P, {dx:.8,dy:.8,sx:.008,sy:.008}).P;
-    }
-  }
-  S.ref = ref; S.W_ = W; S.refMaskCache = null;
-
-  // ---- decide warp por imagem (só se compensar)
-  for(let i=0;i<S.items.length;i++){
-    const it=S.items[i];
-    setProg(i/S.items.length, `Avaliando ${i+1}/${S.items.length}`);
-    if(i%8===0) await yieldUI();
-    pickBest(it, ref, W, [ {ec:0,k:0,ey:0}, {ec:3,k:0.020,ey:3} ]);
-  }
-
-  // ---- render final
-  await renderAll();
-
-  S.processed=true;
-  $('btnProc').disabled=false; $('btnFix').disabled=false;
-  $('btnZip').disabled=false; $('btnDir').disabled = !window.showDirectoryPicker;
-  updateStats(); buildThumbs(); draw();
+  if(n<60) return 0;
+  const det=a11*a22-a12*a12;
+  if(Math.abs(det)<1e-6) return 0;
+  const dx=(a22*b1-a12*b2)/det, dy=(a11*b2-a12*b1)/det;
+  const m=Math.hypot(dx,dy);
+  return isFinite(m)?Math.min(m,20):0;
 }
-
-function pickBest(it, ref, W, levels){
-  const ap = alignedProfile(it.prof, it.P);
-  let best=null;
-  for(const lim of levels){
-    let F=null, prof=ap;
-    if(lim.k>0 || lim.ec>0){
-      F = buildField(ap, ref, W, lim);
-      if(F) prof = warpProfile(ap, F);
-    }
-    const ev = evaluate(prof, ref, W);
-    const sc = ev.rms + distortionPenalty(F);
-    if(!best || sc < best.sc) best = {sc, ev, F, prof};
-  }
-  it.field = best.F; it.ev = best.ev; it.score = best.sc;
-  it.status = isOK(best.ev, best.F) ? 'OK' : 'REVISAR';
-  return best;
-}
-
-/* ============================================================
-   CORRIGIR REVISAR — vários candidatos por imagem
-   ============================================================ */
-$('btnFix').onclick = fixFlagged;
-
-async function fixFlagged(){
-  if(!S.ref) return;
-  stopPlay();
-  const bad = S.items.filter(it => it.status !== 'OK');
-  if(!bad.length){ setProg(1,'Nenhuma imagem marcada como REVISAR.'); return; }
-  $('btnProc').disabled=true; $('btnFix').disabled=true;
-
-  const ref=S.ref, W=S.W_;
-  const Wlow = W.slice();                                  // pesos só na zona crítica
-  const H = ref.bot-ref.top;
-  for(let y=0;y<Wlow.length;y++){ const t=(y-ref.top)/H; if(t<0.50) Wlow[y]=0; }
-
-  for(let i=0;i<bad.length;i++){
-    const it=bad[i];
-    setProg(i/bad.length, `Revisando ${i+1}/${bad.length} — ${it.name}`);
-    await yieldUI();
-
-    const cands=[];
-    const push=(P,lim)=>{
-      const ap=alignedProfile(it.prof,P); if(!ap) return;
-      let F=null, prof=ap;
-      if(lim.k>0||lim.ec>0){ F=buildField(ap,ref,W,lim); if(F) prof=warpProfile(ap,F); }
-      const ev=evaluate(prof,ref,W);
-      cands.push({P,F,ev,sc:ev.rms+distortionPenalty(F)});
-    };
-
-    // candidato A — re-solve global com busca larga (escapa de mínimo local)
-    const A = solve(it.prof, ref, W, it.P, {dx:6,dy:6,sx:.06,sy:.06}).P;
-    push(A,{ec:0,k:0,ey:0});
-    // candidato B — global otimizado SÓ pela zona crítica
-    const B = solve(it.prof, ref, Wlow, it.P, {dx:4,dy:4,sx:.04,sy:.04}).P;
-    push(B,{ec:0,k:0,ey:0});
-    // candidatos C/D/E — warp progressivo sobre a melhor base global
-    for(const P of [A,B]){
-      push(P,{ec:3,k:0.020,ey:3});
-      push(P,{ec:5,k:0.035,ey:5});
-      push(P,{ec:7,k:0.050,ey:6});
-    }
-    // candidato F — mantém o atual
-    push(it.P, it.field ? {ec:5,k:0.035,ey:5} : {ec:0,k:0,ey:0});
-
-    cands.sort((a,b)=>a.sc-b.sc);
-    const w = cands[0];
-    it.P=w.P; it.field=w.F; it.ev=w.ev; it.score=w.sc;
-    it.status = isOK(w.ev, w.F) ? 'OK' : 'REVISAR';
-  }
-
-  await renderAll();
-  S.refMaskCache = null;
-  $('btnProc').disabled=false; $('btnFix').disabled=false;
-  updateStats(); buildThumbs(); draw();
-}
-
-/* ============================================================
-   RENDER FINAL (amostragem bilinear com alpha pré-multiplicado)
-   ============================================================ */
-async function renderAll(){
-  S.ovlP=null; S.ovlO=null; S.refMaskCache=null;
-  for(let i=0;i<S.items.length;i++){
-    const it=S.items[i];
-    if(i%4===0){ setProg(i/S.items.length, `Renderizando ${i+1}/${S.items.length}`); await yieldUI(); }
-    it.proc = renderItem(it);
-    it.pmask = buildMaskFromAlpha(it.proc, S.fw, S.fh);
-    it.cProf = null;
-  }
-  setProg(1,'Pronto.');
-}
-
-function renderItem(it){
-  const w=S.fw, h=S.fh, cx=w/2, cy=h/2, P=it.P, F=it.field;
-  const src = it.crop.data;
-  const out = new ImageData(w,h);
-  const o = out.data;
-
-  // tabela inversa do campo vertical: Y -> ya
-  let invY=null;
-  if(F){
-    const fwd=new Float64Array(h);
-    for(let y=0;y<h;y++) fwd[y]=y+F.ey[y];
-    invY=new Float64Array(h);
-    let j=0;
-    for(let Y=0;Y<h;Y++){
-      while(j<h-2 && fwd[j+1] < Y) j++;
-      const a=fwd[j], b=fwd[j+1];
-      invY[Y] = (b-a)>1e-6 ? j + (Y-a)/(b-a) : j;
-      invY[Y] = clamp(invY[Y],0,h-1);
-    }
-  }
-
-  for(let Y=0;Y<h;Y++){
-    const ya = F ? invY[Y] : Y;
-    let ca=0,k=1,e=0;
-    if(F){
-      const i0=clamp(Math.floor(ya),0,h-1), i1=clamp(i0+1,0,h-1), t=ya-i0;
-      ca=F.Ca[i0]*(1-t)+F.Ca[i1]*t; k=F.k[i0]*(1-t)+F.k[i1]*t; e=F.ec[i0]*(1-t)+F.ec[i1]*t;
-      if(!(k>0.5)) k=1;
-    }
-    const ysrc = cy + (ya - cy - P.dy)/P.sy;
-    if(ysrc < -1 || ysrc > h) continue;
-    const row = Y*w*4;
-    for(let X=0;X<w;X++){
-      const xa = F ? (ca + (X - ca - e)/k) : X;
-      const xsrc = cx + (xa - cx - P.dx)/P.sx;
-      if(xsrc < -1 || xsrc > w) continue;
-      bilinear(src, w, h, xsrc, ysrc, o, row + X*4);
-    }
+function computeFlicker(getInk){
+  const M=structMask(), n=S.items.length, out=[];
+  for(let i=0;i<n;i++){
+    const a=getInk(S.items[i]), b=getInk(S.items[(i+1)%n]);
+    out.push(a&&b?flickerPair(a,b,M):0);
   }
   return out;
 }
 
-function bilinear(src, w, h, fx, fy, out, oi){
-  const x0=Math.floor(fx), y0=Math.floor(fy), tx=fx-x0, ty=fy-y0;
+/* ====================== RENDER ====================== */
+function renderItem(it,P0,field){
+  const w=S.fw,h=S.fh,cx=w/2,cy=h/2;
+  const P={dx:P0.dx+it.nudge.x, dy:P0.dy+it.nudge.y, sx:P0.sx, sy:P0.sy};
+  const src=it.crop.data, out=new ImageData(w,h), o=out.data;
+  let invY=null;
+  if(field){
+    const fw=new Float64Array(h);
+    for(let y=0;y<h;y++) fw[y]=y+field.ey[y];
+    invY=new Float64Array(h); let j=0;
+    for(let Y=0;Y<h;Y++){
+      while(j<h-2&&fw[j+1]<Y) j++;
+      const a=fw[j],b=fw[j+1];
+      invY[Y]=clamp((b-a)>1e-6?j+(Y-a)/(b-a):j,0,h-1);
+    }
+  }
+  const cut=cutLines(), fe=1.6;
+  for(let Y=0;Y<h;Y++){
+    let ca=0,k=1,e=0, ya=Y;
+    if(field){
+      ya=invY[Y];
+      const i0=clamp(Math.floor(ya),0,h-1), i1=clamp(i0+1,0,h-1), t=ya-i0;
+      ca=field.Ca[i0]*(1-t)+field.Ca[i1]*t;
+      k=field.k[i0]*(1-t)+field.k[i1]*t;
+      e=field.ec[i0]*(1-t)+field.ec[i1]*t;
+      if(!(k>0.5)) k=1;
+    }
+    let av=1;
+    if(S.cutTop>0) av*=smoothstep(cut.top-fe,cut.top+fe,Y);
+    if(S.cutBot>0) av*=1-smoothstep(cut.bot-fe,cut.bot+fe,Y);
+    if(av<=0.004) continue;
+    const ys=cy+(ya-cy-P.dy)/P.sy;
+    if(ys<-1||ys>h) continue;
+    const row=Y*w*4;
+    for(let X=0;X<w;X++){
+      const xa = field ? (ca+(X-ca-e)/k) : X;
+      const xs = cx+(xa-cx-P.dx)/P.sx;
+      if(xs<-1||xs>w) continue;
+      bilPM(src,w,h,xs,ys,o,row+X*4,av);
+    }
+  }
+  return out;
+}
+function bilPM(src,w,h,fx,fy,out,oi,mul){
+  const x0=Math.floor(fx),y0=Math.floor(fy),tx=fx-x0,ty=fy-y0;
   let r=0,g=0,b=0,a=0;
   for(let dy=0;dy<2;dy++){
     const yy=y0+dy; if(yy<0||yy>=h) continue;
-    const wy = dy? ty : 1-ty; if(wy<=0) continue;
+    const wy=dy?ty:1-ty; if(wy<=0) continue;
     for(let dx=0;dx<2;dx++){
       const xx=x0+dx; if(xx<0||xx>=w) continue;
-      const wx = dx? tx : 1-tx; if(wx<=0) continue;
-      const wgt = wx*wy, i=(yy*w+xx)*4, al=src[i+3]/255;
-      r += src[i]  *al*wgt; g += src[i+1]*al*wgt; b += src[i+2]*al*wgt; a += al*wgt;
+      const wx=dx?tx:1-tx; if(wx<=0) continue;
+      const wt=wx*wy,i=(yy*w+xx)*4,al=src[i+3]/255;
+      r+=src[i]*al*wt; g+=src[i+1]*al*wt; b+=src[i+2]*al*wt; a+=al*wt;
     }
   }
   if(a<=0.0006) return;
-  out[oi]   = clamp(Math.round(r/a),0,255);
-  out[oi+1] = clamp(Math.round(g/a),0,255);
-  out[oi+2] = clamp(Math.round(b/a),0,255);
-  out[oi+3] = clamp(Math.round(a*255),0,255);
+  out[oi]=clamp(Math.round(r/a),0,255);
+  out[oi+1]=clamp(Math.round(g/a),0,255);
+  out[oi+2]=clamp(Math.round(b/a),0,255);
+  out[oi+3]=clamp(Math.round(a*255*mul),0,255);
 }
-function buildMaskFromAlpha(imgData,w,h){
-  const p=imgData.data, m=new Uint8Array(w*h);
-  for(let i=0,j=0;i<m.length;i++,j+=4) m[i]= p[j+3]>=96?1:0;
+function maskFromAlpha(img){
+  const p=img.data,m=new Uint8Array(S.fw*S.fh);
+  for(let i=0,j=0;i<m.length;i++,j+=4) m[i]=p[j+3]>=96?1:0;
   return m;
 }
+/* ====================== DRIVERS DOS MÉTODOS ====================== */
+S.molds={};
+function initP(it){ return it.m.m1 ? {...it.m.m1.P} : bootstrap(it.prof, S._anc||(S._anc=anchorOf())); }
+function busy(b){ METHODS.forEach(m=>$(m).disabled=b); $('btnFix').disabled=b||!S.method; $('btnAutoCut').disabled=b; }
 
-/* ---------- estatísticas ---------- */
-function updateStats(){
-  const n=S.items.length;
-  const ok=S.items.filter(i=>i.status==='OK').length;
-  $('kN').textContent=n; $('kOK').textContent=ok; $('kRV').textContent=n-ok;
-  const rs=S.items.map(i=>i.ev?i.ev.rms:0);
-  $('kJ').textContent = (rs.reduce((a,b)=>a+b,0)/n).toFixed(2)+' px';
-  $('kW').textContent = Math.max(...rs).toFixed(2)+' px';
+async function runMethod(key){
+  if(!S.items.length) return;
+  stopPlay(); busy(true);
+  try{
+    if(key==='m1') await runSil();
+    else if(key==='m2') await runDense('m2','uniform',null,2);
+    else if(key==='m3') await runDense('m3','variance',null,3);
+    else if(key==='m4') await runDense('m4','variance',[0.46,1.04],3);
+    else if(key==='m5') await runWarp();
+    else if(key==='m6') await runAnti();
+    else if(key==='m7') await runAuto();
+    await finish(key);
+  }catch(e){ setProg(0,'Erro: '+e.message); console.error(e); }
+  busy(false);
+}
+METHODS.forEach(k=>$(k).onclick=()=>runMethod(k));
+
+async function runSil(){
+  const anc=anchorOf(); S._anc=anc;
+  const tmp=new Map();
+  for(const it of S.items) tmp.set(it,bootstrap(it.prof,anc));
+  let mold=consensus(S.items.map(it=>alignedProfile(it.prof,tmp.get(it))));
+  S.mold=mold;
+  let W=bandWeights(mold.top,mold.bot,null);
+  for(let o=0;o<3;o++){
+    for(let i=0;i<S.items.length;i++){
+      const it=S.items[i];
+      if(i%10===0){ setProg((o*S.items.length+i)/(3*S.items.length),`Silhueta ${o+1}/3 — ${i+1}/${S.items.length}`); await yieldUI(); }
+      tmp.set(it, profSolve(it.prof,mold,W,tmp.get(it), o===0?{dx:5,dy:5,sx:.05,sy:.05}:{dx:1.2,dy:1.2,sx:.012,sy:.012}));
+    }
+    mold=consensus(S.items.map(it=>alignedProfile(it.prof,tmp.get(it))));
+    S.mold=mold; W=bandWeights(mold.top,mold.bot,null);
+  }
+  for(const it of S.items) it.m.m1={P:tmp.get(it),field:null};
+  normalize(it=>it.m.m1.P,(it,P)=>it.m.m1.P=P);
 }
 
-/* ============================================================
-   VISUALIZAÇÃO
-   ============================================================ */
+async function runDense(key,mode,band,outer){
+  for(const it of S.items) it.m[key]={P:initP(it),field:null};
+  S.mold=consensus(S.items.map(it=>alignedProfile(it.prof,it.m[key].P)));
+  for(let o=0;o<outer;o++){
+    setProg(o/outer,`${MNAME[key]} — construindo referência (${o+1}/${outer})`); await yieldUI();
+    const st=stackStats(it=>it.m[key].P);
+    S.varmap=st.vr;
+    const refPyr=meanToPyr(st.mean);
+    const wPyr=downW(buildWeightMap(o===0?'uniform':mode,band),S.fw,S.fh,3);
+    for(let i=0;i<S.items.length;i++){
+      const it=S.items[i];
+      if(i%5===0){ setProg((o+i/S.items.length)/outer,`${MNAME[key]} ${o+1}/${outer} — ${i+1}/${S.items.length}`); await yieldUI(); }
+      it.m[key].P=gnFit(it.pyr,refPyr,wPyr,it.m[key].P, o===0?12:8);
+    }
+    normalize(it=>it.m[key].P,(it,P)=>it.m[key].P=P);
+    S.mold=consensus(S.items.map(it=>alignedProfile(it.prof,it.m[key].P)));
+  }
+}
+
+async function runWarp(){
+  if(!S.items[0].m.m3){ await runDense('m3','variance',null,3); await finish('m3'); }
+  const mold=S.molds.m3||S.mold, W=bandWeights(mold.top,mold.bot,null);
+  for(let i=0;i<S.items.length;i++){
+    const it=S.items[i];
+    if(i%8===0){ setProg(i/S.items.length,`Warp suave — ${i+1}/${S.items.length}`); await yieldUI(); }
+    const P={...it.m.m3.P}, ap=alignedProfile(it.prof,P);
+    let best={sc:evalProf(ap,mold,W).rms,F:null};
+    for(const lim of [{ec:3,k:.020,ey:3},{ec:5,k:.035,ey:5}]){
+      const F=buildField(ap,mold,lim); if(!F) continue;
+      const sc=evalProf(warpProfile(ap,F),mold,W).rms+distPen(F);
+      if(sc<best.sc) best={sc,F};
+    }
+    it.m.m5={P,field:best.F};
+  }
+}
+
+async function runAnti(){
+  if(!S.items[0].m.m3){ await runDense('m3','variance',null,3); await finish('m3'); }
+  const n=S.items.length;
+  for(const it of S.items) it.m.m6={P:{...it.m.m3.P},field:null};
+  const st=stackStats(it=>it.m.m6.P); S.varmap=st.vr;
+  const refPyr=meanToPyr(st.mean);
+  const wPyr=downW(buildWeightMap('variance',null),S.fw,S.fh,3);
+  for(let sw=0;sw<2;sw++){
+    const old=S.items.map(it=>({...it.m.m6.P}));
+    const a=0.30;
+    for(let i=0;i<n;i++){
+      const p=old[(i-1+n)%n], q=old[(i+1)%n], c=old[i];
+      S.items[i].m.m6.P={
+        dx:(1-a)*c.dx+a*(p.dx+q.dx)/2, dy:(1-a)*c.dy+a*(p.dy+q.dy)/2,
+        sx:(1-a)*c.sx+a*(p.sx+q.sx)/2, sy:(1-a)*c.sy+a*(p.sy+q.sy)/2 };
+    }
+    for(let i=0;i<n;i++){
+      if(i%6===0){ setProg((sw+i/n)/2,`Anti-flicker ${sw+1}/2 — ${i+1}/${n}`); await yieldUI(); }
+      S.items[i].m.m6.P=gnFit(S.items[i].pyr,refPyr,wPyr,S.items[i].m.m6.P,4);
+    }
+  }
+  normalize(it=>it.m.m6.P,(it,P)=>it.m.m6.P=P);
+}
+
+async function runAuto(){
+  for(const k of ['m3','m4','m5']){
+    if(!S.items[0].m[k]){
+      if(k==='m3') await runDense('m3','variance',null,3);
+      else if(k==='m4') await runDense('m4','variance',[0.46,1.04],3);
+      else await runWarp();
+      await finish(k);
+    }
+  }
+  const mold=S.molds.m3||S.mold, W=bandWeights(mold.top,mold.bot,null);
+  const tally={};
+  for(let i=0;i<S.items.length;i++){
+    const it=S.items[i];
+    if(i%10===0){ setProg(i/S.items.length,`Auto — escolhendo por imagem ${i+1}/${S.items.length}`); await yieldUI(); }
+    let best=null;
+    for(const k of ['m3','m4','m5']){
+      const c=it.m[k]; if(!c) continue;
+      let p=alignedProfile(it.prof,c.P);
+      if(c.field) p=warpProfile(p,c.field);
+      const sc=evalProf(p,mold,W).rms+distPen(c.field);
+      if(!best||sc<best.sc) best={sc,k,P:{...c.P},field:c.field};
+    }
+    it.m.m7={P:best.P,field:best.field,from:best.k};
+    tally[best.k]=(tally[best.k]||0)+1;
+  }
+  S._autoTally=tally;
+}
+
+/* ====================== CORRIGIR REVISAR ====================== */
+$('btnFix').onclick=async()=>{
+  if(!S.method) return;
+  const key=S.method, bad=S.items.filter(it=>it.status!=='OK');
+  if(!bad.length){ setProg(1,'Nada marcado como REVISAR.'); return; }
+  stopPlay(); busy(true);
+  const mold=S.mold, W=bandWeights(mold.top,mold.bot,null);
+  const Wlow=W.slice(), H=mold.bot-mold.top;
+  for(let y=0;y<Wlow.length;y++){ if((y-mold.top)/H<0.50) Wlow[y]=0; }
+  const st=stackStats(it=>it.m[key].P); S.varmap=st.vr;
+  const refPyr=meanToPyr(st.mean);
+  const wA=downW(buildWeightMap('variance',null),S.fw,S.fh,3);
+  const wB=downW(buildWeightMap('variance',[0.46,1.04]),S.fw,S.fh,3);
+  for(let i=0;i<bad.length;i++){
+    const it=bad[i];
+    setProg(i/bad.length,`Revisando ${i+1}/${bad.length} — ${it.name}`); await yieldUI();
+    const cands=[];
+    const add=(P,F)=>{ let p=alignedProfile(it.prof,P); if(!p) return; if(F) p=warpProfile(p,F);
+      cands.push({P,F,sc:evalProf(p,mold,W).rms+distPen(F)}); };
+    add({...it.m[key].P}, it.m[key].field);
+    const A=gnFit(it.pyr,refPyr,wA,it.m[key].P,14); add(A,null);
+    const B=gnFit(it.pyr,refPyr,wB,it.m[key].P,14); add(B,null);
+    const C=profSolve(it.prof,mold,Wlow,it.m[key].P,{dx:3,dy:3,sx:.03,sy:.03}); add(C,null);
+    for(const P of [A,B,C]){
+      const ap=alignedProfile(it.prof,P); if(!ap) continue;
+      for(const lim of [{ec:3,k:.020,ey:3},{ec:5,k:.035,ey:5},{ec:7,k:.050,ey:6}]){
+        const F=buildField(ap,mold,lim); if(F) add(P,F);
+      }
+    }
+    cands.sort((a,b)=>a.sc-b.sc);
+    it.m[key]={P:cands[0].P,field:cands[0].F};
+  }
+  await finish(key);
+  busy(false);
+};
+
+/* ====================== FINALIZAÇÃO ====================== */
+async function finish(key){
+  S.method=key;
+  const mold=consensus(S.items.map(it=>{
+    const c=it.m[key]; let p=alignedProfile(it.prof,c.P);
+    return c.field&&p?warpProfile(p,c.field):p;
+  }));
+  S.mold=mold; S.molds[key]=mold;
+  const W=bandWeights(mold.top,mold.bot,null);
+
+  for(let i=0;i<S.items.length;i++){
+    const it=S.items[i];
+    if(i%4===0){ setProg(i/S.items.length,`Renderizando ${i+1}/${S.items.length}`); await yieldUI(); }
+    const c=it.m[key];
+    let p=alignedProfile(it.prof,c.P); if(c.field&&p) p=warpProfile(p,c.field);
+    it.ev=evalProf(p,mold,W); it.ev.pen=distPen(c.field);
+    it.status=isOK(it.ev,c.field)?'OK':'REVISAR';
+    it.proc=renderItem(it,c.P,c.field);
+    it.pmask=maskFromAlpha(it.proc);
+    it.aInk=inkOf(it.proc,S.fw,S.fh);
+    it.cProf=null;
+  }
+  // variância dos RESULTADOS: é a prova final. Só olho e boca deveriam acender.
+  const n=S.fw*S.fh, sum=new Float64Array(n), sq=new Float64Array(n);
+  for(const it of S.items) for(let i=0;i<n;i++){ const v=it.aInk[i]; sum[i]+=v; sq[i]+=v*v; }
+  const N=S.items.length;
+  S.varmap=new Float32Array(n); S.meanImg=new Float32Array(n);
+  for(let i=0;i<n;i++){ const m=sum[i]/N; S.meanImg[i]=m; S.varmap[i]=Math.max(0,sq[i]/N-m*m); }
+
+  if(S.baseFlicker===null){
+    const f0=computeFlicker(it=>it._oInk||(it._oInk=inkOf(it.crop,S.fw,S.fh)));
+    S.baseFlicker=f0.reduce((a,b)=>a+b,0)/f0.length;
+    $('kB').textContent=S.baseFlicker.toFixed(2)+' px';
+    for(const it of S.items) it._oInk=null;
+  }
+  S.flick=computeFlicker(it=>it.aInk);
+  const fm=S.flick.reduce((a,b)=>a+b,0)/S.flick.length;
+  const rs=S.items.map(i=>i.ev.rms);
+  const rm=rs.reduce((a,b)=>a+b,0)/rs.length;
+
+  $('s'+key[1]).textContent=rm.toFixed(2)+' / '+fm.toFixed(2);
+  METHODS.forEach(m=>{
+    const b=$(m); b.className=b.className.replace(/ ?(done|act)/g,'');
+    if(S.items[0].m[m]) b.className+=' done';
+    if(m===key) b.className+=' act';
+  });
+  $('curMethod').textContent=MNAME[key]+(key==='m7'&&S._autoTally?' ('+Object.entries(S._autoTally).map(([k,v])=>MNAME[k].split(' ')[0].toLowerCase()+':'+v).join(' ')+')':'');
+  $('kOK').textContent=`${S.items.filter(i=>i.status==='OK').length} / ${S.items.filter(i=>i.status!=='OK').length}`;
+  $('kJ').textContent=rm.toFixed(2)+' px';
+  $('kW').textContent=Math.max(...rs).toFixed(2)+' px';
+  $('kF').textContent=fm.toFixed(2)+' px';
+  S.cache={};
+  $('btnZip').disabled=false; $('btnDir').disabled=!window.showDirectoryPicker;
+  $('btnSave').disabled=false; $('btnFix').disabled=false;
+  setProg(1,`${MNAME[key]} pronto · desvio ${rm.toFixed(2)}px · flicker ${fm.toFixed(2)}px`);
+  buildThumbs(); drawFlick(); draw();
+}
+
+async function rerender(){
+  if(!S.method) return;
+  const key=S.method;
+  for(let i=0;i<S.items.length;i++){
+    const it=S.items[i];
+    if(i%6===0){ setProg(i/S.items.length,`Re-renderizando ${i+1}/${S.items.length}`); await yieldUI(); }
+    it.proc=renderItem(it,it.m[key].P,it.m[key].field);
+    it.pmask=maskFromAlpha(it.proc); it.aInk=inkOf(it.proc,S.fw,S.fh); it.cProf=null;
+  }
+  S.cache={}; setProg(1,'Pronto.'); buildThumbs(); draw();
+}
+/* ====================== CORTE ====================== */
+function upCut(){
+  S.cutTop=parseInt($('slTop').value,10)/100;
+  S.cutBot=parseInt($('slBot').value,10)/100;
+  $('vTop').textContent=$('slTop').value+'%'; $('vBot').textContent=$('slBot').value+'%';
+}
+let cutT=null;
+function cutChanged(){
+  upCut();
+  clearTimeout(cutT);
+  cutT=setTimeout(()=>{ if(S.method) rerender(); else draw(); },260);
+}
+$('slTop').oninput=cutChanged; $('slBot').oninput=cutChanged;
+$('btnAutoCut').onclick=()=>{
+  const key=S.method;
+  const aps=S.items.map(it=>{
+    const P=key?it.m[key].P:bootstrap(it.prof,S._anc||(S._anc=anchorOf()));
+    return alignedProfile(it.prof,P);
+  }).filter(Boolean);
+  const mold=consensus(aps); if(!mold) return;
+  const H=mold.bot-mold.top;
+  const bots=aps.map(p=>p.bot), tops=aps.map(p=>p.top);
+  const bCut=clamp((mold.bot-pct(bots,0.10))/H+0.012,0,0.60);
+  const tCut=clamp((pct(tops,0.90)-mold.top)/H+0.004,0,0.40);
+  $('slBot').value=Math.round(bCut*100); $('slTop').value=Math.round(tCut*100);
+  upCut();
+  setProg(1,`Corte automático: base ${Math.round(bCut*100)}%, topo ${Math.round(tCut*100)}%. Rode o método de novo pra o corte entrar no cálculo.`);
+  if(S.method) rerender(); else draw();
+};
+
+/* ====================== CANVAS / VISTAS ====================== */
 const cv=$('cv'), ctx=cv.getContext('2d');
-const scratch=document.createElement('canvas'), sctx=scratch.getContext('2d',{willReadFrequently:true});
-$('view').onchange=draw; $('ckZoom').onchange=draw; $('ckDbg').onchange=()=>{ $('dbg').style.display=$('ckDbg').checked?'block':'none'; draw(); };
+const scr=document.createElement('canvas'), sctx=scr.getContext('2d',{willReadFrequently:true});
+const magc=$('magc'), mctx=magc.getContext('2d');
+['view','ckZoom','ckMold','ckFill','ckGuides','ckOnion','ckMag'].forEach(id=>$(id).onchange=()=>{
+  if(id==='ckMag') $('mag').style.display=$('ckMag').checked?'block':'none';
+  draw();
+});
+$('slMold').oninput=()=>{ $('vMold').textContent=$('slMold').value+'%'; draw(); };
+$('ckDbg').onchange=()=>{ $('dbg').style.display=$('ckDbg').checked?'block':'none'; draw(); };
 
 function fitCanvas(){
-  const r=cv.getBoundingClientRect();
-  const dpr=window.devicePixelRatio||1;
-  cv.width=Math.max(2,Math.round(r.width*dpr)); cv.height=Math.max(2,Math.round(r.height*dpr));
+  const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  cv.width=Math.max(2,Math.round(r.width*d)); cv.height=Math.max(2,Math.round(r.height*d));
 }
 window.addEventListener('resize',()=>{fitCanvas();draw();});
 
 function viewport(){
-  // enquadramento FIXO — nunca muda entre expressões
   let x=0,y=0,w=S.fw,h=S.fh;
-  if($('ckZoom').checked && S.ref){
-    const H=S.ref.bot-S.ref.top;
-    y=Math.max(0, Math.round(S.ref.top + H*0.34)); h=Math.min(S.fh-y, Math.round(H*0.74));
+  if($('ckZoom').checked&&S.mold){
+    const H=S.mold.bot-S.mold.top;
+    y=Math.max(0,Math.round(S.mold.top+H*0.34)); h=Math.min(S.fh-y,Math.round(H*0.76));
     let l=1e9,r=-1e9;
-    for(let i=S.ref.top;i<S.ref.bot;i++){ if(!isNaN(S.ref.L[i])){ l=Math.min(l,S.ref.L[i]); r=Math.max(r,S.ref.R[i]); } }
-    const pad=(r-l)*0.14; x=Math.max(0,Math.round(l-pad)); w=Math.min(S.fw-x,Math.round(r-l+pad*2));
+    for(let i=S.mold.top;i<S.mold.bot;i++) if(!isNaN(S.mold.L[i])){ l=Math.min(l,S.mold.L[i]); r=Math.max(r,S.mold.R[i]); }
+    const p=(r-l)*0.14; x=Math.max(0,Math.round(l-p)); w=Math.min(S.fw-x,Math.round(r-l+p*2));
   }
-  const sc=Math.min(cv.width/w, cv.height/h);
-  return {x,y,w,h,sc, ox:(cv.width-w*sc)/2, oy:(cv.height-h*sc)/2};
+  const sc=Math.min(cv.width/w,cv.height/h);
+  return {x,y,w,h,sc,ox:(cv.width-w*sc)/2,oy:(cv.height-h*sc)/2};
 }
-function paint(imgData, vp, alpha){
-  scratch.width=S.fw; scratch.height=S.fh;
-  sctx.clearRect(0,0,S.fw,S.fh); sctx.putImageData(imgData,0,0);
-  ctx.globalAlpha = alpha===undefined?1:alpha;
-  ctx.drawImage(scratch, vp.x,vp.y,vp.w,vp.h, vp.ox,vp.oy, vp.w*vp.sc, vp.h*vp.sc);
+function paint(img,vp,alpha){
+  scr.width=S.fw; scr.height=S.fh;
+  sctx.clearRect(0,0,S.fw,S.fh); sctx.putImageData(img,0,0);
+  ctx.globalAlpha=alpha===undefined?1:alpha;
+  ctx.imageSmoothingEnabled=true;
+  ctx.drawImage(scr,vp.x,vp.y,vp.w,vp.h,vp.ox,vp.oy,vp.w*vp.sc,vp.h*vp.sc);
   ctx.globalAlpha=1;
 }
+function lab(t,x,y){ ctx.fillStyle='#9aa4af'; ctx.font='600 12px sans-serif'; ctx.fillText(t,x,y); }
 
 function draw(){
-  if(!cv.width || cv.width<10) fitCanvas();
-  ctx.fillStyle='#0f1013'; ctx.fillRect(0,0,cv.width,cv.height);
-  if(!S.items.length){ hint('Carregue a pasta com os PNGs.'); return; }
+  if(cv.width<10) fitCanvas();
+  ctx.fillStyle='#0d0e11'; ctx.fillRect(0,0,cv.width,cv.height);
+  if(!S.items.length){ ctx.fillStyle='#4a515b'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('Carregue a pasta com os PNGs.',cv.width/2,cv.height/2); ctx.textAlign='left'; return; }
   const it=S.items[S.cur]; if(!it) return;
   const vp=viewport(), v=$('view').value;
 
-  if(v==='orig' || (!it.proc && v==='proc')) paint(it.crop,vp);
+  if($('ckOnion').checked&&it.proc){
+    const pv=S.items[(S.cur-1+S.items.length)%S.items.length];
+    if(pv.proc) paint(pv.proc,vp,0.42);
+  }
+  if(v==='orig'||(!it.proc&&v!=='ovlo')) paint(it.crop,vp);
   else if(v==='proc') paint(it.proc,vp);
   else if(v==='cmp'){
-    const half=Math.round(cv.width/2);
-    ctx.save(); ctx.beginPath(); ctx.rect(0,0,half,cv.height); ctx.clip(); paint(it.crop,vp); ctx.restore();
-    ctx.save(); ctx.beginPath(); ctx.rect(half,0,cv.width-half,cv.height); ctx.clip(); paint(it.proc||it.crop,vp); ctx.restore();
-    ctx.strokeStyle='#4d9e7a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(half,0); ctx.lineTo(half,cv.height); ctx.stroke();
-    lab('ORIGINAL',12,26); lab('PROCESSADO',half+12,26);
+    const hf=Math.round(cv.width/2);
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,hf,cv.height); ctx.clip(); paint(it.crop,vp); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.rect(hf,0,cv.width-hf,cv.height); ctx.clip(); paint(it.proc||it.crop,vp); ctx.restore();
+    ctx.strokeStyle='#4d9e7a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(hf,0); ctx.lineTo(hf,cv.height); ctx.stroke();
+    lab('ORIGINAL',12,24); lab('PROCESSADO',hf+12,24);
   }
-  else if(v==='ovl' || v==='ovlo') drawOverlay(vp, v==='ovlo');
+  else if(v==='ovl'||v==='ovlo') drawOverlay(vp,v==='ovlo');
   else if(v==='cnt') drawContours(vp);
-  else if(v==='ref'){ paint(it.proc||it.crop,vp); strokeProfile(S.ref,vp,'#ff5d8f',2); lab('rosa = referência de consenso',12,26); }
+  else if(v==='var') drawVar(vp);
   else if(v==='dif') drawDiff(vp,it);
 
-  if($('ckDbg').checked) drawDebug(vp,it);
-  $('pName').textContent=it.name;
-  $('pScore').innerHTML = it.ev ? `${it.status} · <b>${it.ev.rms.toFixed(2)}px</b> rms / ${it.ev.max.toFixed(2)}px máx` : '—';
-  $('pIdx').textContent=`${S.cur+1} / ${S.items.length}`;
-  if($('ckDbg').checked) $('dbg').textContent = it.ev ?
-`dx ${it.P.dx.toFixed(2)}  dy ${it.P.dy.toFixed(2)}
-sx ${it.P.sx.toFixed(4)}  sy ${it.P.sy.toFixed(4)}
-rms ${it.ev.rms.toFixed(3)}px  max ${it.ev.max.toFixed(3)}px
-warp ${it.field ? `k±${(it.field.maxK*100).toFixed(2)}%  ec±${it.field.maxEc.toFixed(2)}px  ey±${it.field.maxEy.toFixed(2)}px` : 'nenhum (só transformação global)'}
-score ${it.score.toFixed(3)}` : 'sem dados';
-}
-function hint(t){ ctx.fillStyle='#4a515b'; ctx.font='14px sans-serif'; ctx.textAlign='center'; ctx.fillText(t,cv.width/2,cv.height/2); ctx.textAlign='left'; }
-function lab(t,x,y){ ctx.fillStyle='#9aa4af'; ctx.font='600 12px sans-serif'; ctx.fillText(t,x,y); }
+  drawMold(vp);
+  if($('ckDbg').checked) drawDbg(vp,it);
+  if($('ckMag').checked) drawMag();
 
-function drawOverlay(vp, useOriginal){
-  const key = useOriginal?'ovlO':'ovlP';
-  if(S[key]){ paint(S[key],vp); lab(useOriginal?'OVERLAY ORIGINAL — vermelho = divergência':'OVERLAY PROCESSADO — vermelho = divergência restante',12,26); return; }
-  const w=S.fw,h=S.fh,n=S.items.length;
-  const cnt=new Uint16Array(w*h);
-  for(const it of S.items){
-    const m = useOriginal ? it.mask : (it.pmask||it.mask);
-    for(let i=0;i<cnt.length;i++) if(m[i]) cnt[i]++;
+  $('pName').textContent=it.name;
+  $('pScore').innerHTML=it.ev?`${it.status} · <b>${it.ev.rms.toFixed(2)}px</b> / máx ${it.ev.max.toFixed(2)}px`:'—';
+  $('pIdx').textContent=`${S.cur+1} / ${S.items.length}`;
+  $('pNudge').textContent=`nudge ${it.nudge.x.toFixed(1)}, ${it.nudge.y.toFixed(1)}`;
+  if($('ckDbg').checked&&it.ev){
+    const c=it.m[S.method]||{P:{dx:0,dy:0,sx:1,sy:1}};
+    $('dbg').textContent=
+`método ${MNAME[S.method]||'—'}${c.from?' <- '+MNAME[c.from]:''}
+dx ${c.P.dx.toFixed(3)}  dy ${c.P.dy.toFixed(3)}
+sx ${c.P.sx.toFixed(5)}  sy ${c.P.sy.toFixed(5)}
+rms ${it.ev.rms.toFixed(3)}px  máx ${it.ev.max.toFixed(3)}px
+warp ${c.field?`k±${(c.field.maxK*100).toFixed(2)}% ec±${c.field.maxEc.toFixed(2)}px ey±${c.field.maxEy.toFixed(2)}px`:'nenhum'}
+corte topo ${(S.cutTop*100).toFixed(0)}%  base ${(S.cutBot*100).toFixed(0)}%`;
   }
-  const img=new ImageData(w,h), d=img.data;
-  for(let i=0,j=0;i<cnt.length;i++,j+=4){
-    const c=cnt[i]; if(!c) continue;
-    const f=c/n;
-    if(f>0.985){ d[j]=225;d[j+1]=232;d[j+2]=238;d[j+3]=255; }       // todas concordam
-    else { d[j]=255; d[j+1]=Math.round(60+150*f); d[j+2]=Math.round(40+60*f); d[j+3]=Math.round(70+185*(1-Math.abs(f-0.5)*1.4)); }
+}
+
+/* --------- molde visível --------- */
+function moldGuides(){
+  const m=S.mold; if(!m) return [];
+  const g=[], mw=maxW(m);
+  let my=-1,bw=0;
+  for(let y=m.top;y<m.bot;y++) if(!isNaN(m.L[y])&&m.R[y]-m.L[y]>bw){ bw=m.R[y]-m.L[y]; my=y; }
+  g.push([my,'largura máx','#7fd0ff']);
+  const j=crossRow(m,mw*0.82); if(j!=null) g.push([j,'mandíbula','#ffd37f']);
+  const c=crossRow(m,mw*0.62); if(c!=null) g.push([c,'queixo','#ff9f7f']);
+  const nk=crossRow(m,mw*0.42); if(nk!=null) g.push([nk,'raiz do pescoço','#c79fff']);
+  return g;
+}
+function drawMold(vp){
+  const m=S.mold; if(!m) return;
+  const op=parseInt($('slMold').value,10)/100;
+  const X=v=>vp.ox+(v-vp.x)*vp.sc, Y=v=>vp.oy+(v-vp.y)*vp.sc;
+  if($('ckFill').checked){
+    ctx.fillStyle=`rgba(255,93,143,${0.13*op})`;
+    ctx.beginPath();
+    for(let y=m.top;y<m.bot;y++) if(!isNaN(m.L[y])) ctx.lineTo(X(m.L[y]),Y(y));
+    for(let y=m.bot-1;y>=m.top;y--) if(!isNaN(m.L[y])) ctx.lineTo(X(m.R[y]),Y(y));
+    ctx.closePath(); ctx.fill();
   }
-  S[key]=img;
-  paint(img,vp);
-  lab(useOriginal?'OVERLAY ORIGINAL — vermelho = divergência':'OVERLAY PROCESSADO — vermelho = divergência restante',12,26);
+  if($('ckMold').checked){
+    ctx.strokeStyle=`rgba(255,93,143,${op})`; ctx.lineWidth=1.6;
+    for(const s of ['L','R']){
+      ctx.beginPath(); let st=false;
+      for(let y=m.top;y<m.bot;y++){
+        if(isNaN(m[s][y])){ st=false; continue; }
+        const px=X(m[s][y]),py=Y(y);
+        st?ctx.lineTo(px,py):(ctx.moveTo(px,py),st=true);
+      }
+      ctx.stroke();
+    }
+  }
+  if($('ckGuides').checked){
+    ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    for(const [y,name,col] of moldGuides()){
+      ctx.globalAlpha=0.75*op;
+      ctx.strokeStyle=col;
+      ctx.beginPath(); ctx.moveTo(0,Y(y)); ctx.lineTo(cv.width,Y(y)); ctx.stroke();
+      ctx.fillStyle=col; ctx.font='10px sans-serif'; ctx.fillText(name,5,Y(y)-3);
+      ctx.globalAlpha=1;
+    }
+    ctx.setLineDash([]);
+  }
+  const cut=cutLines();
+  if(S.cutTop>0||S.cutBot>0){
+    ctx.fillStyle='rgba(0,0,0,0.55)';
+    if(S.cutTop>0) ctx.fillRect(0,0,cv.width,Math.max(0,Y(cut.top)));
+    if(S.cutBot>0) ctx.fillRect(0,Y(cut.bot),cv.width,cv.height);
+    ctx.strokeStyle='#ff5d8f'; ctx.lineWidth=1.2;
+    if(S.cutTop>0){ ctx.beginPath(); ctx.moveTo(0,Y(cut.top)); ctx.lineTo(cv.width,Y(cut.top)); ctx.stroke(); }
+    if(S.cutBot>0){ ctx.beginPath(); ctx.moveTo(0,Y(cut.bot)); ctx.lineTo(cv.width,Y(cut.bot)); ctx.stroke(); }
+  }
+}
+
+/* --------- vistas agregadas --------- */
+function drawOverlay(vp,orig){
+  const key=orig?'ovlO':'ovlP';
+  if(!S.cache[key]){
+    const w=S.fw,h=S.fh,n=S.items.length, cnt=new Uint16Array(w*h);
+    for(const it of S.items){ const m=orig?it.mask:(it.pmask||it.mask); for(let i=0;i<cnt.length;i++) if(m[i]) cnt[i]++; }
+    const img=new ImageData(w,h), d=img.data;
+    for(let i=0,j=0;i<cnt.length;i++,j+=4){
+      const c=cnt[i]; if(!c) continue;
+      const f=c/n;
+      if(f>0.985){ d[j]=222;d[j+1]=230;d[j+2]=238;d[j+3]=255; }
+      else { d[j]=255; d[j+1]=Math.round(55+150*f); d[j+2]=Math.round(40+55*f);
+             d[j+3]=Math.round(70+185*(1-Math.abs(f-.5)*1.4)); }
+    }
+    S.cache[key]=img;
+  }
+  paint(S.cache[key],vp);
+  lab(orig?'OVERLAY ORIGINAL — vermelho = divergência':'OVERLAY PROCESSADO — vermelho = divergência restante',12,24);
 }
 function drawContours(vp){
-  ctx.save(); ctx.lineWidth=1;
   for(let i=0;i<S.items.length;i++){
     const it=S.items[i];
-    if(it.proc && !it.cProf) it.cProf = rowProfile(it.pmask, S.fw, S.fh);
-    const ap = it.cProf || it.prof;
-    ctx.strokeStyle = i===S.cur ? '#4dd39c' : 'rgba(255,255,255,0.13)';
-    strokeProfile(ap,vp, ctx.strokeStyle, i===S.cur?2:1);
-  }
-  if(S.ref) strokeProfile(S.ref,vp,'#ff5d8f',2);
-  ctx.restore(); lab('contornos de todas · rosa = referência',12,26);
-}
-function profFromMask(m){ return rowProfile(m,S.fw,S.fh); }
-function strokeProfile(p,vp,color,lw){
-  if(!p) return;
-  ctx.strokeStyle=color; ctx.lineWidth=lw||1;
-  for(const side of ['L','R']){
-    ctx.beginPath(); let started=false;
-    for(let y=p.top;y<p.bot;y++){
-      if(isNaN(p[side][y])) { started=false; continue; }
-      const X=vp.ox+(p[side][y]-vp.x)*vp.sc, Y=vp.oy+(y-vp.y)*vp.sc;
-      if(!started){ ctx.moveTo(X,Y); started=true; } else ctx.lineTo(X,Y);
+    if(it.proc&&!it.cProf) it.cProf=rowProfile(it.pmask,S.fw,S.fh);
+    const p=it.cProf||it.prof; if(!p) continue;
+    ctx.strokeStyle=i===S.cur?'#6fd3a5':'rgba(255,255,255,0.11)';
+    ctx.lineWidth=i===S.cur?2:1;
+    for(const s of ['L','R']){
+      ctx.beginPath(); let st=false;
+      for(let y=p.top;y<p.bot;y++){
+        if(isNaN(p[s][y])){ st=false; continue; }
+        const X=vp.ox+(p[s][y]-vp.x)*vp.sc, Y=vp.oy+(y-vp.y)*vp.sc;
+        st?ctx.lineTo(X,Y):(ctx.moveTo(X,Y),st=true);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
   }
+  lab('contornos de todas · rosa = molde',12,24);
+}
+function drawVar(vp){
+  if(!S.varmap){ lab('rode um método primeiro',12,24); return; }
+  if(!S.cache.var){
+    const n=S.fw*S.fh, img=new ImageData(S.fw,S.fh), d=img.data;
+    const vs=[]; for(let i=0;i<n;i+=5) if(S.varmap[i]>0&&S.varmap[i]<1e5) vs.push(S.varmap[i]);
+    const hi=pct(vs,0.995)||1;
+    for(let i=0,j=0;i<n;i++,j+=4){
+      const m=S.meanImg?S.meanImg[i]:0;
+      if(m<3&&S.varmap[i]<hi*0.02){ d[j+3]=0; continue; }
+      const t=clamp(S.varmap[i]/hi,0,1);
+      d[j]=Math.round(20+235*t); d[j+1]=Math.round(30+120*(1-Math.abs(t-.5)*2)); d[j+2]=Math.round(60+150*(1-t));
+      d[j+3]=Math.round(60+195*Math.max(t,m/255*0.35));
+    }
+    S.cache.var=img;
+  }
+  paint(S.cache.var,vp);
+  lab('VARIÂNCIA DA PILHA — só olhos e boca deveriam acender',12,24);
 }
 function drawDiff(vp,it){
-  const w=S.fw,h=S.fh;
-  const a=it.pmask||it.mask;
-  const ref=S.refMaskCache || (S.refMaskCache = refMask());
-  const img=new ImageData(w,h), d=img.data;
-  for(let i=0,j=0;i<a.length;i++,j+=4){
-    const x=a[i], y=ref[i];
-    if(x&&y){ d[j]=40;d[j+1]=46;d[j+2]=54;d[j+3]=255; }
-    else if(x){ d[j]=255;d[j+1]=70;d[j+2]=90;d[j+3]=255; }
-    else if(y){ d[j]=70;d[j+1]=150;d[j+2]=255;d[j+3]=255; }
-  }
-  paint(img,vp); lab('vermelho = sobra · azul = falta · cinza = coincide',12,26);
-}
-function refMask(){
-  const w=S.fw,h=S.fh,m=new Uint8Array(w*h);
-  if(!S.ref) return m;
-  for(let y=S.ref.top;y<S.ref.bot;y++){
-    if(isNaN(S.ref.L[y])) continue;
-    const l=Math.round(S.ref.L[y]), r=Math.round(S.ref.R[y]);
-    for(let x=Math.max(0,l);x<Math.min(w,r);x++) m[y*w+x]=1;
-  }
-  return m;
-}
-function drawDebug(vp,it){
-  if(!S.ref) return;
-  const H=S.ref.bot-S.ref.top;
-  ctx.strokeStyle='rgba(120,200,255,.5)'; ctx.setLineDash([5,5]); ctx.lineWidth=1;
-  for(const t of [0.5,0.75,0.9]){
-    const Y=vp.oy+(S.ref.top+H*t-vp.y)*vp.sc;
-    ctx.beginPath(); ctx.moveTo(0,Y); ctx.lineTo(cv.width,Y); ctx.stroke();
-    ctx.fillStyle='rgba(120,200,255,.8)'; ctx.font='10px monospace'; ctx.fillText((t*100)+'%',4,Y-3);
-  }
-  ctx.setLineDash([]);
-  if(it.field){
-    ctx.strokeStyle='#ffb020'; ctx.beginPath();
-    for(let y=S.ref.top;y<S.ref.bot;y++){
-      const X=vp.ox+20+it.field.ec[y]*8, Y=vp.oy+(y-vp.y)*vp.sc;
-      y===S.ref.top?ctx.moveTo(X,Y):ctx.lineTo(X,Y);
+  if(!it.pmask||!S.mold){ paint(it.crop,vp); return; }
+  if(!S.cache.moldMask){
+    const m=new Uint8Array(S.fw*S.fh);
+    for(let y=S.mold.top;y<S.mold.bot;y++){
+      if(isNaN(S.mold.L[y])) continue;
+      for(let x=Math.max(0,Math.round(S.mold.L[y]));x<Math.min(S.fw,Math.round(S.mold.R[y]));x++) m[y*S.fw+x]=1;
     }
-    ctx.stroke(); ctx.fillStyle='#ffb020'; ctx.font='10px monospace'; ctx.fillText('campo ec(y) ×8',4,vp.oy+14);
+    S.cache.moldMask=m;
+  }
+  const rm=S.cache.moldMask, img=new ImageData(S.fw,S.fh), d=img.data;
+  for(let i=0,j=0;i<rm.length;i++,j+=4){
+    const a=it.pmask[i],b=rm[i];
+    if(a&&b){ d[j]=38;d[j+1]=44;d[j+2]=52;d[j+3]=255; }
+    else if(a){ d[j]=255;d[j+1]=70;d[j+2]=90;d[j+3]=255; }
+    else if(b){ d[j]=70;d[j+1]=150;d[j+2]=255;d[j+3]=255; }
+  }
+  paint(img,vp); lab('vermelho = sobra · azul = falta',12,24);
+}
+function drawDbg(vp,it){
+  if(!S.mold) return;
+  const c=it.m[S.method]; if(!c||!c.field) return;
+  ctx.strokeStyle='#ffb020'; ctx.lineWidth=1; ctx.beginPath();
+  for(let y=S.mold.top;y<S.mold.bot;y++){
+    const X=vp.ox+18+c.field.ec[y]*10, Y=vp.oy+(y-vp.y)*vp.sc;
+    y===S.mold.top?ctx.moveTo(X,Y):ctx.lineTo(X,Y);
+  }
+  ctx.stroke(); ctx.fillStyle='#ffb020'; ctx.font='10px monospace'; ctx.fillText('ec(y) ×10',4,vp.oy+12);
+}
+
+/* --------- lupa 4x --------- */
+cv.addEventListener('click',e=>{
+  const r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1;
+  const vp=viewport();
+  const px=(e.clientX-r.left)*d, py=(e.clientY-r.top)*d;
+  S.magPin={x:vp.x+(px-vp.ox)/vp.sc, y:vp.y+(py-vp.oy)/vp.sc};
+  if(!$('ckMag').checked){ $('ckMag').checked=true; $('mag').style.display='block'; }
+  draw();
+});
+function drawMag(){
+  const it=S.items[S.cur]; if(!it) return;
+  const p=S.magPin||{x:S.fw/2,y:S.mold?S.mold.top+(S.mold.bot-S.mold.top)*0.8:S.fh/2};
+  const Z=6, side=magc.width, span=side/Z;
+  mctx.fillStyle='#0d0e11'; mctx.fillRect(0,0,side,side);
+  scr.width=S.fw; scr.height=S.fh;
+  sctx.clearRect(0,0,S.fw,S.fh); sctx.putImageData(it.proc||it.crop,0,0);
+  mctx.imageSmoothingEnabled=false;
+  mctx.drawImage(scr,p.x-span/2,p.y-span/2,span,span,0,0,side,side);
+  if(S.mold&&$('ckMold').checked){
+    mctx.strokeStyle='rgba(255,93,143,.9)'; mctx.lineWidth=1.5;
+    for(const s of ['L','R']){
+      mctx.beginPath(); let st=false;
+      for(let y=S.mold.top;y<S.mold.bot;y++){
+        if(isNaN(S.mold[s][y])){ st=false; continue; }
+        const X=(S.mold[s][y]-(p.x-span/2))*Z, Y=(y-(p.y-span/2))*Z;
+        if(X<-50||X>side+50){ st=false; continue; }
+        st?mctx.lineTo(X,Y):(mctx.moveTo(X,Y),st=true);
+      }
+      mctx.stroke();
+    }
+  }
+  mctx.strokeStyle='#49505a'; mctx.strokeRect(.5,.5,side-1,side-1);
+  mctx.fillStyle='#6fd3a5'; mctx.font='11px monospace'; mctx.fillText('6×',6,14);
+}
+
+/* --------- gráfico de flicker --------- */
+function drawFlick(){
+  const c=$('flick'), g=c.getContext('2d');
+  const d=window.devicePixelRatio||1;
+  c.width=c.clientWidth*d; c.height=42*d;
+  g.fillStyle='#15171a'; g.fillRect(0,0,c.width,c.height);
+  if(!S.flick||!S.flick.length) return;
+  const mx=Math.max(1,Math.max(...S.flick,S.baseFlicker||0));
+  g.fillStyle='#2d6a4f';
+  const bw=c.width/S.flick.length;
+  S.flick.forEach((v,i)=>{
+    const h=(v/mx)*(c.height-4);
+    g.fillStyle = v>1.2?'#c25a3a':(v>0.7?'#b08b3a':'#2d6a4f');
+    g.fillRect(i*bw,c.height-h,Math.max(1,bw-1),h);
+  });
+  if(S.baseFlicker){
+    const y=c.height-(S.baseFlicker/mx)*(c.height-4);
+    g.strokeStyle='#ff5d8f'; g.setLineDash([3,3]); g.lineWidth=1;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(c.width,y); g.stroke(); g.setLineDash([]);
   }
 }
 
-/* ---------- thumbnails ---------- */
+/* --------- thumbnails --------- */
 function buildThumbs(){
   const box=$('thumbs'); box.innerHTML='';
+  scr.width=S.fw; scr.height=S.fh;
   S.items.forEach((it,i)=>{
     const d=document.createElement('div'); d.className='th'+(i===S.cur?' sel':'');
-    const c=document.createElement('canvas'); c.width=66; c.height=88;
+    const c=document.createElement('canvas'); c.width=64; c.height=86;
     const g=c.getContext('2d');
-    scratch.width=S.fw; scratch.height=S.fh;
     sctx.clearRect(0,0,S.fw,S.fh); sctx.putImageData(it.proc||it.crop,0,0);
-    let sx=0,sy=0,sw=S.fw,sh=S.fh;
-    if(S.ref){ const H=S.ref.bot-S.ref.top; sy=Math.max(0,Math.round(S.ref.top+H*0.28)); sh=Math.min(S.fh-sy,Math.round(H*0.8)); }
-    g.fillStyle='#15161a'; g.fillRect(0,0,66,88);
-    g.drawImage(scratch,sx,sy,sw,sh,0,0,66,88);
+    let sy=0,sh=S.fh;
+    if(S.mold){ const H=S.mold.bot-S.mold.top; sy=Math.max(0,Math.round(S.mold.top+H*0.26)); sh=Math.min(S.fh-sy,Math.round(H*0.82)); }
+    g.fillStyle='#141518'; g.fillRect(0,0,64,86);
+    g.drawImage(scr,0,sy,S.fw,sh,0,0,64,86);
     d.appendChild(c);
-    if(it.status!=='—'){
+    if(it.status!=='—'&&it.ev){
       const b=document.createElement('span'); b.className='bg '+(it.status==='OK'?'ok':'rv'); b.textContent=it.status; d.appendChild(b);
       const s=document.createElement('span'); s.className='sc'; s.textContent=it.ev.rms.toFixed(2); d.appendChild(s);
     }
@@ -1027,40 +1475,58 @@ function buildThumbs(){
   const sel=box.children[S.cur]; if(sel) sel.scrollIntoView({block:'nearest'});
 }
 
-/* ---------- player ---------- */
-$('btnPrev').onclick=()=>{ step(-1); };
-$('btnNext').onclick=()=>{ step(1); };
-$('btnPlay').onclick=()=>{ S.playing?stopPlay():startPlay(); };
+/* --------- player + nudge --------- */
+$('btnPrev').onclick=()=>step(-1);
+$('btnNext').onclick=()=>step(1);
+$('btnPlay').onclick=()=>S.playing?stopPlay():startPlay();
 $('fps').oninput=()=>{ $('fpsv').textContent=$('fps').value; if(S.playing){stopPlay();startPlay();} };
+$('btnReset').onclick=()=>{ const it=S.items[S.cur]; if(!it) return; it.nudge={x:0,y:0}; reOne(it); };
 function step(d){ if(!S.items.length) return; S.cur=(S.cur+d+S.items.length)%S.items.length; buildThumbs(); draw(); }
 function startPlay(){ if(!S.items.length) return; S.playing=true; $('btnPlay').textContent='❚❚ Pause';
-  S.timer=setInterval(()=>{ S.cur=(S.cur+1)%S.items.length; draw(); }, 1000/parseInt($('fps').value,10)); }
-function stopPlay(){ S.playing=false; $('btnPlay').textContent='▶ Play'; if(S.timer) clearInterval(S.timer); S.timer=null; buildThumbs(); }
+  S.timer=setInterval(()=>{ S.cur=(S.cur+1)%S.items.length; draw(); },1000/parseInt($('fps').value,10)); }
+function stopPlay(){ S.playing=false; $('btnPlay').textContent='▶ Play'; if(S.timer) clearInterval(S.timer); S.timer=null; if(S.items.length) buildThumbs(); }
+function reOne(it){
+  if(!S.method) return;
+  const c=it.m[S.method];
+  it.proc=renderItem(it,c.P,c.field); it.pmask=maskFromAlpha(it.proc);
+  it.aInk=inkOf(it.proc,S.fw,S.fh); it.cProf=null; S.cache={};
+  buildThumbs(); draw();
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  const it=S.items[S.cur];
+  if(e.shiftKey&&it&&S.method){
+    const s=e.ctrlKey?1:0.1;
+    if(e.key==='ArrowLeft'){ it.nudge.x-=s; reOne(it); e.preventDefault(); return; }
+    if(e.key==='ArrowRight'){ it.nudge.x+=s; reOne(it); e.preventDefault(); return; }
+    if(e.key==='ArrowUp'){ it.nudge.y-=s; reOne(it); e.preventDefault(); return; }
+    if(e.key==='ArrowDown'){ it.nudge.y+=s; reOne(it); e.preventDefault(); return; }
+  }
+  if(e.key==='ArrowLeft'){ step(-1); e.preventDefault(); }
+  if(e.key==='ArrowRight'){ step(1); e.preventDefault(); }
+  if(e.code==='Space'){ S.playing?stopPlay():startPlay(); e.preventDefault(); }
+});
 
-/* ============================================================
-   EXPORTAÇÃO
-   ============================================================ */
+/* ====================== EXPORTAÇÃO ====================== */
 async function makePNG(it){
   const c=document.createElement('canvas'); c.width=S.W; c.height=S.H;
   const g=c.getContext('2d');
-  scratch.width=S.fw; scratch.height=S.fh;
+  scr.width=S.fw; scr.height=S.fh;
   sctx.clearRect(0,0,S.fw,S.fh); sctx.putImageData(it.proc,0,0);
-  g.drawImage(scratch, S.fx, S.fy);
-  const blob=await new Promise(r=>c.toBlob(r,'image/png'));
-  return new Uint8Array(await blob.arrayBuffer());
+  g.drawImage(scr,S.fx,S.fy);
+  const b=await new Promise(r=>c.toBlob(r,'image/png'));
+  return new Uint8Array(await b.arrayBuffer());
 }
 $('btnZip').onclick=async()=>{
   $('btnZip').disabled=true; stopPlay();
-  const files=[];
+  const fs=[];
   for(let i=0;i<S.items.length;i++){
-    setProg(i/S.items.length,`Exportando ${i+1}/${S.items.length}`);
-    if(i%3===0) await yieldUI();
-    files.push({name:S.items[i].name, data:await makePNG(S.items[i])});
+    if(i%3===0){ setProg(i/S.items.length,`Exportando ${i+1}/${S.items.length}`); await yieldUI(); }
+    fs.push({name:S.items[i].name,data:await makePNG(S.items[i])});
   }
-  const blob=zipStore(files);
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='head_lock_alinhadas.zip'; a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),8000);
+  const a=document.createElement('a'); a.href=URL.createObjectURL(zipStore(fs));
+  a.download='head_lock_'+(S.method||'out')+'.zip'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),9000);
   setProg(1,'ZIP gerado.'); $('btnZip').disabled=false;
 };
 $('btnDir').onclick=async()=>{
@@ -1068,55 +1534,68 @@ $('btnDir').onclick=async()=>{
   let dir; try{ dir=await window.showDirectoryPicker({mode:'readwrite'}); }catch(e){ return; }
   $('btnDir').disabled=true; stopPlay();
   for(let i=0;i<S.items.length;i++){
-    setProg(i/S.items.length,`Salvando ${i+1}/${S.items.length}`);
-    if(i%3===0) await yieldUI();
-    const data=await makePNG(S.items[i]);
+    if(i%3===0){ setProg(i/S.items.length,`Salvando ${i+1}/${S.items.length}`); await yieldUI(); }
+    const d=await makePNG(S.items[i]);
     const fh=await dir.getFileHandle(S.items[i].name,{create:true});
-    const ws=await fh.createWritable(); await ws.write(data); await ws.close();
+    const ws=await fh.createWritable(); await ws.write(d); await ws.close();
   }
-  setProg(1,'Salvo na pasta.'); $('btnDir').disabled=false;
+  setProg(1,'Salvo.'); $('btnDir').disabled=false;
+};
+$('btnSave').onclick=()=>{
+  const o={v:2,method:S.method,cutTop:S.cutTop,cutBot:S.cutBot,
+    items:S.items.map(it=>({name:it.name,nudge:it.nudge,
+      m:Object.fromEntries(Object.entries(it.m).map(([k,c])=>[k,{P:c.P,hasField:!!c.field,from:c.from||null}]))}))};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:'application/json'}));
+  a.download='head_lock_sessao.json'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),9000);
+};
+$('btnLoad').onclick=()=>$('finSess').click();
+$('finSess').onchange=async e=>{
+  const f=e.target.files[0]; if(!f||!S.items.length) return;
+  try{
+    const o=JSON.parse(await f.text());
+    const by=new Map(o.items.map(i=>[i.name,i]));
+    let n=0;
+    for(const it of S.items){
+      const r=by.get(it.name); if(!r) continue;
+      it.nudge=r.nudge||{x:0,y:0};
+      for(const [k,c] of Object.entries(r.m||{})) it.m[k]={P:c.P,field:null,from:c.from};
+      n++;
+    }
+    $('slTop').value=Math.round((o.cutTop||0)*100); $('slBot').value=Math.round((o.cutBot||0)*100); upCut();
+    setProg(1,`Sessão carregada (${n} imagens). Campos de warp não são salvos — rode o método 5 se precisar.`);
+    if(o.method&&S.items[0].m[o.method]) await finish(o.method);
+  }catch(err){ setProg(0,'Sessão inválida: '+err.message); }
 };
 
-/* ZIP (store, sem compressão — PNG já é comprimido) */
 const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
-function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRCT[(c^u8[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function crc32(u){let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
 function zipStore(files){
-  const enc=new TextEncoder(), parts=[], central=[];
-  let off=0;
-  const now=new Date();
-  const dt=((now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1))&0xFFFF;
-  const dd=(((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate())&0xFFFF;
+  const enc=new TextEncoder(),parts=[],cd=[]; let off=0;
+  const d=new Date();
+  const tm=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF;
+  const dt=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
   for(const f of files){
-    const nm=enc.encode(f.name), crc=crc32(f.data), sz=f.data.length;
-    const lh=new Uint8Array(30+nm.length), v=new DataView(lh.buffer);
-    v.setUint32(0,0x04034b50,true); v.setUint16(4,20,true); v.setUint16(6,0,true); v.setUint16(8,0,true);
-    v.setUint16(10,dt,true); v.setUint16(12,dd,true); v.setUint32(14,crc,true);
-    v.setUint32(18,sz,true); v.setUint32(22,sz,true); v.setUint16(26,nm.length,true); v.setUint16(28,0,true);
-    lh.set(nm,30);
-    parts.push(lh,f.data);
-    const ch=new Uint8Array(46+nm.length), cvw=new DataView(ch.buffer);
-    cvw.setUint32(0,0x02014b50,true); cvw.setUint16(4,20,true); cvw.setUint16(6,20,true);
-    cvw.setUint16(8,0,true); cvw.setUint16(10,0,true); cvw.setUint16(12,dt,true); cvw.setUint16(14,dd,true);
-    cvw.setUint32(16,crc,true); cvw.setUint32(20,sz,true); cvw.setUint32(24,sz,true);
-    cvw.setUint16(28,nm.length,true); cvw.setUint32(42,off,true);
-    ch.set(nm,46); central.push(ch);
-    off += lh.length + sz;
+    const nm=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const lh=new Uint8Array(30+nm.length),v=new DataView(lh.buffer);
+    v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(10,tm,true);v.setUint16(12,dt,true);
+    v.setUint32(14,crc,true);v.setUint32(18,sz,true);v.setUint32(22,sz,true);v.setUint16(26,nm.length,true);
+    lh.set(nm,30); parts.push(lh,f.data);
+    const ch=new Uint8Array(46+nm.length),w=new DataView(ch.buffer);
+    w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);
+    w.setUint16(12,tm,true);w.setUint16(14,dt,true);w.setUint32(16,crc,true);
+    w.setUint32(20,sz,true);w.setUint32(24,sz,true);w.setUint16(28,nm.length,true);w.setUint32(42,off,true);
+    ch.set(nm,46); cd.push(ch); off+=lh.length+sz;
   }
-  let cs=0; for(const c of central) cs+=c.length;
-  const end=new Uint8Array(22), ev=new DataView(end.buffer);
-  ev.setUint32(0,0x06054b50,true); ev.setUint16(8,files.length,true); ev.setUint16(10,files.length,true);
-  ev.setUint32(12,cs,true); ev.setUint32(16,off,true);
-  return new Blob([...parts,...central,end],{type:'application/zip'});
+  let cs=0; for(const c of cd) cs+=c.length;
+  const e=new Uint8Array(22),v=new DataView(e.buffer);
+  v.setUint32(0,0x06054b50,true);v.setUint16(8,files.length,true);v.setUint16(10,files.length,true);
+  v.setUint32(12,cs,true);v.setUint32(16,off,true);
+  return new Blob([...parts,...cd,e],{type:'application/zip'});
 }
 
-/* ---------- init ---------- */
-window.addEventListener('load',()=>{ fitCanvas(); draw(); });
-document.addEventListener('keydown',e=>{
-  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-  if(e.key==='ArrowLeft'){step(-1);e.preventDefault();}
-  if(e.key==='ArrowRight'){step(1);e.preventDefault();}
-  if(e.code==='Space'){ S.playing?stopPlay():startPlay(); e.preventDefault(); }
-});
+window.addEventListener('load',()=>{ upCut(); fitCanvas(); draw(); drawFlick(); });
 </script>
 </body>
 </html>
