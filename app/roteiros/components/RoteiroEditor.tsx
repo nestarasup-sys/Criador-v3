@@ -13,6 +13,7 @@ import { renderAiGuideText } from "../ai-guide";
 import type { AiContextResultDocument } from "../context-transfer";
 import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, copyRoteiroTikTokToBase, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
+import type { RoteiroExportTarget } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
 import { AI_DIRECTIVES } from "../ai-directives.mjs";
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
@@ -29,6 +30,11 @@ import styles from "../roteiros.module.css";
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
+const ROTEIRO_EXPORT_TARGET_KEY = "nymi-roteiros-export-target";
+const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
+  v2: { label: "Editor V2", path: String.raw`D:\EDITOR WEB 2\EDITOR TESTE\data\assets` },
+  v3: { label: "Editor V3", path: String.raw`D:\EDITOR WEB 2\EDITOR TESTE V3\data\assets` },
+};
 
 type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
 
@@ -463,6 +469,11 @@ export default function RoteiroEditor() {
   const [openingActive, setOpeningActive] = useState(false);
   const [exportLoading, setExportLoading] = useState("");
   const [exportMessage, setExportMessage] = useState("");
+  const [exportTarget, setExportTarget] = useState<RoteiroExportTarget>(() => {
+    if (typeof window === "undefined") return "v2";
+    const saved = window.localStorage.getItem(ROTEIRO_EXPORT_TARGET_KEY);
+    return saved === "v2" || saved === "v3" ? saved : "v2";
+  });
   const [contextImportInputKey, setContextImportInputKey] = useState(0);
   const contextImportRef = useRef<HTMLInputElement>(null);
   const [contextImportPreview, setContextImportPreview] = useState<{ fileName: string; data: AiContextResultDocument; sections: number; blocks: number; warnings: string[] } | null>(null);
@@ -511,7 +522,7 @@ export default function RoteiroEditor() {
   const exportVideos = async () => {
     setExportLoading("videos"); setExportMessage("");
     try {
-      const result = await exportRoteiroVideos(script);
+      const result = await exportRoteiroVideos(script, exportTarget);
       setExportMessage(`Vídeos exportados: ${result.exported}. Descrições salvas. ${result.missing.length ? `Sem arquivo: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar vídeos."); }
     finally { setExportLoading(""); }
@@ -529,7 +540,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
@@ -550,7 +561,7 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
-          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle);
+          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       }
@@ -562,7 +573,7 @@ export default function RoteiroEditor() {
     setExportLoading("script"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, getScriptAiContext(script, state).profiles, assets.modelPacks, assets.expressionPacks, assets.catalog));
+      const result = await exportRoteiroText(script, buildReadableScript(script, characters, assets.characters, getScriptAiContext(script, state).profiles, assets.modelPacks, assets.expressionPacks, assets.catalog), exportTarget);
       setExportMessage(`Roteiro exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o roteiro."); }
     finally { setExportLoading(""); }
@@ -672,7 +683,7 @@ export default function RoteiroEditor() {
     if (!script.background) { setExportMessage("Adicione um fundo antes de exportar."); return; }
     setExportLoading("background-export"); setExportMessage("");
     try {
-      const result = await exportRoteiroBackground(script);
+      const result = await exportRoteiroBackground(script, exportTarget);
       patchScript({ background: { ...script.background, exportedPath: result.relativePath } });
       setExportMessage(`Fundo exportado: ${result.fileName}.`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o fundo."); }
@@ -682,7 +693,7 @@ export default function RoteiroEditor() {
     const loadingKey = target === "characters" ? "folder-characters" : target === "background" ? "folder-background" : "folder-script";
     setExportLoading(loadingKey); setExportMessage("");
     try {
-      await openRoteiroExportFolder(target, script.title);
+      await openRoteiroExportFolder(target, script.title, exportTarget);
       setExportMessage("Pasta aberta no Explorador de Arquivos.");
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Não foi possível abrir a pasta."); }
     finally { setExportLoading(""); }
@@ -703,6 +714,12 @@ export default function RoteiroEditor() {
   const activeIndex = activeSection ? script.tiktoks.findIndex((section) => section.id === activeSection.id) : -1;
   const scriptAiContext = getScriptAiContext(script, state);
   const providerLabel = state.settings.aiProvider === "ollama" ? "Ollama" : state.settings.aiProvider === "lmstudio" ? "LM Studio" : state.settings.aiProvider === "openai" ? "ChatGPT API" : "IA desativada";
+  const selectedExportTarget = ROTEIRO_EXPORT_TARGETS[exportTarget];
+  const chooseExportTarget = (target: RoteiroExportTarget) => {
+    setExportTarget(target);
+    window.localStorage.setItem(ROTEIRO_EXPORT_TARGET_KEY, target);
+    setExportMessage(`Destino selecionado: ${ROTEIRO_EXPORT_TARGETS[target].label}.`);
+  };
 
   return <div className={styles.editorShell}>
     <RecoveryBanner candidate={recoveryCandidate} onRestore={restoreRecovery} onDismiss={dismissRecovery} />
@@ -771,9 +788,12 @@ export default function RoteiroEditor() {
           {script.background && <small>Fundo atual: {script.background.name}</small>}
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportDestinationCard}>
-            <strong>DESTINO DO EDITOR</strong>
-            <span>EDITOR WEB 2 · EDITOR TESTE</span>
-            <small>D:\EDITOR WEB 2\EDITOR TESTE\data\assets</small>
+            <strong>DESTINO DA EXPORTAÇÃO</strong>
+            <div className={styles.exportTargetButtons} role="group" aria-label="Destino da exportação">
+              {(Object.entries(ROTEIRO_EXPORT_TARGETS) as Array<[RoteiroExportTarget, { label: string; path: string }]>).map(([target, config]) => <button key={target} type="button" title={config.label} className={`${styles.exportTargetButton} ${exportTarget === target ? styles.exportTargetButtonSelected : ""}`} aria-pressed={exportTarget === target} disabled={Boolean(exportLoading)} onClick={() => chooseExportTarget(target)}>⇩ Exportar para {target.toUpperCase()}</button>)}
+            </div>
+            <span>Destino atual: {selectedExportTarget.label}</span>
+            <small>{selectedExportTarget.path}</small>
           </div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacterVariants()}>{exportLoading === "character-variants" ? "Exportando poses…" : "Exportar variantes"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>

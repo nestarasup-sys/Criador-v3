@@ -272,6 +272,12 @@
 .exportDestinationCard strong { color:#6d6380; font-size:10px; letter-spacing:.05em; }
 .exportDestinationCard span { color:#44366d; font-size:11px; font-weight:800; }
 .exportDestinationCard small { overflow-wrap:anywhere; color:#8b80a0; font-size:9px; }
+.exportTargetButtons { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+.exportTargetButton { min-height:32px; border:1px solid #d9ccef; border-radius:8px; padding:7px 8px; background:#fff; color:#5c4a8c; font-size:10px; font-weight:800; cursor:pointer; transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease; }
+.exportTargetButton:hover:not(:disabled) { border-color:var(--purple); background:#f3efff; transform:translateY(-1px); }
+.exportTargetButtonSelected { border-color:var(--purple); background:var(--purple); color:#fff; box-shadow:0 4px 10px rgb(104 67 214 / 20%); }
+.exportTargetButtonSelected:hover:not(:disabled) { background:var(--purple-dark); color:#fff; }
+.exportTargetButton:disabled { cursor:not-allowed; opacity:.58; }
 .exportDestinationHint { display:block; color:#7d7390; font-size:9px!important; }
 .exportAction { display:grid; gap:3px; }
 .exportAction .folderButton {
