@@ -221,7 +221,7 @@ export async function exportRoteiroCharacter(scriptId: string, scriptTitle: stri
   return result as { folder: string; files: number };
 }
 
-export async function openRoteiroExportFolder(folderTarget: "characters" | "script" | "background", scriptTitle: string, exportTarget: RoteiroExportTarget = "v4") {
+export async function openRoteiroExportFolder(folderTarget: "characters" | "videos" | "script" | "background", scriptTitle: string, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch("/roteiros/open-folder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -688,8 +688,8 @@ export default function RoteiroEditor() {
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar o fundo."); }
     finally { setExportLoading(""); }
   };
-  const openExportFolder = async (target: "characters" | "script" | "background") => {
-    const loadingKey = target === "characters" ? "folder-characters" : target === "background" ? "folder-background" : "folder-script";
+  const openExportFolder = async (target: "characters" | "videos" | "script" | "background") => {
+    const loadingKey = target === "characters" ? "folder-characters" : target === "videos" ? "folder-videos" : target === "background" ? "folder-background" : "folder-script";
     setExportLoading(loadingKey); setExportMessage("");
     try {
       await openRoteiroExportFolder(target, script.title, exportTarget);
@@ -798,7 +798,7 @@ export default function RoteiroEditor() {
             </div>
             <div className={styles.exportGroup}>
               <div className={styles.exportGroupHeading}><span>VÍDEOS</span><small>TikToks e descrições</small></div>
-              <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Abrir pasta do projeto"}</button></div>
+              <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("videos")}>▣ {exportLoading === "folder-videos" ? "Abrindo pasta…" : "Abrir pasta de vídeos"}</button></div>
             </div>
             <div className={styles.exportGroup}>
               <div className={styles.exportGroupHeading}><span>PERSONAGENS</span><small>Personagens e variantes visuais</small></div>

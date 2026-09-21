@@ -1253,13 +1253,16 @@ async function route(request, response) {
     const projectRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
     const characterRoot = roteiroCharacterExportRoot(body?.scriptTitle, exportTarget.id);
     const backgroundRoot = roteiroBackgroundExportRoot(body?.scriptTitle, exportTarget.id);
+    const videoRoot = roteiroVideoExportRoot(body?.scriptTitle, exportTarget.id);
     const folder = target === "characters"
       ? characterRoot
+      : target === "videos"
+        ? videoRoot
       : target === "background"
         ? backgroundRoot
       : projectRoot;
-    const allowedRoot = target === "characters" ? characterRoot : target === "background" ? backgroundRoot : projectRoot;
-    if (target !== "characters" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
+    const allowedRoot = target === "characters" ? characterRoot : target === "videos" ? videoRoot : target === "background" ? backgroundRoot : projectRoot;
+    if (target !== "characters" && target !== "videos" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
     if (target !== "characters" && !inside(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
     await mkdir(folder, { recursive: true });
     // /root forces Explorer to open the requested directory instead of merely

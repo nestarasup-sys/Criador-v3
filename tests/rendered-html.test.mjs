@@ -1148,6 +1148,8 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(storage, /listRoteiroOrphans/);
   assert.match(editor, /videoBaseSrc/);
   assert.match(editor, /Duração total do vídeo: \$\{formatTikTokDuration\(section\.video\?\.durationSeconds\)\}/);
+  assert.match(editor, /openExportFolder\("videos"\)/);
+  assert.match(editor, /Abrir pasta de vídeos/);
   assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
   assert.match(editor, /key=\{`\$\{section\.video\.storedPath\}-\$\{section\.video\.updatedAt\}`\}/);
   assert.match(storage, /signal\?: AbortSignal/);
@@ -1162,6 +1164,8 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
+  assert.match(server, /target === "videos"/);
+  assert.match(server, /roteiroVideoExportRoot\(body\?\.scriptTitle, exportTarget\.id\)/);
   assert.match(server, /roteiroProjectHasScriptManifest/);
   assert.match(server, /await rm\(projectRoot, \{ recursive: true, force: true \}\)/);
   assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
