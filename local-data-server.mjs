@@ -53,42 +53,46 @@ const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
 const ROTEIRO_EXPORT_TARGETS = Object.freeze({
-  v2: Object.freeze({
-    id: "v2",
-    label: "Editor V2",
-    root: resolve(process.env.GACHA_EDITOR_TESTE_ASSETS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR TESTE\\data\\assets"),
-  }),
-  v3: Object.freeze({
-    id: "v3",
-    label: "Editor V3",
-    root: resolve(process.env.GACHA_EDITOR_TESTE_V3_ASSETS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR TESTE V3\\data\\assets"),
+  v4: Object.freeze({
+    id: "v4",
+    label: "Editor V4",
+    root: resolve(process.env.GACHA_EDITOR_V4_PROJECTS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR V4\\projects"),
   }),
 });
+const ROTEIRO_V4_LOADING_ASSET = resolve(process.env.GACHA_EDITOR_V4_LOADING_ASSET ?? "D:\\EDITOR WEB 2\\EDITOR V4\\projects\\FYN_VISOES_DO_RETORNO_GUIA_V10\\assets\\ui\\loading.gif");
 const ROTEIRO_EXPORT_MANIFEST = ".nymi-script.json";
 function roteiroExportTarget(value) {
-  const target = String(value || "v2").trim().toLowerCase();
+  const target = String(value || "v4").trim().toLowerCase();
   const config = ROTEIRO_EXPORT_TARGETS[target];
   if (!config) throw Object.assign(new Error("Destino de exportação inválido."), { status: 400, code: "INVALID_EXPORT_TARGET" });
   return config;
 }
-function roteiroVideoExportRoot(target = "v2") {
-  return join(roteiroExportTarget(target).root, "tiktoks", "GACHA MAKER ROTEIROS PRO");
+function roteiroProjectRoot(scriptTitle, target = "v4") {
+  return join(roteiroExportTarget(target).root, safeExportFolderName(scriptTitle, "Roteiro"));
 }
-function roteiroCharacterExportRoot(target = "v2") {
-  return join(roteiroExportTarget(target).root, "characters", "GACHA MAKER PERSONAGENS");
+function roteiroVideoExportRoot(scriptTitle, target = "v4") {
+  return join(roteiroProjectRoot(scriptTitle, target), "assets", "tiktoks");
 }
-function roteiroBackgroundExportRoot(target = "v2") {
-  return join(roteiroExportTarget(target).root, "backgrounds");
+function roteiroCharacterExportRoot(scriptTitle, target = "v4") {
+  return join(roteiroProjectRoot(scriptTitle, target), "assets", "characters");
 }
-function roteiroExportRoots(target = "v2") {
+function roteiroBackgroundExportRoot(scriptTitle, target = "v4") {
+  return join(roteiroProjectRoot(scriptTitle, target), "assets", "backgrounds");
+}
+function roteiroUiExportRoot(scriptTitle, target = "v4") {
+  return join(roteiroProjectRoot(scriptTitle, target), "assets", "ui");
+}
+function roteiroExportRoots(scriptTitle, target = "v4") {
   return [
-    [roteiroVideoExportRoot(target), "videos"],
-    [roteiroBackgroundExportRoot(target), "backgrounds"],
-    [roteiroCharacterExportRoot(target), "characters"],
+    [roteiroProjectRoot(scriptTitle, target), "script"],
+    [roteiroVideoExportRoot(scriptTitle, target), "videos"],
+    [roteiroBackgroundExportRoot(scriptTitle, target), "backgrounds"],
+    [roteiroCharacterExportRoot(scriptTitle, target), "characters"],
+    [roteiroUiExportRoot(scriptTitle, target), "ui"],
   ];
 }
 
-async function writeRoteiroExportManifest(folder, scriptId, scriptTitle, kind, target = "v2") {
+async function writeRoteiroExportManifest(folder, scriptId, scriptTitle, kind, target = "v4") {
   const manifestPath = join(folder, ROTEIRO_EXPORT_MANIFEST);
   if (!inside(folder, manifestPath)) throw new Error("Manifesto de exportação inválido");
   await writeJsonAtomic(manifestPath, { app: "NYMI_ROTEIRO_EXPORT_V1", scriptId, scriptTitle: String(scriptTitle || "Roteiro"), kind, editorTarget: roteiroExportTarget(target).id, updatedAt: new Date().toISOString() });
@@ -114,7 +118,7 @@ async function manifestFoldersForScript(root, scriptId) {
 async function removeRoteiroExportFolders(script, allowLegacyTitle) {
   const scriptId = safeId(script.id);
   const titleFolder = safeExportFolderName(script.title, "Roteiro");
-  const roots = Object.keys(ROTEIRO_EXPORT_TARGETS).flatMap((target) => roteiroExportRoots(target));
+  const roots = roteiroExportRoots(script.title, "v4");
   const candidates = [];
   for (const [root, kind] of roots) {
     candidates.push(...await manifestFoldersForScript(root, scriptId));
@@ -134,20 +138,23 @@ async function removeRoteiroExportFolders(script, allowLegacyTitle) {
 
 async function listRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) {
   const knownTitleFolders = new Set(knownScriptTitles.map((title) => safeExportFolderName(title, "Roteiro")));
-  const roots = Object.keys(ROTEIRO_EXPORT_TARGETS).flatMap((target) => roteiroExportRoots(target));
   const orphans = [];
-  for (const [root, kind] of roots) {
-    try {
-      const entries = await readdir(root, { withFileTypes: true });
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const folder = join(root, entry.name);
-        const manifest = await readOptionalJson(join(folder, ROTEIRO_EXPORT_MANIFEST));
-        if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && !knownScriptIds.has(manifest.scriptId)) orphans.push({ kind, folder, scriptId: manifest.scriptId });
-        else if (!manifest && !knownTitleFolders.has(entry.name)) orphans.push({ kind, folder, scriptId: "", untracked: true });
-      }
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
+  const root = roteiroExportTarget("v4").root;
+  let entries;
+  try {
+    entries = await readdir(root, { withFileTypes: true });
+  } catch (error) {
+    if (error?.code === "ENOENT") return orphans;
+    throw error;
+  }
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const folder = join(root, entry.name);
+    const manifest = await readOptionalJson(join(folder, ROTEIRO_EXPORT_MANIFEST));
+    if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && !knownScriptIds.has(manifest.scriptId)) {
+      orphans.push({ kind: "script", folder, scriptId: manifest.scriptId });
+    } else if (!manifest && !knownTitleFolders.has(entry.name)) {
+      orphans.push({ kind: "script", folder, scriptId: "", untracked: true });
     }
   }
   return orphans;
@@ -156,7 +163,7 @@ async function listRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) 
 async function removeRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) {
   const orphans = await listRoteiroExportOrphans(knownScriptIds, knownScriptTitles);
   for (const orphan of orphans) {
-    const root = Object.keys(ROTEIRO_EXPORT_TARGETS).flatMap((target) => roteiroExportRoots(target)).find(([candidate, kind]) => kind === orphan.kind && inside(candidate, orphan.folder))?.[0];
+    const root = roteiroExportTarget("v4").root;
     if (!inside(root, orphan.folder) || resolve(root) === resolve(orphan.folder)) continue;
     await rm(orphan.folder, { recursive: true, force: true });
   }
@@ -399,11 +406,6 @@ async function ensureFolders() {
     mkdir(BASE_DADOS_ROOT, { recursive: true }),
     mkdir(join(BASE_DADOS_ROOT, "rascunhos", "videos"), { recursive: true }),
     mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
-    ...Object.keys(ROTEIRO_EXPORT_TARGETS).flatMap((target) => [
-      mkdir(roteiroVideoExportRoot(target), { recursive: true }),
-      mkdir(roteiroCharacterExportRoot(target), { recursive: true }),
-      mkdir(roteiroBackgroundExportRoot(target), { recursive: true }),
-    ]),
     mkdir(PRINTS_ROOT, { recursive: true }),
     mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
     mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
@@ -1188,15 +1190,15 @@ async function route(request, response) {
     const body = await requestJson(request);
     const target = String(body?.target || "script");
     const exportTarget = roteiroExportTarget(body?.exportTarget);
-    const characterRoot = roteiroCharacterExportRoot(exportTarget.id);
-    const videoRoot = roteiroVideoExportRoot(exportTarget.id);
-    const backgroundRoot = roteiroBackgroundExportRoot(exportTarget.id);
+    const projectRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
+    const characterRoot = roteiroCharacterExportRoot(body?.scriptTitle, exportTarget.id);
+    const backgroundRoot = roteiroBackgroundExportRoot(body?.scriptTitle, exportTarget.id);
     const folder = target === "characters"
       ? characterRoot
       : target === "background"
-        ? join(backgroundRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"))
-        : join(videoRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
-    const allowedRoot = target === "characters" ? characterRoot : target === "background" ? backgroundRoot : videoRoot;
+        ? backgroundRoot
+      : projectRoot;
+    const allowedRoot = target === "characters" ? characterRoot : target === "background" ? backgroundRoot : projectRoot;
     if (target !== "characters" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
     if (target !== "characters" && !inside(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
     await mkdir(folder, { recursive: true });
@@ -1324,11 +1326,14 @@ async function route(request, response) {
   if (request.method === "POST" && url.pathname === "/roteiros/export-videos") {
     const body = await requestJson(request);
     const exportTarget = roteiroExportTarget(body?.exportTarget);
-    const exportRoot = roteiroVideoExportRoot(exportTarget.id);
-    const folder = join(exportRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
+    const exportRoot = roteiroVideoExportRoot(body?.scriptTitle, exportTarget.id);
+    const projectRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
+    const folder = exportRoot;
     if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     const scriptId = safeId(body?.scriptId);
     await mkdir(folder, { recursive: true });
+    await mkdir(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), { recursive: true });
+    await copyFile(ROTEIRO_V4_LOADING_ASSET, join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"));
     await writeRoteiroExportManifest(folder, scriptId, body?.scriptTitle, "videos", exportTarget.id);
     const tiktoks = Array.isArray(body?.tiktoks) ? body.tiktoks : [];
     const missing = [];
@@ -1358,16 +1363,15 @@ async function route(request, response) {
     }
     const descriptionFile = join(folder, "descricoes.txt");
     await writeFile(descriptionFile, descriptionLines.join("\n"), "utf8");
-    sendJson(response, request, 200, { ok: true, folder, exported, missing, descriptionFile, exportTarget: exportTarget.id });
+    sendJson(response, request, 200, { ok: true, folder: projectRoot, exported, missing, descriptionFile, loadingFile: join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"), exportTarget: exportTarget.id });
     return;
   }
 
   if (request.method === "POST" && url.pathname === "/roteiros/export-background") {
     const body = await requestJson(request);
     const exportTarget = roteiroExportTarget(body?.exportTarget);
-    const exportRoot = roteiroBackgroundExportRoot(exportTarget.id);
-    const scriptFolderName = safeExportFolderName(body?.scriptTitle, "Roteiro");
-    const folder = join(exportRoot, scriptFolderName);
+    const exportRoot = roteiroBackgroundExportRoot(body?.scriptTitle, exportTarget.id);
+    const folder = exportRoot;
     if (!inside(exportRoot, folder)) throw new Error("Destino do fundo inválido");
     const scriptId = safeId(body?.scriptId);
     const sourceFolder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
@@ -1380,7 +1384,7 @@ async function route(request, response) {
     for (const oldExtension of [".png", ".jpg", ".jpeg", ".webp"]) await rm(join(folder, `01${oldExtension}`), { force: true });
     const destination = join(folder, `01${extension}`);
     await copyFile(join(sourceFolder, sourceName), destination);
-    const relativePath = `assets/backgrounds/${scriptFolderName}/${destination.split(sep).pop()}`;
+    const relativePath = `assets/backgrounds/${destination.split(sep).pop()}`;
     sendJson(response, request, 200, { ok: true, folder, path: destination, relativePath, fileName: destination.split(sep).pop(), exportTarget: exportTarget.id });
     return;
   }
@@ -1388,8 +1392,8 @@ async function route(request, response) {
   if (request.method === "POST" && url.pathname === "/roteiros/export-text") {
     const body = await requestJson(request);
     const exportTarget = roteiroExportTarget(body?.exportTarget);
-    const exportRoot = roteiroVideoExportRoot(exportTarget.id);
-    const folder = join(exportRoot, safeExportFolderName(body?.scriptTitle, "Roteiro"));
+    const exportRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
+    const folder = exportRoot;
     if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     const scriptId = safeId(body?.scriptId);
     await mkdir(folder, { recursive: true });
@@ -1408,12 +1412,11 @@ async function route(request, response) {
     const body = await requestBody(request, BODY_LIMITS.zip);
     if (!body.length) throw new Error("ZIP do personagem vazio");
     const exportTarget = roteiroExportTarget(metadata.exportTarget);
-    const exportRoot = roteiroCharacterExportRoot(exportTarget.id);
+    const exportRoot = roteiroCharacterExportRoot(metadata.scriptTitle, exportTarget.id);
     const scriptId = safeId(metadata.scriptId);
-    const scriptFolderName = safeExportFolderName(metadata.scriptTitle || "Roteiro", "Roteiro");
     const characterFolderName = safeExportFolderName(metadata.characterName || characterId, characterId);
-    const scriptFolder = join(exportRoot, scriptFolderName);
-    const folder = join(scriptFolder, characterFolderName);
+    const scriptFolder = roteiroProjectRoot(metadata.scriptTitle || "Roteiro", exportTarget.id);
+    const folder = join(exportRoot, characterFolderName);
     if (!inside(exportRoot, folder)) throw new Error("Destino do personagem inválido");
     await rm(folder, { recursive: true, force: true });
     await mkdir(folder, { recursive: true });

@@ -30,10 +30,8 @@ import styles from "../roteiros.module.css";
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
-const ROTEIRO_EXPORT_TARGET_KEY = "nymi-roteiros-export-target";
 const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
-  v2: { label: "Editor V2", path: String.raw`D:\EDITOR WEB 2\EDITOR TESTE\data\assets` },
-  v3: { label: "Editor V3", path: String.raw`D:\EDITOR WEB 2\EDITOR TESTE V3\data\assets` },
+  v4: { label: "Editor V4", path: String.raw`D:\EDITOR WEB 2\EDITOR V4\projects` },
 };
 
 type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
@@ -86,7 +84,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     const expressionKeys = character ? expressionKeysForCharacter(character, expressionPacks, modelPacks) : ["normal"];
     const expressions = [...new Set(expressionKeys.filter((key) => !/(?:_blink|_talk)$/i.test(key)).map(readableExpression))];
     const name = names.get(participant.characterId) || character?.name || "Personagem removido";
-    const folder = character ? `assets/characters/GACHA MAKER PERSONAGENS/${exportPathSegment(script.title, "roteiro")}/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
+    const folder = character ? `assets/characters/${exportPathSegment(character.name, character.id)}` : "pasta não disponível";
     const variants = character ? outfitVariantsForExport(character, catalog) : [];
     const variantLines = variants.map((variant) => `${variant.label} - Pasta exata: ${folder}/${variant.label}`);
     const profile = profiles.find((item) => item.characterId === participant.characterId);
@@ -125,7 +123,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
   })() : [];
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
     const number = String(index + 1).padStart(2, "0");
-    const folder = `assets/tiktoks/GACHA MAKER ROTEIROS PRO/${exportPathSegment(script.title, "roteiro")}`;
+    const folder = "assets/tiktoks";
     const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Duração total do vídeo: ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Primeira reação em grupo no ${formatSceneEnd(section.firstGroupReactionSeconds)}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought"].includes(block.type));
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
@@ -139,7 +137,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
     });
     return [...lines, ""];
   });
-  const backgroundLines = script.background ? ["FUNDO", "=====", `Caminho exato: ${script.background.exportedPath || `assets/backgrounds/${exportPathSegment(script.title, "roteiro")}/01${script.background.name.match(/\.(png|jpe?g|webp)$/i)?.[0] || ".png"}`}`, `Nome do arquivo: ${script.background.exportedPath?.split("/").pop() || script.background.name}`, ""] : [];
+  const backgroundLines = script.background ? ["FUNDO", "=====", `Caminho exato: ${script.background.exportedPath || `assets/backgrounds/01${script.background.name.match(/\.(png|jpe?g|webp)$/i)?.[0] || ".png"}`}`, `Nome do arquivo: ${script.background.exportedPath?.split("/").pop() || script.background.name}`, ""] : [];
   return ["PERSONAGENS E EXPRESSÕES", "========================", "", ...expressionLines.flatMap((line) => [line, ""]), ...backgroundLines, "ROTEIRO", "=======", "", ...openingLines, ...tiktokLines].join("\n");
 }
 
@@ -469,11 +467,7 @@ export default function RoteiroEditor() {
   const [openingActive, setOpeningActive] = useState(false);
   const [exportLoading, setExportLoading] = useState("");
   const [exportMessage, setExportMessage] = useState("");
-  const [exportTarget, setExportTarget] = useState<RoteiroExportTarget>(() => {
-    if (typeof window === "undefined") return "v2";
-    const saved = window.localStorage.getItem(ROTEIRO_EXPORT_TARGET_KEY);
-    return saved === "v2" || saved === "v3" ? saved : "v2";
-  });
+  const [exportTarget, setExportTarget] = useState<RoteiroExportTarget>("v4");
   const [contextImportInputKey, setContextImportInputKey] = useState(0);
   const contextImportRef = useRef<HTMLInputElement>(null);
   const [contextImportPreview, setContextImportPreview] = useState<{ fileName: string; data: AiContextResultDocument; sections: number; blocks: number; warnings: string[] } | null>(null);
@@ -717,7 +711,6 @@ export default function RoteiroEditor() {
   const selectedExportTarget = ROTEIRO_EXPORT_TARGETS[exportTarget];
   const chooseExportTarget = (target: RoteiroExportTarget) => {
     setExportTarget(target);
-    window.localStorage.setItem(ROTEIRO_EXPORT_TARGET_KEY, target);
     setExportMessage(`Destino selecionado: ${ROTEIRO_EXPORT_TARGETS[target].label}.`);
   };
 
@@ -790,7 +783,7 @@ export default function RoteiroEditor() {
           <div className={styles.exportDestinationCard}>
             <strong>DESTINO DA EXPORTAÇÃO</strong>
             <div className={styles.exportTargetButtons} role="group" aria-label="Destino da exportação">
-              {(Object.entries(ROTEIRO_EXPORT_TARGETS) as Array<[RoteiroExportTarget, { label: string; path: string }]>).map(([target, config]) => <button key={target} type="button" title={config.label} className={`${styles.exportTargetButton} ${exportTarget === target ? styles.exportTargetButtonSelected : ""}`} aria-pressed={exportTarget === target} disabled={Boolean(exportLoading)} onClick={() => chooseExportTarget(target)}>⇩ Exportar para {target.toUpperCase()}</button>)}
+              {(Object.entries(ROTEIRO_EXPORT_TARGETS) as Array<[RoteiroExportTarget, { label: string; path: string }]>).map(([target, config]) => <button key={target} type="button" title={config.label} className={`${styles.exportTargetButton} ${exportTarget === target ? styles.exportTargetButtonSelected : ""}`} aria-pressed={exportTarget === target} disabled={Boolean(exportLoading)} onClick={() => chooseExportTarget(target)}>⇩ Exportar para V4</button>)}
             </div>
             <span>Destino atual: {selectedExportTarget.label}</span>
             <small>{selectedExportTarget.path}</small>

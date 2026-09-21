@@ -9,7 +9,7 @@ import type { RecoveryJournalEntry } from "./recovery-types";
 const MIRROR_KEY = "gacha-premium-roteiros-emergency-v1";
 let saveQueue: Promise<void> = Promise.resolve();
 
-export type RoteiroExportTarget = "v2" | "v3";
+export type RoteiroExportTarget = "v4";
 
 function readMirror() {
   try {
@@ -181,14 +181,14 @@ export async function uploadRoteiroBackground(scriptId: string, file: File) {
   return result.background;
 }
 
-export async function exportRoteiroBackground(script: ScriptProject, exportTarget: RoteiroExportTarget = "v2") {
+export async function exportRoteiroBackground(script: ScriptProject, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch("/roteiros/export-background", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, exportTarget }) });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar o fundo."));
   return result as { folder: string; path: string; relativePath: string; fileName: string };
 }
 
-export async function exportRoteiroVideos(script: ScriptProject, exportTarget: RoteiroExportTarget = "v2") {
+export async function exportRoteiroVideos(script: ScriptProject, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch("/roteiros/export-videos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -199,7 +199,7 @@ export async function exportRoteiroVideos(script: ScriptProject, exportTarget: R
   return result as { folder: string; exported: number; missing: string[]; descriptionFile: string };
 }
 
-export async function exportRoteiroText(script: ScriptProject, content: string, exportTarget: RoteiroExportTarget = "v2") {
+export async function exportRoteiroText(script: ScriptProject, content: string, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch("/roteiros/export-text", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -210,7 +210,7 @@ export async function exportRoteiroText(script: ScriptProject, content: string, 
   return result as { path: string; fileName: string };
 }
 
-export async function exportRoteiroCharacter(scriptId: string, scriptTitle: string, characterId: string, characterName: string, bundle: Blob, exportTarget: RoteiroExportTarget = "v2") {
+export async function exportRoteiroCharacter(scriptId: string, scriptTitle: string, characterId: string, characterName: string, bundle: Blob, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch(`/roteiros/export-characters/${encodeURIComponent(characterId)}`, {
     method: "POST",
     headers: { "Content-Type": "application/zip", ...localMeta({ scriptId, scriptTitle, characterName, exportTarget }) },
@@ -221,7 +221,7 @@ export async function exportRoteiroCharacter(scriptId: string, scriptTitle: stri
   return result as { folder: string; files: number };
 }
 
-export async function openRoteiroExportFolder(folderTarget: "characters" | "script" | "background", scriptTitle: string, exportTarget: RoteiroExportTarget = "v2") {
+export async function openRoteiroExportFolder(folderTarget: "characters" | "script" | "background", scriptTitle: string, exportTarget: RoteiroExportTarget = "v4") {
   const response = await localDataFetch("/roteiros/open-folder", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
