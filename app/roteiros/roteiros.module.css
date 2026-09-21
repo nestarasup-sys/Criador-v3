@@ -228,6 +228,8 @@
 .tiktokHeaderActions .videoHeaderButton { border-color:#d9cff7; background:#f8f5ff; color:#624db0; }
 .tiktokHeaderActions .sendToDatabaseButton { border-color:#299b68; background:linear-gradient(135deg,#39b978,#218b59); color:#fff; box-shadow:0 4px 10px rgba(39,155,103,.16); }
 .tiktokHeaderActions .sendToDatabaseButton:hover:not(:disabled) { background:linear-gradient(135deg,#2eaa6b,#187b4d); transform:translateY(-1px); }
+.tiktokHeaderActions .addFromDatabaseButton { border-color:#d98224; background:linear-gradient(135deg,#f5a33c,#d97916); color:#fff; box-shadow:0 4px 10px rgba(217,121,22,.18); }
+.tiktokHeaderActions .addFromDatabaseButton:hover:not(:disabled) { background:linear-gradient(135deg,#f08f22,#c9680d); transform:translateY(-1px); }
 .hiddenFileInput { display:none; }
 .dangerButton { border-color:#f2d2d7!important; color:#c74359!important; background:#fff7f8!important; box-shadow:none; }
 .tiktokBody { padding:22px; }
@@ -318,6 +320,30 @@
 .generationPanel .aiProgress { align-self:center; color:#6d5aa8; font-size:10px; font-weight:800; white-space:nowrap; }
 .inlineMessage { position:relative; margin-bottom:15px; padding-right:38px; }
 .inlineMessage button { position:absolute; right:8px; top:7px; border:0; background:transparent; cursor:pointer; }
+
+.basePickerBackdrop { position:fixed; z-index:80; inset:0; display:grid; place-items:center; padding:22px; background:rgba(29,20,43,.58); backdrop-filter:blur(4px); }
+.basePickerModal { width:min(980px,100%); max-height:min(86dvh,820px); overflow:hidden; border:1px solid #e2d6f3; border-radius:18px; background:#fff; box-shadow:0 24px 80px rgba(29,20,43,.28); }
+.basePickerHeader { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:20px 22px; border-bottom:1px solid #eee8f5; background:linear-gradient(135deg,#fffaf3,#fff); }
+.basePickerHeader span { color:#c56c12; font-size:9px; font-weight:950; letter-spacing:.15em; }
+.basePickerHeader h2 { margin:5px 0 4px; color:var(--ink); font-size:20px; }
+.basePickerHeader p { margin:0; color:var(--muted); font-size:11px; line-height:1.45; }
+.basePickerClose { width:32px; height:32px; flex:none; border:1px solid #eadfea; border-radius:9px; background:#fff; color:#81768d; font-size:20px; line-height:1; cursor:pointer; }
+.basePickerClose:hover { border-color:#d98224; color:#c56c12; }
+.basePickerGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; overflow-y:auto; max-height:calc(min(86dvh,820px) - 96px); padding:18px; background:#faf9fc; }
+.basePickerCard { min-width:0; overflow:hidden; border:1px solid #e7deef; border-radius:13px; background:#fff; box-shadow:0 5px 16px rgba(50,35,64,.05); }
+.basePickerVideo, .basePickerUnavailable { display:block; width:100%; aspect-ratio:16 / 9; border:0; background:#19151f; object-fit:contain; }
+.basePickerUnavailable { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; padding:18px; color:#eee8f3; text-align:center; }
+.basePickerUnavailable span { font-size:24px; }
+.basePickerUnavailable strong { font-size:12px; }
+.basePickerUnavailable small { max-width:260px; color:#bdb2c8; font-size:10px; line-height:1.4; }
+.basePickerCardBody { display:grid; grid-template-columns:1fr auto; gap:5px 10px; padding:12px; }
+.basePickerCardBody>strong { color:var(--purple-dark); font-size:12px; }
+.basePickerCardBody>small { color:#8e8497; font-size:10px; text-align:right; }
+.basePickerCardBody p { grid-column:1 / -1; min-height:55px; margin:1px 0 5px; color:#62596b; font-size:11px; line-height:1.5; white-space:pre-wrap; overflow-wrap:anywhere; }
+.basePickerSelectButton { grid-column:1 / -1; min-height:34px; border:1px solid #d98224; border-radius:9px; background:#fff6ea; color:#b9610d; font-size:11px; font-weight:850; cursor:pointer; }
+.basePickerSelectButton:hover:not(:disabled) { background:#d98224; color:#fff; }
+.basePickerSelectButton:disabled { cursor:not-allowed; opacity:.5; }
+.basePickerEmpty { grid-column:1 / -1; padding:38px 20px; border:1px dashed #d9cfea; border-radius:12px; color:var(--muted); text-align:center; }
 .blocksSection>header { display:flex; justify-content:space-between; align-items:flex-end; margin:24px 0 10px; }
 .blocksSection h3 { margin:4px 0 0; font-size:22px; }
 .blockList { display:flex; flex-direction:column; gap:10px; }
@@ -386,6 +412,9 @@
   .castSection { align-items:stretch; flex-direction:column; }
   .tiktokHeader { align-items:flex-start; flex-wrap:wrap; }
   .tiktokHeaderActions { width:100%; justify-content:flex-end; }
+  .basePickerBackdrop { align-items:start; padding:10px; }
+  .basePickerModal { max-height:calc(100dvh - 20px); }
+  .basePickerGrid { grid-template-columns:1fr; max-height:calc(100dvh - 116px); padding:12px; }
   .generationPanel>div:last-child { justify-content:flex-start; }
   .blockControls { grid-template-columns:1fr; }
   .emotionField { grid-column:auto; }

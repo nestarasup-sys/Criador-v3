@@ -174,6 +174,19 @@ test("o envio para a Base usa somente o TikTok aberto e todos os metadados dele"
   assert.match(handler, /patch\(\{[\s\S]*video: result\.video/);
 });
 
+test("adiciona vídeo oficial da Base substituindo somente o mídia e metadados do TikTok selecionado", async () => {
+  const source = await readFile(resolve("app/roteiros/components/RoteiroEditor.tsx"), "utf8");
+  assert.match(source, /Adicionar da Base/);
+  assert.match(source, /basePickerGrid/);
+  assert.match(source, /baseDadosVideoUrl\(video\)/);
+  assert.match(source, /importBaseDadosVideoIntoRoteiro\(script\.id, section\.id, video\.id\)/);
+  assert.match(source, /description: video\.description/);
+  assert.match(source, /sceneEndSeconds: video\.sceneEndSeconds/);
+  assert.match(source, /firstGroupReactionSeconds: video\.firstGroupReactionSeconds/);
+  assert.match(source, /Preserva título, blocos, regras e configurações/);
+  assert.match(source, /basePickerSelectButton/);
+});
+
 test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {
   const budget = await loadModule("app/roteiros/generation-budget.ts");
   assert.deepEqual(budget.calculateReactionBudget(20, 10), {

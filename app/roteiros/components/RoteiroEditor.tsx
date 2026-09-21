@@ -18,7 +18,8 @@ import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCh
 import { AI_DIRECTIVES } from "../ai-directives.mjs";
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
 import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
-import { loadBaseDados } from "../../base de dados/storage";
+import { baseDadosVideoUrl, loadBaseDados } from "../../base de dados/storage";
+import type { BaseDadosVideo } from "../../base de dados/types";
 import { NymiBrand, NymiConnectionStatus, NymiNavigation } from "../../shared/NymiShell";
 import { ReactionBlockList } from "./ReactionBlockList";
 import RecoveryBanner from "./RecoveryBanner";
@@ -170,6 +171,10 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
   const [undoBlocks, setUndoBlocks] = useState<ReactionBlock[] | null>(null);
   const [videoLoading, setVideoLoading] = useState(false);
   const [databaseLoading, setDatabaseLoading] = useState(false);
+  const [basePickerOpen, setBasePickerOpen] = useState(false);
+  const [baseVideos, setBaseVideos] = useState<BaseDadosVideo[]>([]);
+  const [baseLoading, setBaseLoading] = useState(false);
+  const [baseSelectingId, setBaseSelectingId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const aiControllerRef = useRef<AbortController | null>(null);
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
@@ -378,6 +383,49 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
     }
   };
 
+  const openBasePicker = async () => {
+    if (baseLoading) return;
+    setBaseLoading(true);
+    setMessage("");
+    try {
+      // Usa somente a Base oficial: este fluxo cria um vínculo compartilhado
+      // e não transforma edições do roteiro em alterações da Base.
+      const database = await loadBaseDados();
+      setBaseVideos(database.videos);
+      setBasePickerOpen(true);
+      if (!database.videos.length) setMessage("A Base de dados não possui vídeos cadastrados.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível carregar a Base de dados.");
+    } finally {
+      setBaseLoading(false);
+    }
+  };
+
+  const chooseBaseVideo = async (video: BaseDadosVideo) => {
+    if (videoLoading || databaseLoading || video.fileAvailable === false) return;
+    setBaseSelectingId(video.id);
+    setVideoLoading(true);
+    setMessage("");
+    try {
+      const linkedVideo = await importBaseDadosVideoIntoRoteiro(script.id, section.id, video.id);
+      // Preserva título, blocos, regras e configurações do TikTok selecionado.
+      // Apenas mídia e metadados do vídeo escolhido são substituídos.
+      patch({
+        video: linkedVideo,
+        description: video.description,
+        sceneEndSeconds: video.sceneEndSeconds,
+        firstGroupReactionSeconds: video.firstGroupReactionSeconds,
+      });
+      setBasePickerOpen(false);
+      setMessage(`Vídeo ${String(video.sequence).padStart(2, "0")} adicionado neste TikTok.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível adicionar o vídeo da Base.");
+    } finally {
+      setBaseSelectingId(null);
+      setVideoLoading(false);
+    }
+  };
+
   const videoBaseSrc = section.video?.url || (section.video ? roteiroVideoUrl(script.id, section.id) : "");
   const videoSrc = videoBaseSrc ? `${videoBaseSrc}${videoBaseSrc.includes("?") ? "&" : "?"}v=${encodeURIComponent(section.video?.updatedAt || "")}` : "";
 
@@ -391,7 +439,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         <p>{section.reactionBlocks.length} blocos · {section.reactionBlocks.filter((block) => !blockIsEmpty(block)).length} preenchidos · {new Intl.NumberFormat("pt-BR").format(section.aiUsage?.totalTokens || 0)} tokens IA</p>
       </div>
       <div className={styles.tiktokHeaderActions}>
-        {!opening && <><button className={styles.sendToDatabaseButton} disabled={videoLoading || databaseLoading || !section.video} onClick={() => void sendToDatabase()} title="Enviar vídeo, descrição e tempo para a Base de dados">{databaseLoading ? "Enviando…" : "＋ Base de dados"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Adicionar vídeo"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Substituir vídeo"}</button><button disabled={sectionIndex === 0} onClick={() => moveSection(-1)} aria-label="Mover TikTok para cima">↑</button><button disabled={sectionIndex === script.tiktoks.length - 1} onClick={() => moveSection(1)} aria-label="Mover TikTok para baixo">↓</button></>}
+        {!opening && <><button className={styles.sendToDatabaseButton} disabled={videoLoading || databaseLoading || !section.video} onClick={() => void sendToDatabase()} title="Enviar vídeo, descrição e tempo para a Base de dados">{databaseLoading ? "Enviando…" : "＋ Base de dados"}</button><button className={styles.addFromDatabaseButton} disabled={videoLoading || databaseLoading || baseLoading} onClick={() => void openBasePicker()} title="Escolher um vídeo existente da Base de dados">{baseLoading ? "Carregando Base…" : "＋ Adicionar da Base"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Adicionar vídeo"}</button><button className={styles.videoHeaderButton} disabled={videoLoading} onClick={openVideoPicker}>{videoLoading ? "Salvando…" : "Substituir vídeo"}</button><button disabled={sectionIndex === 0} onClick={() => moveSection(-1)} aria-label="Mover TikTok para cima">↑</button><button disabled={sectionIndex === script.tiktoks.length - 1} onClick={() => moveSection(1)} aria-label="Mover TikTok para baixo">↓</button></>}
         <button onClick={() => void copyTikTok()}>▣ Copiar</button>
         <button className={styles.dangerButton} onClick={deleteSection}>Excluir</button>
       </div>
@@ -462,6 +510,24 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         onDuplicateBlock={(block) => applyBlockCommand((current) => opening ? duplicateOpeningReactionBlock(current, script.id, block.id) : duplicateReactionBlock(current, script.id, section.id, block.id))}
         onRemoveBlock={(id) => applyBlockCommand((current) => opening ? removeOpeningReactionBlock(current, script.id, id) : removeReactionBlock(current, script.id, section.id, id))}
       />
+    </div>}
+    {basePickerOpen && !opening && <div className={styles.basePickerBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setBasePickerOpen(false); }}>
+      <section className={styles.basePickerModal} role="dialog" aria-modal="true" aria-labelledby={`base-picker-title-${section.id}`}>
+        <header className={styles.basePickerHeader}>
+          <div><span>BASE DE DADOS</span><h2 id={`base-picker-title-${section.id}`}>Adicionar vídeo neste TikTok</h2><p>Escolha um vídeo para substituir o vídeo atual. O vínculo será compartilhado e a Base não será alterada.</p></div>
+          <button className={styles.basePickerClose} type="button" onClick={() => setBasePickerOpen(false)} aria-label="Fechar seleção da Base">×</button>
+        </header>
+        <div className={styles.basePickerGrid}>
+          {baseVideos.length ? baseVideos.map((video) => {
+            const selecting = baseSelectingId === video.id;
+            const unavailable = video.fileAvailable === false;
+            return <article className={styles.basePickerCard} key={video.id}>
+              {unavailable ? <div className={styles.basePickerUnavailable}><span>▧</span><strong>Arquivo ausente</strong><small>O cadastro existe, mas o vídeo não está disponível no servidor.</small></div> : <video className={styles.basePickerVideo} src={baseDadosVideoUrl(video)} controls preload="metadata" playsInline />}
+              <div className={styles.basePickerCardBody}><strong>Vídeo {String(video.sequence).padStart(2, "0")}</strong><small>{formatTikTokDuration(video.durationSeconds)}</small><p>{video.description.trim() || "Sem descrição cadastrada."}</p><button className={styles.basePickerSelectButton} type="button" disabled={videoLoading || databaseLoading || selecting || unavailable} onClick={() => void chooseBaseVideo(video)}>{selecting ? "Adicionando…" : unavailable ? "Arquivo indisponível" : "Usar neste TikTok"}</button></div>
+            </article>;
+          }) : <div className={styles.basePickerEmpty}>Nenhum vídeo cadastrado na Base de dados.</div>}
+        </div>
+      </section>
     </div>}
   </article>;
 }
