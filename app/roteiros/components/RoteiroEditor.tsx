@@ -629,12 +629,15 @@ export default function RoteiroEditor() {
       const selected = script.participants.map((participant) => participant.characterId);
       const results: string[] = [];
       const failures: string[] = [];
-      for (const characterId of selected) {
+      for (const [characterIndex, characterId] of selected.entries()) {
         const character = assets.characters.find((item) => item.id === characterId);
         const fallback = characterMap.get(characterId);
         if (!character) { failures.push(fallback?.name || characterId); continue; }
         try {
-          const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks);
+          const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks, (progress) => {
+            const phase = progress.phase === "packaging" ? "compactando ZIP" : `pose ${progress.variantIndex + 1}/${progress.variantCount}`;
+            setExportMessage(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
+          });
           await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }

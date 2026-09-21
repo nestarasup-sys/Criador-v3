@@ -312,6 +312,7 @@ export type CharacterVariantsBundleOptions = {
   character: CharacterBundleOptions["character"];
   variants: readonly CharacterVariant[];
   createVariantBundle: (variant: CharacterVariant) => CharacterBundleOptions;
+  onProgress?: (progress: { phase: "rendering" | "packaging"; variantIndex: number; variantCount: number }) => void;
 };
 
 /** Cria um ZIP com a mesma estrutura do exportador normal dentro de cada POSE. */
@@ -321,9 +322,11 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
   const preparedVariants: Array<{ variant: CharacterVariant; prepared: PreparedCharacterBundle }> = [];
-  for (const variant of options.variants) {
+  for (const [variantIndex, variant] of options.variants.entries()) {
+    options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length });
     preparedVariants.push({ variant, prepared: await prepareCharacterBundle(options.createVariantBundle(variant)) });
   }
+  options.onProgress?.({ phase: "packaging", variantIndex: options.variants.length, variantCount: options.variants.length });
   const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));
   for (const { variant, prepared } of preparedVariants) {
     const poseRoot = root.folder(safePoseFolderName(variant.label, variant.index));
@@ -365,7 +368,7 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
 }
 
 /** Monta todas as variantes de roupa para exportação pelo Roteiros. */
-export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}) {
+export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}, onProgress?: CharacterVariantsBundleOptions["onProgress"]) {
   const variants = outfitVariantsForExport(character, catalog);
   const expressions = expressionKeysForCharacter(character, packs, modelPacks);
   const pack = packs.find((item) => item.id === character.expressionPackId);
@@ -373,6 +376,7 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
     folderName: character.name,
     character: { ...character, id: character.id },
     variants,
+    onProgress,
     createVariantBundle: (variant) => {
       const packId = normalizedPackId(character.basePackId);
       const variantKey = `${variant.id}:${packId}`;
