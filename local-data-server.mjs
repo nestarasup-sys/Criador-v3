@@ -82,58 +82,42 @@ function roteiroBackgroundExportRoot(scriptTitle, target = "v4") {
 function roteiroUiExportRoot(scriptTitle, target = "v4") {
   return join(roteiroProjectRoot(scriptTitle, target), "assets", "ui");
 }
-function roteiroExportRoots(scriptTitle, target = "v4") {
-  return [
-    [roteiroProjectRoot(scriptTitle, target), "script"],
-    [roteiroVideoExportRoot(scriptTitle, target), "videos"],
-    [roteiroBackgroundExportRoot(scriptTitle, target), "backgrounds"],
-    [roteiroCharacterExportRoot(scriptTitle, target), "characters"],
-    [roteiroUiExportRoot(scriptTitle, target), "ui"],
-  ];
-}
-
 async function writeRoteiroExportManifest(folder, scriptId, scriptTitle, kind, target = "v4") {
   const manifestPath = join(folder, ROTEIRO_EXPORT_MANIFEST);
   if (!inside(folder, manifestPath)) throw new Error("Manifesto de exportação inválido");
   await writeJsonAtomic(manifestPath, { app: "NYMI_ROTEIRO_EXPORT_V1", scriptId, scriptTitle: String(scriptTitle || "Roteiro"), kind, editorTarget: roteiroExportTarget(target).id, updatedAt: new Date().toISOString() });
 }
 
-async function manifestFoldersForScript(root, scriptId) {
-  const folders = [];
-  try {
-    const entries = await readdir(root, { withFileTypes: true });
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const folder = join(root, entry.name);
-      if (!inside(root, folder)) continue;
-      const manifest = await readOptionalJson(join(folder, ROTEIRO_EXPORT_MANIFEST));
-      if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && manifest.scriptId === scriptId) folders.push(folder);
-    }
-  } catch (error) {
-    if (error?.code !== "ENOENT") throw error;
+async function roteiroProjectHasScriptManifest(projectRoot, scriptId) {
+  const directManifest = await readOptionalJson(join(projectRoot, ROTEIRO_EXPORT_MANIFEST));
+  if (directManifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && directManifest.scriptId === scriptId) return true;
+  const nestedRoots = [
+    join(projectRoot, "assets", "tiktoks"),
+    join(projectRoot, "assets", "backgrounds"),
+    join(projectRoot, "assets", "characters"),
+  ];
+  for (const root of nestedRoots) {
+    const manifest = await readOptionalJson(join(root, ROTEIRO_EXPORT_MANIFEST));
+    if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && manifest.scriptId === scriptId) return true;
   }
-  return folders;
+  return false;
 }
 
 async function removeRoteiroExportFolders(script, allowLegacyTitle) {
   const scriptId = safeId(script.id);
-  const titleFolder = safeExportFolderName(script.title, "Roteiro");
-  const roots = roteiroExportRoots(script.title, "v4");
-  const candidates = [];
-  for (const [root, kind] of roots) {
-    candidates.push(...await manifestFoldersForScript(root, scriptId));
-    if (allowLegacyTitle) candidates.push(join(root, titleFolder));
-    void kind;
+  const exportRoot = roteiroExportTarget("v4").root;
+  const projectRoot = roteiroProjectRoot(script.title, "v4");
+  if (!inside(exportRoot, projectRoot) || resolve(exportRoot) === resolve(projectRoot)) return [];
+  let projectExists = true;
+  try { await stat(projectRoot); } catch (error) {
+    if (error?.code === "ENOENT") projectExists = false;
+    else throw error;
   }
-  const unique = [...new Set(candidates)];
-  const removed = [];
-  for (const folder of unique) {
-    const root = roots.find(([candidate]) => inside(candidate, folder))?.[0];
-    if (!root || !inside(root, folder) || resolve(root) === resolve(folder)) continue;
-    await rm(folder, { recursive: true, force: true });
-    removed.push(folder);
-  }
-  return removed;
+  if (!projectExists) return [];
+  const hasManifest = await roteiroProjectHasScriptManifest(projectRoot, scriptId);
+  if (!hasManifest && !allowLegacyTitle) return [];
+  await rm(projectRoot, { recursive: true, force: true });
+  return [projectRoot];
 }
 
 async function listRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) {
@@ -1334,6 +1318,7 @@ async function route(request, response) {
     await mkdir(folder, { recursive: true });
     await mkdir(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), { recursive: true });
     await copyFile(ROTEIRO_V4_LOADING_ASSET, join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"));
+    await writeRoteiroExportManifest(projectRoot, scriptId, body?.scriptTitle, "project", exportTarget.id);
     await writeRoteiroExportManifest(folder, scriptId, body?.scriptTitle, "videos", exportTarget.id);
     const tiktoks = Array.isArray(body?.tiktoks) ? body.tiktoks : [];
     const missing = [];
@@ -1380,6 +1365,7 @@ async function route(request, response) {
     if (!sourceName) throw Object.assign(new Error("Este roteiro não possui fundo salvo."), { status: 404 });
     const extension = extname(sourceName).toLowerCase() || ".png";
     await mkdir(folder, { recursive: true });
+    await writeRoteiroExportManifest(roteiroProjectRoot(body?.scriptTitle, exportTarget.id), scriptId, body?.scriptTitle, "project", exportTarget.id);
     await writeRoteiroExportManifest(folder, scriptId, body?.scriptTitle, "backgrounds", exportTarget.id);
     for (const oldExtension of [".png", ".jpg", ".jpeg", ".webp"]) await rm(join(folder, `01${oldExtension}`), { force: true });
     const destination = join(folder, `01${extension}`);

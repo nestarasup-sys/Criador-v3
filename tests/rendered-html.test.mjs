@@ -1150,6 +1150,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
+  assert.match(server, /roteiroProjectHasScriptManifest/);
+  assert.match(server, /await rm\(projectRoot, \{ recursive: true, force: true \}\)/);
+  assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
   assert.match(editor, /Exportar para V4/);
   assert.match(editor, /ROTEIRO_EXPORT_TARGETS/);
   assert.ok(editor.includes(String.raw`D:\EDITOR WEB 2\EDITOR V4\projects`));
