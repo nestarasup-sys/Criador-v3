@@ -30,4 +30,12 @@ test("monta conversão CFR com seek previsível e áudio opcional", () => {
   assert.ok(argsWithAudio.includes("-c:a") && argsWithAudio.includes("aac"));
   const argsWithoutAudio = buildNormalizeArgs("entrada.mkv", "saida.mp4", { ...compatibleVideo, audio: null }, "libx264");
   assert.equal(argsWithoutAudio.includes("-c:a"), false);
+  assert.ok(argsWithoutAudio.includes("-an"));
+});
+
+test("oferece tentativa tolerante para áudio corrompido sem alterar o perfil do vídeo", () => {
+  const args = buildNormalizeArgs("entrada-corrompida.mp4", "saida.mp4", compatibleVideo, "libx264", { tolerateCorruptAudio: true });
+  assert.ok(args.includes("-fflags") && args.includes("+discardcorrupt"));
+  assert.ok(args.includes("-err_detect") && args.includes("ignore_err"));
+  assert.ok(args.includes("-c:a") && args.includes("aac"));
 });

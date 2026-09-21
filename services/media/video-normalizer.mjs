@@ -74,8 +74,10 @@ export function buildScaleFilter(width, height) {
   return "scale=w='min(1920,iw)':h='min(1080,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2:flags=lanczos,fps=30";
 }
 
-export function buildNormalizeArgs(inputPath, outputPath, probe, encoder = "libx264") {
-  const args = ["-y", "-hide_banner", "-loglevel", "error", "-i", inputPath, "-map", "0:v:0"];
+export function buildNormalizeArgs(inputPath, outputPath, probe, encoder = "libx264", options = {}) {
+  const args = ["-y", "-hide_banner", "-loglevel", "error"];
+  if (options.tolerateCorruptAudio) args.push("-fflags", "+discardcorrupt", "-err_detect", "ignore_err");
+  args.push("-i", inputPath, "-map", "0:v:0");
   if (probe?.audio) args.push("-map", "0:a:0");
   args.push("-vf", buildScaleFilter(probe?.video?.width, probe?.video?.height), "-r", "30", "-fps_mode", "cfr", "-g", "30", "-keyint_min", "30", "-sc_threshold", "0", "-bf", "0", "-pix_fmt", "yuv420p");
   if (encoder === "h264_nvenc") args.push("-c:v", encoder, "-preset", "p5", "-rc", "vbr", "-cq", "22", "-b:v", "0");
@@ -83,6 +85,7 @@ export function buildNormalizeArgs(inputPath, outputPath, probe, encoder = "libx
   else if (encoder === "h264_amf") args.push("-c:v", encoder, "-quality", "quality", "-rc", "cqp", "-qp_i", "22", "-qp_p", "24");
   else args.push("-c:v", "libx264", "-preset", "fast", "-crf", "20");
   if (probe?.audio) args.push("-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "160k", "-shortest");
+  else args.push("-an");
   args.push("-movflags", "+faststart", outputPath);
   return args;
 }
@@ -115,18 +118,46 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
   const encoder = await availableH264Encoder();
   const temporaryOutput = `${outputPath}.tmp-${randomBytes(6).toString("hex")}.mp4`;
   let usedEncoder = encoder;
+  let lastError;
   try {
     try {
       await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, encoder));
     } catch (hardwareError) {
+      lastError = hardwareError;
       if (encoder === "libx264") throw hardwareError;
       await rm(temporaryOutput, { force: true });
-      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264"));
+      try {
+        await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264"));
+      } catch (softwareError) {
+        lastError = softwareError;
+        throw softwareError;
+      }
       usedEncoder = "libx264";
     }
-    return { encoder: usedEncoder, outputPath: temporaryOutput };
+    return { encoder: usedEncoder, outputPath: temporaryOutput, audioRecovered: false, audioDropped: false };
   } catch (error) {
     await rm(temporaryOutput, { force: true });
-    throw error;
+    if (!probe?.audio) throw error;
+
+    // A broken audio packet must not make a usable video fail. First retry the
+    // same conversion with FFmpeg's corrupt-packet tolerance enabled; this can
+    // preserve a partially damaged but decodable audio track.
+    try {
+      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264", { tolerateCorruptAudio: true }));
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: true, audioDropped: false };
+    } catch (recoveryError) {
+      lastError = recoveryError;
+      await rm(temporaryOutput, { force: true });
+    }
+
+    // Last resort: keep the normalized video and explicitly remove only the
+    // unusable audio stream. The caller reports this per file to the user.
+    try {
+      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, { ...probe, audio: null }, "libx264"));
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioDropped: true };
+    } catch (videoOnlyError) {
+      await rm(temporaryOutput, { force: true });
+      throw videoOnlyError || lastError || error;
+    }
   }
 }
