@@ -872,7 +872,11 @@ async function route(request, response) {
         contentHash: updated.contentHash,
         updatedAt: new Date().toISOString(),
       };
-      const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo);
+      const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo, {
+        description: updated.description,
+        sceneEndSeconds: updated.sceneEndSeconds,
+        firstGroupReactionSeconds: updated.firstGroupReactionSeconds,
+      });
       sendJson(response, request, 200, { ok: true, duplicate: true, updated: true, video: linkedVideo, state: updatedResult.state });
       return;
     }
@@ -899,7 +903,11 @@ async function route(request, response) {
       contentHash: imported.video.contentHash,
       updatedAt: new Date().toISOString(),
     };
-    const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo);
+    const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo, {
+      description: imported.video.description,
+      sceneEndSeconds: imported.video.sceneEndSeconds,
+      firstGroupReactionSeconds: imported.video.firstGroupReactionSeconds,
+    });
     if (sourceIsLocal) await rm(source, { force: true });
     sendJson(response, request, 200, {
       ok: true,

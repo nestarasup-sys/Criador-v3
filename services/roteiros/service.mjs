@@ -1314,7 +1314,7 @@ export function createRoteirosService(rootFolder) {
     return changedCount;
   }
 
-  async function linkVideo(scriptId, tiktokId, video) {
+  async function linkVideo(scriptId, tiktokId, video, metadata = {}) {
     const id = safeScriptId(scriptId);
     const sectionId = String(tiktokId || "");
     if (!/^[a-zA-Z0-9_-]{1,160}$/.test(sectionId)) throw Object.assign(new Error("Identificador de TikTok inválido."), { status: 400 });
@@ -1325,7 +1325,14 @@ export function createRoteirosService(rootFolder) {
       if (!script || !section) throw Object.assign(new Error("TikTok não encontrado no roteiro."), { status: 404 });
       const nextScripts = state.scripts.map((item) => item.id !== id ? item : {
         ...item,
-        tiktoks: item.tiktoks.map((current) => current.id === sectionId ? { ...current, video, updatedAt: new Date().toISOString() } : current),
+        tiktoks: item.tiktoks.map((current) => current.id === sectionId ? {
+          ...current,
+          ...(Object.prototype.hasOwnProperty.call(metadata, "description") ? { description: String(metadata.description ?? "") } : {}),
+          ...(Object.prototype.hasOwnProperty.call(metadata, "sceneEndSeconds") ? { sceneEndSeconds: Number(metadata.sceneEndSeconds) } : {}),
+          ...(Object.prototype.hasOwnProperty.call(metadata, "firstGroupReactionSeconds") ? { firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) } : {}),
+          video,
+          updatedAt: new Date().toISOString(),
+        } : current),
         updatedAt: new Date().toISOString(),
       });
       state = normalizeState({ ...state, scripts: nextScripts });
