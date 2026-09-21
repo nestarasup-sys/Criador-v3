@@ -53,6 +53,7 @@ const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
+const characterPhotoQueues = new Map();
 const ROTEIRO_EXPORT_TARGETS = Object.freeze({
   v4: Object.freeze({
     id: "v4",
@@ -408,7 +409,8 @@ function sendRouteError(response, request, error) {
   const status = Number.isInteger(error?.status)
     ? error.status
     : error?.code === "ENOENT" ? 404 : 400;
-  process.stderr.write(`[${requestId}] ${request.method} ${request.url} ${error?.code || "LOCAL_ERROR"}\n`);
+  const message = String(error?.message || "Erro local.").replace(/[\r\n]+/g, " ").slice(0, 180);
+  process.stderr.write(`[${requestId}] ${request.method} ${request.url} status=${status} code=${error?.code || "LOCAL_ERROR"} message=${message}\n`);
   sendJson(response, request, status, {
     error: publicErrorMessage(error),
     code: error?.code || "LOCAL_ERROR",
@@ -1076,7 +1078,14 @@ async function route(request, response) {
     }
     const filePath = join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`);
     if (!inside(CHARACTER_PHOTOS_ROOT, filePath)) throw new Error("Destino da foto inválido");
-    await writeFile(filePath, body);
+    const previous = characterPhotoQueues.get(characterId) ?? Promise.resolve();
+    const writeOperation = previous.catch(() => undefined).then(() => writeFile(filePath, body));
+    characterPhotoQueues.set(characterId, writeOperation);
+    try {
+      await writeOperation;
+    } finally {
+      if (characterPhotoQueues.get(characterId) === writeOperation) characterPhotoQueues.delete(characterId);
+    }
     sendJson(response, request, 200, {
       ok: true,
       photoUrl: `http://${HOST}:${PORT}/files/characters/${characterId}/photo.png`,

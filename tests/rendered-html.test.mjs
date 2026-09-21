@@ -1014,6 +1014,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(contourWarp, /verticalCompression/);
   assert.match(contourWarp, /targetBottomInSourceSpace/);
   assert.match(page, /compositionMode/);
+  assert.match(page, /lastPhotoGenerationKeyRef/);
+  assert.match(page, /photoGenerationInFlightKeyRef/);
+  assert.match(page, /photoGenerationSnapshot/);
   assert.match(page, /backHairLayer, bodyLayer, faceLayer, outfitLayer/);
   const characterContract = await readFile(new URL("../app/domain/character-contract.ts", import.meta.url), "utf8");
   assert.match(characterContract, /compositionMode\?: CompositionMode/);

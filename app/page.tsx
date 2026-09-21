@@ -1271,7 +1271,9 @@ export default function Home() {
   const renderVersionRef = useRef(0);
   const photoGenerationBusyRef = useRef(false);
   const photoGenerationTimerRef = useRef<number | null>(null);
-  const generateCharacterPhotoRef = useRef<((automatic?: boolean) => Promise<void>) | null>(null);
+  const generateCharacterPhotoRef = useRef<((automatic?: boolean) => Promise<boolean>) | null>(null);
+  const lastPhotoGenerationKeyRef = useRef<string | null>(null);
+  const photoGenerationInFlightKeyRef = useRef<string | null>(null);
   const brushStrokeRef = useRef<string | null>(null);
   const autoSaveTimerRef = useRef<number | null>(null);
   const autoSaveBaselineRef = useRef<string | null>(null);
@@ -2318,12 +2320,12 @@ export default function Home() {
     renderCharacter().catch(() => setNotice("Não foi possível renderizar uma das imagens"));
   }, [renderCharacter]);
 
-  const generateCharacterPhoto = useCallback(async (automatic = false) => {
+  const generateCharacterPhoto = useCallback(async (automatic = false): Promise<boolean> => {
     if (!activeCharacter) {
       if (!automatic) setNotice("Selecione um personagem salvo antes de gerar a foto");
-      return;
+      return false;
     }
-    if (photoGenerationBusyRef.current) return;
+    if (photoGenerationBusyRef.current) return false;
     photoGenerationBusyRef.current = true;
     if (!automatic) {
       setNotice("Gerando foto do personagem…");
@@ -2341,8 +2343,10 @@ export default function Home() {
         ? { ...character, photoUrl, photoDataUrl: undefined, updatedAt: new Date().toISOString() }
         : character));
       if (!automatic) setNotice("Foto do personagem atualizada");
+      return true;
     } catch (error) {
       if (!automatic) setNotice(error instanceof Error ? `Erro ao gerar foto: ${error.message}` : "Não foi possível gerar a foto");
+      return false;
     } finally {
       photoGenerationBusyRef.current = false;
     }
@@ -2362,6 +2366,7 @@ export default function Home() {
     activePackId,
     expressionEmotion,
     layerMasks,
+    compositionMode,
   });
 
   useEffect(() => {
@@ -2370,10 +2375,18 @@ export default function Home() {
 
   useEffect(() => {
     if (!activeCharacter) return;
+    if (lastPhotoGenerationKeyRef.current === photoGenerationSnapshot || photoGenerationInFlightKeyRef.current === photoGenerationSnapshot) return;
     if (photoGenerationTimerRef.current !== null) window.clearTimeout(photoGenerationTimerRef.current);
+    const generationKey = photoGenerationSnapshot;
     photoGenerationTimerRef.current = window.setTimeout(() => {
       photoGenerationTimerRef.current = null;
-      void generateCharacterPhotoRef.current?.(true);
+      photoGenerationInFlightKeyRef.current = generationKey;
+      const generation = generateCharacterPhotoRef.current?.(true);
+      void generation?.then((saved) => {
+        if (saved) lastPhotoGenerationKeyRef.current = generationKey;
+        if (photoGenerationInFlightKeyRef.current === generationKey) photoGenerationInFlightKeyRef.current = null;
+      });
+      if (!generation) photoGenerationInFlightKeyRef.current = null;
     }, 700);
     return () => {
       if (photoGenerationTimerRef.current !== null) {
