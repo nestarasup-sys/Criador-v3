@@ -112,6 +112,7 @@ test("sincronizar pelo roteiro altera apenas o TikTok selecionado", async () => 
     assert.equal(result.response.status, 200);
     assert.equal(result.value.updated, true);
     assert.equal(result.value.video.libraryVideoId, "video-2");
+    assert.equal(result.value.video.sequence, 2);
 
     const state = await requestWithSession(baseUrl, "GET", "/base-dados/state");
     assert.equal(state.response.status, 200);

@@ -133,9 +133,9 @@ export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ scriptId, tiktokId, ...metadata }),
   });
-  const result = await response.json().catch(() => ({})) as { error?: string; duplicate?: boolean; video?: { sequence: number; originalName: string } };
+  const result = await response.json().catch(() => ({})) as { error?: string; duplicate?: boolean; video?: TikTokVideoReference & { sequence: number; originalName: string } };
   if (!response.ok || !result.video) throw new Error(result.error || "Não foi possível enviar o TikTok para a Base de dados.");
-  return result as { duplicate: boolean; video: { sequence: number; originalName: string } };
+  return result as { duplicate: boolean; video: TikTokVideoReference & { sequence: number; originalName: string } };
 }
 
 export async function removeRoteiro(scriptId: string, options: { deleteImportedCharacters?: boolean } = {}) {

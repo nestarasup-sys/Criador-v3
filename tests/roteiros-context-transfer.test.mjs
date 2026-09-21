@@ -171,6 +171,7 @@ test("o envio para a Base usa somente o TikTok aberto e todos os metadados dele"
   assert.match(handler, /durationSeconds: section\.video\.durationSeconds/);
   assert.doesNotMatch(handler, /script\.tiktoks\.map/);
   assert.doesNotMatch(handler, /forEach\(/);
+  assert.match(handler, /patch\(\{[\s\S]*video: result\.video/);
 });
 
 test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {

@@ -359,6 +359,15 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         firstGroupReactionSeconds: section.firstGroupReactionSeconds,
         durationSeconds: section.video.durationSeconds,
       });
+      // O backend também atualiza o vínculo persistido. Atualize o snapshot
+      // local com a referência retornada para que o autosave subsequente não
+      // regrave um estado antigo e faça o vídeo desaparecer após o reload.
+      patch({
+        video: result.video,
+        description: section.description,
+        sceneEndSeconds: section.sceneEndSeconds,
+        firstGroupReactionSeconds: section.firstGroupReactionSeconds,
+      });
       setMessage(result.duplicate
         ? `Vídeo já existia na Base como ${String(result.video.sequence).padStart(2, "0")}.mp4; descrição e tempo foram sincronizados.`
         : `TikTok enviado para a Base como ${String(result.video.sequence).padStart(2, "0")}.mp4.`);

@@ -877,7 +877,7 @@ async function route(request, response) {
         sceneEndSeconds: updated.sceneEndSeconds,
         firstGroupReactionSeconds: updated.firstGroupReactionSeconds,
       });
-      sendJson(response, request, 200, { ok: true, duplicate: true, updated: true, video: linkedVideo, state: updatedResult.state });
+      sendJson(response, request, 200, { ok: true, duplicate: true, updated: true, video: { ...linkedVideo, sequence: updated.sequence, originalName: updated.originalName }, state: updatedResult.state });
       return;
     }
     const source = await findVideoReferenceFile(section.video, scriptId, tiktokId);
@@ -912,7 +912,7 @@ async function route(request, response) {
     sendJson(response, request, 200, {
       ok: true,
       duplicate: imported.duplicate,
-      video: linkedVideo,
+      video: { ...linkedVideo, sequence: imported.video.sequence, originalName: imported.video.originalName },
       state: imported.state,
     });
     return;
