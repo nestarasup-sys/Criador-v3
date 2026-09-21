@@ -5223,6 +5223,11 @@ export default function Home() {
         folderName: characterName,
         character: { id: activeCharacter ?? undefined, name: characterName, model, basePackId, basePackName: activeBasePack.name, faceMode },
         variants,
+        onProgress: (progress) => {
+          setNotice(progress.phase === "packaging"
+            ? `Compactando ZIP com ${progress.variantCount} poses…`
+            : `Montando pose ${progress.variantIndex + 1}/${progress.variantCount} e suas expressões…`);
+        },
         createVariantBundle: (variant) => ({
           folderName: variant.label,
           character: { id: activeCharacter ?? undefined, name: characterName, model, basePackId, basePackName: activeBasePack.name, faceMode },
