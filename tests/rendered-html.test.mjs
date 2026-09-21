@@ -1165,6 +1165,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
   assert.match(server, /target === "videos"/);
+  assert.match(server, /function insideOrSame\(parent, target\)/);
+  assert.match(server, /insideOrSame\(exportRoot, folder\)/);
+  assert.match(server, /insideOrSame\(allowedRoot, folder\)/);
   assert.match(server, /roteiroVideoExportRoot\(body\?\.scriptTitle, exportTarget\.id\)/);
   assert.match(server, /roteiroProjectHasScriptManifest/);
   assert.match(server, /await rm\(projectRoot, \{ recursive: true, force: true \}\)/);

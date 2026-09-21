@@ -84,6 +84,9 @@ function roteiroBackgroundExportRoot(scriptTitle, target = "v4") {
 function roteiroUiExportRoot(scriptTitle, target = "v4") {
   return join(roteiroProjectRoot(scriptTitle, target), "assets", "ui");
 }
+function insideOrSame(parent, target) {
+  return resolve(parent) === resolve(target) || inside(parent, target);
+}
 async function writeRoteiroExportManifest(folder, scriptId, scriptTitle, kind, target = "v4") {
   const manifestPath = join(folder, ROTEIRO_EXPORT_MANIFEST);
   if (!inside(folder, manifestPath)) throw new Error("Manifesto de exportação inválido");
@@ -1263,7 +1266,7 @@ async function route(request, response) {
       : projectRoot;
     const allowedRoot = target === "characters" ? characterRoot : target === "videos" ? videoRoot : target === "background" ? backgroundRoot : projectRoot;
     if (target !== "characters" && target !== "videos" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
-    if (target !== "characters" && !inside(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
+    if (!insideOrSame(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
     await mkdir(folder, { recursive: true });
     // /root forces Explorer to open the requested directory instead of merely
     // handing the path to an existing, possibly minimized Explorer process.
@@ -1392,7 +1395,7 @@ async function route(request, response) {
     const exportRoot = roteiroVideoExportRoot(body?.scriptTitle, exportTarget.id);
     const projectRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
     const folder = exportRoot;
-    if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
+    if (!insideOrSame(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     const scriptId = safeId(body?.scriptId);
     await mkdir(folder, { recursive: true });
     await mkdir(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), { recursive: true });
@@ -1452,7 +1455,7 @@ async function route(request, response) {
     const exportTarget = roteiroExportTarget(body?.exportTarget);
     const exportRoot = roteiroBackgroundExportRoot(body?.scriptTitle, exportTarget.id);
     const folder = exportRoot;
-    if (!inside(exportRoot, folder)) throw new Error("Destino do fundo inválido");
+    if (!insideOrSame(exportRoot, folder)) throw new Error("Destino do fundo inválido");
     const scriptId = safeId(body?.scriptId);
     const sourceFolder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
     const sourceFiles = await readdir(sourceFolder);
@@ -1475,7 +1478,7 @@ async function route(request, response) {
     const exportTarget = roteiroExportTarget(body?.exportTarget);
     const exportRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
     const folder = exportRoot;
-    if (!inside(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
+    if (!insideOrSame(exportRoot, folder)) throw new Error("Destino do roteiro inválido");
     const scriptId = safeId(body?.scriptId);
     await mkdir(folder, { recursive: true });
     await writeRoteiroExportManifest(folder, scriptId, body?.scriptTitle, "text", exportTarget.id);
