@@ -5,6 +5,7 @@ type CreatorCatalogHeaderProps = {
   category: Category;
   faceMode: FaceMode;
   compositionMode: CompositionMode;
+  compositionAvailable: boolean;
   isProcessing: boolean;
   hasFrontHair: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -32,9 +33,9 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-export function CreatorCatalogHeader({ category, faceMode, compositionMode, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {
+export function CreatorCatalogHeader({ category, faceMode, compositionMode, compositionAvailable, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {
   const supportsAssetDelete = category !== "rostos" || faceMode !== "pack";
-  const canToggleComposition = category === "rostos" && faceMode !== "base";
+  const canToggleComposition = category === "rostos" && compositionAvailable;
 
   return <div className="catalog-header">
     <div>
@@ -49,7 +50,7 @@ export function CreatorCatalogHeader({ category, faceMode, compositionMode, isPr
           onClick={onToggleCompositionMode}
           disabled={isProcessing || !canToggleComposition}
           aria-pressed={compositionMode === "outfit-over-face"}
-          title={canToggleComposition ? "Alternar entre o modelo na frente e a roupa na frente" : "Selecione um rosto do catálogo ou um pack para alternar as camadas"}
+          title={canToggleComposition ? "Alternar entre o modelo na frente e a roupa na frente" : "Selecione um rosto, um pack ou um modelo de cabeça 15+ para alternar as camadas"}
         >
           Camada {compositionMode === "outfit-over-face" ? "V2" : "V1"}
         </button>

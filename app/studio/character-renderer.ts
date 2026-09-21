@@ -331,6 +331,8 @@ export async function renderStudioCharacter(
   }
 
   const normalizedPack = activePackId;
+  const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
+  const headOnlyModel = discoveredPack?.type === "head-only" && discoveredPack.anchor === "neck-base";
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
   const baseSource = faceMode === "base" ? expressionSource(character, key, modelPacks) : `/models/${character.model}.png`;
   let base: HTMLCanvasElement;
@@ -342,10 +344,10 @@ export async function renderStudioCharacter(
   const bodyLayer = document.createElement("canvas");
   bodyLayer.width = scene.width;
   bodyLayer.height = scene.height;
+  let adjustedBaseForFace: CanvasImageSource = base;
   const bodyContext = bodyLayer.getContext("2d");
   if (bodyContext) configureHighQualityContext(bodyContext);
   if (bodyContext) {
-    const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
     const modelColors = normalizeModelColorAdjustments(character.modelColorAdjustments);
     const modelColorCalibration = getStoredModelColorCalibration(character.model, activePackId);
     const mapKey = discoveredPack?.expressionKeys?.includes?.(key) ? key : "normal";
@@ -360,10 +362,11 @@ export async function renderStudioCharacter(
       modelColorCalibration,
       baseSource,
     );
+    adjustedBaseForFace = adjustedBase;
     const sourceWidth = base.width || WIDTH;
     const sourceHeight = base.height || HEIGHT;
     const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
-    if (discoveredPack?.type === "head-only" && discoveredPack.anchor === "neck-base") {
+    if (headOnlyModel) {
       const sourceAnchorX = discoveredPack.anchorX ?? sourceWidth / 2;
       const sourceAnchorY = discoveredPack.anchorY ?? sourceHeight;
       const targetAnchorX = discoveredPack.anchorX ?? WIDTH / 2;
@@ -386,7 +389,7 @@ export async function renderStudioCharacter(
   markRenderDebug("layer:bodyDone", { renderId, target: "studio-render", layer: "corpo" });
   captureRenderDebug("snapshot:after-body", bodyLayer, { renderId, target: "studio-render", layer: "corpo" });
 
-  const faceBehindOutfit = character.compositionMode === "outfit-over-face" && faceMode !== "base";
+  const faceBehindOutfit = character.compositionMode === "outfit-over-face" && (faceMode !== "base" || headOnlyModel);
   const faceLayer = faceBehindOutfit ? document.createElement("canvas") : null;
   if (faceLayer) {
     faceLayer.width = scene.width;
@@ -394,7 +397,19 @@ export async function renderStudioCharacter(
     const faceContext = faceLayer.getContext("2d");
     if (!faceContext) throw new Error("Canvas do rosto indisponível");
     configureHighQualityContext(faceContext);
-    if (faceMode === "pack") {
+    if (headOnlyModel) {
+      const sourceAnchorX = discoveredPack?.anchorX ?? base.width / 2;
+      const sourceAnchorY = discoveredPack?.anchorY ?? base.height;
+      const targetAnchorX = discoveredPack?.anchorX ?? WIDTH / 2;
+      const targetAnchorY = discoveredPack?.anchorY ?? HEIGHT;
+      faceContext.drawImage(
+        adjustedBaseForFace,
+        PADDING.x + targetAnchorX - sourceAnchorX,
+        PADDING.y + targetAnchorY - sourceAnchorY,
+        base.width,
+        base.height,
+      );
+    } else if (faceMode === "pack") {
       const pack = packs.find((item) => item.id === character.expressionPackId);
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
       if (frame) await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos), [], undefined, faceContext);
@@ -429,8 +444,21 @@ export async function renderStudioCharacter(
   markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
   captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-  if (faceMode !== "base" && !faceBehindOutfit) {
-    if (faceMode === "pack") {
+  if ((faceMode !== "base" || headOnlyModel) && !faceBehindOutfit) {
+    if (headOnlyModel) {
+      const sourceAnchorX = discoveredPack?.anchorX ?? base.width / 2;
+      const sourceAnchorY = discoveredPack?.anchorY ?? base.height;
+      const targetAnchorX = discoveredPack?.anchorX ?? WIDTH / 2;
+      const targetAnchorY = discoveredPack?.anchorY ?? HEIGHT;
+      context.drawImage(
+        adjustedBaseForFace,
+        PADDING.x + targetAnchorX - sourceAnchorX,
+        PADDING.y + targetAnchorY - sourceAnchorY,
+        base.width,
+        base.height,
+      );
+      markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "modelo-head-only" });
+    } else if (faceMode === "pack") {
       const pack = packs.find((item) => item.id === character.expressionPackId);
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
       if (frame) {

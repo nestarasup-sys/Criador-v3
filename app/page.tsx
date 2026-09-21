@@ -2124,6 +2124,7 @@ export default function Home() {
     const bodyLayer = document.createElement("canvas");
     bodyLayer.width = sceneCanvas.width;
     bodyLayer.height = sceneCanvas.height;
+    let adjustedBaseForLayer: CanvasImageSource | null = null;
     if (baseImage) {
       const bodyContext = bodyLayer.getContext("2d");
       if (!bodyContext) throw new Error("Canvas do corpo indisponível");
@@ -2160,6 +2161,7 @@ export default function Home() {
           adjustedBase = baseImage;
         }
       }
+      adjustedBaseForLayer = adjustedBase;
       const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
       const headOnly = renderBasePackIsHeadOnly;
       if (headOnly) {
@@ -2218,15 +2220,43 @@ export default function Home() {
       captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target, layer: "roupas" });
     }
 
-    const faceBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && faceMode !== "base";
+    // Head-only packs (the model 15+ assets) are already the model's face,
+    // but historically they were rendered as the body layer. Treat them as a
+    // layered face too, so V2 can put the outfit in front without changing
+    // the geometry or the persisted character data.
+    const layeredBaseFace = renderBasePackIsHeadOnly || faceMode !== "base";
+    const faceBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && layeredBaseFace;
     const faceLayer = faceBehindOutfit ? document.createElement("canvas") : null;
+    const headOnlyImage = adjustedBaseForLayer ?? baseImage;
     if (faceLayer) {
       faceLayer.width = sceneCanvas.width;
       faceLayer.height = sceneCanvas.height;
       const faceContext = faceLayer.getContext("2d");
       if (!faceContext) throw new Error("Canvas do rosto indisponível");
       configureHighQualityContext(faceContext);
-      if (faceMode === "pack") {
+      if (renderBasePackIsHeadOnly && headOnlyImage) {
+        const sourceWidth = "naturalWidth" in headOnlyImage
+          ? Number(headOnlyImage.naturalWidth) || canvas.width
+          : "width" in headOnlyImage
+            ? Number(headOnlyImage.width) || canvas.width
+            : canvas.width;
+        const sourceHeight = "naturalHeight" in headOnlyImage
+          ? Number(headOnlyImage.naturalHeight) || canvas.height
+          : "height" in headOnlyImage
+            ? Number(headOnlyImage.height) || canvas.height
+            : canvas.height;
+        const sourceAnchorX = renderBasePackAnchorX ?? sourceWidth / 2;
+        const sourceAnchorY = renderBasePackAnchorY ?? sourceHeight;
+        const targetAnchorX = renderBasePackAnchorX ?? canvas.width / 2;
+        const targetAnchorY = renderBasePackAnchorY ?? canvas.height;
+        faceContext.drawImage(
+          headOnlyImage,
+          SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
+          SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
+          sourceWidth,
+          sourceHeight,
+        );
+      } else if (faceMode === "pack") {
         const pack = activeExpressionPack;
         const frame = pack?.frames.find((entry) => entry.key === expressionKey);
         if (frame) {
@@ -2245,8 +2275,31 @@ export default function Home() {
     markRenderDebug("layers:flattened", { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
     captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-    if (includeExpression && faceMode !== "base" && !faceBehindOutfit) {
-      if (faceMode === "pack" && activeExpressionPack) {
+    if (includeExpression && (renderBasePackIsHeadOnly || faceMode !== "base") && !faceBehindOutfit) {
+      if (renderBasePackIsHeadOnly && headOnlyImage) {
+        const sourceWidth = "naturalWidth" in headOnlyImage
+          ? Number(headOnlyImage.naturalWidth) || canvas.width
+          : "width" in headOnlyImage
+            ? Number(headOnlyImage.width) || canvas.width
+            : canvas.width;
+        const sourceHeight = "naturalHeight" in headOnlyImage
+          ? Number(headOnlyImage.naturalHeight) || canvas.height
+          : "height" in headOnlyImage
+            ? Number(headOnlyImage.height) || canvas.height
+            : canvas.height;
+        const sourceAnchorX = renderBasePackAnchorX ?? sourceWidth / 2;
+        const sourceAnchorY = renderBasePackAnchorY ?? sourceHeight;
+        const targetAnchorX = renderBasePackAnchorX ?? canvas.width / 2;
+        const targetAnchorY = renderBasePackAnchorY ?? canvas.height;
+        context.drawImage(
+          headOnlyImage,
+          SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
+          SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
+          sourceWidth,
+          sourceHeight,
+        );
+        markRenderDebug("layer:faceDone", { renderId, target, layer: "modelo-head-only" });
+      } else if (faceMode === "pack" && activeExpressionPack) {
         const frame = activeExpressionPack.frames.find((entry) => entry.key === expressionKey);
         if (frame) {
           await drawLayer(
@@ -6268,6 +6321,7 @@ export default function Home() {
             category={category}
             faceMode={faceMode}
             compositionMode={compositionMode}
+            compositionAvailable={faceMode !== "base" || (activeBasePack.type === "head-only" && activeBasePack.anchor === "neck-base")}
             isProcessing={isProcessing}
             hasFrontHair={Boolean(selections.cabelos)}
             fileInputRef={fileInputRef}
