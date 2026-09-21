@@ -264,7 +264,9 @@ export async function createCharacterBundle(options: CharacterBundleOptions) {
   if (!root) throw new Error("Falha ao criar pasta do personagem");
   const prepared = await prepareCharacterBundle(options);
   await writePreparedCharacterBundle(root, prepared, cropForPreparedBundles([prepared]));
-  return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+  // PNG já possui compressão própria. Aplicar DEFLATE novamente consome CPU
+  // e quase não reduz o ZIP, então mantemos os arquivos sem recompressão.
+  return zip.generateAsync({ type: "blob", compression: "STORE" });
 }
 
 export type CharacterVariant = {
@@ -320,7 +322,9 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
     crop,
     generatedAt: new Date().toISOString(),
   }, null, 2));
-  return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+  // As poses são compostas por PNGs; STORE evita uma segunda compressão lenta
+  // sem degradar nem alterar os assets exportados.
+  return zip.generateAsync({ type: "blob", compression: "STORE" });
 }
 
 /** Monta exatamente a estrutura de um ZIP do Criador, agora reutilizável pelos Roteiros. */
