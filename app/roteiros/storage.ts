@@ -196,7 +196,7 @@ export async function exportRoteiroVideos(script: ScriptProject, exportTarget: R
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar os vídeos."));
-  return result as { folder: string; exported: number; copied: number; converted: number; missing: string[]; conversionFallbacks: string[]; audioRecoveries: string[]; audioCopied: string[]; descriptionFile: string };
+  return result as { folder: string; exported: number; copied: number; converted: number; missing: string[]; conversionFallbacks: string[]; audioRecoveries: string[]; audioCopied: string[]; relaxedVideoSettings: string[]; descriptionFile: string };
 }
 
 export async function exportRoteiroText(script: ScriptProject, content: string, exportTarget: RoteiroExportTarget = "v4") {

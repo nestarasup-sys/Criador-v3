@@ -520,7 +520,8 @@ export default function RoteiroEditor() {
       const fallbackMessage = result.conversionFallbacks?.length ? ` Fallback para libx264: ${result.conversionFallbacks.join(", ")}.` : "";
       const recoveryMessage = result.audioRecoveries?.length ? ` Áudio recuperado com tolerância a pacotes inválidos: ${result.audioRecoveries.join(", ")}.` : "";
       const audioCopiedMessage = result.audioCopied?.length ? ` Áudio original preservado sem recodificação: ${result.audioCopied.join(", ")}.` : "";
-      setExportMessage(`Vídeos exportados: ${result.exported} (${result.converted ?? 0} convertidos, ${result.copied ?? 0} copiados). Descrições salvas. ${result.missing.length ? `Falhas: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}${fallbackMessage}${recoveryMessage}${audioCopiedMessage}`);
+      const relaxedMessage = result.relaxedVideoSettings?.length ? ` Ajustes técnicos relaxados para compatibilidade: ${result.relaxedVideoSettings.join(", ")}.` : "";
+      setExportMessage(`Vídeos exportados: ${result.exported} (${result.converted ?? 0} convertidos, ${result.copied ?? 0} copiados). Descrições salvas. ${result.missing.length ? `Falhas: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}${fallbackMessage}${recoveryMessage}${audioCopiedMessage}${relaxedMessage}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar vídeos."); }
     finally { setExportLoading(""); }
   };

@@ -194,7 +194,7 @@ async function exportRoteiroVideoAsset(source, destination) {
   const normalized = await normalizeVideoFile(source, destination, probe);
   await rm(destination, { force: true });
   await rename(normalized.outputPath, destination);
-  return { mode: "converted", encoder: normalized.encoder, audioRecovered: normalized.audioRecovered, audioCopied: normalized.audioCopied };
+  return { mode: "converted", encoder: normalized.encoder, audioRecovered: normalized.audioRecovered, audioCopied: normalized.audioCopied, relaxedVideoSettings: normalized.relaxedVideoSettings };
 }
 
 async function runWithConcurrency(items, limit, worker) {
@@ -1364,6 +1364,7 @@ async function route(request, response) {
     const conversionFallbacks = [];
     const audioRecoveries = [];
     const audioCopied = [];
+    const relaxedVideoSettings = [];
     const descriptionLines = [];
     for (const [index, item] of tiktoks.entries()) {
       const number = String(index + 1).padStart(2, "0");
@@ -1395,10 +1396,11 @@ async function route(request, response) {
       if (result.encoder === "libx264" && result.mode === "converted") conversionFallbacks.push(result.fileName);
       if (result.audioRecovered) audioRecoveries.push(result.fileName);
       if (result.audioCopied) audioCopied.push(result.fileName);
+      if (result.relaxedVideoSettings) relaxedVideoSettings.push(result.fileName);
     }
     const descriptionFile = join(folder, "descricoes.txt");
     await writeFile(descriptionFile, descriptionLines.join("\n"), "utf8");
-    sendJson(response, request, 200, { ok: true, folder: projectRoot, exported, copied, converted, missing, conversionFallbacks, audioRecoveries, audioCopied, descriptionFile, loadingFile: join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"), exportTarget: exportTarget.id });
+    sendJson(response, request, 200, { ok: true, folder: projectRoot, exported, copied, converted, missing, conversionFallbacks, audioRecoveries, audioCopied, relaxedVideoSettings, descriptionFile, loadingFile: join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"), exportTarget: exportTarget.id });
     return;
   }
 

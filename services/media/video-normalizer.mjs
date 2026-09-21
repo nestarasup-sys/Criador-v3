@@ -79,7 +79,10 @@ export function buildNormalizeArgs(inputPath, outputPath, probe, encoder = "libx
   if (options.tolerateCorruptAudio) args.push("-fflags", "+discardcorrupt", "-err_detect", "ignore_err");
   args.push("-i", inputPath, "-map", "0:v:0");
   if (probe?.audio) args.push("-map", "0:a:0");
-  args.push("-vf", buildScaleFilter(probe?.video?.width, probe?.video?.height), "-r", "30", "-fps_mode", "cfr", "-g", "30", "-keyint_min", "30", "-sc_threshold", "0", "-bf", "0", "-pix_fmt", "yuv420p");
+  args.push("-vf", buildScaleFilter(probe?.video?.width, probe?.video?.height), "-r", "30", "-fps_mode", "cfr", "-g", "30");
+  if (options.relaxedVideoSettings) args.push("-bf", "2");
+  else args.push("-keyint_min", "30", "-sc_threshold", "0", "-bf", "0");
+  args.push("-pix_fmt", "yuv420p");
   if (encoder === "h264_nvenc") args.push("-c:v", encoder, "-preset", "p5", "-rc", "vbr", "-cq", "22", "-b:v", "0");
   else if (encoder === "h264_qsv") args.push("-c:v", encoder, "-preset", "medium", "-global_quality", "23");
   else if (encoder === "h264_amf") args.push("-c:v", encoder, "-quality", "quality", "-rc", "cqp", "-qp_i", "22", "-qp_p", "24");
@@ -138,7 +141,15 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
     return { encoder: usedEncoder, outputPath: temporaryOutput, audioRecovered: false, audioCopied: false };
   } catch (error) {
     await rm(temporaryOutput, { force: true });
-    if (!probe?.audio) throw error;
+    if (!probe?.audio) {
+      try {
+        await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, { ...probe, audio: null }, "libx264", { relaxedVideoSettings: true }));
+        return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioCopied: false, relaxedVideoSettings: true };
+      } catch (relaxedVideoError) {
+        await rm(temporaryOutput, { force: true });
+        throw relaxedVideoError || error;
+      }
+    }
 
     // A broken audio packet must not make a usable video fail. First retry the
     // same conversion with FFmpeg's corrupt-packet tolerance enabled; this can
@@ -151,8 +162,7 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
       await rm(temporaryOutput, { force: true });
     }
 
-    // Never silently export a video without sound. If AAC conversion failed,
-    // keep the original audio packets and only re-encode the video. This is
+    // Keep the original audio packets and only re-encode the video. This is
     // useful for codecs that are valid in MP4 but cannot be decoded by the
     // local AAC path, and still preserves the user's original soundtrack.
     try {
@@ -160,7 +170,26 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
       return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioCopied: true };
     } catch (audioCopyError) {
       await rm(temporaryOutput, { force: true });
-      throw audioCopyError || lastError || error;
+      lastError = audioCopyError;
+    }
+
+    // Some encoders reject one of the strict seek-tuning flags (most commonly
+    // B-frames=0 or keyint_min). Relax only those flags, keep the resolution,
+    // CFR, pixel format, container and audio requirements, and report this to
+    // the caller instead of discarding the whole video.
+    try {
+      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264", { tolerateCorruptAudio: true, relaxedVideoSettings: true }));
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: true, audioCopied: false, relaxedVideoSettings: true };
+    } catch (relaxedAudioError) {
+      await rm(temporaryOutput, { force: true });
+      lastError = relaxedAudioError;
+    }
+    try {
+      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264", { tolerateCorruptAudio: true, audioMode: "copy", relaxedVideoSettings: true }));
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioCopied: true, relaxedVideoSettings: true };
+    } catch (relaxedCopyError) {
+      await rm(temporaryOutput, { force: true });
+      throw relaxedCopyError || lastError || error;
     }
   }
 }

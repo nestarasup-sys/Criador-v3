@@ -30,6 +30,9 @@ test("monta conversão CFR com seek previsível e áudio opcional", () => {
   assert.ok(argsWithAudio.includes("-c:a") && argsWithAudio.includes("aac"));
   const argsCopyAudio = buildNormalizeArgs("entrada.mp4", "saida.mp4", compatibleVideo, "libx264", { audioMode: "copy" });
   assert.ok(argsCopyAudio.includes("-c:a") && argsCopyAudio.includes("copy"));
+  const relaxedArgs = buildNormalizeArgs("entrada.mp4", "saida.mp4", compatibleVideo, "libx264", { relaxedVideoSettings: true });
+  assert.ok(relaxedArgs.includes("-bf") && relaxedArgs.includes("2"));
+  assert.equal(relaxedArgs.includes("-keyint_min"), false);
   const argsWithoutAudio = buildNormalizeArgs("entrada.mkv", "saida.mp4", { ...compatibleVideo, audio: null }, "libx264");
   assert.equal(argsWithoutAudio.includes("-c:a"), false);
   assert.ok(argsWithoutAudio.includes("-an"));
