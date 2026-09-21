@@ -32,6 +32,9 @@ const NEW_BASE_EXPRESSION_KEYS = [
   "surpreso_2", "surpreso_2_blink", "surpreso_2_talk",
 ] as const satisfies readonly ExpressionKey[];
 
+const faceFrameCache = new Map<string, Promise<Blob>>();
+const MAX_FACE_FRAME_CACHE = 64;
+
 function normalizedPackId(value?: string) {
   if (!value || value === "padrao") return "modelo-1";
   const legacy = value.match(/^pack-(\d+)$/);
@@ -75,9 +78,23 @@ function dataUrlBlob(dataUrl: string) {
 }
 
 async function frameBlob(frame: { fileUrl: string }) {
-  const response = await fetch(frame.fileUrl);
-  if (!response.ok) throw new Error(`Não foi possível ler ${frame.fileUrl}`);
-  return response.blob();
+  const cached = faceFrameCache.get(frame.fileUrl);
+  if (cached) return cached;
+  const pending = (async () => {
+    const response = await fetch(frame.fileUrl);
+    if (!response.ok) throw new Error(`Não foi possível ler ${frame.fileUrl}`);
+    return response.blob();
+  })().catch((error) => {
+    faceFrameCache.delete(frame.fileUrl);
+    throw error;
+  });
+  faceFrameCache.set(frame.fileUrl, pending);
+  while (faceFrameCache.size > MAX_FACE_FRAME_CACHE) {
+    const oldest = faceFrameCache.keys().next().value as string | undefined;
+    if (!oldest || oldest === frame.fileUrl) break;
+    faceFrameCache.delete(oldest);
+  }
+  return pending;
 }
 
 type ImageBounds = { left: number; top: number; right: number; bottom: number };
