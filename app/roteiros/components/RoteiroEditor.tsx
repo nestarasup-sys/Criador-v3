@@ -356,6 +356,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         name: section.video.name,
         description: section.description,
         sceneEndSeconds: section.sceneEndSeconds,
+        firstGroupReactionSeconds: section.firstGroupReactionSeconds,
         durationSeconds: section.video.durationSeconds,
       });
       setMessage(result.duplicate

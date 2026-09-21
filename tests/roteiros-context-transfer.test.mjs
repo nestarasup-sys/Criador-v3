@@ -161,6 +161,18 @@ test("o editor possui os controles separados da base externa", async () => {
   assert.doesNotMatch(source, /Aplicar tudo/);
 });
 
+test("o envio para a Base usa somente o TikTok aberto e todos os metadados dele", async () => {
+  const source = await readFile(resolve("app/roteiros/components/RoteiroEditor.tsx"), "utf8");
+  const handler = source.match(/const sendToDatabase = async \(\) => \{[\s\S]*?\n  \};/u)?.[0] ?? "";
+  assert.match(handler, /copyRoteiroTikTokToBase\(script\.id, section\.id/);
+  assert.match(handler, /description: section\.description/);
+  assert.match(handler, /sceneEndSeconds: section\.sceneEndSeconds/);
+  assert.match(handler, /firstGroupReactionSeconds: section\.firstGroupReactionSeconds/);
+  assert.match(handler, /durationSeconds: section\.video\.durationSeconds/);
+  assert.doesNotMatch(handler, /script\.tiktoks\.map/);
+  assert.doesNotMatch(handler, /forEach\(/);
+});
+
 test("calcula uma faixa compacta para um vídeo de 20 segundos que começa a reagir no segundo 10", async () => {
   const budget = await loadModule("app/roteiros/generation-budget.ts");
   assert.deepEqual(budget.calculateReactionBudget(20, 10), {

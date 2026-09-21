@@ -137,8 +137,9 @@ export default function BaseDadosPage() {
       description: sourceVideo.description,
       sceneEndSeconds: String(sourceVideo.sceneEndSeconds),
       firstGroupReactionSeconds: String(sourceVideo.firstGroupReactionSeconds),
+      baseRevision: Number(sourceVideo.metadataRevision ?? 0),
       changedAt: 0,
-    } : { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", changedAt: 0 });
+    } : { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", baseRevision: 0, changedAt: 0 });
     const next = { ...draftsRef.current, [id]: { ...existing, ...patch, changedAt: existing.changedAt + 1 } };
     draftsRef.current = next;
     if (!writeBaseDadosDrafts(window.localStorage, next)) setMessage("O navegador não conseguiu guardar a cópia de recuperação desta edição.");

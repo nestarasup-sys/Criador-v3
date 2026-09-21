@@ -6,6 +6,8 @@ export type BaseDadosDraft = {
   description: string;
   sceneEndSeconds: string;
   firstGroupReactionSeconds?: string;
+  /** Revision from which this browser recovery draft was created. */
+  baseRevision?: number;
   changedAt: number;
 };
 
@@ -23,7 +25,8 @@ export function readBaseDadosDrafts(storage: StorageLike | null | undefined): Ba
       const draft = value as Partial<BaseDadosDraft>;
       if (typeof draft.description !== "string" || typeof draft.sceneEndSeconds !== "string") return [];
       const changedAt = Number(draft.changedAt);
-      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, ...(typeof draft.firstGroupReactionSeconds === "string" ? { firstGroupReactionSeconds: draft.firstGroupReactionSeconds } : {}), changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
+      const baseRevision = Number(draft.baseRevision);
+      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, ...(typeof draft.firstGroupReactionSeconds === "string" ? { firstGroupReactionSeconds: draft.firstGroupReactionSeconds } : {}), ...(Number.isInteger(baseRevision) && baseRevision >= 0 ? { baseRevision } : {}), changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
     }));
   } catch {
     return {};
@@ -53,6 +56,11 @@ export function recoverBaseDadosDrafts(database: BaseDadosState, drafts: BaseDad
   const videos = new Map(database.videos.map((video) => [video.id, video]));
   return Object.fromEntries(Object.entries(drafts).filter(([id, draft]) => {
     const video = videos.get(id);
-    return Boolean(video && draftDiffersFromVideo(draft, video));
+    if (!video) return false;
+    // A draft created against an older server revision must not overwrite a
+    // confirmed update made from Roteiros or another browser. Legacy drafts
+    // without baseRevision remain recoverable for backward compatibility.
+    if (draft.baseRevision !== undefined && draft.baseRevision !== Number(video.metadataRevision ?? 0)) return false;
+    return draftDiffersFromVideo(draft, video);
   }));
 }
