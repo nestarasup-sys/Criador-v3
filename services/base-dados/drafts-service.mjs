@@ -21,7 +21,8 @@ function contentTypeFor(fileName) {
 }
 
 function persistedVideoShape(video) {
-  const { updatedAt, ...stable } = video;
+  const stable = { ...video };
+  delete stable.updatedAt;
   return stable;
 }
 
