@@ -80,6 +80,85 @@ async function frameBlob(frame: { fileUrl: string }) {
   return response.blob();
 }
 
+type ImageBounds = { left: number; top: number; right: number; bottom: number };
+type CropRect = { left: number; top: number; width: number; height: number };
+type PreparedAsset = { path: string; blob: Blob; width: number; height: number; bounds: ImageBounds };
+
+function unionBounds(current: ImageBounds | null, next: ImageBounds) {
+  if (!current) return next;
+  return {
+    left: Math.min(current.left, next.left),
+    top: Math.min(current.top, next.top),
+    right: Math.max(current.right, next.right),
+    bottom: Math.max(current.bottom, next.bottom),
+  };
+}
+
+function fullImageBounds(width: number, height: number): ImageBounds {
+  return { left: 0, top: 0, right: width, bottom: height };
+}
+
+async function inspectPngBlob(blob: Blob) {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) {
+    bitmap.close();
+    throw new Error("Não foi possível inspecionar o PNG exportado.");
+  }
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(bitmap, 0, 0);
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+  bitmap.close();
+  let left = canvas.width;
+  let top = canvas.height;
+  let right = 0;
+  let bottom = 0;
+  for (let y = 0; y < canvas.height; y += 1) {
+    for (let x = 0; x < canvas.width; x += 1) {
+      if (pixels[(y * canvas.width + x) * 4 + 3] === 0) continue;
+      left = Math.min(left, x);
+      top = Math.min(top, y);
+      right = Math.max(right, x + 1);
+      bottom = Math.max(bottom, y + 1);
+    }
+  }
+  return {
+    width: canvas.width,
+    height: canvas.height,
+    bounds: right > left && bottom > top ? { left, top, right, bottom } : fullImageBounds(canvas.width, canvas.height),
+  };
+}
+
+function cropPadding(bounds: ImageBounds, width: number, height: number): CropRect {
+  // Um pixel de margem evita cortar bordas antialiasadas e mantém o recorte seguro.
+  const left = Math.max(0, bounds.left - 1);
+  const top = Math.max(0, bounds.top - 1);
+  const right = Math.min(width, bounds.right + 1);
+  const bottom = Math.min(height, bounds.bottom + 1);
+  return { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
+}
+
+async function cropAndOptimizePng(blob: Blob, crop: CropRect) {
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = crop.width;
+  canvas.height = crop.height;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    bitmap.close();
+    throw new Error("Não foi possível criar o canvas de otimização PNG.");
+  }
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(bitmap, -crop.left, -crop.top);
+  bitmap.close();
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error("Não foi possível otimizar o PNG exportado.")), "image/png");
+  });
+}
+
 function safeFolderName(value: string) {
   const cleaned = String(value || "Sem nome")
     .normalize("NFD")
@@ -111,33 +190,71 @@ export type CharacterBundleOptions = {
   faceFrame?: (key: string) => Promise<Blob | null>;
 };
 
-async function writeCharacterBundle(root: JSZip, options: CharacterBundleOptions) {
+type PreparedCharacterBundle = {
+  assets: PreparedAsset[];
+  sourceCanvas: { width: number; height: number };
+  bounds: ImageBounds;
+  manifest: Record<string, unknown>;
+};
+
+async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<PreparedCharacterBundle> {
   const expressions = options.expressions;
-  root.file("preview.png", await options.renderPreview());
+  const assets: PreparedAsset[] = [];
+  const addAsset = async (path: string, blob: Blob) => {
+    const inspected = await inspectPngBlob(blob);
+    assets.push({ path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds });
+  };
+  await addAsset("preview.png", await options.renderPreview());
   if (options.usesBuiltInBase) {
-    for (const key of expressions) root.file(`${key}.png`, await options.renderComplete(key));
+    for (const key of expressions) await addAsset(`${key}.png`, await options.renderComplete(key));
   } else {
-    const facesFolder = root.folder("rostos");
-    const completeFolder = root.folder("completos");
-    const baseFolder = root.folder("base");
-    if (!facesFolder || !completeFolder || !baseFolder || !options.renderWithoutFace || !options.faceFrame) throw new Error("Pack de rosto incompleto");
-    baseFolder.file("personagem_sem_rosto.png", await options.renderWithoutFace());
+    if (!options.renderWithoutFace || !options.faceFrame) throw new Error("Pack de rosto incompleto");
+    await addAsset("base/personagem_sem_rosto.png", await options.renderWithoutFace());
     for (const key of expressions) {
       const face = await options.faceFrame(key);
       if (!face) throw new Error(`Expressão ausente: ${key}`);
-      facesFolder.file(`${key}.png`, face);
-      completeFolder.file(`${key}.png`, await options.renderComplete(key));
+      await addAsset(`rostos/${key}.png`, face);
+      await addAsset(`completos/${key}.png`, await options.renderComplete(key));
     }
   }
-  root.file("manifest.json", JSON.stringify({
+  const sourceCanvas = assets.reduce((current, asset) => ({
+    width: Math.max(current.width, asset.width),
+    height: Math.max(current.height, asset.height),
+  }), { width: 0, height: 0 });
+  const bounds = assets.reduce<ImageBounds | null>((current, asset) => unionBounds(current, asset.bounds), null) ?? fullImageBounds(sourceCanvas.width, sourceCanvas.height);
+  return {
+    assets,
+    sourceCanvas,
+    bounds,
+    manifest: {
     format: "gacha-maker-expression-pack",
     version: 1,
     character: { id: options.character.id, name: options.character.name.trim() || "Sem nome", model: options.character.model, basePackId: options.character.basePackId, basePackName: options.character.basePackName, faceMode: options.character.faceMode },
-    canvas: { width: 1920, height: 1080 },
+    canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
     expressions,
     output: options.usesBuiltInBase ? "final-character-frames" : "faces-and-complete-frames",
     generatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+async function writePreparedCharacterBundle(root: JSZip, prepared: PreparedCharacterBundle, crop: CropRect) {
+  for (const asset of prepared.assets) root.file(asset.path, await cropAndOptimizePng(asset.blob, crop));
+  root.file("manifest.json", JSON.stringify({
+    ...prepared.manifest,
+    canvas: { width: crop.width, height: crop.height },
+    sourceCanvas: prepared.sourceCanvas,
+    crop,
   }, null, 2));
+}
+
+function cropForPreparedBundles(prepared: readonly PreparedCharacterBundle[]) {
+  const sourceCanvas = prepared.reduce((current, bundle) => ({
+    width: Math.max(current.width, bundle.sourceCanvas.width),
+    height: Math.max(current.height, bundle.sourceCanvas.height),
+  }), { width: 0, height: 0 });
+  const bounds = prepared.reduce<ImageBounds | null>((current, bundle) => unionBounds(current, bundle.bounds), null) ?? fullImageBounds(sourceCanvas.width, sourceCanvas.height);
+  return cropPadding(bounds, sourceCanvas.width, sourceCanvas.height);
 }
 
 /** Núcleo compartilhado do ZIP: o Criador e os Roteiros passam apenas seus renderizadores. */
@@ -145,7 +262,8 @@ export async function createCharacterBundle(options: CharacterBundleOptions) {
   const zip = new JSZip();
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
-  await writeCharacterBundle(root, options);
+  const prepared = await prepareCharacterBundle(options);
+  await writePreparedCharacterBundle(root, prepared, cropForPreparedBundles([prepared]));
   return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
 }
 
@@ -183,16 +301,23 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   const zip = new JSZip();
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
+  const preparedVariants: Array<{ variant: CharacterVariant; prepared: PreparedCharacterBundle }> = [];
   for (const variant of options.variants) {
+    preparedVariants.push({ variant, prepared: await prepareCharacterBundle(options.createVariantBundle(variant)) });
+  }
+  const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));
+  for (const { variant, prepared } of preparedVariants) {
     const poseRoot = root.folder(safePoseFolderName(variant.label, variant.index));
     if (!poseRoot) throw new Error(`Falha ao criar a pasta ${variant.label}`);
-    await writeCharacterBundle(poseRoot, options.createVariantBundle(variant));
+    await writePreparedCharacterBundle(poseRoot, prepared, crop);
   }
   root.file("variants-manifest.json", JSON.stringify({
     format: "gacha-maker-expression-variants-pack",
     version: 1,
     character: options.character,
     variants: options.variants,
+    canvas: { width: crop.width, height: crop.height },
+    crop,
     generatedAt: new Date().toISOString(),
   }, null, 2));
   return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });

@@ -65,6 +65,16 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /encodeURIComponent\(resolvedKey\)/);
 });
 
+test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas de origem", async () => {
+  const source = await readFile(new URL("../app/studio/character-export.ts", import.meta.url), "utf8");
+  assert.match(source, /inspectPngBlob/);
+  assert.match(source, /cropForPreparedBundles/);
+  assert.match(source, /cropAndOptimizePng/);
+  assert.match(source, /image\/png/);
+  assert.match(source, /sourceCanvas/);
+  assert.match(source, /variants-manifest\.json/);
+});
+
 test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {
   const [page, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
