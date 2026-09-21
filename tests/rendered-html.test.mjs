@@ -48,6 +48,20 @@ test("trocar V0 e V1 não troca o modelo ativo automaticamente", async () => {
   assert.doesNotMatch(changeVersion, /setBasePackId\(/);
 });
 
+test("exporta o fundo diretamente em assets/backgrounds", async () => {
+  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
+  assert.match(
+    server,
+    /function roteiroBackgroundExportRoot\(scriptTitle, target = "v4"\)\s*\{\s*return join\(roteiroProjectRoot\(scriptTitle, target\), "assets", "backgrounds"\);/s,
+  );
+
+  const route = server.match(/if \(request\.method === "POST" && url\.pathname === "\/roteiros\/export-background"\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
+  assert.match(route, /const exportRoot = roteiroBackgroundExportRoot\(body\?\.scriptTitle, exportTarget\.id\);/);
+  assert.match(route, /const folder = exportRoot;/);
+  assert.match(route, /const destination = join\(folder, `01\$\{extension\}`\);/);
+  assert.doesNotMatch(route, /join\(folder, body\?\.scriptTitle/);
+});
+
 test("keeps the nine-expression pack contract in the editor", async () => {
   const [page, expressions] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
