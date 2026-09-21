@@ -84,7 +84,8 @@ export function buildNormalizeArgs(inputPath, outputPath, probe, encoder = "libx
   else if (encoder === "h264_qsv") args.push("-c:v", encoder, "-preset", "medium", "-global_quality", "23");
   else if (encoder === "h264_amf") args.push("-c:v", encoder, "-quality", "quality", "-rc", "cqp", "-qp_i", "22", "-qp_p", "24");
   else args.push("-c:v", "libx264", "-preset", "fast", "-crf", "20");
-  if (probe?.audio) args.push("-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "160k", "-shortest");
+  if (probe?.audio && options.audioMode === "copy") args.push("-c:a", "copy", "-shortest");
+  else if (probe?.audio) args.push("-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "160k", "-shortest");
   else args.push("-an");
   args.push("-movflags", "+faststart", outputPath);
   return args;
@@ -134,7 +135,7 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
       }
       usedEncoder = "libx264";
     }
-    return { encoder: usedEncoder, outputPath: temporaryOutput, audioRecovered: false, audioDropped: false };
+    return { encoder: usedEncoder, outputPath: temporaryOutput, audioRecovered: false, audioCopied: false };
   } catch (error) {
     await rm(temporaryOutput, { force: true });
     if (!probe?.audio) throw error;
@@ -144,20 +145,22 @@ export async function normalizeVideoFile(inputPath, outputPath, probe) {
     // preserve a partially damaged but decodable audio track.
     try {
       await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264", { tolerateCorruptAudio: true }));
-      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: true, audioDropped: false };
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: true, audioCopied: false };
     } catch (recoveryError) {
       lastError = recoveryError;
       await rm(temporaryOutput, { force: true });
     }
 
-    // Last resort: keep the normalized video and explicitly remove only the
-    // unusable audio stream. The caller reports this per file to the user.
+    // Never silently export a video without sound. If AAC conversion failed,
+    // keep the original audio packets and only re-encode the video. This is
+    // useful for codecs that are valid in MP4 but cannot be decoded by the
+    // local AAC path, and still preserves the user's original soundtrack.
     try {
-      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, { ...probe, audio: null }, "libx264"));
-      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioDropped: true };
-    } catch (videoOnlyError) {
+      await runCommand(process.env.FFMPEG_PATH || "ffmpeg", buildNormalizeArgs(inputPath, temporaryOutput, probe, "libx264", { tolerateCorruptAudio: true, audioMode: "copy" }));
+      return { encoder: "libx264", outputPath: temporaryOutput, audioRecovered: false, audioCopied: true };
+    } catch (audioCopyError) {
       await rm(temporaryOutput, { force: true });
-      throw videoOnlyError || lastError || error;
+      throw audioCopyError || lastError || error;
     }
   }
 }
