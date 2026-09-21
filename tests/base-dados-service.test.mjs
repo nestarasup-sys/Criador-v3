@@ -255,6 +255,9 @@ test("rascunhos detectam vídeos manuais, preservam metadados e enviam para a pr
     await writeFile(join(draftsRoot, "videos", "cena-final.mp4"), Buffer.from([9, 8, 7, 6]));
     const drafts = createDraftsService(draftsRoot, base);
     await drafts.init();
+    const stateAfterFirstSync = await readFile(join(draftsRoot, "state.json"), "utf8");
+    await drafts.init();
+    assert.equal(await readFile(join(draftsRoot, "state.json"), "utf8"), stateAfterFirstSync);
     const headers = () => ({ "Access-Control-Allow-Origin": "http://127.0.0.1:6700" });
     const listed = responseCapture();
     await drafts.handle(request("GET", "/base-dados/drafts/state"), listed, new URL("http://local/base-dados/drafts/state"), headers);

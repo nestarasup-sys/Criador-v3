@@ -20,6 +20,16 @@ function contentTypeFor(fileName) {
   return extension === ".webm" ? "video/webm" : extension === ".mov" ? "video/quicktime" : "video/mp4";
 }
 
+function persistedVideoShape(video) {
+  const { updatedAt, ...stable } = video;
+  return stable;
+}
+
+function videoListsDiffer(previous, next) {
+  if (previous.length !== next.length) return true;
+  return previous.some((item, index) => JSON.stringify(persistedVideoShape(item)) !== JSON.stringify(persistedVideoShape(next[index])));
+}
+
 function safeFileName(fileName) {
   const value = String(fileName || "");
   if (!/^[a-zA-Z0-9._() -]{1,180}\.(?:mp4|webm|mov)$/i.test(value)) throw Object.assign(new Error("Nome de rascunho inválido."), { status: 400, code: "INVALID_DRAFT_FILE" });
@@ -105,8 +115,14 @@ export function createDraftsService(root, baseDadosService) {
     }
     const foundNames = new Set(discovered.map((item) => item.fileName));
     const missing = state.videos.filter((item) => !foundNames.has(item.fileName)).map((item) => ({ ...item, fileAvailable: false }));
-    state.videos = [...discovered, ...missing];
-    await persist();
+    const nextVideos = [...discovered, ...missing];
+    const changed = videoListsDiffer(state.videos, nextVideos);
+    state.videos = nextVideos;
+    // Startup and GET /state are read operations when the folder did not
+    // change. Avoid rewriting state.json on every launch; on Windows that
+    // unnecessary replace is exactly where a transient file handle can cause
+    // EPERM and prevent the whole local server from starting.
+    if (changed) await persist();
     return state;
   }
 
