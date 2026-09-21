@@ -777,20 +777,34 @@ export default function RoteiroEditor() {
         </section>
         <section className={`${styles.exportTools} ${styles.railSection}`}>
           <div className={styles.railSectionHeader}><div><span>ARQUIVOS DO PROJETO</span><small>Fundos, vídeos, personagens e roteiro</small></div></div>
-          <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
-          {script.background && <small>Fundo atual: {script.background.name}</small>}
-          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
           <div className={styles.exportDestinationCard}>
-            <strong>DESTINO DA EXPORTAÇÃO</strong>
+            <div className={styles.exportDestinationHeading}><strong>DESTINO DA EXPORTAÇÃO</strong><span className={styles.exportDestinationBadge}>V4</span></div>
             <div className={styles.exportTargetButtons} role="group" aria-label="Destino da exportação">
               {(Object.entries(ROTEIRO_EXPORT_TARGETS) as Array<[RoteiroExportTarget, { label: string; path: string }]>).map(([target, config]) => <button key={target} type="button" title={config.label} className={`${styles.exportTargetButton} ${exportTarget === target ? styles.exportTargetButtonSelected : ""}`} aria-pressed={exportTarget === target} disabled={Boolean(exportLoading)} onClick={() => chooseExportTarget(target)}>⇩ Exportar para V4</button>)}
             </div>
-            <span>Destino atual: {selectedExportTarget.label}</span>
-            <small>{selectedExportTarget.path}</small>
+            <div className={styles.exportDestinationStatus}><span>{selectedExportTarget.label}</span><small>{selectedExportTarget.path}</small></div>
           </div>
-          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
-          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacterVariants()}>{exportLoading === "character-variants" ? "Exportando poses…" : "Exportar variantes"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
-          <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Ir à pasta"}</button></div>
+          <div className={styles.exportGroups}>
+            <div className={styles.exportGroup}>
+              <div className={styles.exportGroupHeading}><span>FUNDO</span><small>Imagem de fundo do projeto</small></div>
+              <label className={styles.secondaryButton} style={{ textAlign: "center", cursor: "pointer" }}>Adicionar fundo<input type="file" accept="image/png,image/jpeg,image/webp" hidden disabled={Boolean(exportLoading)} onChange={(event) => { const file = event.target.files?.[0]; if (file) void addBackground(file); event.currentTarget.value = ""; }} /></label>
+              {script.background && <small className={styles.exportFileName}>Atual: {script.background.name}</small>}
+              <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading) || !script.background} onClick={() => void exportBackground()}>{exportLoading === "background-export" ? "Exportando fundo…" : "Exportar fundo"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("background")}>▣ {exportLoading === "folder-background" ? "Abrindo pasta…" : "Abrir pasta do fundo"}</button></div>
+            </div>
+            <div className={styles.exportGroup}>
+              <div className={styles.exportGroupHeading}><span>VÍDEOS</span><small>TikToks e descrições</small></div>
+              <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportVideos()}>{exportLoading === "videos" ? "Exportando…" : "Exportar vídeos"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Abrir pasta do projeto"}</button></div>
+            </div>
+            <div className={styles.exportGroup}>
+              <div className={styles.exportGroupHeading}><span>PERSONAGENS</span><small>Personagens e variantes visuais</small></div>
+              <div className={styles.exportCharacterActions}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacters()}>{exportLoading === "characters" ? "Exportando…" : "Exportar personagens"}</button><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportCharacterVariants()}>{exportLoading === "character-variants" ? "Exportando poses…" : "Exportar variantes"}</button></div>
+              <button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("characters")}>▣ {exportLoading === "folder-characters" ? "Abrindo pasta…" : "Abrir pasta de personagens"}</button>
+            </div>
+            <div className={styles.exportGroup}>
+              <div className={styles.exportGroupHeading}><span>ROTEIRO</span><small>Arquivo de texto para o editor</small></div>
+              <div className={styles.exportAction}><button className={styles.secondaryButton} disabled={Boolean(exportLoading)} onClick={() => void exportScriptText()}>{exportLoading === "script" ? "Exportando…" : "Exportar roteiro.txt"}</button><button className={styles.folderButton} disabled={Boolean(exportLoading)} onClick={() => void openExportFolder("script")}>▣ {exportLoading === "folder-script" ? "Abrindo pasta…" : "Abrir pasta do projeto"}</button></div>
+            </div>
+          </div>
           {exportMessage && <small>{exportMessage}</small>}
         </section>
         <section className={styles.railRules}><span>REGRAS ATIVAS</span><strong>{scriptAiContext.rules.filter((rule) => rule.enabled).length + 10}</strong><small>estruturais + regras deste roteiro</small><Link href="/roteiros">Abrir modelos globais</Link></section>

@@ -269,8 +269,11 @@
 .contextImportPreview small { color:#776b58; font-size:9px; overflow-wrap:anywhere; }
 .contextImportPreview span { color:#68583e; font-size:10px; font-weight:800; }
 .exportDestinationCard { display:grid; gap:3px; padding:9px 10px; border:1px solid #e6def5; border-radius:10px; background:#fff; }
+.exportDestinationHeading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .exportDestinationCard strong { color:#6d6380; font-size:10px; letter-spacing:.05em; }
-.exportDestinationCard span { color:#44366d; font-size:11px; font-weight:800; }
+.exportDestinationBadge { padding:3px 7px; border-radius:999px; background:#eee8ff; color:var(--purple)!important; font-size:9px!important; font-weight:900!important; letter-spacing:.08em; }
+.exportDestinationStatus { display:flex; flex-direction:column; gap:2px; }
+.exportDestinationStatus span { color:#44366d; font-size:11px; font-weight:800; }
 .exportDestinationCard small { overflow-wrap:anywhere; color:#8b80a0; font-size:9px; }
 .exportTargetButtons { display:grid; grid-template-columns:minmax(0,1fr); gap:6px; }
 .exportTargetButton { min-height:32px; border:1px solid #d9ccef; border-radius:8px; padding:7px 8px; background:#fff; color:#5c4a8c; font-size:10px; font-weight:800; cursor:pointer; transition:background .15s ease,border-color .15s ease,color .15s ease,transform .15s ease; }
@@ -279,6 +282,13 @@
 .exportTargetButtonSelected:hover:not(:disabled) { background:var(--purple-dark); color:#fff; }
 .exportTargetButton:disabled { cursor:not-allowed; opacity:.58; }
 .exportDestinationHint { display:block; color:#7d7390; font-size:9px!important; }
+.exportGroups { display:grid; gap:8px; margin-top:2px; }
+.exportGroup { display:grid; gap:6px; padding:10px; border:1px solid #ebe4f6; border-radius:11px; background:rgba(255,255,255,.78); }
+.exportGroupHeading { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.exportGroupHeading span { color:var(--purple-dark); font-size:9px; font-weight:950; letter-spacing:.11em; }
+.exportGroupHeading small { color:#91889e; font-size:9px; text-align:right; }
+.exportFileName { overflow:hidden; color:#756b82!important; text-overflow:ellipsis; white-space:nowrap; }
+.exportCharacterActions { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .exportAction { display:grid; gap:3px; }
 .exportAction .folderButton {
   min-height:27px;
@@ -1348,6 +1358,9 @@
   .generationHeading p { white-space:normal; }
 }
 @media (max-width:780px) {
+  .exportGroupHeading { align-items:flex-start; flex-direction:column; gap:2px; }
+  .exportGroupHeading small { text-align:left; }
+  .exportCharacterActions { grid-template-columns:1fr; }
   .tiktokBody { padding:9px; }
   .contextZoneBody { padding:12px; }
   .zoneHeader, .blocksSection>.blocksHeader { align-items:flex-start; }
