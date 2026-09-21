@@ -413,7 +413,13 @@ function sendRouteError(response, request, error) {
     ? error.status
     : error?.code === "ENOENT" ? 404 : 400;
   const message = String(error?.message || "Erro local.").replace(/[\r\n]+/g, " ").slice(0, 180);
-  process.stderr.write(`[${requestId}] ${request.method} ${request.url} status=${status} code=${error?.code || "LOCAL_ERROR"} message=${message}\n`);
+  // A primeira chamada depois de reiniciar o servidor pode carregar o token
+  // da sessão anterior. O cliente renova o token automaticamente e repete a
+  // requisição; não trate essa tentativa esperada como erro operacional no
+  // terminal.
+  if (error?.code !== "SESSION_REQUIRED") {
+    process.stderr.write(`[${requestId}] ${request.method} ${request.url} status=${status} code=${error?.code || "LOCAL_ERROR"} message=${message}\n`);
+  }
   sendJson(response, request, status, {
     error: publicErrorMessage(error),
     code: error?.code || "LOCAL_ERROR",
@@ -1112,6 +1118,9 @@ async function route(request, response) {
     }
     const filePath = join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`);
     if (!inside(CHARACTER_PHOTOS_ROOT, filePath)) throw new Error("Destino da foto inválido");
+    // A pasta pode ter sido removida por uma limpeza externa enquanto o
+    // servidor continuava aberto. Recrie somente o diretório, nunca os dados.
+    await mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true });
     const previous = characterPhotoQueues.get(characterId) ?? Promise.resolve();
     const writeOperation = previous.catch(() => undefined).then(() => writeFile(filePath, body));
     characterPhotoQueues.set(characterId, writeOperation);

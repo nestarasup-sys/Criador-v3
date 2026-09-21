@@ -186,6 +186,19 @@ type CharacterSaveResult = {
   savedAt: string;
 };
 const inFlightCharacterSaves = new Map<string, { fingerprint: string; operation: Promise<CharacterSaveResult> }>();
+const inFlightPhotoUploads = new Map<string, { fingerprint: string; operation: Promise<string> }>();
+
+function photoBlobFingerprint(blob: Blob) {
+  return blob.arrayBuffer().then((buffer) => {
+    const bytes = new Uint8Array(buffer);
+    let hash = 2166136261;
+    for (const byte of bytes) {
+      hash ^= byte;
+      hash = Math.imul(hash, 16777619);
+    }
+    return `${blob.type}:${bytes.length}:${hash >>> 0}`;
+  });
+}
 
 export async function loadPcState(): Promise<PcState> {
   const response = await pcRequest("/state");
@@ -359,10 +372,21 @@ export function deleteCharacterFromPc(id: string) {
 }
 
 export async function uploadCharacterPhotoToPc(characterId: string, blob: Blob) {
-  const response = await pcRequest(`/characters/${encodeURIComponent(characterId)}/photo`, { method: "POST", headers: { "Content-Type": "image/png" }, body: blob });
-  const result = await response.json() as { photoUrl?: string };
-  if (!result.photoUrl) throw new Error("O servidor não retornou a foto salva");
-  return result.photoUrl;
+  const fingerprint = await photoBlobFingerprint(blob);
+  const existing = inFlightPhotoUploads.get(characterId);
+  if (existing?.fingerprint === fingerprint) return existing.operation;
+  const operation = (async () => {
+    const response = await pcRequest(`/characters/${encodeURIComponent(characterId)}/photo`, { method: "POST", headers: { "Content-Type": "image/png" }, body: blob });
+    const result = await response.json() as { photoUrl?: string };
+    if (!result.photoUrl) throw new Error("O servidor não retornou a foto salva");
+    return result.photoUrl;
+  })();
+  inFlightPhotoUploads.set(characterId, { fingerprint, operation });
+  try {
+    return await operation;
+  } finally {
+    if (inFlightPhotoUploads.get(characterId)?.operation === operation) inFlightPhotoUploads.delete(characterId);
+  }
 }
 
 export async function saveCatalogItemToPc(item: CatalogItem) {
