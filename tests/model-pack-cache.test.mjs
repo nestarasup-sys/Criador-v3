@@ -79,6 +79,9 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
   assert.match(source, /MAX_FACE_FRAME_CACHE = 64/);
   assert.match(source, /onProgress\?\.\(\{ phase: "rendering"/);
   assert.match(source, /phase: "packaging"/);
+  assert.match(source, /const MAX_PARALLEL_VARIANTS = 2/);
+  assert.match(source, /mapWithConcurrency\(options\.variants, MAX_PARALLEL_VARIANTS/);
+  assert.doesNotMatch(source, /Promise\.all\(options\.variants\.map/);
 });
 
 test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {

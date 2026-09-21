@@ -34,6 +34,23 @@ const NEW_BASE_EXPRESSION_KEYS = [
 
 const faceFrameCache = new Map<string, Promise<Blob>>();
 const MAX_FACE_FRAME_CACHE = 64;
+const MAX_PARALLEL_VARIANTS = 2;
+
+async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, mapper: (item: T, index: number) => Promise<R>) {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  async function consume() {
+    while (true) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+  const workers = Array.from({ length: Math.min(Math.max(1, limit), items.length) }, () => consume());
+  await Promise.all(workers);
+  return results;
+}
 
 function normalizedPackId(value?: string) {
   if (!value || value === "padrao") return "modelo-1";
@@ -321,11 +338,10 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   const zip = new JSZip();
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
-  const preparedVariants: Array<{ variant: CharacterVariant; prepared: PreparedCharacterBundle }> = [];
-  for (const [variantIndex, variant] of options.variants.entries()) {
+  const preparedVariants = await mapWithConcurrency(options.variants, MAX_PARALLEL_VARIANTS, async (variant, variantIndex) => {
     options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length });
-    preparedVariants.push({ variant, prepared: await prepareCharacterBundle(options.createVariantBundle(variant)) });
-  }
+    return { variant, prepared: await prepareCharacterBundle(options.createVariantBundle(variant)) };
+  });
   options.onProgress?.({ phase: "packaging", variantIndex: options.variants.length, variantCount: options.variants.length });
   const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));
   for (const { variant, prepared } of preparedVariants) {
