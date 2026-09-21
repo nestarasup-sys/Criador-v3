@@ -6254,6 +6254,7 @@ export default function Home() {
           <CreatorCatalogHeader
             category={category}
             faceMode={faceMode}
+            compositionMode={compositionMode}
             isProcessing={isProcessing}
             hasFrontHair={Boolean(selections.cabelos)}
             fileInputRef={fileInputRef}
@@ -6271,6 +6272,10 @@ export default function Home() {
             onImportExpressionPack={importExpressionPack}
             onToggleDeleteMode={toggleAssetDeleteMode}
             onDeleteSelected={() => void removeSelectedAssets()}
+            onToggleCompositionMode={() => {
+              setCompositionMode((current) => current === "outfit-over-face" ? "legacy" : "outfit-over-face");
+              setNotice("Camada alternada; será salva neste personagem");
+            }}
           />
 
           <div className="tabs" role="tablist" aria-label="Categorias do catálogo">

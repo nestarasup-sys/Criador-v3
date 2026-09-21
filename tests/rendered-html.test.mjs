@@ -931,6 +931,11 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /async function importOutfitVariantSheet/);
   assert.match(page, /async function confirmOutfitVariantSheet/);
   assert.match(catalogHeader, /Folha de variantes/);
+  assert.match(catalogHeader, /composition-toggle-button/);
+  assert.match(catalogHeader, /Camada \{compositionMode === "outfit-over-face" \? "V2" : "V1"\}/);
+  assert.match(page, /onToggleCompositionMode/);
+  assert.match(page, /setCompositionMode\(\(current\) => current === "outfit-over-face" \? "legacy" : "outfit-over-face"\)/);
+  assert.match(css, /composition-toggle-button/);
   assert.doesNotMatch(page, /Pack · poses/);
   assert.match(page, /outfitCatalogMode === "standard"/);
   assert.match(page, />Padrão<\/button>/);

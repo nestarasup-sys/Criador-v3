@@ -1,9 +1,10 @@
 import type { ChangeEventHandler, RefObject } from "react";
-import type { Category, FaceMode } from "../../domain/character-primitives";
+import type { Category, CompositionMode, FaceMode } from "../../domain/character-primitives";
 
 type CreatorCatalogHeaderProps = {
   category: Category;
   faceMode: FaceMode;
+  compositionMode: CompositionMode;
   isProcessing: boolean;
   hasFrontHair: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -21,6 +22,7 @@ type CreatorCatalogHeaderProps = {
   onImportExpressionPack: ChangeEventHandler<HTMLInputElement>;
   onToggleDeleteMode: () => void;
   onDeleteSelected: () => void;
+  onToggleCompositionMode: () => void;
 };
 
 const CATEGORY_LABELS: Record<Category, string> = {
@@ -30,8 +32,9 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected }: CreatorCatalogHeaderProps) {
+export function CreatorCatalogHeader({ category, faceMode, compositionMode, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {
   const supportsAssetDelete = category !== "rostos" || faceMode !== "pack";
+  const canToggleComposition = category === "rostos" && faceMode !== "base";
 
   return <div className="catalog-header">
     <div>
@@ -39,6 +42,18 @@ export function CreatorCatalogHeader({ category, faceMode, isProcessing, hasFron
       <h2>{CATEGORY_LABELS[category]}</h2>
     </div>
     <div className="import-actions">
+      {category === "rostos" && (
+        <button
+          type="button"
+          className={`composition-toggle-button ${compositionMode === "outfit-over-face" ? "active" : ""}`}
+          onClick={onToggleCompositionMode}
+          disabled={isProcessing || !canToggleComposition}
+          aria-pressed={compositionMode === "outfit-over-face"}
+          title={canToggleComposition ? "Alternar entre o modelo na frente e a roupa na frente" : "Selecione um rosto do catálogo ou um pack para alternar as camadas"}
+        >
+          Camada {compositionMode === "outfit-over-face" ? "V2" : "V1"}
+        </button>
+      )}
       {category === "rostos" && faceMode === "base" ? null : category === "rostos" && faceMode === "pack" ? (
         <button className="add-button" onClick={() => expressionPackInputRef.current?.click()} disabled={isProcessing}>
           {isProcessing ? "Processando…" : "＋ Pack 3×3"}
