@@ -174,15 +174,18 @@ export function createBaseDadosService(root) {
   }
 
   async function updateImportedMetadata(item, metadata) {
-    const description = String(metadata.description ?? "").trim();
+    const description = Object.prototype.hasOwnProperty.call(metadata || {}, "description")
+      ? String(metadata.description ?? "")
+      : String(item.description || "");
     const sceneEnd = Number(metadata.sceneEndSeconds);
     const duration = Number(metadata.durationSeconds);
     const updated = {
       ...item,
-      ...(description ? { description } : {}),
+      description,
       ...(Number.isFinite(sceneEnd) && sceneEnd >= 0 ? { sceneEndSeconds: sceneEnd } : {}),
       ...(Number.isFinite(Number(metadata.firstGroupReactionSeconds)) && Number(metadata.firstGroupReactionSeconds) >= 0 ? { firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) } : {}),
       ...(Number.isFinite(duration) && duration >= 0 ? { durationSeconds: duration } : {}),
+      metadataRevision: Number(item.metadataRevision ?? 0) + 1,
       updatedAt: new Date().toISOString(),
     };
     state.videos = state.videos.map((video) => video.id === item.id ? updated : video);
@@ -236,6 +239,14 @@ export function createBaseDadosService(root) {
 
   function importFile(sourcePath, metadata = {}) {
     return enqueueMutation(() => importFileUnsafe(sourcePath, metadata));
+  }
+
+  function updateExistingVideo(id, metadata = {}) {
+    return enqueueMutation(async () => {
+      const current = state.videos.find((video) => video.id === String(id));
+      if (!current) throw Object.assign(new Error("Vídeo não encontrado."), { status: 404 });
+      return { video: await withFileStatus(root, await updateImportedMetadata(current, metadata)), state };
+    });
   }
 
   return {
@@ -378,6 +389,7 @@ export function createBaseDadosService(root) {
     getVideos() {
       return state.videos.map((item) => structuredClone(item));
     },
+    updateExistingVideo,
     importFile,
   };
 }

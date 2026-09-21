@@ -853,6 +853,29 @@ async function route(request, response) {
     if (!script || !section) throw Object.assign(new Error("TikTok não encontrado no roteiro atual."), { status: 404 });
     if (!section.video) throw Object.assign(new Error("Adicione um vídeo a este TikTok antes de enviá-lo para a Base de dados."), { status: 400 });
     const sourceIsLocal = !section.video.libraryVideoId;
+    if (!sourceIsLocal) {
+      const updatedResult = await baseDadosService.updateExistingVideo(section.video.libraryVideoId, {
+        description: body?.description ?? section.description,
+        sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
+        firstGroupReactionSeconds: body?.firstGroupReactionSeconds ?? section.firstGroupReactionSeconds,
+        durationSeconds: body?.durationSeconds ?? section.video.durationSeconds,
+      });
+      const updated = updatedResult.video;
+      const sharedVideo = {
+        name: updated.originalName,
+        storedPath: updated.storedPath,
+        url: `http://${HOST}:${PORT}/base-dados/videos/${updated.id}`,
+        contentType: updated.contentType,
+        size: updated.size,
+        durationSeconds: updated.durationSeconds,
+        libraryVideoId: updated.id,
+        contentHash: updated.contentHash,
+        updatedAt: new Date().toISOString(),
+      };
+      const linkedVideo = await roteirosService.linkVideo(scriptId, tiktokId, sharedVideo);
+      sendJson(response, request, 200, { ok: true, duplicate: true, updated: true, video: linkedVideo, state: updatedResult.state });
+      return;
+    }
     const source = await findVideoReferenceFile(section.video, scriptId, tiktokId);
     if (!inside(ROTEIROS_VIDEOS_ROOT, source) && !inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
     const extension = extname(source).toLowerCase();

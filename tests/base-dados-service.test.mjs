@@ -128,6 +128,31 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
+test("atualiza somente os metadados de um vídeo compartilhado sem copiar o arquivo", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-shared-update-"));
+  const sourceRoot = await mkdtemp(join(tmpdir(), "nymi-base-dados-shared-source-"));
+  try {
+    const service = createBaseDadosService(root);
+    await service.init();
+    const source = join(sourceRoot, "original.mp4");
+    await writeFile(source, Buffer.from([9, 8, 7, 6]));
+    const imported = await service.importFile(source, { name: "original.mp4", contentType: "video/mp4", description: "Texto antigo", sceneEndSeconds: 4 });
+    const before = service.getVideo(imported.video.id);
+    const updated = await service.updateExistingVideo(imported.video.id, { description: "", sceneEndSeconds: 8, firstGroupReactionSeconds: 3 });
+    const after = service.getVideo(imported.video.id);
+    assert.equal(updated.video.id, before.id);
+    assert.equal(after.description, "");
+    assert.equal(after.sceneEndSeconds, 8);
+    assert.equal(after.firstGroupReactionSeconds, 3);
+    assert.equal(after.contentHash, before.contentHash);
+    assert.equal(after.metadataRevision, before.metadataRevision + 1);
+    assert.equal((await readdir(join(root, "videos"))).length, 1);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(sourceRoot, { recursive: true, force: true });
+  }
+});
+
 test("não reutiliza sequência excluída e sinaliza arquivo apagado manualmente", async () => {
   const root = await mkdtemp(join(tmpdir(), "nymi-base-dados-integrity-"));
   try {
