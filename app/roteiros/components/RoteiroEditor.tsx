@@ -517,7 +517,8 @@ export default function RoteiroEditor() {
     setExportLoading("videos"); setExportMessage("");
     try {
       const result = await exportRoteiroVideos(script, exportTarget);
-      setExportMessage(`Vídeos exportados: ${result.exported}. Descrições salvas. ${result.missing.length ? `Sem arquivo: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}`);
+      const fallbackMessage = result.conversionFallbacks?.length ? ` Fallback para libx264: ${result.conversionFallbacks.join(", ")}.` : "";
+      setExportMessage(`Vídeos exportados: ${result.exported} (${result.converted ?? 0} convertidos, ${result.copied ?? 0} copiados). Descrições salvas. ${result.missing.length ? `Falhas: ${result.missing.join(", ")}.` : "Todos os TikToks possuem vídeo."}${fallbackMessage}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao exportar vídeos."); }
     finally { setExportLoading(""); }
   };

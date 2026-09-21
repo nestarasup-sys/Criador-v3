@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
 import { probeVideoDuration } from "./services/media/video-metadata.mjs";
+import { normalizeVideoFile, probeVideoFile, videoMatchesExportProfile } from "./services/media/video-normalizer.mjs";
 import { createDraftsService } from "./services/base-dados/drafts-service.mjs";
 import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
@@ -153,7 +154,7 @@ async function removeRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []
   }
   return { orphans, removed: orphans.map((item) => item.folder) };
 }
-const ROTEIRO_VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov"];
+const ROTEIRO_VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov", ".mkv", ".avi", ".m4v"];
 async function findRoteiroVideoFile(scriptId, tiktokId) {
   const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
   for (const extension of ROTEIRO_VIDEO_EXTENSIONS) {
@@ -174,6 +175,41 @@ async function findVideoReferenceFile(video, scriptId, tiktokId) {
     return source;
   }
   return findRoteiroVideoFile(scriptId, tiktokId);
+}
+
+async function exportRoteiroVideoAsset(source, destination) {
+  let probe;
+  try {
+    probe = await probeVideoFile(source);
+  } catch {
+    // Sem ffprobe, mantemos o comportamento anterior para não bloquear uma
+    // exportação em uma máquina que só tenha o vídeo e o explorador local.
+    await copyFile(source, destination);
+    return { mode: "copied", reason: "probe-unavailable" };
+  }
+  if (videoMatchesExportProfile(probe)) {
+    await copyFile(source, destination);
+    return { mode: "copied", reason: "already-compatible" };
+  }
+  const normalized = await normalizeVideoFile(source, destination, probe);
+  await rm(destination, { force: true });
+  await rename(normalized.outputPath, destination);
+  return { mode: "converted", encoder: normalized.encoder };
+}
+
+async function runWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  const consume = async () => {
+    while (true) {
+      const index = cursor;
+      cursor += 1;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, Math.max(1, items.length)) }, () => consume()));
+  return results;
 }
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
@@ -1323,6 +1359,9 @@ async function route(request, response) {
     const tiktoks = Array.isArray(body?.tiktoks) ? body.tiktoks : [];
     const missing = [];
     let exported = 0;
+    let converted = 0;
+    let copied = 0;
+    const conversionFallbacks = [];
     const descriptionLines = [];
     for (const [index, item] of tiktoks.entries()) {
       const number = String(index + 1).padStart(2, "0");
@@ -1331,24 +1370,31 @@ async function route(request, response) {
       const firstGroupReaction = Number.isFinite(Number(item?.firstGroupReactionSeconds)) ? `${Number(item.firstGroupReactionSeconds)} segundos` : "não definido";
       const duration = Number(item?.video?.durationSeconds) > 0 ? `${Number(item.video.durationSeconds)} segundos` : "não disponível";
       descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nDuração total do vídeo: ${duration}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\n`);
+    }
+    const exportResults = await runWithConcurrency(tiktoks, 2, async (item, index) => {
+      const number = String(index + 1).padStart(2, "0");
       const storedPath = String(item?.video?.storedPath || "").replace(/[\\/]+/g, sep);
       const source = item?.video ? await findVideoReferenceFile(item.video, scriptId, item.id).catch(() => null) : (storedPath ? resolve(ROOT, storedPath) : null);
       const destination = join(folder, `${number}.mp4`);
-      if (!source || (!inside(ROTEIROS_VIDEOS_ROOT, source) && !inside(BASE_DADOS_ROOT, source))) {
-        missing.push(`${number}.mp4`);
-        continue;
-      }
+      if (!source || (!inside(ROTEIROS_VIDEOS_ROOT, source) && !inside(BASE_DADOS_ROOT, source))) return { fileName: `${number}.mp4`, ok: false };
       try {
         await stat(source);
-        await copyFile(source, destination);
-        exported += 1;
-      } catch {
-        missing.push(`${number}.mp4`);
+        const result = await exportRoteiroVideoAsset(source, destination);
+        return { fileName: `${number}.mp4`, ok: true, ...result };
+      } catch (error) {
+        return { fileName: `${number}.mp4`, ok: false, error: error instanceof Error ? error.message : "falha desconhecida" };
       }
+    });
+    for (const result of exportResults) {
+      if (!result.ok) { missing.push(result.fileName); continue; }
+      exported += 1;
+      if (result.mode === "converted") converted += 1;
+      else copied += 1;
+      if (result.encoder === "libx264" && result.mode === "converted") conversionFallbacks.push(result.fileName);
     }
     const descriptionFile = join(folder, "descricoes.txt");
     await writeFile(descriptionFile, descriptionLines.join("\n"), "utf8");
-    sendJson(response, request, 200, { ok: true, folder: projectRoot, exported, missing, descriptionFile, loadingFile: join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"), exportTarget: exportTarget.id });
+    sendJson(response, request, 200, { ok: true, folder: projectRoot, exported, copied, converted, missing, conversionFallbacks, descriptionFile, loadingFile: join(roteiroUiExportRoot(body?.scriptTitle, exportTarget.id), "loading.gif"), exportTarget: exportTarget.id });
     return;
   }
 

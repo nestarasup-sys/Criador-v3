@@ -1103,7 +1103,7 @@ test("provides the shared Nymi navigation shell on all primary areas", async () 
 });
 
 test("mantém o slice de Roteiros componentizado, cancelável e compatível com exportação", async () => {
-  const [editor, blocks, commands, contract, storage, service, server, schemas, css] = await Promise.all([
+  const [editor, blocks, commands, contract, storage, service, server, schemas, css, normalizer] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/commands.ts", import.meta.url), "utf8"),
@@ -1113,6 +1113,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/document-schemas.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
+    readFile(new URL("../services/media/video-normalizer.mjs", import.meta.url), "utf8"),
   ]);
   assert.match(editor, /<ReactionBlockList/);
   assert.match(editor, /patchReactionBlock/);
@@ -1146,6 +1147,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(service, /FONTE ÚNICA/);
   assert.match(service, /validateMeaningfulContextRewrite/);
   assert.match(server, /export-videos/);
+  assert.match(server, /probeVideoFile/);
+  assert.match(server, /videoMatchesExportProfile/);
+  assert.match(server, /runWithConcurrency\(tiktoks, 2/);
   assert.match(server, /Duração total do vídeo/);
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
   assert.match(server, /export-text/);
@@ -1168,4 +1172,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /DELETE/);
   assert.match(schemas, /validateRoteiroExportDocument/);
   assert.match(css, /\.cancelButton/);
+  assert.match(normalizer, /h264_nvenc/);
+  assert.match(normalizer, /force_original_aspect_ratio=decrease/);
+  assert.match(normalizer, /-fps_mode.*cfr/);
+  assert.match(normalizer, /"-bf", "0"/);
+  assert.match(normalizer, /"-g", "30"/);
 });
