@@ -103,6 +103,9 @@
 .categoryMenu button:hover,.categoryMenu button:focus-visible { transform:translateX(2px); filter:saturate(1.08); }
 .categoryMenu button:hover,.categoryMenu button:focus-visible { color:#633ab7; background:#f3ebff; font-weight:800; outline:none; }
 .categoryMenu .addCategoryButton { margin-top:4px; border-top:1px dashed #ddcfe8; border-left-color:#633ab7; color:#633ab7; background:#fbf8ff; font-weight:800; }
+.categoryOptionRow { display:grid; grid-template-columns:minmax(0,1fr) 30px; gap:4px; align-items:stretch; }
+.categoryOptionRow>button:first-child { min-width:0; }
+.categoryDeleteButton { padding:0 7px!important; border-left:1px solid #eaddea!important; color:#b24d69!important; background:#fff5f7!important; font-weight:900!important; text-align:center!important; }
 .form label { display:grid; gap:6px; }
 .twoTimeFields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
 .form label>span { color:#4a3857; font-size:12px; font-weight:850; }

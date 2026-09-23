@@ -55,6 +55,15 @@ export function addCustomCategory(label: string): CustomVideoCategory | null {
   return category;
 }
 
+export function removeCustomCategory(categoryId: string) {
+  if (typeof window === "undefined") return false;
+  const current = readCustomCategories();
+  const next = current.filter((category) => category.id !== categoryId);
+  if (next.length === current.length) return false;
+  window.localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(next));
+  return true;
+}
+
 const EMPTY_CATEGORY_TONE = {
   color: "#75647d",
   softColor: "#f5f1f8",
