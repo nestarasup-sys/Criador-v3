@@ -54,7 +54,7 @@ function sendJson(response, headers, status, value) {
 }
 
 function normalizeState(value) {
-  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, metadataRevision: Number.isInteger(item.metadataRevision) && item.metadataRevision >= 0 ? item.metadataRevision : 0, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0, secondGroupReactionSeconds: Number.isFinite(Number(item.secondGroupReactionSeconds)) && Number(item.secondGroupReactionSeconds) >= 0 ? Number(item.secondGroupReactionSeconds) : 0, additionalAiContext: typeof item.additionalAiContext === "string" ? item.additionalAiContext : "" })) : [];
+  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, metadataRevision: Number.isInteger(item.metadataRevision) && item.metadataRevision >= 0 ? item.metadataRevision : 0, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0, secondGroupReactionSeconds: Number.isFinite(Number(item.secondGroupReactionSeconds)) && Number(item.secondGroupReactionSeconds) >= 0 ? Number(item.secondGroupReactionSeconds) : 0, additionalAiContext: typeof item.additionalAiContext === "string" ? item.additionalAiContext : "", category: typeof item.category === "string" ? item.category : "" })) : [];
   const highestSequence = videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0);
   const requestedNext = Number(value?.nextSequence);
   const nextSequence = Number.isInteger(requestedNext) && requestedNext > highestSequence ? requestedNext : highestSequence + 1;
@@ -230,6 +230,7 @@ export function createBaseDadosService(root) {
       firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) >= 0 ? Number(metadata.firstGroupReactionSeconds) : 0,
       secondGroupReactionSeconds: Number(metadata.secondGroupReactionSeconds) >= 0 ? Number(metadata.secondGroupReactionSeconds) : 0,
       additionalAiContext: String(metadata.additionalAiContext || ""),
+      category: typeof metadata.category === "string" ? metadata.category : "",
       metadataRevision: 0,
       createdAt: now, updatedAt: now,
     };
@@ -332,11 +333,12 @@ export function createBaseDadosService(root) {
           const sceneEndSeconds = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
           const secondGroupReactionSeconds = body?.secondGroupReactionSeconds === undefined ? Number(current.secondGroupReactionSeconds ?? 0) : Number(body.secondGroupReactionSeconds);
+          const category = body?.category === undefined ? String(current.category || "") : String(body.category || "");
           if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
           if (!Number.isFinite(secondGroupReactionSeconds) || secondGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da segunda reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
           const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
-          const updated = { ...current, description, sceneEndSeconds, firstGroupReactionSeconds, secondGroupReactionSeconds, ...(Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? { additionalAiContext: String(body.additionalAiContext ?? "") } : {}), metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
+          const updated = { ...current, description, sceneEndSeconds, firstGroupReactionSeconds, secondGroupReactionSeconds, additionalAiContext: Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? String(body.additionalAiContext ?? "") : String(current.additionalAiContext || ""), category, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           state.videos = state.videos.map((video) => video.id === id ? updated : video);
           await persist();
           return { video: await withFileStatus(root, updated), state, revision: updated.metadataRevision };

@@ -1,5 +1,6 @@
 import type { NarrativeProfile } from "../domain/roteiro-contract";
 import type { BaseDadosState, BaseDadosVideo } from "./types";
+import { categoryLabel } from "./categories";
 
 export const BASE_DATABASE_EXPORT_FORMAT = "NYMI_BASE_DATABASE_EXPORT_V2";
 
@@ -9,7 +10,7 @@ export type BaseDadosCharacterExport = {
   narrativeProfile?: NarrativeProfile;
 };
 
-export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string; secondGroupReactionSeconds?: string; additionalAiContext?: string };
+export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string; secondGroupReactionSeconds?: string; additionalAiContext?: string; category?: string };
 
 /** Mescla alterações ainda não confirmadas pelo autosave no snapshot exportado. */
 export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<string, BaseDadosVideoDraft>) {
@@ -20,10 +21,10 @@ export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<st
       if (!draft) return video;
       const sceneEndSeconds = Number(draft.sceneEndSeconds);
       if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return video;
-      if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds };
+      if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds, ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) };
       const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
       const secondGroupReactionSeconds = Number(draft.secondGroupReactionSeconds);
-      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, ...(Number.isFinite(secondGroupReactionSeconds) && secondGroupReactionSeconds >= 0 ? { secondGroupReactionSeconds } : {}), ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }) } : video;
+      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, ...(Number.isFinite(secondGroupReactionSeconds) && secondGroupReactionSeconds >= 0 ? { secondGroupReactionSeconds } : {}), ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) } : video;
     }),
   };
 }
@@ -66,6 +67,7 @@ export function buildBaseDadosExportText(
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
     `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    `CATEGORIA: ${categoryLabel(video.category)}`,
     "CONTEXTO ADICIONAL PARA IA:",
     video.additionalAiContext?.trim() || "Não informado.",
     `TEMPO TOTAL DO VÍDEO: ${formatSeconds(video.durationSeconds)} segundos`,
@@ -105,6 +107,7 @@ export function buildBaseDadosSimpleExportText(
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
     `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    `CATEGORIA: ${categoryLabel(video.category)}`,
     "CONTEXTO ADICIONAL PARA IA:",
     video.additionalAiContext?.trim() || "Não informado.",
   ].join("\n"));

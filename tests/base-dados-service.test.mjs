@@ -110,11 +110,12 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
     const video = JSON.parse(uploaded.capture.body).video;
 
     const first = responseCapture();
-    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, secondGroupReactionSeconds: 7.5, additionalAiContext: "A reação deve parecer desconfiada.", expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
+    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, secondGroupReactionSeconds: 7.5, additionalAiContext: "A reação deve parecer desconfiada.", category: "the-villainess-is-destined-to-die", expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
     const firstResult = JSON.parse(first.capture.body);
     assert.equal(firstResult.video.metadataRevision, 1);
     assert.equal(firstResult.video.secondGroupReactionSeconds, 7.5);
     assert.equal(firstResult.video.additionalAiContext, "A reação deve parecer desconfiada.");
+    assert.equal(firstResult.video.category, "the-villainess-is-destined-to-die");
     assert.ok((await readdir(join(root, "backups"))).some((name) => name.startsWith("state-") && name.endsWith(".json")));
 
     const partial = responseCapture();
@@ -123,6 +124,7 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
     assert.equal(JSON.parse(partial.capture.body).video.firstGroupReactionSeconds, 2);
     assert.equal(JSON.parse(partial.capture.body).video.secondGroupReactionSeconds, 7.5);
     assert.equal(JSON.parse(partial.capture.body).video.additionalAiContext, "A reação deve parecer desconfiada.");
+    assert.equal(JSON.parse(partial.capture.body).video.category, "the-villainess-is-destined-to-die");
 
     await assert.rejects(
       service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto antigo", sceneEndSeconds: 7, expectedRevision: 0 })), { "content-type": "application/json" }), responseCapture(), new URL(`http://local/base-dados/videos/${video.id}`), headers),

@@ -21,6 +21,8 @@ export type BaseDadosVideo = {
   secondGroupReactionSeconds: number;
   /** Contexto adicional enviado nas exportações que alimentam a IA. */
   additionalAiContext: string;
+  /** Categoria editorial usada para filtrar exportações. */
+  category: string;
   /** Incremented by the local server for every metadata commit. */
   metadataRevision?: number;
   createdAt: string;

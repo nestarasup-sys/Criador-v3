@@ -18,7 +18,7 @@ async function bundled(modulePath) {
 test("exporta a base completa e o tempo final da cena com personagens selecionados", async () => {
   const { loaded, root } = await bundled("app/base de dados/export-contract.ts");
   try {
-    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, secondGroupReactionSeconds: 16, additionalAiContext: "A tensão deve crescer.", createdAt: "", updatedAt: "" }] };
+    const database = { app: "NYMI_BASE_DADOS_V1", version: 1, updatedAt: "", videos: [{ id: "video-01", sequence: 1, fileName: "01.mp4", originalName: "cena.mp4", storedPath: "base-de-dados/videos/01.mp4", absolutePath: "C:\\NYMI\\01.mp4", contentType: "video/mp4", size: 12, durationSeconds: 20, description: "A cena acontece.", sceneEndSeconds: 10, firstGroupReactionSeconds: 12, secondGroupReactionSeconds: 16, additionalAiContext: "A tensão deve crescer.", category: "the-villainess-is-destined-to-die", createdAt: "", updatedAt: "" }] };
     const text = loaded.buildBaseDadosExportText(database, [{ characterId: "char-01", name: "Duque", narrativeProfile: { characterId: "char-01", personality: "Reservado", backstory: "História do Duque", fynRelationship: "Aliado", speakingStyle: "Formal", additionalRules: "Não inventa fatos", relationships: [{ id: "rel-01", targetCharacterId: "char-02", description: "Confia pouco" }], updatedAt: "" } }], "2026-01-01T00:00:00.000Z");
     assert.match(text, /NYMI_BASE_DATABASE_EXPORT_V2/);
     assert.match(text, /CAMINHO ABSOLUTO: C:\\NYMI\\01\.mp4/);
@@ -27,6 +27,7 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
     assert.match(text, /TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: 10\.00 segundos/);
     assert.match(text, /TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: 12\.00 segundos/);
     assert.match(text, /TEMPO DA SEGUNDA REAÇÃO EM GRUPO: 16\.00 segundos/);
+    assert.match(text, /CATEGORIA: The Villainess Is Destined to Die/);
     assert.match(text, /A tensão deve crescer\./);
     assert.match(text, /TEMPO TOTAL DO VÍDEO: 20\.00 segundos/);
     assert.match(text, /ID: char-01/);
@@ -41,6 +42,7 @@ test("exporta a base completa e o tempo final da cena com personagens selecionad
     assert.match(guide, /NYMI_IMPORTABLE_SCRIPT_V1/);
     assert.match(guide, /Não inclua uma seção de abertura/);
     assert.match(loaded.buildBaseDadosSimpleExportText(database, []), /TEMPO DA SEGUNDA REAÇÃO EM GRUPO/);
+    assert.match(loaded.buildBaseDadosSimpleExportText(database, []), /CATEGORIA: The Villainess Is Destined to Die/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -51,6 +53,7 @@ test("exportação usa drafts recentes mesmo antes do debounce terminar", async 
     const merged = loaded.mergeBaseDadosDrafts(database, { "video-01": { description: "Descrição digitada agora", sceneEndSeconds: "10" } });
     assert.equal(merged.videos[0].description, "Descrição digitada agora");
     assert.equal(merged.videos[0].sceneEndSeconds, 10);
+    assert.equal(loaded.mergeBaseDadosDrafts({ ...database, videos: [{ ...database.videos[0], category: "the-villainess-is-destined-to-die" }] }, { "video-01": { description: "Descrição digitada agora", sceneEndSeconds: "10" } }).videos[0].category, "the-villainess-is-destined-to-die");
     assert.equal(database.videos[0].description, "Descrição antiga");
   } finally { await rm(root, { recursive: true, force: true }); }
 });
@@ -161,6 +164,9 @@ test("os controles novos permanecem presentes na Base de dados e em Roteiros", a
   assert.match(basePage, /createScriptFromImport/);
   assert.match(basePage, /Confirmar e criar roteiro/);
   assert.match(basePage, /Pacote completo para IA/);
+  assert.match(basePage, /Categoria/);
+  assert.match(basePage, /BASE_VIDEO_CATEGORIES/);
+  assert.match(basePage, /Exportar dados simples/);
   assert.match(basePage, /Guia V6\.md/);
   assert.match(basePage, /dados para fazer roteiro\.txt/);
   assert.match(roteiroHome, /Auditar pastas/);
