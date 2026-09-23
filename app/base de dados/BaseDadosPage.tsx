@@ -46,6 +46,7 @@ export default function BaseDadosPage() {
   const [characterQuery, setCharacterQuery] = useState("");
   const [videoQuery, setVideoQuery] = useState("");
   const [videoFilter, setVideoFilter] = useState<"all" | "filled" | "pending">("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryOpenId, setCategoryOpenId] = useState<string | null>(null);
   const [simpleExportOpen, setSimpleExportOpen] = useState(false);
@@ -494,9 +495,10 @@ export default function BaseDadosPage() {
       ].some((value) => value.toLocaleLowerCase("pt-BR").includes(query));
       const filled = draft.description.trim().length > 0;
       const matchesFilter = videoFilter === "all" || (videoFilter === "filled" ? filled : !filled);
-      return matchesQuery && matchesFilter;
+      const matchesCategory = categoryFilter === "all" || (categoryFilter === "uncategorized" ? !video.category : video.category === categoryFilter);
+      return matchesQuery && matchesFilter && matchesCategory;
     });
-  }, [database, draftFor, videoFilter, videoQuery]);
+  }, [categoryFilter, database, draftFor, videoFilter, videoQuery]);
 
   const openDataFolder = async () => {
     setBusy("folder"); setMessage("");
@@ -536,6 +538,10 @@ export default function BaseDadosPage() {
               <button className={videoFilter === "all" ? styles.filterActive : ""} onClick={() => { setVideoFilter("all"); setFiltersOpen(false); }}>Todos</button>
               <button className={videoFilter === "filled" ? styles.filterActive : ""} onClick={() => { setVideoFilter("filled"); setFiltersOpen(false); }}>Preenchidos</button>
               <button className={videoFilter === "pending" ? styles.filterActive : ""} onClick={() => { setVideoFilter("pending"); setFiltersOpen(false); }}>Pendentes</button>
+              <span className={styles.filterSectionLabel}>CATEGORIA</span>
+              <button className={categoryFilter === "all" ? styles.filterActive : ""} onClick={() => { setCategoryFilter("all"); setFiltersOpen(false); }}>Todas as categorias</button>
+              <button style={{ color: categoryTone("").color }} className={categoryFilter === "uncategorized" ? styles.filterActive : ""} onClick={() => { setCategoryFilter("uncategorized"); setFiltersOpen(false); }}>Sem categoria</button>
+              {BASE_VIDEO_CATEGORIES.map((category) => <button key={category.id} style={{ color: category.color }} className={categoryFilter === category.id ? styles.filterActive : ""} onClick={() => { setCategoryFilter(category.id); setFiltersOpen(false); }}>{category.label}</button>)}
             </div>}
           </div>
         </div>
@@ -559,7 +565,7 @@ export default function BaseDadosPage() {
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {message && <p className={styles.message} role="status">{message}</p>}
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
-      {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
+      {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); setCategoryFilter("all"); }}>Limpar busca e filtros</button></section>}
       {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const groupStart = Number(draft.firstGroupReactionSeconds); const hasKnownDuration = Number.isFinite(video.durationSeconds) && video.durationSeconds > 0; const warning = hasKnownDuration && Number.isFinite(end) && end > video.durationSeconds; const groupWarning = hasKnownDuration && Number.isFinite(groupStart) && groupStart > video.durationSeconds; return <article className={styles.card} key={video.id}>
         <div className={styles.player}><video ref={(element) => { if (element) videoRefsRef.current.set(video.id, element); else videoRefsRef.current.delete(video.id); }} key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
         <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>

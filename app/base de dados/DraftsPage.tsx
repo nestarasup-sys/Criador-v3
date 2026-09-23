@@ -15,6 +15,7 @@ export default function DraftsPage() {
   const [drafts, setDrafts] = useState<Record<string, DraftValue>>({});
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "filled" | "pending">("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
   const [message, setMessage] = useState("");
@@ -122,14 +123,15 @@ export default function DraftsPage() {
   const openFolder = async () => { setBusy("folder"); try { await openBaseDadosDraftsFolder(); setMessage("Pasta de rascunhos aberta no Explorador de Arquivos."); } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível abrir a pasta."); } finally { setBusy(""); } };
   const visible = useMemo(() => (database?.videos || []).filter((video) => {
     const value = valueFor(video); const filled = Boolean(value.description.trim());
-    return (!query.trim() || `${video.fileName} ${value.description}`.toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR"))) && (filter === "all" || (filter === "filled" ? filled : !filled));
-  }), [database, filter, query, valueFor]);
+    const matchesCategory = categoryFilter === "all" || (categoryFilter === "uncategorized" ? !video.category : video.category === categoryFilter);
+    return (!query.trim() || `${video.fileName} ${value.description}`.toLocaleLowerCase("pt-BR").includes(query.trim().toLocaleLowerCase("pt-BR"))) && (filter === "all" || (filter === "filled" ? filled : !filled)) && matchesCategory;
+  }), [categoryFilter, database, filter, query, valueFor]);
 
   return <div className={`${styles.app} ${styles.scaled}`}>
     <header className={`${styles.topbar} topbar`}><div className={styles.topbarBrand}><Link href="/base%20de%20dados" className={`${styles.topbarBack} button secondary`} aria-label="Voltar para a Base de dados">←</Link><NymiBrand /><div className={styles.moduleTitle}><span>BIBLIOTECA</span><strong>ÁREA DE RASCUNHO</strong></div></div><div className="top-actions"><NymiConnectionStatus connected={Boolean(database)} /><NymiNavigation active="base-dados" compact /></div></header>
     <main className={styles.content}>
       <section className={styles.draftHeader}><div><span className={styles.eyebrow}>BASE DE DADOS</span><h1>Área de rascunho</h1><p>Coloque vídeos manualmente na pasta, descreva as cenas e envie-os para a próxima posição da Base.</p></div><div className={styles.draftHeaderActions}><button className={styles.toolbarButton + " " + styles.toolbarNeutral} disabled={Boolean(busy)} onClick={() => void openFolder()}>↗ Abrir pasta</button><Link className={styles.toolbarButton + " " + styles.toolbarPurple} href="/base%20de%20dados">Base de dados</Link></div></section>
-      {!loading && <section className={styles.pageTools + " " + styles.draftTools}><div className={styles.counter}><strong>{database?.videos.length || 0}</strong><span>rascunhos</span></div><label className={styles.searchWrap}><span aria-hidden="true">⌕</span><input aria-label="Buscar rascunhos" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar rascunhos…" /></label><select className={styles.filterButton} aria-label="Filtrar rascunhos" value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)}><option value="all">Todos</option><option value="filled">Preenchidos</option><option value="pending">Pendentes</option></select></section>}
+      {!loading && <section className={styles.pageTools + " " + styles.draftTools}><div className={styles.counter}><strong>{database?.videos.length || 0}</strong><span>rascunhos</span></div><label className={styles.searchWrap}><span aria-hidden="true">⌕</span><input aria-label="Buscar rascunhos" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar rascunhos…" /></label><select className={styles.filterButton} aria-label="Filtrar rascunhos por status" value={filter} onChange={(event) => setFilter(event.target.value as typeof filter)}><option value="all">Todos</option><option value="filled">Preenchidos</option><option value="pending">Pendentes</option></select><select className={styles.filterButton} aria-label="Filtrar rascunhos por categoria" value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)}><option value="all">Todas as categorias</option><option value="uncategorized">Sem categoria</option>{BASE_VIDEO_CATEGORIES.map((category) => <option key={category.id} value={category.id}>{category.label}</option>)}</select></section>}
       {message && <p className={styles.message} role="status">{message}</p>}
       {loading && <div className={styles.emptyState}><span>…</span><h2>Carregando rascunhos</h2></div>}
       {!loading && !visible.length && <div className={styles.emptyState}><span>＋</span><h2>Nenhum rascunho encontrado</h2><p>Coloque vídeos MP4, WebM ou MOV em <code>base-de-dados/rascunhos/videos</code> e atualize esta página.</p><button className={styles.actionButtonPrimary} onClick={() => void refresh()}>Atualizar</button></div>}
