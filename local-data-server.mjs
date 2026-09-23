@@ -1436,7 +1436,7 @@ async function route(request, response) {
       const sceneEnd = Number.isFinite(Number(item?.sceneEndSeconds)) ? `${Number(item.sceneEndSeconds)} segundos` : "não definido";
       const firstGroupReaction = Number.isFinite(Number(item?.firstGroupReactionSeconds)) ? `${Number(item.firstGroupReactionSeconds)} segundos` : "não definido";
       const secondGroupReaction = Number.isFinite(Number(item?.secondGroupReactionSeconds)) ? `${Number(item.secondGroupReactionSeconds)} segundos` : "não definido";
-      const additionalAiContext = String(item?.additionalAiContext || "");
+      const additionalAiContext = String(item?.video?.additionalAiContext ?? item?.additionalAiContext ?? "");
       const duration = Number(item?.video?.durationSeconds) > 0 ? `${Number(item.video.durationSeconds)} segundos` : "não disponível";
       descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nDuração total do vídeo: ${duration}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\nSegunda reação em grupo pode começar no segundo: ${secondGroupReaction}\nContexto adicional para IA: ${additionalAiContext || "não informado"}\n`);
     }
