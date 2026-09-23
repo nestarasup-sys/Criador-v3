@@ -48,6 +48,7 @@ export type AiContextSection = {
   description: string;
   sceneEndSeconds?: number;
   firstGroupReactionSeconds?: number;
+  secondGroupReactionSeconds?: number;
   sceneGoal: string;
   timeline: TikTokSection["timeline"];
   specificRules: string;
@@ -197,6 +198,7 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     description: section.description,
     ...(section.sceneEndSeconds === undefined ? {} : { sceneEndSeconds: section.sceneEndSeconds }),
     ...(section.firstGroupReactionSeconds === undefined ? {} : { firstGroupReactionSeconds: section.firstGroupReactionSeconds }),
+    ...(section.secondGroupReactionSeconds === undefined ? {} : { secondGroupReactionSeconds: section.secondGroupReactionSeconds }),
     sceneGoal: section.sceneGoal,
     timeline: section.timeline,
     specificRules: section.specificRules,
@@ -361,6 +363,7 @@ export function renderAiContextText(context: AiContextExportDocument): string {
       `Duração do vídeo: ${section.video?.durationSeconds === undefined ? "não disponível" : `${section.video.durationSeconds} segundos`}`,
       `Cena da descrição termina no segundo: ${section.sceneEndSeconds === undefined ? "não definido" : section.sceneEndSeconds}`,
       `Primeira reação em grupo pode começar no segundo: ${section.firstGroupReactionSeconds === undefined ? "não definido" : section.firstGroupReactionSeconds}`,
+      `Segunda reação em grupo pode começar no segundo: ${section.secondGroupReactionSeconds === undefined ? "não definido" : section.secondGroupReactionSeconds}`,
       `Início das falas/pensamentos: ${section.reactionStartSeconds === null ? "não definido" : `${section.reactionStartSeconds} segundos`}`,
       `Janela disponível para reações: ${section.reactionWindowSeconds === null ? "não calculável" : `${section.reactionWindowSeconds} segundos`}`,
       `Blocos recomendados: ${section.recommendedBlockCount === null ? "não calculável" : `${section.recommendedBlockRange?.min}–${section.recommendedBlockRange?.max} (alvo ${section.recommendedBlockCount})`}`,

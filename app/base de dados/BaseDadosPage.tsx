@@ -60,6 +60,7 @@ export default function BaseDadosPage() {
   const saveJobsRef = useRef(new Map<string, Promise<void>>());
   const runningRevisionRef = useRef(new Map<string, number>());
   const saveControllersRef = useRef(new Map<string, AbortController>());
+  const videoRefsRef = useRef(new Map<string, HTMLVideoElement>());
   const saveRevisionRef = useRef<Record<string, number>>({});
   const scheduledRevisionRef = useRef<Record<string, number>>({});
 
@@ -123,7 +124,7 @@ export default function BaseDadosPage() {
     return () => window.removeEventListener("pagehide", persistDrafts);
   }, []);
 
-  const draftFor = useCallback((video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds), changedAt: 0 }, [drafts]);
+  const draftFor = useCallback((video: BaseDadosVideo): VideoDraft => drafts[video.id] ?? { description: video.description, sceneEndSeconds: String(video.sceneEndSeconds), firstGroupReactionSeconds: String(video.firstGroupReactionSeconds), secondGroupReactionSeconds: String(video.secondGroupReactionSeconds), additionalAiContext: video.additionalAiContext, changedAt: 0 }, [drafts]);
   const updateDraft = (id: string, patch: Partial<VideoDraft>) => {
     saveRevisionRef.current[id] = (saveRevisionRef.current[id] || 0) + 1;
     scheduledRevisionRef.current[id] = -1;
@@ -137,6 +138,8 @@ export default function BaseDadosPage() {
       description: sourceVideo.description,
       sceneEndSeconds: String(sourceVideo.sceneEndSeconds),
       firstGroupReactionSeconds: String(sourceVideo.firstGroupReactionSeconds),
+      secondGroupReactionSeconds: String(sourceVideo.secondGroupReactionSeconds),
+      additionalAiContext: sourceVideo.additionalAiContext,
       baseRevision: Number(sourceVideo.metadataRevision ?? 0),
       changedAt: 0,
     } : { description: "", sceneEndSeconds: "0", firstGroupReactionSeconds: "0", baseRevision: 0, changedAt: 0 });
@@ -168,19 +171,21 @@ export default function BaseDadosPage() {
     const latestVideo = databaseRef.current?.videos.find((item) => item.id === video.id) || video;
     const sceneEndSeconds = Number(draft.sceneEndSeconds);
     const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
+    const secondGroupReactionSeconds = Number(draft.secondGroupReactionSeconds);
     if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return setMessage("O tempo final precisa ser um número igual ou maior que zero.");
     if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) return setMessage("O tempo da primeira reação em grupo precisa ser igual ou maior que zero.");
+    if (!Number.isFinite(secondGroupReactionSeconds) || secondGroupReactionSeconds < 0) return setMessage("O tempo da segunda reação em grupo precisa ser igual ou maior que zero.");
     const controller = new AbortController();
     saveControllersRef.current.set(latestVideo.id, controller);
     setBusy(`save:${latestVideo.id}`); setMessage("");
     try {
-      const result = await patchBaseDadosVideo(latestVideo.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, expectedRevision: Number(latestVideo.metadataRevision ?? 0) }, controller.signal);
+      const result = await patchBaseDadosVideo(latestVideo.id, { description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, secondGroupReactionSeconds, additionalAiContext: draft.additionalAiContext || "", expectedRevision: Number(latestVideo.metadataRevision ?? 0) }, controller.signal);
       databaseRef.current = result.state;
       if (saveRevisionRef.current[latestVideo.id] !== revision) return;
       setDatabase(result.state);
       const currentDraft = draftsRef.current[latestVideo.id];
-      const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}\u0000${draft.firstGroupReactionSeconds ?? "0"}`;
-      const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}\u0000${currentDraft.firstGroupReactionSeconds ?? "0"}` : savedSignature;
+      const savedSignature = `${draft.description}\u0000${draft.sceneEndSeconds}\u0000${draft.firstGroupReactionSeconds ?? "0"}\u0000${draft.secondGroupReactionSeconds ?? "0"}\u0000${draft.additionalAiContext || ""}`;
+      const currentSignature = currentDraft ? `${currentDraft.description}\u0000${currentDraft.sceneEndSeconds}\u0000${currentDraft.firstGroupReactionSeconds ?? "0"}\u0000${currentDraft.secondGroupReactionSeconds ?? "0"}\u0000${currentDraft.additionalAiContext || ""}` : savedSignature;
       if (currentSignature === savedSignature) {
         const next = { ...draftsRef.current };
         delete next[latestVideo.id];
@@ -267,6 +272,13 @@ export default function BaseDadosPage() {
       await flushVideoDraft(id);
     }
   }, [flushVideoDraft]);
+
+  const captureVideoTime = (id: string, field: "firstGroupReactionSeconds" | "secondGroupReactionSeconds") => {
+    const currentTime = videoRefsRef.current.get(id)?.currentTime ?? Number.NaN;
+    if (!Number.isFinite(currentTime) || currentTime < 0) return setMessage("Dê play no vídeo e pause no momento desejado antes de usar Tempo real.");
+    updateDraft(id, { [field]: currentTime.toFixed(2) });
+    setMessage(`${field === "firstGroupReactionSeconds" ? "Primeira" : "Segunda"} reação registrada em ${currentTime.toFixed(2)}s.`);
+  };
 
   const deleteVideo = async (video: BaseDadosVideo) => {
     if (!window.confirm(`Excluir ${video.fileName} da Base de dados?`)) return;
@@ -537,9 +549,9 @@ export default function BaseDadosPage() {
       {!loading && !database?.videos.length && <section className={styles.emptyState}><span>▶</span><h2>Nenhum vídeo ainda</h2><p>Comece adicionando o primeiro vídeo da sua biblioteca.</p><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => uploadRef.current?.click()}>＋ Adicionar vídeo</button></section>}
       {!loading && Boolean(database?.videos.length) && !visibleVideos.length && <section className={styles.emptyState}><span>⌕</span><h2>Nenhum vídeo encontrado</h2><p>Tente outro termo ou remova o filtro atual.</p><button className={styles.secondaryButton} onClick={() => { setVideoQuery(""); setVideoFilter("all"); }}>Limpar busca e filtros</button></section>}
       {!loading && Boolean(database?.videos.length) && Boolean(visibleVideos.length) && <section className={styles.grid}>{visibleVideos.map((video) => { const draft = draftFor(video); const end = Number(draft.sceneEndSeconds); const groupStart = Number(draft.firstGroupReactionSeconds); const hasKnownDuration = Number.isFinite(video.durationSeconds) && video.durationSeconds > 0; const warning = hasKnownDuration && Number.isFinite(end) && end > video.durationSeconds; const groupWarning = hasKnownDuration && Number.isFinite(groupStart) && groupStart > video.durationSeconds; return <article className={styles.card} key={video.id}>
-        <div className={styles.player}><video key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
+        <div className={styles.player}><video ref={(element) => { if (element) videoRefsRef.current.set(video.id, element); else videoRefsRef.current.delete(video.id); }} key={video.id} src={baseDadosVideoUrl(video)} controls playsInline preload="auto" onLoadedData={(event) => { event.currentTarget.currentTime = 0; }} /></div>
         <div className={styles.cardHeader}><div className={styles.sequence}>{String(video.sequence).padStart(2, "0")}</div><div className={styles.cardTitle}><strong>Cena {String(video.sequence).padStart(2, "0")}</strong><small>{video.fileName}</small></div><span className={draft.description.trim() ? styles.ready : styles.pending}>{draft.description.trim() ? "Preenchido" : "Pendente"}</span>{video.fileAvailable === false && <span className={styles.missing}>Arquivo ausente</span>}</div>
-        <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.firstGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label></div><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
+        <div className={styles.form}><label><span>Descrição do que acontece no vídeo</span><textarea rows={5} value={draft.description} onChange={(event) => updateDraft(video.id, { description: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Descreva objetivamente o que acontece no vídeo…" /></label><div className={styles.twoTimeFields}><label><span>Tempo que acaba a cena de descrição</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.sceneEndSeconds} onChange={(event) => updateDraft(video.id, { sceneEndSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><em>segundos</em></div>{warning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da primeira reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.firstGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { firstGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><button type="button" className={styles.smallButton} onClick={() => captureVideoTime(video.id, "firstGroupReactionSeconds")}>Tempo real</button><em>segundos</em></div>{groupWarning && <small className={styles.warning}>Ultrapassa a duração total.</small>}</label><label><span>Tempo da segunda reação em grupo</span><div className={styles.seconds}><input type="number" min="0" step="0.01" value={draft.secondGroupReactionSeconds} onChange={(event) => updateDraft(video.id, { secondGroupReactionSeconds: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} /><button type="button" className={styles.smallButton} onClick={() => captureVideoTime(video.id, "secondGroupReactionSeconds")}>Tempo real</button><em>segundos</em></div></label></div><label><span>Contexto adicional para IA</span><textarea rows={3} value={draft.additionalAiContext || ""} onChange={(event) => updateDraft(video.id, { additionalAiContext: event.target.value })} onBlur={() => void flushVideoDraft(video.id)} placeholder="Informações extras para orientar a IA…" /></label><div className={styles.cardActions}><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteVideo(video)}>Excluir</button></div></div>
       </article>; })}</section>}
       {importPreview && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !importing) setImportPreview(null); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-import-title"><header><div><span className={styles.eyebrow}>IMPORTAÇÃO VALIDADA</span><h2 id="base-dados-import-title">{importPreview.validation.data?.title || "Roteiro da IA"}</h2><p>O roteiro será criado sem alterar os roteiros existentes.</p></div><button className={styles.closeButton} disabled={importing} onClick={() => setImportPreview(null)} aria-label="Fechar">×</button></header><div className={styles.importSummary}><span><strong>{importPreview.validation.data?.videos.length || 0}</strong> vídeos</span><span><strong>{importPreview.validation.data?.characters.length || 0}</strong> personagens</span><span><strong>{importPreview.validation.data?.blocks.length || 0}</strong> blocos</span></div><div className={styles.importIssues}>{importPreview.validation.issues.length ? importPreview.validation.issues.map((issue, index) => <p className={issue.level === "error" ? styles.importError : styles.warning} key={`${issue.path}-${index}`}><strong>{issue.level === "error" ? "Erro" : "Aviso"}</strong> {issue.path}: {issue.message}</p>) : <p className={styles.importSuccess}>JSON válido. Os vídeos serão vinculados à Base sem copiar os arquivos.</p>}</div>{importPreview.validation.data && <div className={styles.importPreviewList}><strong>Ordem dos vídeos</strong>{importPreview.validation.data.videos.map((video) => <span key={video.videoId}>{video.order}. {video.videoId} — {importPreview.database.videos.find((item) => item.id === video.videoId)?.description || "sem descrição"}</span>)}</div>}<footer><span>Os vídeos continuarão protegidos na Base de dados.</span><button className={styles.secondaryButton} disabled={importing} onClick={() => setImportPreview(null)}>Cancelar</button><button className={styles.actionButtonPrimary} disabled={importing || !importPreview.validation.success} onClick={() => void confirmRoteiroImport()}>{importing ? "Criando roteiro…" : "Confirmar e criar roteiro"}</button></footer></section></div>}
     </main>

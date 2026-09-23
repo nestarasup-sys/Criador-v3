@@ -17,6 +17,10 @@ export type BaseDadosVideo = {
   sceneEndSeconds: number;
   /** Segundo em que a primeira reação coletiva pode começar. */
   firstGroupReactionSeconds: number;
+  /** Segundo em que a segunda reação coletiva pode começar. */
+  secondGroupReactionSeconds: number;
+  /** Contexto adicional enviado nas exportações que alimentam a IA. */
+  additionalAiContext: string;
   /** Incremented by the local server for every metadata commit. */
   metadataRevision?: number;
   createdAt: string;

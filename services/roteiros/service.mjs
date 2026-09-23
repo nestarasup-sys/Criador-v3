@@ -1330,6 +1330,7 @@ export function createRoteirosService(rootFolder) {
           ...(Object.prototype.hasOwnProperty.call(metadata, "description") ? { description: String(metadata.description ?? "") } : {}),
           ...(Object.prototype.hasOwnProperty.call(metadata, "sceneEndSeconds") ? { sceneEndSeconds: Number(metadata.sceneEndSeconds) } : {}),
           ...(Object.prototype.hasOwnProperty.call(metadata, "firstGroupReactionSeconds") ? { firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) } : {}),
+          ...(Object.prototype.hasOwnProperty.call(metadata, "secondGroupReactionSeconds") ? { secondGroupReactionSeconds: Number(metadata.secondGroupReactionSeconds) } : {}),
           video,
           updatedAt: new Date().toISOString(),
         } : current),

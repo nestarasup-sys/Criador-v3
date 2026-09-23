@@ -55,7 +55,7 @@ export async function uploadBaseDadosVideo(file: File, durationSeconds: number) 
   return { video: result.video, state: result.state };
 }
 
-export async function patchBaseDadosVideo(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">> & { expectedRevision?: number }, signal?: AbortSignal) {
+export async function patchBaseDadosVideo(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds" | "secondGroupReactionSeconds" | "additionalAiContext">> & { expectedRevision?: number }, signal?: AbortSignal) {
   const result = await request(`/base-dados/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch), signal });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosState };
 }
@@ -80,7 +80,7 @@ export function baseDadosDraftVideoUrl(video: BaseDadosVideo) {
   return `${path}?v=${encodeURIComponent(video.contentHash || video.fileName)}`;
 }
 
-export async function patchBaseDadosDraft(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds">> & { expectedRevision?: number }) {
+export async function patchBaseDadosDraft(id: string, patch: Partial<Pick<BaseDadosVideo, "description" | "sceneEndSeconds" | "firstGroupReactionSeconds" | "secondGroupReactionSeconds" | "additionalAiContext">> & { expectedRevision?: number }) {
   const result = await request(`/base-dados/drafts/videos/${encodeURIComponent(id)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) });
   return result as unknown as { video: BaseDadosVideo; state: BaseDadosDraftState };
 }

@@ -289,6 +289,8 @@ function normalizeRoteiroSection(value) {
     shortLines: Boolean(source.shortLines),
     ...(typeof source.orderLocked === "boolean" ? { orderLocked: source.orderLocked } : {}),
     ...(Number.isFinite(Number(source.sceneEndSeconds)) && Number(source.sceneEndSeconds) >= 0 ? { sceneEndSeconds: Number(source.sceneEndSeconds) } : {}),
+    ...(Number.isFinite(Number(source.firstGroupReactionSeconds)) && Number(source.firstGroupReactionSeconds) >= 0 ? { firstGroupReactionSeconds: Number(source.firstGroupReactionSeconds) } : {}),
+    ...(Number.isFinite(Number(source.secondGroupReactionSeconds)) && Number(source.secondGroupReactionSeconds) >= 0 ? { secondGroupReactionSeconds: Number(source.secondGroupReactionSeconds) } : {}),
     ...(video ? { video } : {}),
     reactionBlocks: list(source.reactionBlocks).map(normalizeReactionBlock),
     ...(source.aiUsage && typeof source.aiUsage === "object" ? { aiUsage: normalizeAiUsage(source.aiUsage) } : {}),

@@ -127,7 +127,7 @@ export async function savePremiumCharacters(characters: Character[]) {
   });
 }
 
-export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; durationSeconds?: number; name?: string }) {
+export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; secondGroupReactionSeconds?: number; durationSeconds?: number; name?: string }) {
   const response = await localDataFetch("/base-dados/import-from-roteiro", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -192,7 +192,7 @@ export async function exportRoteiroVideos(script: ScriptProject, exportTarget: R
   const response = await localDataFetch("/roteiros/export-videos", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, exportTarget, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, sceneEndSeconds: section.sceneEndSeconds, firstGroupReactionSeconds: section.firstGroupReactionSeconds, video: section.video })) }),
+    body: JSON.stringify({ scriptId: script.id, scriptTitle: script.title, exportTarget, tiktoks: script.tiktoks.map((section) => ({ id: section.id, description: section.description, sceneEndSeconds: section.sceneEndSeconds, firstGroupReactionSeconds: section.firstGroupReactionSeconds, secondGroupReactionSeconds: section.secondGroupReactionSeconds, video: section.video })) }),
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(String(result.error || "Não foi possível exportar os vídeos."));

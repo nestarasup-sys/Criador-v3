@@ -163,6 +163,7 @@ export function createScriptFromImport(document: ImportableScriptDocument, video
       sceneGoal: "",
       sceneEndSeconds: sourceVideo.sceneEndSeconds,
       firstGroupReactionSeconds: sourceVideo.firstGroupReactionSeconds,
+      secondGroupReactionSeconds: sourceVideo.secondGroupReactionSeconds,
       userInstruction: "",
       specificRules: "",
       shortLines: false,

@@ -867,6 +867,8 @@ async function route(request, response) {
         description: body?.description ?? section.description,
         sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
         firstGroupReactionSeconds: body?.firstGroupReactionSeconds ?? section.firstGroupReactionSeconds,
+        secondGroupReactionSeconds: body?.secondGroupReactionSeconds ?? section.secondGroupReactionSeconds,
+        ...(body?.additionalAiContext !== undefined || section.video.additionalAiContext !== undefined ? { additionalAiContext: body?.additionalAiContext ?? section.video.additionalAiContext } : {}),
         durationSeconds: body?.durationSeconds ?? section.video.durationSeconds,
       });
       const updated = updatedResult.video;
@@ -877,6 +879,7 @@ async function route(request, response) {
         contentType: updated.contentType,
         size: updated.size,
         durationSeconds: updated.durationSeconds,
+        additionalAiContext: updated.additionalAiContext,
         libraryVideoId: updated.id,
         contentHash: updated.contentHash,
         updatedAt: new Date().toISOString(),
@@ -885,6 +888,7 @@ async function route(request, response) {
         description: updated.description,
         sceneEndSeconds: updated.sceneEndSeconds,
         firstGroupReactionSeconds: updated.firstGroupReactionSeconds,
+        secondGroupReactionSeconds: updated.secondGroupReactionSeconds,
       });
       sendJson(response, request, 200, { ok: true, duplicate: true, updated: true, video: { ...linkedVideo, sequence: updated.sequence, originalName: updated.originalName }, state: updatedResult.state });
       return;
@@ -900,6 +904,8 @@ async function route(request, response) {
       description: body?.description ?? section.description,
       sceneEndSeconds: body?.sceneEndSeconds ?? section.sceneEndSeconds,
       firstGroupReactionSeconds: body?.firstGroupReactionSeconds ?? section.firstGroupReactionSeconds,
+      secondGroupReactionSeconds: body?.secondGroupReactionSeconds ?? section.secondGroupReactionSeconds,
+      ...(body?.additionalAiContext !== undefined || section.video.additionalAiContext !== undefined ? { additionalAiContext: body?.additionalAiContext ?? section.video.additionalAiContext } : {}),
     });
     const sharedVideo = {
       name: imported.video.originalName,
@@ -908,6 +914,7 @@ async function route(request, response) {
       contentType: imported.video.contentType,
       size: imported.video.size,
       durationSeconds: imported.video.durationSeconds,
+        additionalAiContext: imported.video.additionalAiContext,
       libraryVideoId: imported.video.id,
       contentHash: imported.video.contentHash,
       updatedAt: new Date().toISOString(),
@@ -916,6 +923,7 @@ async function route(request, response) {
       description: imported.video.description,
       sceneEndSeconds: imported.video.sceneEndSeconds,
       firstGroupReactionSeconds: imported.video.firstGroupReactionSeconds,
+      secondGroupReactionSeconds: imported.video.secondGroupReactionSeconds,
     });
     if (sourceIsLocal) await rm(source, { force: true });
     sendJson(response, request, 200, {
@@ -1336,6 +1344,7 @@ async function route(request, response) {
         contentType: sourceVideo.contentType,
         size: sourceVideo.size,
         durationSeconds: sourceVideo.durationSeconds,
+        additionalAiContext: sourceVideo.additionalAiContext,
         libraryVideoId: sourceVideo.id,
         contentHash: sourceVideo.contentHash,
         updatedAt: new Date().toISOString(),
@@ -1426,8 +1435,10 @@ async function route(request, response) {
       const description = String(item?.description ?? "");
       const sceneEnd = Number.isFinite(Number(item?.sceneEndSeconds)) ? `${Number(item.sceneEndSeconds)} segundos` : "não definido";
       const firstGroupReaction = Number.isFinite(Number(item?.firstGroupReactionSeconds)) ? `${Number(item.firstGroupReactionSeconds)} segundos` : "não definido";
+      const secondGroupReaction = Number.isFinite(Number(item?.secondGroupReactionSeconds)) ? `${Number(item.secondGroupReactionSeconds)} segundos` : "não definido";
+      const additionalAiContext = String(item?.additionalAiContext || "");
       const duration = Number(item?.video?.durationSeconds) > 0 ? `${Number(item.video.durationSeconds)} segundos` : "não disponível";
-      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nDuração total do vídeo: ${duration}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\n`);
+      descriptionLines.push(`${number}.mp4\nDescrição: ${description}\nDuração total do vídeo: ${duration}\nCena da descrição termina no segundo: ${sceneEnd}\nPrimeira reação em grupo pode começar no segundo: ${firstGroupReaction}\nSegunda reação em grupo pode começar no segundo: ${secondGroupReaction}\nContexto adicional para IA: ${additionalAiContext || "não informado"}\n`);
     }
     const exportResults = await runWithConcurrency(tiktoks, 2, async (item, index) => {
       const number = String(index + 1).padStart(2, "0");

@@ -6,6 +6,8 @@ export type BaseDadosDraft = {
   description: string;
   sceneEndSeconds: string;
   firstGroupReactionSeconds?: string;
+  secondGroupReactionSeconds?: string;
+  additionalAiContext?: string;
   /** Revision from which this browser recovery draft was created. */
   baseRevision?: number;
   changedAt: number;
@@ -26,7 +28,7 @@ export function readBaseDadosDrafts(storage: StorageLike | null | undefined): Ba
       if (typeof draft.description !== "string" || typeof draft.sceneEndSeconds !== "string") return [];
       const changedAt = Number(draft.changedAt);
       const baseRevision = Number(draft.baseRevision);
-      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, ...(typeof draft.firstGroupReactionSeconds === "string" ? { firstGroupReactionSeconds: draft.firstGroupReactionSeconds } : {}), ...(Number.isInteger(baseRevision) && baseRevision >= 0 ? { baseRevision } : {}), changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
+      return [[id, { description: draft.description, sceneEndSeconds: draft.sceneEndSeconds, ...(typeof draft.firstGroupReactionSeconds === "string" ? { firstGroupReactionSeconds: draft.firstGroupReactionSeconds } : {}), ...(typeof draft.secondGroupReactionSeconds === "string" ? { secondGroupReactionSeconds: draft.secondGroupReactionSeconds } : {}), ...(typeof draft.additionalAiContext === "string" ? { additionalAiContext: draft.additionalAiContext } : {}), ...(Number.isInteger(baseRevision) && baseRevision >= 0 ? { baseRevision } : {}), changedAt: Number.isFinite(changedAt) ? changedAt : 0 } satisfies BaseDadosDraft]];
     }));
   } catch {
     return {};
@@ -49,7 +51,9 @@ export function writeBaseDadosDrafts(storage: StorageLike | null | undefined, dr
 export function draftDiffersFromVideo(draft: BaseDadosDraft, video: BaseDadosVideo) {
   const draftEnd = Number(draft.sceneEndSeconds);
   const draftGroupStart = draft.firstGroupReactionSeconds === undefined ? video.firstGroupReactionSeconds : Number(draft.firstGroupReactionSeconds);
-  return draft.description !== video.description || !Number.isFinite(draftEnd) || draftEnd !== video.sceneEndSeconds || !Number.isFinite(draftGroupStart) || draftGroupStart !== video.firstGroupReactionSeconds;
+  const draftSecondGroupStart = draft.secondGroupReactionSeconds === undefined ? video.secondGroupReactionSeconds : Number(draft.secondGroupReactionSeconds);
+  const draftContext = draft.additionalAiContext === undefined ? video.additionalAiContext : draft.additionalAiContext;
+  return draft.description !== video.description || !Number.isFinite(draftEnd) || draftEnd !== video.sceneEndSeconds || !Number.isFinite(draftGroupStart) || draftGroupStart !== video.firstGroupReactionSeconds || !Number.isFinite(draftSecondGroupStart) || draftSecondGroupStart !== video.secondGroupReactionSeconds || draftContext !== video.additionalAiContext;
 }
 
 export function recoverBaseDadosDrafts(database: BaseDadosState, drafts: BaseDadosDrafts): BaseDadosDrafts {

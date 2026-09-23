@@ -99,7 +99,7 @@ export function createDraftsService(root, baseDadosService) {
       const previous = currentByHash.get(contentHash) || currentByName.get(entry.name);
       const now = previous?.createdAt || new Date().toISOString();
       discovered.push({
-        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0 }),
+        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0, secondGroupReactionSeconds: 0, additionalAiContext: "" }),
         fileName: entry.name,
         originalName: previous?.originalName || entry.name,
         storedPath: `base-de-dados/rascunhos/videos/${entry.name}`,
@@ -109,6 +109,8 @@ export function createDraftsService(root, baseDadosService) {
         durationSeconds: Number(previous?.durationSeconds) >= 0 ? Number(previous.durationSeconds) : 0,
         sceneEndSeconds: Number(previous?.sceneEndSeconds) >= 0 ? Number(previous.sceneEndSeconds) : 0,
         firstGroupReactionSeconds: Number(previous?.firstGroupReactionSeconds) >= 0 ? Number(previous.firstGroupReactionSeconds) : 0,
+        secondGroupReactionSeconds: Number(previous?.secondGroupReactionSeconds) >= 0 ? Number(previous.secondGroupReactionSeconds) : 0,
+        additionalAiContext: typeof previous?.additionalAiContext === "string" ? previous.additionalAiContext : "",
         createdAt: now,
         updatedAt: new Date().toISOString(),
         fileAvailable: true,
@@ -176,10 +178,12 @@ export function createDraftsService(root, baseDadosService) {
           if (expectedRevision !== undefined && (!Number.isInteger(expectedRevision) || expectedRevision !== currentRevision)) throw Object.assign(new Error("Este rascunho foi alterado por outra operação. Recarregue antes de salvar."), { status: 409, code: "STALE_DRAFT_REVISION", entity: "base-draft", entityId: videoMatch[1], currentRevision });
           const end = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
+          const secondGroupReactionSeconds = body?.secondGroupReactionSeconds === undefined ? Number(current.secondGroupReactionSeconds ?? 0) : Number(body.secondGroupReactionSeconds);
           if (!Number.isFinite(end) || end < 0) throw Object.assign(new Error("O tempo final precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SCENE_END" });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_GROUP_REACTION_START" });
+          if (!Number.isFinite(secondGroupReactionSeconds) || secondGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da segunda reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SECOND_GROUP_REACTION_START" });
           const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
-          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
+          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, secondGroupReactionSeconds, ...(Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? { additionalAiContext: String(body.additionalAiContext ?? "") } : {}), metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;
@@ -214,7 +218,7 @@ export function createDraftsService(root, baseDadosService) {
           if (!item) throw Object.assign(new Error("Rascunho não encontrado."), { status: 404, code: "DRAFT_NOT_FOUND" });
           const source = draftPath(item);
           if (!(await exists(source))) throw Object.assign(new Error("O arquivo do rascunho não está na pasta."), { status: 409, code: "DRAFT_FILE_MISSING" });
-          const imported = await baseDadosService.importFile(source, { name: item.originalName || item.fileName, contentType: item.contentType, durationSeconds: item.durationSeconds, description: item.description, sceneEndSeconds: item.sceneEndSeconds, firstGroupReactionSeconds: item.firstGroupReactionSeconds });
+          const imported = await baseDadosService.importFile(source, { name: item.originalName || item.fileName, contentType: item.contentType, durationSeconds: item.durationSeconds, description: item.description, sceneEndSeconds: item.sceneEndSeconds, firstGroupReactionSeconds: item.firstGroupReactionSeconds, secondGroupReactionSeconds: item.secondGroupReactionSeconds, additionalAiContext: item.additionalAiContext });
           if (imported.duplicate) return { duplicate: true, video: imported.video, state };
           if (!(await exists(imported.video.absolutePath))) throw Object.assign(new Error("A Base não confirmou o arquivo importado."), { status: 500, code: "DRAFT_IMPORT_UNCONFIRMED" });
           await rm(source, { force: false });

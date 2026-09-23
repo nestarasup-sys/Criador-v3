@@ -9,7 +9,7 @@ export type BaseDadosCharacterExport = {
   narrativeProfile?: NarrativeProfile;
 };
 
-export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string };
+export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string; secondGroupReactionSeconds?: string; additionalAiContext?: string };
 
 /** Mescla alterações ainda não confirmadas pelo autosave no snapshot exportado. */
 export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<string, BaseDadosVideoDraft>) {
@@ -22,7 +22,8 @@ export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<st
       if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return video;
       if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds };
       const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
-      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds } : video;
+      const secondGroupReactionSeconds = Number(draft.secondGroupReactionSeconds);
+      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, ...(Number.isFinite(secondGroupReactionSeconds) && secondGroupReactionSeconds >= 0 ? { secondGroupReactionSeconds } : {}), ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }) } : video;
     }),
   };
 }
@@ -64,6 +65,9 @@ export function buildBaseDadosExportText(
     video.description.trim() || "Não preenchida.",
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
+    `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    "CONTEXTO ADICIONAL PARA IA:",
+    video.additionalAiContext?.trim() || "Não informado.",
     `TEMPO TOTAL DO VÍDEO: ${formatSeconds(video.durationSeconds)} segundos`,
   ].join("\n"));
 
@@ -100,6 +104,9 @@ export function buildBaseDadosSimpleExportText(
     video.description.trim() || "Não preenchida.",
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
+    `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    "CONTEXTO ADICIONAL PARA IA:",
+    video.additionalAiContext?.trim() || "Não informado.",
   ].join("\n"));
   const narrativeProfile = (profile: NarrativeProfile | undefined) => profile ? {
     personality: profile.personality,

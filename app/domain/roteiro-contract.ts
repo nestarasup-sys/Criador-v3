@@ -37,7 +37,7 @@ export type ReactionBlock = {
 };
 export type TikTokVideoReference = {
   name: string; storedPath: string; url?: string; contentType: string;
-  size: number; updatedAt: string; durationSeconds?: number; libraryVideoId?: string; contentHash?: string;
+  size: number; updatedAt: string; durationSeconds?: number; libraryVideoId?: string; contentHash?: string; additionalAiContext?: string;
 };
 export type AiUsageTotals = {
   calls: number;
@@ -54,7 +54,7 @@ export type RoteiroBackgroundReference = {
 };
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
-  sceneGoal: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; userInstruction: string; aiDirectives?: string[]; specificRules: string; shortLines: boolean; orderLocked?: boolean;
+  sceneGoal: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; secondGroupReactionSeconds?: number; userInstruction: string; aiDirectives?: string[]; specificRules: string; shortLines: boolean; orderLocked?: boolean;
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
   aiUsage?: AiUsageTotals;
   createdAt: string; updatedAt: string;
