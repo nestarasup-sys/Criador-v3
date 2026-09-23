@@ -98,7 +98,8 @@
 .form { display:grid; gap:15px; padding:17px; }
 .categoryControl { position:relative; z-index:20; display:inline-flex; align-items:flex-start; width:max-content; max-width:100%; }
 .categoryMenu { position:absolute; z-index:40; top:calc(100% + 7px); left:0; display:grid; min-width:220px; max-width:min(320px,calc(100vw - 40px)); padding:6px; border:1px solid #e1d6f0; border-radius:12px; background:#fff; box-shadow:0 16px 35px rgba(54,38,75,.22); }
-.categoryMenu button { padding:9px 11px; border:0; border-radius:8px; color:#665577; background:transparent; text-align:left; font:inherit; font-size:11px; cursor:pointer; }
+.categoryMenu button { padding:9px 11px; border:0; border-left:3px solid transparent; border-radius:8px; color:#665577; background:transparent; text-align:left; font:inherit; font-size:11px; cursor:pointer; transition:filter .15s ease,transform .15s ease; }
+.categoryMenu button:hover,.categoryMenu button:focus-visible { transform:translateX(2px); filter:saturate(1.08); }
 .categoryMenu button:hover,.categoryMenu button:focus-visible { color:#633ab7; background:#f3ebff; font-weight:800; outline:none; }
 .form label { display:grid; gap:6px; }
 .twoTimeFields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
