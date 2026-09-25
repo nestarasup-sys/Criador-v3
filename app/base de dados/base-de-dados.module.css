@@ -96,7 +96,7 @@
 .metaIdentity .sequence { width:34px; height:30px; border-radius:9px; font-size:12px; }
 .meta span { display:grid; gap:4px; min-width:0; overflow:hidden; color:#665a70; font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
 .meta b { color:#9c8fa4; font-size:8px; letter-spacing:.08em; text-transform:uppercase; }
-.form { position:relative; display:flex; flex-direction:column; gap:15px; padding:17px; }
+.form { position:relative; display:flex; flex-direction:column; gap:11px; padding:8px 17px 17px; }
 .form > .categoryControl { position:absolute; z-index:20; top:-55px; right:105px; display:inline-flex; align-items:flex-start; width:max-content; max-width:calc(100% - 122px); }
 .form > label:first-of-type { order:2; }
 .form > .sceneTimingPanel { order:1; }
@@ -120,14 +120,15 @@
 .reactionPanel header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
 .reactionPanel header span { color:#443451; font-size:11px; font-weight:900; }
 .reactionPanel header b { padding:3px 6px; border-radius:99px; font-size:8px; letter-spacing:.08em; }
-.reactionPanelFirst { border-color:#d7c6f3; background:#f6f0ff; }
-.reactionPanelFirst header b { color:#6841bb; background:#e5d8ff; }
-.reactionPanelSecond { border-color:#f0cbd8; background:#fff4f7; }
-.reactionPanelSecond header b { color:#b04772; background:#ffdce8; }
-.reactionInputs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+.reactionPanelFirst { border-color:#7139d7; background:linear-gradient(145deg,#100d18,#241044); }
+.reactionPanelFirst header b { color:#fff; background:#6734c5; }
+.reactionPanelSecond { border-color:#ad3ec8; background:linear-gradient(145deg,#170d1a,#3a103f); }
+.reactionPanelSecond header b { color:#fff; background:#a635b9; }
+.reactionPanel header span,.reactionInputs label>span { color:#fff; }
+.reactionInputs { display:grid; grid-template-columns:1fr; gap:9px; }
 .reactionInputs label { min-width:0; }
 .reactionInputs label>span { font-size:10px; }
-.reactionInputs .seconds { gap:5px; }
+.reactionInputs .seconds { display:grid; grid-template-columns:minmax(0,1fr) auto auto; gap:5px; }
 .reactionInputs .seconds input { width:100%; min-width:0; }
 .countInput { width:100%; height:38px; padding:0 10px; border:1px solid #ddd3e7; border-radius:10px; color:#46394f; background:#fff; font:inherit; font-size:12px; outline:none; }
 .countInput:focus { border-color:#9c77d8; box-shadow:0 0 0 3px rgba(145,104,211,.12); }
@@ -137,7 +138,7 @@
 .form textarea:focus,.seconds input:focus { border-color:#9c77d8; box-shadow:0 0 0 3px rgba(145,104,211,.12); }
 .seconds { display:flex; align-items:center; gap:9px; }
 .seconds input { width:125px; height:38px; padding:0 10px; }
-.seconds em { color:#88788e; font-size:11px; font-style:normal; }
+.seconds em { align-self:center; color:#e2d5ef; font-size:11px; font-style:normal; }
 .warning { color:#b16623; font-size:10px; }
 .missing { padding:5px 8px; border-radius:99px; color:#a33f53!important; background:#fff0f3; font-size:9px!important; font-weight:900; white-space:nowrap; }
 .cardActions { display:flex; gap:8px; padding-top:2px; }
