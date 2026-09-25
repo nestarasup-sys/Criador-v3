@@ -54,7 +54,7 @@ function sendJson(response, headers, status, value) {
 }
 
 function normalizeState(value) {
-  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, metadataRevision: Number.isInteger(item.metadataRevision) && item.metadataRevision >= 0 ? item.metadataRevision : 0, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0, secondGroupReactionSeconds: Number.isFinite(Number(item.secondGroupReactionSeconds)) && Number(item.secondGroupReactionSeconds) >= 0 ? Number(item.secondGroupReactionSeconds) : 0, additionalAiContext: typeof item.additionalAiContext === "string" ? item.additionalAiContext : "", category: typeof item.category === "string" ? item.category : "" })) : [];
+  const videos = Array.isArray(value?.videos) ? value.videos.filter((item) => item && typeof item.id === "string").map((item) => ({ ...item, metadataRevision: Number.isInteger(item.metadataRevision) && item.metadataRevision >= 0 ? item.metadataRevision : 0, firstGroupReactionSeconds: Number.isFinite(Number(item.firstGroupReactionSeconds)) && Number(item.firstGroupReactionSeconds) >= 0 ? Number(item.firstGroupReactionSeconds) : 0, firstGroupReactionSpeechCount: Number.isInteger(Number(item.firstGroupReactionSpeechCount)) && Number(item.firstGroupReactionSpeechCount) >= 0 ? Number(item.firstGroupReactionSpeechCount) : 0, secondGroupReactionSeconds: Number.isFinite(Number(item.secondGroupReactionSeconds)) && Number(item.secondGroupReactionSeconds) >= 0 ? Number(item.secondGroupReactionSeconds) : 0, secondGroupReactionSpeechCount: Number.isInteger(Number(item.secondGroupReactionSpeechCount)) && Number(item.secondGroupReactionSpeechCount) >= 0 ? Number(item.secondGroupReactionSpeechCount) : 0, additionalAiContext: typeof item.additionalAiContext === "string" ? item.additionalAiContext : "", category: typeof item.category === "string" ? item.category : "" })) : [];
   const highestSequence = videos.reduce((highest, item) => Math.max(highest, Number(item.sequence) || 0), 0);
   const requestedNext = Number(value?.nextSequence);
   const nextSequence = Number.isInteger(requestedNext) && requestedNext > highestSequence ? requestedNext : highestSequence + 1;
@@ -184,7 +184,9 @@ export function createBaseDadosService(root) {
       description,
       ...(Number.isFinite(sceneEnd) && sceneEnd >= 0 ? { sceneEndSeconds: sceneEnd } : {}),
       ...(Number.isFinite(Number(metadata.firstGroupReactionSeconds)) && Number(metadata.firstGroupReactionSeconds) >= 0 ? { firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) } : {}),
+      ...(Number.isInteger(Number(metadata.firstGroupReactionSpeechCount)) && Number(metadata.firstGroupReactionSpeechCount) >= 0 ? { firstGroupReactionSpeechCount: Number(metadata.firstGroupReactionSpeechCount) } : {}),
       ...(Number.isFinite(Number(metadata.secondGroupReactionSeconds)) && Number(metadata.secondGroupReactionSeconds) >= 0 ? { secondGroupReactionSeconds: Number(metadata.secondGroupReactionSeconds) } : {}),
+      ...(Number.isInteger(Number(metadata.secondGroupReactionSpeechCount)) && Number(metadata.secondGroupReactionSpeechCount) >= 0 ? { secondGroupReactionSpeechCount: Number(metadata.secondGroupReactionSpeechCount) } : {}),
       ...(Object.prototype.hasOwnProperty.call(metadata || {}, "additionalAiContext") ? { additionalAiContext: String(metadata.additionalAiContext ?? "") } : {}),
       ...(Number.isFinite(duration) && duration >= 0 ? { durationSeconds: duration } : {}),
       metadataRevision: Number(item.metadataRevision ?? 0) + 1,
@@ -228,7 +230,9 @@ export function createBaseDadosService(root) {
       description: String(metadata.description || ""),
       sceneEndSeconds: Number(metadata.sceneEndSeconds) >= 0 ? Number(metadata.sceneEndSeconds) : 0,
       firstGroupReactionSeconds: Number(metadata.firstGroupReactionSeconds) >= 0 ? Number(metadata.firstGroupReactionSeconds) : 0,
+      firstGroupReactionSpeechCount: Number.isInteger(Number(metadata.firstGroupReactionSpeechCount)) && Number(metadata.firstGroupReactionSpeechCount) >= 0 ? Number(metadata.firstGroupReactionSpeechCount) : 0,
       secondGroupReactionSeconds: Number(metadata.secondGroupReactionSeconds) >= 0 ? Number(metadata.secondGroupReactionSeconds) : 0,
+      secondGroupReactionSpeechCount: Number.isInteger(Number(metadata.secondGroupReactionSpeechCount)) && Number(metadata.secondGroupReactionSpeechCount) >= 0 ? Number(metadata.secondGroupReactionSpeechCount) : 0,
       additionalAiContext: String(metadata.additionalAiContext || ""),
       category: typeof metadata.category === "string" ? metadata.category : "",
       metadataRevision: 0,
@@ -332,13 +336,17 @@ export function createBaseDadosService(root) {
           }
           const sceneEndSeconds = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
+          const firstGroupReactionSpeechCount = body?.firstGroupReactionSpeechCount === undefined ? Number(current.firstGroupReactionSpeechCount ?? 0) : Number(body.firstGroupReactionSpeechCount);
           const secondGroupReactionSeconds = body?.secondGroupReactionSeconds === undefined ? Number(current.secondGroupReactionSeconds ?? 0) : Number(body.secondGroupReactionSeconds);
+          const secondGroupReactionSpeechCount = body?.secondGroupReactionSpeechCount === undefined ? Number(current.secondGroupReactionSpeechCount ?? 0) : Number(body.secondGroupReactionSpeechCount);
           const category = body?.category === undefined ? String(current.category || "") : String(body.category || "");
           if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) throw Object.assign(new Error("O tempo final precisa ser um número igual ou maior que zero."), { status: 400 });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
+          if (!Number.isInteger(firstGroupReactionSpeechCount) || firstGroupReactionSpeechCount < 0) throw Object.assign(new Error("A quantidade de falas da primeira reação precisa ser um número inteiro igual ou maior que zero."), { status: 400 });
           if (!Number.isFinite(secondGroupReactionSeconds) || secondGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da segunda reação em grupo precisa ser igual ou maior que zero."), { status: 400 });
+          if (!Number.isInteger(secondGroupReactionSpeechCount) || secondGroupReactionSpeechCount < 0) throw Object.assign(new Error("A quantidade de falas da segunda reação precisa ser um número inteiro igual ou maior que zero."), { status: 400 });
           const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
-          const updated = { ...current, description, sceneEndSeconds, firstGroupReactionSeconds, secondGroupReactionSeconds, additionalAiContext: Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? String(body.additionalAiContext ?? "") : String(current.additionalAiContext || ""), category, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
+          const updated = { ...current, description, sceneEndSeconds, firstGroupReactionSeconds, firstGroupReactionSpeechCount, secondGroupReactionSeconds, secondGroupReactionSpeechCount, additionalAiContext: Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? String(body.additionalAiContext ?? "") : String(current.additionalAiContext || ""), category, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           state.videos = state.videos.map((video) => video.id === id ? updated : video);
           await persist();
           return { video: await withFileStatus(root, updated), state, revision: updated.metadataRevision };

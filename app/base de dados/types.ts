@@ -17,8 +17,12 @@ export type BaseDadosVideo = {
   sceneEndSeconds: number;
   /** Segundo em que a primeira reação coletiva pode começar. */
   firstGroupReactionSeconds: number;
+  /** Quantidade planejada de falas na primeira reação coletiva. */
+  firstGroupReactionSpeechCount: number;
   /** Segundo em que a segunda reação coletiva pode começar. */
   secondGroupReactionSeconds: number;
+  /** Quantidade planejada de falas na segunda reação coletiva. */
+  secondGroupReactionSpeechCount: number;
   /** Contexto adicional enviado nas exportações que alimentam a IA. */
   additionalAiContext: string;
   /** Categoria editorial usada para filtrar exportações. */

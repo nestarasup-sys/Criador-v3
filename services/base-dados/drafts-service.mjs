@@ -99,7 +99,7 @@ export function createDraftsService(root, baseDadosService) {
       const previous = currentByHash.get(contentHash) || currentByName.get(entry.name);
       const now = previous?.createdAt || new Date().toISOString();
       discovered.push({
-        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0, secondGroupReactionSeconds: 0, additionalAiContext: "", category: "" }),
+        ...(previous || { id: `draft-${contentHash.slice(0, 24)}`, description: "", sceneEndSeconds: 0, firstGroupReactionSeconds: 0, firstGroupReactionSpeechCount: 0, secondGroupReactionSeconds: 0, secondGroupReactionSpeechCount: 0, additionalAiContext: "", category: "" }),
         fileName: entry.name,
         originalName: previous?.originalName || entry.name,
         storedPath: `base-de-dados/rascunhos/videos/${entry.name}`,
@@ -109,7 +109,9 @@ export function createDraftsService(root, baseDadosService) {
         durationSeconds: Number(previous?.durationSeconds) >= 0 ? Number(previous.durationSeconds) : 0,
         sceneEndSeconds: Number(previous?.sceneEndSeconds) >= 0 ? Number(previous.sceneEndSeconds) : 0,
         firstGroupReactionSeconds: Number(previous?.firstGroupReactionSeconds) >= 0 ? Number(previous.firstGroupReactionSeconds) : 0,
+        firstGroupReactionSpeechCount: Number.isInteger(Number(previous?.firstGroupReactionSpeechCount)) && Number(previous.firstGroupReactionSpeechCount) >= 0 ? Number(previous.firstGroupReactionSpeechCount) : 0,
         secondGroupReactionSeconds: Number(previous?.secondGroupReactionSeconds) >= 0 ? Number(previous.secondGroupReactionSeconds) : 0,
+        secondGroupReactionSpeechCount: Number.isInteger(Number(previous?.secondGroupReactionSpeechCount)) && Number(previous.secondGroupReactionSpeechCount) >= 0 ? Number(previous.secondGroupReactionSpeechCount) : 0,
         additionalAiContext: typeof previous?.additionalAiContext === "string" ? previous.additionalAiContext : "",
         category: typeof previous?.category === "string" ? previous.category : "",
         createdAt: now,
@@ -179,13 +181,17 @@ export function createDraftsService(root, baseDadosService) {
           if (expectedRevision !== undefined && (!Number.isInteger(expectedRevision) || expectedRevision !== currentRevision)) throw Object.assign(new Error("Este rascunho foi alterado por outra operação. Recarregue antes de salvar."), { status: 409, code: "STALE_DRAFT_REVISION", entity: "base-draft", entityId: videoMatch[1], currentRevision });
           const end = body?.sceneEndSeconds === undefined ? Number(current.sceneEndSeconds ?? 0) : Number(body.sceneEndSeconds);
           const firstGroupReactionSeconds = body?.firstGroupReactionSeconds === undefined ? Number(current.firstGroupReactionSeconds ?? 0) : Number(body.firstGroupReactionSeconds);
+          const firstGroupReactionSpeechCount = body?.firstGroupReactionSpeechCount === undefined ? Number(current.firstGroupReactionSpeechCount ?? 0) : Number(body.firstGroupReactionSpeechCount);
           const secondGroupReactionSeconds = body?.secondGroupReactionSeconds === undefined ? Number(current.secondGroupReactionSeconds ?? 0) : Number(body.secondGroupReactionSeconds);
+          const secondGroupReactionSpeechCount = body?.secondGroupReactionSpeechCount === undefined ? Number(current.secondGroupReactionSpeechCount ?? 0) : Number(body.secondGroupReactionSpeechCount);
           const category = body?.category === undefined ? String(current.category || "") : String(body.category || "");
           if (!Number.isFinite(end) || end < 0) throw Object.assign(new Error("O tempo final precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SCENE_END" });
           if (!Number.isFinite(firstGroupReactionSeconds) || firstGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da primeira reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_GROUP_REACTION_START" });
+          if (!Number.isInteger(firstGroupReactionSpeechCount) || firstGroupReactionSpeechCount < 0) throw Object.assign(new Error("A quantidade de falas da primeira reação precisa ser um número inteiro igual ou maior que zero."), { status: 400, code: "INVALID_FIRST_SPEECH_COUNT" });
           if (!Number.isFinite(secondGroupReactionSeconds) || secondGroupReactionSeconds < 0) throw Object.assign(new Error("O tempo da segunda reação em grupo precisa ser igual ou maior que zero."), { status: 400, code: "INVALID_SECOND_GROUP_REACTION_START" });
+          if (!Number.isInteger(secondGroupReactionSpeechCount) || secondGroupReactionSpeechCount < 0) throw Object.assign(new Error("A quantidade de falas da segunda reação precisa ser um número inteiro igual ou maior que zero."), { status: 400, code: "INVALID_SECOND_SPEECH_COUNT" });
           const description = Object.prototype.hasOwnProperty.call(body || {}, "description") ? String(body.description ?? "") : String(current.description || "");
-          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, secondGroupReactionSeconds, additionalAiContext: Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? String(body.additionalAiContext ?? "") : String(current.additionalAiContext || ""), category, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
+          state.videos[index] = { ...current, description, sceneEndSeconds: end, firstGroupReactionSeconds, firstGroupReactionSpeechCount, secondGroupReactionSeconds, secondGroupReactionSpeechCount, additionalAiContext: Object.prototype.hasOwnProperty.call(body || {}, "additionalAiContext") ? String(body.additionalAiContext ?? "") : String(current.additionalAiContext || ""), category, metadataRevision: currentRevision + 1, updatedAt: new Date().toISOString() };
           await persist(); return state.videos[index];
         });
         sendJson(response, responseHeaders, 200, { ok: true, video: result, state }); return true;
