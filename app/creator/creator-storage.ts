@@ -179,6 +179,8 @@ async function pcRequest(path: string, init?: RequestInit) {
 }
 
 const characterRevisions = new Map<string, { revision: number; updatedAt: string }>();
+const characterSnapshots = new Map<string, Record<string, unknown>>();
+const MAX_CHARACTER_REBASE_RETRIES = 2;
 type CharacterSaveResult = {
   status: "pc-saved";
   entityId: string;
@@ -204,6 +206,8 @@ export async function loadPcState(): Promise<PcState> {
   const response = await pcRequest("/state");
   const state = await response.json() as PcState;
   for (const character of state.characters ?? []) {
+    const payload = characterWithoutPhotos(character);
+    characterSnapshots.set(character.id, payload);
     if (Number.isInteger(character.persistenceRevision)) characterRevisions.set(character.id, { revision: character.persistenceRevision!, updatedAt: character.updatedAt });
   }
   return state;
@@ -269,6 +273,41 @@ function characterWithoutPhotos(character: Character) {
   return { ...withoutPhotos, ...(Number.isInteger(persistenceRevision) ? { persistenceRevision } : {}) };
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Reapplies only fields changed locally since the last server snapshot.
+ * Arrays are intentionally atomic: a local edit to a list must not be
+ * partially merged with a newer list from another window.
+ */
+function mergeCharacterChanges(base: unknown, local: unknown, remote: unknown): unknown {
+  if (isPlainRecord(base) && isPlainRecord(local) && isPlainRecord(remote)) {
+    const keys = new Set([...Object.keys(base), ...Object.keys(local), ...Object.keys(remote)]);
+    const merged: Record<string, unknown> = { ...remote };
+    for (const key of keys) {
+      const localValue = local[key];
+      const baseValue = base[key];
+      if (stableSerialize(localValue) === stableSerialize(baseValue)) continue;
+      if (localValue === undefined) delete merged[key];
+      else merged[key] = mergeCharacterChanges(baseValue, localValue, remote[key]);
+    }
+    return merged;
+  }
+  return stableSerialize(local) === stableSerialize(base) ? remote : local;
+}
+
+async function reloadCharacterForRebase(id: string) {
+  const response = await pcRequest(`/characters/${encodeURIComponent(id)}`, { cache: "no-store" });
+  const result = await response.json() as { character?: Character };
+  if (!result.character) throw new Error("O servidor não retornou o personagem atualizado.");
+  const { photoUrl: _photoUrl, photoDataUrl: _photoDataUrl, ...remote } = result.character;
+  void _photoUrl;
+  void _photoDataUrl;
+  return remote;
+}
+
 async function flushCharacterSaves() {
   while (pendingCharacterBody !== null) {
     const body = pendingCharacterBody;
@@ -325,21 +364,46 @@ export function saveCharacterToPc(character: Character) {
 
   const operation: Promise<CharacterSaveResult> = characterItemQueue.catch(() => undefined).then(async () => {
     const startedAt = Date.now();
+    let requestPayload = payload as Record<string, unknown>;
+    let requestBody = body;
+    let retryCount = 0;
     try {
-      const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body,
-      });
-      const result = await response.json() as { revision?: number; savedAt?: string };
-      if (Number.isInteger(result.revision)) characterRevisions.set(character.id, { revision: result.revision!, updatedAt: character.updatedAt });
+      let result: { revision?: number; savedAt?: string } | null = null;
+      while (!result) {
+        try {
+          const response = await pcRequest(`/characters/${encodeURIComponent(character.id)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: requestBody,
+          });
+          result = await response.json() as { revision?: number; savedAt?: string };
+        } catch (error) {
+          if ((error as { status?: number })?.status !== 409 || retryCount >= MAX_CHARACTER_REBASE_RETRIES) throw error;
+          const remote = await reloadCharacterForRebase(character.id);
+          const base = characterSnapshots.get(character.id);
+          requestPayload = (base
+            ? mergeCharacterChanges(base, requestPayload, remote)
+            : { ...remote, ...requestPayload }) as Record<string, unknown>;
+          requestPayload.persistenceRevision = remote.persistenceRevision;
+          requestBody = JSON.stringify(requestPayload);
+          retryCount += 1;
+          characterRevisions.set(character.id, {
+            revision: Number(remote.persistenceRevision) || 0,
+            updatedAt: String(remote.updatedAt || ""),
+          });
+        }
+      }
+      if (Number.isInteger(result.revision)) {
+        characterRevisions.set(character.id, { revision: result.revision!, updatedAt: String(requestPayload.updatedAt || character.updatedAt || "") });
+        characterSnapshots.set(character.id, { ...requestPayload, persistenceRevision: result.revision });
+      }
       await markCharacterCheckpointSynced(character.id).catch(() => undefined);
       notifyPcPersistenceRecovered();
-      notifyPcPersistenceMetric("character", body.length, startedAt, "ok");
-        return { status: "pc-saved", entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
+      notifyPcPersistenceMetric("character", requestBody.length, startedAt, "ok");
+      return { status: "pc-saved", entityId: character.id, revision: result.revision ?? 0, savedAt: result.savedAt ?? new Date().toISOString() };
     } catch (error) {
       if ((error as { status?: number })?.status !== 409) notifyPcPersistenceFailure("character", error);
-      notifyPcPersistenceMetric("character", body.length, startedAt, "error", error);
+      notifyPcPersistenceMetric("character", requestBody.length, startedAt, "error", error);
       throw error;
     }
   });
@@ -358,6 +422,7 @@ export function deleteCharacterFromPc(id: string) {
     try {
       await pcRequest(`/characters/${encodeURIComponent(id)}`, { method: "DELETE" });
       characterRevisions.delete(id);
+      characterSnapshots.delete(id);
       await markCharacterDeletionSynced(id).catch(() => undefined);
       notifyPcPersistenceRecovered();
       notifyPcPersistenceMetric("character-delete", 0, startedAt, "ok");
