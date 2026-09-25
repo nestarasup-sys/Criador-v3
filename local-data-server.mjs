@@ -61,7 +61,7 @@ const ROTEIRO_EXPORT_TARGETS = Object.freeze({
     root: resolve(process.env.GACHA_EDITOR_V4_PROJECTS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR V4\\projects"),
   }),
 });
-const ROTEIRO_V4_LOADING_ASSET = resolve(process.env.GACHA_EDITOR_V4_LOADING_ASSET ?? "D:\\EDITOR WEB 2\\EDITOR V4\\projects\\FYN_VISOES_DO_RETORNO_GUIA_V10\\assets\\ui\\loading.gif");
+const ROTEIRO_V4_LOADING_ASSET = resolve(process.env.GACHA_EDITOR_V4_LOADING_ASSET ?? join(ROTEIRO_EXPORT_TARGETS.v4.root, "FYN — Visões do Retorno e Marek", "assets", "ui", "loading.gif"));
 const ROTEIRO_EXPORT_MANIFEST = ".nymi-script.json";
 function roteiroExportTarget(value) {
   const target = String(value || "v4").trim().toLowerCase();
