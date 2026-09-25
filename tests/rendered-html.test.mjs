@@ -987,6 +987,8 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /moveSelectedOutfitsToV0/);
   assert.match(page, /category === "cabelos"/);
   assert.match(page, /Par frontal \+ traseiro/);
+  assert.match(catalogHeader, /Par V2/);
+  assert.match(catalogHeader, /cabelo frontal acima e cabelo traseiro abaixo/);
   assert.match(page, /openV0Catalog/);
   assert.match(page, /Catálogo V0/);
   assert.match(page, /openCatalogTransfer/);

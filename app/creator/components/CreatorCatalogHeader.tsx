@@ -67,6 +67,9 @@ export function CreatorCatalogHeader({ category, faceMode, compositionMode, comp
           <button className="add-button" onClick={() => fileInputRef.current?.click()} disabled={isProcessing} title="Importar um par: traseiro à esquerda e frontal à direita">
             ＋ Par
           </button>
+          <button type="button" className="sheet-button" disabled title="Par V2: cabelo frontal acima e cabelo traseiro abaixo">
+            Par V2
+          </button>
           <button className="sheet-button" onClick={() => hairPairSheetInputRef.current?.click()} disabled={isProcessing} title="Importar folha 3×2 com três pares">
             Folha · 3 pares
           </button>
