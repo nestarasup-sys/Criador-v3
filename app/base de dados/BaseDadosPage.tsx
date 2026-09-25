@@ -22,6 +22,14 @@ type VideoDraft = BaseDadosDraft;
 const MAX_EXPORT_CHARACTERS = 10;
 const SELECTED_CHARACTERS_STORAGE_KEY = "nymi-base-dados-selected-characters-v1";
 
+function persistSelectedCharacterIds(ids: string[]) {
+  try {
+    window.localStorage.setItem(SELECTED_CHARACTERS_STORAGE_KEY, JSON.stringify(ids));
+  } catch {
+    // A seleção é funcional mesmo sem a preferência opcional do navegador.
+  }
+}
+
 type CharacterPickerProps = {
   characters: Character[];
   selectedIds: string[];
@@ -37,20 +45,20 @@ function CharacterPicker({ characters, selectedIds: initialSelectedIds, onComple
   }, [characters, query]);
   const commitSelection = (ids: string[]) => {
     const next = [...new Set(ids)].slice(0, MAX_EXPORT_CHARACTERS);
-    window.localStorage.setItem(SELECTED_CHARACTERS_STORAGE_KEY, JSON.stringify(next));
+    persistSelectedCharacterIds(next);
     onComplete(next);
   };
   const toggle = (id: string) => setSelectedIds((current) => {
     const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id].slice(0, MAX_EXPORT_CHARACTERS);
-    window.localStorage.setItem(SELECTED_CHARACTERS_STORAGE_KEY, JSON.stringify(next));
+    persistSelectedCharacterIds(next);
     return next;
   });
   const selectAllVisible = () => setSelectedIds((current) => {
     const next = [...new Set([...current, ...visibleCharacters.map((character) => character.id)])].slice(0, MAX_EXPORT_CHARACTERS);
-    window.localStorage.setItem(SELECTED_CHARACTERS_STORAGE_KEY, JSON.stringify(next));
+    persistSelectedCharacterIds(next);
     return next;
   });
-  const clear = () => { window.localStorage.setItem(SELECTED_CHARACTERS_STORAGE_KEY, "[]"); setSelectedIds([]); };
+  const clear = () => { persistSelectedCharacterIds([]); setSelectedIds([]); };
   return <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) commitSelection(selectedIds); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Até {MAX_EXPORT_CHARACTERS} personagens podem ser incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => commitSelection(selectedIds)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clear}>Limpar seleção</button><span>{selectedIds.length}/{MAX_EXPORT_CHARACTERS} selecionados</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} disabled={!selected && selectedIds.length >= MAX_EXPORT_CHARACTERS} onChange={() => toggle(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" loading="lazy" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => commitSelection(selectedIds)}>Concluir</button></footer></section></div>;
 }
 
@@ -142,7 +150,7 @@ export default function BaseDadosPage() {
     const validIds = new Set(characterData.characters.map((character) => character.id));
     const timer = window.setTimeout(() => setSelectedCharacterIds((current) => {
       const next = current.filter((id) => validIds.has(id));
-      if (next.length !== current.length) window.localStorage.setItem("nymi-base-dados-selected-characters-v1", JSON.stringify(next));
+      if (next.length !== current.length) persistSelectedCharacterIds(next);
       return next;
     }), 0);
     return () => window.clearTimeout(timer);
