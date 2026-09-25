@@ -110,10 +110,12 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
     const video = JSON.parse(uploaded.capture.body).video;
 
     const first = responseCapture();
-    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, secondGroupReactionSeconds: 7.5, additionalAiContext: "A reação deve parecer desconfiada.", category: "the-villainess-is-destined-to-die", expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
+    await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ description: "Texto confirmado", sceneEndSeconds: 5, firstGroupReactionSeconds: 2, firstGroupReactionSpeechCount: 3, secondGroupReactionSeconds: 7.5, secondGroupReactionSpeechCount: 2, additionalAiContext: "A reação deve parecer desconfiada.", category: "the-villainess-is-destined-to-die", expectedRevision: 0 })), { "content-type": "application/json" }), first, new URL(`http://local/base-dados/videos/${video.id}`), headers);
     const firstResult = JSON.parse(first.capture.body);
     assert.equal(firstResult.video.metadataRevision, 1);
     assert.equal(firstResult.video.secondGroupReactionSeconds, 7.5);
+    assert.equal(firstResult.video.firstGroupReactionSpeechCount, 3);
+    assert.equal(firstResult.video.secondGroupReactionSpeechCount, 2);
     assert.equal(firstResult.video.additionalAiContext, "A reação deve parecer desconfiada.");
     assert.equal(firstResult.video.category, "the-villainess-is-destined-to-die");
     assert.ok((await readdir(join(root, "backups"))).some((name) => name.startsWith("state-") && name.endsWith(".json")));
@@ -122,6 +124,8 @@ test("preserva campos omitidos e recusa uma gravação com revisão antiga", asy
     await service.handle(request("PATCH", `/base-dados/videos/${video.id}`, Buffer.from(JSON.stringify({ sceneEndSeconds: 6 })), { "content-type": "application/json" }), partial, new URL(`http://local/base-dados/videos/${video.id}`), headers);
     assert.equal(JSON.parse(partial.capture.body).video.description, "Texto confirmado");
     assert.equal(JSON.parse(partial.capture.body).video.firstGroupReactionSeconds, 2);
+    assert.equal(JSON.parse(partial.capture.body).video.firstGroupReactionSpeechCount, 3);
+    assert.equal(JSON.parse(partial.capture.body).video.secondGroupReactionSpeechCount, 2);
     assert.equal(JSON.parse(partial.capture.body).video.secondGroupReactionSeconds, 7.5);
     assert.equal(JSON.parse(partial.capture.body).video.additionalAiContext, "A reação deve parecer desconfiada.");
     assert.equal(JSON.parse(partial.capture.body).video.category, "the-villainess-is-destined-to-die");
