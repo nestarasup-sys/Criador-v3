@@ -34,6 +34,7 @@ const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
 const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
   v4: { label: "Editor V4", path: String.raw`D:\EDITOR WEB 2\EDITOR V4\projects` },
 };
+const MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS = 2;
 
 type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
 
@@ -76,6 +77,21 @@ function formatSceneEnd(seconds: number | undefined) {
 function exportPathSegment(value: string, fallback: string) {
   const normalized = String(value || fallback).replace(/[<>:"/\\|?*]+/g, "-").replace(/[. ]+$/g, "").trim().slice(0, 120);
   return normalized || fallback;
+}
+
+async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, worker: (item: T, index: number) => Promise<R>) {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  async function consume() {
+    while (true) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) return;
+      results[index] = await worker(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(Math.max(1, limit), items.length) }, () => consume()));
+  return results;
 }
 
 function buildReadableScript(script: ScriptProject, characters: PremiumCharacter[], fullCharacters: Awaited<ReturnType<typeof loadPremiumStudioData>>["characters"], profiles: NarrativeProfile[], modelPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["modelPacks"], expressionPacks: Awaited<ReturnType<typeof loadPremiumStudioData>>["expressionPacks"], catalog: Awaited<ReturnType<typeof loadPremiumStudioData>>["catalog"]) {
@@ -643,13 +659,13 @@ export default function RoteiroEditor() {
     setExportLoading("character-variants"); setExportMessage("");
     try {
       const assets = await loadPremiumStudioData();
-      const selected = script.participants.map((participant) => participant.characterId);
+      const selected = [...new Set(script.participants.map((participant) => participant.characterId))];
       const results: string[] = [];
       const failures: string[] = [];
-      for (const [characterIndex, characterId] of selected.entries()) {
+      await mapWithConcurrency(selected, MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS, async (characterId, characterIndex) => {
         const character = assets.characters.find((item) => item.id === characterId);
         const fallback = characterMap.get(characterId);
-        if (!character) { failures.push(fallback?.name || characterId); continue; }
+        if (!character) { failures.push(fallback?.name || characterId); return; }
         try {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks, (progress) => {
             const phase = progress.phase === "packaging" ? "compactando ZIP" : `pose ${progress.variantIndex + 1}/${progress.variantCount}`;
@@ -658,7 +674,7 @@ export default function RoteiroEditor() {
           await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
-      }
+      });
       setExportMessage(`Variantes exportadas: ${results.length}/${selected.length}.${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
     finally { setExportLoading(""); }
