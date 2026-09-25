@@ -120,11 +120,11 @@
 .reactionPanel header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
 .reactionPanel header span { color:#443451; font-size:11px; font-weight:900; }
 .reactionPanel header b { padding:3px 6px; border-radius:99px; font-size:8px; letter-spacing:.08em; }
-.reactionPanelFirst { border-color:#7139d7; background:linear-gradient(145deg,#100d18,#241044); }
+.reactionPanelFirst { border-color:#7c3aed; background:#050308; }
 .reactionPanelFirst header b { color:#fff; background:#6734c5; }
-.reactionPanelSecond { border-color:#ad3ec8; background:linear-gradient(145deg,#170d1a,#3a103f); }
+.reactionPanelSecond { border-color:#c026d3; background:#050308; }
 .reactionPanelSecond header b { color:#fff; background:#a635b9; }
-.reactionPanel header span,.reactionInputs label>span { color:#fff; }
+.reactionPanel header span,.reactionInputs label>span,.reactionPanel .seconds em { color:#fff; }
 .reactionInputs { display:grid; grid-template-columns:1fr; gap:9px; }
 .reactionInputs label { min-width:0; }
 .reactionInputs label>span { font-size:10px; }
