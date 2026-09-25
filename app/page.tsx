@@ -1107,6 +1107,49 @@ async function prepareHairPair(source: Blob) {
   }
 }
 
+async function prepareHairPairV2(source: Blob) {
+  const cleanBlob = await removeChroma(source);
+  const url = URL.createObjectURL(cleanBlob);
+  try {
+    const image = await loadImage(url);
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = image.naturalWidth;
+    sourceCanvas.height = image.naturalHeight;
+    const sourceContext = sourceCanvas.getContext("2d");
+    if (!sourceContext) throw new Error("Canvas indisponível");
+    sourceContext.drawImage(image, 0, 0);
+
+    const splitY = Math.floor(sourceCanvas.height / 2);
+    if (splitY < 1 || sourceCanvas.width < 1) throw new Error("A imagem precisa ter duas partes empilhadas");
+    const prepareRow = async (startY: number, height: number) => {
+      const row = document.createElement("canvas");
+      row.width = sourceCanvas.width;
+      row.height = height;
+      const rowContext = row.getContext("2d", { willReadFrequently: true });
+      if (!rowContext) throw new Error("Canvas indisponível");
+      rowContext.drawImage(sourceCanvas, 0, startY, sourceCanvas.width, height, 0, 0, row.width, row.height);
+      const pixels = rowContext.getImageData(0, 0, row.width, row.height);
+      const bounds = contentBounds(pixels.data, row.width, row.height);
+      if (!bounds) throw new Error("Uma das partes do par V2 está vazia");
+      const crop = document.createElement("canvas");
+      crop.width = bounds.width;
+      crop.height = bounds.height;
+      const cropContext = crop.getContext("2d");
+      if (!cropContext) throw new Error("Canvas indisponível");
+      cropContext.drawImage(row, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+      return { blob: await canvasBlob(crop), width: crop.width, height: crop.height, defaultX: 970, defaultY: 285 };
+    };
+
+    const [front, back] = await Promise.all([
+      prepareRow(0, splitY),
+      prepareRow(splitY, sourceCanvas.height - splitY),
+    ]);
+    return { front, back };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 async function prepareHairPairSheet(source: Blob) {
   const cleanBlob = await removeChroma(source);
   const url = URL.createObjectURL(cleanBlob);
@@ -1257,6 +1300,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sheetInputRef = useRef<HTMLInputElement>(null);
   const singleHairInputRef = useRef<HTMLInputElement>(null);
+  const hairPairV2InputRef = useRef<HTMLInputElement>(null);
   const hairPairSheetInputRef = useRef<HTMLInputElement>(null);
   const expressionPackInputRef = useRef<HTMLInputElement>(null);
   const colorEditorCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -2718,6 +2762,57 @@ export default function Home() {
     } catch (error) {
       const reason = error instanceof Error ? error.message : "formato inválido";
       setNotice(`Não foi possível importar a folha: ${reason}. Use três colunas, frente em cima e traseiro embaixo`);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function importHairPairV2(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setNotice("Escolha um arquivo de imagem");
+      return;
+    }
+
+    setIsProcessing(true);
+    setNotice("Separando o par V2… frente acima e traseiro abaixo");
+    try {
+      const preparedPair = await prepareHairPairV2(file);
+      const baseName = file.name.replace(/\.[^.]+$/, "");
+      const frontId = crypto.randomUUID();
+      const front: CatalogItem = {
+        id: frontId,
+        name: `${baseName} (frente V2)`,
+        model,
+        category: "cabelos",
+        ...preparedPair.front,
+        fit: { ...DEFAULT_TRANSFORM },
+        url: URL.createObjectURL(preparedPair.front.blob),
+      };
+      const back: CatalogItem = {
+        id: crypto.randomUUID(),
+        name: `${baseName} (trás V2)`,
+        model,
+        category: "cabelosTras",
+        linkedHairId: frontId,
+        ...preparedPair.back,
+        fit: { ...DEFAULT_TRANSFORM },
+        url: URL.createObjectURL(preparedPair.back.blob),
+      };
+      await Promise.all([storeCatalogItem(front), storeCatalogItem(back)]);
+      setCatalog((current) => [...current, front, back]);
+      setSelections((current) => ({ ...current, cabelos: front.id, cabelosTras: back.id }));
+      setAdjustments((current) => ({
+        ...current,
+        cabelos: { ...DEFAULT_TRANSFORM },
+        cabelosTras: { ...DEFAULT_TRANSFORM },
+      }));
+      setNotice("Par V2 importado; frente acima e traseiro abaixo");
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "formato inválido";
+      setNotice(`Não foi possível importar o par V2: ${reason}`);
     } finally {
       setIsProcessing(false);
     }
@@ -6332,6 +6427,7 @@ export default function Home() {
             fileInputRef={fileInputRef}
             sheetInputRef={sheetInputRef}
             singleHairInputRef={singleHairInputRef}
+            hairPairV2InputRef={hairPairV2InputRef}
             hairPairSheetInputRef={hairPairSheetInputRef}
             expressionPackInputRef={expressionPackInputRef}
             deleteMode={assetDeleteMode}
@@ -6340,6 +6436,7 @@ export default function Home() {
             onImportItem={importItem}
             onImportSheet={importSheet}
             onImportFrontHair={importFrontHairItem}
+            onImportHairPairV2={importHairPairV2}
             onImportHairPairSheet={importHairPairSheet}
             onImportExpressionPack={importExpressionPack}
             onToggleDeleteMode={toggleAssetDeleteMode}

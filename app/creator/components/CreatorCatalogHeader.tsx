@@ -11,6 +11,7 @@ type CreatorCatalogHeaderProps = {
   fileInputRef: RefObject<HTMLInputElement | null>;
   sheetInputRef: RefObject<HTMLInputElement | null>;
   singleHairInputRef: RefObject<HTMLInputElement | null>;
+  hairPairV2InputRef: RefObject<HTMLInputElement | null>;
   hairPairSheetInputRef: RefObject<HTMLInputElement | null>;
   expressionPackInputRef: RefObject<HTMLInputElement | null>;
   deleteMode: boolean;
@@ -19,6 +20,7 @@ type CreatorCatalogHeaderProps = {
   onImportItem: ChangeEventHandler<HTMLInputElement>;
   onImportSheet: ChangeEventHandler<HTMLInputElement>;
   onImportFrontHair: ChangeEventHandler<HTMLInputElement>;
+  onImportHairPairV2: ChangeEventHandler<HTMLInputElement>;
   onImportHairPairSheet: ChangeEventHandler<HTMLInputElement>;
   onImportExpressionPack: ChangeEventHandler<HTMLInputElement>;
   onToggleDeleteMode: () => void;
@@ -33,7 +35,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   roupas: "Roupas",
 };
 
-export function CreatorCatalogHeader({ category, faceMode, compositionMode, compositionAvailable, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {
+export function CreatorCatalogHeader({ category, faceMode, compositionMode, compositionAvailable, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairV2InputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairV2, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {
   const supportsAssetDelete = category !== "rostos" || faceMode !== "pack";
   const canToggleComposition = category === "rostos" && compositionAvailable;
 
@@ -67,8 +69,8 @@ export function CreatorCatalogHeader({ category, faceMode, compositionMode, comp
           <button className="add-button" onClick={() => fileInputRef.current?.click()} disabled={isProcessing} title="Importar um par: traseiro à esquerda e frontal à direita">
             ＋ Par
           </button>
-          <button type="button" className="sheet-button" disabled title="Par V2: cabelo frontal acima e cabelo traseiro abaixo">
-            Par V2
+          <button type="button" className="sheet-button" onClick={() => hairPairV2InputRef.current?.click()} disabled={isProcessing} title="Importar par V2: cabelo frontal acima e cabelo traseiro abaixo">
+            {isProcessing ? "Processando…" : "Par V2"}
           </button>
           <button className="sheet-button" onClick={() => hairPairSheetInputRef.current?.click()} disabled={isProcessing} title="Importar folha 3×2 com três pares">
             Folha · 3 pares
@@ -120,6 +122,7 @@ export function CreatorCatalogHeader({ category, faceMode, compositionMode, comp
     <input ref={fileInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportItem} />
     <input ref={sheetInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportSheet} />
     <input ref={singleHairInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportFrontHair} />
+    <input ref={hairPairV2InputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportHairPairV2} />
     <input ref={hairPairSheetInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportHairPairSheet} />
     <input ref={expressionPackInputRef} type="file" accept="image/png,image/webp,image/jpeg" hidden onChange={onImportExpressionPack} />
   </div>;
