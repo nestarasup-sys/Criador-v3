@@ -54,7 +54,7 @@ export type RoteiroBackgroundReference = {
 };
 export type TikTokSection = {
   id: string; title: string; description: string; timeline: TikTokTimeline;
-  sceneGoal: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; secondGroupReactionSeconds?: number; userInstruction: string; aiDirectives?: string[]; specificRules: string; shortLines: boolean; orderLocked?: boolean;
+  sceneGoal: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; firstGroupReactionSpeechCount?: number; secondGroupReactionSeconds?: number; secondGroupReactionSpeechCount?: number; userInstruction: string; aiDirectives?: string[]; specificRules: string; shortLines: boolean; orderLocked?: boolean;
   video?: TikTokVideoReference; reactionBlocks: ReactionBlock[];
   aiUsage?: AiUsageTotals;
   createdAt: string; updatedAt: string;

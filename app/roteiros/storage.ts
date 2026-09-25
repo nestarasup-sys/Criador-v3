@@ -127,7 +127,7 @@ export async function savePremiumCharacters(characters: Character[]) {
   });
 }
 
-export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; secondGroupReactionSeconds?: number; durationSeconds?: number; name?: string }) {
+export async function copyRoteiroTikTokToBase(scriptId: string, tiktokId: string, metadata?: { description?: string; sceneEndSeconds?: number; firstGroupReactionSeconds?: number; firstGroupReactionSpeechCount?: number; secondGroupReactionSeconds?: number; secondGroupReactionSpeechCount?: number; durationSeconds?: number; name?: string }) {
   const response = await localDataFetch("/base-dados/import-from-roteiro", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

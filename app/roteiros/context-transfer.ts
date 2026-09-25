@@ -48,7 +48,9 @@ export type AiContextSection = {
   description: string;
   sceneEndSeconds?: number;
   firstGroupReactionSeconds?: number;
+  firstGroupReactionSpeechCount?: number;
   secondGroupReactionSeconds?: number;
+  secondGroupReactionSpeechCount?: number;
   sceneGoal: string;
   timeline: TikTokSection["timeline"];
   specificRules: string;
@@ -198,7 +200,9 @@ function sectionToContext(section: TikTokSection | OpeningSection, kind: "openin
     description: section.description,
     ...(section.sceneEndSeconds === undefined ? {} : { sceneEndSeconds: section.sceneEndSeconds }),
     ...(section.firstGroupReactionSeconds === undefined ? {} : { firstGroupReactionSeconds: section.firstGroupReactionSeconds }),
+    ...(section.firstGroupReactionSpeechCount === undefined ? {} : { firstGroupReactionSpeechCount: section.firstGroupReactionSpeechCount }),
     ...(section.secondGroupReactionSeconds === undefined ? {} : { secondGroupReactionSeconds: section.secondGroupReactionSeconds }),
+    ...(section.secondGroupReactionSpeechCount === undefined ? {} : { secondGroupReactionSpeechCount: section.secondGroupReactionSpeechCount }),
     sceneGoal: section.sceneGoal,
     timeline: section.timeline,
     specificRules: section.specificRules,

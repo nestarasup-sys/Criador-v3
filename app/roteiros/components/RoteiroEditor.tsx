@@ -125,7 +125,7 @@ function buildReadableScript(script: ScriptProject, characters: PremiumCharacter
   const tiktokLines = script.tiktoks.flatMap((section, index) => {
     const number = String(index + 1).padStart(2, "0");
     const folder = "assets/tiktoks";
-    const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Duração total do vídeo: ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Primeira reação em grupo no ${formatSceneEnd(section.firstGroupReactionSeconds)}`, `Segunda reação em grupo no ${formatSceneEnd(section.secondGroupReactionSeconds)}`, `Descrição: ${section.description}`];
+    const lines = [`TIKTOK ${number} — ${formatTikTokDuration(section.video?.durationSeconds)}`, `Duração total do vídeo: ${formatTikTokDuration(section.video?.durationSeconds)}`, `Caminho exato: ${folder}/${number}.mp4`, `Cena da descrição termina no ${formatSceneEnd(section.sceneEndSeconds)}`, `Primeira reação em grupo no ${formatSceneEnd(section.firstGroupReactionSeconds)} · falas planejadas: ${section.firstGroupReactionSpeechCount ?? 0}`, `Segunda reação em grupo no ${formatSceneEnd(section.secondGroupReactionSeconds)} · falas planejadas: ${section.secondGroupReactionSpeechCount ?? 0}`, `Descrição: ${section.description}`];
     const blocks = section.reactionBlocks.filter((block) => ["auto", "speech", "thought"].includes(block.type));
     if (!blocks.length) lines.push("Sem falas ou pensamentos.");
     blocks.forEach((block, blockIndex) => {
@@ -363,7 +363,9 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         description: section.description,
         sceneEndSeconds: section.sceneEndSeconds,
         firstGroupReactionSeconds: section.firstGroupReactionSeconds,
+        firstGroupReactionSpeechCount: section.firstGroupReactionSpeechCount,
         secondGroupReactionSeconds: section.secondGroupReactionSeconds,
+        secondGroupReactionSpeechCount: section.secondGroupReactionSpeechCount,
         durationSeconds: section.video.durationSeconds,
       });
       // O backend também atualiza o vínculo persistido. Atualize o snapshot
@@ -374,7 +376,9 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
         description: section.description,
         sceneEndSeconds: section.sceneEndSeconds,
         firstGroupReactionSeconds: section.firstGroupReactionSeconds,
+        firstGroupReactionSpeechCount: section.firstGroupReactionSpeechCount,
         secondGroupReactionSeconds: section.secondGroupReactionSeconds,
+        secondGroupReactionSpeechCount: section.secondGroupReactionSpeechCount,
       });
       setMessage(result.duplicate
         ? `Vídeo já existia na Base como ${String(result.video.sequence).padStart(2, "0")}.mp4; descrição e tempo foram sincronizados.`
@@ -416,9 +420,11 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
       patch({
         video: linkedVideo,
         description: video.description,
-        sceneEndSeconds: video.sceneEndSeconds,
+            sceneEndSeconds: video.sceneEndSeconds,
+            firstGroupReactionSpeechCount: video.firstGroupReactionSpeechCount,
         firstGroupReactionSeconds: video.firstGroupReactionSeconds,
-        secondGroupReactionSeconds: video.secondGroupReactionSeconds,
+            secondGroupReactionSeconds: video.secondGroupReactionSeconds,
+            secondGroupReactionSpeechCount: video.secondGroupReactionSpeechCount,
       });
       setBasePickerOpen(false);
       setMessage(`Vídeo ${String(video.sequence).padStart(2, "0")} adicionado neste TikTok.`);
@@ -707,7 +713,10 @@ export default function RoteiroEditor() {
             title: `Vídeo ${String(sourceVideo.sequence).padStart(2, "0")}`,
             description: sourceVideo.description,
             sceneEndSeconds: sourceVideo.sceneEndSeconds,
+            firstGroupReactionSeconds: sourceVideo.firstGroupReactionSeconds,
+            firstGroupReactionSpeechCount: sourceVideo.firstGroupReactionSpeechCount,
             secondGroupReactionSeconds: sourceVideo.secondGroupReactionSeconds,
+            secondGroupReactionSpeechCount: sourceVideo.secondGroupReactionSpeechCount,
             reactionBlocks: [],
             video,
             updatedAt: nowIso(),
