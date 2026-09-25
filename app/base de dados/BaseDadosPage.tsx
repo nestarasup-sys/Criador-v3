@@ -19,6 +19,7 @@ import type { RoteirosState } from "../roteiros/types";
 import styles from "./base-de-dados.module.css";
 
 type VideoDraft = BaseDadosDraft;
+const MAX_EXPORT_CHARACTERS = 10;
 
 function readVideoDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
@@ -473,17 +474,30 @@ export default function BaseDadosPage() {
     return characterData.characters.filter((character) => !query || character.name.toLocaleLowerCase("pt-BR").includes(query) || character.id.toLocaleLowerCase("pt-BR").includes(query));
   }, [characterData.characters, characterQuery]);
 
-  const toggleCharacter = (id: string) => setSelectedCharacterIds((current) => {
-    const next = current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
-    window.localStorage.setItem("nymi-base-dados-selected-characters-v1", JSON.stringify(next));
-    return next;
-  });
+  const toggleCharacter = (id: string) => {
+    setSelectedCharacterIds((current) => {
+      if (current.includes(id)) {
+        const next = current.filter((item) => item !== id);
+        window.localStorage.setItem("nymi-base-dados-selected-characters-v1", JSON.stringify(next));
+        return next;
+      }
+      if (current.length >= MAX_EXPORT_CHARACTERS) return current;
+      const next = [...current, id];
+      window.localStorage.setItem("nymi-base-dados-selected-characters-v1", JSON.stringify(next));
+      return next;
+    });
+    if (!selectedCharacterIds.includes(id) && selectedCharacterIds.length >= MAX_EXPORT_CHARACTERS) {
+      setMessage(`Você pode selecionar até ${MAX_EXPORT_CHARACTERS} personagens por exportação.`);
+    }
+  };
 
-  const selectAllVisible = () => setSelectedCharacterIds((current) => {
-    const next = [...new Set([...current, ...visibleCharacters.map((character) => character.id)])];
+  const selectAllVisible = () => {
+    const available = visibleCharacters.map((character) => character.id);
+    const next = [...new Set([...selectedCharacterIds, ...available])].slice(0, MAX_EXPORT_CHARACTERS);
     window.localStorage.setItem("nymi-base-dados-selected-characters-v1", JSON.stringify(next));
-    return next;
-  });
+    setSelectedCharacterIds(next);
+    if (next.length < new Set([...selectedCharacterIds, ...available]).size) setMessage(`A seleção foi limitada a ${MAX_EXPORT_CHARACTERS} personagens.`);
+  };
 
   const clearCharacters = () => {
     window.localStorage.setItem("nymi-base-dados-selected-characters-v1", "[]");
@@ -585,7 +599,7 @@ export default function BaseDadosPage() {
         </div>
       </section>}
       {simpleExportOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSimpleExportOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-simple-export-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-simple-export-title">Exportar dados simples</h2><p>Escolha quais vídeos entram no TXT.</p></div><button className={styles.closeButton} onClick={() => setSimpleExportOpen(false)} aria-label="Fechar">×</button></header><div className={styles.importedManagerList}><button className={styles.actionButtonPrimary} disabled={Boolean(busy)} onClick={() => void exportSimpleData("all")}>Todas as categorias</button><button className={styles.secondaryButton} disabled={Boolean(busy)} onClick={() => void exportSimpleData("")}>Sem categoria</button>{availableCategories.map((category) => <button key={category.id} className={styles.secondaryButton} style={{ color: category.color, borderColor: category.borderColor }} disabled={Boolean(busy)} onClick={() => void exportSimpleData(category.id)}>{category.label}</button>)}</div></section></div>}
-      {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Somente os personagens selecionados serão incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length} selecionado(s)</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
+      {characterPickerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setCharacterPickerOpen(false); }}><section className={styles.characterPickerPanel} role="dialog" aria-modal="true" aria-labelledby="base-dados-character-picker-title"><header><div><span className={styles.eyebrow}>EXPORTAÇÃO</span><h2 id="base-dados-character-picker-title">Selecionar personagens</h2><p>Até {MAX_EXPORT_CHARACTERS} personagens podem ser incluídos no TXT.</p></div><button className={styles.closeButton} onClick={() => setCharacterPickerOpen(false)} aria-label="Fechar">×</button></header><input className={styles.characterSearch} value={characterQuery} onChange={(event) => setCharacterQuery(event.target.value)} placeholder="⌕ Buscar por nome ou ID…" /><div className={styles.characterPickerActions}><button className={styles.smallButton} onClick={selectAllVisible}>Selecionar visíveis</button><button className={styles.smallButton} onClick={clearCharacters}>Limpar seleção</button><span>{selectedCharacterIds.length}/{MAX_EXPORT_CHARACTERS} selecionados</span></div><div className={styles.characterOptions}>{visibleCharacters.map((character) => { const selected = selectedCharacterIds.includes(character.id); const photo = character.photoUrl ?? character.photoDataUrl; return <label className={`${styles.characterOption} ${selected ? styles.characterOptionSelected : ""}`} key={character.id}><input type="checkbox" checked={selected} disabled={!selected && selectedCharacterIds.length >= MAX_EXPORT_CHARACTERS} onChange={() => toggleCharacter(character.id)} /><span className={styles.characterThumbnail}>{photo ? <img src={photo} alt="" /> : (character.name.trim().slice(0, 1).toUpperCase() || "?")}</span><span><strong>{character.name}</strong><small>{character.id} · {character.model}</small></span><b>{selected ? "✓" : ""}</b></label>; })}{!visibleCharacters.length && <p className={styles.noCharacters}>Nenhum personagem encontrado no Criador.</p>}</div><footer><span>{selectedCharacterIds.length ? "Apenas a ficha narrativa de Roteiros será exportada." : "Nenhum personagem selecionado: o TXT será exportado somente com vídeos."}</span><button className={styles.actionButtonPrimary} onClick={() => setCharacterPickerOpen(false)}>Concluir</button></footer></section></div>}
       {importedManagerOpen && <div className={styles.popoverBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setImportedManagerOpen(false); }}><section className={`${styles.characterPickerPanel} ${styles.importedManagerPanel}`} role="dialog" aria-modal="true" aria-labelledby="base-dados-imported-title"><header><div><span className={styles.eyebrow}>BIBLIOTECA DE ELENCOS</span><h2 id="base-dados-imported-title">Roteiros importados</h2><p>Personagens criados automaticamente a partir dos seus roteiros.</p></div><button className={styles.closeButton} onClick={() => setImportedManagerOpen(false)} aria-label="Fechar">×</button></header><div className={styles.importedManagerList}>{importedScripts.map((script) => { const importedCharacters = importedCharactersFor(script); return <article className={styles.importedScriptCard} key={script.id}><div className={styles.importedScriptHeading}><span className={styles.importedScriptIcon}>✦</span><div><strong>{script.title}</strong><small>{importedCharacters.length} personagem(ns) criado(s)</small></div></div><div className={styles.importedCharacterChips}>{importedCharacters.length ? importedCharacters.map((character) => <span key={character.id}>{character.name}</span>) : <span>Nenhum personagem novo neste roteiro</span>}</div><div className={styles.importedScriptActions}><button className={styles.secondaryButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, false)}>Manter personagens</button><button className={styles.deleteButton} disabled={Boolean(busy)} onClick={() => void deleteImportedScript(script, true)}>Excluir roteiro e personagens</button></div></article>; })}</div><footer><span>Personagens utilizados em outros roteiros serão mantidos automaticamente.</span><button className={styles.actionButtonPrimary} onClick={() => setImportedManagerOpen(false)}>Fechar</button></footer></section></div>}
       {loading && <div className={styles.emptyState}>Carregando sua Base de dados…</div>}
       {message && <p className={styles.message} role="status">{message}</p>}
