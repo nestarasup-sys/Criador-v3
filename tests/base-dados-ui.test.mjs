@@ -13,7 +13,12 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.doesNotMatch(page, /exportGuide/);
   assert.doesNotMatch(page, /onClick=\{exportData\}/);
   assert.match(page, /Descrição do que acontece no vídeo/);
-  assert.match(page, /Tempo que acaba a cena de descrição/);
+  assert.match(page, /Fim da cena de descrição/);
+  assert.match(page, /captureVideoTime\(video\.id, "sceneEndSeconds"\)/);
+  assert.match(page, /Quantidade de falas/);
+  assert.match(page, /firstGroupReactionSpeechCount/);
+  assert.match(page, /secondGroupReactionSpeechCount/);
+  assert.match(styles, /\.reactionPanel/);
   assert.match(page, /uploadBaseDadosVideo/);
   assert.match(page, /removeBaseDadosVideo/);
   assert.match(page, /baseDadosVideoUrl/);

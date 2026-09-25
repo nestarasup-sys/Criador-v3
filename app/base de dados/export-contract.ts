@@ -10,7 +10,7 @@ export type BaseDadosCharacterExport = {
   narrativeProfile?: NarrativeProfile;
 };
 
-export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string; secondGroupReactionSeconds?: string; additionalAiContext?: string; category?: string };
+export type BaseDadosVideoDraft = { description: string; sceneEndSeconds: string; firstGroupReactionSeconds?: string; firstGroupReactionSpeechCount?: string; secondGroupReactionSeconds?: string; secondGroupReactionSpeechCount?: string; additionalAiContext?: string; category?: string };
 
 /** Mescla alterações ainda não confirmadas pelo autosave no snapshot exportado. */
 export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<string, BaseDadosVideoDraft>) {
@@ -21,10 +21,14 @@ export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<st
       if (!draft) return video;
       const sceneEndSeconds = Number(draft.sceneEndSeconds);
       if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return video;
-      if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds, ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) };
+      const firstCount = draft.firstGroupReactionSpeechCount === undefined ? undefined : Number(draft.firstGroupReactionSpeechCount);
+      const secondCount = draft.secondGroupReactionSpeechCount === undefined ? undefined : Number(draft.secondGroupReactionSpeechCount);
+      const validFirstCount = Number.isInteger(firstCount) && firstCount >= 0 ? { firstGroupReactionSpeechCount: firstCount } : {};
+      const validSecondCount = Number.isInteger(secondCount) && secondCount >= 0 ? { secondGroupReactionSpeechCount: secondCount } : {};
+      if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds, ...validFirstCount, ...validSecondCount, ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) };
       const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
       const secondGroupReactionSeconds = Number(draft.secondGroupReactionSeconds);
-      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, ...(Number.isFinite(secondGroupReactionSeconds) && secondGroupReactionSeconds >= 0 ? { secondGroupReactionSeconds } : {}), ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) } : video;
+      return Number.isFinite(firstGroupReactionSeconds) && firstGroupReactionSeconds >= 0 ? { ...video, description: draft.description, sceneEndSeconds, firstGroupReactionSeconds, ...(Number.isFinite(secondGroupReactionSeconds) && secondGroupReactionSeconds >= 0 ? { secondGroupReactionSeconds } : {}), ...validFirstCount, ...validSecondCount, ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) } : video;
     }),
   };
 }
@@ -66,7 +70,9 @@ export function buildBaseDadosExportText(
     video.description.trim() || "Não preenchida.",
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
+    `QUANTIDADE DE FALAS DA PRIMEIRA REAÇÃO: ${video.firstGroupReactionSpeechCount ?? 0}`,
     `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    `QUANTIDADE DE FALAS DA SEGUNDA REAÇÃO: ${video.secondGroupReactionSpeechCount ?? 0}`,
     `CATEGORIA: ${categoryLabel(video.category)}`,
     "CONTEXTO ADICIONAL PARA IA:",
     video.additionalAiContext?.trim() || "Não informado.",
@@ -106,7 +112,9 @@ export function buildBaseDadosSimpleExportText(
     video.description.trim() || "Não preenchida.",
     `TEMPO QUE TERMINA A CENA DA DESCRIÇÃO: ${formatSeconds(video.sceneEndSeconds)} segundos`,
     `TEMPO DA PRIMEIRA REAÇÃO EM GRUPO: ${formatSeconds(video.firstGroupReactionSeconds ?? 0)} segundos`,
+    `QUANTIDADE DE FALAS DA PRIMEIRA REAÇÃO: ${video.firstGroupReactionSpeechCount ?? 0}`,
     `TEMPO DA SEGUNDA REAÇÃO EM GRUPO: ${formatSeconds(video.secondGroupReactionSeconds ?? 0)} segundos`,
+    `QUANTIDADE DE FALAS DA SEGUNDA REAÇÃO: ${video.secondGroupReactionSpeechCount ?? 0}`,
     `CATEGORIA: ${categoryLabel(video.category)}`,
     "CONTEXTO ADICIONAL PARA IA:",
     video.additionalAiContext?.trim() || "Não informado.",
