@@ -22,6 +22,8 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(page, /uploadBaseDadosVideo/);
   assert.match(page, /removeBaseDadosVideo/);
   assert.match(page, /baseDadosVideoUrl/);
+  assert.match(page, /preload="metadata"/);
+  assert.doesNotMatch(page, /preload="auto"/);
   assert.match(page, /Buscar cenas/);
   assert.match(page, /Filtros/);
   assert.match(page, /visibleVideos/);
