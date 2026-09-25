@@ -26,7 +26,9 @@ test("a nova Base de dados possui o layout e os controles básicos independentes
   assert.match(page, /Filtros/);
   assert.match(page, /visibleVideos/);
   assert.match(styles, /\.pageHeader/);
-  assert.match(styles, /grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(styles, /grid-template-columns:repeat\(2,minmax\(0,520px\)\)/);
+  assert.match(page, /captureVideoTime\(video\.id, "firstGroupReactionSeconds"\)/);
+  assert.match(page, /captureVideoTime\(video\.id, "secondGroupReactionSeconds"\)/);
   assert.match(styles, /\.player video/);
   assert.match(storage, /\/base-dados\/videos/);
   assert.match(shell, /Base de dados/);
