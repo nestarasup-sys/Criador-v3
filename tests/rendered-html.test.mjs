@@ -1175,6 +1175,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(storage, /listRoteiroOrphans/);
   assert.match(editor, /videoBaseSrc/);
   assert.match(editor, /Duração total do vídeo: \$\{formatTikTokDuration\(section\.video\?\.durationSeconds\)\}/);
+  assert.match(editor, /Contexto adicional para IA: \$\{section\.video\?\.additionalAiContext/);
   assert.match(editor, /openExportFolder\("videos"\)/);
   assert.match(editor, /Abrir pasta de vídeos/);
   assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
