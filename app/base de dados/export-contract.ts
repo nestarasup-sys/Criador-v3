@@ -23,8 +23,8 @@ export function mergeBaseDadosDrafts(database: BaseDadosState, drafts: Record<st
       if (!Number.isFinite(sceneEndSeconds) || sceneEndSeconds < 0) return video;
       const firstCount = draft.firstGroupReactionSpeechCount === undefined ? undefined : Number(draft.firstGroupReactionSpeechCount);
       const secondCount = draft.secondGroupReactionSpeechCount === undefined ? undefined : Number(draft.secondGroupReactionSpeechCount);
-      const validFirstCount = Number.isInteger(firstCount) && firstCount >= 0 ? { firstGroupReactionSpeechCount: firstCount } : {};
-      const validSecondCount = Number.isInteger(secondCount) && secondCount >= 0 ? { secondGroupReactionSpeechCount: secondCount } : {};
+      const validFirstCount = typeof firstCount === "number" && Number.isInteger(firstCount) && firstCount >= 0 ? { firstGroupReactionSpeechCount: firstCount } : {};
+      const validSecondCount = typeof secondCount === "number" && Number.isInteger(secondCount) && secondCount >= 0 ? { secondGroupReactionSpeechCount: secondCount } : {};
       if (draft.firstGroupReactionSeconds === undefined) return { ...video, description: draft.description, sceneEndSeconds, ...validFirstCount, ...validSecondCount, ...(draft.additionalAiContext === undefined ? {} : { additionalAiContext: draft.additionalAiContext }), ...(draft.category === undefined ? {} : { category: draft.category }) };
       const firstGroupReactionSeconds = Number(draft.firstGroupReactionSeconds);
       const secondGroupReactionSeconds = Number(draft.secondGroupReactionSeconds);
