@@ -672,7 +672,7 @@ export default function RoteiroEditor() {
             const phase = progress.phase === "packaging" ? "compactando ZIP" : `pose ${progress.variantIndex + 1}/${progress.variantCount}`;
             setExportMessage(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
           }, (metrics) => {
-            diagnostics.push(metrics);
+            diagnostics.push({ ...metrics, packageBytes: metrics.packageBytes ?? 0 });
             setExportMessage(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · pacote ${Math.round(metrics.packageMs)}ms`);
           });
           await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
