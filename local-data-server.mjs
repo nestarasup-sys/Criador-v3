@@ -1522,23 +1522,53 @@ async function route(request, response) {
     const scriptFolder = roteiroProjectRoot(metadata.scriptTitle || "Roteiro", exportTarget.id);
     const folder = join(exportRoot, characterFolderName);
     if (!inside(exportRoot, folder)) throw new Error("Destino do personagem inválido");
-    await rm(folder, { recursive: true, force: true });
-    await mkdir(folder, { recursive: true });
-    await writeRoteiroExportManifest(scriptFolder, scriptId, metadata.scriptTitle, "characters", exportTarget.id);
     const zip = await JSZip.loadAsync(body);
+    const exportEntries = Object.entries(zip.files).filter(([, entry]) => !entry.dir);
+    if (!exportEntries.length) throw new Error("ZIP sem arquivos exportáveis");
+    const stagingFolder = join(exportRoot, `.nymi-character-staging-${characterId}-${randomBytes(8).toString("hex")}`);
+    const previousFolder = join(exportRoot, `.nymi-character-previous-${characterId}-${randomBytes(8).toString("hex")}`);
+    if (!inside(exportRoot, stagingFolder) || !inside(exportRoot, previousFolder)) throw new Error("Pasta temporária de exportação inválida");
     let files = 0;
-    for (const [zipName, entry] of Object.entries(zip.files)) {
-      if (entry.dir) continue;
-      const segments = String(zipName).split(/[\\/]/).filter(Boolean);
-      if (!segments.length) continue;
-      const relativeSegments = segments.length > 1 ? segments.slice(1) : segments;
-      const target = join(folder, ...relativeSegments);
-      if (!inside(folder, target)) throw new Error("Arquivo ZIP fora da pasta permitida");
-      await mkdir(resolve(target, ".."), { recursive: true });
-      await writeFile(target, await entry.async("nodebuffer"));
-      files += 1;
+    let previousMoved = false;
+    let promoted = false;
+    try {
+      await mkdir(stagingFolder, { recursive: true });
+      const written = await runWithConcurrency(exportEntries, 2, async ([zipName, entry]) => {
+        const segments = String(zipName).split(/[\\/]/).filter(Boolean);
+        if (!segments.length) return false;
+        const relativeSegments = segments.length > 1 ? segments.slice(1) : segments;
+        const target = join(stagingFolder, ...relativeSegments);
+        if (!inside(stagingFolder, target)) throw new Error("Arquivo ZIP fora da pasta permitida");
+        await mkdir(resolve(target, ".."), { recursive: true });
+        await writeFile(target, await entry.async("nodebuffer"));
+        return true;
+      });
+      files = written.filter(Boolean).length;
+      if (!files) throw new Error("ZIP sem arquivos exportáveis");
+      await stat(stagingFolder);
+      try {
+        await rename(folder, previousFolder);
+        previousMoved = true;
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+      }
+      try {
+        await rename(stagingFolder, folder);
+      } catch (error) {
+        if (previousMoved) await rename(previousFolder, folder).catch(() => undefined);
+        throw error;
+      }
+      promoted = true;
+      await writeRoteiroExportManifest(scriptFolder, scriptId, metadata.scriptTitle, "characters", exportTarget.id);
+      if (previousMoved) await rm(previousFolder, { recursive: true, force: true });
+    } catch (error) {
+      await rm(stagingFolder, { recursive: true, force: true }).catch(() => undefined);
+      if (previousMoved) {
+        if (promoted) await rm(folder, { recursive: true, force: true }).catch(() => undefined);
+        await rename(previousFolder, folder).catch(() => undefined);
+      }
+      throw error;
     }
-    if (!files) throw new Error("ZIP sem arquivos exportáveis");
     sendJson(response, request, 200, { ok: true, characterId, folder, files, exportTarget: exportTarget.id });
     return;
   }
