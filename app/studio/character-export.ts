@@ -53,6 +53,8 @@ export type CharacterExportDiagnostics = ExportTiming & {
   packageBytes?: number;
 };
 
+type CharacterExpressionProgress = { expressionIndex: number; expressionCount: number };
+
 function nowMs() {
   return typeof performance !== "undefined" ? performance.now() : Date.now();
 }
@@ -266,6 +268,7 @@ export type CharacterBundleOptions = {
   renderComplete: (key: string) => Promise<Blob>;
   renderWithoutFace?: () => Promise<Blob>;
   faceFrame?: (key: string) => Promise<Blob | null>;
+  onExpressionProgress?: (progress: CharacterExpressionProgress) => void;
 };
 
 type PreparedCharacterBundle = {
@@ -295,7 +298,8 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
   };
   await renderAsset("preview.png", options.renderPreview);
   if (options.usesBuiltInBase) {
-    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key) => {
+    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key, expressionIndex) => {
+      options.onExpressionProgress?.({ expressionIndex, expressionCount: expressions.length });
       const path = `${key}.png`;
       const renderStarted = nowMs();
       const blob = await exportTaskGate.run(() => options.renderComplete(key));
@@ -311,7 +315,8 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
     if (!options.renderWithoutFace || !options.faceFrame) throw new Error("Pack de rosto incompleto");
     const faceFrame = options.faceFrame;
     await renderAsset("base/personagem_sem_rosto.png", options.renderWithoutFace);
-    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key) => {
+    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key, expressionIndex) => {
+      options.onExpressionProgress?.({ expressionIndex, expressionCount: expressions.length });
       const face = await faceFrame(key);
       if (!face) throw new Error(`Expressão ausente: ${key}`);
       const faceInspectStarted = nowMs();
@@ -419,7 +424,7 @@ export type CharacterVariantsBundleOptions = {
   variants: readonly CharacterVariant[];
   createVariantBundle: (variant: CharacterVariant) => CharacterBundleOptions;
   expressionCount?: number;
-  onProgress?: (progress: { phase: "rendering" | "packaging"; variantIndex: number; variantCount: number }) => void;
+  onProgress?: (progress: { phase: "rendering" | "packaging"; variantIndex: number; variantCount: number; expressionIndex?: number; expressionCount?: number }) => void;
   onDiagnostics?: (diagnostics: CharacterExportDiagnostics) => void;
 };
 
@@ -432,7 +437,14 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   if (!root) throw new Error("Falha ao criar pasta do personagem");
   const preparedVariants = await mapWithConcurrency(options.variants, MAX_PARALLEL_VARIANTS, async (variant, variantIndex) => {
     options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length });
-    return { variant, prepared: await prepareCharacterBundle(options.createVariantBundle(variant)) };
+    const variantOptions = options.createVariantBundle(variant);
+    return {
+      variant,
+      prepared: await prepareCharacterBundle({
+        ...variantOptions,
+        onExpressionProgress: ({ expressionIndex, expressionCount }) => options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length, expressionIndex, expressionCount }),
+      }),
+    };
   });
   options.onProgress?.({ phase: "packaging", variantIndex: options.variants.length, variantCount: options.variants.length });
   const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));

@@ -669,7 +669,11 @@ export default function RoteiroEditor() {
         if (!character) { failures.push(fallback?.name || characterId); return; }
         try {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks, (progress) => {
-            const phase = progress.phase === "packaging" ? "compactando ZIP" : `pose ${progress.variantIndex + 1}/${progress.variantCount}`;
+            const phase = progress.phase === "packaging"
+              ? "montando pacote"
+              : progress.expressionIndex === undefined
+                ? `pose ${progress.variantIndex + 1}/${progress.variantCount}`
+                : `pose ${progress.variantIndex + 1}/${progress.variantCount} · expressão ${progress.expressionIndex + 1}/${progress.expressionCount}`;
             setExportMessage(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
           }, (metrics) => {
             diagnostics.push({ ...metrics, packageBytes: metrics.packageBytes ?? 0 });
