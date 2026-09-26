@@ -1998,6 +1998,7 @@ export default function Home() {
     const renderBasePackAnchorY = renderBasePack.anchorY;
     const renderModelColorMapSource = baseExpressionColorMapSource(renderBasePack, renderModelColorExpressionKey);
     const renderModelColorMap = renderModelColorMapSource ? await loadImage(renderModelColorMapSource).catch(() => null) : null;
+    const headOnlyBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && renderBasePackIsHeadOnly;
     const manualPupilMaskUrl = manualModelColorMasks[manualModelColorMaskKey(model, basePackId, renderModelColorExpressionKey, "pupils")];
     const manualPupilMask = manualPupilMaskUrl ? await loadImage(manualPupilMaskUrl).catch(() => null) : null;
     const canvas = document.createElement("canvas");
@@ -2208,7 +2209,7 @@ export default function Home() {
       adjustedBaseForLayer = adjustedBase;
       const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
       const headOnly = renderBasePackIsHeadOnly;
-      if (headOnly) {
+      if (!headOnlyBehindOutfit && headOnly) {
         // The anchor is expressed in the model's original 1920×1080 canvas.
         // Keep the native canvas and translate only when a future model uses
         // a different source size; this avoids bottom-centering a head-only PNG.
@@ -2222,10 +2223,10 @@ export default function Home() {
           sourceWidth,
           sourceHeight,
         );
-      } else {
+      } else if (!headOnlyBehindOutfit) {
         bodyContext.drawImage(debugBody, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
       }
-      if (renderLayerMasks.body.length > 0) {
+      if (!headOnlyBehindOutfit && renderLayerMasks.body.length > 0) {
         bodyContext.globalCompositeOperation = "destination-in";
         bodyContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         bodyContext.globalCompositeOperation = "source-over";
@@ -2300,6 +2301,11 @@ export default function Home() {
           sourceWidth,
           sourceHeight,
         );
+        if (renderLayerMasks.body.length > 0) {
+          faceContext.globalCompositeOperation = "destination-in";
+          faceContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
+          faceContext.globalCompositeOperation = "source-over";
+        }
       } else if (faceMode === "pack") {
         const pack = activeExpressionPack;
         const frame = pack?.frames.find((entry) => entry.key === expressionKey);

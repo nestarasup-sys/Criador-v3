@@ -334,6 +334,7 @@ export async function renderStudioCharacter(
   const discoveredPack = modelPacks[character.model]?.find((item) => item.id === activePackId);
   const headOnlyModel = discoveredPack?.type === "head-only" && discoveredPack.anchor === "neck-base";
   const faceMode = normalizedPack !== "modelo-1" ? "base" : character.faceMode ?? "base";
+  const headOnlyBehindOutfit = character.compositionMode === "outfit-over-face" && headOnlyModel;
   const baseSource = faceMode === "base" ? expressionSource(character, key, modelPacks) : `/models/${character.model}.png`;
   let base: HTMLCanvasElement;
   try {
@@ -366,7 +367,10 @@ export async function renderStudioCharacter(
     const sourceWidth = base.width || WIDTH;
     const sourceHeight = base.height || HEIGHT;
     const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
-    if (headOnlyModel) {
+    if (headOnlyBehindOutfit) {
+      // In V2 the head-only model belongs exclusively to faceLayer. Drawing it
+      // here as well would make a body eraser appear ineffective.
+    } else if (headOnlyModel) {
       const sourceAnchorX = discoveredPack.anchorX ?? sourceWidth / 2;
       const sourceAnchorY = discoveredPack.anchorY ?? sourceHeight;
       const targetAnchorX = discoveredPack.anchorX ?? WIDTH / 2;
@@ -382,7 +386,7 @@ export async function renderStudioCharacter(
       bodyContext.drawImage(debugBody, PADDING.x, PADDING.y, WIDTH, HEIGHT);
     }
   }
-  if (bodyContext && masks.body.length) {
+  if (bodyContext && masks.body.length && !headOnlyBehindOutfit) {
     bodyContext.globalCompositeOperation = "destination-in";
     bodyContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
   }
@@ -409,6 +413,11 @@ export async function renderStudioCharacter(
         base.width,
         base.height,
       );
+      if (masks.body.length) {
+        faceContext.globalCompositeOperation = "destination-in";
+        faceContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
+        faceContext.globalCompositeOperation = "source-over";
+      }
     } else if (faceMode === "pack") {
       const pack = packs.find((item) => item.id === character.expressionPackId);
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
