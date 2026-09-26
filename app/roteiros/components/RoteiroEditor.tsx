@@ -657,6 +657,25 @@ export default function RoteiroEditor() {
   };
   const exportCharacterVariants = async () => {
     setExportLoading("character-variants"); setExportMessage("");
+    let lastProgressAt = 0;
+    let progressTimer: ReturnType<typeof setTimeout> | undefined;
+    let pendingProgress: string | undefined;
+    const reportProgress = (message: string, flush = false) => {
+      pendingProgress = message;
+      const publish = () => {
+        progressTimer = undefined;
+        if (!pendingProgress) return;
+        lastProgressAt = performance.now();
+        setExportMessage(pendingProgress);
+        pendingProgress = undefined;
+      };
+      if (flush || performance.now() - lastProgressAt >= 100) {
+        if (progressTimer) clearTimeout(progressTimer);
+        publish();
+      } else if (!progressTimer) {
+        progressTimer = setTimeout(publish, 100);
+      }
+    };
     try {
       const assets = await loadPremiumStudioData();
       const selected = [...new Set(script.participants.map((participant) => participant.characterId))];
@@ -674,10 +693,10 @@ export default function RoteiroEditor() {
               : progress.expressionIndex === undefined
                 ? `pose ${progress.variantIndex + 1}/${progress.variantCount}`
                 : `pose ${progress.variantIndex + 1}/${progress.variantCount} · expressão ${progress.expressionIndex + 1}/${progress.expressionCount}`;
-            setExportMessage(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
+            reportProgress(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
           }, (metrics) => {
             diagnostics.push({ ...metrics, packageBytes: metrics.packageBytes ?? 0 });
-            setExportMessage(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · pacote ${Math.round(metrics.packageMs)}ms`);
+            reportProgress(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · pacote ${Math.round(metrics.packageMs)}ms`, true);
           });
           await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
@@ -692,9 +711,13 @@ export default function RoteiroEditor() {
         packageBytes: total.packageBytes + (item.packageBytes ?? 0),
       }), { totalMs: 0, renderMs: 0, inspectMs: 0, pngMs: 0, packageMs: 0, packageBytes: 0 });
       const metricsMessage = diagnostics.length ? ` Tempo: ${(totalMetrics.totalMs / 1000).toFixed(1)}s · render ${(totalMetrics.renderMs / 1000).toFixed(1)}s · PNG ${(totalMetrics.pngMs / 1000).toFixed(1)}s · pacote ${(totalMetrics.packageMs / 1000).toFixed(1)}s · ${(totalMetrics.packageBytes / 1024 / 1024).toFixed(1)}MB.` : "";
-      setExportMessage(`Variantes exportadas: ${results.length}/${selected.length}.${metricsMessage}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+      reportProgress(`Variantes exportadas: ${results.length}/${selected.length}.${metricsMessage}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`, true);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
-    finally { setExportLoading(""); }
+    finally {
+      if (progressTimer) clearTimeout(progressTimer);
+      progressTimer = undefined;
+      setExportLoading("");
+    }
   };
   const exportScriptText = async () => {
     setExportLoading("script"); setExportMessage("");
