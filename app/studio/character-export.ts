@@ -1,7 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
-import { renderStudioCharacter } from "./character-renderer";
+import { renderStudioCharacterBlob } from "./character-renderer";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack } from "./types";
 
 const PACK_EXPRESSION_KEYS = [
@@ -117,25 +117,6 @@ export function expressionKeysForCharacter(
   return normalizedPackId(character.basePackId) === "modelo-1"
     ? STANDARD_BASE_EXPRESSION_KEYS
     : NEW_BASE_EXPRESSION_KEYS;
-}
-
-function dataUrlBlob(dataUrl: string) {
-  const separator = dataUrl.indexOf(",");
-  if (!dataUrl.startsWith("data:") || separator < 0) {
-    throw new Error("A prévia renderizada não é um data URL válido.");
-  }
-  const header = dataUrl.slice(5, separator);
-  const payload = dataUrl.slice(separator + 1);
-  const parts = header.split(";");
-  const mime = parts.shift() || "application/octet-stream";
-  const binary = parts.some((part) => part.toLowerCase() === "base64")
-    ? atob(payload)
-    : decodeURIComponent(payload);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return new Blob([bytes], { type: mime });
 }
 
 async function frameBlob(frame: { fileUrl: string }) {
@@ -488,14 +469,26 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
   const keys = expressionKeysForCharacter(character, packs, modelPacks);
   const usesBuiltInBase = character.faceMode !== "single" && character.faceMode !== "pack";
   const pack = packs.find((item) => item.id === character.expressionPackId);
+  const rendered = new Map<string, Promise<Blob>>();
+  const render = (key: string) => {
+    const cached = rendered.get(key);
+    if (cached) return cached;
+    const pending = renderStudioCharacterBlob(character, key as ExpressionKey, catalog, packs, modelPacks)
+      .catch((error) => {
+        rendered.delete(key);
+        throw error;
+      });
+    rendered.set(key, pending);
+    return pending;
+  };
   return createCharacterBundle({
     folderName: character.name,
     character: { ...character, id: character.id },
     usesBuiltInBase,
     expressions: keys,
-    renderPreview: async () => dataUrlBlob(await renderStudioCharacter(character, keys[0], catalog, packs, modelPacks)),
-    renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(character, key as ExpressionKey, catalog, packs, modelPacks)),
-    renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks)),
+    renderPreview: () => render(keys[0]),
+    renderComplete: (key) => render(key),
+    renderWithoutFace: () => renderStudioCharacterBlob({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks),
     faceFrame: async (key) => {
       const frame = pack?.frames.find((item) => item.key === key);
       return frame ? frameBlob(frame) : null;
@@ -540,14 +533,26 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
             ?? (variant.id === character.selections.roupas ? character.protectionMasks?.roupas : undefined),
         },
       };
+      const rendered = new Map<string, Promise<Blob>>();
+      const render = (key: string) => {
+        const cached = rendered.get(key);
+        if (cached) return cached;
+        const pending = renderStudioCharacterBlob(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks)
+          .catch((error) => {
+            rendered.delete(key);
+            throw error;
+          });
+        rendered.set(key, pending);
+        return pending;
+      };
       return {
         folderName: variant.label,
         character: { ...variantCharacter, id: character.id },
         usesBuiltInBase: character.faceMode !== "single" && character.faceMode !== "pack",
         expressions,
-        renderPreview: async () => dataUrlBlob(await renderStudioCharacter(variantCharacter, expressions[0], catalog, packs, modelPacks)),
-        renderComplete: async (key) => dataUrlBlob(await renderStudioCharacter(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks)),
-        renderWithoutFace: async () => dataUrlBlob(await renderStudioCharacter({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks)),
+        renderPreview: () => render(expressions[0]),
+        renderComplete: (key) => render(key),
+        renderWithoutFace: () => renderStudioCharacterBlob({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks),
         faceFrame: async (key) => {
           const frame = pack?.frames.find((item) => item.key === key);
           return frame ? frameBlob(frame) : null;

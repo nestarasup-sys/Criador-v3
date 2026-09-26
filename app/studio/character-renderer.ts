@@ -183,12 +183,15 @@ export function expressionKey(emotion: string, state: string) {
   return (state === "default" ? emotion : `${emotion}_${state}`) as ExpressionKey;
 }
 
-export async function renderStudioCharacter(
+type RenderOutput = "data-url" | "blob";
+
+async function renderStudioCharacterOutput(
   character: Character,
   key: ExpressionKey,
   catalog: PcCatalogItem[],
   packs: PcExpressionPack[],
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
+  output: RenderOutput,
 ) {
   const renderId = `studio-${crypto.randomUUID()}`;
   markRenderDebug("render:start", { renderId, target: "studio-render" });
@@ -501,7 +504,32 @@ export async function renderStudioCharacter(
   // evita que o Studio redimensione e reposicione o personagem ao aparar
   // apenas a caixa de pixels visíveis.
   captureRenderDebug("snapshot:before-export", final, { renderId, target: "studio-render", layer: "final-canvas" });
-  const output = final.toDataURL("image/png");
+  const outputValue = output === "blob"
+    ? await new Promise<Blob>((resolve, reject) => {
+      final.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar o PNG do personagem.")), "image/png");
+    })
+    : final.toDataURL("image/png");
   markRenderDebug("render:complete", { renderId, target: "studio-render" });
-  return output;
+  return outputValue;
+}
+
+export async function renderStudioCharacter(
+  character: Character,
+  key: ExpressionKey,
+  catalog: PcCatalogItem[],
+  packs: PcExpressionPack[],
+  modelPacks: Record<string, DiscoveredModelPack[]> = {},
+) {
+  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "data-url") as Promise<string>;
+}
+
+/** Caminho sem Data URL para exportações; evita uma cópia Base64 de cada pose. */
+export async function renderStudioCharacterBlob(
+  character: Character,
+  key: ExpressionKey,
+  catalog: PcCatalogItem[],
+  packs: PcExpressionPack[],
+  modelPacks: Record<string, DiscoveredModelPack[]> = {},
+) {
+  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "blob") as Promise<Blob>;
 }
