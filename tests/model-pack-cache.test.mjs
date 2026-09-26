@@ -57,8 +57,10 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(creatorPage, /renderLayerMasks\.body\.length > 0[\s\S]*faceContext\.globalCompositeOperation = "destination-in"/);
   assert.doesNotMatch(renderer, /trimCanvas\(final\)/);
   assert.match(renderer, /captureRenderDebug\("snapshot:before-export"/);
-  assert.match(renderer, /const output = final\.toDataURL\("image\/png"\)/);
-  assert.match(characterExport, /function dataUrlBlob\(dataUrl: string\)/);
+  assert.match(renderer, /output === "blob"/);
+  assert.match(renderer, /final\.toBlob/);
+  assert.match(characterExport, /renderStudioCharacterBlob/);
+  assert.doesNotMatch(characterExport, /function dataUrlBlob/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);
   assert.match(studioPage, /JSON\.stringify\(item\.layerMasks \?\? \{\}\)/);
@@ -88,6 +90,8 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
   assert.match(source, /const MAX_PARALLEL_VARIANTS = 2/);
   assert.match(source, /const MAX_PARALLEL_EXPORT_TASKS = 2/);
   assert.match(source, /const exportTaskGate = new ExportTaskGate\(\)/);
+  assert.match(source, /createStudioCharacterRenderSession/);
+  assert.match(source, /session\.clear\(\)/);
   assert.match(source, /onDiagnostics\?:/);
   assert.match(source, /asset\.width === crop\.width && asset\.height === crop\.height/);
   assert.match(source, /mapWithConcurrency\(options\.variants, MAX_PARALLEL_VARIANTS/);

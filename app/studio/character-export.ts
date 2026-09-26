@@ -1,7 +1,7 @@
 "use client";
 
 import JSZip from "jszip";
-import { renderStudioCharacterBlob } from "./character-renderer";
+import { createStudioCharacterRenderSession, renderStudioCharacterBlob } from "./character-renderer";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack } from "./types";
 
 const PACK_EXPRESSION_KEYS = [
@@ -469,11 +469,12 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
   const keys = expressionKeysForCharacter(character, packs, modelPacks);
   const usesBuiltInBase = character.faceMode !== "single" && character.faceMode !== "pack";
   const pack = packs.find((item) => item.id === character.expressionPackId);
+  const session = createStudioCharacterRenderSession(catalog, packs);
   const rendered = new Map<string, Promise<Blob>>();
   const render = (key: string) => {
     const cached = rendered.get(key);
     if (cached) return cached;
-    const pending = renderStudioCharacterBlob(character, key as ExpressionKey, catalog, packs, modelPacks)
+    const pending = renderStudioCharacterBlob(character, key as ExpressionKey, catalog, packs, modelPacks, session)
       .catch((error) => {
         rendered.delete(key);
         throw error;
@@ -481,19 +482,23 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
     rendered.set(key, pending);
     return pending;
   };
-  return createCharacterBundle({
+  try {
+    return await createCharacterBundle({
     folderName: character.name,
     character: { ...character, id: character.id },
     usesBuiltInBase,
     expressions: keys,
     renderPreview: () => render(keys[0]),
     renderComplete: (key) => render(key),
-    renderWithoutFace: () => renderStudioCharacterBlob({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks),
+    renderWithoutFace: () => renderStudioCharacterBlob({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
     faceFrame: async (key) => {
       const frame = pack?.frames.find((item) => item.key === key);
       return frame ? frameBlob(frame) : null;
     },
-  });
+    });
+  } finally {
+    session.clear();
+  }
 }
 
 /** Monta todas as variantes de roupa para exportação pelo Roteiros. */
@@ -501,7 +506,9 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
   const variants = outfitVariantsForExport(character, catalog);
   const expressions = expressionKeysForCharacter(character, packs, modelPacks);
   const pack = packs.find((item) => item.id === character.expressionPackId);
-  return createCharacterVariantsBundle({
+  const session = createStudioCharacterRenderSession(catalog, packs);
+  try {
+    return await createCharacterVariantsBundle({
     folderName: character.name,
     character: { ...character, id: character.id },
     variants,
@@ -537,7 +544,7 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
       const render = (key: string) => {
         const cached = rendered.get(key);
         if (cached) return cached;
-        const pending = renderStudioCharacterBlob(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks)
+        const pending = renderStudioCharacterBlob(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks, session)
           .catch((error) => {
             rendered.delete(key);
             throw error;
@@ -552,12 +559,15 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
         expressions,
         renderPreview: () => render(expressions[0]),
         renderComplete: (key) => render(key),
-        renderWithoutFace: () => renderStudioCharacterBlob({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks),
+        renderWithoutFace: () => renderStudioCharacterBlob({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
         faceFrame: async (key) => {
           const frame = pack?.frames.find((item) => item.key === key);
           return frame ? frameBlob(frame) : null;
         },
       };
     },
-  });
+    });
+  } finally {
+    session.clear();
+  }
 }

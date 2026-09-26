@@ -30,6 +30,30 @@ const MAX_COLOR_CACHE = 16;
 const headWarpCache = new Map<string, CanvasImageSource>();
 const MAX_HEAD_WARP_CACHE = 8;
 
+export type StudioCharacterRenderSession = {
+  catalogById: Map<string, PcCatalogItem>;
+  packsById: Map<string, PcExpressionPack>;
+  maskCache: Map<string, HTMLCanvasElement>;
+  clear: () => void;
+};
+
+export function createStudioCharacterRenderSession(
+  catalog: readonly PcCatalogItem[] = [],
+  packs: readonly PcExpressionPack[] = [],
+): StudioCharacterRenderSession {
+  const session: StudioCharacterRenderSession = {
+    catalogById: new Map(catalog.map((item) => [item.id, item])),
+    packsById: new Map(packs.map((pack) => [pack.id, pack])),
+    maskCache: new Map(),
+    clear: () => {
+      session.catalogById.clear();
+      session.packsById.clear();
+      session.maskCache.clear();
+    },
+  };
+  return session;
+}
+
 export function clearStudioCharacterRenderCaches() {
   chromaCache.clear();
   colorLayerCache.clear();
@@ -112,7 +136,10 @@ function paintStroke(context: CanvasRenderingContext2D, stroke: MaskStroke, colo
   context.restore();
 }
 
-function createMask(strokes: MaskStroke[], width: number, height: number) {
+function createMask(strokes: MaskStroke[], width: number, height: number, session?: StudioCharacterRenderSession) {
+  const cacheKey = session ? `${width}x${height}:${JSON.stringify(strokes)}` : "";
+  const cached = session?.maskCache.get(cacheKey);
+  if (cached) return cached;
   const canvas = document.createElement("canvas");
   canvas.width = width;
   canvas.height = height;
@@ -132,6 +159,7 @@ function createMask(strokes: MaskStroke[], width: number, height: number) {
     }
   }
   context.restore();
+  if (session) session.maskCache.set(cacheKey, canvas);
   return canvas;
 }
 
@@ -192,6 +220,7 @@ async function renderStudioCharacterOutput(
   packs: PcExpressionPack[],
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
   output: RenderOutput,
+  session?: StudioCharacterRenderSession,
 ) {
   const renderId = `studio-${crypto.randomUUID()}`;
   markRenderDebug("render:start", { renderId, target: "studio-render" });
@@ -214,6 +243,8 @@ async function renderStudioCharacterOutput(
     hairBack: character.layerMasks?.hairBack ?? [],
     outfit: character.layerMasks?.outfit ?? [],
   };
+  const catalogById = session?.catalogById ?? new Map(catalog.map((item) => [item.id, item]));
+  const packsById = session?.packsById ?? new Map(packs.map((pack) => [pack.id, pack]));
 
   const drawItem = async (
     item: PcCatalogItem | { fileUrl: string; width: number; height: number; defaultX: number; defaultY: number; outfitGroupId?: string },
@@ -305,14 +336,14 @@ async function renderStudioCharacterOutput(
     if (layer) {
       target.save();
       target.globalCompositeOperation = "destination-in";
-      target.drawImage(createMask(mask, scene.width, scene.height), 0, 0);
+      target.drawImage(createMask(mask, scene.width, scene.height, session), 0, 0);
       target.restore();
       compositeCharacterLayers(targetContext, [layer]);
     }
     markRenderDebug("layer:complete", { renderId, target: "studio-render", layer: layerCategory ?? "unknown", source: item.fileUrl });
   };
 
-  const backHair = catalog.find((item) => item.id === character.selections.cabelosTras);
+  const backHair = character.selections.cabelosTras ? catalogById.get(character.selections.cabelosTras) : undefined;
   const backHairLayer = backHair ? document.createElement("canvas") : null;
   let backHairContext: CanvasRenderingContext2D | null = null;
   if (backHairLayer) {
@@ -391,7 +422,7 @@ async function renderStudioCharacterOutput(
   }
   if (bodyContext && masks.body.length && !headOnlyBehindOutfit) {
     bodyContext.globalCompositeOperation = "destination-in";
-    bodyContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
+    bodyContext.drawImage(createMask(masks.body, scene.width, scene.height, session), 0, 0);
   }
   markRenderDebug("layer:bodyDone", { renderId, target: "studio-render", layer: "corpo" });
   captureRenderDebug("snapshot:after-body", bodyLayer, { renderId, target: "studio-render", layer: "corpo" });
@@ -418,15 +449,15 @@ async function renderStudioCharacterOutput(
       );
       if (masks.body.length) {
         faceContext.globalCompositeOperation = "destination-in";
-        faceContext.drawImage(createMask(masks.body, scene.width, scene.height), 0, 0);
+        faceContext.drawImage(createMask(masks.body, scene.width, scene.height, session), 0, 0);
         faceContext.globalCompositeOperation = "source-over";
       }
     } else if (faceMode === "pack") {
-      const pack = packs.find((item) => item.id === character.expressionPackId);
+      const pack = character.expressionPackId ? packsById.get(character.expressionPackId) : undefined;
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
       if (frame) await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos), [], undefined, faceContext);
     } else {
-      const face = catalog.find((item) => item.id === character.selections.rostos);
+      const face = character.selections.rostos ? catalogById.get(character.selections.rostos) : undefined;
       if (face) await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos", faceContext);
     }
     captureRenderDebug("snapshot:faceBehindOutfit", faceLayer, { renderId, target: "studio-render", layer: "rosto→roupa" });
@@ -437,7 +468,7 @@ async function renderStudioCharacterOutput(
   outfitLayer.height = scene.height;
   const outfitContext = outfitLayer.getContext("2d");
   if (outfitContext) configureHighQualityContext(outfitContext);
-  const outfit = catalog.find((item) => item.id === character.selections.roupas);
+  const outfit = character.selections.roupas ? catalogById.get(character.selections.roupas) : undefined;
   if (outfit) {
     await drawItem(
       outfit,
@@ -471,14 +502,14 @@ async function renderStudioCharacterOutput(
       );
       markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "modelo-head-only" });
     } else if (faceMode === "pack") {
-      const pack = packs.find((item) => item.id === character.expressionPackId);
+      const pack = character.expressionPackId ? packsById.get(character.expressionPackId) : undefined;
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
       if (frame) {
         await drawItem({ ...frame, defaultX: 970, defaultY: 285 }, normalizedTransform(character.adjustments.rostos));
         markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "rosto" });
       }
     } else {
-      const face = catalog.find((item) => item.id === character.selections.rostos);
+      const face = character.selections.rostos ? catalogById.get(character.selections.rostos) : undefined;
       if (face) {
         await drawItem(face, normalizedTransform(character.adjustments.rostos), [], "rostos");
         markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "rosto" });
@@ -486,7 +517,7 @@ async function renderStudioCharacterOutput(
     }
   }
 
-  const frontHair = catalog.find((item) => item.id === character.selections.cabelos);
+  const frontHair = character.selections.cabelos ? catalogById.get(character.selections.cabelos) : undefined;
   if (frontHair) {
     await drawItem(frontHair, normalizedTransform(character.adjustments.cabelos ?? packAdjustments?.cabelos), masks.hairFront, "cabelos");
     markRenderDebug("layer:frontHairDone", { renderId, target: "studio-render", layer: "cabelos" });
@@ -519,8 +550,9 @@ export async function renderStudioCharacter(
   catalog: PcCatalogItem[],
   packs: PcExpressionPack[],
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
+  session?: StudioCharacterRenderSession,
 ) {
-  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "data-url") as Promise<string>;
+  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "data-url", session) as Promise<string>;
 }
 
 /** Caminho sem Data URL para exportações; evita uma cópia Base64 de cada pose. */
@@ -530,6 +562,7 @@ export async function renderStudioCharacterBlob(
   catalog: PcCatalogItem[],
   packs: PcExpressionPack[],
   modelPacks: Record<string, DiscoveredModelPack[]> = {},
+  session?: StudioCharacterRenderSession,
 ) {
-  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "blob") as Promise<Blob>;
+  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "blob", session) as Promise<Blob>;
 }
