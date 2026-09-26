@@ -80,6 +80,10 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
   assert.match(source, /onProgress\?\.\(\{ phase: "rendering"/);
   assert.match(source, /phase: "packaging"/);
   assert.match(source, /const MAX_PARALLEL_VARIANTS = 2/);
+  assert.match(source, /const MAX_PARALLEL_EXPORT_TASKS = 2/);
+  assert.match(source, /const exportTaskGate = new ExportTaskGate\(\)/);
+  assert.match(source, /onDiagnostics\?:/);
+  assert.match(source, /asset\.width === crop\.width && asset\.height === crop\.height/);
   assert.match(source, /mapWithConcurrency\(options\.variants, MAX_PARALLEL_VARIANTS/);
   assert.doesNotMatch(source, /Promise\.all\(options\.variants\.map/);
 });

@@ -1176,6 +1176,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /videoBaseSrc/);
   assert.match(editor, /Duração total do vídeo: \$\{formatTikTokDuration\(section\.video\?\.durationSeconds\)\}/);
   assert.match(editor, /Contexto adicional para IA: \$\{section\.video\?\.additionalAiContext/);
+  assert.match(editor, /expressão \$\{progress\.expressionIndex \+ 1\}\/\$\{progress\.expressionCount\}/);
   assert.match(editor, /openExportFolder\("videos"\)/);
   assert.match(editor, /Abrir pasta de vídeos/);
   assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
@@ -1192,6 +1193,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
   assert.match(server, /export-text/);
   assert.match(server, /export-characters/);
+  assert.match(server, /nymi-character-staging/);
+  assert.match(server, /nymi-character-previous/);
+  assert.match(server, /runWithConcurrency\(exportEntries, 2/);
   assert.match(server, /target === "videos"/);
   assert.match(server, /function insideOrSame\(parent, target\)/);
   assert.match(server, /insideOrSame\(exportRoot, folder\)/);
