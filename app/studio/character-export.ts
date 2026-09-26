@@ -175,13 +175,15 @@ async function inspectPngBlob(blob: Blob) {
   let top = canvas.height;
   let right = 0;
   let bottom = 0;
+  const rowStride = canvas.width * 4;
   for (let y = 0; y < canvas.height; y += 1) {
-    for (let x = 0; x < canvas.width; x += 1) {
-      if (pixels[(y * canvas.width + x) * 4 + 3] === 0) continue;
-      left = Math.min(left, x);
-      top = Math.min(top, y);
-      right = Math.max(right, x + 1);
-      bottom = Math.max(bottom, y + 1);
+    let pixelIndex = y * rowStride;
+    for (let x = 0; x < canvas.width; x += 1, pixelIndex += 4) {
+      if (pixels[pixelIndex + 3] === 0) continue;
+      if (x < left) left = x;
+      if (x + 1 > right) right = x + 1;
+      if (y < top) top = y;
+      if (y + 1 > bottom) bottom = y + 1;
     }
   }
   return {
