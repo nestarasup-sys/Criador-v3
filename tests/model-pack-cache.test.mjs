@@ -14,7 +14,7 @@ test("cacheia expressões pelo pacote realmente resolvido", async () => {
 });
 
 test("invalida o cache quando um modelo ou expressão é substituído", async () => {
-  const [server, basePacks, creatorStorage, renderer, compositor, studioPage, characterExport, outfitVariants] = await Promise.all([
+  const [server, basePacks, creatorStorage, renderer, compositor, studioPage, characterExport, outfitVariants, creatorPage] = await Promise.all([
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
@@ -23,6 +23,7 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-export.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/outfit-variants.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(server, /versionParts = await Promise\.all/);
@@ -49,6 +50,11 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /discoveredPack\?\.type === "head-only"/);
   assert.match(renderer, /discoveredPack\.anchorX \?\? sourceWidth \/ 2/);
   assert.match(renderer, /discoveredPack\.anchorY \?\? sourceHeight/);
+  assert.match(renderer, /const headOnlyBehindOutfit = character\.compositionMode === "outfit-over-face" && headOnlyModel/);
+  assert.match(renderer, /masks\.body\.length && !headOnlyBehindOutfit/);
+  assert.match(renderer, /faceContext\.globalCompositeOperation = "destination-in"/);
+  assert.match(creatorPage, /const headOnlyBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && renderBasePackIsHeadOnly/);
+  assert.match(creatorPage, /renderLayerMasks\.body\.length > 0[\s\S]*faceContext\.globalCompositeOperation = "destination-in"/);
   assert.doesNotMatch(renderer, /trimCanvas\(final\)/);
   assert.match(renderer, /captureRenderDebug\("snapshot:before-export"/);
   assert.match(renderer, /const output = final\.toDataURL\("image\/png"\)/);
