@@ -662,6 +662,7 @@ export default function RoteiroEditor() {
       const selected = [...new Set(script.participants.map((participant) => participant.characterId))];
       const results: string[] = [];
       const failures: string[] = [];
+      const diagnostics: Array<{ totalMs: number; renderMs: number; inspectMs: number; pngMs: number; packageMs: number; packageBytes: number }> = [];
       await mapWithConcurrency(selected, MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS, async (characterId, characterIndex) => {
         const character = assets.characters.find((item) => item.id === characterId);
         const fallback = characterMap.get(characterId);
@@ -670,12 +671,24 @@ export default function RoteiroEditor() {
           const bundle = await buildCharacterVariantsBundle(character, assets.catalog, assets.expressionPacks, assets.modelPacks, (progress) => {
             const phase = progress.phase === "packaging" ? "compactando ZIP" : `pose ${progress.variantIndex + 1}/${progress.variantCount}`;
             setExportMessage(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
+          }, (metrics) => {
+            diagnostics.push(metrics);
+            setExportMessage(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · pacote ${Math.round(metrics.packageMs)}ms`);
           });
           await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       });
-      setExportMessage(`Variantes exportadas: ${results.length}/${selected.length}.${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
+      const totalMetrics = diagnostics.reduce((total, item) => ({
+        totalMs: total.totalMs + item.totalMs,
+        renderMs: total.renderMs + item.renderMs,
+        inspectMs: total.inspectMs + item.inspectMs,
+        pngMs: total.pngMs + item.pngMs,
+        packageMs: total.packageMs + item.packageMs,
+        packageBytes: total.packageBytes + (item.packageBytes ?? 0),
+      }), { totalMs: 0, renderMs: 0, inspectMs: 0, pngMs: 0, packageMs: 0, packageBytes: 0 });
+      const metricsMessage = diagnostics.length ? ` Tempo: ${(totalMetrics.totalMs / 1000).toFixed(1)}s · render ${(totalMetrics.renderMs / 1000).toFixed(1)}s · PNG ${(totalMetrics.pngMs / 1000).toFixed(1)}s · pacote ${(totalMetrics.packageMs / 1000).toFixed(1)}s · ${(totalMetrics.packageBytes / 1024 / 1024).toFixed(1)}MB.` : "";
+      setExportMessage(`Variantes exportadas: ${results.length}/${selected.length}.${metricsMessage}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
     finally { setExportLoading(""); }
   };

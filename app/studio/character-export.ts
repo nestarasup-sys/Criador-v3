@@ -35,6 +35,44 @@ const NEW_BASE_EXPRESSION_KEYS = [
 const faceFrameCache = new Map<string, Promise<Blob>>();
 const MAX_FACE_FRAME_CACHE = 64;
 const MAX_PARALLEL_VARIANTS = 2;
+const MAX_PARALLEL_EXPORT_TASKS = 2;
+const MAX_PARALLEL_ASSETS = 2;
+
+type ExportTiming = {
+  renderMs: number;
+  inspectMs: number;
+  pngMs: number;
+  assets: number;
+};
+
+export type CharacterExportDiagnostics = ExportTiming & {
+  poses: number;
+  expressions: number;
+  packageMs: number;
+  totalMs: number;
+  packageBytes?: number;
+};
+
+function nowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
+
+class ExportTaskGate {
+  private active = 0;
+  private queue: Array<() => void> = [];
+
+  async run<T>(task: () => Promise<T> | T) {
+    if (this.active >= MAX_PARALLEL_EXPORT_TASKS) await new Promise<void>((resolve) => this.queue.push(resolve));
+    this.active += 1;
+    try { return await task(); }
+    finally {
+      this.active -= 1;
+      this.queue.shift()?.();
+    }
+  }
+}
+
+const exportTaskGate = new ExportTaskGate();
 
 async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, mapper: (item: T, index: number) => Promise<R>) {
   const results = new Array<R>(items.length);
@@ -50,6 +88,10 @@ async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, mapp
   const workers = Array.from({ length: Math.min(Math.max(1, limit), items.length) }, () => consume());
   await Promise.all(workers);
   return results;
+}
+
+function emptyExportTiming(): ExportTiming {
+  return { renderMs: 0, inspectMs: 0, pngMs: 0, assets: 0 };
 }
 
 function normalizedPackId(value?: string) {
@@ -175,7 +217,9 @@ function cropPadding(bounds: ImageBounds, width: number, height: number): CropRe
   return { left, top, width: Math.max(1, right - left), height: Math.max(1, bottom - top) };
 }
 
-async function cropAndOptimizePng(blob: Blob, crop: CropRect) {
+async function cropAndOptimizePng(asset: PreparedAsset, crop: CropRect) {
+  if (asset.width === crop.width && asset.height === crop.height && crop.left === 0 && crop.top === 0 && asset.blob.type === "image/png") return asset.blob;
+  const blob = asset.blob;
   const bitmap = await createImageBitmap(blob);
   const canvas = document.createElement("canvas");
   canvas.width = crop.width;
@@ -229,27 +273,64 @@ type PreparedCharacterBundle = {
   sourceCanvas: { width: number; height: number };
   bounds: ImageBounds;
   manifest: Record<string, unknown>;
+  timing: ExportTiming;
 };
 
 async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<PreparedCharacterBundle> {
   const expressions = options.expressions;
   const assets: PreparedAsset[] = [];
+  const timing = emptyExportTiming();
   const addAsset = async (path: string, blob: Blob) => {
-    const inspected = await inspectPngBlob(blob);
+    timing.assets += 1;
+    const inspectStarted = nowMs();
+    const inspected = await exportTaskGate.run(() => inspectPngBlob(blob));
+    timing.inspectMs += nowMs() - inspectStarted;
     assets.push({ path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds });
   };
-  await addAsset("preview.png", await options.renderPreview());
+  const renderAsset = async (path: string, render: () => Promise<Blob>) => {
+    const renderStarted = nowMs();
+    const blob = await exportTaskGate.run(render);
+    timing.renderMs += nowMs() - renderStarted;
+    await addAsset(path, blob);
+  };
+  await renderAsset("preview.png", options.renderPreview);
   if (options.usesBuiltInBase) {
-    for (const key of expressions) await addAsset(`${key}.png`, await options.renderComplete(key));
+    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key) => {
+      const path = `${key}.png`;
+      const renderStarted = nowMs();
+      const blob = await exportTaskGate.run(() => options.renderComplete(key));
+      timing.renderMs += nowMs() - renderStarted;
+      const inspectStarted = nowMs();
+      const inspected = await exportTaskGate.run(() => inspectPngBlob(blob));
+      timing.inspectMs += nowMs() - inspectStarted;
+      timing.assets += 1;
+      return { path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds };
+    });
+    assets.push(...rendered);
   } else {
     if (!options.renderWithoutFace || !options.faceFrame) throw new Error("Pack de rosto incompleto");
-    await addAsset("base/personagem_sem_rosto.png", await options.renderWithoutFace());
-    for (const key of expressions) {
-      const face = await options.faceFrame(key);
+    const faceFrame = options.faceFrame;
+    await renderAsset("base/personagem_sem_rosto.png", options.renderWithoutFace);
+    const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key) => {
+      const face = await faceFrame(key);
       if (!face) throw new Error(`Expressão ausente: ${key}`);
-      await addAsset(`rostos/${key}.png`, face);
-      await addAsset(`completos/${key}.png`, await options.renderComplete(key));
-    }
+      const faceInspectStarted = nowMs();
+      const faceInspected = await exportTaskGate.run(() => inspectPngBlob(face));
+      timing.inspectMs += nowMs() - faceInspectStarted;
+      timing.assets += 1;
+      const renderStarted = nowMs();
+      const complete = await exportTaskGate.run(() => options.renderComplete(key));
+      timing.renderMs += nowMs() - renderStarted;
+      const completeInspectStarted = nowMs();
+      const completeInspected = await exportTaskGate.run(() => inspectPngBlob(complete));
+      timing.inspectMs += nowMs() - completeInspectStarted;
+      timing.assets += 1;
+      return [
+        { path: `rostos/${key}.png`, blob: face, width: faceInspected.width, height: faceInspected.height, bounds: faceInspected.bounds },
+        { path: `completos/${key}.png`, blob: complete, width: completeInspected.width, height: completeInspected.height, bounds: completeInspected.bounds },
+      ];
+    });
+    rendered.forEach((entries) => assets.push(...entries));
   }
   const sourceCanvas = assets.reduce((current, asset) => ({
     width: Math.max(current.width, asset.width),
@@ -260,6 +341,7 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
     assets,
     sourceCanvas,
     bounds,
+    timing,
     manifest: {
     format: "gacha-maker-expression-pack",
     version: 1,
@@ -273,7 +355,14 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
 }
 
 async function writePreparedCharacterBundle(root: JSZip, prepared: PreparedCharacterBundle, crop: CropRect) {
-  for (const asset of prepared.assets) root.file(asset.path, await cropAndOptimizePng(asset.blob, crop));
+  await mapWithConcurrency(prepared.assets, MAX_PARALLEL_ASSETS, async (asset) => {
+    const pngStarted = nowMs();
+    const optimized = await exportTaskGate.run(() => cropAndOptimizePng(asset, crop));
+    prepared.timing.pngMs += nowMs() - pngStarted;
+    return { path: asset.path, blob: optimized };
+  }).then((entries) => {
+    for (const entry of entries) root.file(entry.path, entry.blob);
+  });
   root.file("manifest.json", JSON.stringify({
     ...prepared.manifest,
     canvas: { width: crop.width, height: crop.height },
@@ -329,12 +418,15 @@ export type CharacterVariantsBundleOptions = {
   character: CharacterBundleOptions["character"];
   variants: readonly CharacterVariant[];
   createVariantBundle: (variant: CharacterVariant) => CharacterBundleOptions;
+  expressionCount?: number;
   onProgress?: (progress: { phase: "rendering" | "packaging"; variantIndex: number; variantCount: number }) => void;
+  onDiagnostics?: (diagnostics: CharacterExportDiagnostics) => void;
 };
 
 /** Cria um ZIP com a mesma estrutura do exportador normal dentro de cada POSE. */
 export async function createCharacterVariantsBundle(options: CharacterVariantsBundleOptions) {
   if (!options.variants.length) throw new Error("Este personagem não possui roupa para exportar");
+  const startedAt = nowMs();
   const zip = new JSZip();
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
@@ -344,6 +436,7 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   });
   options.onProgress?.({ phase: "packaging", variantIndex: options.variants.length, variantCount: options.variants.length });
   const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));
+  const packageStarted = nowMs();
   for (const { variant, prepared } of preparedVariants) {
     const poseRoot = root.folder(safePoseFolderName(variant.label, variant.index));
     if (!poseRoot) throw new Error(`Falha ao criar a pasta ${variant.label}`);
@@ -360,7 +453,22 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   }, null, 2));
   // As poses são compostas por PNGs; STORE evita uma segunda compressão lenta
   // sem degradar nem alterar os assets exportados.
-  return zip.generateAsync({ type: "blob", compression: "STORE" });
+  const bundle = await zip.generateAsync({ type: "blob", compression: "STORE" });
+  const timing = preparedVariants.reduce<ExportTiming>((total, item) => ({
+    renderMs: total.renderMs + item.prepared.timing.renderMs,
+    inspectMs: total.inspectMs + item.prepared.timing.inspectMs,
+    pngMs: total.pngMs + item.prepared.timing.pngMs,
+    assets: total.assets + item.prepared.timing.assets,
+  }), emptyExportTiming());
+  options.onDiagnostics?.({
+    ...timing,
+    poses: options.variants.length,
+    expressions: options.variants.length * (options.expressionCount ?? 0),
+    packageMs: nowMs() - packageStarted,
+    totalMs: nowMs() - startedAt,
+    packageBytes: bundle.size,
+  });
+  return bundle;
 }
 
 /** Monta exatamente a estrutura de um ZIP do Criador, agora reutilizável pelos Roteiros. */
@@ -384,7 +492,7 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
 }
 
 /** Monta todas as variantes de roupa para exportação pelo Roteiros. */
-export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}, onProgress?: CharacterVariantsBundleOptions["onProgress"]) {
+export async function buildCharacterVariantsBundle(character: Character, catalog: PcCatalogItem[], packs: PcExpressionPack[], modelPacks: Record<string, Array<{ id: string; expressionKeys: string[]; source?: string; version?: string }>> = {}, onProgress?: CharacterVariantsBundleOptions["onProgress"], onDiagnostics?: CharacterVariantsBundleOptions["onDiagnostics"]) {
   const variants = outfitVariantsForExport(character, catalog);
   const expressions = expressionKeysForCharacter(character, packs, modelPacks);
   const pack = packs.find((item) => item.id === character.expressionPackId);
@@ -392,7 +500,9 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
     folderName: character.name,
     character: { ...character, id: character.id },
     variants,
+    expressionCount: expressions.length,
     onProgress,
+    onDiagnostics,
     createVariantBundle: (variant) => {
       const packId = normalizedPackId(character.basePackId);
       const variantKey = `${variant.id}:${packId}`;
