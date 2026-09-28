@@ -68,6 +68,7 @@ test("Fabricador mantém a página e o preview roláveis", async () => {
   assert.match(styles, /\.page\s*\{[^}]*height:\s*100dvh;[^}]*overflow-y:\s*auto;/s);
   assert.match(styles, /\.canvasWrap[^\{]*\{[^}]*overflow:\s*auto(?:;|\})/s);
   assert.match(styles, /\.panel[^\{]*\{[^}]*position:\s*sticky;/s);
+  assert.match(styles, /\.panel[^\{]*\{[^}]*max-height:\s*calc\(100dvh - 36px\)[^}]*overflow-y:\s*auto;/s);
 });
 
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {
