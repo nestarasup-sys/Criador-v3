@@ -2,6 +2,19 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
+async function requireLocalModelFixture(t, relativePath) {
+  try {
+    await access(new URL(`../public/models/modelos/${relativePath}`, import.meta.url));
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      t.skip("requer assets locais de modelo, que deliberadamente não são versionados");
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
@@ -94,7 +107,9 @@ test("keeps the nine-expression pack contract in the editor", async () => {
   assert.match(page, /faceMode === "pack"/);
 });
 
-test("ships the complete female and male expression bases and exports final frames", async () => {
+test("ships the complete female and male expression bases and exports final frames", async (t) => {
+  if (!await requireLocalModelFixture(t, "feminino/modelo-1/normal.png")) return;
+  if (!await requireLocalModelFixture(t, "masculino/modelo-1/normal.png")) return;
   const [page, basePacks, expressions] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
@@ -125,7 +140,9 @@ test("ships the complete female and male expression bases and exports final fram
   assert.match(page, /root\.file\(`\$\{key\}\.png`/);
 });
 
-test("discovers numbered model folders with shared hair and outfits by gender", async () => {
+test("discovers numbered model folders with shared hair and outfits by gender", async (t) => {
+  if (!await requireLocalModelFixture(t, "feminino/modelo-2/normal.png")) return;
+  if (!await requireLocalModelFixture(t, "masculino/modelo-2/normal.png")) return;
   const [page, basePacks, storage, server] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
@@ -310,7 +327,9 @@ test("corrects the inverted Corado 3 blink and talk source names", async () => {
   assert.match(importer, /"_talk": "_blink"/);
 });
 
-test("imports Surpreso 2 for all five numbered models, including the misspelled Talk sheet", async () => {
+test("imports Surpreso 2 for all five numbered models, including the misspelled Talk sheet", async (t) => {
+  if (!await requireLocalModelFixture(t, "feminino/modelo-2/surpreso_2.png")) return;
+  if (!await requireLocalModelFixture(t, "masculino/modelo-2/surpreso_2.png")) return;
   const [page, types, expressions, importer] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/types.ts", import.meta.url), "utf8"),

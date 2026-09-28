@@ -1,11 +1,18 @@
 import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
+import sharp from "sharp";
 
 const baseURL = process.env.NYMI_E2E_BASE_URL ?? "http://localhost:6700";
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
+const fabricadorOnly = process.argv.includes("--fabricador");
+
 try {
+  if (fabricadorOnly) {
+    await runFabricadorSmoke(page, baseURL);
+    console.log(JSON.stringify({ feature: "fabricador", status: "passed" }));
+  } else {
   await page.goto(`${baseURL}/`, { waitUntil: "domcontentloaded", timeout: 30_000 });
   await waitForImages(page);
   assert.match(await page.title(), /Nymi Gacha/i);
@@ -47,6 +54,10 @@ try {
   await assertVisible(reloadedQualityCharacter);
   await reloadedQualityCharacter.click();
   assert.equal(await page.getByText(/QUALIDADE (?:MÁXIMA|LIMITADA PELA FONTE)/).count(), 0, "Avisos técnicos de qualidade não devem poluir o Studio");
+
+  const fabricadorPage = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await runFabricadorSmoke(fabricadorPage, baseURL);
+  await fabricadorPage.close();
 
   // Keep the editor workflow in a fresh context. This avoids development-mode
   // HMR module state leaking between the three independent route checks.
@@ -102,8 +113,67 @@ try {
   const objectUrlStats = await monitorObjectUrls(roteiroPage, baseURL);
   assert.ok(objectUrlStats.active < 100, `URLs de objeto ativas demais: ${objectUrlStats.active}`);
   console.log(JSON.stringify({ phase: 8, status: "passed", objectUrlStats }));
+  }
 } finally {
   await browser.close();
+}
+
+async function makeFabricadorEyesPng() {
+  const svg = Buffer.from(`<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+    <rect width="400" height="200" fill="#00ff00"/>
+    <ellipse cx="110" cy="55" rx="38" ry="26" fill="#111"/>
+    <ellipse cx="290" cy="55" rx="38" ry="26" fill="#111"/>
+    <rect x="72" y="145" width="76" height="12" rx="6" fill="#111"/>
+    <rect x="252" y="145" width="76" height="12" rx="6" fill="#111"/>
+  </svg>`);
+  return sharp(svg).png().toBuffer();
+}
+
+async function makeFabricadorMouthsPng() {
+  const cells = [];
+  for (let row = 0; row < 3; row += 1) {
+    for (let column = 0; column < 7; column += 1) {
+      const cx = column * 100 + 50;
+      const cy = row * 100 + 50;
+      cells.push(`<ellipse cx="${cx}" cy="${cy}" rx="${18 + ((row * 7 + column) % 5)}" ry="${7 + ((row + column) % 4)}" fill="#111"/>`);
+    }
+  }
+  const svg = Buffer.from(`<svg width="700" height="300" xmlns="http://www.w3.org/2000/svg"><rect width="700" height="300" fill="#00ff00"/>${cells.join("")}</svg>`);
+  return sharp(svg).png().toBuffer();
+}
+
+async function runFabricadorSmoke(currentPage, rootUrl) {
+  await currentPage.goto(`${rootUrl}/Ferramentas/fabricador-de-modelo`, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  await assertVisible(currentPage.getByText("Fabricador de Modelo", { exact: true }).first());
+
+  const uploads = currentPage.locator('label').filter({ has: currentPage.locator('input[type="file"]') });
+  const eyeInput = uploads.filter({ hasText: "Olhos" }).locator('input[type="file"]').first();
+  const mouthInput = uploads.filter({ hasText: "Bocas" }).locator('input[type="file"]').first();
+
+  await eyeInput.setInputFiles({ name: "e2e-olhos.png", mimeType: "image/png", buffer: await makeFabricadorEyesPng() });
+  await assertVisible(currentPage.getByText("Pronto", { exact: true }).first());
+  await currentPage.waitForFunction(() => {
+    const canvas = document.querySelector("canvas");
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return false;
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let index = 3; index < pixels.length; index += 4) if (pixels[index] > 0) return true;
+    return false;
+  }, undefined, { timeout: 20_000 });
+
+  await mouthInput.setInputFiles({ name: "e2e-bocas.png", mimeType: "image/png", buffer: await makeFabricadorMouthsPng() });
+  await assertVisible(currentPage.getByText("21/21", { exact: true }));
+
+  await currentPage.getByRole("button", { name: /Exportar/ }).first().click();
+  const generate = currentPage.getByRole("button", { name: "Gerar 21 expressões" });
+  await assertVisible(generate);
+  await generate.click();
+  await currentPage.waitForFunction(() => document.body.innerText.includes("21 expressões prontas"), undefined, { timeout: 45_000 });
+
+  const previewCanvas = currentPage.locator("canvas").first();
+  await assertVisible(previewCanvas);
+  const box = await previewCanvas.boundingBox();
+  assert.ok(box && box.width > 200 && box.height > 200, "Preview do Fabricador precisa permanecer visível e dimensionado");
 }
 
 async function assertVisible(locator) {

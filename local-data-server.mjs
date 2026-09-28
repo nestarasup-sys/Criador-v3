@@ -15,6 +15,7 @@ import { isBaseVideoReferencedByScripts } from "./services/base-dados/references
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { createCharacterStore } from "./services/storage/character-store.mjs";
+import { assertModelExportSession, cancelModelExportSession, commitModelExportSession, createModelExportSession, modelExportPaths, nextModelNumber } from "./services/models/model-export-session.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { emptyAppState, normalizeAppState, normalizeCharacterDocument } from "./app/domain/document-schemas.mjs";
 import { baseExpressionKeys, collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
@@ -221,6 +222,7 @@ async function runWithConcurrency(items, limit, worker) {
 }
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
+const MODEL_EXPORT_STAGING_ROOT = resolve(MODELS_ROOT, "..", ".model-export-staging");
 const EXPLORER_PATH = join(process.env.WINDIR ?? process.env.SystemRoot ?? "C:\\Windows", "explorer.exe");
 const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
@@ -454,6 +456,7 @@ async function ensureFolders() {
     mkdir(PRINTS_ROOT, { recursive: true }),
     mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
     mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
+    mkdir(MODEL_EXPORT_STAGING_ROOT, { recursive: true }),
   ]);
 }
 
@@ -730,6 +733,10 @@ async function discoverModels() {
 
 async function loadState() {
   await ensureFolders();
+  // Sessões de exportação são temporárias. Se o servidor reiniciou, nenhuma
+  // sessão anterior pode continuar com segurança; limpe-as antes de expor o catálogo.
+  await rm(MODEL_EXPORT_STAGING_ROOT, { recursive: true, force: true });
+  await mkdir(MODEL_EXPORT_STAGING_ROOT, { recursive: true });
   let parsed;
   try {
     parsed = JSON.parse(await readFile(STATE_PATH, "utf8"));
@@ -1119,8 +1126,14 @@ async function route(request, response) {
     const body = await requestJson(request);
     const normalized = normalizeFabricatorPresets(body);
     await queueFabricatorMutation(async () => {
-      fabricatorPresets = normalized;
-      await queueFabricatorPresetsWrite();
+      const previous = fabricatorPresets;
+      try {
+        fabricatorPresets = normalized;
+        await queueFabricatorPresetsWrite();
+      } catch (error) {
+        fabricatorPresets = previous;
+        throw error;
+      }
     });
     sendJson(response, request, 200, fabricatorPresets);
     return;
@@ -1133,6 +1146,9 @@ async function route(request, response) {
     assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
     const kind = ["eyes", "eyebrows", "mouths", "blush", "shadow", "manpu"].includes(metadata.kind) ? metadata.kind : null;
     if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
+    if (fabricatorAssets.some((asset) => asset.id === id)) {
+      throw Object.assign(new Error("Já existe um asset com este identificador."), { status: 409, code: "FABRICATOR_ASSET_EXISTS" });
+    }
     const body = await requestBody(request, BODY_LIMITS.image);
     const extension = contentType === "image/jpeg" ? ".jpg" : contentType === "image/webp" ? ".webp" : ".png";
     const fileName = `${id}${extension}`;
@@ -1140,14 +1156,22 @@ async function route(request, response) {
     if (!inside(FABRICATOR_ROOT, filePath)) throw new Error("Destino do Fabricador inválido");
     await mkdir(FABRICATOR_ROOT, { recursive: true });
     await queueFabricatorMutation(async () => {
-      const previous = fabricatorAssets.find((asset) => asset.id === id);
-      if (previous?.fileName && previous.fileName !== fileName) await rm(join(FABRICATOR_ROOT, previous.fileName), { force: true }).catch(() => undefined);
-      await writeFile(filePath, body);
-      fabricatorAssets = [
-        ...fabricatorAssets.filter((asset) => asset.id !== id),
-        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma), placement: normalizeFabricatorPlacement(metadata.placement) },
-      ];
-      await queueFabricatorWrite();
+      if (fabricatorAssets.some((entry) => entry.id === id)) {
+        throw Object.assign(new Error("Já existe um asset com este identificador."), { status: 409, code: "FABRICATOR_ASSET_EXISTS" });
+      }
+      const previousAssets = fabricatorAssets;
+      try {
+        await writeFile(filePath, body);
+        fabricatorAssets = [
+          ...fabricatorAssets,
+          { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma), placement: normalizeFabricatorPlacement(metadata.placement) },
+        ];
+        await queueFabricatorWrite();
+      } catch (error) {
+        fabricatorAssets = previousAssets;
+        await rm(filePath, { force: true }).catch(() => undefined);
+        throw error;
+      }
     });
     sendJson(response, request, 200, { ok: true, id, fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${id}` });
     return;
@@ -1163,8 +1187,14 @@ async function route(request, response) {
     if (body?.placement !== undefined && !placement) throw Object.assign(new Error("Posição do asset inválida."), { status: 400, code: "INVALID_FABRICATOR_PLACEMENT" });
     if (!chroma && !placement) throw Object.assign(new Error("Nenhuma alteração válida para o asset."), { status: 400, code: "EMPTY_FABRICATOR_PATCH" });
     await queueFabricatorMutation(async () => {
-      fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}) } : entry);
-      await queueFabricatorWrite();
+      const previousAssets = fabricatorAssets;
+      try {
+        fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}) } : entry);
+        await queueFabricatorWrite();
+      } catch (error) {
+        fabricatorAssets = previousAssets;
+        throw error;
+      }
     });
     sendJson(response, request, 200, { ok: true, id, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}) });
     return;
@@ -1174,9 +1204,41 @@ async function route(request, response) {
     const asset = fabricatorAssets.find((entry) => entry.id === id);
     if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
     await queueFabricatorMutation(async () => {
-      fabricatorAssets = fabricatorAssets.filter((entry) => entry.id !== id);
-      await queueFabricatorWrite();
-      await rm(join(FABRICATOR_ROOT, asset.fileName), { force: true }).catch(() => undefined);
+      const previousAssets = fabricatorAssets;
+      const previousPresets = fabricatorPresets;
+      const sourcePath = join(FABRICATOR_ROOT, asset.fileName);
+      const quarantinePath = join(FABRICATOR_ROOT, `.delete-${id}-${Date.now()}`);
+      let quarantined = false;
+      try {
+        try {
+          await rename(sourcePath, quarantinePath);
+          quarantined = true;
+        } catch (error) {
+          if (error?.code !== "ENOENT") throw error;
+        }
+
+        fabricatorAssets = fabricatorAssets.filter((entry) => entry.id !== id);
+        if (["blush", "shadow", "manpu"].includes(asset.kind)) {
+          fabricatorPresets = Object.fromEntries(Object.entries(fabricatorPresets).map(([key, preset]) => {
+            if (preset?.effectAssets?.[asset.kind] !== id) return [key, preset];
+            return [key, {
+              ...preset,
+              enabledEffects: { ...preset.enabledEffects, [asset.kind]: false },
+              effectAssets: { ...preset.effectAssets, [asset.kind]: null },
+            }];
+          }));
+        }
+
+        await queueFabricatorWrite();
+        await queueFabricatorPresetsWrite();
+        if (quarantined) await rm(quarantinePath, { force: true });
+      } catch (error) {
+        fabricatorAssets = previousAssets;
+        fabricatorPresets = previousPresets;
+        if (quarantined) await rename(quarantinePath, sourcePath).catch(() => undefined);
+        await Promise.all([queueFabricatorWrite(), queueFabricatorPresetsWrite()]).catch(() => undefined);
+        throw error;
+      }
     });
     sendJson(response, request, 200, { ok: true, id });
     return;
@@ -1207,12 +1269,7 @@ async function route(request, response) {
   const nextModelMatch = url.pathname.match(/^\/models\/next\/(feminino|masculino)$/i);
   if (nextModelMatch && request.method === "GET") {
     const gender = nextModelMatch[1].toLowerCase();
-    const genderRoot = join(MODELS_ROOT, gender);
-    const entries = await readdir(genderRoot, { withFileTypes: true });
-    const numbers = entries
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => Number(entry.name.match(/^modelo-(\d+)$/i)?.[1] ?? 0));
-    const number = Math.max(0, ...numbers) + 1;
+    const number = await nextModelNumber({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender });
     sendJson(response, request, 200, { gender, number, id: `modelo-${number}` });
     return;
   }
@@ -1251,6 +1308,81 @@ async function route(request, response) {
     sendJson(response, request, 200, { ok: true, gender, id: modelId, expressionKey, bytes: body.length, path: filePath });
     return;
   }
+  const modelExportSessionMatch = url.pathname.match(/^\/models\/export-session\/(feminino|masculino)\/(modelo-[0-9]{1,5})(?:\/file\/([a-zA-Z0-9_.-]{1,160})|\/(commit))?$/i);
+  if (modelExportSessionMatch) {
+    const gender = modelExportSessionMatch[1].toLowerCase();
+    const modelId = safeId(modelExportSessionMatch[2]);
+    const fileName = modelExportSessionMatch[3] || null;
+    const commitAction = modelExportSessionMatch[4] === "commit";
+    const { genderRoot, finalFolder, stagingFolder } = modelExportPaths(MODELS_ROOT, MODEL_EXPORT_STAGING_ROOT, gender, modelId);
+    if (!inside(genderRoot, finalFolder) || !inside(MODEL_EXPORT_STAGING_ROOT, stagingFolder)) {
+      throw Object.assign(new Error("Destino do modelo inválido."), { status: 400 });
+    }
+
+    if (request.method === "POST" && !fileName && !commitAction) {
+      await createModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId });
+      sendJson(response, request, 200, { ok: true, gender, id: modelId });
+      return;
+    }
+
+    if (request.method === "DELETE" && !fileName && !commitAction) {
+      await cancelModelExportSession({ stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId });
+      sendJson(response, request, 200, { ok: true, gender, id: modelId });
+      return;
+    }
+
+    if (request.method === "POST" && fileName) {
+      if (fileName.includes("..") || fileName.startsWith(".")) throw Object.assign(new Error("Nome de arquivo inválido."), { status: 400 });
+      await assertModelExportSession({ stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId });
+      const filePath = join(stagingFolder, fileName);
+      if (!inside(stagingFolder, filePath)) throw Object.assign(new Error("Destino do arquivo inválido."), { status: 400 });
+      const isJson = fileName.toLowerCase() === `${modelId}.json`;
+      const isPng = fileName.toLowerCase().endsWith(".png");
+      if (!isJson && !isPng) throw Object.assign(new Error("A exportação só aceita PNGs e o JSON do modelo."), { status: 415 });
+      const body = await requestBody(request, isJson ? BODY_LIMITS.json : BODY_LIMITS.image);
+      if (isJson) {
+        assertMimeType(contentTypeOf(request), new Set(["application/json"]), "O manifesto do modelo precisa ser JSON.");
+        let manifest;
+        try { manifest = JSON.parse(body.toString("utf8")); } catch { throw Object.assign(new Error("Manifesto de modelo inválido."), { status: 400 }); }
+        if (!Array.isArray(manifest?.expressionKeys) || manifest.expressionKeys.length !== 21) {
+          throw Object.assign(new Error("O manifesto precisa declarar exatamente 21 expressões."), { status: 400, code: "INVALID_MODEL_EXPRESSIONS" });
+        }
+        const expressionKeys = manifest.expressionKeys.map((key) => safeId(key));
+        if (new Set(expressionKeys).size !== 21) {
+          throw Object.assign(new Error("As 21 expressões do manifesto precisam ser únicas."), { status: 400, code: "INVALID_MODEL_EXPRESSIONS" });
+        }
+        await writeJsonAtomic(filePath, { ...manifest, expressionKeys, gender, catalogVersion: "v1" });
+      } else {
+        assertMimeType(contentTypeOf(request), new Set(["image/png"]), "As expressões do modelo precisam ser PNG.");
+        const imageMetadata = await sharp(body).metadata();
+        if (imageMetadata.width !== 1920 || imageMetadata.height !== 1080) {
+          throw Object.assign(new Error("Cada expressão precisa ter exatamente 1920×1080 pixels."), { status: 400 });
+        }
+        await writeFile(filePath, body);
+      }
+      sendJson(response, request, 200, { ok: true, gender, id: modelId, fileName });
+      return;
+    }
+
+    if (request.method === "POST" && commitAction) {
+      const manifest = await readOptionalJson(join(stagingFolder, `${modelId}.json`));
+      if (!manifest || !Array.isArray(manifest.expressionKeys) || manifest.expressionKeys.length !== 21) {
+        throw Object.assign(new Error("A exportação está sem manifesto válido."), { status: 400, code: "INCOMPLETE_MODEL_EXPORT" });
+      }
+      const keys = manifest.expressionKeys.map((key) => safeId(key));
+      if (new Set(keys).size !== 21) {
+        throw Object.assign(new Error("A exportação contém chaves de expressão duplicadas."), { status: 400, code: "INCOMPLETE_MODEL_EXPORT" });
+      }
+      const expectedFiles = [
+        `${modelId}.json`,
+        ...keys.flatMap((key) => [`${key}.png`, `${key}_talk.png`, `${key}_blink.png`]),
+      ];
+      const result = await commitModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId, expectedFiles });
+      sendJson(response, request, 200, { ok: true, gender, id: modelId, files: result.files });
+      return;
+    }
+  }
+
   const modelImportMatch = url.pathname.match(/^\/models\/import\/(feminino|masculino)\/(modelo-[0-9]{1,5})\/([a-zA-Z0-9_.-]{1,160})$/i);
   if (modelImportMatch && request.method === "POST") {
     const gender = modelImportMatch[1].toLowerCase();

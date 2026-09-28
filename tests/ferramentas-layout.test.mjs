@@ -14,179 +14,160 @@ test("dashboard de Ferramentas ocupa a largura disponível e usa duas colunas", 
   assert.match(styles, /@media\s*\(max-width:\s*720px\)[^{]*\{[^}]*\.dashboardMain \.grid\s*\{[^}]*grid-template-columns:\s*1fr;/s);
 });
 
-test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async () => {
-  const [page, server] = await Promise.all([
-    read("app/Ferramentas/page.tsx"),
-    read("local-data-server.mjs"),
-  ]);
-
+test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
+  const page = await read("app/Ferramentas/page.tsx");
   assert.match(page, /<strong>04<\/strong>/);
-  assert.match(page, /area2-final-head-lock/);
-  assert.doesNotMatch(page, /alinhador-profissional-v2|laboratorio-cor-modelo|teste-controles-cor/);
-  assert.match(page, /Fabricador de Modelo/);
-  assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
-});
-
-test("Fabricador de Modelo beta está disponível no catálogo", async () => {
-  const [page, tool, mold, expressions, processing, storage, server] = await Promise.all([
-    read("app/Ferramentas/page.tsx"),
-    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
-    read("app/Ferramentas/fabricador-de-modelo/types/eye-model.ts"),
-    read("app/Ferramentas/fabricador-de-modelo/constants/expressions.ts"),
-    read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
-    read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
-    read("local-data-server.mjs"),
-  ]);
-  const browExpressionSource = expressions.slice(expressions.indexOf("export const BROW_VARIATIONS"));
-
   assert.match(page, /fabricador-de-modelo/);
-  assert.match(tool, /processEyeSheet/);
-  assert.doesNotMatch(tool, /MODELO HEAD-ONLY · BETA/);
-  assert.match(tool, /processEyebrowSheet/);
-  assert.match(tool, /processMouthSheet/);
-  assert.match(tool, /processEffectImage/);
-  assert.match(tool, /processManpuSheet/);
-  assert.match(processing, /const columns = 7; const rows = 3/);
-  assert.match(processing, /pieces\.push\(makePiece/);
-  assert.match(processing, /processEffectImage/);
-  assert.match(processing, /processManpuSheet/);
-  assert.match(tool, /Enviar sobrancelhas/);
-  assert.match(tool, /Enviar folha de bocas/);
-  assert.match(tool, /eyebrowPlacement/);
-  assert.match(processing, /greenBackground/);
-  assert.match(processing, /bounds\(data, row\.top, row\.bottom, left, right\)/);
-  assert.match(tool, /_talk\.png/);
-  assert.match(tool, /eyeChromaSettings\.strength/);
-  assert.match(tool, /eyebrowChromaSettings\.strength/);
-  assert.match(tool, /mouthChromaSettings\.strength/);
-  assert.match(tool, /mouthPlacement/);
-  assert.match(tool, /Enviar blush/);
-  assert.match(tool, /Enviar shadow/);
-  assert.match(tool, /Enviar manpu/);
-  assert.match(tool, /effectPieces/);
-  assert.match(tool, /manpuPieces/);
-  assert.match(tool, /Folha 7×3 · 21 expressões/);
-  assert.match(tool, /effectCatalogAssets/);
-  assert.match(tool, /manpuCatalogPieces/);
-  assert.match(tool, /effectCatalogGrid/);
-  assert.match(tool, /Manpu.*21/);
-  assert.match(tool, /assignEffectAsset/);
-  assert.match(tool, /effectAssets/);
-  assert.match(tool, /effectChromaSettings/);
-  assert.match(tool, /2 · Efeitos/);
-  assert.match(tool, /updateEffectEnabled/);
-  assert.match(tool, /enabledEffects/);
-  assert.match(server, /enabledEffects/);
-  assert.match(tool, /mouthPieces\[expressionIndex\]/);
-  assert.match(tool, /mouthPieces\[presetIndex\] \?\? mouthPieces\[0\]/);
-  assert.match(tool, /updateChroma\("eyes"/);
-  assert.match(tool, /updateChroma\("eyebrows"/);
-  assert.match(tool, /Restaurar chroma dos olhos/);
-  assert.match(tool, /Restaurar chroma das sobrancelhas/);
-  assert.match(tool, /scale: \{ min: \.35, max: 12 \}/);
-  assert.match(tool, /scaleX: \{ min: \.5, max: 6\.8 \}/);
-  assert.match(tool, /gap: \{ min: 0, max: 1040 \}/);
-  assert.match(tool, /DEFAULT_PLACEMENT: EyePlacement = \{[^}]*gap: 491 \}/);
-  assert.match(tool, /DEFAULT_BROW_PLACEMENT: EyePlacement = \{[^}]*gap: 491 \}/);
-  assert.match(tool, /rotation: \{ min: -80, max: 80 \}/);
-  assert.match(expressions, /\["aliviada", "Aliviada"\]/);
-  assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
-  assert.match(expressions, /const variation/);
-  assert.match(expressions, /BROW_VARIATIONS/);
-  assert.match(expressions, /browVariation\(\{ scaleY: 1\.16/);
-  assert.match(expressions, /scaleY: 1\.2/);
-  assert.equal((expressions.match(/^\s+(?:variation\(|NORMAL_VARIATION,)/gm) ?? []).length, 21, "Os olhos precisam ter 21 presets");
-  assert.equal((browExpressionSource.match(/^\s+(?:browVariation\(|NORMAL_BROW_VARIATION,)/gm) ?? []).length, 21, "As sobrancelhas precisam ter 21 presets");
-  assert.match(expressions, /export const NORMAL_VARIATION = variation\(\)/);
-  assert.match(expressions, /NORMAL_VARIATION,/);
-  assert.match(expressions, /variation\(\{ scaleY: 1\.08 \}\)/);
-  assert.match(expressions, /variation\(\{ scaleY: 1\.12 \}\)/);
-  assert.match(expressions, /scaleX: 1\.04, scaleY: \.76, rotation: 2, x: -1, y: 1/);
-  assert.match(expressions, /scaleX: 1\.04, scaleY: \.76, rotation: -2, x: 1, y: 1/);
-  assert.match(expressions, /browVariation\(\{ scaleY: \.78, rotation: 14 \}, \{ scaleY: \.78, rotation: -14 \}\)/);
-  assert.match(expressions, /export const NORMAL_BROW_VARIATION = browVariation\(\)/);
-  assert.doesNotMatch(browExpressionSource, /\b(?:scaleX|x|y)\s*:/, "Presets de sobrancelha não podem alterar largura ou posição");
-  assert.match(expressions, /BrowPresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);
-  assert.doesNotMatch(expressions, /pt_/);
-  assert.match(mold, /EyeTransform/);
-  assert.match(mold, /enabledEffects/);
-  assert.match(mold, /effectAssets/);
-  assert.match(server, /effectAssets/);
-  assert.match(tool, /variation\.left/);
-  assert.match(tool, /variation\.right/);
-  assert.match(tool, /eyebrowVariation/);
-  assert.match(tool, /BROW_VARIATIONS\[index\]/);
-  assert.match(tool, /imageFromPiece\(eyebrowPair\)/);
-  assert.match(tool, /if \(eyebrows\) drawPair\(eyebrows, eyebrowPlacement, eyebrowVariation\);\s*if \(mouth\) drawFeature\(mouth, mouthPlacement, 0, mouthVariation\);\s*if \(!pair\) return;/s);
-  assert.doesNotMatch(tool, /setLoaded\(await imageFromPair/);
-  assert.doesNotMatch(tool, /setEyebrowsLoaded\(await imageFromPiece/);
-  assert.match(tool, /eyebrowPlacement\.scaleY\.toFixed\(2\)/);
-  assert.match(tool, /updateEyebrowPlacement\("scaleY"/);
-  assert.doesNotMatch(tool, /Posição vertical/);
-  assert.match(tool, /Zoom das sobrancelhas/);
-  assert.match(tool, /Altura das sobrancelhas/);
-  assert.match(tool, /Distância <output>\{eyebrowPlacement\.gap\}px/);
-  assert.match(tool, /Zoom da boca/);
-  assert.match(tool, /Distância da boca não aplicável/);
-  assert.match(tool, /dragging === "eyebrows"/);
-  assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
-  assert.match(tool, /Gerar 21 expressões/);
-  assert.match(tool, /Exportar para o Criador/);
-  assert.match(tool, /exportGender/);
-  assert.ok(tool.includes("/models/next/${exportGender}"));
-  assert.ok(tool.includes("/models/import/${gender}/${modelId}"));
-  assert.match(tool, /exportModel/);
-  assert.match(tool, /CATALOG_CANVAS_WIDTH = 1920/);
-  assert.match(tool, /CATALOG_CANVAS_HEIGHT = 1080/);
-  assert.match(tool, /CATALOG_MODEL_SIZE = 336/);
-  assert.match(tool, /CATALOG_MODEL_TOP = 10/);
-  assert.match(tool, /Feminino/);
-  assert.match(tool, /Masculino/);
-  assert.match(tool, /BIBLIOTECA LOCAL/);
-  assert.match(tool, /visibleLibraryAssets/);
-  assert.match(tool, /placementSaveTimers/);
-  assert.match(tool, /persistPlacement\("eyes"/);
-  assert.match(tool, /persistPlacement\("eyebrows"/);
-  assert.match(tool, /persistPlacement\("mouths"/);
-  assert.match(tool, /copyPlacementFromAsset/);
-  assert.match(tool, /Copiar posição/);
-  assert.match(tool, /Editor permanente de presets/);
-  assert.match(tool, /Salvar presets permanentemente/);
-  assert.match(tool, /loadFabricatorPresets/);
-  assert.match(tool, /saveFabricatorPresets/);
-  assert.match(tool, /presetTransform/);
-  assert.match(tool, /updatePresetTransform/);
-  assert.match(storage, /placement\?: EyePlacement/);
-  assert.match(storage, /updateFabricatorAsset\(assetId: string, updates/);
-  assert.match(storage, /uploadFabricatorAsset/);
-  assert.match(storage, /\/fabricador-modelos/);
-  assert.match(storage, /loadFabricatorPresets/);
-  assert.match(storage, /saveFabricatorPresets/);
-  assert.match(storage, /pcSaved/);
-  assert.match(server, /FABRICATOR_ROOT/);
-  assert.match(server, /FABRICATOR_MANIFEST_PATH = join\(FABRICATOR_ROOT, "index\.json"\)/);
-  assert.match(server, /recoveredAssets/);
-  assert.match(server, /function queueFabricatorWrite\(\) \{\s*return writeJsonAtomic/s);
-  assert.match(server, /\/files\/fabricador-modelos/);
-  assert.match(server, /request\.method === "PATCH"/);
-  assert.match(server, /normalizeFabricatorPlacement/);
-  assert.match(server, /FABRICATOR_PRESETS_PATH/);
-  assert.match(server, /normalizeFabricatorPresets/);
-  assert.match(server, /\/fabricador-modelos\/presets/);
-  assert.match(server, /INVALID_FABRICATOR_PLACEMENT/);
-  assert.match(tool, /molde\.png/);
-  assert.match(mold, /EyePair/);
+  assert.match(page, /Fabricador de Modelo/);
 });
 
-test("Fabricador mantém a página e o preview roláveis", async () => {
+test("Fabricador V2 separa configuração, composição e persistência", async () => {
+  const [page, config, compositor, storage, processing] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
+  ]);
+
+  assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
+  assert.match(page, /Assets/);
+  assert.match(page, /Encaixe/);
+  assert.match(page, /Expressões/);
+  assert.match(page, /Exportar/);
+  assert.match(page, /UploadTile/);
+  assert.match(page, /PlacementControls/);
+  assert.match(page, /ChromaControls/);
+  assert.match(page, /resultGrid/);
+  assert.match(page, /libraryPanel/);
+
+  assert.match(config, /export const DEFAULT_PLACEMENT/);
+  assert.match(config, /export function defaultPresetForIndex/);
+  assert.match(config, /export function mergeSavedPresets/);
+  assert.match(compositor, /export function drawComposition/);
+  assert.match(compositor, /export async function toCatalogFrame/);
+
+  assert.match(storage, /PRESETS_DIRTY_KEY/);
+  assert.match(storage, /syncLocalAsset/);
+  assert.match(storage, /localAssets\.filter\(\(asset\) => asset\.localOnly\)/);
+  assert.match(storage, /localSaved/);
+
+  assert.match(processing, /1 - mask \* strength/);
+  assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);
+});
+
+test("Fabricador não simula seleção individual de manpu que o modelo de dados não suporta", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+
+  assert.match(page, /A folha de manpu fornece automaticamente a célula correspondente à expressão selecionada/);
+  assert.doesNotMatch(page, /manpuCatalogPieces/);
+  assert.doesNotMatch(page, /Manpu \$\{String\(pieceIndex \+ 1\)/);
+});
+
+test("exportação do Fabricador usa staging e commit atômico", async () => {
+  const [page, server, exportSessionService] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("local-data-server.mjs"),
+    read("services/models/model-export-session.mjs"),
+  ]);
+
+  assert.match(page, /\/models\/export-session\/\$\{gender\}\/\$\{modelId\}/);
+  assert.match(page, /\/commit/);
+  assert.match(page, /method: "DELETE"/);
+  assert.doesNotMatch(page, /createdModelByThisExport/);
+  assert.doesNotMatch(page, /\/models\/modelos\/\$\{createdModel/);
+
+  assert.match(server, /MODEL_EXPORT_STAGING_ROOT/);
+  assert.match(server, /modelExportSessionMatch/);
+  assert.match(server, /INCOMPLETE_MODEL_EXPORT/);
+  assert.match(server, /expectedFiles/);
+  assert.match(exportSessionService, /await rename\(paths\.stagingFolder, paths\.finalFolder\)/);
+});
+
+test("Fabricador restaura posição salva e bloqueia geração durante reprocessamento", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+
+  assert.match(page, /if \(persist\) setPlacement\(\{ \.\.\.DEFAULT_PLACEMENT \}\)/);
+  assert.match(page, /if \(persist\) setEyebrowPlacement\(\{ \.\.\.DEFAULT_BROW_PLACEMENT \}\)/);
+  assert.match(page, /if \(persist\) setMouthPlacement\(\{ \.\.\.DEFAULT_MOUTH_PLACEMENT \}\)/);
+  assert.match(page, /setPlacementForKind\(asset\.kind, asset\.placement \?\? defaultPlacementForKind\(asset\.kind\)\)/);
+
+  assert.match(page, /processingLayers/);
+  assert.match(page, /processingBusy/);
+  assert.match(page, /if \(processingBusy\).*Aguarde o processamento das camadas terminar antes de gerar/s);
+  assert.match(page, /disabled=\{!pair \|\| processingBusy \|\| generating \|\| exporting\}/);
+});
+
+test("Fabricador cancela saves atrasados ao trocar ou remover assets", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+
+  assert.match(page, /clearTimeout\(timer\);\s*delete placementSaveTimers\.current\[kind\];\s*}\s*const assetId = activeAssetIdForKind\(kind\)/s);
+  assert.match(page, /clearTimeout\(timer\);\s*delete chromaSaveTimers\.current\[kind\];\s*}\s*const assetId = activeAssetIdForKind\(kind\)/s);
+  assert.match(page, /Object\.values\(placementSaveTimers\.current\).*clearTimeout/s);
+  assert.match(page, /Object\.values\(chromaSaveTimers\.current\).*clearTimeout/s);
+});
+
+test("Fabricador não invalida resultado só por navegar e bloqueia geração concorrente", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+
+  assert.match(page, /generationLockRef/);
+  assert.match(page, /exportLockRef/);
+  assert.match(page, /setPlacementForKind\(kind, asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\], false\)/);
+  assert.match(page, /onChange=\{\(event\) => setPresetIndex\(Number\(event\.target\.value\)\)\}/);
+  assert.doesNotMatch(page, /setPresetIndex\(Number\(event\.target\.value\)\); setGenerated\(\[\]\)/);
+  assert.match(page, /if \(generationLockRef\.current\).*já está em andamento/s);
+  assert.match(page, /if \(!pair \|\| exportLockRef\.current \|\| generationLockRef\.current \|\| processingBusy\) return/);
+  assert.match(page, /disabled=\{!pair \|\| !availableNextModel \|\| processingBusy \|\| generating \|\| exporting\}/);
+});
+
+test("Fabricador não desativa regras de hooks para esconder arquitetura inválida", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+  assert.doesNotMatch(page, /eslint-disable react-hooks\/set-state-in-effect/);
+  assert.doesNotMatch(page, /function useLibraryAsset|const useLibraryAsset/);
+});
+
+test("Fabricador só persiste uploads depois de processamento válido", async () => {
+  const [page, processing] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
+  ]);
+
+  assert.match(page, /queuePersistenceAfterProcessing/);
+  assert.match(page, /completePendingPersistence\("eyes"/);
+  assert.match(page, /completePendingPersistence\("eyebrows"/);
+  assert.match(page, /completePendingPersistence\("mouths"/);
+  assert.match(page, /completePendingPersistence\("blush"/);
+  assert.match(page, /completePendingPersistence\("shadow"/);
+  assert.match(page, /completePendingPersistence\("manpu"/);
+  assert.match(processing, /visibleCells/);
+  assert.match(processing, /visibleCells === 0/);
+});
+
+test("Fabricador preserva fallback offline e limpa referências quebradas", async () => {
+  const [page, storage] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
+  ]);
+
+  assert.match(page, /assetId && !assetIds\.has\(assetId\)/);
+  assert.match(page, /referências dependentes limpas/i);
+  assert.match(page, /effectAssets: \{ \.\.\.preset\.effectAssets, \[kind\]: null \}/);
+
+  assert.match(storage, /if \(presetsAreDirty\(\)\)/);
+  assert.match(storage, /markPresetsDirty\(false\)/);
+  assert.match(storage, /volatileOnly/);
+  assert.match(page, /(?:apenas|somente) nesta sessão/);
+});
+
+test("layout do Fabricador mantém preview central, painel de controle e biblioteca responsivos", async () => {
   const styles = await read("app/Ferramentas/fabricador-de-modelo/fabricador.module.css");
 
-  assert.match(styles, /\.page\s*\{[^}]*height:\s*100dvh;[^}]*overflow-y:\s*auto;/s);
-  assert.match(styles, /\.canvasWrap[^\{]*\{[^}]*overflow:\s*auto(?:;|\})/s);
-  assert.match(styles, /\.workspace \{[^}]*max-width: 1920px/);
-  assert.match(styles, /\.layout \{[^}]*350px minmax\(0, 1fr\) 340px/);
-  assert.match(styles, /\.panel[^\{]*\{[^}]*position:\s*sticky;/s);
-  assert.match(styles, /\.panel[^\{]*\{[^}]*max-height:\s*100dvh[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.layout\s*\{[^}]*grid-template-columns:\s*340px minmax\(560px, 1fr\) 320px/s);
+  assert.match(styles, /\.controlPanel\s*\{[^}]*position:\s*sticky/s);
+  assert.match(styles, /\.libraryPanel\s*\{[^}]*position:\s*sticky/s);
+  assert.match(styles, /\.canvasStage\s*\{[^}]*place-items:\s*center/s);
+  assert.match(styles, /@media \(max-width: 760px\)/);
+  assert.match(styles, /\.resultGrid\s*\{[^}]*grid-template-columns:\s*repeat\(4,/s);
 });
 
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {

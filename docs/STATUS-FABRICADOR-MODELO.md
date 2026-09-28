@@ -1,137 +1,152 @@
-# Status de continuidade — Fabricador de Modelo
+# Fabricador de Modelo V2 — estado atual
 
-Atualizado em 31/08/2026. Branch atual: `app-v4`. Último commit da implementação: `10d7582`; último commit do registro: `c37ce38`.
+Atualizado em 28/09/2026 para a branch `V11-TESTE`.
 
-Este documento registra o estado exato para retomar o trabalho depois. Nenhuma chamada de API externa foi feita nesta rodada.
+Este documento descreve somente a implementação atual. Registros antigos de Head Master, Folha 1/Folha 2, 21/42 sprites e painéis de qualidade pertencem a uma arquitetura anterior e não devem orientar novas alterações.
 
-## O que já foi implementado
+## Objetivo
 
-### Núcleo de processamento
+O Fabricador monta modelos head-only a partir de camadas independentes:
 
-- Folha 1 obrigatória e Folha 2 opcional.
-- Detecção adaptativa de 3 linhas × 7 colunas, com fallback seguro 7×3.
-- Proteção vertical entre linhas para evitar que o recorte capture a célula de baixo.
-- Limpeza conservadora de fragmentos estranhos nas bordas.
-- Chroma key conectado às bordas, tolerância, suavidade, feather, despill e limpeza de bordas.
-- Máscara visual separada da máscara estrutural.
-- Anatomia estrutural com crânio, mandíbula, pescoço e perfil em 32 faixas.
-- Head Master robusto com mediana, MAD, outliers, perfil e melhor trio.
-- Estabilização dos trios `default`, `blink` e `talk` antes da calibração.
-- Folha 1 com correção estrutural conservadora e limite configurável.
-- Folha 2 calibrada globalmente apenas por `scaleX`/`scaleY`, com limite padrão de 8% e microajuste padrão de 2%. Não foi migrado warp regional, scanline, liquify ou deformação por bandas.
-- Composição final transparente em 1920×1080, usando `neck-base`, âncora X/Y e escala base de 110%.
-- Pontuação por estabilidade, escala, posição, proporção, silhueta, mandíbula e pescoço.
+- olhos: 2 linhas, aberto em cima e fechado embaixo;
+- sobrancelhas: par esquerdo/direito;
+- bocas: grade 7×3 com 21 células;
+- blush: imagem individual;
+- shadow: imagem individual;
+- manpu: grade 7×3 com 21 células, permitindo células vazias;
+- molde fixo: `public/Ferramentas/fabricador-de-modelo/molde.png`.
 
-### Interface
+## Fluxo da interface
 
-- Grade única para 21 ou 42 sprites.
-- Filtros `Alternar 21/42`, `Folha 1 (21)` e `Folha 2 (21)`.
-- Comparador de expressão por folha, coluna e estado.
-- Ghost entre as folhas.
-- Flicker alternando de fato entre as imagens comparadas.
-- Animação do trio na sequência `default → blink → default → talk → default`.
-- Editor individual de escala, `scaleX`, `scaleY`, deslocamento X/Y, reset, aplicar, copiar para o trio e marcar como revisado.
-- Indicadores de `OK`, `Revisar`, `Crítico` e `Revisado`.
-- Controles reais de calibração: escala, intensidade e limites das folhas, chroma, recorte, padding, recorte justo, recorte quadrado e âncora.
-- Layout com rolagem vertical.
+A interface foi reconstruída em quatro etapas claras:
 
-### Salvamento e integração
+1. **Assets** — upload e estado das camadas.
+2. **Encaixe** — chroma e posição da camada selecionada.
+3. **Expressões** — edição dos 21 presets, efeitos e microajustes.
+4. **Exportar** — geração, revisão, ZIP e envio para o catálogo.
 
-- Validação de 21 ou 42 sprites antes do salvamento.
-- Nomes duplicados são rejeitados.
-- Pasta de destino existente não é sobrescrita.
-- `model.json` recebe `head-only`, `neck-base`, âncora, escala base, dimensões e expressões.
-- O endpoint local continua sendo `/models/fabricator`.
-- O catálogo consulta `/models` dinamicamente, descobre expressões extras e usa versão baseada nos arquivos.
-- O Criador é atualizado pelo evento `nymi:models-updated`, sem exigir reinício do servidor.
-- O Studio e Roteiros continuam consumindo o catálogo existente.
-- Crítico não revisado bloqueia o salvamento; warning não bloqueia; crítico marcado como revisado pode ser salvo conscientemente.
+O preview fica central e estável. A biblioteca fica separada das ações de edição.
 
-## Arquivos criados ou alterados
+Ações destrutivas e não destrutivas agora são distintas:
 
-Núcleo novo/principal:
+- **Remover da montagem** não apaga o arquivo.
+- **Excluir da biblioteca** pede confirmação e remove o arquivo permanentemente.
 
-- `app/Ferramentas/fabricador-de-modelo/types/face-model.ts`
-- `app/Ferramentas/fabricador-de-modelo/utils/statistics.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/structural-mask.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/anatomy.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/head-master.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/quality.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/normalization.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/chroma-key.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/detection.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/fragment-cleaner.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/crop.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/compositor.ts`
-- `app/Ferramentas/fabricador-de-modelo/core/build-model.ts`
-- `app/Ferramentas/fabricador-de-modelo/constants/expressions.ts`
+## Arquitetura
 
-Interface/documentação:
+Arquivos principais:
 
-- `app/Ferramentas/fabricador-de-modelo/page.tsx`
-- `app/Ferramentas/fabricador-de-modelo/components/CalibrationPanel.tsx`
-- `app/Ferramentas/fabricador-de-modelo/components/ComparisonPlayer.tsx`
-- `app/Ferramentas/fabricador-de-modelo/components/ManualAdjustmentPanel.tsx`
-- `app/Ferramentas/fabricador-de-modelo/components/PreviewGrid.tsx`
-- `app/Ferramentas/fabricador-de-modelo/components/QualityPanel.tsx`
-- `app/Ferramentas/ferramentas.module.css`
-- `app/Ferramentas/fabricador-de-modelo/README.md`
-- `local-data-server.mjs`
+- `page.tsx` — orquestração do workspace e estado da sessão;
+- `components/ControlPrimitives.tsx` — controles reutilizáveis;
+- `fabricador-config.ts` — defaults, limites, presets e tipos de fluxo;
+- `core/compositor.ts` — composição em canvas e frame 1920×1080;
+- `core/eye-processing.ts` — chroma, detecção e recorte;
+- `fabricador-storage.ts` — biblioteca e fallback offline;
+- `services/models/model-export-session.mjs` — publicação atômica de modelos;
+- `local-data-server.mjs` — endpoints e persistência local.
 
-Testes:
+## Chroma e processamento
 
-- `tests/fabricador-model.test.mjs`
-- `scripts/e2e-check.mjs`
+O chroma agora separa duas responsabilidades:
 
-O HTML experimental `app/Ferramentas/fabricador-de-modelo/assets/importador-folha-rostos-v11.1 (1).html` continua apenas como referência e não foi incluído nos commits.
+- **máscara estrutural** usa força 100% para localizar corretamente os pixels do asset e calcular recortes;
+- **imagem visual** respeita Força, Tolerância e Suavidade escolhidas pelo usuário.
 
-## Commits desta etapa
+Isso evita que um fundo parcialmente transparente seja confundido com conteúdo durante o recorte.
 
-- `0097f67` — integração inicial da calibração avançada.
-- `ad747dd` — correção de tipagem da calibração da extensão.
-- `7305d79` — detecção determinística.
-- `557089d` — revisão visual, qualidade e ajustes manuais.
-- `785d659` — limpeza de avisos do núcleo.
-- `247a304` — estabilização do perfil da extensão.
-- `f185f06` — documentação do fluxo.
-- `d870eab` — comparação entre as duas folhas.
-- `9b16a6d` — teste visual da ferramenta.
-- `4780c65` — controles completos, recorte e regra de revisão no salvamento.
-- `e8ec385` — upload e geração real no teste de navegador.
-- `b66ccae` — documentação dos controles e revisão.
-- `10d7582` — correção definitiva do Flicker e da animação do trio.
+Proteções adicionais:
 
-## Validações já executadas
+- arquivos acima de 48 MB são rejeitados antes do processamento;
+- imagens acima de 40 milhões de pixels são recusadas antes de criar canvas grande;
+- olhos exigem conteúdo visível nas duas linhas e dois elementos por linha;
+- sobrancelhas exigem conteúdo visível;
+- bocas exigem 21 células não vazias;
+- manpu aceita células vazias.
 
-Após a retomada, a bateria foi executada novamente depois do ajuste final do comparador:
+## Expressões e efeitos
 
-- `npm run typecheck` — passou.
-- `npm run test:unit` — 125 testes passaram.
-- `npm run build` — passou.
-- `npm run test:e2e` — passou; o Playwright abriu a ferramenta, verificou a rolagem, enviou um PNG sintético e gerou 21 sprites.
-- `npx eslint app/Ferramentas/fabricador-de-modelo --quiet` — passou.
-- `node --test tests/fabricador-model.test.mjs` — 2 testes passaram, incluindo Flicker e a sequência `default → blink → default → talk → default`.
+Existem 21 expressões canônicas em `constants/expressions.ts`.
 
-## O que falta fazer
+Cada expressão pode escolher blush, shadow e manpu próprios. Na geração, a posição base é carregada do asset específico usado por aquela expressão — não da última camada aberta no editor.
 
-O ajuste final foi revalidado com sucesso. O próximo passo opcional é a validação visual com uma Folha 1 e uma Folha 2 reais no Chrome.
+Manpu não simula seleção individual de célula: a folha 7×3 é o asset, e a célula correspondente é escolhida automaticamente pelo índice da expressão.
 
-Validações funcionais ainda não cobertas integralmente pelo Playwright:
+O processamento de efeitos é cacheado por asset + chroma durante a geração. Olhos e sobrancelhas decodificados também são reutilizados.
 
-- upload simultâneo de Folha 1 + Folha 2 real e geração de 42 sprites;
-- salvamento real de um modelo pelo botão e confirmação visual no Criador;
-- exportação com folhas reais do usuário;
-- comparação visual de qualidade com folhas reais, pois não há uma folha real versionada de teste no repositório.
+Qualquer alteração que muda a composição invalida a grade já gerada, evitando exportar PNGs antigos depois de reposicionar ou trocar assets.
 
-Esses pontos são validação de ambiente/dados reais, não motivo para reabrir a arquitetura. O fluxo implementado já está utilizável para testar a ferramenta.
+## Biblioteca e persistência
 
-## Estado do diretório de trabalho
+Assets ficam em:
 
-Há alterações manuais do usuário que foram preservadas e não devem ser revertidas nem incluídas em commits:
+- `arquivos/fabricador-modelos/`;
+- `arquivos/fabricador-modelos/index.json`;
+- presets em `arquivos/fabricador-modelos/presets.json`.
 
-- exclusões do `public/models/modelos/feminino/modelo-6/`;
-- alterações manuais nos modelos `modelo-8` e `modelo-9`;
-- pastas novas `modelo-10`, `modelo-11` e `modelo-12`;
-- HTML experimental citado acima.
+Fallback do navegador:
 
-Para voltar com segurança ao estado completo desta implementação, use o commit `10d7582` como ponto de referência (ou `c37ce38` para incluir este registro). Não use `git reset --hard` sem antes preservar os assets manuais listados acima.
+- assets criados offline são preservados;
+- assets `localOnly` tentam sincronizar quando o servidor retorna;
+- presets offline ficam marcados como pendentes;
+- falta de espaço no localStorage não é tratada como salvamento bem-sucedido.
+
+Servidor:
+
+- IDs duplicados são rejeitados;
+- POST/PATCH/presets fazem rollback de memória quando a gravação atômica falha;
+- exclusão usa quarentena do arquivo antes de alterar manifestos;
+- efeitos excluídos são removidos dos presets que os referenciam.
+
+## Exportação atômica
+
+A exportação não grava mais diretamente em `public/models/modelos`.
+
+Fluxo:
+
+1. consulta o próximo número;
+2. reserva `modelo-N` numa pasta de staging;
+3. envia manifesto + 63 PNGs para staging;
+4. servidor verifica as 21 chaves únicas e todos os 64 arquivos;
+5. um `rename` publica a pasta completa de uma vez.
+
+Se houver falha:
+
+- staging é cancelado;
+- nenhum modelo parcial aparece no catálogo;
+- uma segunda exportação não consegue roubar uma reserva ativa;
+- numerações reservadas entram no cálculo do próximo modelo;
+- staging antigo é limpo quando o servidor reinicia.
+
+## Testes adicionados
+
+- `tests/model-export-session.test.mjs`:
+  - reserva concorrente;
+  - commit incompleto;
+  - publicação completa;
+  - cancelamento;
+  - próximo número considerando staging.
+- `tests/ferramentas-layout.test.mjs`:
+  - contratos estruturais do Fabricador V2;
+  - persistência offline;
+  - exportação em staging;
+  - layout novo.
+- `scripts/e2e-check.mjs`:
+  - abre o Fabricador;
+  - envia folha sintética de olhos;
+  - envia grade sintética 7×3 de bocas;
+  - confirma 21/21;
+  - gera as 21 expressões;
+  - valida que o preview continua visível.
+
+## Validação recomendada no Windows self-hosted
+
+Sem artifacts, executar no checkout da `V11-TESTE`:
+
+```powershell
+npm run typecheck
+node --test tests/model-export-session.test.mjs tests/ferramentas-layout.test.mjs
+npm run build
+npm run test:e2e
+```
+
+Além da automação, ainda vale um teste visual com seus assets reais para conferir gosto/posicionamento, porque isso não pode ser inferido por uma folha sintética.

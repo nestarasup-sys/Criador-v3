@@ -12,6 +12,14 @@ export const DEFAULT_CHROMA_SETTINGS: ChromaSettings = {
   softness: 24,
 };
 
+const MAX_SOURCE_PIXELS = 40_000_000;
+
+function assertSourceImageSize(image: HTMLImageElement) {
+  const pixels = image.naturalWidth * image.naturalHeight;
+  if (!image.naturalWidth || !image.naturalHeight) throw new Error("A imagem não possui dimensões válidas.");
+  if (pixels > MAX_SOURCE_PIXELS) throw new Error("A imagem é grande demais para processar com segurança. Reduza a resolução antes de usar.");
+}
+
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
 function distance(r: number, g: number, b: number, target: [number, number, number]) {
@@ -68,9 +76,8 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
   }
   const output = new ImageData(new Uint8ClampedArray(data), width, height);
   for (let i = 0; i < output.data.length / 4; i += 1) if (visited[i] > 0) {
-    const mask = greenBackground ? 1 : visited[i];
-    const appliedStrength = greenBackground ? 1 : strength;
-    output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - mask * appliedStrength));
+    const mask = visited[i];
+    output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - mask * strength));
   }
   return output;
 }
@@ -95,28 +102,29 @@ function bounds(data: ImageData, y0: number, y1: number, x0 = 0, x1 = data.width
   return right > left ? { left, top, right, bottom } : null;
 }
 
-function splitRow(data: ImageData, row: { top: number; bottom: number }): [EyePiece, EyePiece] {
-  const columns = Array.from({ length: data.width }, (_, x) => {
-    for (let y = row.top; y < row.bottom; y += 1) if (data.data[(y * data.width + x) * 4 + 3] > 24) return 1;
+function splitRow(structural: ImageData, visual: ImageData, row: { top: number; bottom: number }): [EyePiece, EyePiece] {
+  const columns = Array.from({ length: structural.width }, (_, x) => {
+    for (let y = row.top; y < row.bottom; y += 1) if (structural.data[(y * structural.width + x) * 4 + 3] > 24) return 1;
     return 0;
   });
-  let bestStart = Math.floor(data.width * .25); let bestEnd = Math.ceil(data.width * .75); let runStart = -1;
+  let bestStart = Math.floor(structural.width * .25); let bestEnd = Math.ceil(structural.width * .75); let runStart = -1;
   for (let x = 0; x <= columns.length; x += 1) {
     if (x < columns.length && columns[x] === 0 && runStart < 0) runStart = x;
     if ((x === columns.length || columns[x] === 1) && runStart >= 0) {
-      if (runStart > data.width * .12 && x < data.width * .88 && x - runStart > bestEnd - bestStart) { bestStart = runStart; bestEnd = x; }
+      if (runStart > structural.width * .12 && x < structural.width * .88 && x - runStart > bestEnd - bestStart) { bestStart = runStart; bestEnd = x; }
       runStart = -1;
     }
   }
   const split = Math.round((bestStart + bestEnd) / 2);
   const makePiece = (left: number, right: number): EyePiece => {
-    const box = bounds(data, row.top, row.bottom, left, right);
-    const local = box ? { left: Math.max(left, box.left), right: Math.min(right, box.right), top: box.top, bottom: box.bottom } : { left, right, top: row.top, bottom: row.bottom };
-    const image = trim(data, local.left, local.top, local.right, local.bottom);
+    const box = bounds(structural, row.top, row.bottom, left, right);
+    if (!box) throw new Error("A folha não contém dois elementos visíveis nessa linha.");
+    const local = { left: Math.max(left, box.left), right: Math.min(right, box.right), top: box.top, bottom: box.bottom };
+    const image = trim(visual, local.left, local.top, local.right, local.bottom);
     const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height; canvas.getContext("2d")!.putImageData(image, 0, 0);
     return { dataUrl: canvas.toDataURL("image/png"), width: image.width, height: image.height };
   };
-  return [makePiece(0, split), makePiece(split, data.width)];
+  return [makePiece(0, split), makePiece(split, structural.width)];
 }
 
 function mergePair(left: EyePiece, right: EyePiece): EyePiece {
@@ -126,15 +134,18 @@ function mergePair(left: EyePiece, right: EyePiece): EyePiece {
 export async function processEyeSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePair> {
   const url = URL.createObjectURL(file);
   try {
-    const image = new Image(); image.src = url; await image.decode();
+    const image = new Image(); image.src = url; await image.decode(); assertSourceImageSize(image);
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
-    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
-    const half = Math.floor(cleaned.height / 2);
-    const top = bounds(cleaned, 0, half) ?? { left: 0, top: 0, right: cleaned.width, bottom: half };
-    const bottom = bounds(cleaned, half, cleaned.height) ?? { left: 0, top: half, right: cleaned.width, bottom: cleaned.height };
-    const [openLeft, openRight] = splitRow(cleaned, top);
-    const [closedLeft, closedRight] = splitRow(cleaned, bottom);
+    const source = context.getImageData(0, 0, canvas.width, canvas.height);
+    const cleaned = removeConnectedChroma(source, settings);
+    const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
+    const half = Math.floor(structural.height / 2);
+    const top = bounds(structural, 0, half);
+    const bottom = bounds(structural, half, structural.height);
+    if (!top || !bottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas duas linhas.");
+    const [openLeft, openRight] = splitRow(structural, cleaned, top);
+    const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
     return { open: mergePair(openLeft, openRight), closed: mergePair(closedLeft, closedRight) };
   } finally { URL.revokeObjectURL(url); }
 }
@@ -143,32 +154,46 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
 export async function processEyebrowSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece> {
   const url = URL.createObjectURL(file);
   try {
-    const image = new Image(); image.src = url; await image.decode();
+    const image = new Image(); image.src = url; await image.decode(); assertSourceImageSize(image);
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
-    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
-    const half = Math.floor(cleaned.height / 2);
-    const whole = bounds(cleaned, 0, cleaned.height);
-    const upper = bounds(cleaned, 0, half);
-    const lower = bounds(cleaned, half, cleaned.height);
-    const row = upper && lower ? { top: upper.top, bottom: upper.bottom } : whole ?? { top: 0, bottom: cleaned.height };
-    const [left, right] = splitRow(cleaned, row);
+    const source = context.getImageData(0, 0, canvas.width, canvas.height);
+    const cleaned = removeConnectedChroma(source, settings);
+    const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
+    const half = Math.floor(structural.height / 2);
+    const whole = bounds(structural, 0, structural.height);
+    if (!whole) throw new Error("A folha de sobrancelhas está vazia depois do chroma.");
+    const upper = bounds(structural, 0, half);
+    const lower = bounds(structural, half, structural.height);
+    const row = upper && lower ? { top: upper.top, bottom: upper.bottom } : whole;
+    const [left, right] = splitRow(structural, cleaned, row);
     return mergePair(left, right);
   } finally { URL.revokeObjectURL(url); }
 }
 
 /** Folha 7×3: limpa o fundo e recorta cada célula pelo último pixel visível. */
-async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
+async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS, allowEmpty = false): Promise<EyePiece[]> {
   const url = URL.createObjectURL(file);
   try {
-    const image = new Image(); image.src = url; await image.decode();
+    const image = new Image(); image.src = url; await image.decode(); assertSourceImageSize(image);
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
-    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
+    const source = context.getImageData(0, 0, canvas.width, canvas.height);
+    const cleaned = removeConnectedChroma(source, settings);
+    const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
     const columns = 7; const rows = 3;
     const pieces: EyePiece[] = [];
-    const makePiece = (x0: number, y0: number, x1: number, y1: number) => {
-      const box = bounds(cleaned, y0, y1, x0, x1) ?? { left: x0, top: y0, right: x1, bottom: y1 };
+    let visibleCells = 0;
+    const makePiece = (x0: number, y0: number, x1: number, y1: number, cellIndex: number) => {
+      const box = bounds(structural, y0, y1, x0, x1);
+      if (!box) {
+        if (!allowEmpty) throw new Error(`A célula ${cellIndex + 1} da grade 7×3 ficou vazia depois do chroma.`);
+        const empty = document.createElement("canvas");
+        empty.width = 1;
+        empty.height = 1;
+        return { dataUrl: empty.toDataURL("image/png"), width: 1, height: 1 };
+      }
+      visibleCells += 1;
       const cropped = trim(cleaned, box.left, box.top, box.right, box.bottom);
       const output = document.createElement("canvas"); output.width = cropped.width; output.height = cropped.height; output.getContext("2d")!.putImageData(cropped, 0, 0);
       return { dataUrl: output.toDataURL("image/png"), width: cropped.width, height: cropped.height };
@@ -176,29 +201,33 @@ async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_C
     for (let row = 0; row < rows; row += 1) for (let column = 0; column < columns; column += 1) {
       const x0 = Math.floor(column * cleaned.width / columns); const x1 = Math.floor((column + 1) * cleaned.width / columns);
       const y0 = Math.floor(row * cleaned.height / rows); const y1 = Math.floor((row + 1) * cleaned.height / rows);
-      pieces.push(makePiece(x0, y0, x1, y1));
+      pieces.push(makePiece(x0, y0, x1, y1, row * columns + column));
     }
+    if (allowEmpty && visibleCells === 0) throw new Error("A folha 7×3 não contém nenhum elemento visível depois do chroma.");
     return pieces;
   } finally { URL.revokeObjectURL(url); }
 }
 
 export function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
-  return processGridSheet(file, settings);
+  return processGridSheet(file, settings, false);
 }
 
 export function processManpuSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
-  return processGridSheet(file, settings);
+  return processGridSheet(file, settings, true);
 }
 
 /** Efeitos são camadas unitárias: remove o fundo e recorta o último pixel visível. */
 export async function processEffectImage(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece> {
   const url = URL.createObjectURL(file);
   try {
-    const image = new Image(); image.src = url; await image.decode();
+    const image = new Image(); image.src = url; await image.decode(); assertSourceImageSize(image);
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
-    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
-    const box = bounds(cleaned, 0, cleaned.height) ?? { left: 0, top: 0, right: cleaned.width, bottom: cleaned.height };
+    const source = context.getImageData(0, 0, canvas.width, canvas.height);
+    const cleaned = removeConnectedChroma(source, settings);
+    const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
+    const box = bounds(structural, 0, structural.height);
+    if (!box) throw new Error("O efeito ficou vazio depois do chroma.");
     const cropped = trim(cleaned, box.left, box.top, box.right, box.bottom);
     const output = document.createElement("canvas"); output.width = cropped.width; output.height = cropped.height; output.getContext("2d")!.putImageData(cropped, 0, 0);
     return { dataUrl: output.toDataURL("image/png"), width: cropped.width, height: cropped.height };
