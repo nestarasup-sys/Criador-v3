@@ -1064,7 +1064,12 @@ export default function FabricadorDeModeloPage() {
     const expressionEffectPlacements = Object.fromEntries(EFFECT_KINDS.map((kind) => {
       const assetId = preset.effectAssets[kind];
       const asset = assetId ? libraryAssets.find((entry) => entry.id === assetId && entry.kind === kind) : null;
-      const placementForExpression = assetId && activeEffectAssetIds[kind] === assetId
+      // Efeitos procedurais não possuem assetId. Nesse caso, a posição editada
+      // no preview é a fonte de verdade e precisa acompanhar todas as 21 saídas.
+      // Para assets, continuamos usando a posição específica salva na biblioteca
+      // quando a expressão não está usando o asset atualmente carregado.
+      const isProcedural = preset.effectSettings[kind]?.source === "gradient";
+      const placementForExpression = isProcedural || (assetId && activeEffectAssetIds[kind] === assetId)
         ? effectPlacements[kind]
         : asset?.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind];
       return [kind, placementForExpression];

@@ -187,6 +187,13 @@ test("layout do Fabricador mantém preview central, painel de controle e bibliot
   assert.match(styles, /\.resultGrid\s*\{[^}]*grid-template-columns:\s*repeat\(4,/s);
 });
 
+test("geração usa a posição atual dos efeitos automáticos", async () => {
+  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+
+  assert.match(page, /const isProcedural = preset\.effectSettings\[kind\]\?\.source === "gradient"/);
+  assert.match(page, /isProcedural \|\| \(assetId && activeEffectAssetIds\[kind\] === assetId\)/);
+});
+
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {
   const [page, html] = await Promise.all([
     read("app/Ferramentas/area2-final-head-lock/page.tsx"),
