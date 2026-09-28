@@ -1,6 +1,7 @@
 export type EyeState = "open" | "closed";
 export type FaceEffectKind = "blush" | "shadow" | "manpu";
-export type FaceEffectSettings = { opacity: number; clipToTemplate: boolean };
+export type FaceEffectSource = "asset" | "gradient";
+export type FaceEffectSettings = { opacity: number; clipToTemplate: boolean; source: FaceEffectSource; verticalCoverage: number; softness: number };
 
 export type EyePiece = {
   dataUrl: string;

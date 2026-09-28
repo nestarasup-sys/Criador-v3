@@ -556,7 +556,15 @@ function normalizeFabricatorPresets(value) {
     const effectSettings = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => {
       const source = preset.effectSettings?.[effect];
       const opacity = Number(source?.opacity);
-      return [effect, { opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1, clipToTemplate: source?.clipToTemplate !== false }];
+      const coverage = Number(source?.verticalCoverage);
+      const softness = Number(source?.softness);
+      return [effect, {
+        opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1,
+        clipToTemplate: source?.clipToTemplate !== false,
+        source: source?.source === "gradient" ? "gradient" : "asset",
+        verticalCoverage: Number.isFinite(coverage) ? Math.min(1, Math.max(.01, coverage)) : .5,
+        softness: Number.isFinite(softness) ? Math.min(1, Math.max(.01, softness)) : .18,
+      }];
     }));
     if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings };
   }

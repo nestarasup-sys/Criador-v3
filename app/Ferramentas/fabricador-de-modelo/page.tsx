@@ -34,7 +34,7 @@ import {
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
-import type { EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, MouthPiece } from "./types/eye-model";
+import type { EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -929,13 +929,14 @@ export default function FabricadorDeModeloPage() {
     setGenerated([]);
   };
 
-  const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean) => {
+  const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean | FaceEffectSource) => {
     if (!EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return;
     const kind = presetLayer as FaceEffectKind;
-    setPresets((current) => current.map((preset, index) => index === presetIndex ? {
-      ...preset,
-      effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], [key]: value } },
-    } : preset));
+    setPresets((current) => current.map((preset, index) => {
+      if (index !== presetIndex) return preset;
+      const next = { ...preset, effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], [key]: value } } };
+      return key === "source" && value === "gradient" ? { ...next, enabledEffects: { ...next.enabledEffects, [kind]: true } } : next;
+    }));
     setGenerated([]);
   };
 
@@ -953,6 +954,7 @@ export default function FabricadorDeModeloPage() {
       setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
       setPresets((current) => current.map((preset, index) => index === presetIndex ? {
         ...preset,
+        effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], source: "asset" } },
         enabledEffects: { ...preset.enabledEffects, [kind]: true },
         effectAssets: { ...preset.effectAssets, [kind]: asset.id },
       } : preset));
@@ -1317,6 +1319,14 @@ export default function FabricadorDeModeloPage() {
             </PanelBlock>}
 
             {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Composição do efeito" description="O molde funciona como máscara para impedir que o efeito escape da cabeça.">
+              <div className={styles.segmented}>
+                <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "asset" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "asset")}>Imagem</button>
+                {effectCatalogKind === "shadow" && <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "gradient")}>Shadow automático</button>}
+              </div>
+              {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && effectCatalogKind === "shadow" && <div className={styles.controlStack}>
+                <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />
+                <RangeControl label="Suavidade do degradê" value={activePreset.effectSettings[effectCatalogKind]?.softness ?? .18} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.softness ?? .18) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("softness", value)} />
+              </div>}
               <label className={styles.checkRow}><input type="checkbox" checked={activePreset.effectSettings[effectCatalogKind]?.clipToTemplate ?? DEFAULT_EFFECT_SETTINGS[effectCatalogKind].clipToTemplate} onChange={(event) => updateEffectSetting("clipToTemplate", event.target.checked)} /><span><b>Limitar ao molde</b><small>Recorta o efeito na área visível do molde</small></span></label>
               <div className={styles.controlStack}><RangeControl label="Transparência" value={activePreset.effectSettings[effectCatalogKind]?.opacity ?? 1} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.opacity ?? 1) * 100)}%`} min={0} max={1} step=".01" onChange={(value) => updateEffectSetting("opacity", value)} /></div>
             </PanelBlock>}

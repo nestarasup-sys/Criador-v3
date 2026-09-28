@@ -63,8 +63,8 @@ export function drawComposition(
 
   const drawEffect = (kind: FaceEffectKind) => {
     const image = effects[kind];
-    if (!image || !enabledEffects[kind] || !effectAssets[kind]) return;
     const settings = effectSettings[kind] ?? DEFAULT_EFFECT_SETTINGS[kind];
+    if (!enabledEffects[kind] || (settings.source !== "gradient" && (!image || !effectAssets[kind]))) return;
     const layer = document.createElement("canvas");
     layer.width = CANVAS_SIZE;
     layer.height = CANVAS_SIZE;
@@ -80,7 +80,22 @@ export function drawComposition(
       layerContext.drawImage(featureImage, -width / 2, -height / 2, width, height);
       layerContext.restore();
     };
-    drawOnLayer(image, effectPlacements[kind], effectVariations[kind]);
+    if (settings.source === "gradient") {
+      if (kind !== "shadow") return;
+      const coverage = Math.min(1, Math.max(.01, settings.verticalCoverage));
+      const softness = Math.min(coverage, Math.max(.01, settings.softness));
+      const edge = Math.max(.01, coverage - softness);
+      const gradient = layerContext.createLinearGradient(0, 0, 0, CANVAS_SIZE);
+      gradient.addColorStop(0, "rgba(44, 31, 52, .78)");
+      gradient.addColorStop(edge, "rgba(44, 31, 52, .60)");
+      gradient.addColorStop(coverage, "rgba(44, 31, 52, 0)");
+      gradient.addColorStop(Math.min(1, coverage + .001), "rgba(44, 31, 52, 0)");
+      layerContext.fillStyle = gradient;
+      layerContext.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    } else {
+      if (!image || !effectAssets[kind]) return;
+      drawOnLayer(image, effectPlacements[kind], effectVariations[kind]);
+    }
     if (settings.clipToTemplate) {
       layerContext.globalCompositeOperation = "destination-in";
       layerContext.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);

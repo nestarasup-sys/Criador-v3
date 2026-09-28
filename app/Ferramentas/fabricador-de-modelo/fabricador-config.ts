@@ -18,9 +18,9 @@ export const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1,
 export const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };
 export const EFFECT_KINDS: FaceEffectKind[] = ["blush", "shadow", "manpu"];
 export const DEFAULT_EFFECT_SETTINGS: Record<FaceEffectKind, FaceEffectSettings> = {
-  blush: { opacity: 1, clipToTemplate: true },
-  shadow: { opacity: 1, clipToTemplate: true },
-  manpu: { opacity: 1, clipToTemplate: true },
+  blush: { opacity: 1, clipToTemplate: true, source: "asset", verticalCoverage: .5, softness: .18 },
+  shadow: { opacity: 1, clipToTemplate: true, source: "asset", verticalCoverage: .5, softness: .18 },
+  manpu: { opacity: 1, clipToTemplate: true, source: "asset", verticalCoverage: .5, softness: .18 },
 };
 export const DEFAULT_EFFECT_PLACEMENTS: Record<FaceEffectKind, EyePlacement> = {
   blush: { x: 500, y: 520, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
