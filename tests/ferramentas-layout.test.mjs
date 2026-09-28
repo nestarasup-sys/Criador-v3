@@ -57,6 +57,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(mold, /EyeTransform/);
   assert.match(tool, /variation\.left/);
   assert.match(tool, /variation\.right/);
+  assert.match(tool, /dragging === "eyebrows"/);
+  assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);

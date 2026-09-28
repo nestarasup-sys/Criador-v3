@@ -81,7 +81,7 @@ export default function FabricadorDeModeloPage() {
   const [state, setState] = useState<EyeState>("open");
   const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
   const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
-  const [dragging, setDragging] = useState(false);
+  const [dragging, setDragging] = useState<"eyes" | "eyebrows" | null>(null);
   const [status, setStatus] = useState("Envie uma folha para começar");
   const [generated, setGenerated] = useState<string[]>([]);
 
@@ -147,9 +147,31 @@ export default function FabricadorDeModeloPage() {
     const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
     return { x: ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE, y: ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE };
   };
-  const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!loaded) return; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
-  const drag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!dragging) return; const point = pointerPosition(event); setPlacement((current) => ({ ...current, x: point.x, y: point.y })); setEyebrowPlacement((current) => ({ ...current, x: point.x })); };
-  const stopDrag = () => setDragging(false);
+  const isInsideFeature = (point: { x: number; y: number }, feature: LoadedPair, featurePlacement: EyePlacement) => {
+    const halfGap = featurePlacement.gap * featurePlacement.scale / 2;
+    const isInsideImage = (image: HTMLImageElement, side: -1 | 1) => {
+      const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX;
+      const height = image.naturalHeight * featurePlacement.scale * featurePlacement.scaleY;
+      const centerX = featurePlacement.x + side * halfGap;
+      return point.x >= centerX - width / 2 - 18 && point.x <= centerX + width / 2 + 18
+        && point.y >= featurePlacement.y - height / 2 - 18 && point.y <= featurePlacement.y + height / 2 + 18;
+    };
+    return isInsideImage(feature.left, -1) || isInsideImage(feature.right, 1);
+  };
+  const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!loaded) return;
+    const point = pointerPosition(event);
+    const target = eyebrowsLoaded && isInsideFeature(point, eyebrowsLoaded, eyebrowPlacement) ? "eyebrows" : "eyes";
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(target);
+  };
+  const drag = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!dragging) return;
+    const point = pointerPosition(event);
+    if (dragging === "eyebrows") setEyebrowPlacement((current) => ({ ...current, x: point.x, y: point.y }));
+    else setPlacement((current) => ({ ...current, x: point.x, y: point.y }));
+  };
+  const stopDrag = () => setDragging(null);
 
   const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
     if (!template || !pair) return null;
@@ -186,7 +208,7 @@ export default function FabricadorDeModeloPage() {
         <label>Força <output>{chromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={chromaSettings.strength} onChange={(event) => updateChroma("strength", Number(event.target.value))} /></label>
         <label>Tolerância <output>{chromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={chromaSettings.tolerance} onChange={(event) => updateChroma("tolerance", Number(event.target.value))} /></label>
         <label>Suavidade <output>{chromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={chromaSettings.softness} onChange={(event) => updateChroma("softness", Number(event.target.value))} /></label>
-        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Os olhos e as sobrancelhas acompanham o eixo X; as expressões continuam transformando cada lado separadamente.</p>
+        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste os olhos ou clique diretamente nas sobrancelhas para mover cada camada livremente. As expressões continuam transformando cada lado separadamente.</p>
         <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
         <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
         <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
@@ -202,7 +224,7 @@ export default function FabricadorDeModeloPage() {
         <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
         <button className={styles.reset} onClick={() => { setPlacement(DEFAULT_PLACEMENT); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); }}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
       </aside>
-      <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? "Solte para posicionar" : "Arraste os olhos para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
+      <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : "os olhos"}` : "Arraste os olhos ou as sobrancelhas para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
       </section></section>
     </main></div>;
