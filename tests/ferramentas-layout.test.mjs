@@ -47,6 +47,10 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Shadow automático/);
   assert.match(page, /Blush automático/);
   assert.match(page, /Cobertura vertical/);
+  assert.match(page, /Bocas de fala/);
+  assert.match(page, /Configurar vínculos de fala/);
+  assert.match(page, /mouthTalkIndex/);
+  assert.match(page, /mouths-talk/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
   assert.match(config, /DEFAULT_EFFECT_SETTINGS/);
@@ -67,6 +71,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(storage, /localAssets\.filter\(\(asset\) => asset\.localOnly\)/);
   assert.match(storage, /localSaved/);
   assert.match(server, /effectSettings/);
+  assert.match(server, /mouths-talk/);
 
   assert.match(processing, /1 - mask \* strength/);
   assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);

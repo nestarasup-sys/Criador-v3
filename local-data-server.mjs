@@ -570,7 +570,8 @@ function normalizeFabricatorPresets(value) {
         gradientHeight: Number.isFinite(gradientHeight) ? Math.min(700, Math.max(50, gradientHeight)) : 220,
       }];
     }));
-    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings };
+    const mouthTalkIndex = Number.isInteger(preset.mouthTalkIndex) && preset.mouthTalkIndex >= 0 && preset.mouthTalkIndex < 21 ? preset.mouthTalkIndex : Object.keys(value).indexOf(key);
+    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
 }
@@ -1161,7 +1162,7 @@ async function route(request, response) {
     const metadata = readMetadata(request);
     const contentType = contentTypeOf(request, metadata);
     assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
-    const kind = ["eyes", "eyebrows", "mouths", "blush", "shadow", "manpu"].includes(metadata.kind) ? metadata.kind : null;
+    const kind = ["eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"].includes(metadata.kind) ? metadata.kind : null;
     if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
     if (fabricatorAssets.some((asset) => asset.id === id)) {
       throw Object.assign(new Error("Já existe um asset com este identificador."), { status: 409, code: "FABRICATOR_ASSET_EXISTS" });

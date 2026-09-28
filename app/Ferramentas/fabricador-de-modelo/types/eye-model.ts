@@ -38,6 +38,8 @@ export type FacePreset = {
   enabledEffects: Record<FaceEffectKind, boolean>;
   effectAssets: Record<FaceEffectKind, string | null>;
   effectSettings: Record<FaceEffectKind, FaceEffectSettings>;
+  /** Índice da célula de boca usada na variação _talk desta expressão. */
+  mouthTalkIndex: number;
 };
 
 export type FacePresetCollection = Record<string, FacePreset>;

@@ -236,6 +236,90 @@
   text-transform: uppercase;
 }
 
+.talkPopover {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  max-height: 420px;
+  margin-top: 10px;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid #d9c7e2;
+  border-radius: 12px;
+  background: #f8f3fb;
+}
+
+.talkPopoverHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.talkPopoverHeader div,
+.talkMapRow span {
+  display: grid;
+  gap: 3px;
+}
+
+.talkPopoverHeader b {
+  color: #4c3755;
+  font-size: 11px;
+}
+
+.talkPopoverHeader small {
+  max-width: 240px;
+  color: #897f90;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.talkPopoverHeader button {
+  border: 0;
+  background: transparent;
+  color: #82608e;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.talkMapList {
+  display: grid;
+  gap: 5px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.talkMapRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 124px;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 7px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.talkMapRow span {
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  color: #6c5c74;
+  font-size: 9px;
+}
+
+.talkMapRow span b {
+  color: #b14274;
+}
+
+.talkMapRow select {
+  min-width: 0;
+  min-height: 28px;
+  padding: 0 4px;
+  border: 1px solid #ded2e4;
+  border-radius: 6px;
+  color: #594664;
+  font-size: 9px;
+}
+
 .layerTabs,
 .segmented,
 .libraryTabs {

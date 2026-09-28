@@ -46,6 +46,7 @@ const KIND_LABEL: Record<FabricatorAssetKind, string> = {
   eyes: "Olhos",
   eyebrows: "Sobrancelhas",
   mouths: "Bocas",
+  "mouths-talk": "Bocas de fala",
   blush: "Blush",
   shadow: "Shadow",
   manpu: "Manpu",
@@ -90,6 +91,8 @@ export default function FabricadorDeModeloPage() {
   const [eyebrowFile, setEyebrowFile] = useState<File | null>(null);
   const [mouthPieces, setMouthPieces] = useState<MouthPiece[]>([]);
   const [mouthFile, setMouthFile] = useState<File | null>(null);
+  const [mouthTalkPieces, setMouthTalkPieces] = useState<MouthPiece[]>([]);
+  const [mouthTalkFile, setMouthTalkFile] = useState<File | null>(null);
   const [effectFiles, setEffectFiles] = useState<Partial<Record<FaceEffectKind, File>>>({});
   const [effectPieces, setEffectPieces] = useState<Partial<Record<FaceEffectKind, EyePiece>>>({});
   const [manpuPieces, setManpuPieces] = useState<EyePiece[]>([]);
@@ -102,6 +105,7 @@ export default function FabricadorDeModeloPage() {
   const [eyeChromaSettings, setEyeChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [eyebrowChromaSettings, setEyebrowChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [mouthChromaSettings, setMouthChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
+  const [mouthTalkChromaSettings, setMouthTalkChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [effectChromaSettings, setEffectChromaSettings] = useState<Record<FaceEffectKind, ChromaSettings>>(() =>
     Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_CHROMA_SETTINGS }])) as Record<FaceEffectKind, ChromaSettings>
   );
@@ -124,6 +128,7 @@ export default function FabricadorDeModeloPage() {
   const [activeEyeAssetId, setActiveEyeAssetId] = useState<string | null>(null);
   const [activeEyebrowAssetId, setActiveEyebrowAssetId] = useState<string | null>(null);
   const [activeMouthAssetId, setActiveMouthAssetId] = useState<string | null>(null);
+  const [activeMouthTalkAssetId, setActiveMouthTalkAssetId] = useState<string | null>(null);
   const [activeEffectAssetIds, setActiveEffectAssetIds] = useState<Partial<Record<FaceEffectKind, string>>>({});
 
   const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
@@ -132,6 +137,8 @@ export default function FabricadorDeModeloPage() {
   const [presetSide, setPresetSide] = useState<PresetSide>("both");
   const [effectCatalogKind, setEffectCatalogKind] = useState<FaceEffectKind>("blush");
   const [savingPresets, setSavingPresets] = useState(false);
+  const [talkConfigOpen, setTalkConfigOpen] = useState(false);
+  const [mouthPreviewMode, setMouthPreviewMode] = useState<"base" | "talk">("base");
 
   const [generated, setGenerated] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
@@ -145,17 +152,19 @@ export default function FabricadorDeModeloPage() {
       eyes: eyeChromaSettings,
       eyebrows: eyebrowChromaSettings,
       mouths: mouthChromaSettings,
+      "mouths-talk": mouthTalkChromaSettings,
       blush: effectChromaSettings.blush,
       shadow: effectChromaSettings.shadow,
       manpu: effectChromaSettings.manpu,
     };
-  }, [eyeChromaSettings, eyebrowChromaSettings, mouthChromaSettings, effectChromaSettings]);
+  }, [eyeChromaSettings, eyebrowChromaSettings, mouthChromaSettings, mouthTalkChromaSettings, effectChromaSettings]);
 
   useEffect(() => {
     latestPlacementRef.current = {
       eyes: placement,
       eyebrows: eyebrowPlacement,
       mouths: mouthPlacement,
+      "mouths-talk": mouthPlacement,
       blush: effectPlacements.blush,
       shadow: effectPlacements.shadow,
       manpu: effectPlacements.manpu,
@@ -243,27 +252,28 @@ export default function FabricadorDeModeloPage() {
     kind === "eyes" ? activeEyeAssetId
       : kind === "eyebrows" ? activeEyebrowAssetId
         : kind === "mouths" ? activeMouthAssetId
+          : kind === "mouths-talk" ? activeMouthTalkAssetId
           : activeEffectAssetIds[kind],
-  [activeEyeAssetId, activeEyebrowAssetId, activeMouthAssetId, activeEffectAssetIds]);
+  [activeEyeAssetId, activeEyebrowAssetId, activeMouthAssetId, activeMouthTalkAssetId, activeEffectAssetIds]);
 
   const placementForKind = useCallback((kind: FabricatorAssetKind) =>
     kind === "eyes" ? placement
       : kind === "eyebrows" ? eyebrowPlacement
-        : kind === "mouths" ? mouthPlacement
+        : kind === "mouths" || kind === "mouths-talk" ? mouthPlacement
           : effectPlacements[kind],
   [placement, eyebrowPlacement, mouthPlacement, effectPlacements]);
 
   const defaultPlacementForKind = (kind: FabricatorAssetKind) =>
     kind === "eyes" ? DEFAULT_PLACEMENT
       : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT
-        : kind === "mouths" ? DEFAULT_MOUTH_PLACEMENT
+        : kind === "mouths" || kind === "mouths-talk" ? DEFAULT_MOUTH_PLACEMENT
           : DEFAULT_EFFECT_PLACEMENTS[kind];
 
   const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement, invalidateGenerated = true) => {
     if (invalidateGenerated) setGenerated([]);
     if (kind === "eyes") setPlacement(next);
     else if (kind === "eyebrows") setEyebrowPlacement(next);
-    else if (kind === "mouths") setMouthPlacement(next);
+    else if (kind === "mouths" || kind === "mouths-talk") setMouthPlacement(next);
     else setEffectPlacements((current) => ({ ...current, [kind]: next }));
   };
 
@@ -271,12 +281,14 @@ export default function FabricadorDeModeloPage() {
     kind === "eyes" ? eyeChromaSettings
       : kind === "eyebrows" ? eyebrowChromaSettings
         : kind === "mouths" ? mouthChromaSettings
+        : kind === "mouths-talk" ? mouthTalkChromaSettings
           : effectChromaSettings[kind];
 
   const setChromaForKind = (kind: FabricatorAssetKind, settings: ChromaSettings) => {
     if (kind === "eyes") setEyeChromaSettings(settings);
     else if (kind === "eyebrows") setEyebrowChromaSettings(settings);
     else if (kind === "mouths") setMouthChromaSettings(settings);
+    else if (kind === "mouths-talk") setMouthTalkChromaSettings(settings);
     else setEffectChromaSettings((current) => ({ ...current, [kind]: settings }));
   };
 
@@ -284,6 +296,7 @@ export default function FabricadorDeModeloPage() {
     kind === "eyes" ? Boolean(sourceFile)
       : kind === "eyebrows" ? Boolean(eyebrowFile)
         : kind === "mouths" ? Boolean(mouthFile)
+        : kind === "mouths-talk" ? Boolean(mouthTalkFile)
           : Boolean(effectFiles[kind]);
 
   const markLayerProcessing = (kind: FabricatorAssetKind, processing: boolean) => {
@@ -322,6 +335,7 @@ export default function FabricadorDeModeloPage() {
       if (kind === "eyes") setActiveEyeAssetId(asset.id);
       else if (kind === "eyebrows") setActiveEyebrowAssetId(asset.id);
       else if (kind === "mouths") setActiveMouthAssetId(asset.id);
+      else if (kind === "mouths-talk") setActiveMouthTalkAssetId(asset.id);
       else {
         setEffectFiles((current) => ({ ...current, [kind]: file }));
         setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
@@ -386,6 +400,17 @@ export default function FabricadorDeModeloPage() {
     if (persist) setMouthPlacement({ ...DEFAULT_MOUTH_PLACEMENT });
     setStatus("Recortando as 21 bocas…");
     if (persist) { setActiveMouthAssetId(null); queuePersistenceAfterProcessing(file, "mouths"); }
+  };
+
+  const onMouthTalkUpload = (file?: File, persist = true) => {
+    if (!file) return;
+    const validationError = validateInputFile(file);
+    if (validationError) { setStatus(validationError); return; }
+    setGenerated([]);
+    markLayerProcessing("mouths-talk", true);
+    setMouthTalkFile(file);
+    if (persist) { setActiveMouthTalkAssetId(null); queuePersistenceAfterProcessing(file, "mouths-talk"); }
+    setStatus("Recortando as 21 bocas de fala…");
   };
 
   const onEffectUpload = (kind: FaceEffectKind, file?: File, persist = true) => {
@@ -464,12 +489,36 @@ export default function FabricadorDeModeloPage() {
   }, [mouthFile, mouthChromaSettings]);
 
   useEffect(() => {
+    if (!mouthTalkFile) return;
+    let cancelled = false;
+    processMouthSheet(mouthTalkFile, mouthTalkChromaSettings)
+      .then((pieces) => {
+        if (cancelled) return;
+        setMouthTalkPieces(pieces);
+        void completePendingPersistence("mouths-talk", mouthTalkFile, mouthTalkChromaSettings);
+        setProcessingLayers((current) => ({ ...current, "mouths-talk": false }));
+        setStatus(`${pieces.length} bocas de fala recortadas.`);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        discardPendingPersistence("mouths-talk", mouthTalkFile);
+        setMouthTalkPieces([]);
+        setProcessingLayers((current) => ({ ...current, "mouths-talk": false }));
+        setStatus(error instanceof Error ? error.message : "Não consegui recortar a folha de bocas de fala.");
+      });
+    return () => { cancelled = true; };
+  }, [mouthTalkFile, mouthTalkChromaSettings]);
+
+  useEffect(() => {
     if (!mouthPieces.length) return;
     let cancelled = false;
-    const piece = mouthPieces[presetIndex] ?? mouthPieces[0];
+    const talkIndex = activePreset.mouthTalkIndex ?? presetIndex;
+    const piece = mouthPreviewMode === "talk" && mouthTalkPieces.length === EYE_EXPRESSIONS.length
+      ? mouthTalkPieces[talkIndex] ?? mouthTalkPieces[0]
+      : mouthPieces[presetIndex] ?? mouthPieces[0];
     loadImage(piece.dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
     return () => { cancelled = true; };
-  }, [mouthPieces, presetIndex]);
+  }, [mouthPieces, mouthTalkPieces, mouthPreviewMode, activePreset.mouthTalkIndex, presetIndex]);
 
   useEffect(() => {
     const file = effectFiles.blush;
@@ -627,6 +676,7 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => { persistPlacement("eyes", placement); }, [placement, persistPlacement]);
   useEffect(() => { persistPlacement("eyebrows", eyebrowPlacement); }, [eyebrowPlacement, persistPlacement]);
   useEffect(() => { persistPlacement("mouths", mouthPlacement); }, [mouthPlacement, persistPlacement]);
+  useEffect(() => { persistPlacement("mouths-talk", mouthPlacement); }, [mouthPlacement, persistPlacement]);
   useEffect(() => { persistPlacement("blush", effectPlacements.blush); }, [effectPlacements.blush, persistPlacement]);
   useEffect(() => { persistPlacement("shadow", effectPlacements.shadow); }, [effectPlacements.shadow, persistPlacement]);
   useEffect(() => { persistPlacement("manpu", effectPlacements.manpu); }, [effectPlacements.manpu, persistPlacement]);
@@ -717,13 +767,14 @@ export default function FabricadorDeModeloPage() {
       const file = await assetToFile(asset);
       if (libraryUseSequenceRef.current !== sequence) return;
       setGenerated([]);
-      setActiveLayer(asset.kind);
-      setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" ? "adjust" : "expressions");
+       setActiveLayer(asset.kind === "mouths-talk" ? "mouths" : asset.kind);
+       setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" || asset.kind === "mouths-talk" ? "adjust" : "expressions");
       setChromaForKind(asset.kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
       setPlacementForKind(asset.kind, asset.placement ?? defaultPlacementForKind(asset.kind));
       if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); onUpload(file, false); }
       else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); onEyebrowUpload(file, false); }
       else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); onMouthUpload(file, false); }
+       else if (asset.kind === "mouths-talk") { setActiveMouthTalkAssetId(asset.id); onMouthTalkUpload(file, false); }
       else {
         markLayerProcessing(asset.kind, true);
         setActiveEffectAssetIds((current) => ({ ...current, [asset.kind]: asset.id }));
@@ -769,6 +820,11 @@ export default function FabricadorDeModeloPage() {
         setMouthLoaded(null);
         setActiveMouthAssetId(null);
         setMouthPlacement({ ...DEFAULT_MOUTH_PLACEMENT });
+       } else if (asset.kind === "mouths-talk" && wasActive) {
+         markLayerProcessing("mouths-talk", false);
+         setMouthTalkFile(null);
+         setMouthTalkPieces([]);
+         setActiveMouthTalkAssetId(null);
       }
 
       if (EFFECT_KINDS.includes(asset.kind as FaceEffectKind)) {
@@ -836,8 +892,9 @@ export default function FabricadorDeModeloPage() {
   const activeLayerReady = activeLayer === "eyes" ? Boolean(pair)
     : activeLayer === "eyebrows" ? Boolean(eyebrowPair)
       : activeLayer === "mouths" ? mouthPieces.length > 0
+      : activeLayer === "mouths-talk" ? mouthTalkPieces.length > 0
         : activeLayer === "manpu" ? manpuPieces.length > 0
-          : activePreset.enabledEffects[activeLayer] && activePreset.effectSettings[activeLayer]?.source === "gradient" || Boolean(effectPieces[activeLayer]);
+          : EFFECT_KINDS.includes(activeLayer as FaceEffectKind) && (activePreset.enabledEffects[activeLayer as FaceEffectKind] && activePreset.effectSettings[activeLayer as FaceEffectKind]?.source === "gradient" || Boolean(effectPieces[activeLayer as FaceEffectKind]));
 
   const activeLayerChroma = chromaForKind(activeLayer);
   const activeLayerPlacement = placementForKind(activeLayer);
@@ -939,6 +996,12 @@ export default function FabricadorDeModeloPage() {
           : { ...variation, [presetSide]: { ...variation[presetSide], [key]: value } },
       };
     }));
+    setGenerated([]);
+  };
+
+  const updateMouthTalkLink = (expressionIndex: number, talkIndex: number) => {
+    if (!Number.isInteger(talkIndex) || talkIndex < 0 || talkIndex >= EYE_EXPRESSIONS.length) return;
+    setPresets((current) => current.map((preset, index) => index === expressionIndex ? { ...preset, mouthTalkIndex: talkIndex } : preset));
     setGenerated([]);
   };
 
@@ -1051,15 +1114,19 @@ export default function FabricadorDeModeloPage() {
     return browImageCache.current.value;
   };
 
-  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
+  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open", mouthVariant: "base" | "talk" = "base") => {
     if (!template || !pair) return null;
     const eyeImages = imagesForEyeState(expressionState);
     if (!eyeImages) return null;
     const images = await eyeImages;
     const browPromise = imagesForBrows();
     const browImages = browPromise ? await browPromise : null;
-    const expressionMouth = mouthPieces[expressionIndex] ? await loadImage(mouthPieces[expressionIndex].dataUrl) : null;
     const preset = presets[expressionIndex] ?? defaultPresetForIndex(expressionIndex);
+    const talkIndex = Number.isInteger(preset.mouthTalkIndex) ? preset.mouthTalkIndex : expressionIndex;
+    const mouthSource = mouthVariant === "talk" && mouthTalkPieces.length === EYE_EXPRESSIONS.length
+      ? mouthTalkPieces[talkIndex] ?? mouthTalkPieces[expressionIndex]
+      : mouthPieces[expressionIndex];
+    const expressionMouth = mouthSource ? await loadImage(mouthSource.dataUrl) : null;
     const expressionEffects = await loadEffectImagesForExpression(expressionIndex, preset);
     const expressionEffectPlacements = Object.fromEntries(EFFECT_KINDS.map((kind) => {
       const assetId = preset.effectAssets[kind];
@@ -1089,6 +1156,7 @@ export default function FabricadorDeModeloPage() {
     if (!pair) { setStatus("Carregue os olhos antes de gerar."); return null; }
     if (eyebrowFile && !eyebrowPair) { setStatus("Aguarde as sobrancelhas terminarem de processar."); return null; }
     if (mouthFile && mouthPieces.length !== EYE_EXPRESSIONS.length) { setStatus("A folha de bocas ainda não está pronta."); return null; }
+    if (mouthTalkFile && mouthTalkPieces.length !== EYE_EXPRESSIONS.length) { setStatus("A folha de bocas de fala ainda não está pronta."); return null; }
     generationLockRef.current = true;
     setGenerating(true);
     try {
@@ -1154,11 +1222,12 @@ export default function FabricadorDeModeloPage() {
         source: "fabricador-de-modelo-v2",
         expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
         generator: {
-          version: 2,
+          version: 3,
           includes: [
             "eyes",
             ...(eyebrowPair ? ["eyebrows"] : []),
             ...(mouthPieces.length ? ["mouths"] : []),
+            ...(mouthTalkPieces.length ? ["mouths-talk"] : []),
             ...EFFECT_KINDS.filter((kind) => presets.some((preset) => preset.enabledEffects[kind] && preset.effectAssets[kind])),
           ],
         },
@@ -1171,7 +1240,9 @@ export default function FabricadorDeModeloPage() {
         const [key] = EYE_EXPRESSIONS[index];
         const base = await toCatalogFrame(outputs[index]);
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}.png`, base, "image/png");
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, base, "image/png");
+        const talk = await renderOutput(index, "open", "talk");
+        if (!talk) throw new Error(`Falha no talk de ${key}.`);
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, await toCatalogFrame(talk), "image/png");
         const blink = await renderOutput(index, "closed");
         if (!blink) throw new Error(`Falha no blink de ${key}.`);
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_blink.png`, await toCatalogFrame(blink), "image/png");
@@ -1213,7 +1284,8 @@ export default function FabricadorDeModeloPage() {
     for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
       const [key] = EYE_EXPRESSIONS[index];
       zip.file(`${key}.png`, outputs[index].split(",")[1], { base64: true });
-      zip.file(`${key}_talk.png`, outputs[index].split(",")[1], { base64: true });
+      const talk = await renderOutput(index, "open", "talk");
+      zip.file(`${key}_talk.png`, (talk ?? outputs[index]).split(",")[1], { base64: true });
       const blink = await renderOutput(index, "closed");
       if (blink) zip.file(`${key}_blink.png`, blink.split(",")[1], { base64: true });
     }
@@ -1250,17 +1322,33 @@ export default function FabricadorDeModeloPage() {
       <section className={styles.layout}>
         <aside className={styles.controlPanel}>
           {section === "assets" && <>
-            <PanelBlock title="Monte a base" description="Olhos são obrigatórios. Sobrancelhas e bocas são opcionais.">
+             <PanelBlock title="Monte a base" description="Olhos são obrigatórios. Sobrancelhas e bocas são opcionais.">
               <div className={styles.uploadGrid}>
                 <UploadTile title="Olhos" detail="2 linhas · aberto/fechado" onFile={onUpload} />
                 <UploadTile title="Sobrancelhas" detail="par esquerdo/direito" onFile={onEyebrowUpload} />
                 <UploadTile title="Bocas" detail="grade 7×3 · 21 bocas" onFile={onMouthUpload} />
+                 <UploadTile title="Bocas de fala" detail="grade 7×3 · _talk" onFile={onMouthTalkUpload} />
               </div>
               <div className={styles.assetSummary}>
                 <div className={pair ? styles.ready : ""}><span>Olhos</span><b>{pair ? "Pronto" : "Pendente"}</b></div>
                 <div className={eyebrowPair ? styles.ready : ""}><span>Sobrancelhas</span><b>{eyebrowPair ? "Pronto" : "Opcional"}</b></div>
                 <div className={mouthPieces.length === 21 ? styles.ready : ""}><span>Bocas</span><b>{mouthPieces.length === 21 ? "21/21" : "Opcional"}</b></div>
+                 <div className={mouthTalkPieces.length === 21 ? styles.ready : ""}><span>Fala</span><b>{mouthTalkPieces.length === 21 ? "21/21" : "Boca base"}</b></div>
               </div>
+               <button className={styles.secondaryButton} type="button" disabled={mouthTalkPieces.length !== EYE_EXPRESSIONS.length} onClick={() => setTalkConfigOpen((open) => !open)}>
+                 {talkConfigOpen ? "Fechar configuração de fala" : "Configurar vínculos de fala"}
+               </button>
+               {talkConfigOpen && <div className={styles.talkPopover} role="dialog" aria-label="Configuração das bocas de fala">
+                 <div className={styles.talkPopoverHeader}><div><b>Vínculos das bocas de fala</b><small>Escolha qual célula da folha _talk cada expressão usará. A boca normal não é alterada.</small></div><button type="button" onClick={() => setTalkConfigOpen(false)} aria-label="Fechar">×</button></div>
+                 <div className={styles.talkMapList}>
+                   {EYE_EXPRESSIONS.map(([key, label], index) => <label key={key} className={styles.talkMapRow}>
+                     <span><b>{String(index + 1).padStart(2, "0")}</b>{label}</span>
+                     <select value={presets[index]?.mouthTalkIndex ?? index} onChange={(event) => { setPresetIndex(index); updateMouthTalkLink(index, Number(event.target.value)); }}>
+                       {EYE_EXPRESSIONS.map(([, sourceLabel], sourceIndex) => <option key={sourceIndex} value={sourceIndex}>{String(sourceIndex + 1).padStart(2, "0")} · {sourceLabel}</option>)}
+                     </select>
+                   </label>)}
+                 </div>
+               </div>}
             </PanelBlock>
             <PanelBlock title="Efeitos" description="Efeitos ficam na biblioteca e podem ser ligados por expressão.">
               <div className={styles.uploadGrid}>
@@ -1298,6 +1386,10 @@ export default function FabricadorDeModeloPage() {
               />
               {activeLayer !== "eyes" && activeLayerReady && <button className={styles.dangerGhostButton} type="button" onClick={() => clearLayerFromComposition(activeLayer)}>Remover da montagem</button>}
             </PanelBlock>
+           {activeLayer === "mouths" && mouthTalkPieces.length === EYE_EXPRESSIONS.length && <div className={styles.inlineActions}>
+             <button className={mouthPreviewMode === "base" ? styles.primarySmall : styles.secondaryButton} onClick={() => setMouthPreviewMode("base")}>Boca normal</button>
+             <button className={mouthPreviewMode === "talk" ? styles.primarySmall : styles.secondaryButton} onClick={() => setMouthPreviewMode("talk")}>Boca de fala</button>
+           </div>}
             <div className={styles.inlineActions}>
               <button className={state === "open" ? styles.primarySmall : styles.secondaryButton} onClick={() => setState("open")}>Olhos abertos</button>
               <button className={state === "closed" ? styles.primarySmall : styles.secondaryButton} onClick={() => setState("closed")}>Olhos fechados</button>
@@ -1413,7 +1505,7 @@ export default function FabricadorDeModeloPage() {
           <header className={styles.libraryHeader}><div><span>BIBLIOTECA</span><h2>Assets</h2></div><b>{libraryAssets.length}</b></header>
           <input className={styles.search} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="Buscar asset…" aria-label="Buscar assets na biblioteca" />
           <div className={styles.libraryTabs}>
-            {(["all", "eyes", "eyebrows", "mouths", "blush", "shadow", "manpu"] as LibraryFilter[]).map((filter) =>
+            {(["all", "eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"] as LibraryFilter[]).map((filter) =>
               <button key={filter} className={libraryFilter === filter ? styles.tabActive : ""} onClick={() => setLibraryFilter(filter)}>
                 {filter === "all" ? "Todos" : KIND_LABEL[filter]}
               </button>)}

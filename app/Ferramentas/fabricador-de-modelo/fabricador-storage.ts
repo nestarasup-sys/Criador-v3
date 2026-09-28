@@ -2,7 +2,7 @@ import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
 import type { EyePlacement, FaceEffectKind, FacePresetCollection } from "./types/eye-model";
 
-export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths" | FaceEffectKind;
+export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths" | "mouths-talk" | FaceEffectKind;
 
 export type FabricatorAsset = {
   id: string;
