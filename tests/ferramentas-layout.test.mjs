@@ -37,6 +37,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
     read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
     read("local-data-server.mjs"),
   ]);
+  const browExpressionSource = expressions.slice(expressions.indexOf("export const BROW_VARIATIONS"));
 
   assert.match(page, /fabricador-de-modelo/);
   assert.match(tool, /processEyeSheet/);
@@ -69,13 +70,15 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
   assert.match(expressions, /const variation/);
   assert.match(expressions, /BROW_VARIATIONS/);
-  assert.match(expressions, /variation\(\{ scaleY: 1\.16 \}\)/);
-  assert.match(expressions, /variation\(\{ scaleY: 1\.22 \}\)/);
-  assert.equal((expressions.match(/^\s+variation\(/gm) ?? []).length, 40, "As duas tabelas precisam ter 21 presets além da referência normal compartilhada");
+  assert.match(expressions, /browVariation\(\{ scaleY: 1\.16/);
+  assert.match(expressions, /scaleY: 1\.22/);
+  assert.equal((expressions.match(/^\s+(?:variation\(|NORMAL_VARIATION,)/gm) ?? []).length, 21, "Os olhos precisam ter 21 presets");
+  assert.equal((browExpressionSource.match(/^\s+(?:browVariation\(|NORMAL_BROW_VARIATION,)/gm) ?? []).length, 21, "As sobrancelhas precisam ter 21 presets");
   assert.match(expressions, /export const NORMAL_VARIATION = variation\(\)/);
   assert.match(expressions, /NORMAL_VARIATION,/);
-  assert.doesNotMatch(expressions, /variation\(\{[^}]*\b(?:scaleX|x|y)\s*:/, "Presets não podem alterar largura ou posição");
-  assert.match(expressions, /PresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);
+  assert.match(expressions, /export const NORMAL_BROW_VARIATION = browVariation\(\)/);
+  assert.doesNotMatch(browExpressionSource, /\b(?:scaleX|x|y)\s*:/, "Presets de sobrancelha não podem alterar largura ou posição");
+  assert.match(expressions, /BrowPresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
   assert.match(tool, /variation\.left/);
