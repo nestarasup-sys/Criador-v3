@@ -22,12 +22,13 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing] = await Promise.all([
+  const [page, config, compositor, storage, processing, server] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
+    read("local-data-server.mjs"),
   ]);
 
   assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -40,17 +41,24 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /ChromaControls/);
   assert.match(page, /resultGrid/);
   assert.match(page, /libraryPanel/);
+  assert.match(page, /effectSettings/);
+  assert.match(page, /clipToTemplate/);
+  assert.match(page, /Transparência/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
+  assert.match(config, /DEFAULT_EFFECT_SETTINGS/);
   assert.match(config, /export function defaultPresetForIndex/);
   assert.match(config, /export function mergeSavedPresets/);
   assert.match(compositor, /export function drawComposition/);
+  assert.match(compositor, /destination-in/);
+  assert.match(compositor, /globalAlpha/);
   assert.match(compositor, /export async function toCatalogFrame/);
 
   assert.match(storage, /PRESETS_DIRTY_KEY/);
   assert.match(storage, /syncLocalAsset/);
   assert.match(storage, /localAssets\.filter\(\(asset\) => asset\.localOnly\)/);
   assert.match(storage, /localSaved/);
+  assert.match(server, /effectSettings/);
 
   assert.match(processing, /1 - mask \* strength/);
   assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);

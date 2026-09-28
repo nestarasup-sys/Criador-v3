@@ -12,6 +12,7 @@ import {
   CANVAS_SIZE,
   DEFAULT_BROW_PLACEMENT,
   DEFAULT_EFFECT_PLACEMENTS,
+  DEFAULT_EFFECT_SETTINGS,
   DEFAULT_MOUTH_PLACEMENT,
   DEFAULT_PLACEMENT,
   EFFECT_KINDS,
@@ -33,7 +34,7 @@ import {
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
-import type { EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FacePreset, MouthPiece } from "./types/eye-model";
+import type { EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -601,6 +602,7 @@ export default function FabricadorDeModeloPage() {
       activePreset.effects,
       activePreset.enabledEffects,
       activePreset.effectAssets,
+      activePreset.effectSettings,
     );
   }, [template, loaded, placement, state, activePreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
 
@@ -927,6 +929,16 @@ export default function FabricadorDeModeloPage() {
     setGenerated([]);
   };
 
+  const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean) => {
+    if (!EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return;
+    const kind = presetLayer as FaceEffectKind;
+    setPresets((current) => current.map((preset, index) => index === presetIndex ? {
+      ...preset,
+      effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], [key]: value } },
+    } : preset));
+    setGenerated([]);
+  };
+
   const assignEffectAsset = async (asset: FabricatorAsset) => {
     if (!EFFECT_KINDS.includes(asset.kind as FaceEffectKind)) return;
     const kind = asset.kind as FaceEffectKind;
@@ -1047,7 +1059,7 @@ export default function FabricadorDeModeloPage() {
     canvas.height = CANVAS_SIZE;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas indisponível.");
-    drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets);
+    drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings);
     return canvas.toDataURL("image/png");
   };
 
@@ -1302,6 +1314,11 @@ export default function FabricadorDeModeloPage() {
                   <span><b>{asset.name}</b><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</small></span>
                 </button>)}
               </div>
+            </PanelBlock>}
+
+            {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Composição do efeito" description="O molde funciona como máscara para impedir que o efeito escape da cabeça.">
+              <label className={styles.checkRow}><input type="checkbox" checked={activePreset.effectSettings[effectCatalogKind]?.clipToTemplate ?? DEFAULT_EFFECT_SETTINGS[effectCatalogKind].clipToTemplate} onChange={(event) => updateEffectSetting("clipToTemplate", event.target.checked)} /><span><b>Limitar ao molde</b><small>Recorta o efeito na área visível do molde</small></span></label>
+              <div className={styles.controlStack}><RangeControl label="Transparência" value={activePreset.effectSettings[effectCatalogKind]?.opacity ?? 1} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.opacity ?? 1) * 100)}%`} min={0} max={1} step=".01" onChange={(value) => updateEffectSetting("opacity", value)} /></div>
             </PanelBlock>}
 
             <PanelBlock title="Transformação" description="Microajustes da expressão, sem alterar a posição base do asset.">

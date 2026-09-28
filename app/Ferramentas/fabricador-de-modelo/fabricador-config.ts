@@ -1,5 +1,5 @@
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import type { EyeExpressionVariation, EyePlacement, EyeTransform, FaceEffectKind, FacePreset, FacePresetCollection } from "./types/eye-model";
+import type { EyeExpressionVariation, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection } from "./types/eye-model";
 
 export const CANVAS_SIZE = 1000;
 export const CATALOG_CANVAS_WIDTH = 1920;
@@ -17,6 +17,11 @@ export const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, 
 export const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 };
 export const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };
 export const EFFECT_KINDS: FaceEffectKind[] = ["blush", "shadow", "manpu"];
+export const DEFAULT_EFFECT_SETTINGS: Record<FaceEffectKind, FaceEffectSettings> = {
+  blush: { opacity: 1, clipToTemplate: true },
+  shadow: { opacity: 1, clipToTemplate: true },
+  manpu: { opacity: 1, clipToTemplate: true },
+};
 export const DEFAULT_EFFECT_PLACEMENTS: Record<FaceEffectKind, EyePlacement> = {
   blush: { x: 500, y: 520, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
   shadow: { x: 500, y: 420, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
@@ -45,6 +50,7 @@ export function defaultPresetForIndex(index: number): FacePreset {
     effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>,
     enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, true])) as Record<FaceEffectKind, boolean>,
     effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, null])) as Record<FaceEffectKind, string | null>,
+    effectSettings: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_SETTINGS[kind] }])) as Record<FaceEffectKind, FaceEffectSettings>,
   };
 }
 
@@ -59,6 +65,7 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
       effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(preset.effects?.[kind] ?? DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>,
       enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.enabledEffects?.[kind] ?? true])) as Record<FaceEffectKind, boolean>,
       effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.effectAssets?.[kind] ?? null])) as Record<FaceEffectKind, string | null>,
+      effectSettings: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_SETTINGS[kind], ...(preset.effectSettings?.[kind] ?? {}) }])) as Record<FaceEffectKind, FaceEffectSettings>,
     };
   });
 }

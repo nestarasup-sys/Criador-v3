@@ -1,7 +1,7 @@
 import { loadImage, splitPair } from "./eye-processing";
 import type { FabricatorAsset } from "../fabricador-storage";
-import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind } from "../types/eye-model";
-import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
+import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
+import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
 export type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
 
@@ -40,6 +40,7 @@ export function drawComposition(
   effectVariations: Record<FaceEffectKind, EyeTransform> = defaultPresetForIndex(13).effects,
   enabledEffects: Record<FaceEffectKind, boolean> = defaultPresetForIndex(13).enabledEffects,
   effectAssets: Record<FaceEffectKind, string | null> = defaultPresetForIndex(13).effectAssets,
+  effectSettings: Record<FaceEffectKind, FaceEffectSettings> = DEFAULT_EFFECT_SETTINGS,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -60,8 +61,39 @@ export function drawComposition(
     drawFeature(feature.right, featurePlacement, 1, featureVariation.right);
   };
 
+  const drawEffect = (kind: FaceEffectKind) => {
+    const image = effects[kind];
+    if (!image || !enabledEffects[kind] || !effectAssets[kind]) return;
+    const settings = effectSettings[kind] ?? DEFAULT_EFFECT_SETTINGS[kind];
+    const layer = document.createElement("canvas");
+    layer.width = CANVAS_SIZE;
+    layer.height = CANVAS_SIZE;
+    const layerContext = layer.getContext("2d");
+    if (!layerContext) return;
+    const drawOnLayer = (featureImage: HTMLImageElement, featurePlacement: EyePlacement, transform: EyeTransform) => {
+      const width = featureImage.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
+      const height = featureImage.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
+      const angle = (featurePlacement.rotation + transform.rotation) * Math.PI / 180;
+      layerContext.save();
+      layerContext.translate(featurePlacement.x + transform.x, featurePlacement.y + transform.y);
+      layerContext.rotate(angle);
+      layerContext.drawImage(featureImage, -width / 2, -height / 2, width, height);
+      layerContext.restore();
+    };
+    drawOnLayer(image, effectPlacements[kind], effectVariations[kind]);
+    if (settings.clipToTemplate) {
+      layerContext.globalCompositeOperation = "destination-in";
+      layerContext.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      layerContext.globalCompositeOperation = "source-over";
+    }
+    context.save();
+    context.globalAlpha = Math.min(1, Math.max(0, settings.opacity));
+    context.drawImage(layer, 0, 0);
+    context.restore();
+  };
+
   for (const kind of EFFECT_KINDS) {
-    if (enabledEffects[kind] && effectAssets[kind] && effects[kind]) drawFeature(effects[kind]!, effectPlacements[kind], 0, effectVariations[kind]);
+    drawEffect(kind);
   }
   if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);

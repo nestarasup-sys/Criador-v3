@@ -1,5 +1,6 @@
 export type EyeState = "open" | "closed";
 export type FaceEffectKind = "blush" | "shadow" | "manpu";
+export type FaceEffectSettings = { opacity: number; clipToTemplate: boolean };
 
 export type EyePiece = {
   dataUrl: string;
@@ -35,6 +36,7 @@ export type FacePreset = {
   effects: Record<FaceEffectKind, EyeTransform>;
   enabledEffects: Record<FaceEffectKind, boolean>;
   effectAssets: Record<FaceEffectKind, string | null>;
+  effectSettings: Record<FaceEffectKind, FaceEffectSettings>;
 };
 
 export type FacePresetCollection = Record<string, FacePreset>;
