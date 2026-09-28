@@ -55,7 +55,7 @@ export const EXPRESSION_VARIATIONS = [
   variation({ scaleX: .94, scaleY: 1.1, rotation: -3, y: -2 }, { scaleX: .94, scaleY: 1.1, rotation: 3, y: -2 }),
   variation({ scaleX: .96, scaleY: .86, rotation: -1, y: 1 }, { scaleX: .96, scaleY: .86, rotation: 1, y: 1 }),
   variation({ scaleX: 1.08, scaleY: .92, rotation: -3, x: -1 }, { scaleX: .96, scaleY: .98, rotation: 2, x: 1 }),
-  variation({ scaleX: 1.1, scaleY: .88, rotation: -7, x: -1 }, { scaleX: 1.02, scaleY: .92, rotation: 5, x: 1 }),
+  variation({ scaleX: 1.1, scaleY: .88, rotation: 2, x: -1 }, { scaleX: 1.02, scaleY: .92, rotation: -2, x: 1 }),
   // Surpresa: abre um pouco mais no eixo vertical, mantendo o centro ancorado.
   variation({ scaleY: 1.12 }),
   variation({ scaleX: .9, scaleY: .82, rotation: -3, y: 2 }, { scaleX: .9, scaleY: .82, rotation: 3, y: 2 }),
