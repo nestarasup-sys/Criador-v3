@@ -67,6 +67,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /manpuPieces/);
   assert.match(tool, /Folha 7×3 · 21 expressões/);
   assert.match(tool, /effectCatalogAssets/);
+  assert.match(tool, /manpuCatalogPieces/);
+  assert.match(tool, /effectCatalogGrid/);
+  assert.match(tool, /Manpu.*21/);
   assert.match(tool, /assignEffectAsset/);
   assert.match(tool, /effectAssets/);
   assert.match(tool, /effectChromaSettings/);

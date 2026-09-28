@@ -166,6 +166,7 @@ export default function FabricadorDeModeloPage() {
   const [activeEffectAssetIds, setActiveEffectAssetIds] = useState<Partial<Record<FaceEffectKind, string>>>({});
   const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
   const [effectCatalogKind, setEffectCatalogKind] = useState<FaceEffectKind>("blush");
+  const [manpuCatalogPieces, setManpuCatalogPieces] = useState<Record<string, EyePiece[]>>({});
   const [panelArea, setPanelArea] = useState<1 | 2>(1);
   const [presetIndex, setPresetIndex] = useState(13);
   const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
@@ -295,6 +296,26 @@ export default function FabricadorDeModeloPage() {
     return matchesFilter && asset.name.toLocaleLowerCase().includes(libraryQuery.trim().toLocaleLowerCase());
   }), [libraryAssets, libraryFilter, libraryQuery]);
   const effectCatalogAssets = useMemo(() => libraryAssets.filter((asset) => asset.kind === effectCatalogKind), [effectCatalogKind, libraryAssets]);
+
+  useEffect(() => {
+    if (effectCatalogKind !== "manpu" || !effectCatalogAssets.length) {
+      setManpuCatalogPieces({});
+      return;
+    }
+    let cancelled = false;
+    Promise.all(effectCatalogAssets.map(async (asset) => {
+      try {
+        const file = await assetToFile(asset);
+        const pieces = await processManpuSheet(file, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
+        return [asset.id, pieces] as const;
+      } catch {
+        return [asset.id, []] as const;
+      }
+    })).then((entries) => {
+      if (!cancelled) setManpuCatalogPieces(Object.fromEntries(entries));
+    });
+    return () => { cancelled = true; };
+  }, [effectCatalogAssets, effectCatalogKind]);
 
   useEffect(() => {
     if (!sourceFile) return;
@@ -704,7 +725,7 @@ export default function FabricadorDeModeloPage() {
           <div className={styles.row}><button className={presetLayer === "blush" ? styles.active : ""} onClick={() => setPresetLayer("blush")}>Blush</button><button className={presetLayer === "shadow" ? styles.active : ""} onClick={() => setPresetLayer("shadow")}>Shadow</button></div>
           <button className={`${styles.presetLayerMouth} ${presetLayer === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("manpu")}>Manpu</button>
           <div className={styles.effectToggles}><strong>Efeitos nesta expressão</strong>{EFFECT_KINDS.map((kind) => { const hasAsset = kind === "manpu" ? manpuPieces.length > 0 : Boolean(effectPieces[kind]); return <label key={kind}><input type="checkbox" checked={activePreset.enabledEffects[kind] && Boolean(activePreset.effectAssets[kind])} disabled={!hasAsset} onChange={(event) => updateEffectEnabled(kind, event.target.checked)} />{kind}{!hasAsset && " · envie o asset"}</label>; })}</div>
-          <div className={styles.effectCatalog}><strong>Catálogo de efeitos · expressão {String(presetIndex + 1).padStart(2, "0")}</strong><span>Escolha um asset diferente para esta expressão ou deixe sem efeito.</span><div className={styles.row}><button className={effectCatalogKind === "blush" ? styles.active : ""} onClick={() => setEffectCatalogKind("blush")}>Blush</button><button className={effectCatalogKind === "shadow" ? styles.active : ""} onClick={() => setEffectCatalogKind("shadow")}>Shadow</button></div><button className={`${styles.presetLayerMouth} ${effectCatalogKind === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setEffectCatalogKind("manpu")}>Manpu</button><button className={styles.reset} onClick={() => clearEffectFromExpression(effectCatalogKind)} disabled={!activePreset.effectAssets[effectCatalogKind]}>× Usar nenhum {effectCatalogKind}</button><div className={styles.effectCatalogList}>{effectCatalogAssets.map((asset) => <article className={styles.effectCatalogCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div><strong title={asset.name}>{asset.name}</strong><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado nesta expressão" : "Disponível na biblioteca"}</small><button onClick={() => void assignEffectAsset(asset)}>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</button></div></article>)}{!effectCatalogAssets.length && <small>Nenhum {effectCatalogKind} salvo ainda. Envie um asset acima.</small>}</div></div>
+          <div className={styles.effectCatalog}><strong>Catálogo de efeitos · expressão {String(presetIndex + 1).padStart(2, "0")}</strong><span>{effectCatalogKind === "manpu" ? "Cada folha 7×3 aparece aqui como 21 manpus independentes. Escolha qual será usada nesta expressão." : "Escolha um asset diferente para esta expressão ou deixe sem efeito."}</span><div className={styles.row}><button className={effectCatalogKind === "blush" ? styles.active : ""} onClick={() => setEffectCatalogKind("blush")}>Blush</button><button className={effectCatalogKind === "shadow" ? styles.active : ""} onClick={() => setEffectCatalogKind("shadow")}>Shadow</button></div><button className={`${styles.presetLayerMouth} ${effectCatalogKind === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setEffectCatalogKind("manpu")}>Manpu</button><button className={styles.reset} onClick={() => clearEffectFromExpression(effectCatalogKind)} disabled={!activePreset.effectAssets[effectCatalogKind]}>× Usar nenhum {effectCatalogKind}</button><div className={`${styles.effectCatalogList} ${effectCatalogKind === "manpu" ? styles.effectCatalogGrid : ""}`}>{effectCatalogAssets.flatMap((asset) => { const pieces = effectCatalogKind === "manpu" ? manpuCatalogPieces[asset.id] ?? [] : [null]; return pieces.length ? pieces.map((piece, pieceIndex) => <article className={styles.effectCatalogCard} key={`${asset.id}-${pieceIndex}`}><img src={piece?.dataUrl ?? asset.fileUrl} alt={`${asset.name} · manpu ${pieceIndex + 1}`} loading="lazy" /><div><strong title={`${asset.name} · ${pieceIndex + 1}/21`}>{effectCatalogKind === "manpu" ? `Manpu ${String(pieceIndex + 1).padStart(2, "0")} / 21` : asset.name}</strong><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Folha selecionada nesta expressão" : "Disponível na biblioteca"}</small><button onClick={() => void assignEffectAsset(asset)}>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</button></div></article>) : [<article className={styles.effectCatalogCard} key={asset.id}><img src={asset.fileUrl} alt={asset.name} loading="lazy" /><div><strong title={asset.name}>{asset.name}</strong><small>Processando as 21 células…</small></div></article>]; })}{!effectCatalogAssets.length && <small>Nenhum {effectCatalogKind} salvo ainda. Envie um asset acima.</small>}</div></div>
           {(presetLayer === "eyes" || presetLayer === "eyebrows") && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
           <label>Escala horizontal <output>{presetTransform().scaleX.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleX} onChange={(event) => updatePresetTransform("scaleX", Number(event.target.value))} /></label>
           <label>Altura <output>{presetTransform().scaleY.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleY} onChange={(event) => updatePresetTransform("scaleY", Number(event.target.value))} /></label>
