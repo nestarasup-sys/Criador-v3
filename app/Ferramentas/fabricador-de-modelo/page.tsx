@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
 import { deleteFabricatorAsset, loadFabricatorAssets, loadFabricatorPresets, saveFabricatorPresets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FacePreset, FacePresetCollection, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
@@ -138,6 +138,7 @@ export default function FabricadorDeModeloPage() {
   const [mouthFile, setMouthFile] = useState<File | null>(null);
   const [effectFiles, setEffectFiles] = useState<Partial<Record<FaceEffectKind, File>>>({});
   const [effectPieces, setEffectPieces] = useState<Partial<Record<FaceEffectKind, EyePiece>>>({});
+  const [manpuPieces, setManpuPieces] = useState<EyePiece[]>([]);
   const [effectLoaded, setEffectLoaded] = useState<Partial<Record<FaceEffectKind, HTMLImageElement>>>({});
   const [eyeChromaSettings, setEyeChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [eyebrowChromaSettings, setEyebrowChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
@@ -237,8 +238,8 @@ export default function FabricadorDeModeloPage() {
 
   const onEffectUpload = (kind: FaceEffectKind, file?: File, persist = true) => {
     if (!file) return;
-    setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando o efeito ${kind}…`);
-    setEffectFiles((current) => ({ ...current, [kind]: file })); setGenerated([]); setEffectPlacements((current) => ({ ...current, [kind]: DEFAULT_EFFECT_PLACEMENTS[kind] }));
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando o efeito ${kind}${kind === "manpu" ? " em 21 células" : ""}…`);
+    setEffectFiles((current) => ({ ...current, [kind]: file })); if (kind === "manpu") setManpuPieces([]); setGenerated([]); setEffectPlacements((current) => ({ ...current, [kind]: DEFAULT_EFFECT_PLACEMENTS[kind] }));
     if (persist) { setActiveEffectAssetIds((current) => ({ ...current, [kind]: "" })); persistUpload(file, kind, effectChromaSettings[kind]); }
   };
 
@@ -333,7 +334,7 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(EFFECT_KINDS.map(async (kind) => [kind, effectFiles[kind] ? await processEffectImage(effectFiles[kind]!, effectChromaSettings[kind]) : undefined] as const)).then((entries) => {
+    Promise.all(EFFECT_KINDS.filter((kind) => kind !== "manpu").map(async (kind) => [kind, effectFiles[kind] ? await processEffectImage(effectFiles[kind]!, effectChromaSettings[kind]) : undefined] as const)).then((entries) => {
       if (cancelled) return;
       setEffectPieces(Object.fromEntries(entries.filter((entry): entry is [FaceEffectKind, EyePiece] => Boolean(entry[1]))));
     }).catch(() => { if (!cancelled) setStatus("Não consegui recortar um dos efeitos. Use PNG com fundo verde ou branco."); });
@@ -342,11 +343,18 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(EFFECT_KINDS.map(async (kind) => [kind, effectPieces[kind] ? await loadImage(effectPieces[kind]!.dataUrl) : undefined] as const)).then((entries) => {
+    if (!effectFiles.manpu) { setManpuPieces([]); return () => { cancelled = true; }; }
+    processManpuSheet(effectFiles.manpu, effectChromaSettings.manpu).then((pieces) => { if (!cancelled) setManpuPieces(pieces); }).catch(() => { if (!cancelled) setStatus("Não consegui recortar a folha 7×3 do manpu."); });
+    return () => { cancelled = true; };
+  }, [effectChromaSettings.manpu, effectFiles.manpu]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(EFFECT_KINDS.map(async (kind) => [kind, kind === "manpu" ? (manpuPieces[presetIndex] ? await loadImage(manpuPieces[presetIndex].dataUrl) : undefined) : (effectPieces[kind] ? await loadImage(effectPieces[kind]!.dataUrl) : undefined)] as const)).then((entries) => {
       if (!cancelled) setEffectLoaded(Object.fromEntries(entries.filter((entry): entry is [FaceEffectKind, HTMLImageElement] => Boolean(entry[1]))));
     });
     return () => { cancelled = true; };
-  }, [effectPieces]);
+  }, [effectPieces, manpuPieces, presetIndex]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
@@ -549,7 +557,7 @@ export default function FabricadorDeModeloPage() {
         height: 1080,
         source: "fabricador-de-modelo",
         expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
-        generator: { version: 1, includes: ["eyes", "eyebrows", "mouths"].filter((kind) => kind === "eyes" || (kind === "eyebrows" && eyebrowPair) || (kind === "mouths" && mouthPieces.length)).concat(EFFECT_KINDS.filter((kind) => effectPieces[kind])) },
+        generator: { version: 1, includes: ["eyes", "eyebrows", "mouths"].filter((kind) => kind === "eyes" || (kind === "eyebrows" && eyebrowPair) || (kind === "mouths" && mouthPieces.length)).concat(EFFECT_KINDS.filter((kind) => kind === "manpu" ? manpuPieces.length > 0 : Boolean(effectPieces[kind]))) },
       };
       setStatus(`Exportando ${targetModel.gender}/${targetModel.id}…`);
       await uploadCatalogFile(targetModel.gender, targetModel.id, `${targetModel.id}.json`, JSON.stringify(manifest, null, 2), "application/json");
@@ -592,7 +600,7 @@ export default function FabricadorDeModeloPage() {
       <section className={styles.layout}><aside className={styles.panel}><div className={styles.panelAreas}><button className={panelArea === 1 ? styles.panelAreaActive : ""} onClick={() => setPanelArea(1)}>Área 1 · Montagem</button><button className={panelArea === 2 ? styles.panelAreaActive : ""} onClick={() => setPanelArea(2)}>Área 2 · Efeitos permanentes</button></div>{panelArea === 2 && <div className={styles.areaHeader}><strong>Efeitos permanentes</strong><span>Envie, ajuste e escolha em quais expressões cada camada aparece.</span></div>}{panelArea === 1 && <><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEyebrowUpload(event.target.files?.[0])} /><strong>＋ Enviar sobrancelhas</strong><span>Opcional · par esquerdo/direito</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onMouthUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de bocas</strong><span>Opcional · grade 7×3 · 21 expressões</span></label>
-        </>} {panelArea === 2 && <div className={styles.effectsUpload}><strong>Efeitos separados</strong><span>Upload individual · cada camada fica salva na biblioteca</span><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("blush", event.target.files?.[0])} /><strong>＋ Enviar blush</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("shadow", event.target.files?.[0])} /><strong>＋ Enviar shadow</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("manpu", event.target.files?.[0])} /><strong>＋ Enviar manpu</strong><span>Camada independente</span></label></div>}
+        </>} {panelArea === 2 && <div className={styles.effectsUpload}><strong>Efeitos separados</strong><span>Upload individual · cada camada fica salva na biblioteca</span><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("blush", event.target.files?.[0])} /><strong>＋ Enviar blush</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("shadow", event.target.files?.[0])} /><strong>＋ Enviar shadow</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("manpu", event.target.files?.[0])} /><strong>＋ Enviar manpu</strong><span>Folha 7×3 · 21 expressões</span></label></div>}
         {panelArea === 1 && eyebrowPair && <button className={styles.reset} onClick={() => { setEyebrowFile(null); setEyebrowPair(null); setEyebrowsLoaded(null); }}>× Remover sobrancelhas</button>}
         {panelArea === 1 && mouthPieces.length > 0 && <button className={styles.reset} onClick={() => { setMouthFile(null); setMouthPieces([]); setMouthLoaded(null); }}>× Remover boca</button>}
         <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma dos olhos</h2><p className={styles.hint}>Configuração exclusiva da folha de olhos selecionada. O asset guarda estes valores na biblioteca.</p>
@@ -634,7 +642,7 @@ export default function FabricadorDeModeloPage() {
           <button className={`${styles.presetLayerMouth} ${presetLayer === "mouth" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("mouth")}>Boca</button>
           <div className={styles.row}><button className={presetLayer === "blush" ? styles.active : ""} onClick={() => setPresetLayer("blush")}>Blush</button><button className={presetLayer === "shadow" ? styles.active : ""} onClick={() => setPresetLayer("shadow")}>Shadow</button></div>
           <button className={`${styles.presetLayerMouth} ${presetLayer === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("manpu")}>Manpu</button>
-          <div className={styles.effectToggles}><strong>Efeitos nesta expressão</strong>{EFFECT_KINDS.map((kind) => <label key={kind}><input type="checkbox" checked={activePreset.enabledEffects[kind]} disabled={!effectPieces[kind]} onChange={(event) => updateEffectEnabled(kind, event.target.checked)} />{kind}{!effectPieces[kind] && " · envie o asset"}</label>)}</div>
+          <div className={styles.effectToggles}><strong>Efeitos nesta expressão</strong>{EFFECT_KINDS.map((kind) => { const hasAsset = kind === "manpu" ? manpuPieces.length > 0 : Boolean(effectPieces[kind]); return <label key={kind}><input type="checkbox" checked={activePreset.enabledEffects[kind]} disabled={!hasAsset} onChange={(event) => updateEffectEnabled(kind, event.target.checked)} />{kind}{!hasAsset && " · envie o asset"}</label>; })}</div>
           {(presetLayer === "eyes" || presetLayer === "eyebrows") && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
           <label>Escala horizontal <output>{presetTransform().scaleX.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleX} onChange={(event) => updatePresetTransform("scaleX", Number(event.target.value))} /></label>
           <label>Altura <output>{presetTransform().scaleY.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleY} onChange={(event) => updatePresetTransform("scaleY", Number(event.target.value))} /></label>

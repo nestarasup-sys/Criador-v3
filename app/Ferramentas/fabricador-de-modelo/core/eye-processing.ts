@@ -157,8 +157,8 @@ export async function processEyebrowSheet(file: File, settings: ChromaSettings =
   } finally { URL.revokeObjectURL(url); }
 }
 
-/** Boca é uma camada unitária: limpa o fundo e recorta somente o desenho visível. */
-export async function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
+/** Folha 7×3: limpa o fundo e recorta cada célula pelo último pixel visível. */
+async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
   const url = URL.createObjectURL(file);
   try {
     const image = new Image(); image.src = url; await image.decode();
@@ -180,6 +180,14 @@ export async function processMouthSheet(file: File, settings: ChromaSettings = D
     }
     return pieces;
   } finally { URL.revokeObjectURL(url); }
+}
+
+export function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
+  return processGridSheet(file, settings);
+}
+
+export function processManpuSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
+  return processGridSheet(file, settings);
 }
 
 /** Efeitos são camadas unitárias: remove o fundo e recorta o último pixel visível. */

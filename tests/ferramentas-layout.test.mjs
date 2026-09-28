@@ -45,9 +45,11 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /processEyebrowSheet/);
   assert.match(tool, /processMouthSheet/);
   assert.match(tool, /processEffectImage/);
+  assert.match(tool, /processManpuSheet/);
   assert.match(processing, /const columns = 7; const rows = 3/);
   assert.match(processing, /pieces\.push\(makePiece/);
   assert.match(processing, /processEffectImage/);
+  assert.match(processing, /processManpuSheet/);
   assert.match(tool, /Enviar sobrancelhas/);
   assert.match(tool, /Enviar folha de bocas/);
   assert.match(tool, /eyebrowPlacement/);
@@ -62,6 +64,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /Enviar shadow/);
   assert.match(tool, /Enviar manpu/);
   assert.match(tool, /effectPieces/);
+  assert.match(tool, /manpuPieces/);
+  assert.match(tool, /Folha 7×3 · 21 expressões/);
   assert.match(tool, /effectChromaSettings/);
   assert.match(tool, /Área 2 · Efeitos permanentes/);
   assert.match(tool, /updateEffectEnabled/);
