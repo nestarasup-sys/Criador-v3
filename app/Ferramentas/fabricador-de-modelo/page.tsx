@@ -13,6 +13,7 @@ const CANVAS_SIZE = 1000;
 const LINKED_VARIATION: EyeExpressionVariation = { left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }, right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 } };
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
+const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 };
 const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
   scaleX: { min: .5, max: 6.8 },
@@ -98,7 +99,8 @@ export default function FabricadorDeModeloPage() {
   const [state, setState] = useState<EyeState>("open");
   const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
   const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
-  const [mouthPlacement, setMouthPlacement] = useState<EyePlacement>({ x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 });
+  const [mouthPlacement, setMouthPlacement] = useState<EyePlacement>(DEFAULT_MOUTH_PLACEMENT);
+  const placementSaveTimers = useRef<Partial<Record<FabricatorAssetKind, ReturnType<typeof setTimeout>>>>({});
   const [dragging, setDragging] = useState<"eyes" | "eyebrows" | "mouth" | null>(null);
   const [status, setStatus] = useState("Envie uma folha para começar");
   const [generated, setGenerated] = useState<string[]>([]);
@@ -151,15 +153,15 @@ export default function FabricadorDeModeloPage() {
 
   const onMouthUpload = (file?: File, persist = true) => {
     if (!file) return;
-    setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando a boca…`); setMouthFile(file); setGenerated([]); setMouthPlacement({ x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 }); if (persist) { setActiveMouthAssetId(null); persistUpload(file, "mouths", mouthChromaSettings); }
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando a boca…`); setMouthFile(file); setGenerated([]); setMouthPlacement(DEFAULT_MOUTH_PLACEMENT); if (persist) { setActiveMouthAssetId(null); persistUpload(file, "mouths", mouthChromaSettings); }
   };
 
   const useLibraryAsset = async (asset: FabricatorAsset) => {
     try {
       const file = await assetToFile(asset);
-      if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); setEyeChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onUpload(file, false); }
-      else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); setEyebrowChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onEyebrowUpload(file, false); }
-      else { setActiveMouthAssetId(asset.id); setMouthChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onMouthUpload(file, false); }
+      if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); setEyeChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onUpload(file, false); setPlacement(asset.placement ?? DEFAULT_PLACEMENT); }
+      else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); setEyebrowChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onEyebrowUpload(file, false); setEyebrowPlacement(asset.placement ?? DEFAULT_BROW_PLACEMENT); }
+      else { setActiveMouthAssetId(asset.id); setMouthChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onMouthUpload(file, false); setMouthPlacement(asset.placement ?? DEFAULT_MOUTH_PLACEMENT); }
     } catch {
       setStatus("Não consegui abrir este arquivo da biblioteca. Tente enviar a folha novamente.");
     }
@@ -173,6 +175,16 @@ export default function FabricadorDeModeloPage() {
     } catch {
       setStatus("Não consegui remover este arquivo da biblioteca.");
     }
+  };
+
+  const copyPlacementFromAsset = (source: FabricatorAsset) => {
+    const targetId = activeAssetIdForKind(source.kind);
+    if (!targetId) { setStatus("Use primeiro um asset do mesmo tipo para receber a posição."); return; }
+    if (targetId === source.id) { setStatus("Este asset já está sendo usado."); return; }
+    const next = source.placement ?? defaultPlacementForKind(source.kind);
+    setPlacementForKind(source.kind, next);
+    setLibraryAssets((current) => current.map((asset) => asset.id === targetId ? { ...asset, placement: next } : asset));
+    updateFabricatorAsset(targetId, { placement: next }).then(() => setStatus(`Posição copiada de “${source.name}”.`)).catch(() => setStatus("Posição copiada nesta sessão, mas não consegui salvá-la no asset atual."));
   };
 
   const visibleLibraryAssets = useMemo(() => libraryAssets.filter((asset) => {
@@ -233,10 +245,32 @@ export default function FabricadorDeModeloPage() {
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
+  const activeAssetIdForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? activeEyeAssetId : kind === "eyebrows" ? activeEyebrowAssetId : activeMouthAssetId;
+  const placementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? placement : kind === "eyebrows" ? eyebrowPlacement : mouthPlacement;
+  const defaultPlacementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? DEFAULT_PLACEMENT : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT : DEFAULT_MOUTH_PLACEMENT;
+  const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement) => {
+    if (kind === "eyes") setPlacement(next);
+    else if (kind === "eyebrows") setEyebrowPlacement(next);
+    else setMouthPlacement(next);
+  };
+  const persistPlacement = (kind: FabricatorAssetKind, next: EyePlacement) => {
+    const assetId = activeAssetIdForKind(kind);
+    if (!assetId) return;
+    const previousTimer = placementSaveTimers.current[kind];
+    if (previousTimer) clearTimeout(previousTimer);
+    placementSaveTimers.current[kind] = setTimeout(() => {
+      updateFabricatorAsset(assetId, { placement: next }).then(() => {
+        setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, placement: next } : asset));
+      }).catch(() => setStatus("Posição aplicada nesta sessão, mas não consegui salvá-la no asset."));
+    }, 350);
+  };
+  useEffect(() => { persistPlacement("eyes", placement); }, [placement, activeEyeAssetId]);
+  useEffect(() => { persistPlacement("eyebrows", eyebrowPlacement); }, [eyebrowPlacement, activeEyebrowAssetId]);
+  useEffect(() => { persistPlacement("mouths", mouthPlacement); }, [mouthPlacement, activeMouthAssetId]);
   const saveChroma = (kind: FabricatorAssetKind, chroma: ChromaSettings) => {
     const assetId = kind === "eyes" ? activeEyeAssetId : kind === "eyebrows" ? activeEyebrowAssetId : activeMouthAssetId;
     if (!assetId) return;
-    updateFabricatorAsset(assetId, chroma).then(() => setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, chroma } : asset))).catch(() => setStatus("Chroma aplicado nesta sessão, mas não consegui salvar a configuração do asset."));
+    updateFabricatorAsset(assetId, { chroma }).then(() => setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, chroma } : asset))).catch(() => setStatus("Chroma aplicado nesta sessão, mas não consegui salvar a configuração do asset."));
   };
   const updateChroma = (kind: FabricatorAssetKind, key: keyof ChromaSettings, value: number) => {
     setStatus("Reprocessando o chroma com os novos controles…");
@@ -369,5 +403,5 @@ export default function FabricadorDeModeloPage() {
       <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : dragging === "mouth" ? "a boca" : "os olhos"}` : "Arraste os olhos, sobrancelhas ou boca para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
       </section>
-      <aside className={styles.libraryPanel}><header className={styles.libraryHeader}><div><span>BIBLIOTECA LOCAL</span><h2>Meus arquivos</h2></div><b>{libraryAssets.length}</b></header><p className={styles.libraryHint}>As folhas enviadas ficam salvas na pasta própria do Fabricador e podem ser reutilizadas a qualquer momento.</p><input className={styles.librarySearch} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="⌕ Buscar arquivo…" aria-label="Buscar arquivo na biblioteca" /><div className={styles.libraryTabs}><button className={libraryFilter === "all" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("all")}>Todos</button><button className={libraryFilter === "eyes" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyes")}>Olhos</button><button className={libraryFilter === "eyebrows" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyebrows")}>Sobrancelhas</button><button className={libraryFilter === "mouths" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("mouths")}>Bocas</button></div><div className={styles.libraryList}>{visibleLibraryAssets.map((asset) => <article className={styles.libraryCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div className={styles.libraryCardBody}><strong title={asset.name}>{asset.name}</strong><small>{asset.kind === "eyes" ? "Folha de olhos" : asset.kind === "eyebrows" ? "Folha de sobrancelhas" : "Boca"}{asset.localOnly ? " · navegador" : " · PC"}</small><div><button onClick={() => void useLibraryAsset(asset)}>Usar</button><button className={styles.libraryDelete} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name}`}>×</button></div></div></article>)}{!visibleLibraryAssets.length && <div className={styles.libraryEmpty}><span>＋</span><strong>Nenhuma folha salva</strong><small>Envie olhos, sobrancelhas ou boca para criar sua biblioteca.</small></div>}</div><footer className={styles.libraryFooter}>Biblioteca independente · {libraryAssets.length} {libraryAssets.length === 1 ? "arquivo" : "arquivos"}</footer></aside></section></main></div>;
+      <aside className={styles.libraryPanel}><header className={styles.libraryHeader}><div><span>BIBLIOTECA LOCAL</span><h2>Meus arquivos</h2></div><b>{libraryAssets.length}</b></header><p className={styles.libraryHint}>As folhas enviadas ficam salvas na pasta própria do Fabricador e recuperam a última posição usada.</p><input className={styles.librarySearch} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="⌕ Buscar arquivo…" aria-label="Buscar arquivo na biblioteca" /><div className={styles.libraryTabs}><button className={libraryFilter === "all" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("all")}>Todos</button><button className={libraryFilter === "eyes" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyes")}>Olhos</button><button className={libraryFilter === "eyebrows" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyebrows")}>Sobrancelhas</button><button className={libraryFilter === "mouths" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("mouths")}>Bocas</button></div><div className={styles.libraryList}>{visibleLibraryAssets.map((asset) => <article className={styles.libraryCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div className={styles.libraryCardBody}><strong title={asset.name}>{asset.name}</strong><small>{asset.kind === "eyes" ? "Folha de olhos" : asset.kind === "eyebrows" ? "Folha de sobrancelhas" : "Boca"}{asset.localOnly ? " · navegador" : " · PC"}{asset.placement ? " · posição salva" : " · posição padrão"}</small><div><button onClick={() => void useLibraryAsset(asset)}>Usar</button><button onClick={() => copyPlacementFromAsset(asset)} disabled={!activeAssetIdForKind(asset.kind) || activeAssetIdForKind(asset.kind) === asset.id}>Copiar posição</button><button className={styles.libraryDelete} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name}`}>×</button></div></div></article>)}{!visibleLibraryAssets.length && <div className={styles.libraryEmpty}><span>＋</span><strong>Nenhuma folha salva</strong><small>Envie olhos, sobrancelhas ou boca para criar sua biblioteca.</small></div>}</div><footer className={styles.libraryFooter}>Biblioteca independente · {libraryAssets.length} {libraryAssets.length === 1 ? "arquivo" : "arquivos"}</footer></aside></section></main></div>;
 }

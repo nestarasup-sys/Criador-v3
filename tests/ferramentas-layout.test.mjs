@@ -102,6 +102,14 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /BIBLIOTECA LOCAL/);
   assert.match(tool, /visibleLibraryAssets/);
+  assert.match(tool, /placementSaveTimers/);
+  assert.match(tool, /persistPlacement\("eyes"/);
+  assert.match(tool, /persistPlacement\("eyebrows"/);
+  assert.match(tool, /persistPlacement\("mouths"/);
+  assert.match(tool, /copyPlacementFromAsset/);
+  assert.match(tool, /Copiar posição/);
+  assert.match(storage, /placement\?: EyePlacement/);
+  assert.match(storage, /updateFabricatorAsset\(assetId: string, updates/);
   assert.match(storage, /uploadFabricatorAsset/);
   assert.match(storage, /\/fabricador-modelos/);
   assert.match(server, /FABRICATOR_ROOT/);
@@ -110,6 +118,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(server, /function queueFabricatorWrite\(\) \{\s*return writeJsonAtomic/s);
   assert.match(server, /\/files\/fabricador-modelos/);
   assert.match(server, /request\.method === "PATCH"/);
+  assert.match(server, /normalizeFabricatorPlacement/);
+  assert.match(server, /INVALID_FABRICATOR_PLACEMENT/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);
 });

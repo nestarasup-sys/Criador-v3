@@ -488,6 +488,23 @@ function normalizeFabricatorChroma(value) {
   };
 }
 
+function normalizeFabricatorPlacement(value) {
+  if (!value || typeof value !== "object") return undefined;
+  const number = (candidate, fallback, minimum, maximum) => {
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
+  };
+  return {
+    x: number(value.x, 500, 0, 1000),
+    y: number(value.y, 500, 0, 1000),
+    scale: number(value.scale, 1, .35, 12),
+    scaleX: number(value.scaleX, 1, .5, 6.8),
+    scaleY: number(value.scaleY, 1, .5, 6.8),
+    rotation: number(value.rotation, 0, -80, 80),
+    gap: number(value.gap, 0, 0, 1040),
+  };
+}
+
 function openWindowsFolder(folder) {
   return new Promise((resolvePromise, reject) => {
     const explorer = spawn(EXPLORER_PATH, [folder], { detached: true, stdio: "ignore", windowsHide: false });
@@ -1064,7 +1081,7 @@ async function route(request, response) {
       await writeFile(filePath, body);
       fabricatorAssets = [
         ...fabricatorAssets.filter((asset) => asset.id !== id),
-        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma) },
+        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma), placement: normalizeFabricatorPlacement(metadata.placement) },
       ];
       await queueFabricatorWrite();
     });
@@ -1076,13 +1093,16 @@ async function route(request, response) {
     const asset = fabricatorAssets.find((entry) => entry.id === id);
     if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
     const body = await requestJson(request);
-    const chroma = normalizeFabricatorChroma(body?.chroma);
-    if (!chroma) throw Object.assign(new Error("Configuração de chroma inválida."), { status: 400, code: "INVALID_FABRICATOR_CHROMA" });
+    const chroma = body?.chroma === undefined ? undefined : normalizeFabricatorChroma(body.chroma);
+    const placement = body?.placement === undefined ? undefined : normalizeFabricatorPlacement(body.placement);
+    if (body?.chroma !== undefined && !chroma) throw Object.assign(new Error("Configuração de chroma inválida."), { status: 400, code: "INVALID_FABRICATOR_CHROMA" });
+    if (body?.placement !== undefined && !placement) throw Object.assign(new Error("Posição do asset inválida."), { status: 400, code: "INVALID_FABRICATOR_PLACEMENT" });
+    if (!chroma && !placement) throw Object.assign(new Error("Nenhuma alteração válida para o asset."), { status: 400, code: "EMPTY_FABRICATOR_PATCH" });
     await queueFabricatorMutation(async () => {
-      fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, chroma } : entry);
+      fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}) } : entry);
       await queueFabricatorWrite();
     });
-    sendJson(response, request, 200, { ok: true, id, chroma });
+    sendJson(response, request, 200, { ok: true, id, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}) });
     return;
   }
   if (fabricatorAssetMatch && request.method === "DELETE") {

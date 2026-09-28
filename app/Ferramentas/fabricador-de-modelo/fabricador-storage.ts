@@ -1,5 +1,6 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
+import type { EyePlacement } from "./types/eye-model";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths";
 
@@ -11,6 +12,7 @@ export type FabricatorAsset = {
   fileUrl: string;
   createdAt: string;
   chroma?: ChromaSettings;
+  placement?: EyePlacement;
   localOnly?: boolean;
 };
 
@@ -83,16 +85,22 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
   }
 }
 
-export async function updateFabricatorAsset(assetId: string, chroma: ChromaSettings) {
-  const response = await localDataFetch(`/fabricador-modelos/${encodeURIComponent(assetId)}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chroma }),
-  });
-  if (!response.ok) throw new Error("Não foi possível salvar o chroma do arquivo.");
-  const assets = readFallback().map((asset) => asset.id === assetId ? { ...asset, chroma } : asset);
+export async function updateFabricatorAsset(assetId: string, updates: { chroma?: ChromaSettings; placement?: EyePlacement }) {
+  let serverSaved = false;
+  try {
+    const response = await localDataFetch(`/fabricador-modelos/${encodeURIComponent(assetId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    serverSaved = response.ok;
+  } catch {
+    serverSaved = false;
+  }
+  const assets = readFallback().map((asset) => asset.id === assetId ? { ...asset, ...updates } : asset);
+  if (!serverSaved && !assets.some((asset) => asset.id === assetId)) throw new Error("Não foi possível salvar o asset.");
   writeFallback(assets);
-  return chroma;
+  return updates;
 }
 
 export async function deleteFabricatorAsset(asset: FabricatorAsset) {
