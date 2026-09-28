@@ -11,6 +11,10 @@ import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
 const CANVAS_SIZE = 1000;
+const CATALOG_CANVAS_WIDTH = 1920;
+const CATALOG_CANVAS_HEIGHT = 1080;
+const CATALOG_MODEL_SIZE = 336;
+const CATALOG_MODEL_TOP = 10;
 const LINKED_VARIATION: EyeExpressionVariation = { left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }, right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 } };
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
@@ -371,10 +375,13 @@ export default function FabricadorDeModeloPage() {
 
   const toCatalogFrame = async (dataUrl: string) => {
     const image = await loadImage(dataUrl);
-    const canvas = document.createElement("canvas"); canvas.width = 1920; canvas.height = 1080;
+    const canvas = document.createElement("canvas"); canvas.width = CATALOG_CANVAS_WIDTH; canvas.height = CATALOG_CANVAS_HEIGHT;
     const context = canvas.getContext("2d"); if (!context) throw new Error("Não foi possível preparar o PNG do catálogo.");
     context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(image, 420, 0, 1080, 1080);
+    // O catálogo usa o head-only compacto dos modelos 15+: 336px de altura,
+    // centralizado no eixo X e encostado no topo do canvas 1920x1080.
+    const left = (CATALOG_CANVAS_WIDTH - CATALOG_MODEL_SIZE) / 2;
+    context.drawImage(image, left, CATALOG_MODEL_TOP, CATALOG_MODEL_SIZE, CATALOG_MODEL_SIZE);
     return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Falha ao gerar PNG do catálogo.")), "image/png"));
   };
 
