@@ -56,6 +56,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /mouthChromaSettings\.strength/);
   assert.match(tool, /mouthPlacement/);
   assert.match(tool, /mouthPieces\[expressionIndex\]/);
+  assert.match(tool, /mouthPieces\[presetIndex\] \?\? mouthPieces\[0\]/);
   assert.match(tool, /updateChroma\("eyes"/);
   assert.match(tool, /updateChroma\("eyebrows"/);
   assert.match(tool, /Restaurar chroma dos olhos/);

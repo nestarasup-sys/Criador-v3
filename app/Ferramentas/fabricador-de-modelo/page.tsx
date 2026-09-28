@@ -299,9 +299,10 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => {
     if (!mouthPieces.length) return;
     let cancelled = false;
-    loadImage(mouthPieces[0].dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
+    const selectedMouth = mouthPieces[presetIndex] ?? mouthPieces[0];
+    loadImage(selectedMouth.dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
     return () => { cancelled = true; };
-  }, [mouthPieces]);
+  }, [mouthPieces, presetIndex]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
