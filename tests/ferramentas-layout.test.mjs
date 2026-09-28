@@ -37,6 +37,10 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
 
   assert.match(page, /fabricador-de-modelo/);
   assert.match(tool, /processEyeSheet/);
+  assert.match(tool, /processEyebrowSheet/);
+  assert.match(tool, /Enviar sobrancelhas/);
+  assert.match(tool, /eyebrowPlacement/);
+  assert.match(tool, /_talk\.png/);
   assert.match(tool, /chromaSettings\.strength/);
   assert.match(tool, /Restaurar chroma/);
   assert.match(tool, /scale: \{ min: \.35, max: 12 \}/);

@@ -11,4 +11,4 @@ essa integração seja planejada explicitamente.
 - `public/Ferramentas/green-bg-pro/index.html` — Green BG PRO, ferramenta integrada em modo legado.
 - `public/Ferramentas/alinhador-profissa/index.html` — Alinhador Profissa, ferramenta integrada em modo legado.
 - `public/Ferramentas/area2-final-head-lock/index.html` — PROCESSADOR V2, ferramenta independente de travamento e revisão de cabeças.
-- `app/Ferramentas/fabricador-de-modelo/` — Fabricador de Modelo beta, com molde fixo, recorte de folha 2×1 de olhos, vínculo aberto/fechado, preview arrastável e geração de 21 expressões.
+- `app/Ferramentas/fabricador-de-modelo/` — Fabricador de Modelo beta, com molde fixo, recorte de olhos e sobrancelhas, chroma configurável, vínculo aberto/fechado, preview arrastável e geração de 21 expressões.

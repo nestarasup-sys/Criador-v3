@@ -115,6 +115,10 @@ function splitRow(data: ImageData, row: { top: number; bottom: number }): [EyePi
   return [makePiece(0, split), makePiece(split, data.width)];
 }
 
+function mergePair(left: EyePiece, right: EyePiece): EyePiece {
+  return { dataUrl: JSON.stringify([left.dataUrl, right.dataUrl]), width: left.width + right.width, height: Math.max(left.height, right.height) };
+}
+
 export async function processEyeSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePair> {
   const url = URL.createObjectURL(file);
   try {
@@ -127,8 +131,25 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const bottom = bounds(cleaned, half, cleaned.height) ?? { left: 0, top: half, right: cleaned.width, bottom: cleaned.height };
     const [openLeft, openRight] = splitRow(cleaned, top);
     const [closedLeft, closedRight] = splitRow(cleaned, bottom);
-    const merge = (left: EyePiece, right: EyePiece): EyePiece => ({ dataUrl: JSON.stringify([left.dataUrl, right.dataUrl]), width: left.width + right.width, height: Math.max(left.height, right.height) });
-    return { open: merge(openLeft, openRight), closed: merge(closedLeft, closedRight) };
+    return { open: mergePair(openLeft, openRight), closed: mergePair(closedLeft, closedRight) };
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/** Sobrancelhas normalmente usam uma única linha; se vierem em duas, usamos a primeira. */
+export async function processEyebrowSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image(); image.src = url; await image.decode();
+    const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
+    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
+    const half = Math.floor(cleaned.height / 2);
+    const whole = bounds(cleaned, 0, cleaned.height);
+    const upper = bounds(cleaned, 0, half);
+    const lower = bounds(cleaned, half, cleaned.height);
+    const row = upper && lower ? { top: upper.top, bottom: upper.bottom } : whole ?? { top: 0, bottom: cleaned.height };
+    const [left, right] = splitRow(cleaned, row);
+    return mergePair(left, right);
   } finally { URL.revokeObjectURL(url); }
 }
 

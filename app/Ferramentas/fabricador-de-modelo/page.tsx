@@ -4,13 +4,14 @@ import JSZip from "jszip";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
-import type { EyeExpressionVariation, EyePair, EyePlacement, EyeState } from "./types/eye-model";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
+import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState } from "./types/eye-model";
 import styles from "./fabricador.module.css";
 
 const CANVAS_SIZE = 1000;
 const LINKED_VARIATION: EyeExpressionVariation = { left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }, right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 } };
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 92 };
+const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 92 };
 const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
   scaleX: { min: .5, max: 6.8 },
@@ -26,6 +27,11 @@ function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
   return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
 }
 
+function imageFromPiece(piece: EyePiece): Promise<LoadedPair> {
+  const [left, right] = splitPair(piece);
+  return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
+}
+
 function drawComposition(
   context: CanvasRenderingContext2D,
   template: HTMLImageElement,
@@ -33,11 +39,24 @@ function drawComposition(
   placement: EyePlacement,
   state: EyeState,
   variation: EyeExpressionVariation = LINKED_VARIATION,
+  eyebrows: LoadedPair | null = null,
+  eyebrowPlacement: EyePlacement = DEFAULT_BROW_PLACEMENT,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
   if (!pair) return;
   const gap = placement.gap * placement.scale;
+  const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement) => {
+    const drawFeature = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
+      const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
+      const height = image.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
+      const angle = (featurePlacement.rotation + transform.rotation) * Math.PI / 180;
+      context.save(); context.translate(featurePlacement.x + side * featurePlacement.gap * featurePlacement.scale / 2 + transform.x, featurePlacement.y + transform.y); context.rotate(angle);
+      context.drawImage(image, -width / 2, -height / 2, width, height); context.restore();
+    };
+    drawFeature(feature.left, -1, variation.left); drawFeature(feature.right, 1, variation.right);
+  };
+  if (eyebrows) drawPair(eyebrows, eyebrowPlacement);
   const drawEye = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
     const width = image.naturalWidth * placement.scale * placement.scaleX * transform.scaleX;
     const height = image.naturalHeight * placement.scale * placement.scaleY * transform.scaleY;
@@ -54,10 +73,14 @@ export default function FabricadorDeModeloPage() {
   const [template, setTemplate] = useState<HTMLImageElement | null>(null);
   const [pair, setPair] = useState<EyePair | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [eyebrowPair, setEyebrowPair] = useState<EyePiece | null>(null);
+  const [eyebrowFile, setEyebrowFile] = useState<File | null>(null);
   const [chromaSettings, setChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [loaded, setLoaded] = useState<LoadedPair | null>(null);
+  const [eyebrowsLoaded, setEyebrowsLoaded] = useState<LoadedPair | null>(null);
   const [state, setState] = useState<EyeState>("open");
   const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
+  const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
   const [dragging, setDragging] = useState(false);
   const [status, setStatus] = useState("Envie uma folha para começar");
   const [generated, setGenerated] = useState<string[]>([]);
@@ -75,14 +98,19 @@ export default function FabricadorDeModeloPage() {
 
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
-    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState);
-  }, [loaded, placement, state, template]);
+    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, LINKED_VARIATION, eyebrowsLoaded, eyebrowPlacement);
+  }, [eyebrowPlacement, eyebrowsLoaded, loaded, placement, state, template]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
   const onUpload = (file?: File) => {
     if (!file) return;
     setStatus("Limpando fundo e separando os quatro olhos…"); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT);
+  };
+
+  const onEyebrowUpload = (file?: File) => {
+    if (!file) return;
+    setStatus("Limpando fundo e separando as duas sobrancelhas…"); setEyebrowFile(file); setGenerated([]); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT);
   };
 
   useEffect(() => {
@@ -97,7 +125,20 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => { if (pair) imageFromPair(pair, state).then(setLoaded); }, [pair, state]);
 
+  useEffect(() => {
+    if (!eyebrowFile) return;
+    let cancelled = false;
+    processEyebrowSheet(eyebrowFile, chromaSettings).then(async (result) => {
+      if (cancelled) return;
+      setEyebrowPair(result); setEyebrowsLoaded(await imageFromPiece(result)); setStatus("Sobrancelhas processadas e vinculadas às expressões.");
+    }).catch(() => { if (!cancelled) setStatus("Não consegui separar as sobrancelhas. Use uma folha com duas sobrancelhas."); });
+    return () => { cancelled = true; };
+  }, [chromaSettings, eyebrowFile]);
+
+  useEffect(() => { if (eyebrowPair) imageFromPiece(eyebrowPair).then(setEyebrowsLoaded); }, [eyebrowPair]);
+
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
+  const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
   const updateChroma = (key: keyof ChromaSettings, value: number) => {
     setStatus("Reprocessando o chroma com os novos controles…");
     setChromaSettings((current) => ({ ...current, [key]: value }));
@@ -107,13 +148,13 @@ export default function FabricadorDeModeloPage() {
     return { x: ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE, y: ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE };
   };
   const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!loaded) return; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
-  const drag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!dragging) return; const point = pointerPosition(event); setPlacement((current) => ({ ...current, x: point.x, y: point.y })); };
+  const drag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!dragging) return; const point = pointerPosition(event); setPlacement((current) => ({ ...current, x: point.x, y: point.y })); setEyebrowPlacement((current) => ({ ...current, x: point.x })); };
   const stopDrag = () => setDragging(false);
 
   const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
     if (!template || !pair) return null;
     const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex]);
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], eyebrowsLoaded, eyebrowPlacement);
     return canvas.toDataURL("image/png");
   };
 
@@ -127,29 +168,39 @@ export default function FabricadorDeModeloPage() {
   const downloadPackage = async () => {
     if (!generated.length) return;
     const zip = new JSZip(); generated.forEach((dataUrl, index) => zip.file(`${EYE_EXPRESSIONS[index][0]}.png`, dataUrl.split(",")[1], { base64: true }));
+    generated.forEach((dataUrl, index) => zip.file(`${EYE_EXPRESSIONS[index][0]}_talk.png`, dataUrl.split(",")[1], { base64: true }));
     for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
       const blink = await renderOutput(index, "closed");
       if (blink) zip.file(`${EYE_EXPRESSIONS[index][0]}_blink.png`, blink.split(",")[1], { base64: true });
     }
-    zip.file("README.txt", "Fabricador de Modelo — beta\n\n21 expressões derivadas da folha de olhos original.\nO sufixo _blink usa o par fechado detectado na folha.\n");
+    zip.file("README.txt", "Fabricador de Modelo — beta\n\n21 expressões derivadas da folha de olhos original.\nOs arquivos _blink usam o par fechado detectado na folha.\nOs arquivos _talk repetem a composição aberta, seguindo o padrão do catálogo.\n");
     const blob = await zip.generateAsync({ type: "blob" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "fabricador-modelo-beta.zip"; anchor.click(); URL.revokeObjectURL(url);
   };
 
   return <div className={styles.page}><ToolsTopbar title="Fabricador de Modelo" subtitle="Beta · encaixe e geração de olhos" />
     <main className={styles.workspace}><section className={styles.intro}><div><span className={styles.eyebrow}>MODELO HEAD-ONLY · BETA</span><h1>Fabricador de Modelo</h1><p>Importe uma folha com o par aberto em cima e o par fechado embaixo. O recorte é automático e os dois olhos permanecem vinculados.</p></div><span className={styles.beta}>BETA</span></section>
       <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
-        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma key</h2><p className={styles.hint}>Se o fundo branco estiver apagando partes do olho, reduza a força ou a tolerância.</p>
+        <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEyebrowUpload(event.target.files?.[0])} /><strong>＋ Enviar sobrancelhas</strong><span>Opcional · par esquerdo/direito</span></label>
+        {eyebrowPair && <button className={styles.reset} onClick={() => { setEyebrowFile(null); setEyebrowPair(null); setEyebrowsLoaded(null); }}>× Remover sobrancelhas</button>}
+        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma key</h2><p className={styles.hint}>O mesmo chroma é aplicado aos olhos e às sobrancelhas. Se o fundo branco estiver apagando detalhes, reduza a força ou a tolerância.</p>
         <label>Força <output>{chromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={chromaSettings.strength} onChange={(event) => updateChroma("strength", Number(event.target.value))} /></label>
         <label>Tolerância <output>{chromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={chromaSettings.tolerance} onChange={(event) => updateChroma("tolerance", Number(event.target.value))} /></label>
         <label>Suavidade <output>{chromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={chromaSettings.softness} onChange={(event) => updateChroma("softness", Number(event.target.value))} /></label>
-        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Todos os controles abaixo afetam os dois olhos juntos.</p>
+        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Os olhos e as sobrancelhas acompanham o eixo X; as expressões continuam transformando cada lado separadamente.</p>
         <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
         <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
         <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
         <label>Distância entre olhos <output>{placement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={placement.gap} onChange={(event) => updatePlacement("gap", Number(event.target.value))} /></label>
         <label>Rotação <output>{placement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={placement.rotation} onChange={(event) => updatePlacement("rotation", Number(event.target.value))} /></label>
+        {eyebrowPair && <><div className={styles.divider} /><h2>Ajuste das sobrancelhas</h2><p className={styles.hint}>A camada segue as expressões por olho, mas pode ser encaixada separadamente no rosto.</p>
+          <label>Altura <output>{eyebrowPlacement.y}px</output><input type="range" min="180" max="520" step="1" value={eyebrowPlacement.y} onChange={(event) => updateEyebrowPlacement("y", Number(event.target.value))} /></label>
+          <label>Zoom <output>{eyebrowPlacement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={eyebrowPlacement.scale} onChange={(event) => updateEyebrowPlacement("scale", Number(event.target.value))} /></label>
+          <label>Largura <output>{eyebrowPlacement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={eyebrowPlacement.scaleX} onChange={(event) => updateEyebrowPlacement("scaleX", Number(event.target.value))} /></label>
+          <label>Distância <output>{eyebrowPlacement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={eyebrowPlacement.gap} onChange={(event) => updateEyebrowPlacement("gap", Number(event.target.value))} /></label>
+          <label>Rotação <output>{eyebrowPlacement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={eyebrowPlacement.rotation} onChange={(event) => updateEyebrowPlacement("rotation", Number(event.target.value))} /></label>
+          <button className={styles.reset} onClick={() => setEyebrowPlacement(DEFAULT_BROW_PLACEMENT)}>↺ Restaurar sobrancelhas</button></>}
         <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
-        <button className={styles.reset} onClick={() => setPlacement(DEFAULT_PLACEMENT)}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
+        <button className={styles.reset} onClick={() => { setPlacement(DEFAULT_PLACEMENT); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); }}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
       </aside>
       <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? "Solte para posicionar" : "Arraste os olhos para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
