@@ -1,6 +1,16 @@
 import type { EyePair, EyePiece } from "../types/eye-model";
 
-type RgbaImage = { data: ImageData; canvas: HTMLCanvasElement };
+export type ChromaSettings = {
+  strength: number;
+  tolerance: number;
+  softness: number;
+};
+
+export const DEFAULT_CHROMA_SETTINGS: ChromaSettings = {
+  strength: 68,
+  tolerance: 34,
+  softness: 24,
+};
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
@@ -24,21 +34,29 @@ function edgeColor(data: Uint8ClampedArray, width: number, height: number): [num
   return [median(0), median(1), median(2)];
 }
 
-function removeConnectedChroma(source: ImageData): ImageData {
+function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): ImageData {
   const { width, height, data } = source;
   const target = edgeColor(data, width, height);
-  const keyed = new Uint8Array(width * height);
+  const keyed = new Float32Array(width * height);
+  const strength = clamp(settings.strength, 0, 100) / 100;
+  const tolerance = clamp(settings.tolerance, 2, 140);
+  const softness = clamp(settings.softness, 0, 100);
   for (let i = 0; i < keyed.length; i += 1) {
     const p = i * 4;
     const [r, g, b] = [data[p], data[p + 1], data[p + 2]];
     const d = distance(r, g, b, target);
     const green = target[1] > target[0] * 1.2 && target[1] > target[2] * 1.1;
-    keyed[i] = d < (green ? 92 : 42) ? 1 : 0;
+    const adaptiveTolerance = green ? tolerance + 22 : tolerance;
+    keyed[i] = d <= adaptiveTolerance
+      ? 1
+      : softness > 0 && d < adaptiveTolerance + softness
+        ? 1 - (d - adaptiveTolerance) / softness
+        : 0;
   }
-  const visited = new Uint8Array(keyed.length);
+  const visited = new Float32Array(keyed.length);
   const queue = new Int32Array(keyed.length);
   let head = 0; let tail = 0;
-  const enqueue = (i: number) => { if (keyed[i] && !visited[i]) { visited[i] = 1; queue[tail++] = i; } };
+  const enqueue = (i: number) => { if (keyed[i] > .02 && visited[i] === 0) { visited[i] = keyed[i]; queue[tail++] = i; } };
   for (let x = 0; x < width; x += 1) { enqueue(x); enqueue((height - 1) * width + x); }
   for (let y = 1; y < height - 1; y += 1) { enqueue(y * width); enqueue(y * width + width - 1); }
   while (head < tail) {
@@ -49,12 +67,12 @@ function removeConnectedChroma(source: ImageData): ImageData {
     }
   }
   const output = new ImageData(new Uint8ClampedArray(data), width, height);
-  for (let i = 0; i < output.data.length / 4; i += 1) if (visited[i]) output.data[i * 4 + 3] = 0;
+  for (let i = 0; i < output.data.length / 4; i += 1) if (visited[i] > 0) output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - visited[i] * strength));
   return output;
 }
 
-export function cleanChromaImage(source: ImageData): ImageData {
-  return removeConnectedChroma(source);
+export function cleanChromaImage(source: ImageData, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): ImageData {
+  return removeConnectedChroma(source, settings);
 }
 
 function trim(data: ImageData, x0: number, y0: number, x1: number, y1: number): ImageData {
@@ -97,13 +115,13 @@ function splitRow(data: ImageData, row: { top: number; bottom: number }): [EyePi
   return [makePiece(0, split), makePiece(split, data.width)];
 }
 
-export async function processEyeSheet(file: File): Promise<EyePair> {
+export async function processEyeSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePair> {
   const url = URL.createObjectURL(file);
   try {
     const image = new Image(); image.src = url; await image.decode();
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
-    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height));
+    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
     const half = Math.floor(cleaned.height / 2);
     const top = bounds(cleaned, 0, half) ?? { left: 0, top: 0, right: cleaned.width, bottom: half };
     const bottom = bounds(cleaned, half, cleaned.height) ?? { left: 0, top: half, right: cleaned.width, bottom: cleaned.height };

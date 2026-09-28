@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import { cleanChromaImage, loadImage, processEyeSheet, splitPair } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
 import type { EyePair, EyePlacement, EyeState } from "./types/eye-model";
 import styles from "./fabricador.module.css";
 
@@ -45,6 +45,8 @@ export default function FabricadorDeModeloPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [template, setTemplate] = useState<HTMLImageElement | null>(null);
   const [pair, setPair] = useState<EyePair | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [chromaSettings, setChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [loaded, setLoaded] = useState<LoadedPair | null>(null);
   const [state, setState] = useState<EyeState>("open");
   const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
@@ -70,17 +72,28 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => { redraw(); }, [redraw]);
 
-  const onUpload = async (file?: File) => {
+  const onUpload = (file?: File) => {
     if (!file) return;
-    setStatus("Limpando fundo e separando os quatro olhos…"); setGenerated([]);
-    try {
-      const result = await processEyeSheet(file); setPair(result); setLoaded(await imageFromPair(result, state)); setPlacement(DEFAULT_PLACEMENT); setStatus("Folha processada: par aberto e par fechado vinculados");
-    } catch { setStatus("Não consegui separar essa folha. Use uma imagem com olhos em duas linhas."); }
+    setStatus("Limpando fundo e separando os quatro olhos…"); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT);
   };
+
+  useEffect(() => {
+    if (!sourceFile) return;
+    let cancelled = false;
+    processEyeSheet(sourceFile, chromaSettings).then(async (result) => {
+      if (cancelled) return;
+      setPair(result); setLoaded(await imageFromPair(result, state)); setStatus("Folha processada. Ajuste o chroma se algum detalhe branco sumir.");
+    }).catch(() => { if (!cancelled) setStatus("Não consegui separar essa folha. Use uma imagem com olhos em duas linhas."); });
+    return () => { cancelled = true; };
+  }, [chromaSettings, sourceFile]);
 
   useEffect(() => { if (pair) imageFromPair(pair, state).then(setLoaded); }, [pair, state]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
+  const updateChroma = (key: keyof ChromaSettings, value: number) => {
+    setStatus("Reprocessando o chroma com os novos controles…");
+    setChromaSettings((current) => ({ ...current, [key]: value }));
+  };
   const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
     return { x: ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE, y: ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE };
@@ -117,7 +130,11 @@ export default function FabricadorDeModeloPage() {
   return <div className={styles.page}><ToolsTopbar title="Fabricador de Modelo" subtitle="Beta · encaixe e geração de olhos" />
     <main className={styles.workspace}><section className={styles.intro}><div><span className={styles.eyebrow}>MODELO HEAD-ONLY · BETA</span><h1>Fabricador de Modelo</h1><p>Importe uma folha com o par aberto em cima e o par fechado embaixo. O recorte é automático e os dois olhos permanecem vinculados.</p></div><span className={styles.beta}>BETA</span></section>
       <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
-        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Todos os controles abaixo afetam os dois olhos juntos.</p>
+        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma key</h2><p className={styles.hint}>Se o fundo branco estiver apagando partes do olho, reduza a força ou a tolerância.</p>
+        <label>Força <output>{chromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={chromaSettings.strength} onChange={(event) => updateChroma("strength", Number(event.target.value))} /></label>
+        <label>Tolerância <output>{chromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={chromaSettings.tolerance} onChange={(event) => updateChroma("tolerance", Number(event.target.value))} /></label>
+        <label>Suavidade <output>{chromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={chromaSettings.softness} onChange={(event) => updateChroma("softness", Number(event.target.value))} /></label>
+        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Todos os controles abaixo afetam os dois olhos juntos.</p>
         <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min=".35" max="3" step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
         <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
         <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>

@@ -36,6 +36,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
 
   assert.match(page, /fabricador-de-modelo/);
   assert.match(tool, /processEyeSheet/);
+  assert.match(tool, /chromaSettings\.strength/);
+  assert.match(tool, /Restaurar chroma/);
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);
