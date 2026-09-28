@@ -62,6 +62,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /scale: \{ min: \.35, max: 12 \}/);
   assert.match(tool, /scaleX: \{ min: \.5, max: 6\.8 \}/);
   assert.match(tool, /gap: \{ min: 0, max: 1040 \}/);
+  assert.match(tool, /DEFAULT_PLACEMENT: EyePlacement = \{[^}]*gap: 491 \}/);
+  assert.match(tool, /DEFAULT_BROW_PLACEMENT: EyePlacement = \{[^}]*gap: 491 \}/);
   assert.match(tool, /rotation: \{ min: -80, max: 80 \}/);
   assert.match(expressions, /\["aliviada", "Aliviada"\]/);
   assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
