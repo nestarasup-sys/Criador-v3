@@ -1,10 +1,11 @@
 "use client";
 
 import JSZip from "jszip";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
+import { deleteFabricatorAsset, loadFabricatorAssets, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState } from "./types/eye-model";
 import styles from "./fabricador.module.css";
 
@@ -30,6 +31,13 @@ function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
 function imageFromPiece(piece: EyePiece): Promise<LoadedPair> {
   const [left, right] = splitPair(piece);
   return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
+}
+
+async function assetToFile(asset: FabricatorAsset) {
+  const response = await fetch(asset.fileUrl);
+  if (!response.ok) throw new Error("Não foi possível abrir o arquivo da biblioteca.");
+  const blob = await response.blob();
+  return new File([blob], asset.name, { type: asset.contentType || blob.type || "image/png" });
 }
 
 function drawComposition(
@@ -84,6 +92,9 @@ export default function FabricadorDeModeloPage() {
   const [dragging, setDragging] = useState<"eyes" | "eyebrows" | null>(null);
   const [status, setStatus] = useState("Envie uma folha para começar");
   const [generated, setGenerated] = useState<string[]>([]);
+  const [libraryAssets, setLibraryAssets] = useState<FabricatorAsset[]>([]);
+  const [libraryFilter, setLibraryFilter] = useState<"all" | FabricatorAssetKind>("all");
+  const [libraryQuery, setLibraryQuery] = useState("");
 
   useEffect(() => {
     fetch("/Ferramentas/fabricador-de-modelo/molde.png").then((response) => response.blob()).then((blob) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -96,6 +107,8 @@ export default function FabricadorDeModeloPage() {
     }).catch(() => setStatus("Não foi possível carregar o molde fixo"));
   }, []);
 
+  useEffect(() => { loadFabricatorAssets().then(setLibraryAssets); }, []);
+
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
     const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, LINKED_VARIATION, eyebrowsLoaded, eyebrowPlacement);
@@ -103,15 +116,47 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => { redraw(); }, [redraw]);
 
-  const onUpload = (file?: File) => {
-    if (!file) return;
-    setStatus("Limpando fundo e separando os quatro olhos…"); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT);
+  const persistUpload = (file: File, kind: FabricatorAssetKind) => {
+    uploadFabricatorAsset(file, kind).then((asset) => {
+      setLibraryAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
+      if (asset.localOnly) setStatus("Arquivo carregado. O servidor local está indisponível; ele ficou salvo neste navegador.");
+    }).catch(() => setStatus("Arquivo carregado, mas não consegui salvar na biblioteca."));
   };
 
-  const onEyebrowUpload = (file?: File) => {
+  const onUpload = (file?: File, persist = true) => {
     if (!file) return;
-    setStatus("Limpando fundo e separando as duas sobrancelhas…"); setEyebrowFile(file); setGenerated([]); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT);
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando os quatro olhos…`); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT); if (persist) persistUpload(file, "eyes");
   };
+
+  const onEyebrowUpload = (file?: File, persist = true) => {
+    if (!file) return;
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando as duas sobrancelhas…`); setEyebrowFile(file); setGenerated([]); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); if (persist) persistUpload(file, "eyebrows");
+  };
+
+  const useLibraryAsset = async (asset: FabricatorAsset) => {
+    try {
+      const file = await assetToFile(asset);
+      if (asset.kind === "eyes") onUpload(file, false);
+      else onEyebrowUpload(file, false);
+    } catch {
+      setStatus("Não consegui abrir este arquivo da biblioteca. Tente enviar a folha novamente.");
+    }
+  };
+
+  const removeLibraryAsset = async (asset: FabricatorAsset) => {
+    try {
+      await deleteFabricatorAsset(asset);
+      setLibraryAssets((current) => current.filter((entry) => entry.id !== asset.id));
+      setStatus("Arquivo removido da biblioteca do Fabricador.");
+    } catch {
+      setStatus("Não consegui remover este arquivo da biblioteca.");
+    }
+  };
+
+  const visibleLibraryAssets = useMemo(() => libraryAssets.filter((asset) => {
+    const matchesFilter = libraryFilter === "all" || asset.kind === libraryFilter;
+    return matchesFilter && asset.name.toLocaleLowerCase().includes(libraryQuery.trim().toLocaleLowerCase());
+  }), [libraryAssets, libraryFilter, libraryQuery]);
 
   useEffect(() => {
     if (!sourceFile) return;
@@ -226,6 +271,6 @@ export default function FabricadorDeModeloPage() {
       </aside>
       <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : "os olhos"}` : "Arraste os olhos ou as sobrancelhas para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
-      </section></section>
-    </main></div>;
+      </section>
+      <aside className={styles.libraryPanel}><header className={styles.libraryHeader}><div><span>BIBLIOTECA LOCAL</span><h2>Meus arquivos</h2></div><b>{libraryAssets.length}</b></header><p className={styles.libraryHint}>As folhas enviadas ficam salvas na pasta própria do Fabricador e podem ser reutilizadas a qualquer momento.</p><input className={styles.librarySearch} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="⌕ Buscar arquivo…" aria-label="Buscar arquivo na biblioteca" /><div className={styles.libraryTabs}><button className={libraryFilter === "all" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("all")}>Todos</button><button className={libraryFilter === "eyes" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyes")}>Olhos</button><button className={libraryFilter === "eyebrows" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyebrows")}>Sobrancelhas</button></div><div className={styles.libraryList}>{visibleLibraryAssets.map((asset) => <article className={styles.libraryCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div className={styles.libraryCardBody}><strong title={asset.name}>{asset.name}</strong><small>{asset.kind === "eyes" ? "Folha de olhos" : "Folha de sobrancelhas"}{asset.localOnly ? " · navegador" : " · PC"}</small><div><button onClick={() => void useLibraryAsset(asset)}>Usar</button><button className={styles.libraryDelete} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name}`}>×</button></div></div></article>)}{!visibleLibraryAssets.length && <div className={styles.libraryEmpty}><span>＋</span><strong>Nenhuma folha salva</strong><small>Envie olhos ou sobrancelhas ao lado para criar sua biblioteca.</small></div>}</div><footer className={styles.libraryFooter}>Biblioteca independente · {libraryAssets.length} {libraryAssets.length === 1 ? "arquivo" : "arquivos"}</footer></aside></section></main></div>;
 }

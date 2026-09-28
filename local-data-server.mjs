@@ -41,6 +41,8 @@ const FILES_ROOT = join(ROOT, "arquivos");
 const CATALOG_ROOT = join(FILES_ROOT, "catalogo");
 const PACKS_ROOT = join(FILES_ROOT, "packs");
 const STUDIO_ASSETS_ROOT = join(FILES_ROOT, "studio");
+const FABRICATOR_ROOT = join(FILES_ROOT, "fabricador-modelos");
+const FABRICATOR_MANIFEST_PATH = join(ROOT, "fabricador-modelos.json");
 const VIDEO_MAKER_ROOT = join(ROOT, "video-maker");
 const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
 const VIDEO_MAKER_TIKTOKS_ROOT = join(VIDEO_MAKER_ROOT, "tiktoks");
@@ -242,6 +244,8 @@ let state = structuredClone(EMPTY_STATE);
 let characters = [];
 let writeQueue = Promise.resolve();
 let stateMutationQueue = Promise.resolve();
+let fabricatorMutationQueue = Promise.resolve();
+let fabricatorAssets = [];
 let lastBackupAt = 0;
 
 async function loadNormalizedCharacters() {
@@ -251,6 +255,12 @@ async function loadNormalizedCharacters() {
 function queueStateMutation(task) {
   const operation = stateMutationQueue.catch(() => undefined).then(task);
   stateMutationQueue = operation.then(() => undefined, () => undefined);
+  return operation;
+}
+
+function queueFabricatorMutation(task) {
+  const operation = fabricatorMutationQueue.catch(() => undefined).then(task);
+  fabricatorMutationQueue = operation.then(() => undefined, () => undefined);
   return operation;
 }
 
@@ -432,6 +442,7 @@ async function ensureFolders() {
     mkdir(CATALOG_ROOT, { recursive: true }),
     mkdir(PACKS_ROOT, { recursive: true }),
     mkdir(STUDIO_ASSETS_ROOT, { recursive: true }),
+    mkdir(FABRICATOR_ROOT, { recursive: true }),
     mkdir(BACKUPS_ROOT, { recursive: true }),
     mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
     mkdir(BASE_DADOS_ROOT, { recursive: true }),
@@ -441,6 +452,16 @@ async function ensureFolders() {
     mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
     mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
   ]);
+}
+
+async function loadFabricatorAssets() {
+  const parsed = await readOptionalJson(FABRICATOR_MANIFEST_PATH);
+  fabricatorAssets = Array.isArray(parsed) ? parsed.filter((asset) => asset && typeof asset.id === "string" && typeof asset.fileName === "string") : [];
+}
+
+function queueFabricatorWrite() {
+  fabricatorMutationQueue = fabricatorMutationQueue.catch(() => undefined).then(() => writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets));
+  return fabricatorMutationQueue;
 }
 
 function openWindowsFolder(folder) {
@@ -990,6 +1011,52 @@ async function route(request, response) {
   }
   if (request.method === "GET" && url.pathname === "/models") {
     sendJson(response, request, 200, await discoverModels());
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/fabricador-modelos") {
+    sendJson(response, request, 200, fabricatorAssets.map((asset) => ({
+      ...asset,
+      fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${asset.id}`,
+    })).sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || ""))));
+    return;
+  }
+  const fabricatorAssetMatch = url.pathname.match(/^\/fabricador-modelos\/([a-zA-Z0-9_-]{1,120})$/);
+  if (fabricatorAssetMatch && request.method === "POST") {
+    const id = safeId(fabricatorAssetMatch[1]);
+    const metadata = readMetadata(request);
+    const contentType = contentTypeOf(request, metadata);
+    assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
+    const kind = metadata.kind === "eyes" || metadata.kind === "eyebrows" ? metadata.kind : null;
+    if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
+    const body = await requestBody(request, BODY_LIMITS.image);
+    const extension = contentType === "image/jpeg" ? ".jpg" : contentType === "image/webp" ? ".webp" : ".png";
+    const fileName = `${id}${extension}`;
+    const filePath = join(FABRICATOR_ROOT, fileName);
+    if (!inside(FABRICATOR_ROOT, filePath)) throw new Error("Destino do Fabricador inválido");
+    await mkdir(FABRICATOR_ROOT, { recursive: true });
+    await queueFabricatorMutation(async () => {
+      const previous = fabricatorAssets.find((asset) => asset.id === id);
+      if (previous?.fileName && previous.fileName !== fileName) await rm(join(FABRICATOR_ROOT, previous.fileName), { force: true }).catch(() => undefined);
+      await writeFile(filePath, body);
+      fabricatorAssets = [
+        ...fabricatorAssets.filter((asset) => asset.id !== id),
+        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString() },
+      ];
+      await queueFabricatorWrite();
+    });
+    sendJson(response, request, 200, { ok: true, id, fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${id}` });
+    return;
+  }
+  if (fabricatorAssetMatch && request.method === "DELETE") {
+    const id = safeId(fabricatorAssetMatch[1]);
+    const asset = fabricatorAssets.find((entry) => entry.id === id);
+    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
+    await queueFabricatorMutation(async () => {
+      fabricatorAssets = fabricatorAssets.filter((entry) => entry.id !== id);
+      await queueFabricatorWrite();
+      await rm(join(FABRICATOR_ROOT, asset.fileName), { force: true }).catch(() => undefined);
+    });
+    sendJson(response, request, 200, { ok: true, id });
     return;
   }
   if (request.method === "GET" && url.pathname === "/persistence/diagnostics") {
@@ -1935,6 +2002,14 @@ async function route(request, response) {
     await serveFile(response, request, join(CATALOG_ROOT, `${id}.png`));
     return;
   }
+  const fabricatorFileMatch = url.pathname.match(/^\/files\/fabricador-modelos\/([a-zA-Z0-9_-]{1,120})$/);
+  if (fabricatorFileMatch && request.method === "GET") {
+    const id = safeId(fabricatorFileMatch[1]);
+    const asset = fabricatorAssets.find((entry) => entry.id === id);
+    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
+    await serveFile(response, request, join(FABRICATOR_ROOT, asset.fileName));
+    return;
+  }
   const packFileMatch = url.pathname.match(/^\/files\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\.png$/);
   if (packFileMatch && request.method === "GET") {
     const packId = safeId(packFileMatch[1]);
@@ -2001,6 +2076,7 @@ async function loadLocalEnvironment() {
 
 await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
+await loadFabricatorAssets();
 await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({

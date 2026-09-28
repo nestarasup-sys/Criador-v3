@@ -28,12 +28,14 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
 });
 
 test("Fabricador de Modelo beta está disponível no catálogo", async () => {
-  const [page, tool, mold, expressions, processing] = await Promise.all([
+  const [page, tool, mold, expressions, processing, storage, server] = await Promise.all([
     read("app/Ferramentas/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/types/eye-model.ts"),
     read("app/Ferramentas/fabricador-de-modelo/constants/expressions.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
+    read("local-data-server.mjs"),
   ]);
 
   assert.match(page, /fabricador-de-modelo/);
@@ -60,6 +62,12 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /dragging === "eyebrows"/);
   assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
+  assert.match(tool, /BIBLIOTECA LOCAL/);
+  assert.match(tool, /visibleLibraryAssets/);
+  assert.match(storage, /uploadFabricatorAsset/);
+  assert.match(storage, /\/fabricador-modelos/);
+  assert.match(server, /FABRICATOR_ROOT/);
+  assert.match(server, /\/files\/fabricador-modelos/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);
 });
