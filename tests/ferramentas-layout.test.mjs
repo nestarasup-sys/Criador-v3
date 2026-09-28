@@ -88,7 +88,12 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.doesNotMatch(tool, /setEyebrowsLoaded\(await imageFromPiece/);
   assert.match(tool, /eyebrowPlacement\.scaleY\.toFixed\(2\)/);
   assert.match(tool, /updateEyebrowPlacement\("scaleY"/);
-  assert.match(tool, /Posição vertical/);
+  assert.doesNotMatch(tool, /Posição vertical/);
+  assert.match(tool, /Zoom das sobrancelhas/);
+  assert.match(tool, /Altura das sobrancelhas/);
+  assert.match(tool, /Distância <output>\{eyebrowPlacement\.gap\}px/);
+  assert.match(tool, /Zoom da boca/);
+  assert.match(tool, /Distância da boca não aplicável/);
   assert.match(tool, /dragging === "eyebrows"/);
   assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
