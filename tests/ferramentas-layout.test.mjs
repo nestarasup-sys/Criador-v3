@@ -92,6 +92,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(storage, /uploadFabricatorAsset/);
   assert.match(storage, /\/fabricador-modelos/);
   assert.match(server, /FABRICATOR_ROOT/);
+  assert.match(server, /FABRICATOR_MANIFEST_PATH = join\(FABRICATOR_ROOT, "index\.json"\)/);
+  assert.match(server, /recoveredAssets/);
+  assert.match(server, /function queueFabricatorWrite\(\) \{\s*return writeJsonAtomic/s);
   assert.match(server, /\/files\/fabricador-modelos/);
   assert.match(server, /request\.method === "PATCH"/);
   assert.match(tool, /molde\.png/);

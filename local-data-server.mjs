@@ -42,7 +42,8 @@ const CATALOG_ROOT = join(FILES_ROOT, "catalogo");
 const PACKS_ROOT = join(FILES_ROOT, "packs");
 const STUDIO_ASSETS_ROOT = join(FILES_ROOT, "studio");
 const FABRICATOR_ROOT = join(FILES_ROOT, "fabricador-modelos");
-const FABRICATOR_MANIFEST_PATH = join(ROOT, "fabricador-modelos.json");
+const FABRICATOR_MANIFEST_PATH = join(FABRICATOR_ROOT, "index.json");
+const LEGACY_FABRICATOR_MANIFEST_PATH = join(ROOT, "fabricador-modelos.json");
 const VIDEO_MAKER_ROOT = join(ROOT, "video-maker");
 const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
 const VIDEO_MAKER_TIKTOKS_ROOT = join(VIDEO_MAKER_ROOT, "tiktoks");
@@ -455,13 +456,23 @@ async function ensureFolders() {
 }
 
 async function loadFabricatorAssets() {
-  const parsed = await readOptionalJson(FABRICATOR_MANIFEST_PATH);
-  fabricatorAssets = Array.isArray(parsed) ? parsed.filter((asset) => asset && typeof asset.id === "string" && typeof asset.fileName === "string") : [];
+  const currentManifest = await readOptionalJson(FABRICATOR_MANIFEST_PATH);
+  const parsed = currentManifest ?? await readOptionalJson(LEGACY_FABRICATOR_MANIFEST_PATH);
+  const knownAssets = Array.isArray(parsed) ? parsed.filter((asset) => asset && typeof asset.id === "string" && typeof asset.fileName === "string") : [];
+  const knownFiles = new Set(knownAssets.map((asset) => asset.fileName));
+  const recoveredAssets = [];
+  for (const entry of await readdir(FABRICATOR_ROOT, { withFileTypes: true })) {
+    if (!entry.isFile() || !/\.(png|jpe?g|webp)$/i.test(entry.name) || knownFiles.has(entry.name)) continue;
+    const id = entry.name.replace(/\.[^.]+$/, "");
+    const info = await stat(join(FABRICATOR_ROOT, entry.name));
+    recoveredAssets.push({ id, name: `Arquivo recuperado ${id.slice(0, 8)}`, kind: "eyes", contentType: entry.name.endsWith(".webp") ? "image/webp" : entry.name.endsWith(".jpg") || entry.name.endsWith(".jpeg") ? "image/jpeg" : "image/png", fileName: entry.name, createdAt: new Date(info.mtimeMs).toISOString() });
+  }
+  fabricatorAssets = [...knownAssets, ...recoveredAssets];
+  if (recoveredAssets.length || currentManifest === null) await writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets);
 }
 
 function queueFabricatorWrite() {
-  fabricatorMutationQueue = fabricatorMutationQueue.catch(() => undefined).then(() => writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets));
-  return fabricatorMutationQueue;
+  return writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets);
 }
 
 function normalizeFabricatorChroma(value) {
