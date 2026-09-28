@@ -20,11 +20,25 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
     read("local-data-server.mjs"),
   ]);
 
-  assert.match(page, /<strong>03<\/strong>/);
+  assert.match(page, /<strong>04<\/strong>/);
   assert.match(page, /area2-final-head-lock/);
   assert.doesNotMatch(page, /alinhador-profissional-v2|laboratorio-cor-modelo|teste-controles-cor/);
-  assert.doesNotMatch(page, /fabricador-de-modelo|Fabricador de Modelo/);
+  assert.match(page, /Fabricador de Modelo/);
   assert.doesNotMatch(server, /models\/fabricator|decodeFabricatorPng/);
+});
+
+test("Fabricador de Modelo beta está disponível no catálogo", async () => {
+  const [page, tool, mold] = await Promise.all([
+    read("app/Ferramentas/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/types/eye-model.ts"),
+  ]);
+
+  assert.match(page, /fabricador-de-modelo/);
+  assert.match(tool, /processEyeSheet/);
+  assert.match(tool, /Gerar 21 expressões/);
+  assert.match(tool, /molde\.png/);
+  assert.match(mold, /EyePair/);
 });
 
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {

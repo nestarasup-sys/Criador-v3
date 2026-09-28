@@ -1,0 +1,133 @@
+"use client";
+
+import JSZip from "jszip";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ToolsTopbar } from "../components/ToolsTopbar";
+import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
+import { cleanChromaImage, loadImage, processEyeSheet, splitPair } from "./core/eye-processing";
+import type { EyePair, EyePlacement, EyeState } from "./types/eye-model";
+import styles from "./fabricador.module.css";
+
+const CANVAS_SIZE = 1000;
+const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 92 };
+
+type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
+
+function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
+  const [left, right] = splitPair(pair[state]);
+  return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
+}
+
+function drawComposition(
+  context: CanvasRenderingContext2D,
+  template: HTMLImageElement,
+  pair: LoadedPair | null,
+  placement: EyePlacement,
+  state: EyeState,
+  variation = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+) {
+  context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  if (!pair) return;
+  const width = pair.left.naturalWidth * placement.scale * placement.scaleX * variation.scaleX;
+  const height = pair.left.naturalHeight * placement.scale * placement.scaleY * variation.scaleY;
+  const gap = placement.gap * placement.scale;
+  const angle = (placement.rotation + variation.rotation) * Math.PI / 180;
+  const drawEye = (image: HTMLImageElement, x: number) => {
+    context.save(); context.translate(x + variation.x, placement.y + variation.y); context.rotate(angle);
+    context.drawImage(image, -width / 2, -height / 2, width, height); context.restore();
+  };
+  drawEye(pair.left, placement.x - gap / 2); drawEye(pair.right, placement.x + gap / 2);
+  void state;
+}
+
+export default function FabricadorDeModeloPage() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [template, setTemplate] = useState<HTMLImageElement | null>(null);
+  const [pair, setPair] = useState<EyePair | null>(null);
+  const [loaded, setLoaded] = useState<LoadedPair | null>(null);
+  const [state, setState] = useState<EyeState>("open");
+  const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
+  const [dragging, setDragging] = useState(false);
+  const [status, setStatus] = useState("Envie uma folha para começar");
+  const [generated, setGenerated] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/Ferramentas/fabricador-de-modelo/molde.png").then((response) => response.blob()).then((blob) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image(); image.onload = () => resolve(image); image.onerror = reject; image.src = URL.createObjectURL(blob);
+    })).then((image) => {
+      const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+      const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
+      const cleaned = cleanChromaImage(context.getImageData(0, 0, canvas.width, canvas.height));
+      context.putImageData(cleaned, 0, 0); const output = new Image(); output.src = canvas.toDataURL("image/png"); output.onload = () => setTemplate(output);
+    }).catch(() => setStatus("Não foi possível carregar o molde fixo"));
+  }, []);
+
+  const redraw = useCallback((nextPlacement = placement, nextState = state) => {
+    const canvas = canvasRef.current; if (!canvas || !template) return;
+    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState);
+  }, [loaded, placement, state, template]);
+
+  useEffect(() => { redraw(); }, [redraw]);
+
+  const onUpload = async (file?: File) => {
+    if (!file) return;
+    setStatus("Limpando fundo e separando os quatro olhos…"); setGenerated([]);
+    try {
+      const result = await processEyeSheet(file); setPair(result); setLoaded(await imageFromPair(result, state)); setPlacement(DEFAULT_PLACEMENT); setStatus("Folha processada: par aberto e par fechado vinculados");
+    } catch { setStatus("Não consegui separar essa folha. Use uma imagem com olhos em duas linhas."); }
+  };
+
+  useEffect(() => { if (pair) imageFromPair(pair, state).then(setLoaded); }, [pair, state]);
+
+  const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
+  const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
+    return { x: ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE, y: ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE };
+  };
+  const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!loaded) return; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
+  const drag = (event: React.PointerEvent<HTMLCanvasElement>) => { if (!dragging) return; const point = pointerPosition(event); setPlacement((current) => ({ ...current, x: point.x, y: point.y })); };
+  const stopDrag = () => setDragging(false);
+
+  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
+    if (!template || !pair) return null;
+    const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex]);
+    return canvas.toDataURL("image/png");
+  };
+
+  const generateExpressions = async () => {
+    if (!pair) { setStatus("Envie uma folha antes de gerar as expressões"); return; }
+    setStatus("Gerando 21 expressões derivadas do posicionamento…");
+    const outputs: string[] = []; for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) outputs.push((await renderOutput(index))!);
+    setGenerated(outputs); setStatus("21 expressões geradas. Revise a grade e baixe o pacote quando quiser.");
+  };
+
+  const downloadPackage = async () => {
+    if (!generated.length) return;
+    const zip = new JSZip(); generated.forEach((dataUrl, index) => zip.file(`${EYE_EXPRESSIONS[index][0]}.png`, dataUrl.split(",")[1], { base64: true }));
+    for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
+      const blink = await renderOutput(index, "closed");
+      if (blink) zip.file(`${EYE_EXPRESSIONS[index][0]}_blink.png`, blink.split(",")[1], { base64: true });
+    }
+    zip.file("README.txt", "Fabricador de Modelo — beta\n\n21 expressões derivadas da folha de olhos original.\nO sufixo _blink usa o par fechado detectado na folha.\n");
+    const blob = await zip.generateAsync({ type: "blob" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "fabricador-modelo-beta.zip"; anchor.click(); URL.revokeObjectURL(url);
+  };
+
+  return <div className={styles.page}><ToolsTopbar title="Fabricador de Modelo" subtitle="Beta · encaixe e geração de olhos" />
+    <main className={styles.workspace}><section className={styles.intro}><div><span className={styles.eyebrow}>MODELO HEAD-ONLY · BETA</span><h1>Fabricador de Modelo</h1><p>Importe uma folha com o par aberto em cima e o par fechado embaixo. O recorte é automático e os dois olhos permanecem vinculados.</p></div><span className={styles.beta}>BETA</span></section>
+      <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
+        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Todos os controles abaixo afetam os dois olhos juntos.</p>
+        <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min=".35" max="3" step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
+        <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
+        <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
+        <label>Distância entre olhos <output>{placement.gap}px</output><input type="range" min="0" max="260" step="1" value={placement.gap} onChange={(event) => updatePlacement("gap", Number(event.target.value))} /></label>
+        <label>Rotação <output>{placement.rotation}°</output><input type="range" min="-20" max="20" step=".5" value={placement.rotation} onChange={(event) => updatePlacement("rotation", Number(event.target.value))} /></label>
+        <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
+        <button className={styles.reset} onClick={() => setPlacement(DEFAULT_PLACEMENT)}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
+      </aside>
+      <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? "Solte para posicionar" : "Arraste os olhos para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
+        {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
+      </section></section>
+    </main></div>;
+}
