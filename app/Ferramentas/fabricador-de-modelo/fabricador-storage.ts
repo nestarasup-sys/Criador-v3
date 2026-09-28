@@ -1,7 +1,7 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
 
-export type FabricatorAssetKind = "eyes" | "eyebrows";
+export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths";
 
 export type FabricatorAsset = {
   id: string;

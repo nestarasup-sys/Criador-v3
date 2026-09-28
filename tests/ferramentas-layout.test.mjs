@@ -41,13 +41,17 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(page, /fabricador-de-modelo/);
   assert.match(tool, /processEyeSheet/);
   assert.match(tool, /processEyebrowSheet/);
+  assert.match(tool, /processMouthSheet/);
   assert.match(tool, /Enviar sobrancelhas/);
+  assert.match(tool, /Enviar boca/);
   assert.match(tool, /eyebrowPlacement/);
   assert.match(processing, /greenBackground/);
   assert.match(processing, /bounds\(data, row\.top, row\.bottom, left, right\)/);
   assert.match(tool, /_talk\.png/);
   assert.match(tool, /eyeChromaSettings\.strength/);
   assert.match(tool, /eyebrowChromaSettings\.strength/);
+  assert.match(tool, /mouthChromaSettings\.strength/);
+  assert.match(tool, /mouthPlacement/);
   assert.match(tool, /updateChroma\("eyes"/);
   assert.match(tool, /updateChroma\("eyebrows"/);
   assert.match(tool, /Restaurar chroma dos olhos/);
@@ -69,7 +73,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /eyebrowVariation/);
   assert.match(tool, /BROW_VARIATIONS\[expressionIndex\]/);
   assert.match(tool, /imageFromPiece\(eyebrowPair\)/);
-  assert.match(tool, /if \(eyebrows\) drawPair\(eyebrows, eyebrowPlacement, eyebrowVariation\);\s*if \(!pair\) return;/s);
+  assert.match(tool, /if \(eyebrows\) drawPair\(eyebrows, eyebrowPlacement, eyebrowVariation\);\s*if \(mouth\) drawFeature\(mouth, mouthPlacement, 0, LINKED_VARIATION\.left\);\s*if \(!pair\) return;/s);
   assert.doesNotMatch(tool, /setLoaded\(await imageFromPair/);
   assert.doesNotMatch(tool, /setEyebrowsLoaded\(await imageFromPiece/);
   assert.match(tool, /eyebrowPlacement\.scaleY\.toFixed\(2\)/);

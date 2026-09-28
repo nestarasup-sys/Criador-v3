@@ -6,6 +6,8 @@ export type EyePiece = {
   height: number;
 };
 
+export type MouthPiece = EyePiece;
+
 export type EyePair = {
   open: EyePiece;
   closed: EyePiece;

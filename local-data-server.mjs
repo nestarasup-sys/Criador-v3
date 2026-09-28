@@ -1039,7 +1039,7 @@ async function route(request, response) {
     const metadata = readMetadata(request);
     const contentType = contentTypeOf(request, metadata);
     assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
-    const kind = metadata.kind === "eyes" || metadata.kind === "eyebrows" ? metadata.kind : null;
+    const kind = metadata.kind === "eyes" || metadata.kind === "eyebrows" || metadata.kind === "mouths" ? metadata.kind : null;
     if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
     const body = await requestBody(request, BODY_LIMITS.image);
     const extension = contentType === "image/jpeg" ? ".jpg" : contentType === "image/webp" ? ".webp" : ".png";
