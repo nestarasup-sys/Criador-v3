@@ -7,6 +7,7 @@ import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./const
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
 import { deleteFabricatorAsset, loadFabricatorAssets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, MouthPiece } from "./types/eye-model";
+import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
 const CANVAS_SIZE = 1000;
@@ -23,6 +24,8 @@ const PLACEMENT_LIMITS = {
 } as const;
 
 type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
+type ModelGender = "feminino" | "masculino";
+type NextModel = { gender: ModelGender; number: number; id: string };
 
 function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
   const [left, right] = splitPair(pair[state]);
@@ -110,6 +113,9 @@ export default function FabricadorDeModeloPage() {
   const [activeEyeAssetId, setActiveEyeAssetId] = useState<string | null>(null);
   const [activeEyebrowAssetId, setActiveEyebrowAssetId] = useState<string | null>(null);
   const [activeMouthAssetId, setActiveMouthAssetId] = useState<string | null>(null);
+  const [exportGender, setExportGender] = useState<ModelGender>("feminino");
+  const [nextModel, setNextModel] = useState<NextModel | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetch("/Ferramentas/fabricador-de-modelo/molde.png").then((response) => response.blob()).then((blob) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -123,6 +129,19 @@ export default function FabricadorDeModeloPage() {
   }, []);
 
   useEffect(() => { loadFabricatorAssets().then(setLibraryAssets); }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setNextModel(null);
+    localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" }).then(async (response) => {
+      if (!response.ok) throw new Error("Não foi possível consultar o próximo modelo.");
+      const result = await response.json() as Partial<NextModel>;
+      if (typeof result.number !== "number" || !Number.isInteger(result.number) || result.number < 1 || result.id !== `modelo-${result.number}`) throw new Error("Numeração de modelo inválida.");
+      const number = result.number;
+      if (!cancelled) setNextModel({ gender: exportGender, number, id: `modelo-${number}` });
+    }).catch(() => { if (!cancelled) setStatus("Não consegui consultar a próxima numeração do catálogo local."); });
+    return () => { cancelled = true; };
+  }, [exportGender]);
 
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
@@ -336,13 +355,88 @@ export default function FabricadorDeModeloPage() {
     return canvas.toDataURL("image/png");
   };
 
-  const generateExpressions = async () => {
+  const generateExpressionOutputs = async () => {
     if (!pair) { setStatus("Envie uma folha antes de gerar as expressões"); return; }
     if (eyebrowFile && !eyebrowPair) { setStatus("Aguarde o processamento das sobrancelhas terminar antes de gerar."); return; }
     if (mouthFile && !mouthPieces.length) { setStatus("Aguarde o recorte das bocas terminar antes de gerar."); return; }
     setStatus("Gerando 21 expressões derivadas do posicionamento…");
     const outputs: string[] = []; for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) outputs.push((await renderOutput(index))!);
     setGenerated(outputs); setStatus("21 expressões geradas. Revise a grade e baixe o pacote quando quiser.");
+    return outputs;
+  };
+
+  const generateExpressions = async () => {
+    await generateExpressionOutputs();
+  };
+
+  const toCatalogFrame = async (dataUrl: string) => {
+    const image = await loadImage(dataUrl);
+    const canvas = document.createElement("canvas"); canvas.width = 1920; canvas.height = 1080;
+    const context = canvas.getContext("2d"); if (!context) throw new Error("Não foi possível preparar o PNG do catálogo.");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 420, 0, 1080, 1080);
+    return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Falha ao gerar PNG do catálogo.")), "image/png"));
+  };
+
+  const uploadCatalogFile = async (gender: ModelGender, modelId: string, fileName: string, body: BodyInit, contentType: string) => {
+    const response = await localDataFetch(`/models/import/${gender}/${modelId}/${encodeURIComponent(fileName)}`, { method: "POST", headers: { "Content-Type": contentType }, body });
+    if (!response.ok) {
+      const detail = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(detail.error || `Falha ao enviar ${fileName}.`);
+    }
+  };
+
+  const exportModel = async () => {
+    if (!pair || exporting) return;
+    setExporting(true);
+    let createdModel: NextModel | null = null;
+    try {
+      const outputs = generated.length === EYE_EXPRESSIONS.length ? generated : await generateExpressionOutputs();
+      if (!outputs || outputs.length !== EYE_EXPRESSIONS.length) throw new Error("Gere as 21 expressões antes de exportar.");
+      const numberResponse = await localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" });
+      if (!numberResponse.ok) throw new Error("Não consegui calcular o próximo número do modelo.");
+      const numberData = await numberResponse.json() as Partial<NextModel>;
+      if (typeof numberData.number !== "number" || !Number.isInteger(numberData.number) || numberData.number < 1) throw new Error("O catálogo retornou uma numeração inválida.");
+      const number = numberData.number;
+      const targetModel: NextModel = { gender: exportGender, number, id: `modelo-${number}` };
+      createdModel = targetModel;
+      setNextModel(targetModel);
+      const manifest = {
+        name: `Modelo ${targetModel.number}`,
+        gender: targetModel.gender,
+        type: "head-only",
+        anchor: "neck-base",
+        anchorX: 960,
+        anchorY: 346,
+        baseScale: 1,
+        width: 1920,
+        height: 1080,
+        source: "fabricador-de-modelo",
+        expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
+        generator: { version: 1, includes: ["eyes", "eyebrows", "mouths"].filter((kind) => kind === "eyes" || (kind === "eyebrows" && eyebrowPair) || (kind === "mouths" && mouthPieces.length)) },
+      };
+      setStatus(`Exportando ${targetModel.gender}/${targetModel.id}…`);
+      await uploadCatalogFile(targetModel.gender, targetModel.id, `${targetModel.id}.json`, JSON.stringify(manifest, null, 2), "application/json");
+      for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
+        const [key] = EYE_EXPRESSIONS[index];
+        const base = await toCatalogFrame(outputs[index]);
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}.png`, base, "image/png");
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, base, "image/png");
+        const blink = await renderOutput(index, "closed");
+        if (!blink) throw new Error(`Falha ao gerar o blink de ${key}.`);
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_blink.png`, await toCatalogFrame(blink), "image/png");
+        setStatus(`Exportando ${targetModel.id}: ${index + 1}/${EYE_EXPRESSIONS.length} expressões…`);
+      }
+      setStatus(`Modelo ${targetModel.id} exportado para o catálogo ${targetModel.gender}.`);
+      window.dispatchEvent(new CustomEvent("nymi:models-updated"));
+    } catch (error) {
+      if (createdModel) {
+        await localDataFetch(`/models/modelos/${createdModel.gender}/${createdModel.id}`, { method: "DELETE" }).catch(() => undefined);
+      }
+      setStatus(`Não foi possível exportar o modelo: ${error instanceof Error ? error.message : "erro desconhecido"}`);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const downloadPackage = async () => {
@@ -398,7 +492,9 @@ export default function FabricadorDeModeloPage() {
           <label>Rotação <output>{mouthPlacement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={mouthPlacement.rotation} onChange={(event) => setMouthPlacement((current) => ({ ...current, rotation: Number(event.target.value) }))} /></label>
         </>}
         <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
-        <button className={styles.reset} onClick={() => { setPlacement(DEFAULT_PLACEMENT); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); }}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
+        <button className={styles.reset} onClick={() => { setPlacement(DEFAULT_PLACEMENT); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); }}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair || exporting}>Gerar 21 expressões <b>→</b></button>
+        <div className={styles.exportBox}><strong>Exportar para o Criador</strong><p>Cria o próximo modelo livre no catálogo, sem substituir nenhum existente.</p><div className={styles.row}><button className={exportGender === "feminino" ? styles.active : ""} onClick={() => setExportGender("feminino")} disabled={exporting}>Feminino</button><button className={exportGender === "masculino" ? styles.active : ""} onClick={() => setExportGender("masculino")} disabled={exporting}>Masculino</button></div><small>{nextModel ? `Próximo: ${nextModel.id}` : "Consultando numeração…"}</small><button className={styles.export} onClick={exportModel} disabled={!pair || exporting || !nextModel}>{exporting ? "Exportando…" : "Exportar modelo"}</button></div>
+        {generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
       </aside>
       <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : dragging === "mouth" ? "a boca" : "os olhos"}` : "Arraste os olhos, sobrancelhas ou boca para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}

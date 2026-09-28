@@ -39,6 +39,14 @@
 .generate:disabled { opacity: .5; cursor: not-allowed; }
 .generate b { float: right; }
 .download { width: 100%; margin-top: 8px; background: #f1e8f6; color: #753875; }
+.exportBox { margin-top: 12px; padding: 13px; border: 1px solid #eadfea; border-radius: 14px; background: linear-gradient(135deg, #fff8fb, #f8f3fb); }
+.exportBox strong { display: block; color: #6f356f; font-size: 12px; }
+.exportBox p { margin: 6px 0 10px; color: #897d8d; font-size: 10px; line-height: 1.4; }
+.exportBox small { display: block; margin: -3px 0 8px; color: #897d8d; font-size: 10px; }
+.exportBox .row { margin: 0 0 9px; }
+.exportBox .row button:disabled { cursor: not-allowed; opacity: .55; }
+.export { width: 100%; border: 0; border-radius: 10px; padding: 10px; background: #6f356f; color: #fff; font-weight: 900; cursor: pointer; }
+.export:disabled { cursor: not-allowed; opacity: .5; }
 
 .libraryPanel { position: sticky; top: 18px; display: flex; flex-direction: column; min-height: 420px; max-height: calc(100dvh - 36px); overflow: hidden; padding: 16px; }
 .libraryHeader { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }

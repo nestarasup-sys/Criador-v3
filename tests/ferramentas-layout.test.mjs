@@ -100,6 +100,14 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /dragging === "eyebrows"/);
   assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
+  assert.match(tool, /Exportar para o Criador/);
+  assert.match(tool, /exportGender/);
+  assert.ok(tool.includes("/models/next/${exportGender}"));
+  assert.ok(tool.includes("/models/import/${gender}/${modelId}"));
+  assert.match(tool, /exportModel/);
+  assert.match(tool, /width = 1920; canvas.height = 1080/);
+  assert.match(tool, /Feminino/);
+  assert.match(tool, /Masculino/);
   assert.match(tool, /BIBLIOTECA LOCAL/);
   assert.match(tool, /visibleLibraryAssets/);
   assert.match(tool, /placementSaveTimers/);
