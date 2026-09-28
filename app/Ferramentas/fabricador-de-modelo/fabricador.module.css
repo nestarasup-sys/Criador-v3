@@ -46,6 +46,42 @@
 .effectCatalogCard strong { overflow: hidden; color: #5d5064; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .effectCatalogCard small { overflow: hidden; color: #9a8c9f; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .effectCatalogCard button { padding: 6px; border: 0; border-radius: 7px; background: #f9dce9; color: #a33468; font-size: 9px; font-weight: 900; cursor: pointer; }
+
+/* Visual system: clear action hierarchy, colorful but calm surfaces, and one obvious focal point. */
+.page { background: #f3f0f7; color: #2b2038; }
+.workspace { max-width: 1920px; padding: 0 20px 32px; }
+.layout { grid-template-columns: 360px minmax(560px, 1fr) 340px; gap: 16px; }
+.panel, .previewPanel, .libraryPanel { border-color: #e6deed; border-radius: 18px; box-shadow: 0 12px 30px #3f25540f; }
+.panel { background: #fbfaff; padding: 16px; }
+.panelAreas { grid-template-columns: 1fr 1fr; gap: 5px; margin: -2px -2px 12px; padding: 5px; background: #e9e1f1; }
+.panelAreas button { padding: 10px 8px; color: #725f7c; text-align: center; }
+.panelAreas button.panelAreaActive { background: #6f4a83; color: #fff; box-shadow: 0 4px 10px #6f4a8330; }
+.areaHeader { margin: 0 0 12px; padding: 13px; border: 0; border-radius: 13px; color: #fff; box-shadow: none; }
+.areaHeader strong { color: inherit; font-size: 13px; }
+.areaHeader span { color: #ffffffd9; font-size: 10px; }
+.areaHeaderBase { background: linear-gradient(135deg, #bd4777, #974d91); }
+.areaHeaderEffects { background: linear-gradient(135deg, #4c78b7, #5d5599); }
+.upload { padding: 18px 12px; border: 2px dashed #d4b3cb; background: #fff7fc; transition: border-color .2s, transform .2s, background .2s; }
+.upload:hover { border-color: #b34d7b; background: #fff0f8; transform: translateY(-1px); }
+.effectsUpload { border: 0; background: #eeeaf8; }
+.effectsUpload .upload { border-color: #c3b6de; background: #faf8ff; }
+.previewPanel { min-width: 0; padding: 0; overflow: hidden; background: #fff; }
+.previewHead { margin: 0; padding: 17px 20px; background: linear-gradient(135deg, #6f4a83, #4e628f); color: #fff; }
+.previewHead span, .previewHead small { color: #ffffffd9; }
+.previewHead h2 { color: #fff; }
+.canvasWrap { min-height: min(680px, calc(100dvh - 125px)); padding: 28px; border: 0; border-radius: 0; background-color: #252136; background-image: linear-gradient(45deg, #302944 25%, transparent 25%), linear-gradient(-45deg, #302944 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #302944 75%), linear-gradient(-45deg, transparent 75%, #302944 75%); background-size: 28px 28px; background-position: 0 0, 0 14px, 14px -14px, -14px 0; }
+.libraryPanel { background: #fbfaff; padding: 16px; }
+.libraryHeader h2, .presetEditor h2 { color: #3a2947; }
+.libraryTabs { background: #e9e1f1; }
+.libraryTabs button.libraryTabActive { color: #6f4a83; }
+.generate, .export { background: linear-gradient(135deg, #bd4777, #6f4a83); }
+.presetSave { background: #4c78b7; }
+.effectCatalog { background: #f6f4fb; border-color: #ddd4eb; }
+.effectCatalogCard { background: #fff; }
+@media (min-width: 1700px) {
+  .workspace { padding-left: 28px; padding-right: 28px; }
+  .layout { grid-template-columns: 390px minmax(700px, 1fr) 370px; gap: 20px; }
+}
 .status { display: flex; gap: 8px; align-items: flex-start; margin: 15px 2px; color: #726778; font-size: 11px; line-height: 1.4; }
 .status i { width: 8px; height: 8px; flex: none; margin-top: 3px; border-radius: 50%; background: #48ae78; }
 .divider { height: 1px; margin: 17px 0; background: #eee6ef; }

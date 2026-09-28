@@ -70,7 +70,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /assignEffectAsset/);
   assert.match(tool, /effectAssets/);
   assert.match(tool, /effectChromaSettings/);
-  assert.match(tool, /Área 2 · Efeitos permanentes/);
+  assert.match(tool, /2 · Efeitos/);
   assert.match(tool, /updateEffectEnabled/);
   assert.match(tool, /enabledEffects/);
   assert.match(server, /enabledEffects/);
