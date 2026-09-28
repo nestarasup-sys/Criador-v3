@@ -558,12 +558,16 @@ function normalizeFabricatorPresets(value) {
       const opacity = Number(source?.opacity);
       const coverage = Number(source?.verticalCoverage);
       const softness = Number(source?.softness);
+      const gradientWidth = Number(source?.gradientWidth);
+      const gradientHeight = Number(source?.gradientHeight);
       return [effect, {
         opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1,
         clipToTemplate: source?.clipToTemplate !== false,
         source: source?.source === "gradient" ? "gradient" : "asset",
         verticalCoverage: Number.isFinite(coverage) ? Math.min(1, Math.max(.01, coverage)) : .5,
         softness: Number.isFinite(softness) ? Math.min(1, Math.max(.01, softness)) : .18,
+        gradientWidth: Number.isFinite(gradientWidth) ? Math.min(1000, Math.max(80, gradientWidth)) : 420,
+        gradientHeight: Number.isFinite(gradientHeight) ? Math.min(700, Math.max(50, gradientHeight)) : 220,
       }];
     }));
     if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings };

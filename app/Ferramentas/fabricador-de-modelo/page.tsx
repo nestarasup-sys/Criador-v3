@@ -837,7 +837,7 @@ export default function FabricadorDeModeloPage() {
     : activeLayer === "eyebrows" ? Boolean(eyebrowPair)
       : activeLayer === "mouths" ? mouthPieces.length > 0
         : activeLayer === "manpu" ? manpuPieces.length > 0
-          : Boolean(effectPieces[activeLayer]);
+          : activePreset.enabledEffects[activeLayer] && activePreset.effectSettings[activeLayer]?.source === "gradient" || Boolean(effectPieces[activeLayer]);
 
   const activeLayerChroma = chromaForKind(activeLayer);
   const activeLayerPlacement = placementForKind(activeLayer);
@@ -856,6 +856,16 @@ export default function FabricadorDeModeloPage() {
     const height = image.naturalHeight * itemPlacement.scale * itemPlacement.scaleY;
     return point.x >= itemPlacement.x - width / 2 - 20 && point.x <= itemPlacement.x + width / 2 + 20
       && point.y >= itemPlacement.y - height / 2 - 20 && point.y <= itemPlacement.y + height / 2 + 20;
+  };
+
+  const insideProceduralEffect = (point: { x: number; y: number }, kind: FaceEffectKind) => {
+    const settings = activePreset.effectSettings[kind];
+    if (!settings || settings.source !== "gradient") return false;
+    const itemPlacement = effectPlacements[kind];
+    const width = settings.gradientWidth * itemPlacement.scale * itemPlacement.scaleX;
+    const height = settings.gradientHeight * itemPlacement.scale * itemPlacement.scaleY;
+    return point.x >= itemPlacement.x - width / 2 && point.x <= itemPlacement.x + width / 2
+      && point.y >= itemPlacement.y - height / 2 && point.y <= itemPlacement.y + height / 2;
   };
 
   const insidePair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePlacement) => {
@@ -881,7 +891,10 @@ export default function FabricadorDeModeloPage() {
     if (!target) {
       for (const kind of [...EFFECT_KINDS].reverse()) {
         const image = effectLoaded[kind];
-        if (image && activePreset.enabledEffects[kind] && activePreset.effectAssets[kind] && insideSingle(point, image, effectPlacements[kind])) {
+        const hit = image
+          ? activePreset.enabledEffects[kind] && activePreset.effectAssets[kind] && insideSingle(point, image, effectPlacements[kind])
+          : activePreset.enabledEffects[kind] && insideProceduralEffect(point, kind);
+        if (hit) {
           target = kind;
           break;
         }
@@ -1324,7 +1337,8 @@ export default function FabricadorDeModeloPage() {
                 {(effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "gradient")}>{effectCatalogKind === "blush" ? "Blush automático" : "Shadow automático"}</button>}
               </div>
               {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && (effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <div className={styles.controlStack}>
-                <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />
+                {effectCatalogKind === "shadow" && <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />}
+                {effectCatalogKind === "blush" && <><RangeControl label="Largura da área" value={activePreset.effectSettings[effectCatalogKind]?.gradientWidth ?? 420} display={`${Math.round(activePreset.effectSettings[effectCatalogKind]?.gradientWidth ?? 420)} px`} min={80} max={1000} step={1} onChange={(value) => updateEffectSetting("gradientWidth", value)} /><RangeControl label="Altura da área" value={activePreset.effectSettings[effectCatalogKind]?.gradientHeight ?? 220} display={`${Math.round(activePreset.effectSettings[effectCatalogKind]?.gradientHeight ?? 220)} px`} min={50} max={700} step={1} onChange={(value) => updateEffectSetting("gradientHeight", value)} /></>}
                 <RangeControl label="Suavidade do degradê" value={activePreset.effectSettings[effectCatalogKind]?.softness ?? .18} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.softness ?? .18) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("softness", value)} />
               </div>}
               <label className={styles.checkRow}><input type="checkbox" checked={activePreset.effectSettings[effectCatalogKind]?.clipToTemplate ?? DEFAULT_EFFECT_SETTINGS[effectCatalogKind].clipToTemplate} onChange={(event) => updateEffectSetting("clipToTemplate", event.target.checked)} /><span><b>Limitar ao molde</b><small>Recorta o efeito na área visível do molde</small></span></label>

@@ -82,17 +82,32 @@ export function drawComposition(
     };
     if (settings.source === "gradient") {
       if (kind !== "shadow" && kind !== "blush") return;
-      const coverage = Math.min(1, Math.max(.01, settings.verticalCoverage));
-      const softness = Math.min(coverage, Math.max(.01, settings.softness));
-      const edge = Math.max(.01, coverage - softness);
       const color = kind === "blush" ? "255, 144, 174" : "44, 31, 52";
-      const gradient = layerContext.createLinearGradient(0, 0, 0, CANVAS_SIZE);
-      gradient.addColorStop(0, `rgba(${color}, ${kind === "blush" ? ".48" : ".78"})`);
-      gradient.addColorStop(edge, `rgba(${color}, ${kind === "blush" ? ".32" : ".60"})`);
-      gradient.addColorStop(coverage, `rgba(${color}, 0)`);
-      gradient.addColorStop(Math.min(1, coverage + .001), `rgba(${color}, 0)`);
-      layerContext.fillStyle = gradient;
-      layerContext.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      if (kind === "blush") {
+        const softness = Math.min(1, Math.max(.01, settings.softness));
+        layerContext.save();
+        layerContext.translate(effectPlacements[kind].x, effectPlacements[kind].y);
+        layerContext.rotate(effectPlacements[kind].rotation * Math.PI / 180);
+        layerContext.scale(settings.gradientWidth * effectPlacements[kind].scale * effectPlacements[kind].scaleX / 2, settings.gradientHeight * effectPlacements[kind].scale * effectPlacements[kind].scaleY / 2);
+        const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
+        gradient.addColorStop(0, `rgba(${color}, .54)`);
+        gradient.addColorStop(Math.max(.01, 1 - softness), `rgba(${color}, .30)`);
+        gradient.addColorStop(1, `rgba(${color}, 0)`);
+        layerContext.fillStyle = gradient;
+        layerContext.fillRect(-1, -1, 2, 2);
+        layerContext.restore();
+      } else {
+        const coverage = Math.min(1, Math.max(.01, settings.verticalCoverage));
+        const softness = Math.min(coverage, Math.max(.01, settings.softness));
+        const edge = Math.max(.01, coverage - softness);
+        const gradient = layerContext.createLinearGradient(0, 0, 0, CANVAS_SIZE);
+        gradient.addColorStop(0, `rgba(${color}, .78)`);
+        gradient.addColorStop(edge, `rgba(${color}, .60)`);
+        gradient.addColorStop(coverage, `rgba(${color}, 0)`);
+        gradient.addColorStop(Math.min(1, coverage + .001), `rgba(${color}, 0)`);
+        layerContext.fillStyle = gradient;
+        layerContext.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      }
     } else {
       if (!image || !effectAssets[kind]) return;
       drawOnLayer(image, effectPlacements[kind], effectVariations[kind]);
