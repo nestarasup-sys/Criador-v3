@@ -7,6 +7,7 @@ export type EyePiece = {
 };
 
 export type MouthPiece = EyePiece;
+export type MouthExpressionSheet = MouthPiece[];
 
 export type EyePair = {
   open: EyePiece;

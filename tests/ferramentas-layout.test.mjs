@@ -42,8 +42,10 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /processEyeSheet/);
   assert.match(tool, /processEyebrowSheet/);
   assert.match(tool, /processMouthSheet/);
+  assert.match(processing, /const columns = 7; const rows = 3/);
+  assert.match(processing, /pieces\.push\(makePiece/);
   assert.match(tool, /Enviar sobrancelhas/);
-  assert.match(tool, /Enviar boca/);
+  assert.match(tool, /Enviar folha de bocas/);
   assert.match(tool, /eyebrowPlacement/);
   assert.match(processing, /greenBackground/);
   assert.match(processing, /bounds\(data, row\.top, row\.bottom, left, right\)/);
@@ -52,6 +54,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /eyebrowChromaSettings\.strength/);
   assert.match(tool, /mouthChromaSettings\.strength/);
   assert.match(tool, /mouthPlacement/);
+  assert.match(tool, /mouthPieces\[expressionIndex\]/);
   assert.match(tool, /updateChroma\("eyes"/);
   assert.match(tool, /updateChroma\("eyebrows"/);
   assert.match(tool, /Restaurar chroma dos olhos/);

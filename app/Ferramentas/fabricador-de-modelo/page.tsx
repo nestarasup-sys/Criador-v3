@@ -87,7 +87,7 @@ export default function FabricadorDeModeloPage() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [eyebrowPair, setEyebrowPair] = useState<EyePiece | null>(null);
   const [eyebrowFile, setEyebrowFile] = useState<File | null>(null);
-  const [mouthPiece, setMouthPiece] = useState<MouthPiece | null>(null);
+  const [mouthPieces, setMouthPieces] = useState<MouthPiece[]>([]);
   const [mouthFile, setMouthFile] = useState<File | null>(null);
   const [eyeChromaSettings, setEyeChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [eyebrowChromaSettings, setEyebrowChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
@@ -219,17 +219,17 @@ export default function FabricadorDeModeloPage() {
     let cancelled = false;
     processMouthSheet(mouthFile, mouthChromaSettings).then((result) => {
       if (cancelled) return;
-      setMouthPiece(result); setStatus("Boca processada e isolada das outras camadas.");
+      setMouthPieces(result); setStatus(`${result.length === 21 ? "21 bocas recortadas na ordem das expressões" : "Boca recortada"} e isolada das outras camadas.`);
     }).catch(() => { if (!cancelled) setStatus("Não consegui recortar essa boca. Use uma imagem com fundo verde ou branco."); });
     return () => { cancelled = true; };
   }, [mouthChromaSettings, mouthFile]);
 
   useEffect(() => {
-    if (!mouthPiece) return;
+    if (!mouthPieces.length) return;
     let cancelled = false;
-    loadImage(mouthPiece.dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
+    loadImage(mouthPieces[0].dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
     return () => { cancelled = true; };
-  }, [mouthPiece]);
+  }, [mouthPieces]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
@@ -297,13 +297,15 @@ export default function FabricadorDeModeloPage() {
     if (!template || !pair) return null;
     const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
     const browImages = eyebrowPair ? await imageFromPiece(eyebrowPair) : eyebrowsLoaded;
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], browImages, eyebrowPlacement, BROW_VARIATIONS[expressionIndex], mouthLoaded, mouthPlacement);
+    const expressionMouth = mouthPieces[expressionIndex] ? await loadImage(mouthPieces[expressionIndex].dataUrl) : mouthLoaded;
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], browImages, eyebrowPlacement, BROW_VARIATIONS[expressionIndex], expressionMouth, mouthPlacement);
     return canvas.toDataURL("image/png");
   };
 
   const generateExpressions = async () => {
     if (!pair) { setStatus("Envie uma folha antes de gerar as expressões"); return; }
     if (eyebrowFile && !eyebrowPair) { setStatus("Aguarde o processamento das sobrancelhas terminar antes de gerar."); return; }
+    if (mouthFile && !mouthPieces.length) { setStatus("Aguarde o recorte das bocas terminar antes de gerar."); return; }
     setStatus("Gerando 21 expressões derivadas do posicionamento…");
     const outputs: string[] = []; for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) outputs.push((await renderOutput(index))!);
     setGenerated(outputs); setStatus("21 expressões geradas. Revise a grade e baixe o pacote quando quiser.");
@@ -325,9 +327,9 @@ export default function FabricadorDeModeloPage() {
     <main className={styles.workspace}><section className={styles.intro}><div><span className={styles.eyebrow}>MODELO HEAD-ONLY · BETA</span><h1>Fabricador de Modelo</h1><p>Importe uma folha com o par aberto em cima e o par fechado embaixo. O recorte é automático e os dois olhos permanecem vinculados.</p></div><span className={styles.beta}>BETA</span></section>
       <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEyebrowUpload(event.target.files?.[0])} /><strong>＋ Enviar sobrancelhas</strong><span>Opcional · par esquerdo/direito</span></label>
-        <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onMouthUpload(event.target.files?.[0])} /><strong>＋ Enviar boca</strong><span>Opcional · uma boca por folha</span></label>
+        <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onMouthUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de bocas</strong><span>Opcional · grade 7×3 · 21 expressões</span></label>
         {eyebrowPair && <button className={styles.reset} onClick={() => { setEyebrowFile(null); setEyebrowPair(null); setEyebrowsLoaded(null); }}>× Remover sobrancelhas</button>}
-        {mouthPiece && <button className={styles.reset} onClick={() => { setMouthFile(null); setMouthPiece(null); setMouthLoaded(null); }}>× Remover boca</button>}
+        {mouthPieces.length > 0 && <button className={styles.reset} onClick={() => { setMouthFile(null); setMouthPieces([]); setMouthLoaded(null); }}>× Remover boca</button>}
         <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma dos olhos</h2><p className={styles.hint}>Configuração exclusiva da folha de olhos selecionada. O asset guarda estes valores na biblioteca.</p>
         <label>Força <output>{eyeChromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={eyeChromaSettings.strength} onChange={(event) => updateChroma("eyes", "strength", Number(event.target.value))} /></label>
         <label>Tolerância <output>{eyeChromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={eyeChromaSettings.tolerance} onChange={(event) => updateChroma("eyes", "tolerance", Number(event.target.value))} /></label>
@@ -355,7 +357,7 @@ export default function FabricadorDeModeloPage() {
           <label>Distância <output>{eyebrowPlacement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={eyebrowPlacement.gap} onChange={(event) => updateEyebrowPlacement("gap", Number(event.target.value))} /></label>
           <label>Rotação <output>{eyebrowPlacement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={eyebrowPlacement.rotation} onChange={(event) => updateEyebrowPlacement("rotation", Number(event.target.value))} /></label>
           <button className={styles.reset} onClick={() => setEyebrowPlacement(DEFAULT_BROW_PLACEMENT)}>↺ Restaurar sobrancelhas</button></>}
-        {mouthPiece && <><div className={styles.divider} /><h2>Ajuste da boca</h2><p className={styles.hint}>A boca usa a mesma lógica de escala e arraste, mas sem interferir nas outras camadas.</p>
+        {mouthPieces.length > 0 && <><div className={styles.divider} /><h2>Ajuste da boca</h2><p className={styles.hint}>A boca usa a mesma lógica de escala e arraste, mas sem interferir nas outras camadas.</p>
           <label>Altura <output>{mouthPlacement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={mouthPlacement.scaleY} onChange={(event) => setMouthPlacement((current) => ({ ...current, scaleY: Number(event.target.value) }))} /></label>
           <label>Posição vertical <output>{mouthPlacement.y}px</output><input type="range" min="0" max={CANVAS_SIZE} step="1" value={mouthPlacement.y} onChange={(event) => setMouthPlacement((current) => ({ ...current, y: Number(event.target.value) }))} /></label>
           <label>Zoom <output>{mouthPlacement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={mouthPlacement.scale} onChange={(event) => setMouthPlacement((current) => ({ ...current, scale: Number(event.target.value) }))} /></label>

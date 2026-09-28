@@ -158,17 +158,27 @@ export async function processEyebrowSheet(file: File, settings: ChromaSettings =
 }
 
 /** Boca é uma camada unitária: limpa o fundo e recorta somente o desenho visível. */
-export async function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece> {
+export async function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
   const url = URL.createObjectURL(file);
   try {
     const image = new Image(); image.src = url; await image.decode();
     const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
     const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
-    const box = bounds(cleaned, 0, cleaned.height) ?? { left: 0, top: 0, right: cleaned.width, bottom: cleaned.height };
-    const cropped = trim(cleaned, box.left, box.top, box.right, box.bottom);
-    const output = document.createElement("canvas"); output.width = cropped.width; output.height = cropped.height; output.getContext("2d")!.putImageData(cropped, 0, 0);
-    return { dataUrl: output.toDataURL("image/png"), width: cropped.width, height: cropped.height };
+    const columns = 7; const rows = 3;
+    const pieces: EyePiece[] = [];
+    const makePiece = (x0: number, y0: number, x1: number, y1: number) => {
+      const box = bounds(cleaned, y0, y1, x0, x1) ?? { left: x0, top: y0, right: x1, bottom: y1 };
+      const cropped = trim(cleaned, box.left, box.top, box.right, box.bottom);
+      const output = document.createElement("canvas"); output.width = cropped.width; output.height = cropped.height; output.getContext("2d")!.putImageData(cropped, 0, 0);
+      return { dataUrl: output.toDataURL("image/png"), width: cropped.width, height: cropped.height };
+    };
+    for (let row = 0; row < rows; row += 1) for (let column = 0; column < columns; column += 1) {
+      const x0 = Math.floor(column * cleaned.width / columns); const x1 = Math.floor((column + 1) * cleaned.width / columns);
+      const y0 = Math.floor(row * cleaned.height / rows); const y1 = Math.floor((row + 1) * cleaned.height / rows);
+      pieces.push(makePiece(x0, y0, x1, y1));
+    }
+    return pieces;
   } finally { URL.revokeObjectURL(url); }
 }
 
