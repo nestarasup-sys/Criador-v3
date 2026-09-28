@@ -55,7 +55,8 @@ export const EXPRESSION_VARIATIONS = [
   variation({ scaleX: .94, scaleY: 1.1, rotation: -3, y: -2 }, { scaleX: .94, scaleY: 1.1, rotation: 3, y: -2 }),
   variation({ scaleX: .96, scaleY: .86, rotation: -1, y: 1 }, { scaleX: .96, scaleY: .86, rotation: 1, y: 1 }),
   variation({ scaleX: 1.08, scaleY: .92, rotation: -3, x: -1 }, { scaleX: .96, scaleY: .98, rotation: 2, x: 1 }),
-  variation({ scaleX: 1.1, scaleY: .88, rotation: 2, x: -1 }, { scaleX: 1.02, scaleY: .92, rotation: -2, x: 1 }),
+  // Sorriso maligno: a boca sorri, então os olhos precisam estreitar e tensionar a expressão.
+  variation({ scaleX: 1.04, scaleY: .76, rotation: 2, x: -1, y: 1 }, { scaleX: 1.04, scaleY: .76, rotation: -2, x: 1, y: 1 }),
   // Surpresa: abre um pouco mais no eixo vertical, mantendo o centro ancorado.
   variation({ scaleY: 1.12 }),
   variation({ scaleX: .9, scaleY: .82, rotation: -3, y: 2 }, { scaleX: .9, scaleY: .82, rotation: 3, y: 2 }),
@@ -81,7 +82,7 @@ export const BROW_VARIATIONS = [
   browVariation({ scaleY: 1.08, rotation: -10 }, { scaleY: 1.08, rotation: 10 }),
   browVariation({ scaleY: .8, rotation: -5 }, { scaleY: .8, rotation: 5 }),
   browVariation({ scaleY: .88, rotation: -13 }, { scaleY: .94, rotation: 9 }),
-  browVariation({ scaleY: .8, rotation: -20 }, { scaleY: .86, rotation: 8 }),
+  browVariation({ scaleY: .78, rotation: 14 }, { scaleY: .78, rotation: -14 }),
   browVariation({ scaleY: 1.2, rotation: -6 }, { scaleY: 1.2, rotation: 6 }),
   browVariation({ scaleY: .76, rotation: -12 }, { scaleY: .76, rotation: 12 }),
 ] as const;
