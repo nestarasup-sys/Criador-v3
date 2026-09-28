@@ -81,15 +81,16 @@ export function drawComposition(
       layerContext.restore();
     };
     if (settings.source === "gradient") {
-      if (kind !== "shadow") return;
+      if (kind !== "shadow" && kind !== "blush") return;
       const coverage = Math.min(1, Math.max(.01, settings.verticalCoverage));
       const softness = Math.min(coverage, Math.max(.01, settings.softness));
       const edge = Math.max(.01, coverage - softness);
+      const color = kind === "blush" ? "255, 144, 174" : "44, 31, 52";
       const gradient = layerContext.createLinearGradient(0, 0, 0, CANVAS_SIZE);
-      gradient.addColorStop(0, "rgba(44, 31, 52, .78)");
-      gradient.addColorStop(edge, "rgba(44, 31, 52, .60)");
-      gradient.addColorStop(coverage, "rgba(44, 31, 52, 0)");
-      gradient.addColorStop(Math.min(1, coverage + .001), "rgba(44, 31, 52, 0)");
+      gradient.addColorStop(0, `rgba(${color}, ${kind === "blush" ? ".48" : ".78"})`);
+      gradient.addColorStop(edge, `rgba(${color}, ${kind === "blush" ? ".32" : ".60"})`);
+      gradient.addColorStop(coverage, `rgba(${color}, 0)`);
+      gradient.addColorStop(Math.min(1, coverage + .001), `rgba(${color}, 0)`);
       layerContext.fillStyle = gradient;
       layerContext.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     } else {

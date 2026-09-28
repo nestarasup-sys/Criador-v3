@@ -1321,9 +1321,9 @@ export default function FabricadorDeModeloPage() {
             {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Composição do efeito" description="O molde funciona como máscara para impedir que o efeito escape da cabeça.">
               <div className={styles.segmented}>
                 <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "asset" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "asset")}>Imagem</button>
-                {effectCatalogKind === "shadow" && <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "gradient")}>Shadow automático</button>}
+                {(effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "gradient")}>{effectCatalogKind === "blush" ? "Blush automático" : "Shadow automático"}</button>}
               </div>
-              {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && effectCatalogKind === "shadow" && <div className={styles.controlStack}>
+              {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && (effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <div className={styles.controlStack}>
                 <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />
                 <RangeControl label="Suavidade do degradê" value={activePreset.effectSettings[effectCatalogKind]?.softness ?? .18} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.softness ?? .18) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("softness", value)} />
               </div>}

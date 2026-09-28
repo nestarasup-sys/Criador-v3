@@ -45,6 +45,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /clipToTemplate/);
   assert.match(page, /Transparência/);
   assert.match(page, /Shadow automático/);
+  assert.match(page, /Blush automático/);
   assert.match(page, /Cobertura vertical/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
@@ -55,6 +56,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(compositor, /destination-in/);
   assert.match(compositor, /globalAlpha/);
   assert.match(compositor, /createLinearGradient/);
+  assert.match(compositor, /255, 144, 174/);
   assert.match(compositor, /export async function toCatalogFrame/);
 
   assert.match(storage, /PRESETS_DIRTY_KEY/);
