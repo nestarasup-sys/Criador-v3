@@ -41,12 +41,12 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
   const strength = clamp(settings.strength, 0, 100) / 100;
   const tolerance = clamp(settings.tolerance, 2, 140);
   const softness = clamp(settings.softness, 0, 100);
+  const greenBackground = target[1] > target[0] * 1.2 && target[1] > target[2] * 1.1;
   for (let i = 0; i < keyed.length; i += 1) {
     const p = i * 4;
     const [r, g, b] = [data[p], data[p + 1], data[p + 2]];
     const d = distance(r, g, b, target);
-    const green = target[1] > target[0] * 1.2 && target[1] > target[2] * 1.1;
-    const adaptiveTolerance = green ? tolerance + 22 : tolerance;
+    const adaptiveTolerance = greenBackground ? tolerance + 22 : tolerance;
     keyed[i] = d <= adaptiveTolerance
       ? 1
       : softness > 0 && d < adaptiveTolerance + softness
@@ -67,7 +67,11 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
     }
   }
   const output = new ImageData(new Uint8ClampedArray(data), width, height);
-  for (let i = 0; i < output.data.length / 4; i += 1) if (visited[i] > 0) output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - visited[i] * strength));
+  for (let i = 0; i < output.data.length / 4; i += 1) if (visited[i] > 0) {
+    const mask = greenBackground ? 1 : visited[i];
+    const appliedStrength = greenBackground ? 1 : strength;
+    output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - mask * appliedStrength));
+  }
   return output;
 }
 
@@ -82,9 +86,9 @@ function trim(data: ImageData, x0: number, y0: number, x1: number, y1: number): 
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function bounds(data: ImageData, y0: number, y1: number) {
-  let left = data.width; let top = y1; let right = 0; let bottom = y0;
-  for (let y = y0; y < y1; y += 1) for (let x = 0; x < data.width; x += 1) {
+function bounds(data: ImageData, y0: number, y1: number, x0 = 0, x1 = data.width) {
+  let left = x1; let top = y1; let right = x0; let bottom = y0;
+  for (let y = y0; y < y1; y += 1) for (let x = x0; x < x1; x += 1) {
     if (data.data[(y * data.width + x) * 4 + 3] < 24) continue;
     left = Math.min(left, x); right = Math.max(right, x + 1); top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
   }
@@ -106,7 +110,7 @@ function splitRow(data: ImageData, row: { top: number; bottom: number }): [EyePi
   }
   const split = Math.round((bestStart + bestEnd) / 2);
   const makePiece = (left: number, right: number): EyePiece => {
-    const box = bounds(data, row.top, row.bottom);
+    const box = bounds(data, row.top, row.bottom, left, right);
     const local = box ? { left: Math.max(left, box.left), right: Math.min(right, box.right), top: box.top, bottom: box.bottom } : { left, right, top: row.top, bottom: row.bottom };
     const image = trim(data, local.left, local.top, local.right, local.bottom);
     const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height; canvas.getContext("2d")!.putImageData(image, 0, 0);

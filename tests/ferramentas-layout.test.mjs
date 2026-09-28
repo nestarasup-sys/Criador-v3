@@ -28,11 +28,12 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
 });
 
 test("Fabricador de Modelo beta está disponível no catálogo", async () => {
-  const [page, tool, mold, expressions] = await Promise.all([
+  const [page, tool, mold, expressions, processing] = await Promise.all([
     read("app/Ferramentas/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/types/eye-model.ts"),
     read("app/Ferramentas/fabricador-de-modelo/constants/expressions.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
   ]);
 
   assert.match(page, /fabricador-de-modelo/);
@@ -40,6 +41,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /processEyebrowSheet/);
   assert.match(tool, /Enviar sobrancelhas/);
   assert.match(tool, /eyebrowPlacement/);
+  assert.match(processing, /greenBackground/);
+  assert.match(processing, /bounds\(data, row\.top, row\.bottom, left, right\)/);
   assert.match(tool, /_talk\.png/);
   assert.match(tool, /chromaSettings\.strength/);
   assert.match(tool, /Restaurar chroma/);
