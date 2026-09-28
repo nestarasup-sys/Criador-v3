@@ -1,6 +1,6 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
-import type { EyePlacement } from "./types/eye-model";
+import type { EyePlacement, FacePresetCollection } from "./types/eye-model";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths";
 
@@ -17,6 +17,7 @@ export type FabricatorAsset = {
 };
 
 const FALLBACK_KEY = "nymi-fabricador-modelos";
+const PRESETS_FALLBACK_KEY = "nymi-fabricador-presets";
 
 function readFallback() {
   if (typeof window === "undefined") return [] as FabricatorAsset[];
@@ -30,6 +31,20 @@ function readFallback() {
 
 function writeFallback(assets: FabricatorAsset[]) {
   try { localStorage.setItem(FALLBACK_KEY, JSON.stringify(assets)); } catch { /* o arquivo principal continua no PC quando disponível */ }
+}
+
+function readPresetFallback(): FacePresetCollection {
+  if (typeof window === "undefined") return {};
+  try {
+    const value = JSON.parse(localStorage.getItem(PRESETS_FALLBACK_KEY) || "{}");
+    return value && typeof value === "object" && !Array.isArray(value) ? value as FacePresetCollection : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePresetFallback(presets: FacePresetCollection) {
+  try { localStorage.setItem(PRESETS_FALLBACK_KEY, JSON.stringify(presets)); } catch { /* o arquivo principal continua no PC quando disponível */ }
 }
 
 function fileToDataUrl(file: File) {
@@ -109,4 +124,33 @@ export async function deleteFabricatorAsset(asset: FabricatorAsset) {
     if (!response.ok) throw new Error("Não foi possível excluir o arquivo salvo.");
   }
   writeFallback(readFallback().filter((entry) => entry.id !== asset.id));
+}
+
+export async function loadFabricatorPresets() {
+  try {
+    const response = await localDataFetch("/fabricador-modelos/presets", { cache: "no-store" });
+    if (!response.ok) throw new Error("Presets indisponíveis");
+    const presets = await response.json() as FacePresetCollection;
+    writePresetFallback(presets);
+    return presets;
+  } catch {
+    return readPresetFallback();
+  }
+}
+
+export async function saveFabricatorPresets(presets: FacePresetCollection) {
+  writePresetFallback(presets);
+  let pcSaved = false;
+  try {
+    const response = await localDataFetch("/fabricador-modelos/presets", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(presets),
+    });
+    if (!response.ok) throw new Error("Presets rejeitados");
+    pcSaved = true;
+  } catch {
+    // A cópia do navegador permite continuar trabalhando quando o servidor reinicia.
+  }
+  return { presets, pcSaved };
 }

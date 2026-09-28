@@ -43,6 +43,7 @@ const PACKS_ROOT = join(FILES_ROOT, "packs");
 const STUDIO_ASSETS_ROOT = join(FILES_ROOT, "studio");
 const FABRICATOR_ROOT = join(FILES_ROOT, "fabricador-modelos");
 const FABRICATOR_MANIFEST_PATH = join(FABRICATOR_ROOT, "index.json");
+const FABRICATOR_PRESETS_PATH = join(FABRICATOR_ROOT, "presets.json");
 const LEGACY_FABRICATOR_MANIFEST_PATH = join(ROOT, "fabricador-modelos.json");
 const VIDEO_MAKER_ROOT = join(ROOT, "video-maker");
 const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
@@ -247,6 +248,7 @@ let writeQueue = Promise.resolve();
 let stateMutationQueue = Promise.resolve();
 let fabricatorMutationQueue = Promise.resolve();
 let fabricatorAssets = [];
+let fabricatorPresets = {};
 let lastBackupAt = 0;
 
 async function loadNormalizedCharacters() {
@@ -475,6 +477,16 @@ function queueFabricatorWrite() {
   return writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets);
 }
 
+async function loadFabricatorPresets() {
+  const parsed = await readOptionalJson(FABRICATOR_PRESETS_PATH);
+  fabricatorPresets = normalizeFabricatorPresets(parsed);
+  if (parsed === null) await writeJsonAtomic(FABRICATOR_PRESETS_PATH, fabricatorPresets);
+}
+
+function queueFabricatorPresetsWrite() {
+  return writeJsonAtomic(FABRICATOR_PRESETS_PATH, fabricatorPresets);
+}
+
 function normalizeFabricatorChroma(value) {
   if (!value || typeof value !== "object") return undefined;
   const number = (candidate, fallback, minimum, maximum) => {
@@ -503,6 +515,41 @@ function normalizeFabricatorPlacement(value) {
     rotation: number(value.rotation, 0, -80, 80),
     gap: number(value.gap, 0, 0, 1040),
   };
+}
+
+function normalizeFabricatorTransform(value) {
+  if (!value || typeof value !== "object") return undefined;
+  const number = (candidate, fallback, minimum, maximum) => {
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
+  };
+  return {
+    scaleX: number(value.scaleX, 1, .35, 4),
+    scaleY: number(value.scaleY, 1, .35, 4),
+    rotation: number(value.rotation, 0, -80, 80),
+    x: number(value.x, 0, -500, 500),
+    y: number(value.y, 0, -500, 500),
+  };
+}
+
+function normalizeFabricatorVariation(value) {
+  if (!value || typeof value !== "object") return undefined;
+  const left = normalizeFabricatorTransform(value.left);
+  const right = normalizeFabricatorTransform(value.right);
+  return left && right ? { left, right } : undefined;
+}
+
+function normalizeFabricatorPresets(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const result = {};
+  for (const [key, preset] of Object.entries(value).slice(0, 64)) {
+    if (!/^[a-z0-9_-]{1,80}$/i.test(key) || !preset || typeof preset !== "object") continue;
+    const eyes = normalizeFabricatorVariation(preset.eyes);
+    const eyebrows = normalizeFabricatorVariation(preset.eyebrows);
+    const mouth = normalizeFabricatorTransform(preset.mouth);
+    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth };
+  }
+  return result;
 }
 
 function openWindowsFolder(folder) {
@@ -1059,6 +1106,20 @@ async function route(request, response) {
       ...asset,
       fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${asset.id}`,
     })).sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || ""))));
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/fabricador-modelos/presets") {
+    sendJson(response, request, 200, fabricatorPresets);
+    return;
+  }
+  if (request.method === "PUT" && url.pathname === "/fabricador-modelos/presets") {
+    const body = await requestJson(request);
+    const normalized = normalizeFabricatorPresets(body);
+    await queueFabricatorMutation(async () => {
+      fabricatorPresets = normalized;
+      await queueFabricatorPresetsWrite();
+    });
+    sendJson(response, request, 200, fabricatorPresets);
     return;
   }
   const fabricatorAssetMatch = url.pathname.match(/^\/fabricador-modelos\/([a-zA-Z0-9_-]{1,120})$/);
@@ -2135,6 +2196,7 @@ async function loadLocalEnvironment() {
 await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
 await loadFabricatorAssets();
+await loadFabricatorPresets();
 await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({

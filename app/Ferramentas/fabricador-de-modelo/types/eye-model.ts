@@ -27,6 +27,14 @@ export type EyeExpressionVariation = {
   right: EyeTransform;
 };
 
+export type FacePreset = {
+  eyes: EyeExpressionVariation;
+  eyebrows: EyeExpressionVariation;
+  mouth: EyeTransform;
+};
+
+export type FacePresetCollection = Record<string, FacePreset>;
+
 export type EyePlacement = {
   x: number;
   y: number;

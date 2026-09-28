@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
-import { deleteFabricatorAsset, loadFabricatorAssets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
-import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, MouthPiece } from "./types/eye-model";
+import { deleteFabricatorAsset, loadFabricatorAssets, loadFabricatorPresets, saveFabricatorPresets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
+import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FacePreset, FacePresetCollection, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -19,6 +19,7 @@ const LINKED_VARIATION: EyeExpressionVariation = { left: { scaleX: 1, scaleY: 1,
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 };
+const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };
 const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
   scaleX: { min: .5, max: 6.8 },
@@ -30,6 +31,32 @@ const PLACEMENT_LIMITS = {
 type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
 type ModelGender = "feminino" | "masculino";
 type NextModel = { gender: ModelGender; number: number; id: string };
+type PresetLayer = "eyes" | "eyebrows" | "mouth";
+type PresetSide = "both" | "left" | "right";
+
+function cloneTransform(transform: EyeTransform): EyeTransform {
+  return { scaleX: transform.scaleX, scaleY: transform.scaleY, rotation: transform.rotation, x: transform.x, y: transform.y };
+}
+
+function cloneVariation(variation: EyeExpressionVariation): EyeExpressionVariation {
+  return { left: cloneTransform(variation.left), right: cloneTransform(variation.right) };
+}
+
+function defaultPresetForIndex(index: number): FacePreset {
+  return { eyes: cloneVariation(EXPRESSION_VARIATIONS[index]), eyebrows: cloneVariation(BROW_VARIATIONS[index]), mouth: cloneTransform(DEFAULT_PRESET_MOUTH) };
+}
+
+function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
+  return EYE_EXPRESSIONS.map(([key], index) => {
+    const preset = saved[key];
+    if (!preset) return defaultPresetForIndex(index);
+    return { eyes: cloneVariation(preset.eyes), eyebrows: cloneVariation(preset.eyebrows), mouth: cloneTransform(preset.mouth) };
+  });
+}
+
+function presetCollectionFromState(presets: FacePreset[]): FacePresetCollection {
+  return Object.fromEntries(EYE_EXPRESSIONS.map(([key], index) => [key, presets[index] ?? defaultPresetForIndex(index)]));
+}
 
 function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
   const [left, right] = splitPair(pair[state]);
@@ -60,6 +87,7 @@ function drawComposition(
   eyebrowVariation: EyeExpressionVariation = LINKED_VARIATION,
   mouth: HTMLImageElement | null = null,
   mouthPlacement: EyePlacement = DEFAULT_BROW_PLACEMENT,
+  mouthVariation: EyeTransform = DEFAULT_PRESET_MOUTH,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -74,7 +102,7 @@ function drawComposition(
     drawFeature(feature.left, featurePlacement, -1, featureVariation.left); drawFeature(feature.right, featurePlacement, 1, featureVariation.right);
   };
   if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
-  if (mouth) drawFeature(mouth, mouthPlacement, 0, LINKED_VARIATION.left);
+  if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);
   if (!pair) return;
   const gap = placement.gap * placement.scale;
   const drawEye = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
@@ -117,6 +145,11 @@ export default function FabricadorDeModeloPage() {
   const [activeEyeAssetId, setActiveEyeAssetId] = useState<string | null>(null);
   const [activeEyebrowAssetId, setActiveEyebrowAssetId] = useState<string | null>(null);
   const [activeMouthAssetId, setActiveMouthAssetId] = useState<string | null>(null);
+  const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
+  const [presetIndex, setPresetIndex] = useState(13);
+  const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
+  const [presetSide, setPresetSide] = useState<PresetSide>("both");
+  const [savingPresets, setSavingPresets] = useState(false);
   const [exportGender, setExportGender] = useState<ModelGender>("feminino");
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -132,7 +165,7 @@ export default function FabricadorDeModeloPage() {
     }).catch(() => setStatus("Não foi possível carregar o molde fixo"));
   }, []);
 
-  useEffect(() => { loadFabricatorAssets().then(setLibraryAssets); }, []);
+  useEffect(() => { loadFabricatorAssets().then(setLibraryAssets); loadFabricatorPresets().then((saved) => setPresets(mergeSavedPresets(saved))); }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,10 +180,14 @@ export default function FabricadorDeModeloPage() {
     return () => { cancelled = true; };
   }, [exportGender]);
 
+  const presetForIndex = (index: number) => presets[index] ?? defaultPresetForIndex(index);
+  const activePreset = presetForIndex(presetIndex);
+
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
-    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, LINKED_VARIATION, eyebrowsLoaded, eyebrowPlacement, LINKED_VARIATION, mouthLoaded, mouthPlacement);
-  }, [eyebrowPlacement, eyebrowsLoaded, loaded, mouthLoaded, mouthPlacement, placement, state, template]);
+    const previewPreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
+    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, previewPreset.eyes, eyebrowsLoaded, eyebrowPlacement, previewPreset.eyebrows, mouthLoaded, mouthPlacement, previewPreset.mouth);
+  }, [eyebrowPlacement, eyebrowsLoaded, loaded, mouthLoaded, mouthPlacement, placement, presetIndex, presets, state, template]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -350,12 +387,43 @@ export default function FabricadorDeModeloPage() {
   };
   const stopDrag = () => setDragging(null);
 
+  const presetTransform = () => {
+    if (presetLayer === "mouth") return activePreset.mouth;
+    const variation = presetLayer === "eyes" ? activePreset.eyes : activePreset.eyebrows;
+    return presetSide === "right" ? variation.right : variation.left;
+  };
+
+  const updatePresetTransform = (key: keyof EyeTransform, value: number) => {
+    setPresets((current) => current.map((preset, index) => {
+      if (index !== presetIndex) return preset;
+      if (presetLayer === "mouth") return { ...preset, mouth: { ...preset.mouth, [key]: value } };
+      const variationKey = presetLayer === "eyes" ? "eyes" : "eyebrows";
+      const variation = preset[variationKey];
+      const nextVariation = presetSide === "both"
+        ? { left: { ...variation.left, [key]: value }, right: { ...variation.right, [key]: value } }
+        : { ...variation, [presetSide]: { ...variation[presetSide], [key]: value } };
+      return { ...preset, [variationKey]: nextVariation };
+    }));
+    setGenerated([]);
+  };
+
+  const savePresets = async () => {
+    setSavingPresets(true);
+    try {
+      const result = await saveFabricatorPresets(presetCollectionFromState(presets));
+      setStatus(result.pcSaved ? "Presets salvos permanentemente no PC." : "Presets salvos nesta sessão, mas o servidor local está indisponível.");
+    } finally {
+      setSavingPresets(false);
+    }
+  };
+
   const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
     if (!template || !pair) return null;
     const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
     const browImages = eyebrowPair ? await imageFromPiece(eyebrowPair) : eyebrowsLoaded;
     const expressionMouth = mouthPieces[expressionIndex] ? await loadImage(mouthPieces[expressionIndex].dataUrl) : mouthLoaded;
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], browImages, eyebrowPlacement, BROW_VARIATIONS[expressionIndex], expressionMouth, mouthPlacement);
+    const preset = presetForIndex(expressionIndex);
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth);
     return canvas.toDataURL("image/png");
   };
 
@@ -498,6 +566,18 @@ export default function FabricadorDeModeloPage() {
           <label>Distância <output>Não se aplica</output><input aria-label="Distância da boca não aplicável" type="range" min="0" max="0" step="1" value="0" disabled /></label>
           <label>Rotação <output>{mouthPlacement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={mouthPlacement.rotation} onChange={(event) => setMouthPlacement((current) => ({ ...current, rotation: Number(event.target.value) }))} /></label>
         </>}
+        <div className={styles.divider} /><section className={styles.presetEditor}><h2>Editor permanente de presets</h2><p className={styles.hint}>Use os três uploads acima como base, escolha uma expressão, ajuste cada elemento na prévia e salve. A configuração fica no armazenamento do Fabricador.</p>
+          <label>Expressão<select value={presetIndex} onChange={(event) => { setPresetIndex(Number(event.target.value)); setGenerated([]); }} className={styles.presetSelect}>{EYE_EXPRESSIONS.map(([key, label], index) => <option value={index} key={key}>{String(index + 1).padStart(2, "0")} · {label}</option>)}</select></label>
+          <div className={styles.row}><button className={presetLayer === "eyes" ? styles.active : ""} onClick={() => setPresetLayer("eyes")}>Olhos</button><button className={presetLayer === "eyebrows" ? styles.active : ""} onClick={() => setPresetLayer("eyebrows")}>Sobrancelhas</button></div>
+          <button className={`${styles.presetLayerMouth} ${presetLayer === "mouth" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("mouth")}>Boca</button>
+          {presetLayer !== "mouth" && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
+          <label>Escala horizontal <output>{presetTransform().scaleX.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleX} onChange={(event) => updatePresetTransform("scaleX", Number(event.target.value))} /></label>
+          <label>Altura <output>{presetTransform().scaleY.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleY} onChange={(event) => updatePresetTransform("scaleY", Number(event.target.value))} /></label>
+          <label>Rotação <output>{presetTransform().rotation.toFixed(1)}°</output><input type="range" min="-80" max="80" step=".5" value={presetTransform().rotation} onChange={(event) => updatePresetTransform("rotation", Number(event.target.value))} /></label>
+          <label>Deslocamento horizontal <output>{presetTransform().x.toFixed(0)}px</output><input type="range" min="-500" max="500" step="1" value={presetTransform().x} onChange={(event) => updatePresetTransform("x", Number(event.target.value))} /></label>
+          <label>Deslocamento vertical <output>{presetTransform().y.toFixed(0)}px</output><input type="range" min="-500" max="500" step="1" value={presetTransform().y} onChange={(event) => updatePresetTransform("y", Number(event.target.value))} /></label>
+          <button className={styles.presetSave} onClick={() => void savePresets()} disabled={savingPresets}>{savingPresets ? "Salvando…" : "Salvar presets permanentemente"}</button>
+        </section>
         <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
         <button className={styles.reset} onClick={() => { setPlacement(DEFAULT_PLACEMENT); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); }}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair || exporting}>Gerar 21 expressões <b>→</b></button>
         <div className={styles.exportBox}><strong>Exportar para o Criador</strong><p>Cria o próximo modelo livre no catálogo, sem substituir nenhum existente.</p><div className={styles.row}><button className={exportGender === "feminino" ? styles.active : ""} onClick={() => setExportGender("feminino")} disabled={exporting}>Feminino</button><button className={exportGender === "masculino" ? styles.active : ""} onClick={() => setExportGender("masculino")} disabled={exporting}>Masculino</button></div><small>{nextModel ? `Próximo: ${nextModel.id}` : "Consultando numeração…"}</small><button className={styles.export} onClick={exportModel} disabled={!pair || exporting || !nextModel}>{exporting ? "Exportando…" : "Exportar modelo"}</button></div>
