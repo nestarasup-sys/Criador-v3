@@ -67,7 +67,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /eyebrowVariation/);
   assert.match(tool, /BROW_VARIATIONS\[expressionIndex\]/);
   assert.match(tool, /imageFromPiece\(eyebrowPair\)/);
-  assert.match(tool, /max=\{CANVAS_SIZE\}/);
+  assert.match(tool, /eyebrowPlacement\.scaleY\.toFixed\("2"\)/);
+  assert.match(tool, /updateEyebrowPlacement\("scaleY"/);
+  assert.match(tool, /Posição vertical/);
   assert.match(tool, /dragging === "eyebrows"/);
   assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
