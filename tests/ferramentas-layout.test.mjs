@@ -60,6 +60,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
   assert.match(expressions, /const variation/);
   assert.match(expressions, /BROW_VARIATIONS/);
+  assert.match(expressions, /variation\(\{ scaleY: 1\.16 \}\)/);
+  assert.match(expressions, /variation\(\{ scaleY: 1\.22 \}\)/);
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
   assert.match(tool, /variation\.left/);
