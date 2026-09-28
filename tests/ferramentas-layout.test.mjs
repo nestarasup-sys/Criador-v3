@@ -41,6 +41,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
 
   assert.match(page, /fabricador-de-modelo/);
   assert.match(tool, /processEyeSheet/);
+  assert.doesNotMatch(tool, /MODELO HEAD-ONLY · BETA/);
   assert.match(tool, /processEyebrowSheet/);
   assert.match(tool, /processMouthSheet/);
   assert.match(tool, /processEffectImage/);
@@ -170,8 +171,10 @@ test("Fabricador mantém a página e o preview roláveis", async () => {
 
   assert.match(styles, /\.page\s*\{[^}]*height:\s*100dvh;[^}]*overflow-y:\s*auto;/s);
   assert.match(styles, /\.canvasWrap[^\{]*\{[^}]*overflow:\s*auto(?:;|\})/s);
+  assert.match(styles, /\.workspace \{[^}]*max-width: 1920px/);
+  assert.match(styles, /\.layout \{[^}]*350px minmax\(0, 1fr\) 340px/);
   assert.match(styles, /\.panel[^\{]*\{[^}]*position:\s*sticky;/s);
-  assert.match(styles, /\.panel[^\{]*\{[^}]*max-height:\s*calc\(100dvh - 36px\)[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.panel[^\{]*\{[^}]*max-height:\s*100dvh[^}]*overflow-y:\s*auto;/s);
 });
 
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {
