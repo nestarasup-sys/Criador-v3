@@ -38,6 +38,10 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /processEyeSheet/);
   assert.match(tool, /chromaSettings\.strength/);
   assert.match(tool, /Restaurar chroma/);
+  assert.match(tool, /scale: \{ min: \.35, max: 12 \}/);
+  assert.match(tool, /scaleX: \{ min: \.5, max: 6\.8 \}/);
+  assert.match(tool, /gap: \{ min: 0, max: 1040 \}/);
+  assert.match(tool, /rotation: \{ min: -80, max: 80 \}/);
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);

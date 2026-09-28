@@ -10,6 +10,13 @@ import styles from "./fabricador.module.css";
 
 const CANVAS_SIZE = 1000;
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 92 };
+const PLACEMENT_LIMITS = {
+  scale: { min: .35, max: 12 },
+  scaleX: { min: .5, max: 6.8 },
+  scaleY: { min: .5, max: 6.8 },
+  gap: { min: 0, max: 1040 },
+  rotation: { min: -80, max: 80 },
+} as const;
 
 type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
 
@@ -135,11 +142,11 @@ export default function FabricadorDeModeloPage() {
         <label>Tolerância <output>{chromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={chromaSettings.tolerance} onChange={(event) => updateChroma("tolerance", Number(event.target.value))} /></label>
         <label>Suavidade <output>{chromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={chromaSettings.softness} onChange={(event) => updateChroma("softness", Number(event.target.value))} /></label>
         <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste o par no molde. Todos os controles abaixo afetam os dois olhos juntos.</p>
-        <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min=".35" max="3" step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
-        <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
-        <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min=".5" max="1.7" step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
-        <label>Distância entre olhos <output>{placement.gap}px</output><input type="range" min="0" max="260" step="1" value={placement.gap} onChange={(event) => updatePlacement("gap", Number(event.target.value))} /></label>
-        <label>Rotação <output>{placement.rotation}°</output><input type="range" min="-20" max="20" step=".5" value={placement.rotation} onChange={(event) => updatePlacement("rotation", Number(event.target.value))} /></label>
+        <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
+        <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
+        <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
+        <label>Distância entre olhos <output>{placement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={placement.gap} onChange={(event) => updatePlacement("gap", Number(event.target.value))} /></label>
+        <label>Rotação <output>{placement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={placement.rotation} onChange={(event) => updatePlacement("rotation", Number(event.target.value))} /></label>
         <div className={styles.row}><button className={state === "open" ? styles.active : ""} onClick={() => setState("open")}>Olhos abertos</button><button className={state === "closed" ? styles.active : ""} onClick={() => setState("closed")}>Olhos fechados</button></div>
         <button className={styles.reset} onClick={() => setPlacement(DEFAULT_PLACEMENT)}>↺ Restaurar posição</button><button className={styles.generate} onClick={generateExpressions} disabled={!pair}>Gerar 21 expressões <b>→</b></button>{generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
       </aside>
