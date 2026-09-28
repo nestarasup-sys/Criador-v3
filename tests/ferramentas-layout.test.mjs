@@ -105,7 +105,10 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.ok(tool.includes("/models/next/${exportGender}"));
   assert.ok(tool.includes("/models/import/${gender}/${modelId}"));
   assert.match(tool, /exportModel/);
-  assert.match(tool, /width = 1920; canvas.height = 1080/);
+  assert.match(tool, /CATALOG_CANVAS_WIDTH = 1920/);
+  assert.match(tool, /CATALOG_CANVAS_HEIGHT = 1080/);
+  assert.match(tool, /CATALOG_MODEL_SIZE = 336/);
+  assert.match(tool, /CATALOG_MODEL_TOP = 10/);
   assert.match(tool, /Feminino/);
   assert.match(tool, /Masculino/);
   assert.match(tool, /BIBLIOTECA LOCAL/);
