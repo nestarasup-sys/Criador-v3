@@ -76,6 +76,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.equal((browExpressionSource.match(/^\s+(?:browVariation\(|NORMAL_BROW_VARIATION,)/gm) ?? []).length, 21, "As sobrancelhas precisam ter 21 presets");
   assert.match(expressions, /export const NORMAL_VARIATION = variation\(\)/);
   assert.match(expressions, /NORMAL_VARIATION,/);
+  assert.match(expressions, /variation\(\{ scaleY: 1\.08 \}\)/);
+  assert.match(expressions, /variation\(\{ scaleY: 1\.12 \}\)/);
   assert.match(expressions, /export const NORMAL_BROW_VARIATION = browVariation\(\)/);
   assert.doesNotMatch(browExpressionSource, /\b(?:scaleX|x|y)\s*:/, "Presets de sobrancelha não podem alterar largura ou posição");
   assert.match(expressions, /BrowPresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);

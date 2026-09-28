@@ -45,7 +45,8 @@ export const EXPRESSION_VARIATIONS = [
   variation({ scaleX: .92, scaleY: .78, rotation: -2, y: 3 }, { scaleX: .92, scaleY: .78, rotation: 2, y: 3 }),
   variation({ scaleY: .9, rotation: -4, x: -2 }, { scaleX: .95, scaleY: .9, rotation: 2, x: 2 }),
   variation({ scaleX: .88, scaleY: .88, rotation: -2, x: 2, y: 1 }, { scaleX: .88, scaleY: .88, rotation: 2, x: -2, y: 1 }),
-  variation({ scaleX: 1.15, scaleY: 1.16, rotation: -1, y: -2 }, { scaleX: 1.15, scaleY: 1.16, rotation: 1, y: -2 }),
+  // Impressionada: abre apenas no eixo vertical, sem zoom, rotação ou subida.
+  variation({ scaleY: 1.08 }),
   variation({ scaleX: 1.08, scaleY: .86, rotation: -4, y: 1 }, { scaleX: 1.08, scaleY: .86, rotation: 4, y: 1 }),
   variation({ scaleX: 1.16, scaleY: .82, rotation: -5, x: -1, y: 1 }, { scaleX: 1.16, scaleY: .82, rotation: 5, x: 1, y: 1 }),
   variation({ scaleX: .88, scaleY: .78, rotation: 2, x: -1, y: 2 }, { scaleX: .88, scaleY: .78, rotation: -2, x: 1, y: 2 }),
@@ -55,7 +56,8 @@ export const EXPRESSION_VARIATIONS = [
   variation({ scaleX: .96, scaleY: .86, rotation: -1, y: 1 }, { scaleX: .96, scaleY: .86, rotation: 1, y: 1 }),
   variation({ scaleX: 1.08, scaleY: .92, rotation: -3, x: -1 }, { scaleX: .96, scaleY: .98, rotation: 2, x: 1 }),
   variation({ scaleX: 1.1, scaleY: .88, rotation: -7, x: -1 }, { scaleX: 1.02, scaleY: .92, rotation: 5, x: 1 }),
-  variation({ scaleX: 1.18, scaleY: 1.22, rotation: -1, y: -2 }, { scaleX: 1.18, scaleY: 1.22, rotation: 1, y: -2 }),
+  // Surpresa: abre um pouco mais no eixo vertical, mantendo o centro ancorado.
+  variation({ scaleY: 1.12 }),
   variation({ scaleX: .9, scaleY: .82, rotation: -3, y: 2 }, { scaleX: .9, scaleY: .82, rotation: 3, y: 2 }),
 ] as const;
 
