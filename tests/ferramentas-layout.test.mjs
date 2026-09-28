@@ -162,6 +162,7 @@ test("Fabricador preserva fallback offline e limpa referências quebradas", asyn
 test("layout do Fabricador mantém preview central, painel de controle e biblioteca responsivos", async () => {
   const styles = await read("app/Ferramentas/fabricador-de-modelo/fabricador.module.css");
 
+  assert.match(styles, /\.page\s*\{[^}]*height:\s*100dvh[^}]*overflow-y:\s*auto/s);
   assert.match(styles, /\.layout\s*\{[^}]*grid-template-columns:\s*340px minmax\(560px, 1fr\) 320px/s);
   assert.match(styles, /\.controlPanel\s*\{[^}]*position:\s*sticky/s);
   assert.match(styles, /\.libraryPanel\s*\{[^}]*position:\s*sticky/s);

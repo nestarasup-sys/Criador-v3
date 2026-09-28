@@ -1,7 +1,12 @@
 .page {
+  height: 100dvh;
   min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
   background: #f5f3f8;
   color: #251d2d;
+  scrollbar-gutter: stable;
 }
 
 .workspace {
