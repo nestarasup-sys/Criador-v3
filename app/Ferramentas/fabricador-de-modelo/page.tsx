@@ -41,6 +41,9 @@ import styles from "./fabricador.module.css";
 type WorkspaceSection = "assets" | "adjust" | "expressions" | "export";
 type LibraryFilter = "all" | FabricatorAssetKind;
 type DragLayer = "eyes" | "eyebrows" | "mouths" | FaceEffectKind;
+type GeneratedOutputs = { base: string[]; talk: string[]; blink: string[] };
+type GeneratedVariant = keyof GeneratedOutputs;
+const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], talk: [], blink: [] };
 
 const KIND_LABEL: Record<FabricatorAssetKind, string> = {
   eyes: "Olhos",
@@ -76,6 +79,7 @@ export default function FabricadorDeModeloPage() {
   const effectAssignSequenceRef = useRef<Partial<Record<FaceEffectKind, number>>>({});
   const generationLockRef = useRef(false);
   const exportLockRef = useRef(false);
+  const generatedOutputsRef = useRef<GeneratedOutputs>(EMPTY_GENERATED_OUTPUTS);
   const effectProcessingCache = useRef(new Map<string, Promise<EyePiece | EyePiece[]>>());
   const eyeImageCache = useRef<{ source: EyePair | null; open?: Promise<LoadedPair>; closed?: Promise<LoadedPair> }>({ source: null });
   const browImageCache = useRef<{ source: EyePiece | null; value?: Promise<LoadedPair> }>({ source: null });
@@ -141,11 +145,20 @@ export default function FabricadorDeModeloPage() {
   const [mouthPreviewMode, setMouthPreviewMode] = useState<"base" | "talk">("base");
 
   const [generated, setGenerated] = useState<string[]>([]);
+  const [generatedOutputs, setGeneratedOutputs] = useState<GeneratedOutputs>(EMPTY_GENERATED_OUTPUTS);
+  const [generatedVariant, setGeneratedVariant] = useState<GeneratedVariant>("base");
   const [generating, setGenerating] = useState(false);
   const [processingLayers, setProcessingLayers] = useState<Partial<Record<FabricatorAssetKind, boolean>>>({});
   const [exportGender, setExportGender] = useState<ModelGender>("feminino");
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
+
+  const clearGenerated = () => {
+    setGenerated([]);
+    generatedOutputsRef.current = EMPTY_GENERATED_OUTPUTS;
+    setGeneratedOutputs(EMPTY_GENERATED_OUTPUTS);
+    setGeneratedVariant("base");
+  };
 
   useEffect(() => {
     latestChromaRef.current = {
@@ -270,7 +283,7 @@ export default function FabricadorDeModeloPage() {
           : DEFAULT_EFFECT_PLACEMENTS[kind];
 
   const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement, invalidateGenerated = true) => {
-    if (invalidateGenerated) setGenerated([]);
+    if (invalidateGenerated) clearGenerated();
     if (kind === "eyes") setPlacement(next);
     else if (kind === "eyebrows") setEyebrowPlacement(next);
     else if (kind === "mouths" || kind === "mouths-talk") setMouthPlacement(next);
@@ -305,7 +318,7 @@ export default function FabricadorDeModeloPage() {
 
   const applyChromaSettings = (kind: FabricatorAssetKind, next: ChromaSettings) => {
     setChromaForKind(kind, next);
-    setGenerated([]);
+    clearGenerated();
     if (hasSourceForKind(kind)) markLayerProcessing(kind, true);
     persistChromaRef.current?.(kind, next);
   };
@@ -370,7 +383,7 @@ export default function FabricadorDeModeloPage() {
     if (!file) return;
     const validationError = validateInputFile(file);
     if (validationError) { setStatus(validationError); return; }
-    setGenerated([]);
+    clearGenerated();
     markLayerProcessing("eyes", true);
     setSourceFile(file);
     if (persist) setPlacement({ ...DEFAULT_PLACEMENT });
@@ -382,7 +395,7 @@ export default function FabricadorDeModeloPage() {
     if (!file) return;
     const validationError = validateInputFile(file);
     if (validationError) { setStatus(validationError); return; }
-    setGenerated([]);
+    clearGenerated();
     markLayerProcessing("eyebrows", true);
     setEyebrowFile(file);
     if (persist) setEyebrowPlacement({ ...DEFAULT_BROW_PLACEMENT });
@@ -394,7 +407,7 @@ export default function FabricadorDeModeloPage() {
     if (!file) return;
     const validationError = validateInputFile(file);
     if (validationError) { setStatus(validationError); return; }
-    setGenerated([]);
+    clearGenerated();
     markLayerProcessing("mouths", true);
     setMouthFile(file);
     if (persist) setMouthPlacement({ ...DEFAULT_MOUTH_PLACEMENT });
@@ -406,7 +419,7 @@ export default function FabricadorDeModeloPage() {
     if (!file) return;
     const validationError = validateInputFile(file);
     if (validationError) { setStatus(validationError); return; }
-    setGenerated([]);
+    clearGenerated();
     markLayerProcessing("mouths-talk", true);
     setMouthTalkFile(file);
     if (persist) { setActiveMouthTalkAssetId(null); queuePersistenceAfterProcessing(file, "mouths-talk"); }
@@ -417,7 +430,7 @@ export default function FabricadorDeModeloPage() {
     if (!file) return;
     const validationError = validateInputFile(file);
     if (validationError) { setStatus(validationError); return; }
-    setGenerated([]);
+    clearGenerated();
     markLayerProcessing(kind, true);
     setEffectFiles((current) => ({ ...current, [kind]: file }));
     setEffectPlacements((current) => ({ ...current, [kind]: { ...DEFAULT_EFFECT_PLACEMENTS[kind] } }));
@@ -706,7 +719,7 @@ export default function FabricadorDeModeloPage() {
   };
 
   const clearLayerFromComposition = (kind: FabricatorAssetKind) => {
-    setGenerated([]);
+    clearGenerated();
     if (kind === "eyes") return;
     if (kind === "eyebrows") {
       markLayerProcessing("eyebrows", false);
@@ -775,7 +788,7 @@ export default function FabricadorDeModeloPage() {
     try {
       const file = await assetToFile(asset);
       if (libraryUseSequenceRef.current !== sequence) return;
-      setGenerated([]);
+      clearGenerated();
       setActiveLayer(asset.kind);
       setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" || asset.kind === "mouths-talk" ? "adjust" : "expressions");
       setChromaForKind(asset.kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
@@ -803,7 +816,7 @@ export default function FabricadorDeModeloPage() {
   const removeLibraryAsset = async (asset: FabricatorAsset) => {
     if (!window.confirm(`Excluir “${asset.name}” permanentemente da biblioteca do Fabricador?`)) return;
     try {
-      setGenerated([]);
+      clearGenerated();
       await deleteFabricatorAsset(asset);
       setLibraryAssets((current) => current.filter((entry) => entry.id !== asset.id));
 
@@ -1006,13 +1019,13 @@ export default function FabricadorDeModeloPage() {
           : { ...variation, [presetSide]: { ...variation[presetSide], [key]: value } },
       };
     }));
-    setGenerated([]);
+    clearGenerated();
   };
 
   const updateMouthTalkLink = (expressionIndex: number, talkIndex: number) => {
     if (!Number.isInteger(talkIndex) || talkIndex < 0 || talkIndex >= EYE_EXPRESSIONS.length) return;
     setPresets((current) => current.map((preset, index) => index === expressionIndex ? { ...preset, mouthTalkIndex: talkIndex } : preset));
-    setGenerated([]);
+    clearGenerated();
   };
 
   const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean | FaceEffectSource) => {
@@ -1023,7 +1036,7 @@ export default function FabricadorDeModeloPage() {
       const next = { ...preset, effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], [key]: value } } };
       return key === "source" && value === "gradient" ? { ...next, enabledEffects: { ...next.enabledEffects, [kind]: true } } : next;
     }));
-    setGenerated([]);
+    clearGenerated();
   };
 
   const assignEffectAsset = async (asset: FabricatorAsset) => {
@@ -1044,7 +1057,7 @@ export default function FabricadorDeModeloPage() {
         enabledEffects: { ...preset.enabledEffects, [kind]: true },
         effectAssets: { ...preset.effectAssets, [kind]: asset.id },
       } : preset));
-      setGenerated([]);
+      clearGenerated();
       setStatus(`${asset.name} aplicado à expressão ${String(presetIndex + 1).padStart(2, "0")}.`);
     } catch {
       if (effectAssignSequenceRef.current[kind] === sequence) setStatus("Não foi possível aplicar esse efeito.");
@@ -1057,7 +1070,7 @@ export default function FabricadorDeModeloPage() {
       enabledEffects: { ...preset.enabledEffects, [kind]: false },
       effectAssets: { ...preset.effectAssets, [kind]: null },
     } : preset));
-    setGenerated([]);
+    clearGenerated();
   };
 
   const savePresets = async () => {
@@ -1170,16 +1183,26 @@ export default function FabricadorDeModeloPage() {
     generationLockRef.current = true;
     setGenerating(true);
     try {
-      setStatus("Gerando as 21 expressões…");
-      const outputs = [];
+       setStatus("Gerando 21 expressões base, talk e blink…");
+       const outputs: GeneratedOutputs = { base: [], talk: [], blink: [] };
       for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
-        const output = await renderOutput(index);
-        if (!output) throw new Error("Falha ao gerar expressão.");
-        outputs.push(output);
+         const [base, talk, blink] = await Promise.all([
+           renderOutput(index, "open", "base"),
+           renderOutput(index, "open", "talk"),
+           renderOutput(index, "closed", "base"),
+         ]);
+         if (!base || !talk || !blink) throw new Error(`Falha ao gerar a expressão ${index + 1}.`);
+         outputs.base.push(base);
+         outputs.talk.push(talk);
+         outputs.blink.push(blink);
+         setStatus(`Gerando variações: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
       }
-      setGenerated(outputs);
-      setStatus("21 expressões geradas. Revise a grade antes de exportar.");
-      return outputs;
+       setGenerated(outputs.base);
+       generatedOutputsRef.current = outputs;
+       setGeneratedOutputs(outputs);
+       setGeneratedVariant("base");
+       setStatus("21 expressões + talk + blink gerados. Revise a grade antes de exportar.");
+       return outputs.base;
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Falha ao gerar expressões.");
       return null;
@@ -1212,7 +1235,11 @@ export default function FabricadorDeModeloPage() {
     setExporting(true);
     let exportSession: NextModel | null = null;
     try {
-      const outputs = generated.length === EYE_EXPRESSIONS.length ? generated : await generateExpressionOutputs();
+      let variants = generatedOutputsRef.current;
+      const outputs = variants.base.length === EYE_EXPRESSIONS.length
+        ? variants.base
+        : await generateExpressionOutputs();
+      variants = generatedOutputsRef.current;
       if (!outputs || outputs.length !== EYE_EXPRESSIONS.length) throw new Error("As 21 expressões precisam estar prontas.");
       const numberResponse = await localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" });
       if (!numberResponse.ok) throw new Error("Não consegui calcular o próximo número.");
@@ -1250,11 +1277,11 @@ export default function FabricadorDeModeloPage() {
         const [key] = EYE_EXPRESSIONS[index];
         const base = await toCatalogFrame(outputs[index]);
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}.png`, base, "image/png");
-        const talk = await renderOutput(index, "open", "talk");
+        const talk = variants.talk[index];
+        const blink = variants.blink[index];
         if (!talk) throw new Error(`Falha no talk de ${key}.`);
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, await toCatalogFrame(talk), "image/png");
-        const blink = await renderOutput(index, "closed");
         if (!blink) throw new Error(`Falha no blink de ${key}.`);
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, await toCatalogFrame(talk), "image/png");
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_blink.png`, await toCatalogFrame(blink), "image/png");
         setStatus(`Exportando ${targetModel.id}: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
       }
@@ -1288,16 +1315,18 @@ export default function FabricadorDeModeloPage() {
   };
 
   const downloadPackage = async () => {
-    const outputs = generated.length === EYE_EXPRESSIONS.length ? generated : await generateExpressionOutputs();
+    let variants = generatedOutputsRef.current;
+    const outputs = variants.base.length === EYE_EXPRESSIONS.length
+      ? variants.base
+      : await generateExpressionOutputs();
+    variants = generatedOutputsRef.current;
     if (!outputs) return;
     const zip = new JSZip();
     for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
       const [key] = EYE_EXPRESSIONS[index];
       zip.file(`${key}.png`, outputs[index].split(",")[1], { base64: true });
-      const talk = await renderOutput(index, "open", "talk");
-      zip.file(`${key}_talk.png`, (talk ?? outputs[index]).split(",")[1], { base64: true });
-      const blink = await renderOutput(index, "closed");
-      if (blink) zip.file(`${key}_blink.png`, blink.split(",")[1], { base64: true });
+      zip.file(`${key}_talk.png`, variants.talk[index].split(",")[1], { base64: true });
+      zip.file(`${key}_blink.png`, variants.blink[index].split(",")[1], { base64: true });
     }
     zip.file("README.txt", "Fabricador de Modelo V2\n21 expressões + talk + blink.\n");
     const blob = await zip.generateAsync({ type: "blob" });
@@ -1468,7 +1497,7 @@ export default function FabricadorDeModeloPage() {
             <PanelBlock title="Gerar e revisar" description="A geração usa exatamente a montagem e os presets atuais.">
               <button className={styles.primaryButton} onClick={() => void generateExpressionOutputs()} disabled={!pair || processingBusy || generating || exporting}>{processingBusy ? "Processando camadas…" : generating ? "Gerando…" : "Gerar 21 expressões"}</button>
               <button className={styles.secondaryButton} onClick={() => void downloadPackage()} disabled={!pair || processingBusy || generating || exporting}>Baixar ZIP</button>
-              <div className={styles.exportState}><span>Resultado</span><b>{generated.length === 21 ? "21 expressões prontas" : "Ainda não gerado"}</b></div>
+               <div className={styles.exportState}><span>Resultado</span><b>{generated.length === 21 ? "21 base + 21 talk + 21 blink" : "Ainda não gerado"}</b></div>
             </PanelBlock>
             <PanelBlock title="Exportar para o Criador" description="Cria um novo modelo sem sobrescrever os existentes.">
               <div className={styles.segmented}>
@@ -1501,9 +1530,12 @@ export default function FabricadorDeModeloPage() {
             />
           </div>
           {generated.length === 21 && <section className={styles.results}>
-            <header><div><span>RESULTADO</span><h2>21 expressões</h2></div><small>Clique em uma expressão para revisar no editor.</small></header>
+            <header><div><span>RESULTADO</span><h2>21 expressões · {generatedVariant}</h2></div><small>Base, talk e blink foram gerados. Escolha uma variação para revisar.</small></header>
+            <div className={styles.segmented}>
+              {(["base", "talk", "blink"] as GeneratedVariant[]).map((variant) => <button key={variant} className={generatedVariant === variant ? styles.tabActive : ""} onClick={() => setGeneratedVariant(variant)}>{variant === "base" ? "Base" : variant === "talk" ? "Talk" : "Blink"}</button>)}
+            </div>
             <div className={styles.resultGrid}>
-              {generated.map((dataUrl, index) => <button key={EYE_EXPRESSIONS[index][0]} onClick={() => { setPresetIndex(index); setSection("expressions"); }}>
+              {generatedOutputs[generatedVariant].map((dataUrl, index) => <button key={`${generatedVariant}-${EYE_EXPRESSIONS[index][0]}`} onClick={() => { setPresetIndex(index); setSection("expressions"); }}>
                 <img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} />
                 <span>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</span>
               </button>)}
