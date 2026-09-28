@@ -464,6 +464,19 @@ function queueFabricatorWrite() {
   return fabricatorMutationQueue;
 }
 
+function normalizeFabricatorChroma(value) {
+  if (!value || typeof value !== "object") return undefined;
+  const number = (candidate, fallback, minimum, maximum) => {
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
+  };
+  return {
+    strength: number(value.strength, 72, 0, 100),
+    tolerance: number(value.tolerance, 32, 2, 100),
+    softness: number(value.softness, 18, 0, 80),
+  };
+}
+
 function openWindowsFolder(folder) {
   return new Promise((resolvePromise, reject) => {
     const explorer = spawn(EXPLORER_PATH, [folder], { detached: true, stdio: "ignore", windowsHide: false });
@@ -1040,11 +1053,25 @@ async function route(request, response) {
       await writeFile(filePath, body);
       fabricatorAssets = [
         ...fabricatorAssets.filter((asset) => asset.id !== id),
-        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString() },
+        { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma) },
       ];
       await queueFabricatorWrite();
     });
     sendJson(response, request, 200, { ok: true, id, fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${id}` });
+    return;
+  }
+  if (fabricatorAssetMatch && request.method === "PATCH") {
+    const id = safeId(fabricatorAssetMatch[1]);
+    const asset = fabricatorAssets.find((entry) => entry.id === id);
+    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
+    const body = await requestJson(request);
+    const chroma = normalizeFabricatorChroma(body?.chroma);
+    if (!chroma) throw Object.assign(new Error("Configuração de chroma inválida."), { status: 400, code: "INVALID_FABRICATOR_CHROMA" });
+    await queueFabricatorMutation(async () => {
+      fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, chroma } : entry);
+      await queueFabricatorWrite();
+    });
+    sendJson(response, request, 200, { ok: true, id, chroma });
     return;
   }
   if (fabricatorAssetMatch && request.method === "DELETE") {

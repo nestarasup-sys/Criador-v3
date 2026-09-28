@@ -46,8 +46,12 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(processing, /greenBackground/);
   assert.match(processing, /bounds\(data, row\.top, row\.bottom, left, right\)/);
   assert.match(tool, /_talk\.png/);
-  assert.match(tool, /chromaSettings\.strength/);
-  assert.match(tool, /Restaurar chroma/);
+  assert.match(tool, /eyeChromaSettings\.strength/);
+  assert.match(tool, /eyebrowChromaSettings\.strength/);
+  assert.match(tool, /updateChroma\("eyes"/);
+  assert.match(tool, /updateChroma\("eyebrows"/);
+  assert.match(tool, /Restaurar chroma dos olhos/);
+  assert.match(tool, /Restaurar chroma das sobrancelhas/);
   assert.match(tool, /scale: \{ min: \.35, max: 12 \}/);
   assert.match(tool, /scaleX: \{ min: \.5, max: 6\.8 \}/);
   assert.match(tool, /gap: \{ min: 0, max: 1040 \}/);
@@ -68,6 +72,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(storage, /\/fabricador-modelos/);
   assert.match(server, /FABRICATOR_ROOT/);
   assert.match(server, /\/files\/fabricador-modelos/);
+  assert.match(server, /request\.method === "PATCH"/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);
 });

@@ -1,4 +1,5 @@
 import { localDataFetch } from "../../lib/local-data-client";
+import type { ChromaSettings } from "./core/eye-processing";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows";
 
@@ -9,6 +10,7 @@ export type FabricatorAsset = {
   contentType: string;
   fileUrl: string;
   createdAt: string;
+  chroma?: ChromaSettings;
   localOnly?: boolean;
 };
 
@@ -49,7 +51,7 @@ export async function loadFabricatorAssets() {
   }
 }
 
-export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKind) {
+export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKind, chroma: ChromaSettings) {
   const id = crypto.randomUUID();
   const asset: FabricatorAsset = {
     id,
@@ -58,13 +60,14 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
     contentType: file.type || "image/png",
     fileUrl: "",
     createdAt: new Date().toISOString(),
+    chroma,
   };
   try {
     const response = await localDataFetch(`/fabricador-modelos/${encodeURIComponent(id)}`, {
       method: "POST",
       headers: {
         "Content-Type": asset.contentType,
-        "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name: asset.name, kind, contentType: asset.contentType, createdAt: asset.createdAt })),
+        "X-Gacha-Meta": encodeURIComponent(JSON.stringify({ name: asset.name, kind, contentType: asset.contentType, createdAt: asset.createdAt, chroma })),
       },
       body: file,
     });
@@ -78,6 +81,18 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
     writeFallback([...readFallback().filter((entry) => entry.id !== id), localOnly]);
     return localOnly;
   }
+}
+
+export async function updateFabricatorAsset(assetId: string, chroma: ChromaSettings) {
+  const response = await localDataFetch(`/fabricador-modelos/${encodeURIComponent(assetId)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chroma }),
+  });
+  if (!response.ok) throw new Error("Não foi possível salvar o chroma do arquivo.");
+  const assets = readFallback().map((asset) => asset.id === assetId ? { ...asset, chroma } : asset);
+  writeFallback(assets);
+  return chroma;
 }
 
 export async function deleteFabricatorAsset(asset: FabricatorAsset) {

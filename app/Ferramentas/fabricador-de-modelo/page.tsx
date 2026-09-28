@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
-import { deleteFabricatorAsset, loadFabricatorAssets, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
+import { deleteFabricatorAsset, loadFabricatorAssets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState } from "./types/eye-model";
 import styles from "./fabricador.module.css";
 
@@ -83,7 +83,8 @@ export default function FabricadorDeModeloPage() {
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [eyebrowPair, setEyebrowPair] = useState<EyePiece | null>(null);
   const [eyebrowFile, setEyebrowFile] = useState<File | null>(null);
-  const [chromaSettings, setChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
+  const [eyeChromaSettings, setEyeChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
+  const [eyebrowChromaSettings, setEyebrowChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [loaded, setLoaded] = useState<LoadedPair | null>(null);
   const [eyebrowsLoaded, setEyebrowsLoaded] = useState<LoadedPair | null>(null);
   const [state, setState] = useState<EyeState>("open");
@@ -95,6 +96,8 @@ export default function FabricadorDeModeloPage() {
   const [libraryAssets, setLibraryAssets] = useState<FabricatorAsset[]>([]);
   const [libraryFilter, setLibraryFilter] = useState<"all" | FabricatorAssetKind>("all");
   const [libraryQuery, setLibraryQuery] = useState("");
+  const [activeEyeAssetId, setActiveEyeAssetId] = useState<string | null>(null);
+  const [activeEyebrowAssetId, setActiveEyebrowAssetId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/Ferramentas/fabricador-de-modelo/molde.png").then((response) => response.blob()).then((blob) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -116,28 +119,30 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => { redraw(); }, [redraw]);
 
-  const persistUpload = (file: File, kind: FabricatorAssetKind) => {
-    uploadFabricatorAsset(file, kind).then((asset) => {
+  const persistUpload = (file: File, kind: FabricatorAssetKind, chroma: ChromaSettings) => {
+    uploadFabricatorAsset(file, kind, chroma).then((asset) => {
       setLibraryAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
+      if (kind === "eyes") setActiveEyeAssetId(asset.id);
+      else setActiveEyebrowAssetId(asset.id);
       if (asset.localOnly) setStatus("Arquivo carregado. O servidor local está indisponível; ele ficou salvo neste navegador.");
     }).catch(() => setStatus("Arquivo carregado, mas não consegui salvar na biblioteca."));
   };
 
   const onUpload = (file?: File, persist = true) => {
     if (!file) return;
-    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando os quatro olhos…`); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT); if (persist) persistUpload(file, "eyes");
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando os quatro olhos…`); setSourceFile(file); setGenerated([]); setPlacement(DEFAULT_PLACEMENT); if (persist) { setActiveEyeAssetId(null); persistUpload(file, "eyes", eyeChromaSettings); }
   };
 
   const onEyebrowUpload = (file?: File, persist = true) => {
     if (!file) return;
-    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando as duas sobrancelhas…`); setEyebrowFile(file); setGenerated([]); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); if (persist) persistUpload(file, "eyebrows");
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}separando as duas sobrancelhas…`); setEyebrowFile(file); setGenerated([]); setEyebrowPlacement(DEFAULT_BROW_PLACEMENT); if (persist) { setActiveEyebrowAssetId(null); persistUpload(file, "eyebrows", eyebrowChromaSettings); }
   };
 
   const useLibraryAsset = async (asset: FabricatorAsset) => {
     try {
       const file = await assetToFile(asset);
-      if (asset.kind === "eyes") onUpload(file, false);
-      else onEyebrowUpload(file, false);
+      if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); setEyeChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onUpload(file, false); }
+      else { setActiveEyebrowAssetId(asset.id); setEyebrowChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onEyebrowUpload(file, false); }
     } catch {
       setStatus("Não consegui abrir este arquivo da biblioteca. Tente enviar a folha novamente.");
     }
@@ -161,32 +166,46 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => {
     if (!sourceFile) return;
     let cancelled = false;
-    processEyeSheet(sourceFile, chromaSettings).then(async (result) => {
+    processEyeSheet(sourceFile, eyeChromaSettings).then(async (result) => {
       if (cancelled) return;
       setPair(result); setLoaded(await imageFromPair(result, state)); setStatus("Folha processada. Ajuste o chroma se algum detalhe branco sumir.");
     }).catch(() => { if (!cancelled) setStatus("Não consegui separar essa folha. Use uma imagem com olhos em duas linhas."); });
     return () => { cancelled = true; };
-  }, [chromaSettings, sourceFile]);
+  }, [eyeChromaSettings, sourceFile]);
 
   useEffect(() => { if (pair) imageFromPair(pair, state).then(setLoaded); }, [pair, state]);
 
   useEffect(() => {
     if (!eyebrowFile) return;
     let cancelled = false;
-    processEyebrowSheet(eyebrowFile, chromaSettings).then(async (result) => {
+    processEyebrowSheet(eyebrowFile, eyebrowChromaSettings).then(async (result) => {
       if (cancelled) return;
       setEyebrowPair(result); setEyebrowsLoaded(await imageFromPiece(result)); setStatus("Sobrancelhas processadas e vinculadas às expressões.");
     }).catch(() => { if (!cancelled) setStatus("Não consegui separar as sobrancelhas. Use uma folha com duas sobrancelhas."); });
     return () => { cancelled = true; };
-  }, [chromaSettings, eyebrowFile]);
+  }, [eyebrowChromaSettings, eyebrowFile]);
 
   useEffect(() => { if (eyebrowPair) imageFromPiece(eyebrowPair).then(setEyebrowsLoaded); }, [eyebrowPair]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
-  const updateChroma = (key: keyof ChromaSettings, value: number) => {
+  const saveChroma = (kind: FabricatorAssetKind, chroma: ChromaSettings) => {
+    const assetId = kind === "eyes" ? activeEyeAssetId : activeEyebrowAssetId;
+    if (!assetId) return;
+    updateFabricatorAsset(assetId, chroma).then(() => setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, chroma } : asset))).catch(() => setStatus("Chroma aplicado nesta sessão, mas não consegui salvar a configuração do asset."));
+  };
+  const updateChroma = (kind: FabricatorAssetKind, key: keyof ChromaSettings, value: number) => {
     setStatus("Reprocessando o chroma com os novos controles…");
-    setChromaSettings((current) => ({ ...current, [key]: value }));
+    const current = kind === "eyes" ? eyeChromaSettings : eyebrowChromaSettings;
+    const next = { ...current, [key]: value };
+    if (kind === "eyes") setEyeChromaSettings(next);
+    else setEyebrowChromaSettings(next);
+    saveChroma(kind, next);
+  };
+  const resetChroma = (kind: FabricatorAssetKind) => {
+    if (kind === "eyes") { setEyeChromaSettings(DEFAULT_CHROMA_SETTINGS); saveChroma(kind, DEFAULT_CHROMA_SETTINGS); }
+    else { setEyebrowChromaSettings(DEFAULT_CHROMA_SETTINGS); saveChroma(kind, DEFAULT_CHROMA_SETTINGS); }
+    setStatus("Restaurando o chroma deste asset…");
   };
   const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = event.currentTarget; const rect = canvas.getBoundingClientRect();
@@ -249,11 +268,15 @@ export default function FabricadorDeModeloPage() {
       <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEyebrowUpload(event.target.files?.[0])} /><strong>＋ Enviar sobrancelhas</strong><span>Opcional · par esquerdo/direito</span></label>
         {eyebrowPair && <button className={styles.reset} onClick={() => { setEyebrowFile(null); setEyebrowPair(null); setEyebrowsLoaded(null); }}>× Remover sobrancelhas</button>}
-        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma key</h2><p className={styles.hint}>O mesmo chroma é aplicado aos olhos e às sobrancelhas. Se o fundo branco estiver apagando detalhes, reduza a força ou a tolerância.</p>
-        <label>Força <output>{chromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={chromaSettings.strength} onChange={(event) => updateChroma("strength", Number(event.target.value))} /></label>
-        <label>Tolerância <output>{chromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={chromaSettings.tolerance} onChange={(event) => updateChroma("tolerance", Number(event.target.value))} /></label>
-        <label>Suavidade <output>{chromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={chromaSettings.softness} onChange={(event) => updateChroma("softness", Number(event.target.value))} /></label>
-        <button className={styles.reset} onClick={() => { setStatus("Reprocessando o chroma padrão…"); setChromaSettings(DEFAULT_CHROMA_SETTINGS); }}>↺ Restaurar chroma</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste os olhos ou clique diretamente nas sobrancelhas para mover cada camada livremente. As expressões continuam transformando cada lado separadamente.</p>
+        <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma dos olhos</h2><p className={styles.hint}>Configuração exclusiva da folha de olhos selecionada. O asset guarda estes valores na biblioteca.</p>
+        <label>Força <output>{eyeChromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={eyeChromaSettings.strength} onChange={(event) => updateChroma("eyes", "strength", Number(event.target.value))} /></label>
+        <label>Tolerância <output>{eyeChromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={eyeChromaSettings.tolerance} onChange={(event) => updateChroma("eyes", "tolerance", Number(event.target.value))} /></label>
+        <label>Suavidade <output>{eyeChromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={eyeChromaSettings.softness} onChange={(event) => updateChroma("eyes", "softness", Number(event.target.value))} /></label>
+        <button className={styles.reset} onClick={() => resetChroma("eyes")}>↺ Restaurar chroma dos olhos</button><div className={styles.divider} /><h2>Chroma das sobrancelhas</h2><p className={styles.hint}>Configuração separada da folha de sobrancelhas. Ajuste o branco ou verde sem alterar os olhos.</p>
+        <label>Força <output>{eyebrowChromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={eyebrowChromaSettings.strength} onChange={(event) => updateChroma("eyebrows", "strength", Number(event.target.value))} /></label>
+        <label>Tolerância <output>{eyebrowChromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={eyebrowChromaSettings.tolerance} onChange={(event) => updateChroma("eyebrows", "tolerance", Number(event.target.value))} /></label>
+        <label>Suavidade <output>{eyebrowChromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={eyebrowChromaSettings.softness} onChange={(event) => updateChroma("eyebrows", "softness", Number(event.target.value))} /></label>
+        <button className={styles.reset} onClick={() => resetChroma("eyebrows")}>↺ Restaurar chroma das sobrancelhas</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste os olhos ou clique diretamente nas sobrancelhas para mover cada camada livremente. As expressões continuam transformando cada lado separadamente.</p>
         <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
         <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
         <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
