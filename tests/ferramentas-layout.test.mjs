@@ -41,6 +41,14 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(mold, /EyePair/);
 });
 
+test("Fabricador mantém a página e o preview roláveis", async () => {
+  const styles = await read("app/Ferramentas/fabricador-de-modelo/fabricador.module.css");
+
+  assert.match(styles, /\.page\s*\{[^}]*height:\s*100dvh;[^}]*overflow-y:\s*auto;/s);
+  assert.match(styles, /\.canvasWrap[^\{]*\{[^}]*overflow:\s*auto(?:;|\})/s);
+  assert.match(styles, /\.panel[^\{]*\{[^}]*position:\s*sticky;/s);
+});
+
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {
   const [page, html] = await Promise.all([
     read("app/Ferramentas/area2-final-head-lock/page.tsx"),

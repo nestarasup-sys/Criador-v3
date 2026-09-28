@@ -3,6 +3,18 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const launcherPath = new URL("../INICIAR-NYMI-GACHA.bat", import.meta.url);
+const devLauncherPath = new URL("../INICIAR-NYMI-GACHA-DEV.bat", import.meta.url);
+
+test("faz preflight seguro antes de iniciar o desenvolvimento", async () => {
+  const launcher = await readFile(devLauncherPath, "utf8");
+
+  assert.match(launcher, /scripts\\live-runner\.mjs/i);
+  assert.match(launcher, /node_modules\\vinext\\dist\\cli\.js/i);
+  assert.match(launcher, /Get-NetTCPConnection/i);
+  assert.match(launcher, /production-server\\\.mjs\|local-data-server\\\.mjs/i);
+  assert.match(launcher, /Porta .* ocupada/i);
+  assert.match(launcher, /pause/i);
+});
 
 test("mantém o contrato de inicialização local do BAT", async () => {
   const launcher = await readFile(launcherPath, "utf8");
