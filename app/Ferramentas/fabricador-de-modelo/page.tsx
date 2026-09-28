@@ -3,7 +3,7 @@
 import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
-import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
+import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
 import { deleteFabricatorAsset, loadFabricatorAssets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState } from "./types/eye-model";
@@ -49,12 +49,13 @@ function drawComposition(
   variation: EyeExpressionVariation = LINKED_VARIATION,
   eyebrows: LoadedPair | null = null,
   eyebrowPlacement: EyePlacement = DEFAULT_BROW_PLACEMENT,
+  eyebrowVariation: EyeExpressionVariation = LINKED_VARIATION,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
   if (!pair) return;
   const gap = placement.gap * placement.scale;
-  const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement) => {
+  const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
     const drawFeature = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
       const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
       const height = image.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
@@ -62,9 +63,9 @@ function drawComposition(
       context.save(); context.translate(featurePlacement.x + side * featurePlacement.gap * featurePlacement.scale / 2 + transform.x, featurePlacement.y + transform.y); context.rotate(angle);
       context.drawImage(image, -width / 2, -height / 2, width, height); context.restore();
     };
-    drawFeature(feature.left, -1, variation.left); drawFeature(feature.right, 1, variation.right);
+    drawFeature(feature.left, -1, featureVariation.left); drawFeature(feature.right, 1, featureVariation.right);
   };
-  if (eyebrows) drawPair(eyebrows, eyebrowPlacement);
+  if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   const drawEye = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
     const width = image.naturalWidth * placement.scale * placement.scaleX * transform.scaleX;
     const height = image.naturalHeight * placement.scale * placement.scaleY * transform.scaleY;
@@ -240,12 +241,14 @@ export default function FabricadorDeModeloPage() {
   const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
     if (!template || !pair) return null;
     const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], eyebrowsLoaded, eyebrowPlacement);
+    const browImages = eyebrowPair ? await imageFromPiece(eyebrowPair) : eyebrowsLoaded;
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, EXPRESSION_VARIATIONS[expressionIndex], browImages, eyebrowPlacement, BROW_VARIATIONS[expressionIndex]);
     return canvas.toDataURL("image/png");
   };
 
   const generateExpressions = async () => {
     if (!pair) { setStatus("Envie uma folha antes de gerar as expressões"); return; }
+    if (eyebrowFile && !eyebrowPair) { setStatus("Aguarde o processamento das sobrancelhas terminar antes de gerar."); return; }
     setStatus("Gerando 21 expressões derivadas do posicionamento…");
     const outputs: string[] = []; for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) outputs.push((await renderOutput(index))!);
     setGenerated(outputs); setStatus("21 expressões geradas. Revise a grade e baixe o pacote quando quiser.");
@@ -283,7 +286,7 @@ export default function FabricadorDeModeloPage() {
         <label>Distância entre olhos <output>{placement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={placement.gap} onChange={(event) => updatePlacement("gap", Number(event.target.value))} /></label>
         <label>Rotação <output>{placement.rotation}°</output><input type="range" min={PLACEMENT_LIMITS.rotation.min} max={PLACEMENT_LIMITS.rotation.max} step=".5" value={placement.rotation} onChange={(event) => updatePlacement("rotation", Number(event.target.value))} /></label>
         {eyebrowPair && <><div className={styles.divider} /><h2>Ajuste das sobrancelhas</h2><p className={styles.hint}>A camada segue as expressões por olho, mas pode ser encaixada separadamente no rosto.</p>
-          <label>Altura <output>{eyebrowPlacement.y}px</output><input type="range" min="180" max="520" step="1" value={eyebrowPlacement.y} onChange={(event) => updateEyebrowPlacement("y", Number(event.target.value))} /></label>
+          <label>Altura <output>{eyebrowPlacement.y}px</output><input type="range" min="0" max={CANVAS_SIZE} step="1" value={eyebrowPlacement.y} onChange={(event) => updateEyebrowPlacement("y", Number(event.target.value))} /></label>
           <label>Zoom <output>{eyebrowPlacement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={eyebrowPlacement.scale} onChange={(event) => updateEyebrowPlacement("scale", Number(event.target.value))} /></label>
           <label>Largura <output>{eyebrowPlacement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={eyebrowPlacement.scaleX} onChange={(event) => updateEyebrowPlacement("scaleX", Number(event.target.value))} /></label>
           <label>Distância <output>{eyebrowPlacement.gap}px</output><input type="range" min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step="1" value={eyebrowPlacement.gap} onChange={(event) => updateEyebrowPlacement("gap", Number(event.target.value))} /></label>

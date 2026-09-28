@@ -59,10 +59,15 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /\["aliviada", "Aliviada"\]/);
   assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
   assert.match(expressions, /const variation/);
+  assert.match(expressions, /BROW_VARIATIONS/);
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
   assert.match(tool, /variation\.left/);
   assert.match(tool, /variation\.right/);
+  assert.match(tool, /eyebrowVariation/);
+  assert.match(tool, /BROW_VARIATIONS\[expressionIndex\]/);
+  assert.match(tool, /imageFromPiece\(eyebrowPair\)/);
+  assert.match(tool, /max=\{CANVAS_SIZE\}/);
   assert.match(tool, /dragging === "eyebrows"/);
   assert.match(tool, /setEyebrowPlacement\(\(current\) => \(\{ \.\.\.current, x: point\.x, y: point\.y \}\)\)/);
   assert.match(tool, /Gerar 21 expressões/);
