@@ -728,6 +728,15 @@ export default function FabricadorDeModeloPage() {
       setStatus("Bocas removidas da montagem. O arquivo continua na biblioteca.");
       return;
     }
+    if (kind === "mouths-talk") {
+      markLayerProcessing("mouths-talk", false);
+      setMouthTalkFile(null);
+      setMouthTalkPieces([]);
+      setActiveMouthTalkAssetId(null);
+      setMouthPreviewMode("base");
+      setStatus("Bocas de fala removidas da montagem. O arquivo continua na biblioteca.");
+      return;
+    }
     const effectKind = kind as FaceEffectKind;
     markLayerProcessing(effectKind, false);
     setEffectFiles((current) => {
@@ -767,14 +776,14 @@ export default function FabricadorDeModeloPage() {
       const file = await assetToFile(asset);
       if (libraryUseSequenceRef.current !== sequence) return;
       setGenerated([]);
-       setActiveLayer(asset.kind === "mouths-talk" ? "mouths" : asset.kind);
-       setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" || asset.kind === "mouths-talk" ? "adjust" : "expressions");
+      setActiveLayer(asset.kind);
+      setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" || asset.kind === "mouths-talk" ? "adjust" : "expressions");
       setChromaForKind(asset.kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
       setPlacementForKind(asset.kind, asset.placement ?? defaultPlacementForKind(asset.kind));
       if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); onUpload(file, false); }
       else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); onEyebrowUpload(file, false); }
       else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); onMouthUpload(file, false); }
-       else if (asset.kind === "mouths-talk") { setActiveMouthTalkAssetId(asset.id); onMouthTalkUpload(file, false); }
+      else if (asset.kind === "mouths-talk") { setActiveMouthTalkAssetId(asset.id); setMouthPreviewMode("talk"); onMouthTalkUpload(file, false); }
       else {
         markLayerProcessing(asset.kind, true);
         setActiveEffectAssetIds((current) => ({ ...current, [asset.kind]: asset.id }));
@@ -820,11 +829,12 @@ export default function FabricadorDeModeloPage() {
         setMouthLoaded(null);
         setActiveMouthAssetId(null);
         setMouthPlacement({ ...DEFAULT_MOUTH_PLACEMENT });
-       } else if (asset.kind === "mouths-talk" && wasActive) {
-         markLayerProcessing("mouths-talk", false);
-         setMouthTalkFile(null);
-         setMouthTalkPieces([]);
-         setActiveMouthTalkAssetId(null);
+      } else if (asset.kind === "mouths-talk" && wasActive) {
+        markLayerProcessing("mouths-talk", false);
+        setMouthTalkFile(null);
+        setMouthTalkPieces([]);
+        setActiveMouthTalkAssetId(null);
+        setMouthPreviewMode("base");
       }
 
       if (EFFECT_KINDS.includes(asset.kind as FaceEffectKind)) {
@@ -1362,8 +1372,8 @@ export default function FabricadorDeModeloPage() {
           {section === "adjust" && <>
             <PanelBlock title="Camada" description="Escolha o que deseja calibrar. O preview continua fixo no centro.">
               <div className={styles.layerTabs}>
-                {(["eyes", "eyebrows", "mouths", "blush", "shadow", "manpu"] as FabricatorAssetKind[]).map((kind) =>
-                  <button key={kind} className={activeLayer === kind ? styles.tabActive : ""} onClick={() => setActiveLayer(kind)}>
+                 {(["eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"] as FabricatorAssetKind[]).map((kind) =>
+                   <button key={kind} className={activeLayer === kind ? styles.tabActive : ""} onClick={() => { setActiveLayer(kind); if (kind === "mouths-talk") setMouthPreviewMode("talk"); }}>
                     {KIND_LABEL[kind]}
                   </button>)}
               </div>
@@ -1379,14 +1389,14 @@ export default function FabricadorDeModeloPage() {
             <PanelBlock title={`Posição · ${KIND_LABEL[activeLayer]}`} description="Você também pode arrastar a camada diretamente no preview.">
               <PlacementControls
                 placement={activeLayerPlacement}
-                single={activeLayer === "mouths" || EFFECT_KINDS.includes(activeLayer as FaceEffectKind)}
+                 single={activeLayer === "mouths" || activeLayer === "mouths-talk" || EFFECT_KINDS.includes(activeLayer as FaceEffectKind)}
                 disabled={!activeLayerReady}
                 onChange={(key, value) => setPlacementForKind(activeLayer, { ...activeLayerPlacement, [key]: value })}
                 onReset={() => setPlacementForKind(activeLayer, { ...defaultPlacementForKind(activeLayer) })}
               />
               {activeLayer !== "eyes" && activeLayerReady && <button className={styles.dangerGhostButton} type="button" onClick={() => clearLayerFromComposition(activeLayer)}>Remover da montagem</button>}
             </PanelBlock>
-           {activeLayer === "mouths" && mouthTalkPieces.length === EYE_EXPRESSIONS.length && <div className={styles.inlineActions}>
+            {(activeLayer === "mouths" || activeLayer === "mouths-talk") && mouthTalkPieces.length === EYE_EXPRESSIONS.length && <div className={styles.inlineActions}>
              <button className={mouthPreviewMode === "base" ? styles.primarySmall : styles.secondaryButton} onClick={() => setMouthPreviewMode("base")}>Boca normal</button>
              <button className={mouthPreviewMode === "talk" ? styles.primarySmall : styles.secondaryButton} onClick={() => setMouthPreviewMode("talk")}>Boca de fala</button>
            </div>}
