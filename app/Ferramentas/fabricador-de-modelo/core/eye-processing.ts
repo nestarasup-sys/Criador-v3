@@ -182,6 +182,21 @@ export async function processMouthSheet(file: File, settings: ChromaSettings = D
   } finally { URL.revokeObjectURL(url); }
 }
 
+/** Efeitos são camadas unitárias: remove o fundo e recorta o último pixel visível. */
+export async function processEffectImage(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image(); image.src = url; await image.decode();
+    const canvas = document.createElement("canvas"); canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true })!; context.drawImage(image, 0, 0);
+    const cleaned = removeConnectedChroma(context.getImageData(0, 0, canvas.width, canvas.height), settings);
+    const box = bounds(cleaned, 0, cleaned.height) ?? { left: 0, top: 0, right: cleaned.width, bottom: cleaned.height };
+    const cropped = trim(cleaned, box.left, box.top, box.right, box.bottom);
+    const output = document.createElement("canvas"); output.width = cropped.width; output.height = cropped.height; output.getContext("2d")!.putImageData(cropped, 0, 0);
+    return { dataUrl: output.toDataURL("image/png"), width: cropped.width, height: cropped.height };
+  } finally { URL.revokeObjectURL(url); }
+}
+
 export function splitPair(pair: EyePiece): [string, string] {
   try { const parsed = JSON.parse(pair.dataUrl) as string[]; return [parsed[0], parsed[1]]; } catch { return [pair.dataUrl, pair.dataUrl]; }
 }

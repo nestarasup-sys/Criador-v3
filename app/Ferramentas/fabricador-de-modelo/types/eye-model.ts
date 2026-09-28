@@ -1,4 +1,5 @@
 export type EyeState = "open" | "closed";
+export type FaceEffectKind = "blush" | "shadow" | "manpu";
 
 export type EyePiece = {
   dataUrl: string;
@@ -31,6 +32,7 @@ export type FacePreset = {
   eyes: EyeExpressionVariation;
   eyebrows: EyeExpressionVariation;
   mouth: EyeTransform;
+  effects: Record<FaceEffectKind, EyeTransform>;
 };
 
 export type FacePresetCollection = Record<string, FacePreset>;

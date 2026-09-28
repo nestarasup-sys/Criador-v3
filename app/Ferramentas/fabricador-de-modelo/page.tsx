@@ -4,9 +4,9 @@ import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processMouthSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
 import { deleteFabricatorAsset, loadFabricatorAssets, loadFabricatorPresets, saveFabricatorPresets, updateFabricatorAsset, uploadFabricatorAsset, type FabricatorAsset, type FabricatorAssetKind } from "./fabricador-storage";
-import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FacePreset, FacePresetCollection, MouthPiece } from "./types/eye-model";
+import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FacePreset, FacePresetCollection, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -20,6 +20,12 @@ const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, s
 const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 };
 const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };
+const EFFECT_KINDS: FaceEffectKind[] = ["blush", "shadow", "manpu"];
+const DEFAULT_EFFECT_PLACEMENTS: Record<FaceEffectKind, EyePlacement> = {
+  blush: { x: 500, y: 520, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
+  shadow: { x: 500, y: 420, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
+  manpu: { x: 500, y: 360, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
+};
 const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
   scaleX: { min: .5, max: 6.8 },
@@ -31,7 +37,7 @@ const PLACEMENT_LIMITS = {
 type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
 type ModelGender = "feminino" | "masculino";
 type NextModel = { gender: ModelGender; number: number; id: string };
-type PresetLayer = "eyes" | "eyebrows" | "mouth";
+type PresetLayer = "eyes" | "eyebrows" | "mouth" | FaceEffectKind;
 type PresetSide = "both" | "left" | "right";
 
 function cloneTransform(transform: EyeTransform): EyeTransform {
@@ -43,14 +49,14 @@ function cloneVariation(variation: EyeExpressionVariation): EyeExpressionVariati
 }
 
 function defaultPresetForIndex(index: number): FacePreset {
-  return { eyes: cloneVariation(EXPRESSION_VARIATIONS[index]), eyebrows: cloneVariation(BROW_VARIATIONS[index]), mouth: cloneTransform(DEFAULT_PRESET_MOUTH) };
+  return { eyes: cloneVariation(EXPRESSION_VARIATIONS[index]), eyebrows: cloneVariation(BROW_VARIATIONS[index]), mouth: cloneTransform(DEFAULT_PRESET_MOUTH), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform> };
 }
 
 function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
   return EYE_EXPRESSIONS.map(([key], index) => {
     const preset = saved[key];
     if (!preset) return defaultPresetForIndex(index);
-    return { eyes: cloneVariation(preset.eyes), eyebrows: cloneVariation(preset.eyebrows), mouth: cloneTransform(preset.mouth) };
+    return { eyes: cloneVariation(preset.eyes), eyebrows: cloneVariation(preset.eyebrows), mouth: cloneTransform(preset.mouth), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(preset.effects?.[kind] ?? DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform> };
   });
 }
 
@@ -88,6 +94,9 @@ function drawComposition(
   mouth: HTMLImageElement | null = null,
   mouthPlacement: EyePlacement = DEFAULT_BROW_PLACEMENT,
   mouthVariation: EyeTransform = DEFAULT_PRESET_MOUTH,
+  effects: Partial<Record<FaceEffectKind, HTMLImageElement | null>> = {},
+  effectPlacements: Record<FaceEffectKind, EyePlacement> = DEFAULT_EFFECT_PLACEMENTS,
+  effectVariations: Record<FaceEffectKind, EyeTransform> = defaultPresetForIndex(13).effects,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -101,6 +110,7 @@ function drawComposition(
   const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
     drawFeature(feature.left, featurePlacement, -1, featureVariation.left); drawFeature(feature.right, featurePlacement, 1, featureVariation.right);
   };
+  for (const kind of EFFECT_KINDS) if (effects[kind]) drawFeature(effects[kind]!, effectPlacements[kind], 0, effectVariations[kind]);
   if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);
   if (!pair) return;
@@ -125,9 +135,13 @@ export default function FabricadorDeModeloPage() {
   const [eyebrowFile, setEyebrowFile] = useState<File | null>(null);
   const [mouthPieces, setMouthPieces] = useState<MouthPiece[]>([]);
   const [mouthFile, setMouthFile] = useState<File | null>(null);
+  const [effectFiles, setEffectFiles] = useState<Partial<Record<FaceEffectKind, File>>>({});
+  const [effectPieces, setEffectPieces] = useState<Partial<Record<FaceEffectKind, EyePiece>>>({});
+  const [effectLoaded, setEffectLoaded] = useState<Partial<Record<FaceEffectKind, HTMLImageElement>>>({});
   const [eyeChromaSettings, setEyeChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [eyebrowChromaSettings, setEyebrowChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
   const [mouthChromaSettings, setMouthChromaSettings] = useState<ChromaSettings>(DEFAULT_CHROMA_SETTINGS);
+  const [effectChromaSettings, setEffectChromaSettings] = useState<Record<FaceEffectKind, ChromaSettings>>(() => Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, DEFAULT_CHROMA_SETTINGS])) as Record<FaceEffectKind, ChromaSettings>);
   const [loaded, setLoaded] = useState<LoadedPair | null>(null);
   const [eyebrowsLoaded, setEyebrowsLoaded] = useState<LoadedPair | null>(null);
   const [mouthLoaded, setMouthLoaded] = useState<HTMLImageElement | null>(null);
@@ -135,8 +149,9 @@ export default function FabricadorDeModeloPage() {
   const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
   const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
   const [mouthPlacement, setMouthPlacement] = useState<EyePlacement>(DEFAULT_MOUTH_PLACEMENT);
+  const [effectPlacements, setEffectPlacements] = useState<Record<FaceEffectKind, EyePlacement>>(DEFAULT_EFFECT_PLACEMENTS);
   const placementSaveTimers = useRef<Partial<Record<FabricatorAssetKind, ReturnType<typeof setTimeout>>>>({});
-  const [dragging, setDragging] = useState<"eyes" | "eyebrows" | "mouth" | null>(null);
+  const [dragging, setDragging] = useState<"eyes" | "eyebrows" | "mouth" | FaceEffectKind | null>(null);
   const [status, setStatus] = useState("Envie uma folha para começar");
   const [generated, setGenerated] = useState<string[]>([]);
   const [libraryAssets, setLibraryAssets] = useState<FabricatorAsset[]>([]);
@@ -145,6 +160,7 @@ export default function FabricadorDeModeloPage() {
   const [activeEyeAssetId, setActiveEyeAssetId] = useState<string | null>(null);
   const [activeEyebrowAssetId, setActiveEyebrowAssetId] = useState<string | null>(null);
   const [activeMouthAssetId, setActiveMouthAssetId] = useState<string | null>(null);
+  const [activeEffectAssetIds, setActiveEffectAssetIds] = useState<Partial<Record<FaceEffectKind, string>>>({});
   const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
   const [presetIndex, setPresetIndex] = useState(13);
   const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
@@ -186,8 +202,8 @@ export default function FabricadorDeModeloPage() {
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
     const previewPreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
-    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, previewPreset.eyes, eyebrowsLoaded, eyebrowPlacement, previewPreset.eyebrows, mouthLoaded, mouthPlacement, previewPreset.mouth);
-  }, [eyebrowPlacement, eyebrowsLoaded, loaded, mouthLoaded, mouthPlacement, placement, presetIndex, presets, state, template]);
+    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, previewPreset.eyes, eyebrowsLoaded, eyebrowPlacement, previewPreset.eyebrows, mouthLoaded, mouthPlacement, previewPreset.mouth, effectLoaded, effectPlacements, previewPreset.effects);
+  }, [effectLoaded, effectPlacements, eyebrowPlacement, eyebrowsLoaded, loaded, mouthLoaded, mouthPlacement, placement, presetIndex, presets, state, template]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -196,7 +212,8 @@ export default function FabricadorDeModeloPage() {
       setLibraryAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
       if (kind === "eyes") setActiveEyeAssetId(asset.id);
       else if (kind === "eyebrows") setActiveEyebrowAssetId(asset.id);
-      else setActiveMouthAssetId(asset.id);
+      else if (kind === "mouths") setActiveMouthAssetId(asset.id);
+      else setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
       if (asset.localOnly) setStatus("Arquivo carregado. O servidor local está indisponível; ele ficou salvo neste navegador.");
     }).catch(() => setStatus("Arquivo carregado, mas não consegui salvar na biblioteca."));
   };
@@ -216,12 +233,20 @@ export default function FabricadorDeModeloPage() {
     setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando a boca…`); setMouthFile(file); setGenerated([]); setMouthPlacement(DEFAULT_MOUTH_PLACEMENT); if (persist) { setActiveMouthAssetId(null); persistUpload(file, "mouths", mouthChromaSettings); }
   };
 
+  const onEffectUpload = (kind: FaceEffectKind, file?: File, persist = true) => {
+    if (!file) return;
+    setStatus(`${persist ? "Salvando na biblioteca e " : ""}recortando o efeito ${kind}…`);
+    setEffectFiles((current) => ({ ...current, [kind]: file })); setGenerated([]); setEffectPlacements((current) => ({ ...current, [kind]: DEFAULT_EFFECT_PLACEMENTS[kind] }));
+    if (persist) { setActiveEffectAssetIds((current) => ({ ...current, [kind]: "" })); persistUpload(file, kind, effectChromaSettings[kind]); }
+  };
+
   const useLibraryAsset = async (asset: FabricatorAsset) => {
     try {
       const file = await assetToFile(asset);
       if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); setEyeChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onUpload(file, false); setPlacement(asset.placement ?? DEFAULT_PLACEMENT); }
       else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); setEyebrowChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onEyebrowUpload(file, false); setEyebrowPlacement(asset.placement ?? DEFAULT_BROW_PLACEMENT); }
-      else { setActiveMouthAssetId(asset.id); setMouthChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onMouthUpload(file, false); setMouthPlacement(asset.placement ?? DEFAULT_MOUTH_PLACEMENT); }
+      else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); setMouthChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onMouthUpload(file, false); setMouthPlacement(asset.placement ?? DEFAULT_MOUTH_PLACEMENT); }
+      else { const effectKind = asset.kind as FaceEffectKind; setActiveEffectAssetIds((current) => ({ ...current, [effectKind]: asset.id })); setEffectChromaSettings((current) => ({ ...current, [effectKind]: asset.chroma ?? DEFAULT_CHROMA_SETTINGS })); onEffectUpload(effectKind, file, false); setEffectPlacements((current) => ({ ...current, [effectKind]: asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[effectKind] })); }
     } catch {
       setStatus("Não consegui abrir este arquivo da biblioteca. Tente enviar a folha novamente.");
     }
@@ -304,15 +329,33 @@ export default function FabricadorDeModeloPage() {
     return () => { cancelled = true; };
   }, [mouthPieces, presetIndex]);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(EFFECT_KINDS.map(async (kind) => [kind, effectFiles[kind] ? await processEffectImage(effectFiles[kind]!, effectChromaSettings[kind]) : undefined] as const)).then((entries) => {
+      if (cancelled) return;
+      setEffectPieces(Object.fromEntries(entries.filter((entry): entry is [FaceEffectKind, EyePiece] => Boolean(entry[1]))));
+    }).catch(() => { if (!cancelled) setStatus("Não consegui recortar um dos efeitos. Use PNG com fundo verde ou branco."); });
+    return () => { cancelled = true; };
+  }, [effectChromaSettings, effectFiles]);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(EFFECT_KINDS.map(async (kind) => [kind, effectPieces[kind] ? await loadImage(effectPieces[kind]!.dataUrl) : undefined] as const)).then((entries) => {
+      if (!cancelled) setEffectLoaded(Object.fromEntries(entries.filter((entry): entry is [FaceEffectKind, HTMLImageElement] => Boolean(entry[1]))));
+    });
+    return () => { cancelled = true; };
+  }, [effectPieces]);
+
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
-  const activeAssetIdForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? activeEyeAssetId : kind === "eyebrows" ? activeEyebrowAssetId : activeMouthAssetId;
-  const placementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? placement : kind === "eyebrows" ? eyebrowPlacement : mouthPlacement;
-  const defaultPlacementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? DEFAULT_PLACEMENT : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT : DEFAULT_MOUTH_PLACEMENT;
+  const activeAssetIdForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? activeEyeAssetId : kind === "eyebrows" ? activeEyebrowAssetId : kind === "mouths" ? activeMouthAssetId : activeEffectAssetIds[kind];
+  const placementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? placement : kind === "eyebrows" ? eyebrowPlacement : kind === "mouths" ? mouthPlacement : effectPlacements[kind];
+  const defaultPlacementForKind = (kind: FabricatorAssetKind) => kind === "eyes" ? DEFAULT_PLACEMENT : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT : kind === "mouths" ? DEFAULT_MOUTH_PLACEMENT : DEFAULT_EFFECT_PLACEMENTS[kind];
   const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement) => {
     if (kind === "eyes") setPlacement(next);
     else if (kind === "eyebrows") setEyebrowPlacement(next);
-    else setMouthPlacement(next);
+    else if (kind === "mouths") setMouthPlacement(next);
+    else setEffectPlacements((current) => ({ ...current, [kind]: next }));
   };
   const persistPlacement = (kind: FabricatorAssetKind, next: EyePlacement) => {
     const assetId = activeAssetIdForKind(kind);
@@ -328,24 +371,29 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => { persistPlacement("eyes", placement); }, [placement, activeEyeAssetId]);
   useEffect(() => { persistPlacement("eyebrows", eyebrowPlacement); }, [eyebrowPlacement, activeEyebrowAssetId]);
   useEffect(() => { persistPlacement("mouths", mouthPlacement); }, [mouthPlacement, activeMouthAssetId]);
+  useEffect(() => { persistPlacement("blush", effectPlacements.blush); }, [effectPlacements.blush, activeEffectAssetIds.blush]);
+  useEffect(() => { persistPlacement("shadow", effectPlacements.shadow); }, [effectPlacements.shadow, activeEffectAssetIds.shadow]);
+  useEffect(() => { persistPlacement("manpu", effectPlacements.manpu); }, [effectPlacements.manpu, activeEffectAssetIds.manpu]);
   const saveChroma = (kind: FabricatorAssetKind, chroma: ChromaSettings) => {
-    const assetId = kind === "eyes" ? activeEyeAssetId : kind === "eyebrows" ? activeEyebrowAssetId : activeMouthAssetId;
+    const assetId = activeAssetIdForKind(kind);
     if (!assetId) return;
     updateFabricatorAsset(assetId, { chroma }).then(() => setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, chroma } : asset))).catch(() => setStatus("Chroma aplicado nesta sessão, mas não consegui salvar a configuração do asset."));
   };
   const updateChroma = (kind: FabricatorAssetKind, key: keyof ChromaSettings, value: number) => {
     setStatus("Reprocessando o chroma com os novos controles…");
-    const current = kind === "eyes" ? eyeChromaSettings : kind === "eyebrows" ? eyebrowChromaSettings : mouthChromaSettings;
+    const current = kind === "eyes" ? eyeChromaSettings : kind === "eyebrows" ? eyebrowChromaSettings : kind === "mouths" ? mouthChromaSettings : effectChromaSettings[kind];
     const next = { ...current, [key]: value };
     if (kind === "eyes") setEyeChromaSettings(next);
     else if (kind === "eyebrows") setEyebrowChromaSettings(next);
-    else setMouthChromaSettings(next);
+    else if (kind === "mouths") setMouthChromaSettings(next);
+    else setEffectChromaSettings((currentSettings) => ({ ...currentSettings, [kind]: next }));
     saveChroma(kind, next);
   };
   const resetChroma = (kind: FabricatorAssetKind) => {
     if (kind === "eyes") setEyeChromaSettings(DEFAULT_CHROMA_SETTINGS);
     else if (kind === "eyebrows") setEyebrowChromaSettings(DEFAULT_CHROMA_SETTINGS);
-    else setMouthChromaSettings(DEFAULT_CHROMA_SETTINGS);
+    else if (kind === "mouths") setMouthChromaSettings(DEFAULT_CHROMA_SETTINGS);
+    else setEffectChromaSettings((current) => ({ ...current, [kind]: DEFAULT_CHROMA_SETTINGS }));
     saveChroma(kind, DEFAULT_CHROMA_SETTINGS);
     setStatus("Restaurando o chroma deste asset…");
   };
@@ -373,9 +421,11 @@ export default function FabricadorDeModeloPage() {
   const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!loaded) return;
     const point = pointerPosition(event);
-    const target = mouthLoaded && isInsideSingleFeature(point, mouthLoaded, mouthPlacement)
+    const effectTarget = EFFECT_KINDS.find((kind) => effectLoaded[kind] && isInsideSingleFeature(point, effectLoaded[kind]!, effectPlacements[kind]));
+    const target = effectTarget
+      ?? (mouthLoaded && isInsideSingleFeature(point, mouthLoaded, mouthPlacement)
       ? "mouth"
-      : eyebrowsLoaded && isInsideFeature(point, eyebrowsLoaded, eyebrowPlacement) ? "eyebrows" : "eyes";
+      : eyebrowsLoaded && isInsideFeature(point, eyebrowsLoaded, eyebrowPlacement) ? "eyebrows" : "eyes");
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(target);
   };
@@ -384,12 +434,14 @@ export default function FabricadorDeModeloPage() {
     const point = pointerPosition(event);
     if (dragging === "eyebrows") setEyebrowPlacement((current) => ({ ...current, x: point.x, y: point.y }));
     else if (dragging === "mouth") setMouthPlacement((current) => ({ ...current, x: point.x, y: point.y }));
+    else if (EFFECT_KINDS.includes(dragging as FaceEffectKind)) setEffectPlacements((current) => ({ ...current, [dragging as FaceEffectKind]: { ...current[dragging as FaceEffectKind], x: point.x, y: point.y } }));
     else setPlacement((current) => ({ ...current, x: point.x, y: point.y }));
   };
   const stopDrag = () => setDragging(null);
 
   const presetTransform = () => {
     if (presetLayer === "mouth") return activePreset.mouth;
+    if (EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return activePreset.effects[presetLayer as FaceEffectKind];
     const variation = presetLayer === "eyes" ? activePreset.eyes : activePreset.eyebrows;
     return presetSide === "right" ? variation.right : variation.left;
   };
@@ -398,6 +450,7 @@ export default function FabricadorDeModeloPage() {
     setPresets((current) => current.map((preset, index) => {
       if (index !== presetIndex) return preset;
       if (presetLayer === "mouth") return { ...preset, mouth: { ...preset.mouth, [key]: value } };
+      if (EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return { ...preset, effects: { ...preset.effects, [presetLayer]: { ...preset.effects[presetLayer as FaceEffectKind], [key]: value } } };
       const variationKey = presetLayer === "eyes" ? "eyes" : "eyebrows";
       const variation = preset[variationKey];
       const nextVariation = presetSide === "both"
@@ -424,7 +477,7 @@ export default function FabricadorDeModeloPage() {
     const browImages = eyebrowPair ? await imageFromPiece(eyebrowPair) : eyebrowsLoaded;
     const expressionMouth = mouthPieces[expressionIndex] ? await loadImage(mouthPieces[expressionIndex].dataUrl) : mouthLoaded;
     const preset = presetForIndex(expressionIndex);
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth);
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, effectLoaded, effectPlacements, preset.effects);
     return canvas.toDataURL("image/png");
   };
 
@@ -489,7 +542,7 @@ export default function FabricadorDeModeloPage() {
         height: 1080,
         source: "fabricador-de-modelo",
         expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
-        generator: { version: 1, includes: ["eyes", "eyebrows", "mouths"].filter((kind) => kind === "eyes" || (kind === "eyebrows" && eyebrowPair) || (kind === "mouths" && mouthPieces.length)) },
+        generator: { version: 1, includes: ["eyes", "eyebrows", "mouths"].filter((kind) => kind === "eyes" || (kind === "eyebrows" && eyebrowPair) || (kind === "mouths" && mouthPieces.length)).concat(EFFECT_KINDS.filter((kind) => effectPieces[kind])) },
       };
       setStatus(`Exportando ${targetModel.gender}/${targetModel.id}…`);
       await uploadCatalogFile(targetModel.gender, targetModel.id, `${targetModel.id}.json`, JSON.stringify(manifest, null, 2), "application/json");
@@ -532,6 +585,7 @@ export default function FabricadorDeModeloPage() {
       <section className={styles.layout}><aside className={styles.panel}><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de olhos</strong><span>PNG, JPG ou WebP · 2 linhas</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEyebrowUpload(event.target.files?.[0])} /><strong>＋ Enviar sobrancelhas</strong><span>Opcional · par esquerdo/direito</span></label>
         <label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onMouthUpload(event.target.files?.[0])} /><strong>＋ Enviar folha de bocas</strong><span>Opcional · grade 7×3 · 21 expressões</span></label>
+        <div className={styles.effectsUpload}><strong>Efeitos separados</strong><span>Upload individual · cada camada fica salva na biblioteca</span><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("blush", event.target.files?.[0])} /><strong>＋ Enviar blush</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("shadow", event.target.files?.[0])} /><strong>＋ Enviar shadow</strong><span>Camada independente</span></label><label className={styles.upload}><input type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => onEffectUpload("manpu", event.target.files?.[0])} /><strong>＋ Enviar manpu</strong><span>Camada independente</span></label></div>
         {eyebrowPair && <button className={styles.reset} onClick={() => { setEyebrowFile(null); setEyebrowPair(null); setEyebrowsLoaded(null); }}>× Remover sobrancelhas</button>}
         {mouthPieces.length > 0 && <button className={styles.reset} onClick={() => { setMouthFile(null); setMouthPieces([]); setMouthLoaded(null); }}>× Remover boca</button>}
         <div className={styles.status}><i />{status}</div><div className={styles.divider} /><h2>Chroma dos olhos</h2><p className={styles.hint}>Configuração exclusiva da folha de olhos selecionada. O asset guarda estes valores na biblioteca.</p>
@@ -547,7 +601,7 @@ export default function FabricadorDeModeloPage() {
         <label>Força <output>{mouthChromaSettings.strength}%</output><input type="range" min="0" max="100" step="1" value={mouthChromaSettings.strength} onChange={(event) => updateChroma("mouths", "strength", Number(event.target.value))} /></label>
         <label>Tolerância <output>{mouthChromaSettings.tolerance}</output><input type="range" min="2" max="100" step="1" value={mouthChromaSettings.tolerance} onChange={(event) => updateChroma("mouths", "tolerance", Number(event.target.value))} /></label>
         <label>Suavidade <output>{mouthChromaSettings.softness}</output><input type="range" min="0" max="80" step="1" value={mouthChromaSettings.softness} onChange={(event) => updateChroma("mouths", "softness", Number(event.target.value))} /></label>
-        <button className={styles.reset} onClick={() => resetChroma("mouths")}>↺ Restaurar chroma da boca</button><div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste os olhos, sobrancelhas ou boca diretamente na prévia. Cada camada permanece independente.</p>
+        <button className={styles.reset} onClick={() => resetChroma("mouths")}>↺ Restaurar chroma da boca</button><div className={styles.divider} /><h2>Chroma dos efeitos</h2><p className={styles.hint}>Cada efeito tem chroma separado e não altera olhos, sobrancelhas ou boca.</p>{EFFECT_KINDS.map((kind) => <div key={kind} className={styles.effectChroma}><strong>{kind}</strong><label>Força <output>{effectChromaSettings[kind].strength}%</output><input type="range" min="0" max="100" step="1" value={effectChromaSettings[kind].strength} onChange={(event) => updateChroma(kind, "strength", Number(event.target.value))} /></label><label>Tolerância <output>{effectChromaSettings[kind].tolerance}</output><input type="range" min="2" max="100" step="1" value={effectChromaSettings[kind].tolerance} onChange={(event) => updateChroma(kind, "tolerance", Number(event.target.value))} /></label><label>Suavidade <output>{effectChromaSettings[kind].softness}</output><input type="range" min="0" max="80" step="1" value={effectChromaSettings[kind].softness} onChange={(event) => updateChroma(kind, "softness", Number(event.target.value))} /></label><button className={styles.reset} onClick={() => resetChroma(kind)}>↺ Restaurar chroma do {kind}</button></div>)}<div className={styles.divider} /><h2>Posicionamento vinculado</h2><p className={styles.hint}>Arraste os olhos, sobrancelhas, boca ou efeitos diretamente na prévia. Cada camada permanece independente.</p>
         <label>Zoom <output>{placement.scale.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scale.min} max={PLACEMENT_LIMITS.scale.max} step=".01" value={placement.scale} onChange={(event) => updatePlacement("scale", Number(event.target.value))} /></label>
         <label>Largura <output>{placement.scaleX.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleX.min} max={PLACEMENT_LIMITS.scaleX.max} step=".01" value={placement.scaleX} onChange={(event) => updatePlacement("scaleX", Number(event.target.value))} /></label>
         <label>Altura <output>{placement.scaleY.toFixed(2)}×</output><input type="range" min={PLACEMENT_LIMITS.scaleY.min} max={PLACEMENT_LIMITS.scaleY.max} step=".01" value={placement.scaleY} onChange={(event) => updatePlacement("scaleY", Number(event.target.value))} /></label>
@@ -571,7 +625,9 @@ export default function FabricadorDeModeloPage() {
           <label>Expressão<select value={presetIndex} onChange={(event) => { setPresetIndex(Number(event.target.value)); setGenerated([]); }} className={styles.presetSelect}>{EYE_EXPRESSIONS.map(([key, label], index) => <option value={index} key={key}>{String(index + 1).padStart(2, "0")} · {label}</option>)}</select></label>
           <div className={styles.row}><button className={presetLayer === "eyes" ? styles.active : ""} onClick={() => setPresetLayer("eyes")}>Olhos</button><button className={presetLayer === "eyebrows" ? styles.active : ""} onClick={() => setPresetLayer("eyebrows")}>Sobrancelhas</button></div>
           <button className={`${styles.presetLayerMouth} ${presetLayer === "mouth" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("mouth")}>Boca</button>
-          {presetLayer !== "mouth" && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
+          <div className={styles.row}><button className={presetLayer === "blush" ? styles.active : ""} onClick={() => setPresetLayer("blush")}>Blush</button><button className={presetLayer === "shadow" ? styles.active : ""} onClick={() => setPresetLayer("shadow")}>Shadow</button></div>
+          <button className={`${styles.presetLayerMouth} ${presetLayer === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("manpu")}>Manpu</button>
+          {(presetLayer === "eyes" || presetLayer === "eyebrows") && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
           <label>Escala horizontal <output>{presetTransform().scaleX.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleX} onChange={(event) => updatePresetTransform("scaleX", Number(event.target.value))} /></label>
           <label>Altura <output>{presetTransform().scaleY.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleY} onChange={(event) => updatePresetTransform("scaleY", Number(event.target.value))} /></label>
           <label>Rotação <output>{presetTransform().rotation.toFixed(1)}°</output><input type="range" min="-80" max="80" step=".5" value={presetTransform().rotation} onChange={(event) => updatePresetTransform("rotation", Number(event.target.value))} /></label>
@@ -584,8 +640,8 @@ export default function FabricadorDeModeloPage() {
         <div className={styles.exportBox}><strong>Exportar para o Criador</strong><p>Cria o próximo modelo livre no catálogo, sem substituir nenhum existente.</p><div className={styles.row}><button className={exportGender === "feminino" ? styles.active : ""} onClick={() => setExportGender("feminino")} disabled={exporting}>Feminino</button><button className={exportGender === "masculino" ? styles.active : ""} onClick={() => setExportGender("masculino")} disabled={exporting}>Masculino</button></div><small>{nextModel ? `Próximo: ${nextModel.id}` : "Consultando numeração…"}</small><button className={styles.export} onClick={exportModel} disabled={!pair || exporting || !nextModel}>{exporting ? "Exportando…" : "Exportar modelo"}</button></div>
         {generated.length > 0 && <button className={styles.download} onClick={downloadPackage}>↓ Baixar pacote ZIP</button>}
       </aside>
-      <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : dragging === "mouth" ? "a boca" : "os olhos"}` : "Arraste os olhos, sobrancelhas ou boca para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
+      <section className={styles.previewPanel}><div className={styles.previewHead}><div><span>PREVIEW DO MOLDE</span><h2>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</h2></div><small>{dragging ? `Solte para posicionar ${dragging === "eyebrows" ? "as sobrancelhas" : dragging === "mouth" ? "a boca" : EFFECT_KINDS.includes(dragging as FaceEffectKind) ? `o ${dragging}` : "os olhos"}` : "Arraste os olhos, sobrancelhas, boca ou efeitos para ajustar"}</small></div><div className={styles.canvasWrap}><canvas ref={canvasRef} width={CANVAS_SIZE} height={CANVAS_SIZE} onPointerDown={startDrag} onPointerMove={drag} onPointerUp={stopDrag} onPointerCancel={stopDrag} /></div>
         {generated.length > 0 && <div className={styles.results}><div className={styles.previewHead}><div><span>RESULTADO</span><h2>21 expressões prontas</h2></div><small>Baseadas no par original e no seu encaixe</small></div><div className={styles.grid}>{generated.map((dataUrl, index) => <figure key={EYE_EXPRESSIONS[index][0]}><img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} /><figcaption>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</figcaption></figure>)}</div></div>}
       </section>
-      <aside className={styles.libraryPanel}><header className={styles.libraryHeader}><div><span>BIBLIOTECA LOCAL</span><h2>Meus arquivos</h2></div><b>{libraryAssets.length}</b></header><p className={styles.libraryHint}>As folhas enviadas ficam salvas na pasta própria do Fabricador e recuperam a última posição usada.</p><input className={styles.librarySearch} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="⌕ Buscar arquivo…" aria-label="Buscar arquivo na biblioteca" /><div className={styles.libraryTabs}><button className={libraryFilter === "all" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("all")}>Todos</button><button className={libraryFilter === "eyes" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyes")}>Olhos</button><button className={libraryFilter === "eyebrows" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyebrows")}>Sobrancelhas</button><button className={libraryFilter === "mouths" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("mouths")}>Bocas</button></div><div className={styles.libraryList}>{visibleLibraryAssets.map((asset) => <article className={styles.libraryCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div className={styles.libraryCardBody}><strong title={asset.name}>{asset.name}</strong><small>{asset.kind === "eyes" ? "Folha de olhos" : asset.kind === "eyebrows" ? "Folha de sobrancelhas" : "Boca"}{asset.localOnly ? " · navegador" : " · PC"}{asset.placement ? " · posição salva" : " · posição padrão"}</small><div><button onClick={() => void useLibraryAsset(asset)}>Usar</button><button onClick={() => copyPlacementFromAsset(asset)} disabled={!activeAssetIdForKind(asset.kind) || activeAssetIdForKind(asset.kind) === asset.id}>Copiar posição</button><button className={styles.libraryDelete} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name}`}>×</button></div></div></article>)}{!visibleLibraryAssets.length && <div className={styles.libraryEmpty}><span>＋</span><strong>Nenhuma folha salva</strong><small>Envie olhos, sobrancelhas ou boca para criar sua biblioteca.</small></div>}</div><footer className={styles.libraryFooter}>Biblioteca independente · {libraryAssets.length} {libraryAssets.length === 1 ? "arquivo" : "arquivos"}</footer></aside></section></main></div>;
+      <aside className={styles.libraryPanel}><header className={styles.libraryHeader}><div><span>BIBLIOTECA LOCAL</span><h2>Meus arquivos</h2></div><b>{libraryAssets.length}</b></header><p className={styles.libraryHint}>As folhas e efeitos enviados ficam salvos na pasta própria do Fabricador e recuperam a última posição usada.</p><input className={styles.librarySearch} value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder="⌕ Buscar arquivo…" aria-label="Buscar arquivo na biblioteca" /><div className={styles.libraryTabs}><button className={libraryFilter === "all" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("all")}>Todos</button><button className={libraryFilter === "eyes" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyes")}>Olhos</button><button className={libraryFilter === "eyebrows" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("eyebrows")}>Sobrancelhas</button><button className={libraryFilter === "mouths" ? styles.libraryTabActive : ""} onClick={() => setLibraryFilter("mouths")}>Bocas</button></div><div className={styles.libraryList}>{visibleLibraryAssets.map((asset) => <article className={styles.libraryCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div className={styles.libraryCardBody}><strong title={asset.name}>{asset.name}</strong><small>{asset.kind === "eyes" ? "Folha de olhos" : asset.kind === "eyebrows" ? "Folha de sobrancelhas" : asset.kind === "mouths" ? "Boca" : `Efeito ${asset.kind}`}{asset.localOnly ? " · navegador" : " · PC"}{asset.placement ? " · posição salva" : " · posição padrão"}</small><div><button onClick={() => void useLibraryAsset(asset)}>Usar</button><button onClick={() => copyPlacementFromAsset(asset)} disabled={!activeAssetIdForKind(asset.kind) || activeAssetIdForKind(asset.kind) === asset.id}>Copiar posição</button><button className={styles.libraryDelete} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name}`}>×</button></div></div></article>)}{!visibleLibraryAssets.length && <div className={styles.libraryEmpty}><span>＋</span><strong>Nenhuma folha salva</strong><small>Envie olhos, sobrancelhas, bocas ou efeitos para criar sua biblioteca.</small></div>}</div><footer className={styles.libraryFooter}>Biblioteca independente · {libraryAssets.length} {libraryAssets.length === 1 ? "arquivo" : "arquivos"}</footer></aside></section></main></div>;
 }

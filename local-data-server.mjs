@@ -547,7 +547,8 @@ function normalizeFabricatorPresets(value) {
     const eyes = normalizeFabricatorVariation(preset.eyes);
     const eyebrows = normalizeFabricatorVariation(preset.eyebrows);
     const mouth = normalizeFabricatorTransform(preset.mouth);
-    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth };
+    const effects = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, normalizeFabricatorTransform(preset.effects?.[effect]) ?? { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }]));
+    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects };
   }
   return result;
 }
@@ -1128,7 +1129,7 @@ async function route(request, response) {
     const metadata = readMetadata(request);
     const contentType = contentTypeOf(request, metadata);
     assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
-    const kind = metadata.kind === "eyes" || metadata.kind === "eyebrows" || metadata.kind === "mouths" ? metadata.kind : null;
+    const kind = ["eyes", "eyebrows", "mouths", "blush", "shadow", "manpu"].includes(metadata.kind) ? metadata.kind : null;
     if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
     const body = await requestBody(request, BODY_LIMITS.image);
     const extension = contentType === "image/jpeg" ? ".jpg" : contentType === "image/webp" ? ".webp" : ".png";

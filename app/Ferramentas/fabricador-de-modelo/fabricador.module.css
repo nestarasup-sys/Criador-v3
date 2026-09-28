@@ -22,6 +22,12 @@
 .upload input { display: none; }
 .upload strong { color: #a33468; }
 .upload span, .hint, .previewHead small { color: #897d8d; font-size: 11px; }
+.effectsUpload { display: grid; gap: 8px; margin-top: 12px; padding: 10px; border: 1px solid #eadfea; border-radius: 14px; background: #fffafd; }
+.effectsUpload > strong { color: #6f356f; font-size: 11px; }
+.effectsUpload > span { color: #897d8d; font-size: 10px; }
+.effectsUpload .upload { padding: 12px 10px; }
+.effectChroma { margin: 10px 0; padding: 9px; border: 1px solid #eee6ef; border-radius: 11px; background: #fffafd; }
+.effectChroma > strong { color: #6f356f; font-size: 10px; text-transform: uppercase; }
 .status { display: flex; gap: 8px; align-items: flex-start; margin: 15px 2px; color: #726778; font-size: 11px; line-height: 1.4; }
 .status i { width: 8px; height: 8px; flex: none; margin-top: 3px; border-radius: 50%; background: #48ae78; }
 .divider { height: 1px; margin: 17px 0; background: #eee6ef; }
