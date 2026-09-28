@@ -53,8 +53,6 @@ function drawComposition(
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
-  if (!pair) return;
-  const gap = placement.gap * placement.scale;
   const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
     const drawFeature = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
       const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
@@ -66,6 +64,8 @@ function drawComposition(
     drawFeature(feature.left, -1, featureVariation.left); drawFeature(feature.right, 1, featureVariation.right);
   };
   if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
+  if (!pair) return;
+  const gap = placement.gap * placement.scale;
   const drawEye = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
     const width = image.naturalWidth * placement.scale * placement.scaleX * transform.scaleX;
     const height = image.naturalHeight * placement.scale * placement.scaleY * transform.scaleY;
@@ -167,26 +167,36 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => {
     if (!sourceFile) return;
     let cancelled = false;
-    processEyeSheet(sourceFile, eyeChromaSettings).then(async (result) => {
+    processEyeSheet(sourceFile, eyeChromaSettings).then((result) => {
       if (cancelled) return;
-      setPair(result); setLoaded(await imageFromPair(result, state)); setStatus("Folha processada. Ajuste o chroma se algum detalhe branco sumir.");
+      setPair(result); setStatus("Folha processada. Ajuste o chroma se algum detalhe branco sumir.");
     }).catch(() => { if (!cancelled) setStatus("Não consegui separar essa folha. Use uma imagem com olhos em duas linhas."); });
     return () => { cancelled = true; };
   }, [eyeChromaSettings, sourceFile]);
 
-  useEffect(() => { if (pair) imageFromPair(pair, state).then(setLoaded); }, [pair, state]);
+  useEffect(() => {
+    if (!pair) return;
+    let cancelled = false;
+    imageFromPair(pair, state).then((images) => { if (!cancelled) setLoaded(images); });
+    return () => { cancelled = true; };
+  }, [pair, state]);
 
   useEffect(() => {
     if (!eyebrowFile) return;
     let cancelled = false;
-    processEyebrowSheet(eyebrowFile, eyebrowChromaSettings).then(async (result) => {
+    processEyebrowSheet(eyebrowFile, eyebrowChromaSettings).then((result) => {
       if (cancelled) return;
-      setEyebrowPair(result); setEyebrowsLoaded(await imageFromPiece(result)); setStatus("Sobrancelhas processadas e vinculadas às expressões.");
+      setEyebrowPair(result); setStatus("Sobrancelhas processadas e vinculadas às expressões.");
     }).catch(() => { if (!cancelled) setStatus("Não consegui separar as sobrancelhas. Use uma folha com duas sobrancelhas."); });
     return () => { cancelled = true; };
   }, [eyebrowChromaSettings, eyebrowFile]);
 
-  useEffect(() => { if (eyebrowPair) imageFromPiece(eyebrowPair).then(setEyebrowsLoaded); }, [eyebrowPair]);
+  useEffect(() => {
+    if (!eyebrowPair) return;
+    let cancelled = false;
+    imageFromPiece(eyebrowPair).then((images) => { if (!cancelled) setEyebrowsLoaded(images); });
+    return () => { cancelled = true; };
+  }, [eyebrowPair]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));

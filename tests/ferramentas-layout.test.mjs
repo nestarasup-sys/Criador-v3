@@ -67,6 +67,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /eyebrowVariation/);
   assert.match(tool, /BROW_VARIATIONS\[expressionIndex\]/);
   assert.match(tool, /imageFromPiece\(eyebrowPair\)/);
+  assert.match(tool, /if \(eyebrows\) drawPair\(eyebrows, eyebrowPlacement, eyebrowVariation\);\s*if \(!pair\) return;/s);
+  assert.doesNotMatch(tool, /setLoaded\(await imageFromPair/);
+  assert.doesNotMatch(tool, /setEyebrowsLoaded\(await imageFromPiece/);
   assert.match(tool, /eyebrowPlacement\.scaleY\.toFixed\(2\)/);
   assert.match(tool, /updateEyebrowPlacement\("scaleY"/);
   assert.match(tool, /Posição vertical/);
