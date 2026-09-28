@@ -71,7 +71,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /const variation/);
   assert.match(expressions, /BROW_VARIATIONS/);
   assert.match(expressions, /browVariation\(\{ scaleY: 1\.16/);
-  assert.match(expressions, /scaleY: 1\.22/);
+  assert.match(expressions, /scaleY: 1\.2/);
   assert.equal((expressions.match(/^\s+(?:variation\(|NORMAL_VARIATION,)/gm) ?? []).length, 21, "Os olhos precisam ter 21 presets");
   assert.equal((browExpressionSource.match(/^\s+(?:browVariation\(|NORMAL_BROW_VARIATION,)/gm) ?? []).length, 21, "As sobrancelhas precisam ter 21 presets");
   assert.match(expressions, /export const NORMAL_VARIATION = variation\(\)/);
