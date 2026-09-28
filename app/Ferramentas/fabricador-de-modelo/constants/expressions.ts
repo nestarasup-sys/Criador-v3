@@ -1,12 +1,11 @@
 export const EYE_EXPRESSIONS = [
-  ["normal", "Normal"], ["serio", "Sério"], ["raiva", "Raiva"],
-  ["assustado", "Assustado"], ["assustado_2", "Assustado 2"],
-  ["corado", "Corado"], ["corado_2", "Corado 2"], ["corado_3", "Corado 3"],
-  ["corado_4", "Corado 4"], ["envergonhado", "Envergonhado"],
-  ["sorriso_canto", "Sorriso de canto"], ["surpreso", "Surpreso"],
-  ["surpreso_2", "Surpreso 2"], ["cansado", "Cansado"], ["desconfiado", "Desconfiado"],
-  ["triste", "Triste"], ["determinado", "Determinado"], ["feliz", "Feliz"],
-  ["dolorido", "Dolorido"], ["olhar_lateral", "Olhar lateral"], ["curioso", "Curioso"],
+  ["aliviada", "Aliviada"], ["animada", "Animada"], ["apaixonada", "Apaixonada"],
+  ["cansada", "Cansada"], ["ciumenta", "Ciumenta"], ["confusa", "Confusa"],
+  ["decepcionada", "Decepcionada"], ["desconfiada", "Desconfiada"], ["envergonhada", "Envergonhada"],
+  ["impressionada", "Impressionada"], ["indignada", "Indignada"], ["irritada", "Irritada"],
+  ["nojo", "Nojo"], ["normal", "Normal"], ["orgulhosa", "Orgulhosa"],
+  ["preocupada", "Preocupada"], ["seria", "Séria"], ["sorrindo_de_canto", "Sorrindo de canto"],
+  ["sorriso_maligno", "Sorriso maligno"], ["surpresa", "Surpresa"], ["triste_magoada", "Triste/magoada"],
 ] as const;
 
 export const EXPRESSION_VARIATIONS = [

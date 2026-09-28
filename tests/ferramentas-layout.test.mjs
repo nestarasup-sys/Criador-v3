@@ -28,10 +28,11 @@ test("catálogo de Ferramentas não anuncia mais o Fabricador de Modelo", async 
 });
 
 test("Fabricador de Modelo beta está disponível no catálogo", async () => {
-  const [page, tool, mold] = await Promise.all([
+  const [page, tool, mold, expressions] = await Promise.all([
     read("app/Ferramentas/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/types/eye-model.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/constants/expressions.ts"),
   ]);
 
   assert.match(page, /fabricador-de-modelo/);
@@ -42,6 +43,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /scaleX: \{ min: \.5, max: 6\.8 \}/);
   assert.match(tool, /gap: \{ min: 0, max: 1040 \}/);
   assert.match(tool, /rotation: \{ min: -80, max: 80 \}/);
+  assert.match(expressions, /\["aliviada", "Aliviada"\]/);
+  assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
+  assert.doesNotMatch(expressions, /pt_/);
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);
