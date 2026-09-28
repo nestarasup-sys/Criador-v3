@@ -34,6 +34,18 @@
 .effectToggles strong { color: #6f356f; font-size: 10px; }
 .effectToggles label { display: flex !important; gap: 7px; align-items: center; margin: 0 !important; color: #6d5c72; font-size: 10px; }
 .effectToggles input { accent-color: #b34172; }
+.effectCatalog { display: grid; gap: 8px; margin: 12px 0; padding: 11px; border: 1px solid #eadfea; border-radius: 12px; background: #fff; }
+.effectCatalog > strong { color: #6f356f; font-size: 11px; }
+.effectCatalog > span { color: #897d8d; font-size: 10px; line-height: 1.4; }
+.effectCatalog .row { margin: 0; }
+.effectCatalog .reset { padding: 8px; font-size: 10px; }
+.effectCatalogList { display: grid; gap: 7px; max-height: 250px; overflow-y: auto; padding-right: 2px; }
+.effectCatalogCard { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 8px; padding: 7px; border: 1px solid #eee6ef; border-radius: 10px; background: #fffafd; }
+.effectCatalogCard img { width: 48px; height: 48px; object-fit: contain; border-radius: 7px; background: #f3eef3; }
+.effectCatalogCard > div { display: grid; gap: 3px; min-width: 0; }
+.effectCatalogCard strong { overflow: hidden; color: #5d5064; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.effectCatalogCard small { overflow: hidden; color: #9a8c9f; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.effectCatalogCard button { padding: 6px; border: 0; border-radius: 7px; background: #f9dce9; color: #a33468; font-size: 9px; font-weight: 900; cursor: pointer; }
 .status { display: flex; gap: 8px; align-items: flex-start; margin: 15px 2px; color: #726778; font-size: 11px; line-height: 1.4; }
 .status i { width: 8px; height: 8px; flex: none; margin-top: 3px; border-radius: 50%; background: #48ae78; }
 .divider { height: 1px; margin: 17px 0; background: #eee6ef; }

@@ -49,14 +49,14 @@ function cloneVariation(variation: EyeExpressionVariation): EyeExpressionVariati
 }
 
 function defaultPresetForIndex(index: number): FacePreset {
-  return { eyes: cloneVariation(EXPRESSION_VARIATIONS[index]), eyebrows: cloneVariation(BROW_VARIATIONS[index]), mouth: cloneTransform(DEFAULT_PRESET_MOUTH), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>, enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, true])) as Record<FaceEffectKind, boolean> };
+  return { eyes: cloneVariation(EXPRESSION_VARIATIONS[index]), eyebrows: cloneVariation(BROW_VARIATIONS[index]), mouth: cloneTransform(DEFAULT_PRESET_MOUTH), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>, enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, true])) as Record<FaceEffectKind, boolean>, effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, null])) as Record<FaceEffectKind, string | null> };
 }
 
 function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
   return EYE_EXPRESSIONS.map(([key], index) => {
     const preset = saved[key];
     if (!preset) return defaultPresetForIndex(index);
-    return { eyes: cloneVariation(preset.eyes), eyebrows: cloneVariation(preset.eyebrows), mouth: cloneTransform(preset.mouth), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(preset.effects?.[kind] ?? DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>, enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.enabledEffects?.[kind] ?? true])) as Record<FaceEffectKind, boolean> };
+    return { eyes: cloneVariation(preset.eyes), eyebrows: cloneVariation(preset.eyebrows), mouth: cloneTransform(preset.mouth), effects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, cloneTransform(preset.effects?.[kind] ?? DEFAULT_PRESET_MOUTH)])) as Record<FaceEffectKind, EyeTransform>, enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.enabledEffects?.[kind] ?? true])) as Record<FaceEffectKind, boolean>, effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.effectAssets?.[kind] ?? null])) as Record<FaceEffectKind, string | null> };
   });
 }
 
@@ -98,6 +98,7 @@ function drawComposition(
   effectPlacements: Record<FaceEffectKind, EyePlacement> = DEFAULT_EFFECT_PLACEMENTS,
   effectVariations: Record<FaceEffectKind, EyeTransform> = defaultPresetForIndex(13).effects,
   enabledEffects: Record<FaceEffectKind, boolean> = defaultPresetForIndex(13).enabledEffects,
+  effectAssets: Record<FaceEffectKind, string | null> = defaultPresetForIndex(13).effectAssets,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
@@ -111,7 +112,7 @@ function drawComposition(
   const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
     drawFeature(feature.left, featurePlacement, -1, featureVariation.left); drawFeature(feature.right, featurePlacement, 1, featureVariation.right);
   };
-  for (const kind of EFFECT_KINDS) if (enabledEffects[kind] && effects[kind]) drawFeature(effects[kind]!, effectPlacements[kind], 0, effectVariations[kind]);
+  for (const kind of EFFECT_KINDS) if (enabledEffects[kind] && effectAssets[kind] && effects[kind]) drawFeature(effects[kind]!, effectPlacements[kind], 0, effectVariations[kind]);
   if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);
   if (!pair) return;
@@ -164,6 +165,7 @@ export default function FabricadorDeModeloPage() {
   const [activeMouthAssetId, setActiveMouthAssetId] = useState<string | null>(null);
   const [activeEffectAssetIds, setActiveEffectAssetIds] = useState<Partial<Record<FaceEffectKind, string>>>({});
   const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
+  const [effectCatalogKind, setEffectCatalogKind] = useState<FaceEffectKind>("blush");
   const [panelArea, setPanelArea] = useState<1 | 2>(1);
   const [presetIndex, setPresetIndex] = useState(13);
   const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
@@ -205,7 +207,7 @@ export default function FabricadorDeModeloPage() {
   const redraw = useCallback((nextPlacement = placement, nextState = state) => {
     const canvas = canvasRef.current; if (!canvas || !template) return;
     const previewPreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
-    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, previewPreset.eyes, eyebrowsLoaded, eyebrowPlacement, previewPreset.eyebrows, mouthLoaded, mouthPlacement, previewPreset.mouth, effectLoaded, effectPlacements, previewPreset.effects, previewPreset.enabledEffects);
+    const context = canvas.getContext("2d"); if (context) drawComposition(context, template, loaded, nextPlacement, nextState, previewPreset.eyes, eyebrowsLoaded, eyebrowPlacement, previewPreset.eyebrows, mouthLoaded, mouthPlacement, previewPreset.mouth, effectLoaded, effectPlacements, previewPreset.effects, previewPreset.enabledEffects, previewPreset.effectAssets);
   }, [effectLoaded, effectPlacements, eyebrowPlacement, eyebrowsLoaded, loaded, mouthLoaded, mouthPlacement, placement, presetIndex, presets, state, template]);
 
   useEffect(() => { redraw(); }, [redraw]);
@@ -216,7 +218,7 @@ export default function FabricadorDeModeloPage() {
       if (kind === "eyes") setActiveEyeAssetId(asset.id);
       else if (kind === "eyebrows") setActiveEyebrowAssetId(asset.id);
       else if (kind === "mouths") setActiveMouthAssetId(asset.id);
-      else setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
+      else { setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id })); setPresets((current) => current.map((preset, index) => index === presetIndex ? { ...preset, enabledEffects: { ...preset.enabledEffects, [kind]: true }, effectAssets: { ...preset.effectAssets, [kind]: asset.id } } : preset)); }
       if (asset.localOnly) setStatus("Arquivo carregado. O servidor local está indisponível; ele ficou salvo neste navegador.");
     }).catch(() => setStatus("Arquivo carregado, mas não consegui salvar na biblioteca."));
   };
@@ -249,10 +251,23 @@ export default function FabricadorDeModeloPage() {
       if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); setEyeChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onUpload(file, false); setPlacement(asset.placement ?? DEFAULT_PLACEMENT); }
       else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); setEyebrowChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onEyebrowUpload(file, false); setEyebrowPlacement(asset.placement ?? DEFAULT_BROW_PLACEMENT); }
       else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); setMouthChromaSettings(asset.chroma ?? DEFAULT_CHROMA_SETTINGS); onMouthUpload(file, false); setMouthPlacement(asset.placement ?? DEFAULT_MOUTH_PLACEMENT); }
-      else { const effectKind = asset.kind as FaceEffectKind; setActiveEffectAssetIds((current) => ({ ...current, [effectKind]: asset.id })); setEffectChromaSettings((current) => ({ ...current, [effectKind]: asset.chroma ?? DEFAULT_CHROMA_SETTINGS })); onEffectUpload(effectKind, file, false); setEffectPlacements((current) => ({ ...current, [effectKind]: asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[effectKind] })); }
+      else { const effectKind = asset.kind as FaceEffectKind; setActiveEffectAssetIds((current) => ({ ...current, [effectKind]: asset.id })); setEffectChromaSettings((current) => ({ ...current, [effectKind]: asset.chroma ?? DEFAULT_CHROMA_SETTINGS })); onEffectUpload(effectKind, file, false); setEffectPlacements((current) => ({ ...current, [effectKind]: asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[effectKind] })); setPresets((current) => current.map((preset, index) => index === presetIndex ? { ...preset, enabledEffects: { ...preset.enabledEffects, [effectKind]: true }, effectAssets: { ...preset.effectAssets, [effectKind]: asset.id } } : preset)); }
     } catch {
       setStatus("Não consegui abrir este arquivo da biblioteca. Tente enviar a folha novamente.");
     }
+  };
+
+  const assignEffectAsset = async (asset: FabricatorAsset) => {
+    if (!EFFECT_KINDS.includes(asset.kind as FaceEffectKind)) return;
+    const kind = asset.kind as FaceEffectKind;
+    await useLibraryAsset(asset);
+    setPresets((current) => current.map((preset, index) => index === presetIndex ? { ...preset, enabledEffects: { ...preset.enabledEffects, [kind]: true }, effectAssets: { ...preset.effectAssets, [kind]: asset.id } } : preset));
+    setStatus(`${asset.name} aplicado somente à expressão ${String(presetIndex + 1).padStart(2, "0")}.`);
+  };
+
+  const clearEffectFromExpression = (kind: FaceEffectKind) => {
+    setPresets((current) => current.map((preset, index) => index === presetIndex ? { ...preset, enabledEffects: { ...preset.enabledEffects, [kind]: false }, effectAssets: { ...preset.effectAssets, [kind]: null } } : preset));
+    setGenerated([]);
   };
 
   const removeLibraryAsset = async (asset: FabricatorAsset) => {
@@ -279,6 +294,7 @@ export default function FabricadorDeModeloPage() {
     const matchesFilter = libraryFilter === "all" || asset.kind === libraryFilter;
     return matchesFilter && asset.name.toLocaleLowerCase().includes(libraryQuery.trim().toLocaleLowerCase());
   }), [libraryAssets, libraryFilter, libraryQuery]);
+  const effectCatalogAssets = useMemo(() => libraryAssets.filter((asset) => asset.kind === effectCatalogKind), [effectCatalogKind, libraryAssets]);
 
   useEffect(() => {
     if (!sourceFile) return;
@@ -336,7 +352,7 @@ export default function FabricadorDeModeloPage() {
     let cancelled = false;
     Promise.all(EFFECT_KINDS.filter((kind) => kind !== "manpu").map(async (kind) => [kind, effectFiles[kind] ? await processEffectImage(effectFiles[kind]!, effectChromaSettings[kind]) : undefined] as const)).then((entries) => {
       if (cancelled) return;
-      setEffectPieces(Object.fromEntries(entries.filter((entry): entry is [FaceEffectKind, EyePiece] => Boolean(entry[1]))));
+      setEffectPieces(Object.fromEntries(entries.filter((entry): entry is ["blush" | "shadow", EyePiece] => Boolean(entry[1]))));
     }).catch(() => { if (!cancelled) setStatus("Não consegui recortar um dos efeitos. Use PNG com fundo verde ou branco."); });
     return () => { cancelled = true; };
   }, [effectChromaSettings, effectFiles]);
@@ -355,6 +371,30 @@ export default function FabricadorDeModeloPage() {
     });
     return () => { cancelled = true; };
   }, [effectPieces, manpuPieces, presetIndex]);
+
+  useEffect(() => {
+    let cancelled = false;
+    EFFECT_KINDS.forEach((kind) => {
+      const selectedId = activePreset.effectAssets[kind];
+      if (!selectedId) {
+        setEffectFiles((current) => { if (!current[kind]) return current; const next = { ...current }; delete next[kind]; return next; });
+        setEffectLoaded((current) => { if (!current[kind]) return current; const next = { ...current }; delete next[kind]; return next; });
+        if (kind === "manpu") setManpuPieces([]);
+        return;
+      }
+      if (activeEffectAssetIds[kind] === selectedId) return;
+      const asset = libraryAssets.find((entry) => entry.id === selectedId && entry.kind === kind);
+      if (!asset) return;
+      assetToFile(asset).then((file) => {
+        if (cancelled) return;
+        setEffectChromaSettings((current) => ({ ...current, [kind]: asset.chroma ?? DEFAULT_CHROMA_SETTINGS }));
+        onEffectUpload(kind, file, false);
+        setEffectPlacements((current) => ({ ...current, [kind]: asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind] }));
+        setActiveEffectAssetIds((current) => ({ ...current, [kind]: selectedId }));
+      }).catch(() => { if (!cancelled) setStatus(`Não consegui carregar o ${kind} selecionado.`); });
+    });
+    return () => { cancelled = true; };
+  }, [activeEffectAssetIds, activePreset.effectAssets, libraryAssets, presetIndex]);
 
   const updatePlacement = (key: keyof EyePlacement, value: number) => setPlacement((current) => ({ ...current, [key]: value }));
   const updateEyebrowPlacement = (key: keyof EyePlacement, value: number) => setEyebrowPlacement((current) => ({ ...current, [key]: value }));
@@ -486,13 +526,34 @@ export default function FabricadorDeModeloPage() {
     }
   };
 
+  const loadEffectImagesForExpression = async (expressionIndex: number, preset: FacePreset) => {
+    const images: Partial<Record<FaceEffectKind, HTMLImageElement>> = {};
+    for (const kind of EFFECT_KINDS) {
+      const assetId = preset.effectAssets[kind];
+      if (!assetId || !preset.enabledEffects[kind]) continue;
+      if (activeEffectAssetIds[kind] === assetId && effectLoaded[kind]) { images[kind] = effectLoaded[kind]; continue; }
+      const asset = libraryAssets.find((entry) => entry.id === assetId && entry.kind === kind);
+      if (!asset) continue;
+      const file = await assetToFile(asset);
+      if (kind === "manpu") {
+        const pieces = await processManpuSheet(file, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
+        if (pieces[expressionIndex]) images[kind] = await loadImage(pieces[expressionIndex].dataUrl);
+      } else {
+        const piece = await processEffectImage(file, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
+        images[kind] = await loadImage(piece.dataUrl);
+      }
+    }
+    return images;
+  };
+
   const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open") => {
     if (!template || !pair) return null;
     const images = await imageFromPair(pair, expressionState); const canvas = document.createElement("canvas"); canvas.width = CANVAS_SIZE; canvas.height = CANVAS_SIZE;
     const browImages = eyebrowPair ? await imageFromPiece(eyebrowPair) : eyebrowsLoaded;
     const expressionMouth = mouthPieces[expressionIndex] ? await loadImage(mouthPieces[expressionIndex].dataUrl) : mouthLoaded;
     const preset = presetForIndex(expressionIndex);
-    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, effectLoaded, effectPlacements, preset.effects, preset.enabledEffects);
+    const expressionEffects = await loadEffectImagesForExpression(expressionIndex, preset);
+    const context = canvas.getContext("2d")!; drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, effectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets);
     return canvas.toDataURL("image/png");
   };
 
@@ -642,7 +703,8 @@ export default function FabricadorDeModeloPage() {
           <button className={`${styles.presetLayerMouth} ${presetLayer === "mouth" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("mouth")}>Boca</button>
           <div className={styles.row}><button className={presetLayer === "blush" ? styles.active : ""} onClick={() => setPresetLayer("blush")}>Blush</button><button className={presetLayer === "shadow" ? styles.active : ""} onClick={() => setPresetLayer("shadow")}>Shadow</button></div>
           <button className={`${styles.presetLayerMouth} ${presetLayer === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setPresetLayer("manpu")}>Manpu</button>
-          <div className={styles.effectToggles}><strong>Efeitos nesta expressão</strong>{EFFECT_KINDS.map((kind) => { const hasAsset = kind === "manpu" ? manpuPieces.length > 0 : Boolean(effectPieces[kind]); return <label key={kind}><input type="checkbox" checked={activePreset.enabledEffects[kind]} disabled={!hasAsset} onChange={(event) => updateEffectEnabled(kind, event.target.checked)} />{kind}{!hasAsset && " · envie o asset"}</label>; })}</div>
+          <div className={styles.effectToggles}><strong>Efeitos nesta expressão</strong>{EFFECT_KINDS.map((kind) => { const hasAsset = kind === "manpu" ? manpuPieces.length > 0 : Boolean(effectPieces[kind]); return <label key={kind}><input type="checkbox" checked={activePreset.enabledEffects[kind] && Boolean(activePreset.effectAssets[kind])} disabled={!hasAsset} onChange={(event) => updateEffectEnabled(kind, event.target.checked)} />{kind}{!hasAsset && " · envie o asset"}</label>; })}</div>
+          <div className={styles.effectCatalog}><strong>Catálogo de efeitos · expressão {String(presetIndex + 1).padStart(2, "0")}</strong><span>Escolha um asset diferente para esta expressão ou deixe sem efeito.</span><div className={styles.row}><button className={effectCatalogKind === "blush" ? styles.active : ""} onClick={() => setEffectCatalogKind("blush")}>Blush</button><button className={effectCatalogKind === "shadow" ? styles.active : ""} onClick={() => setEffectCatalogKind("shadow")}>Shadow</button></div><button className={`${styles.presetLayerMouth} ${effectCatalogKind === "manpu" ? styles.presetLayerMouthActive : ""}`} onClick={() => setEffectCatalogKind("manpu")}>Manpu</button><button className={styles.reset} onClick={() => clearEffectFromExpression(effectCatalogKind)} disabled={!activePreset.effectAssets[effectCatalogKind]}>× Usar nenhum {effectCatalogKind}</button><div className={styles.effectCatalogList}>{effectCatalogAssets.map((asset) => <article className={styles.effectCatalogCard} key={asset.id}><img src={asset.fileUrl} alt="" loading="lazy" /><div><strong title={asset.name}>{asset.name}</strong><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado nesta expressão" : "Disponível na biblioteca"}</small><button onClick={() => void assignEffectAsset(asset)}>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</button></div></article>)}{!effectCatalogAssets.length && <small>Nenhum {effectCatalogKind} salvo ainda. Envie um asset acima.</small>}</div></div>
           {(presetLayer === "eyes" || presetLayer === "eyebrows") && <div className={`${styles.row} ${styles.presetSides}`}><button className={presetSide === "both" ? styles.active : ""} onClick={() => setPresetSide("both")}>Juntos</button><button className={presetSide === "left" ? styles.active : ""} onClick={() => setPresetSide("left")}>Esquerdo</button><button className={presetSide === "right" ? styles.active : ""} onClick={() => setPresetSide("right")}>Direito</button></div>}
           <label>Escala horizontal <output>{presetTransform().scaleX.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleX} onChange={(event) => updatePresetTransform("scaleX", Number(event.target.value))} /></label>
           <label>Altura <output>{presetTransform().scaleY.toFixed(2)}×</output><input type="range" min=".35" max="4" step=".01" value={presetTransform().scaleY} onChange={(event) => updatePresetTransform("scaleY", Number(event.target.value))} /></label>

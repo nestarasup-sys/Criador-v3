@@ -66,6 +66,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /effectPieces/);
   assert.match(tool, /manpuPieces/);
   assert.match(tool, /Folha 7×3 · 21 expressões/);
+  assert.match(tool, /effectCatalogAssets/);
+  assert.match(tool, /assignEffectAsset/);
+  assert.match(tool, /effectAssets/);
   assert.match(tool, /effectChromaSettings/);
   assert.match(tool, /Área 2 · Efeitos permanentes/);
   assert.match(tool, /updateEffectEnabled/);
@@ -104,6 +107,8 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
   assert.match(mold, /enabledEffects/);
+  assert.match(mold, /effectAssets/);
+  assert.match(server, /effectAssets/);
   assert.match(tool, /variation\.left/);
   assert.match(tool, /variation\.right/);
   assert.match(tool, /eyebrowVariation/);

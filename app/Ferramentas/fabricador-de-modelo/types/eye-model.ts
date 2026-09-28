@@ -34,6 +34,7 @@ export type FacePreset = {
   mouth: EyeTransform;
   effects: Record<FaceEffectKind, EyeTransform>;
   enabledEffects: Record<FaceEffectKind, boolean>;
+  effectAssets: Record<FaceEffectKind, string | null>;
 };
 
 export type FacePresetCollection = Record<string, FacePreset>;
