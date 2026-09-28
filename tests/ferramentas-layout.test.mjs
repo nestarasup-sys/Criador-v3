@@ -45,7 +45,11 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /rotation: \{ min: -80, max: 80 \}/);
   assert.match(expressions, /\["aliviada", "Aliviada"\]/);
   assert.match(expressions, /\["triste_magoada", "Triste\/magoada"\]/);
+  assert.match(expressions, /const variation/);
   assert.doesNotMatch(expressions, /pt_/);
+  assert.match(mold, /EyeTransform/);
+  assert.match(tool, /variation\.left/);
+  assert.match(tool, /variation\.right/);
   assert.match(tool, /Gerar 21 expressões/);
   assert.match(tool, /molde\.png/);
   assert.match(mold, /EyePair/);

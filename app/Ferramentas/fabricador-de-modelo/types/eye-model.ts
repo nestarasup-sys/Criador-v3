@@ -11,6 +11,19 @@ export type EyePair = {
   closed: EyePiece;
 };
 
+export type EyeTransform = {
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  x: number;
+  y: number;
+};
+
+export type EyeExpressionVariation = {
+  left: EyeTransform;
+  right: EyeTransform;
+};
+
 export type EyePlacement = {
   x: number;
   y: number;

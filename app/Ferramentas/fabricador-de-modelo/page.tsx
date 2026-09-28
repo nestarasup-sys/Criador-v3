@@ -5,10 +5,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyeSheet, splitPair, type ChromaSettings } from "./core/eye-processing";
-import type { EyePair, EyePlacement, EyeState } from "./types/eye-model";
+import type { EyeExpressionVariation, EyePair, EyePlacement, EyeState } from "./types/eye-model";
 import styles from "./fabricador.module.css";
 
 const CANVAS_SIZE = 1000;
+const LINKED_VARIATION: EyeExpressionVariation = { left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }, right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 } };
 const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 92 };
 const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
@@ -31,20 +32,20 @@ function drawComposition(
   pair: LoadedPair | null,
   placement: EyePlacement,
   state: EyeState,
-  variation = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+  variation: EyeExpressionVariation = LINKED_VARIATION,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
   if (!pair) return;
-  const width = pair.left.naturalWidth * placement.scale * placement.scaleX * variation.scaleX;
-  const height = pair.left.naturalHeight * placement.scale * placement.scaleY * variation.scaleY;
   const gap = placement.gap * placement.scale;
-  const angle = (placement.rotation + variation.rotation) * Math.PI / 180;
-  const drawEye = (image: HTMLImageElement, x: number) => {
-    context.save(); context.translate(x + variation.x, placement.y + variation.y); context.rotate(angle);
+  const drawEye = (image: HTMLImageElement, side: -1 | 1, transform: EyeExpressionVariation["left"]) => {
+    const width = image.naturalWidth * placement.scale * placement.scaleX * transform.scaleX;
+    const height = image.naturalHeight * placement.scale * placement.scaleY * transform.scaleY;
+    const angle = (placement.rotation + transform.rotation) * Math.PI / 180;
+    context.save(); context.translate(placement.x + side * gap / 2 + transform.x, placement.y + transform.y); context.rotate(angle);
     context.drawImage(image, -width / 2, -height / 2, width, height); context.restore();
   };
-  drawEye(pair.left, placement.x - gap / 2); drawEye(pair.right, placement.x + gap / 2);
+  drawEye(pair.left, -1, variation.left); drawEye(pair.right, 1, variation.right);
   void state;
 }
 
