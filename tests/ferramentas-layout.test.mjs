@@ -62,6 +62,10 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(tool, /Enviar manpu/);
   assert.match(tool, /effectPieces/);
   assert.match(tool, /effectChromaSettings/);
+  assert.match(tool, /Área 2 · Efeitos permanentes/);
+  assert.match(tool, /updateEffectEnabled/);
+  assert.match(tool, /enabledEffects/);
+  assert.match(server, /enabledEffects/);
   assert.match(tool, /mouthPieces\[expressionIndex\]/);
   assert.match(tool, /mouthPieces\[presetIndex\] \?\? mouthPieces\[0\]/);
   assert.match(tool, /updateChroma\("eyes"/);
@@ -94,6 +98,7 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /BrowPresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
+  assert.match(mold, /enabledEffects/);
   assert.match(tool, /variation\.left/);
   assert.match(tool, /variation\.right/);
   assert.match(tool, /eyebrowVariation/);

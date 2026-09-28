@@ -548,7 +548,8 @@ function normalizeFabricatorPresets(value) {
     const eyebrows = normalizeFabricatorVariation(preset.eyebrows);
     const mouth = normalizeFabricatorTransform(preset.mouth);
     const effects = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, normalizeFabricatorTransform(preset.effects?.[effect]) ?? { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }]));
-    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects };
+    const enabledEffects = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, preset.enabledEffects?.[effect] !== false]));
+    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects };
   }
   return result;
 }

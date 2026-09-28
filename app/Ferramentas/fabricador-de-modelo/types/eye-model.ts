@@ -33,6 +33,7 @@ export type FacePreset = {
   eyebrows: EyeExpressionVariation;
   mouth: EyeTransform;
   effects: Record<FaceEffectKind, EyeTransform>;
+  enabledEffects: Record<FaceEffectKind, boolean>;
 };
 
 export type FacePresetCollection = Record<string, FacePreset>;
