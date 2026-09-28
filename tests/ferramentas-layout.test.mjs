@@ -71,6 +71,9 @@ test("Fabricador de Modelo beta está disponível no catálogo", async () => {
   assert.match(expressions, /BROW_VARIATIONS/);
   assert.match(expressions, /variation\(\{ scaleY: 1\.16 \}\)/);
   assert.match(expressions, /variation\(\{ scaleY: 1\.22 \}\)/);
+  assert.equal((expressions.match(/^\s+variation\(/gm) ?? []).length, 42, "As duas tabelas precisam ter 21 presets");
+  assert.doesNotMatch(expressions, /variation\(\{[^}]*\b(?:scaleX|x|y)\s*:/, "Presets não podem alterar largura ou posição");
+  assert.match(expressions, /PresetTransform = Pick<EyeTransform, "scaleY" \| "rotation">/);
   assert.doesNotMatch(expressions, /pt_/);
   assert.match(mold, /EyeTransform/);
   assert.match(tool, /variation\.left/);
