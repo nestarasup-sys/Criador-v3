@@ -14,6 +14,7 @@ test("faz preflight seguro antes de iniciar o desenvolvimento", async () => {
   assert.match(launcher, /\(production-server\|local-data-server\)\\\.mjs/i);
   assert.match(launcher, /Invoke-RestMethod.*6800\/health/i);
   assert.match(launcher, /DirectorySeparatorChar/);
+  assert.match(launcher, /dados-locais-premium/);
   assert.match(launcher, /Start-Sleep -Milliseconds 350/i);
   assert.match(launcher, /Porta .* ocupada/i);
   assert.match(launcher, /pause/i);
