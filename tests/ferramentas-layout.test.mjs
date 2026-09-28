@@ -57,6 +57,9 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(compositor, /globalAlpha/);
   assert.match(compositor, /createLinearGradient/);
   assert.match(compositor, /255, 144, 174/);
+  assert.match(compositor, /transform\.x/);
+  assert.match(compositor, /transform\.scaleX/);
+  assert.match(compositor, /placement\.rotation \+ transform\.rotation/);
   assert.match(compositor, /export async function toCatalogFrame/);
 
   assert.match(storage, /PRESETS_DIRTY_KEY/);

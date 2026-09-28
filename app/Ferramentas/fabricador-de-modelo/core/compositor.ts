@@ -86,9 +86,11 @@ export function drawComposition(
       if (kind === "blush") {
         const softness = Math.min(1, Math.max(.01, settings.softness));
         layerContext.save();
-        layerContext.translate(effectPlacements[kind].x, effectPlacements[kind].y);
-        layerContext.rotate(effectPlacements[kind].rotation * Math.PI / 180);
-        layerContext.scale(settings.gradientWidth * effectPlacements[kind].scale * effectPlacements[kind].scaleX / 2, settings.gradientHeight * effectPlacements[kind].scale * effectPlacements[kind].scaleY / 2);
+        const placement = effectPlacements[kind];
+        const transform = effectVariations[kind];
+        layerContext.translate(placement.x + transform.x, placement.y + transform.y);
+        layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
+        layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
         const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
         gradient.addColorStop(0, `rgba(${color}, .54)`);
         gradient.addColorStop(Math.max(.01, 1 - softness), `rgba(${color}, .30)`);
