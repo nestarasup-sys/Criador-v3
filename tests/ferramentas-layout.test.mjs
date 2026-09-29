@@ -69,6 +69,8 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(processing, /return \{ open: mergePair\(openLeft, openRight\), pt: mergePair\(ptLeft, ptRight\), closed:/);
   assert.match(processing, /function preserveWhiteEyeInteriors/);
   assert.match(processing, /isWhiteBackground/);
+  assert.match(processing, /const interiorThreshold = Math\.max\(92/);
+  assert.match(processing, /upper and lower/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
   assert.match(config, /DEFAULT_EFFECT_SETTINGS/);

@@ -141,28 +141,34 @@ function preserveWhiteEyeInteriors(source: ImageData, output: ImageData, structu
   const target = edgeColor(source.data, source.width, source.height);
   const isWhiteBackground = Math.min(...target) >= 180 && Math.max(...target) - Math.min(...target) < 36;
   if (!isWhiteBackground) return;
-  const threshold = clamp(settings.tolerance, 2, 140) + clamp(settings.softness, 0, 100) + 8;
-  const foregroundBounds = (row: { top: number; bottom: number }, x0: number, x1: number) => {
-    let left = x1; let top = row.bottom; let right = x0; let bottom = row.top;
-    for (let y = row.top; y < row.bottom; y += 1) for (let x = x0; x < x1; x += 1) {
-      const p = (y * source.width + x) * 4;
-      if (source.data[p + 3] < 24) continue;
-      const d = distance(source.data[p], source.data[p + 1], source.data[p + 2], target);
-      if (d <= threshold) continue;
-      left = Math.min(left, x); right = Math.max(right, x + 1); top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
-    }
-    return right > left ? { left, top, right, bottom } : null;
+  const foregroundThreshold = clamp(settings.tolerance, 2, 140) + clamp(settings.softness, 0, 100) + 8;
+  // A generated eye sheet often has a warm white background and a pink/gray
+  // sclera. Restore only bright neutral pixels between the upper and lower
+  // ink limits of each column; never restore the whole rectangular crop.
+  const interiorThreshold = Math.max(92, foregroundThreshold + 24);
+  const isLightInterior = (p: number) => {
+    const r = source.data[p]; const g = source.data[p + 1]; const b = source.data[p + 2];
+    return Math.min(r, g, b) >= 145 && Math.max(r, g, b) - Math.min(r, g, b) < 72
+      && distance(r, g, b, target) <= interiorThreshold;
   };
   for (const row of rows) {
     const split = splitColumn(structural, row);
     for (const [x0, x1] of [[0, split], [split, source.width]]) {
-      const box = foregroundBounds(row, x0, x1);
-      if (!box) continue;
-      for (let y = box.top; y < box.bottom; y += 1) for (let x = box.left; x < box.right; x += 1) {
-        const p = (y * source.width + x) * 4;
-        if (source.data[p + 3] < 24) continue;
-        const d = distance(source.data[p], source.data[p + 1], source.data[p + 2], target);
-        if (d <= threshold) output.data[p + 3] = source.data[p + 3];
+      for (let x = x0; x < x1; x += 1) {
+        let top = row.bottom; let bottom = row.top;
+        for (let y = row.top; y < row.bottom; y += 1) {
+          const p = (y * source.width + x) * 4;
+          if (source.data[p + 3] < 24) continue;
+          const d = distance(source.data[p], source.data[p + 1], source.data[p + 2], target);
+          if (d > foregroundThreshold) { top = Math.min(top, y); bottom = Math.max(bottom, y + 1); }
+        }
+        if (bottom <= top) continue;
+        for (let y = top; y < bottom; y += 1) {
+          const p = (y * source.width + x) * 4;
+          if (source.data[p + 3] >= 24 || !isLightInterior(p)) continue;
+          output.data[p + 3] = source.data[p + 3];
+          structural.data[p + 3] = source.data[p + 3];
+        }
       }
     }
   }
@@ -187,7 +193,6 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const bottom = bounds(structural, third * 2, structural.height);
     if (top && pt && bottom) {
       preserveWhiteEyeInteriors(source, cleaned, structural, [top, pt, bottom], settings);
-      preserveWhiteEyeInteriors(source, structural, structural, [top, pt, bottom], settings);
       const [openLeft, openRight] = splitRow(structural, cleaned, top);
       const [ptLeft, ptRight] = splitRow(structural, cleaned, pt);
       const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
@@ -200,7 +205,6 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const legacyBottom = bounds(structural, half, structural.height);
     if (!legacyTop || !legacyBottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas três linhas: aberto, PT e fechado.");
     preserveWhiteEyeInteriors(source, cleaned, structural, [legacyTop, legacyBottom], settings);
-    preserveWhiteEyeInteriors(source, structural, structural, [legacyTop, legacyBottom], settings);
     const [openLeft, openRight] = splitRow(structural, cleaned, legacyTop);
     const [closedLeft, closedRight] = splitRow(structural, cleaned, legacyBottom);
     const open = mergePair(openLeft, openRight);
