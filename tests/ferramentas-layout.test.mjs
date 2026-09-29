@@ -83,6 +83,12 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(compositor, /rgbaColor\(color/);
   assert.match(compositor, /transform\.x/);
   assert.match(compositor, /transform\.scaleX/);
+  assert.match(page, /normalizeEyePairPlacement/);
+  assert.match(page, /eyePlacementSide/);
+  assert.match(page, /Cada olho tem posição/);
+  assert.match(compositor, /featurePlacement\.left/);
+  assert.match(compositor, /featurePlacement\.right/);
+  assert.match(server, /value\.left && typeof value\.left === "object"/);
   assert.match(compositor, /placement\.rotation \+ transform\.rotation/);
   assert.match(compositor, /export async function toCatalogFrame/);
 
@@ -148,7 +154,7 @@ test("exportação do Fabricador usa staging e commit atômico", async () => {
 test("Fabricador restaura posição salva e bloqueia geração durante reprocessamento", async () => {
   const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
 
-  assert.match(page, /if \(persist\) setPlacement\(\{ \.\.\.DEFAULT_PLACEMENT \}\)/);
+  assert.match(page, /if \(persist\) setEyePlacements\(cloneEditorValue\(DEFAULT_EYE_PLACEMENTS\)\)/);
   assert.match(page, /if \(persist\) setEyebrowPlacement\(\{ \.\.\.DEFAULT_BROW_PLACEMENT \}\)/);
   assert.match(page, /if \(persist\) setMouthPlacement\(\{ \.\.\.DEFAULT_MOUTH_PLACEMENT \}\)/);
   assert.match(page, /setPlacementForKind\(asset\.kind, asset\.placement \?\? defaultPlacementForKind\(asset\.kind\), true, false\)/);

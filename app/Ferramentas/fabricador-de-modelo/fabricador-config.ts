@@ -1,5 +1,5 @@
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import type { EyeExpressionVariation, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection } from "./types/eye-model";
+import type { EyeExpressionVariation, EyePairPlacement, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection } from "./types/eye-model";
 
 export const CANVAS_SIZE = 1000;
 export const CATALOG_CANVAS_WIDTH = 1920;
@@ -13,6 +13,10 @@ export const LINKED_VARIATION: EyeExpressionVariation = {
 };
 
 export const DEFAULT_PLACEMENT: EyePlacement = { x: 500, y: 418, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
+export const DEFAULT_EYE_PLACEMENTS: EyePairPlacement = {
+  left: { ...DEFAULT_PLACEMENT, x: DEFAULT_PLACEMENT.x - DEFAULT_PLACEMENT.gap / 2, gap: 0 },
+  right: { ...DEFAULT_PLACEMENT, x: DEFAULT_PLACEMENT.x + DEFAULT_PLACEMENT.gap / 2, gap: 0 },
+};
 export const DEFAULT_BROW_PLACEMENT: EyePlacement = { x: 500, y: 350, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 491 };
 export const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 };
 export const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };

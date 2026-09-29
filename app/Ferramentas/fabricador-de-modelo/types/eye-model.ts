@@ -62,6 +62,14 @@ export type EyePlacement = {
   gap: number;
 };
 
+/** Posição base independente de cada olho; os presets continuam compartilhando a mesma variação por expressão. */
+export type EyePairPlacement = {
+  left: EyePlacement;
+  right: EyePlacement;
+};
+
+export type AssetPlacement = EyePlacement | EyePairPlacement;
+
 export type EyeExpression = {
   key: string;
   label: string;

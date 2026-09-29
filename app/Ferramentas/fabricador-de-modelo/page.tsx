@@ -14,6 +14,7 @@ import {
   DEFAULT_EFFECT_PLACEMENTS,
   DEFAULT_EFFECT_SETTINGS,
   DEFAULT_MOUTH_PLACEMENT,
+  DEFAULT_EYE_PLACEMENTS,
   DEFAULT_PLACEMENT,
   EFFECT_KINDS,
   TEMPLATE_SCALE_X_LIMITS,
@@ -35,21 +36,38 @@ import {
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
-import type { EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, MouthPiece } from "./types/eye-model";
+import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
 type WorkspaceSection = "assets" | "adjust" | "expressions" | "export";
 type LibraryFilter = "all" | FabricatorAssetKind;
-type DragLayer = "eyes" | "eyebrows" | "mouths" | FaceEffectKind;
+type DragLayer = "eyes-left" | "eyes-right" | "eyebrows" | "mouths" | FaceEffectKind;
 type GeneratedOutputs = { base: string[]; pt: string[]; talk: string[]; blink: string[] };
 type GeneratedVariant = keyof GeneratedOutputs;
 const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [] };
 const NORMAL_PRESET_INDEX = EYE_EXPRESSIONS.findIndex(([key]) => key === "normal");
 
+function isEyePairPlacement(value: AssetPlacement | undefined): value is EyePairPlacement {
+  return Boolean(value && "left" in value && "right" in value);
+}
+
+function normalizeEyePairPlacement(value: AssetPlacement | undefined): EyePairPlacement {
+  if (isEyePairPlacement(value)) return {
+    left: { ...DEFAULT_EYE_PLACEMENTS.left, ...value.left, gap: 0 },
+    right: { ...DEFAULT_EYE_PLACEMENTS.right, ...value.right, gap: 0 },
+  };
+  const legacy = value ?? DEFAULT_PLACEMENT;
+  const gap = Number.isFinite(legacy.gap) ? legacy.gap : DEFAULT_PLACEMENT.gap;
+  return {
+    left: { ...legacy, x: legacy.x - gap / 2, gap: 0 },
+    right: { ...legacy, x: legacy.x + gap / 2, gap: 0 },
+  };
+}
+
 type EditorSnapshot = {
   presets: FacePreset[];
-  placement: EyePlacement;
+  eyePlacements: EyePairPlacement;
   eyebrowPlacement: EyePlacement;
   mouthPlacement: EyePlacement;
   effectPlacements: Record<FaceEffectKind, EyePlacement>;
@@ -93,7 +111,7 @@ export default function FabricadorDeModeloPage() {
   const uploadSequenceRef = useRef<Partial<Record<FabricatorAssetKind, number>>>({});
   const pendingPersistRef = useRef<Partial<Record<FabricatorAssetKind, { file: File; sequence: number }>>>({});
   const latestChromaRef = useRef<Partial<Record<FabricatorAssetKind, ChromaSettings>>>({});
-  const latestPlacementRef = useRef<Partial<Record<FabricatorAssetKind, EyePlacement>>>({});
+  const latestPlacementRef = useRef<Partial<Record<FabricatorAssetKind, AssetPlacement>>>({});
   const libraryUseSequenceRef = useRef(0);
   const effectAssignSequenceRef = useRef<Partial<Record<FaceEffectKind, number>>>({});
   const generationLockRef = useRef(false);
@@ -134,7 +152,8 @@ export default function FabricadorDeModeloPage() {
     Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_CHROMA_SETTINGS }])) as Record<FaceEffectKind, ChromaSettings>
   );
 
-  const [placement, setPlacement] = useState<EyePlacement>(DEFAULT_PLACEMENT);
+  const [eyePlacements, setEyePlacements] = useState<EyePairPlacement>(() => cloneEditorValue(DEFAULT_EYE_PLACEMENTS));
+  const [eyePlacementSide, setEyePlacementSide] = useState<"left" | "right">("left");
   const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
   const [mouthPlacement, setMouthPlacement] = useState<EyePlacement>(DEFAULT_MOUTH_PLACEMENT);
   const [effectPlacements, setEffectPlacements] = useState<Record<FaceEffectKind, EyePlacement>>(() => ({
@@ -184,7 +203,7 @@ export default function FabricadorDeModeloPage() {
   const pushEditorHistory = () => {
     editorHistoryRef.current = [
       ...editorHistoryRef.current,
-      cloneEditorValue({ presets, placement, eyebrowPlacement, mouthPlacement, effectPlacements, eyeChromaSettings, eyebrowChromaSettings, mouthChromaSettings, mouthTalkChromaSettings, effectChromaSettings }),
+      cloneEditorValue({ presets, eyePlacements, eyebrowPlacement, mouthPlacement, effectPlacements, eyeChromaSettings, eyebrowChromaSettings, mouthChromaSettings, mouthTalkChromaSettings, effectChromaSettings }),
     ].slice(-50);
     setCanUndo(true);
   };
@@ -193,7 +212,7 @@ export default function FabricadorDeModeloPage() {
     const previous = editorHistoryRef.current.pop();
     if (!previous) return;
     setPresets(previous.presets);
-    setPlacement(previous.placement);
+    setEyePlacements(previous.eyePlacements);
     setEyebrowPlacement(previous.eyebrowPlacement);
     setMouthPlacement(previous.mouthPlacement);
     setEffectPlacements(previous.effectPlacements);
@@ -221,7 +240,7 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => {
     latestPlacementRef.current = {
-      eyes: placement,
+      eyes: eyePlacements,
       eyebrows: eyebrowPlacement,
       mouths: mouthPlacement,
       "mouths-talk": mouthPlacement,
@@ -229,7 +248,7 @@ export default function FabricadorDeModeloPage() {
       shadow: effectPlacements.shadow,
       manpu: effectPlacements.manpu,
     };
-  }, [placement, eyebrowPlacement, mouthPlacement, effectPlacements]);
+  }, [eyePlacements, eyebrowPlacement, mouthPlacement, effectPlacements]);
 
   useEffect(() => () => {
     for (const timer of Object.values(placementSaveTimers.current)) if (timer) clearTimeout(timer);
@@ -320,26 +339,26 @@ export default function FabricadorDeModeloPage() {
           : activeEffectAssetIds[kind],
   [activeEyeAssetId, activeEyebrowAssetId, activeMouthAssetId, activeMouthTalkAssetId, activeEffectAssetIds]);
 
-  const placementForKind = useCallback((kind: FabricatorAssetKind) =>
-    kind === "eyes" ? placement
+  const placementForKind = useCallback((kind: FabricatorAssetKind): AssetPlacement =>
+    kind === "eyes" ? eyePlacements
       : kind === "eyebrows" ? eyebrowPlacement
         : kind === "mouths" || kind === "mouths-talk" ? mouthPlacement
           : effectPlacements[kind],
-  [placement, eyebrowPlacement, mouthPlacement, effectPlacements]);
+  [eyePlacements, eyebrowPlacement, mouthPlacement, effectPlacements]);
 
-  const defaultPlacementForKind = (kind: FabricatorAssetKind) =>
-    kind === "eyes" ? DEFAULT_PLACEMENT
+  const defaultPlacementForKind = (kind: FabricatorAssetKind): AssetPlacement =>
+    kind === "eyes" ? DEFAULT_EYE_PLACEMENTS
       : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT
         : kind === "mouths" || kind === "mouths-talk" ? DEFAULT_MOUTH_PLACEMENT
           : DEFAULT_EFFECT_PLACEMENTS[kind];
 
-  const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement, invalidateGenerated = true, trackHistory = true) => {
+  const setPlacementForKind = (kind: FabricatorAssetKind, next: AssetPlacement, invalidateGenerated = true, trackHistory = true) => {
     if (trackHistory) pushEditorHistory();
     if (invalidateGenerated) clearGenerated();
-    if (kind === "eyes") setPlacement(next);
-    else if (kind === "eyebrows") setEyebrowPlacement(next);
-    else if (kind === "mouths" || kind === "mouths-talk") setMouthPlacement(next);
-    else setEffectPlacements((current) => ({ ...current, [kind]: next }));
+    if (kind === "eyes") setEyePlacements(normalizeEyePairPlacement(next));
+    else if (kind === "eyebrows") setEyebrowPlacement(next as EyePlacement);
+    else if (kind === "mouths" || kind === "mouths-talk") setMouthPlacement(next as EyePlacement);
+    else setEffectPlacements((current) => ({ ...current, [kind]: next as EyePlacement }));
   };
 
   const chromaForKind = (kind: FabricatorAssetKind) =>
@@ -439,7 +458,7 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
     markLayerProcessing("eyes", true);
     setSourceFile(file);
-    if (persist) setPlacement({ ...DEFAULT_PLACEMENT });
+    if (persist) setEyePlacements(cloneEditorValue(DEFAULT_EYE_PLACEMENTS));
     setStatus("Separando olhos abertos, PT e fechados…");
     if (persist) { setActiveEyeAssetId(null); queuePersistenceAfterProcessing(file, "eyes"); }
   };
@@ -704,7 +723,7 @@ export default function FabricadorDeModeloPage() {
       context,
       template,
       loaded,
-      placement,
+      eyePlacements,
       state,
       previewPreset.eyes,
       eyebrowsLoaded,
@@ -721,11 +740,11 @@ export default function FabricadorDeModeloPage() {
       previewPreset.effectSettings,
       previewPreset.templateScaleX,
     );
-  }, [template, loaded, placement, state, previewPreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
+  }, [template, loaded, eyePlacements, state, previewPreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
-  const persistPlacement = useCallback((kind: FabricatorAssetKind, next: EyePlacement) => {
+  const persistPlacement = useCallback((kind: FabricatorAssetKind, next: AssetPlacement) => {
     const timer = placementSaveTimers.current[kind];
     if (timer) {
       clearTimeout(timer);
@@ -741,7 +760,7 @@ export default function FabricadorDeModeloPage() {
     }, 350);
   }, [activeAssetIdForKind]);
 
-  useEffect(() => { persistPlacement("eyes", placement); }, [placement, persistPlacement]);
+  useEffect(() => { persistPlacement("eyes", eyePlacements); }, [eyePlacements, persistPlacement]);
   useEffect(() => { persistPlacement("eyebrows", eyebrowPlacement); }, [eyebrowPlacement, persistPlacement]);
   useEffect(() => { persistPlacement("mouths", mouthPlacement); }, [mouthPlacement, persistPlacement]);
   useEffect(() => { persistPlacement("mouths-talk", mouthPlacement); }, [mouthPlacement, persistPlacement]);
@@ -882,7 +901,7 @@ export default function FabricadorDeModeloPage() {
         setPair(null);
         setLoaded(null);
         setActiveEyeAssetId(null);
-        setPlacement({ ...DEFAULT_PLACEMENT });
+        setEyePlacements(cloneEditorValue(DEFAULT_EYE_PLACEMENTS));
       } else if (asset.kind === "eyebrows" && wasActive) {
         markLayerProcessing("eyebrows", false);
         setEyebrowFile(null);
@@ -954,7 +973,9 @@ export default function FabricadorDeModeloPage() {
   const copyPlacementFromAsset = (source: FabricatorAsset) => {
     const targetId = activeAssetIdForKind(source.kind);
     if (!targetId || targetId === source.id) return;
-    const next = source.placement ?? defaultPlacementForKind(source.kind);
+    const next = source.kind === "eyes"
+      ? normalizeEyePairPlacement(source.placement)
+      : source.placement ?? defaultPlacementForKind(source.kind);
     setPlacementForKind(source.kind, next);
     void updateFabricatorAsset(targetId, { placement: next });
     setLibraryAssets((current) => current.map((asset) => asset.id === targetId ? { ...asset, placement: next } : asset));
@@ -1003,7 +1024,19 @@ export default function FabricadorDeModeloPage() {
       && point.y >= itemPlacement.y - height / 2 && point.y <= itemPlacement.y + height / 2;
   };
 
-  const insidePair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePlacement) => {
+  const insidePair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePairPlacement): "left" | "right" | null => {
+    for (const side of ["left", "right"] as const) {
+      const image = images[side];
+      const placement = itemPlacement[side];
+      const width = image.naturalWidth * placement.scale * placement.scaleX;
+      const height = image.naturalHeight * placement.scale * placement.scaleY;
+      if (point.x >= placement.x - width / 2 - 20 && point.x <= placement.x + width / 2 + 20
+        && point.y >= placement.y - height / 2 - 20 && point.y <= placement.y + height / 2 + 20) return side;
+    }
+    return null;
+  };
+
+  const insideLegacyPair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePlacement) => {
     const halfGap = itemPlacement.gap * itemPlacement.scale / 2;
     return ([-1, 1] as const).some((side) => {
       const image = side === -1 ? images.left : images.right;
@@ -1020,9 +1053,12 @@ export default function FabricadorDeModeloPage() {
     let target: DragLayer | null = null;
     // Hit-test na ordem inversa do desenho: olhos ficam por cima da boca,
     // boca por cima das sobrancelhas e efeitos ficam ao fundo.
-    if (loaded && insidePair(point, loaded, placement)) target = "eyes";
+    if (loaded) {
+      const eyeSide = insidePair(point, loaded, eyePlacements);
+      if (eyeSide) target = eyeSide === "left" ? "eyes-left" : "eyes-right";
+    }
     if (!target && mouthLoaded && insideSingle(point, mouthLoaded, mouthPlacement)) target = "mouths";
-    if (!target && eyebrowsLoaded && insidePair(point, eyebrowsLoaded, eyebrowPlacement)) target = "eyebrows";
+    if (!target && eyebrowsLoaded && insideLegacyPair(point, eyebrowsLoaded, eyebrowPlacement)) target = "eyebrows";
     if (!target) {
       for (const kind of [...EFFECT_KINDS].reverse()) {
         const image = effectLoaded[kind];
@@ -1039,13 +1075,19 @@ export default function FabricadorDeModeloPage() {
     pushEditorHistory();
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(target);
-    setActiveLayer(target);
+    setActiveLayer(target === "eyes-left" || target === "eyes-right" ? "eyes" : target);
   };
 
   const drag = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!dragging) return;
     const point = pointerPosition(event);
-    const next = { ...placementForKind(dragging), x: point.x, y: point.y };
+    if (dragging === "eyes-left" || dragging === "eyes-right") {
+      const side = dragging === "eyes-left" ? "left" : "right";
+      setEyePlacements((current) => ({ ...current, [side]: { ...current[side], x: point.x, y: point.y } }));
+      clearGenerated();
+      return;
+    }
+    const next = { ...placementForKind(dragging), x: point.x, y: point.y } as EyePlacement;
     setPlacementForKind(dragging, next, true, false);
   };
 
@@ -1280,7 +1322,7 @@ export default function FabricadorDeModeloPage() {
     canvas.height = CANVAS_SIZE;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas indisponível.");
-    drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.templateScaleX);
+    drawComposition(context, template, images, eyePlacements, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.templateScaleX);
     return canvas.toDataURL("image/png");
   };
 
@@ -1540,13 +1582,27 @@ export default function FabricadorDeModeloPage() {
               />
             </PanelBlock>
             <PanelBlock title={`Posição · ${KIND_LABEL[activeLayer]}`} description="Você também pode arrastar a camada diretamente no preview.">
-              <PlacementControls
-                placement={activeLayerPlacement}
-                 single={activeLayer === "mouths" || activeLayer === "mouths-talk" || EFFECT_KINDS.includes(activeLayer as FaceEffectKind)}
+              {activeLayer === "eyes" ? <>
+                <div className={styles.segmented}>
+                  {(["left", "right"] as const).map((side) => <button key={side} className={eyePlacementSide === side ? styles.tabActive : ""} onClick={() => setEyePlacementSide(side)}>
+                    Olho {side === "left" ? "esquerdo" : "direito"}
+                  </button>)}
+                </div>
+                <p className={styles.helperText}>Cada olho tem posição, tamanho e rotação próprios. Os presets continuam compartilhados.</p>
+                <PlacementControls
+                  placement={eyePlacements[eyePlacementSide]}
+                  single
+                  disabled={!activeLayerReady}
+                  onChange={(key, value) => setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...eyePlacements[eyePlacementSide], [key]: value } })}
+                  onReset={() => setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...DEFAULT_EYE_PLACEMENTS[eyePlacementSide] } })}
+                />
+              </> : <PlacementControls
+                placement={activeLayerPlacement as EyePlacement}
+                single={activeLayer === "mouths" || activeLayer === "mouths-talk" || EFFECT_KINDS.includes(activeLayer as FaceEffectKind)}
                 disabled={!activeLayerReady}
-                onChange={(key, value) => setPlacementForKind(activeLayer, { ...activeLayerPlacement, [key]: value })}
-                onReset={() => setPlacementForKind(activeLayer, { ...defaultPlacementForKind(activeLayer) })}
-              />
+                onChange={(key, value) => setPlacementForKind(activeLayer, { ...(activeLayerPlacement as EyePlacement), [key]: value })}
+                onReset={() => setPlacementForKind(activeLayer, defaultPlacementForKind(activeLayer))}
+              />}
               {activeLayer !== "eyes" && activeLayerReady && <button className={styles.dangerGhostButton} type="button" onClick={() => clearLayerFromComposition(activeLayer)}>Remover da montagem</button>}
             </PanelBlock>
             {(activeLayer === "mouths" || activeLayer === "mouths-talk") && mouthTalkPieces.length === EYE_EXPRESSIONS.length && <div className={styles.inlineActions}>
@@ -1646,7 +1702,7 @@ export default function FabricadorDeModeloPage() {
             <div><span>PREVIEW</span><h2>{EYE_EXPRESSIONS[previewIndex][1]}</h2></div>
             <div className={styles.previewMeta}>
               <span>{state === "open" ? "Olhos abertos" : state === "pt" ? "Olhos PT" : "Olhos fechados"}</span>
-              <span>{dragging ? `Movendo ${KIND_LABEL[dragging]}` : "Arraste uma camada para reposicionar"}</span>
+              <span>{dragging ? `Movendo ${dragging === "eyes-left" ? "olho esquerdo" : dragging === "eyes-right" ? "olho direito" : KIND_LABEL[dragging]}` : "Arraste uma camada para reposicionar"}</span>
             </div>
           </header>
           <div className={styles.canvasStage}>

@@ -1,6 +1,6 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
-import type { EyePlacement, FaceEffectKind, FacePresetCollection } from "./types/eye-model";
+import type { AssetPlacement, FaceEffectKind, FacePresetCollection } from "./types/eye-model";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths" | "mouths-talk" | FaceEffectKind;
 
@@ -12,7 +12,7 @@ export type FabricatorAsset = {
   fileUrl: string;
   createdAt: string;
   chroma?: ChromaSettings;
-  placement?: EyePlacement;
+  placement?: AssetPlacement;
   localOnly?: boolean;
   pendingSync?: boolean;
   volatileOnly?: boolean;
@@ -195,7 +195,7 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
   }
 }
 
-export async function updateFabricatorAsset(assetId: string, updates: { chroma?: ChromaSettings; placement?: EyePlacement }) {
+export async function updateFabricatorAsset(assetId: string, updates: { chroma?: ChromaSettings; placement?: AssetPlacement }) {
   if (volatileAssetIds.has(assetId)) {
     return { ...updates, pcSaved: false, localSaved: false, volatileOnly: true };
   }

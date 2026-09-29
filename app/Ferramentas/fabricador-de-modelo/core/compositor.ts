@@ -1,6 +1,6 @@
 import { loadImage, splitPair } from "./eye-processing";
 import type { FabricatorAsset } from "../fabricador-storage";
-import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
+import type { EyeExpressionVariation, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
 import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
 function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElement, templateScaleX: number) {
@@ -46,7 +46,7 @@ export function drawComposition(
   context: CanvasRenderingContext2D,
   template: HTMLImageElement,
   pair: LoadedPair | null,
-  placement: EyePlacement,
+  placement: EyePairPlacement,
   state: EyeState,
   variation: EyeExpressionVariation = LINKED_VARIATION,
   eyebrows: LoadedPair | null = null,
@@ -83,7 +83,12 @@ export function drawComposition(
     context.restore();
   };
 
-  const drawPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
+  const drawPair = (feature: LoadedPair, featurePlacement: EyePairPlacement, featureVariation: EyeExpressionVariation) => {
+    drawFeature(feature.left, featurePlacement.left, 0, featureVariation.left);
+    drawFeature(feature.right, featurePlacement.right, 0, featureVariation.right);
+  };
+
+  const drawSharedPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {
     drawFeature(feature.left, featurePlacement, -1, featureVariation.left);
     drawFeature(feature.right, featurePlacement, 1, featureVariation.right);
   };
@@ -155,7 +160,7 @@ export function drawComposition(
   for (const kind of EFFECT_KINDS) {
     drawEffect(kind);
   }
-  if (eyebrows) drawPair(eyebrows, eyebrowPlacement, eyebrowVariation);
+  if (eyebrows) drawSharedPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);
   if (pair) drawPair(pair, placement, variation);
   void state;

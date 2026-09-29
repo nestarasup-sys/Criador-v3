@@ -509,15 +509,19 @@ function normalizeFabricatorPlacement(value) {
     const parsed = Number(candidate);
     return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
   };
-  return {
-    x: number(value.x, 500, 0, 1000),
-    y: number(value.y, 500, 0, 1000),
-    scale: number(value.scale, 1, .35, 12),
-    scaleX: number(value.scaleX, 1, .5, 6.8),
-    scaleY: number(value.scaleY, 1, .5, 6.8),
-    rotation: number(value.rotation, 0, -80, 80),
-    gap: number(value.gap, 0, 0, 1040),
-  };
+  const normalizeSingle = (placement) => ({
+    x: number(placement?.x, 500, 0, 1000),
+    y: number(placement?.y, 500, 0, 1000),
+    scale: number(placement?.scale, 1, .35, 12),
+    scaleX: number(placement?.scaleX, 1, .5, 6.8),
+    scaleY: number(placement?.scaleY, 1, .5, 6.8),
+    rotation: number(placement?.rotation, 0, -80, 80),
+    gap: number(placement?.gap, 0, 0, 1040),
+  });
+  if (value.left && typeof value.left === "object" && value.right && typeof value.right === "object") {
+    return { left: { ...normalizeSingle(value.left), gap: 0 }, right: { ...normalizeSingle(value.right), gap: 0 } };
+  }
+  return normalizeSingle(value);
 }
 
 function normalizeFabricatorTransform(value) {
