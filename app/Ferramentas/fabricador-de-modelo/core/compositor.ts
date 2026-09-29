@@ -23,16 +23,16 @@ function rgbaColor(hex: string, alpha: number) {
   return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
 }
 
-export type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
+export type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement; leftAnchorY?: number; rightAnchorY?: number };
 
 export function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
   const [left, right] = splitPair(pair[state]);
-  return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
+  return Promise.all([loadImage(left.dataUrl), loadImage(right.dataUrl)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage, leftAnchorY: left.anchorY ?? 0, rightAnchorY: right.anchorY ?? 0 }));
 }
 
 export function imageFromPiece(piece: EyePiece): Promise<LoadedPair> {
   const [left, right] = splitPair(piece);
-  return Promise.all([loadImage(left), loadImage(right)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage }));
+  return Promise.all([loadImage(left.dataUrl), loadImage(right.dataUrl)]).then(([leftImage, rightImage]) => ({ left: leftImage, right: rightImage, leftAnchorY: left.anchorY ?? 0, rightAnchorY: right.anchorY ?? 0 }));
 }
 
 export async function assetToFile(asset: FabricatorAsset) {
@@ -67,7 +67,7 @@ export function drawComposition(
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
   drawTemplate(context, template, compositionScaleX);
 
-  const drawFeature = (image: HTMLImageElement, featurePlacement: EyePlacement, side: -1 | 0 | 1, transform: EyeTransform) => {
+  const drawFeature = (image: HTMLImageElement, featurePlacement: EyePlacement, side: -1 | 0 | 1, transform: EyeTransform, anchorY = 0) => {
     const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX * compositionScaleX;
     const height = image.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
     const angle = (featurePlacement.rotation + transform.rotation) * Math.PI / 180;
@@ -76,7 +76,7 @@ export function drawComposition(
       compressX(featurePlacement.x, compositionScaleX)
         + side * featurePlacement.gap * featurePlacement.scale * compositionScaleX / 2
         + transform.x * compositionScaleX,
-      featurePlacement.y + transform.y,
+      featurePlacement.y + transform.y + anchorY * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY,
     );
     context.rotate(angle);
     context.drawImage(image, -width / 2, -height / 2, width, height);
@@ -84,8 +84,8 @@ export function drawComposition(
   };
 
   const drawPair = (feature: LoadedPair, featurePlacement: EyePairPlacement, featureVariation: EyeExpressionVariation) => {
-    drawFeature(feature.left, featurePlacement.left, 0, featureVariation.left);
-    drawFeature(feature.right, featurePlacement.right, 0, featureVariation.right);
+    drawFeature(feature.left, featurePlacement.left, 0, featureVariation.left, feature.leftAnchorY);
+    drawFeature(feature.right, featurePlacement.right, 0, featureVariation.right, feature.rightAnchorY);
   };
 
   const drawSharedPair = (feature: LoadedPair, featurePlacement: EyePlacement, featureVariation: EyeExpressionVariation) => {

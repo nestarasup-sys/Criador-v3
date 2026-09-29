@@ -7,6 +7,8 @@ export type EyePiece = {
   dataUrl: string;
   width: number;
   height: number;
+  /** Correção de registro vertical em relação ao centro do par recortado. */
+  anchorY?: number;
 };
 
 export type MouthPiece = EyePiece;
