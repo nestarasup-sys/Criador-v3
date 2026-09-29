@@ -982,6 +982,28 @@ export default function FabricadorDeModeloPage() {
     setStatus(`Posição copiada de ${source.name}.`);
   };
 
+  const resetLibraryAsset = async (asset: FabricatorAsset) => {
+    const placement = asset.kind === "eyes"
+      ? cloneEditorValue(DEFAULT_EYE_PLACEMENTS)
+      : cloneEditorValue(defaultPlacementForKind(asset.kind) as EyePlacement);
+    const chroma = { ...DEFAULT_CHROMA_SETTINGS };
+    const isActive = activeAssetIdForKind(asset.kind) === asset.id;
+    try {
+      clearGenerated();
+      if (isActive) {
+        pushEditorHistory();
+        setChromaForKind(asset.kind, chroma);
+        setPlacementForKind(asset.kind, placement, false, false);
+        if (hasSourceForKind(asset.kind)) markLayerProcessing(asset.kind, true);
+      }
+      await updateFabricatorAsset(asset.id, { placement, chroma });
+      setLibraryAssets((current) => current.map((entry) => entry.id === asset.id ? { ...entry, placement, chroma } : entry));
+      setStatus(`${asset.name} voltou aos controles padrão.`);
+    } catch {
+      setStatus("Não foi possível restaurar os controles desse asset.");
+    }
+  };
+
   const visibleLibraryAssets = useMemo(() => libraryAssets.filter((asset) => {
     const query = libraryQuery.trim().toLocaleLowerCase();
     return (libraryFilter === "all" || asset.kind === libraryFilter)
@@ -1748,6 +1770,7 @@ export default function FabricadorDeModeloPage() {
                 <div className={styles.cardActions}>
                   <button onClick={() => void applyLibraryAsset(asset)}>Usar</button>
                   <button onClick={() => copyPlacementFromAsset(asset)} disabled={!activeAssetIdForKind(asset.kind) || activeAssetIdForKind(asset.kind) === asset.id}>Posição</button>
+                  <button className={styles.resetButton} onClick={() => void resetLibraryAsset(asset)} title="Restaurar posição e chroma padrão">Resetar</button>
                   <button className={styles.deleteButton} onClick={() => void removeLibraryAsset(asset)} aria-label={`Excluir ${asset.name} da biblioteca`}>×</button>
                 </div>
               </div>

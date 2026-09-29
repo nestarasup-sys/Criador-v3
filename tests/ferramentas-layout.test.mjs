@@ -71,6 +71,11 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(processing, /isWhiteBackground/);
   assert.match(processing, /const interiorThreshold = Math\.max\(92/);
   assert.match(processing, /upper and lower/);
+  assert.match(processing, /Quantizar antes de contar/);
+  assert.match(processing, /data\[i \+ 3\] < 24/);
+  assert.match(processing, /\[1, 1\], \[1, -1\], \[-1, 1\], \[-1, -1\]/);
+  assert.match(page, /resetLibraryAsset/);
+  assert.match(page, /Restaurar posição e chroma padrão/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
   assert.match(config, /DEFAULT_EFFECT_SETTINGS/);

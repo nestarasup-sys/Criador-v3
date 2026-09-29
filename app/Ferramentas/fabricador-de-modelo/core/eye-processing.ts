@@ -30,16 +30,24 @@ function edgeColor(data: Uint8ClampedArray, width: number, height: number): [num
   const samples: [number, number, number][] = [];
   const add = (x: number, y: number) => {
     const i = (y * width + x) * 4;
+    if (data[i + 3] < 24) return;
     samples.push([data[i], data[i + 1], data[i + 2]]);
   };
   for (let x = 0; x < width; x += Math.max(1, Math.floor(width / 80))) { add(x, 0); add(x, height - 1); }
   for (let y = 1; y < height - 1; y += Math.max(1, Math.floor(height / 80))) { add(0, y); add(width - 1, y); }
-  const candidates = samples;
-  const green = samples.filter(([r, g, b]) => g > r * 1.25 && g > b * 1.15);
-  const neutral = samples.filter(([r, g, b]) => Math.max(r, g, b) - Math.min(r, g, b) < 22);
-  const pool = green.length >= neutral.length ? green : neutral.length ? neutral : candidates;
-  const median = (index: number) => [...pool.map((sample) => sample[index])].sort((a, b) => a - b)[Math.floor(pool.length / 2)] ?? 0;
-  return [median(0), median(1), median(2)];
+  // Quantizar antes de contar evita que pequenas variações de compressão ou
+  // antialiasing dividam o fundo em dezenas de cores quase iguais.
+  const clusters = new Map<string, { count: number; samples: [number, number, number][] }>();
+  for (const sample of samples) {
+    const key = sample.map((value) => Math.round(value / 8)).join(":");
+    const cluster = clusters.get(key) ?? { count: 0, samples: [] };
+    cluster.count += 1;
+    cluster.samples.push(sample);
+    clusters.set(key, cluster);
+  }
+  const dominant = [...clusters.values()].sort((left, right) => right.count - left.count)[0]?.samples ?? samples;
+  const average = (index: number) => Math.round(dominant.reduce((sum, sample) => sum + sample[index], 0) / Math.max(1, dominant.length));
+  return [average(0), average(1), average(2)];
 }
 
 function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): ImageData {
@@ -47,18 +55,30 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
   const target = edgeColor(data, width, height);
   const keyed = new Float32Array(width * height);
   const strength = clamp(settings.strength, 0, 100) / 100;
-  const tolerance = clamp(settings.tolerance, 2, 140);
+  const borderDistances: number[] = [];
+  for (let x = 0; x < width; x += 1) {
+    if (data[x * 4 + 3] >= 24) borderDistances.push(distance(data[x * 4], data[x * 4 + 1], data[x * 4 + 2], target));
+    const bottom = (height - 1) * width + x;
+    if (data[bottom * 4 + 3] >= 24) borderDistances.push(distance(data[bottom * 4], data[bottom * 4 + 1], data[bottom * 4 + 2], target));
+  }
+  for (let y = 1; y < height - 1; y += 1) {
+    const left = y * width * 4;
+    const right = (y * width + width - 1) * 4;
+    if (data[left + 3] >= 24) borderDistances.push(distance(data[left], data[left + 1], data[left + 2], target));
+    if (data[right + 3] >= 24) borderDistances.push(distance(data[right], data[right + 1], data[right + 2], target));
+  }
+  const sortedBorderDistances = borderDistances.sort((left, right) => left - right);
+  const borderNoise = sortedBorderDistances[Math.floor(sortedBorderDistances.length * .8)] ?? 0;
+  const tolerance = clamp(Math.max(settings.tolerance, borderNoise * 1.5), 2, 140);
   const softness = clamp(settings.softness, 0, 100);
-  const greenBackground = target[1] > target[0] * 1.2 && target[1] > target[2] * 1.1;
   for (let i = 0; i < keyed.length; i += 1) {
     const p = i * 4;
     const [r, g, b] = [data[p], data[p + 1], data[p + 2]];
     const d = distance(r, g, b, target);
-    const adaptiveTolerance = greenBackground ? tolerance + 22 : tolerance;
-    keyed[i] = d <= adaptiveTolerance
+    keyed[i] = d <= tolerance
       ? 1
-      : softness > 0 && d < adaptiveTolerance + softness
-        ? 1 - (d - adaptiveTolerance) / softness
+      : softness > 0 && d < tolerance + softness
+        ? 1 - (d - tolerance) / softness
         : 0;
   }
   const visited = new Float32Array(keyed.length);
@@ -69,7 +89,7 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
   for (let y = 1; y < height - 1; y += 1) { enqueue(y * width); enqueue(y * width + width - 1); }
   while (head < tail) {
     const i = queue[head++]; const x = i % width; const y = Math.floor(i / width);
-    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       const nx = x + dx; const ny = y + dy;
       if (nx >= 0 && nx < width && ny >= 0 && ny < height) enqueue(ny * width + nx);
     }

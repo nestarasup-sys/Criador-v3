@@ -955,6 +955,15 @@
   cursor: not-allowed;
 }
 
+.cardActions .resetButton {
+  background: #f3edf6;
+  color: #7a5a8b;
+}
+
+.cardActions .resetButton:hover:not(:disabled) {
+  background: #e8dced;
+}
+
 .cardActions .deleteButton {
   flex: 0 0 25px;
   background: #f3eaed;
