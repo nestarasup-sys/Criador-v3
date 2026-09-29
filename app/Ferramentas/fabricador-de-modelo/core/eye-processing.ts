@@ -102,7 +102,7 @@ function bounds(data: ImageData, y0: number, y1: number, x0 = 0, x1 = data.width
   return right > left ? { left, top, right, bottom } : null;
 }
 
-function splitRow(structural: ImageData, visual: ImageData, row: { top: number; bottom: number }): [EyePiece, EyePiece] {
+function splitColumn(structural: ImageData, row: { top: number; bottom: number }) {
   const columns = Array.from({ length: structural.width }, (_, x) => {
     for (let y = row.top; y < row.bottom; y += 1) if (structural.data[(y * structural.width + x) * 4 + 3] > 24) return 1;
     return 0;
@@ -115,7 +115,11 @@ function splitRow(structural: ImageData, visual: ImageData, row: { top: number; 
       runStart = -1;
     }
   }
-  const split = Math.round((bestStart + bestEnd) / 2);
+  return Math.round((bestStart + bestEnd) / 2);
+}
+
+function splitRow(structural: ImageData, visual: ImageData, row: { top: number; bottom: number }): [EyePiece, EyePiece] {
+  const split = splitColumn(structural, row);
   const makePiece = (left: number, right: number): EyePiece => {
     const box = bounds(structural, row.top, row.bottom, left, right);
     if (!box) throw new Error("A folha não contém dois elementos visíveis nessa linha.");
@@ -125,6 +129,43 @@ function splitRow(structural: ImageData, visual: ImageData, row: { top: number; 
     return { dataUrl: canvas.toDataURL("image/png"), width: image.width, height: image.height };
   };
   return [makePiece(0, split), makePiece(split, structural.width)];
+}
+
+/**
+ * Folhas de olhos brancas costumam ter a esclera aberta nas laterais: ela pode
+ * encostar no fundo branco e ser classificada como fundo conectado. Restaura
+ * somente tons próximos do fundo que estejam dentro do envelope de tinta de
+ * cada olho, preservando a parte branca interna sem devolver o fundo externo.
+ */
+function preserveWhiteEyeInteriors(source: ImageData, output: ImageData, structural: ImageData, rows: Array<{ top: number; bottom: number }>, settings: ChromaSettings) {
+  const target = edgeColor(source.data, source.width, source.height);
+  const isWhiteBackground = Math.min(...target) >= 180 && Math.max(...target) - Math.min(...target) < 36;
+  if (!isWhiteBackground) return;
+  const threshold = clamp(settings.tolerance, 2, 140) + clamp(settings.softness, 0, 100) + 8;
+  const foregroundBounds = (row: { top: number; bottom: number }, x0: number, x1: number) => {
+    let left = x1; let top = row.bottom; let right = x0; let bottom = row.top;
+    for (let y = row.top; y < row.bottom; y += 1) for (let x = x0; x < x1; x += 1) {
+      const p = (y * source.width + x) * 4;
+      if (source.data[p + 3] < 24) continue;
+      const d = distance(source.data[p], source.data[p + 1], source.data[p + 2], target);
+      if (d <= threshold) continue;
+      left = Math.min(left, x); right = Math.max(right, x + 1); top = Math.min(top, y); bottom = Math.max(bottom, y + 1);
+    }
+    return right > left ? { left, top, right, bottom } : null;
+  };
+  for (const row of rows) {
+    const split = splitColumn(structural, row);
+    for (const [x0, x1] of [[0, split], [split, source.width]]) {
+      const box = foregroundBounds(row, x0, x1);
+      if (!box) continue;
+      for (let y = box.top; y < box.bottom; y += 1) for (let x = box.left; x < box.right; x += 1) {
+        const p = (y * source.width + x) * 4;
+        if (source.data[p + 3] < 24) continue;
+        const d = distance(source.data[p], source.data[p + 1], source.data[p + 2], target);
+        if (d <= threshold) output.data[p + 3] = source.data[p + 3];
+      }
+    }
+  }
 }
 
 function mergePair(left: EyePiece, right: EyePiece): EyePiece {
@@ -145,6 +186,8 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const pt = bounds(structural, third, third * 2);
     const bottom = bounds(structural, third * 2, structural.height);
     if (top && pt && bottom) {
+      preserveWhiteEyeInteriors(source, cleaned, structural, [top, pt, bottom], settings);
+      preserveWhiteEyeInteriors(source, structural, structural, [top, pt, bottom], settings);
       const [openLeft, openRight] = splitRow(structural, cleaned, top);
       const [ptLeft, ptRight] = splitRow(structural, cleaned, pt);
       const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
@@ -156,6 +199,8 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const legacyTop = bounds(structural, 0, half);
     const legacyBottom = bounds(structural, half, structural.height);
     if (!legacyTop || !legacyBottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas três linhas: aberto, PT e fechado.");
+    preserveWhiteEyeInteriors(source, cleaned, structural, [legacyTop, legacyBottom], settings);
+    preserveWhiteEyeInteriors(source, structural, structural, [legacyTop, legacyBottom], settings);
     const [openLeft, openRight] = splitRow(structural, cleaned, legacyTop);
     const [closedLeft, closedRight] = splitRow(structural, cleaned, legacyBottom);
     const open = mergePair(openLeft, openRight);
