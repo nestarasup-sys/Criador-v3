@@ -91,6 +91,8 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /normalizeEyePairPlacement/);
   assert.match(page, /eyePlacementSide/);
   assert.match(page, /Cada olho tem posição/);
+  assert.match(page, /Juntos/);
+  assert.match(page, /Distância entre olhos/);
   assert.match(compositor, /featurePlacement\.left/);
   assert.match(compositor, /featurePlacement\.right/);
   assert.match(server, /value\.left && typeof value\.left === "object"/);

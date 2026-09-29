@@ -17,6 +17,7 @@ import {
   DEFAULT_EYE_PLACEMENTS,
   DEFAULT_PLACEMENT,
   EFFECT_KINDS,
+  PLACEMENT_LIMITS,
   TEMPLATE_SCALE_X_LIMITS,
   defaultPresetForIndex,
   mergeSavedPresets,
@@ -153,7 +154,7 @@ export default function FabricadorDeModeloPage() {
   );
 
   const [eyePlacements, setEyePlacements] = useState<EyePairPlacement>(() => cloneEditorValue(DEFAULT_EYE_PLACEMENTS));
-  const [eyePlacementSide, setEyePlacementSide] = useState<"left" | "right">("left");
+  const [eyePlacementSide, setEyePlacementSide] = useState<"both" | "left" | "right">("both");
   const [eyebrowPlacement, setEyebrowPlacement] = useState<EyePlacement>(DEFAULT_BROW_PLACEMENT);
   const [mouthPlacement, setMouthPlacement] = useState<EyePlacement>(DEFAULT_MOUTH_PLACEMENT);
   const [effectPlacements, setEffectPlacements] = useState<Record<FaceEffectKind, EyePlacement>>(() => ({
@@ -1021,6 +1022,31 @@ export default function FabricadorDeModeloPage() {
   const activeLayerPlacement = placementForKind(activeLayer);
   const processingBusy = Object.values(processingLayers).some(Boolean);
 
+  const eyeDistance = Math.abs(eyePlacements.right.x - eyePlacements.left.x);
+  const updateEyePlacementControl = (key: keyof EyePlacement, value: number) => {
+    if (eyePlacementSide !== "both") {
+      setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...eyePlacements[eyePlacementSide], [key]: value } });
+      return;
+    }
+    const left = eyePlacements.left;
+    const right = eyePlacements.right;
+    const next = key === "x"
+      ? { left: { ...left, x: left.x + value - left.x }, right: { ...right, x: right.x + value - left.x } }
+      : key === "y"
+        ? { left: { ...left, y: value }, right: { ...right, y: value } }
+        : { left: { ...left, [key]: value }, right: { ...right, [key]: value } };
+    setPlacementForKind("eyes", next);
+  };
+
+  const updateEyeDistance = (distance: number) => {
+    const center = (eyePlacements.left.x + eyePlacements.right.x) / 2;
+    setPlacementForKind("eyes", {
+      ...eyePlacements,
+      left: { ...eyePlacements.left, x: center - distance / 2 },
+      right: { ...eyePlacements.right, x: center + distance / 2 },
+    });
+  };
+
   const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     return {
@@ -1606,18 +1632,21 @@ export default function FabricadorDeModeloPage() {
             <PanelBlock title={`Posição · ${KIND_LABEL[activeLayer]}`} description="Você também pode arrastar a camada diretamente no preview.">
               {activeLayer === "eyes" ? <>
                 <div className={styles.segmented}>
-                  {(["left", "right"] as const).map((side) => <button key={side} className={eyePlacementSide === side ? styles.tabActive : ""} onClick={() => setEyePlacementSide(side)}>
-                    Olho {side === "left" ? "esquerdo" : "direito"}
+                  {(["both", "left", "right"] as const).map((side) => <button key={side} className={eyePlacementSide === side ? styles.tabActive : ""} onClick={() => setEyePlacementSide(side)}>
+                    {side === "both" ? "Juntos" : `Olho ${side === "left" ? "esquerdo" : "direito"}`}
                   </button>)}
                 </div>
-                <p className={styles.helperText}>Cada olho tem posição, tamanho e rotação próprios. Os presets continuam compartilhados.</p>
+                <p className={styles.helperText}>{eyePlacementSide === "both" ? "Mova ou transforme os dois juntos; a distância mantém o centro do par." : "Cada olho tem posição, tamanho e rotação próprios. Os presets continuam compartilhados."}</p>
                 <PlacementControls
-                  placement={eyePlacements[eyePlacementSide]}
+                  placement={eyePlacements[eyePlacementSide === "both" ? "left" : eyePlacementSide]}
                   single
                   disabled={!activeLayerReady}
-                  onChange={(key, value) => setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...eyePlacements[eyePlacementSide], [key]: value } })}
-                  onReset={() => setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...DEFAULT_EYE_PLACEMENTS[eyePlacementSide] } })}
+                  onChange={updateEyePlacementControl}
+                  onReset={() => eyePlacementSide === "both"
+                    ? setPlacementForKind("eyes", cloneEditorValue(DEFAULT_EYE_PLACEMENTS))
+                    : setPlacementForKind("eyes", { ...eyePlacements, [eyePlacementSide]: { ...DEFAULT_EYE_PLACEMENTS[eyePlacementSide] } })}
                 />
+                {eyePlacementSide === "both" && <RangeControl label="Distância entre olhos" value={eyeDistance} display={`${Math.round(eyeDistance)} px`} min={PLACEMENT_LIMITS.gap.min} max={PLACEMENT_LIMITS.gap.max} step={1} disabled={!activeLayerReady} onChange={updateEyeDistance} />}
               </> : <PlacementControls
                 placement={activeLayerPlacement as EyePlacement}
                 single={activeLayer === "mouths" || activeLayer === "mouths-talk" || EFFECT_KINDS.includes(activeLayer as FaceEffectKind)}
