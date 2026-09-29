@@ -44,9 +44,16 @@ import styles from "./fabricador.module.css";
 type WorkspaceSection = "assets" | "adjust" | "expressions" | "export";
 type LibraryFilter = "all" | FabricatorAssetKind;
 type DragLayer = "eyes-left" | "eyes-right" | "eyebrows" | "mouths" | FaceEffectKind;
-type GeneratedOutputs = { base: string[]; pt: string[]; talk: string[]; blink: string[] };
+type GeneratedOutputs = {
+  base: string[];
+  pt: string[];
+  talk: string[];
+  blink: string[];
+  ptTalk: string[];
+  ptBlink: string[];
+};
 type GeneratedVariant = keyof GeneratedOutputs;
-const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [] };
+const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [], ptTalk: [], ptBlink: [] };
 const NORMAL_PRESET_INDEX = EYE_EXPRESSIONS.findIndex(([key]) => key === "normal");
 
 function isEyePairPlacement(value: AssetPlacement | undefined): value is EyePairPlacement {
@@ -1384,27 +1391,31 @@ export default function FabricadorDeModeloPage() {
     generationLockRef.current = true;
     setGenerating(true);
     try {
-       setStatus("Gerando 21 expressões base, PT, talk e blink…");
-       const outputs: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [] };
+       setStatus("Gerando 21 expressões base, PT, talk, blink, PT talk e PT blink…");
+       const outputs: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [], ptTalk: [], ptBlink: [] };
       for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
-         const [base, pt, talk, blink] = await Promise.all([
+         const [base, pt, talk, blink, ptTalk, ptBlink] = await Promise.all([
            renderOutput(index, "open", "base"),
            renderOutput(index, "pt", "base"),
            renderOutput(index, "open", "talk"),
            renderOutput(index, "closed", "base"),
+           renderOutput(index, "pt", "talk"),
+           renderOutput(index, "closed", "base"),
          ]);
-         if (!base || !pt || !talk || !blink) throw new Error(`Falha ao gerar a expressão ${index + 1}.`);
+         if (!base || !pt || !talk || !blink || !ptTalk || !ptBlink) throw new Error(`Falha ao gerar a expressão ${index + 1}.`);
          outputs.base.push(base);
          outputs.pt.push(pt);
          outputs.talk.push(talk);
          outputs.blink.push(blink);
+         outputs.ptTalk.push(ptTalk);
+         outputs.ptBlink.push(ptBlink);
          setStatus(`Gerando variações: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
       }
        setGenerated(outputs.base);
        generatedOutputsRef.current = outputs;
        setGeneratedOutputs(outputs);
        setGeneratedVariant("base");
-       setStatus("21 expressões + PT + talk + blink gerados. Revise a grade antes de exportar.");
+       setStatus("21 expressões + PT, talk, blink, PT talk e PT blink gerados. Revise a grade antes de exportar.");
        return outputs.base;
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Falha ao gerar expressões.");
@@ -1484,12 +1495,18 @@ export default function FabricadorDeModeloPage() {
         const talk = variants.talk[index];
         const pt = variants.pt[index];
         const blink = variants.blink[index];
+        const ptTalk = variants.ptTalk[index];
+        const ptBlink = variants.ptBlink[index];
         if (!pt) throw new Error(`Falha no PT de ${key}.`);
         if (!talk) throw new Error(`Falha no talk de ${key}.`);
         if (!blink) throw new Error(`Falha no blink de ${key}.`);
+        if (!ptTalk) throw new Error(`Falha no PT talk de ${key}.`);
+        if (!ptBlink) throw new Error(`Falha no PT blink de ${key}.`);
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, await toCatalogFrame(talk), "image/png");
         await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_blink.png`, await toCatalogFrame(blink), "image/png");
         await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}.png`, await toCatalogFrame(pt), "image/png");
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_talk.png`, await toCatalogFrame(ptTalk), "image/png");
+        await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_blink.png`, await toCatalogFrame(ptBlink), "image/png");
         setStatus(`Exportando ${targetModel.id}: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
       }
       setStatus(`Finalizando ${targetModel.id}…`);
@@ -1535,8 +1552,10 @@ export default function FabricadorDeModeloPage() {
       zip.file(`pt_${key}.png`, variants.pt[index].split(",")[1], { base64: true });
       zip.file(`${key}_talk.png`, variants.talk[index].split(",")[1], { base64: true });
       zip.file(`${key}_blink.png`, variants.blink[index].split(",")[1], { base64: true });
+      zip.file(`pt_${key}_talk.png`, variants.ptTalk[index].split(",")[1], { base64: true });
+      zip.file(`pt_${key}_blink.png`, variants.ptBlink[index].split(",")[1], { base64: true });
     }
-    zip.file("README.txt", "Fabricador de Modelo V2\n21 expressões + PT + talk + blink.\n");
+    zip.file("README.txt", "Fabricador de Modelo V2\n21 expressões + PT, talk, blink, PT talk e PT blink.\n");
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -1735,7 +1754,7 @@ export default function FabricadorDeModeloPage() {
             <PanelBlock title="Gerar e revisar" description="A geração usa exatamente a montagem e os presets atuais.">
               <button className={styles.primaryButton} onClick={() => void generateExpressionOutputs()} disabled={!pair || processingBusy || generating || exporting}>{processingBusy ? "Processando camadas…" : generating ? "Gerando…" : "Gerar 21 expressões"}</button>
               <button className={styles.secondaryButton} onClick={() => void downloadPackage()} disabled={!pair || processingBusy || generating || exporting}>Baixar ZIP</button>
-              <div className={styles.exportState}><span>Resultado</span><b>{generated.length === 21 ? "21 base + 21 PT + 21 talk + 21 blink" : "Ainda não gerado"}</b></div>
+              <div className={styles.exportState}><span>Resultado</span><b>{generated.length === 21 ? "21 base + 21 PT + 21 talk + 21 blink + 21 PT talk + 21 PT blink" : "Ainda não gerado"}</b></div>
             </PanelBlock>
             <PanelBlock title="Exportar para o Criador" description="Cria um novo modelo sem sobrescrever os existentes.">
               <div className={styles.segmented}>
@@ -1768,9 +1787,9 @@ export default function FabricadorDeModeloPage() {
             />
           </div>
           {generated.length === 21 && <section className={styles.results}>
-            <header><div><span>RESULTADO</span><h2>21 expressões · {generatedVariant}</h2></div><small>Base, PT, talk e blink foram gerados. Escolha uma variação para revisar.</small></header>
+            <header><div><span>RESULTADO</span><h2>21 expressões · {generatedVariant}</h2></div><small>Base, PT, talk, blink, PT talk e PT blink foram gerados. Escolha uma variação para revisar.</small></header>
             <div className={styles.segmented}>
-              {(["base", "pt", "talk", "blink"] as GeneratedVariant[]).map((variant) => <button key={variant} className={generatedVariant === variant ? styles.tabActive : ""} onClick={() => setGeneratedVariant(variant)}>{variant === "base" ? "Base" : variant === "pt" ? "PT" : variant === "talk" ? "Talk" : "Blink"}</button>)}
+              {(["base", "pt", "talk", "blink", "ptTalk", "ptBlink"] as GeneratedVariant[]).map((variant) => <button key={variant} className={generatedVariant === variant ? styles.tabActive : ""} onClick={() => setGeneratedVariant(variant)}>{variant === "base" ? "Base" : variant === "pt" ? "PT" : variant === "talk" ? "Talk" : variant === "blink" ? "Blink" : variant === "ptTalk" ? "PT Talk" : "PT Blink"}</button>)}
             </div>
             <div className={styles.resultGrid}>
               {generatedOutputs[generatedVariant].map((dataUrl, index) => <button key={`${generatedVariant}-${EYE_EXPRESSIONS[index][0]}`} onClick={() => { setPresetIndex(index); setSection("expressions"); }}>
