@@ -45,6 +45,23 @@ type GeneratedOutputs = { base: string[]; talk: string[]; blink: string[] };
 type GeneratedVariant = keyof GeneratedOutputs;
 const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], talk: [], blink: [] };
 
+type EditorSnapshot = {
+  presets: FacePreset[];
+  placement: EyePlacement;
+  eyebrowPlacement: EyePlacement;
+  mouthPlacement: EyePlacement;
+  effectPlacements: Record<FaceEffectKind, EyePlacement>;
+  eyeChromaSettings: ChromaSettings;
+  eyebrowChromaSettings: ChromaSettings;
+  mouthChromaSettings: ChromaSettings;
+  mouthTalkChromaSettings: ChromaSettings;
+  effectChromaSettings: Record<FaceEffectKind, ChromaSettings>;
+};
+
+function cloneEditorValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
 const KIND_LABEL: Record<FabricatorAssetKind, string> = {
   eyes: "Olhos",
   eyebrows: "Sobrancelhas",
@@ -80,6 +97,7 @@ export default function FabricadorDeModeloPage() {
   const generationLockRef = useRef(false);
   const exportLockRef = useRef(false);
   const generatedOutputsRef = useRef<GeneratedOutputs>(EMPTY_GENERATED_OUTPUTS);
+  const editorHistoryRef = useRef<EditorSnapshot[]>([]);
   const effectProcessingCache = useRef(new Map<string, Promise<EyePiece | EyePiece[]>>());
   const eyeImageCache = useRef<{ source: EyePair | null; open?: Promise<LoadedPair>; closed?: Promise<LoadedPair> }>({ source: null });
   const browImageCache = useRef<{ source: EyePiece | null; value?: Promise<LoadedPair> }>({ source: null });
@@ -152,12 +170,39 @@ export default function FabricadorDeModeloPage() {
   const [exportGender, setExportGender] = useState<ModelGender>("feminino");
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [canUndo, setCanUndo] = useState(false);
 
   const clearGenerated = () => {
     setGenerated([]);
     generatedOutputsRef.current = EMPTY_GENERATED_OUTPUTS;
     setGeneratedOutputs(EMPTY_GENERATED_OUTPUTS);
     setGeneratedVariant("base");
+  };
+
+  const pushEditorHistory = () => {
+    editorHistoryRef.current = [
+      ...editorHistoryRef.current,
+      cloneEditorValue({ presets, placement, eyebrowPlacement, mouthPlacement, effectPlacements, eyeChromaSettings, eyebrowChromaSettings, mouthChromaSettings, mouthTalkChromaSettings, effectChromaSettings }),
+    ].slice(-50);
+    setCanUndo(true);
+  };
+
+  const undoLastEditorChange = () => {
+    const previous = editorHistoryRef.current.pop();
+    if (!previous) return;
+    setPresets(previous.presets);
+    setPlacement(previous.placement);
+    setEyebrowPlacement(previous.eyebrowPlacement);
+    setMouthPlacement(previous.mouthPlacement);
+    setEffectPlacements(previous.effectPlacements);
+    setEyeChromaSettings(previous.eyeChromaSettings);
+    setEyebrowChromaSettings(previous.eyebrowChromaSettings);
+    setMouthChromaSettings(previous.mouthChromaSettings);
+    setMouthTalkChromaSettings(previous.mouthTalkChromaSettings);
+    setEffectChromaSettings(previous.effectChromaSettings);
+    setCanUndo(editorHistoryRef.current.length > 0);
+    clearGenerated();
+    setStatus("Última alteração desfeita. Salve os presets para manter esse estado.");
   };
 
   useEffect(() => {
@@ -282,7 +327,8 @@ export default function FabricadorDeModeloPage() {
         : kind === "mouths" || kind === "mouths-talk" ? DEFAULT_MOUTH_PLACEMENT
           : DEFAULT_EFFECT_PLACEMENTS[kind];
 
-  const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement, invalidateGenerated = true) => {
+  const setPlacementForKind = (kind: FabricatorAssetKind, next: EyePlacement, invalidateGenerated = true, trackHistory = true) => {
+    if (trackHistory) pushEditorHistory();
     if (invalidateGenerated) clearGenerated();
     if (kind === "eyes") setPlacement(next);
     else if (kind === "eyebrows") setEyebrowPlacement(next);
@@ -317,6 +363,7 @@ export default function FabricadorDeModeloPage() {
   };
 
   const applyChromaSettings = (kind: FabricatorAssetKind, next: ChromaSettings) => {
+    pushEditorHistory();
     setChromaForKind(kind, next);
     clearGenerated();
     if (hasSourceForKind(kind)) markLayerProcessing(kind, true);
@@ -631,7 +678,7 @@ export default function FabricadorDeModeloPage() {
           if (cancelled) return;
           markLayerProcessing(kind, true);
           setChromaForKind(kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
-          setPlacementForKind(kind, asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind], false);
+          setPlacementForKind(kind, asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind], false, false);
           setEffectFiles((current) => ({ ...current, [kind]: file }));
           setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
         } catch {
@@ -793,7 +840,7 @@ export default function FabricadorDeModeloPage() {
       setActiveLayer(asset.kind);
       setSection(asset.kind === "eyes" || asset.kind === "eyebrows" || asset.kind === "mouths" || asset.kind === "mouths-talk" ? "adjust" : "expressions");
       setChromaForKind(asset.kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
-      setPlacementForKind(asset.kind, asset.placement ?? defaultPlacementForKind(asset.kind));
+      setPlacementForKind(asset.kind, asset.placement ?? defaultPlacementForKind(asset.kind), true, false);
       if (asset.kind === "eyes") { setActiveEyeAssetId(asset.id); onUpload(file, false); }
       else if (asset.kind === "eyebrows") { setActiveEyebrowAssetId(asset.id); onEyebrowUpload(file, false); }
       else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); onMouthUpload(file, false); }
@@ -982,6 +1029,7 @@ export default function FabricadorDeModeloPage() {
       }
     }
     if (!target) return;
+    pushEditorHistory();
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(target);
     setActiveLayer(target);
@@ -991,7 +1039,7 @@ export default function FabricadorDeModeloPage() {
     if (!dragging) return;
     const point = pointerPosition(event);
     const next = { ...placementForKind(dragging), x: point.x, y: point.y };
-    setPlacementForKind(dragging, next);
+    setPlacementForKind(dragging, next, true, false);
   };
 
   const stopDrag = () => setDragging(null);
@@ -1004,6 +1052,7 @@ export default function FabricadorDeModeloPage() {
   };
 
   const updatePresetTransform = (key: keyof EyeTransform, value: number) => {
+    pushEditorHistory();
     setPresets((current) => current.map((preset, index) => {
       if (index !== presetIndex) return preset;
       if (presetLayer === "mouth") return { ...preset, mouth: { ...preset.mouth, [key]: value } };
@@ -1025,12 +1074,14 @@ export default function FabricadorDeModeloPage() {
 
   const updateMouthTalkLink = (expressionIndex: number, talkIndex: number) => {
     if (!Number.isInteger(talkIndex) || talkIndex < 0 || talkIndex >= EYE_EXPRESSIONS.length) return;
+    pushEditorHistory();
     setPresets((current) => current.map((preset, index) => index === expressionIndex ? { ...preset, mouthTalkIndex: talkIndex } : preset));
     clearGenerated();
   };
 
   const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean | string | FaceEffectSource) => {
     if (!EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return;
+    pushEditorHistory();
     const kind = presetLayer as FaceEffectKind;
     setPresets((current) => current.map((preset, index) => {
       if (index !== presetIndex) return preset;
@@ -1044,6 +1095,7 @@ export default function FabricadorDeModeloPage() {
     if (kind !== "manpu" || pieceIndex < 0 || pieceIndex >= 21) return;
     const assetId = activeEffectAssetIds.manpu;
     if (!assetId) { setStatus("Carregue uma folha de manpu da biblioteca antes de escolher a célula."); return; }
+    pushEditorHistory();
     setPresets((current) => current.map((preset, index) => index === presetIndex ? {
       ...preset,
       enabledEffects: { ...preset.enabledEffects, manpu: true },
@@ -1063,7 +1115,7 @@ export default function FabricadorDeModeloPage() {
       if (effectAssignSequenceRef.current[kind] !== sequence) return;
       setEffectFiles((current) => ({ ...current, [kind]: file }));
       setChromaForKind(kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
-      setPlacementForKind(kind, asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind]);
+      setPlacementForKind(kind, asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind], true, false);
       setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
       setPresets((current) => current.map((preset, index) => index === presetIndex ? {
         ...preset,
@@ -1394,6 +1446,9 @@ export default function FabricadorDeModeloPage() {
             <span>{number}</span><b>{label}</b>
           </button>)}
         </div>
+        <button className={styles.undoButton} type="button" onClick={undoLastEditorChange} disabled={!canUndo || generating || exporting} title="Desfazer a última alteração da montagem">
+          <span>↶</span> Desfazer
+        </button>
         <div className={styles.statusBar}><i /> <span>{status}</span></div>
       </section>
 

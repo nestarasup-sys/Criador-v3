@@ -119,7 +119,7 @@ test("Fabricador restaura posição salva e bloqueia geração durante reprocess
   assert.match(page, /if \(persist\) setPlacement\(\{ \.\.\.DEFAULT_PLACEMENT \}\)/);
   assert.match(page, /if \(persist\) setEyebrowPlacement\(\{ \.\.\.DEFAULT_BROW_PLACEMENT \}\)/);
   assert.match(page, /if \(persist\) setMouthPlacement\(\{ \.\.\.DEFAULT_MOUTH_PLACEMENT \}\)/);
-  assert.match(page, /setPlacementForKind\(asset\.kind, asset\.placement \?\? defaultPlacementForKind\(asset\.kind\)\)/);
+  assert.match(page, /setPlacementForKind\(asset\.kind, asset\.placement \?\? defaultPlacementForKind\(asset\.kind\), true, false\)/);
 
   assert.match(page, /processingLayers/);
   assert.match(page, /processingBusy/);
@@ -141,12 +141,27 @@ test("Fabricador não invalida resultado só por navegar e bloqueia geração co
 
   assert.match(page, /generationLockRef/);
   assert.match(page, /exportLockRef/);
-  assert.match(page, /setPlacementForKind\(kind, asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\], false\)/);
+  assert.match(page, /setPlacementForKind\(kind, asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\], false, false\)/);
   assert.match(page, /onChange=\{\(event\) => setPresetIndex\(Number\(event\.target\.value\)\)\}/);
   assert.doesNotMatch(page, /setPresetIndex\(Number\(event\.target\.value\)\); setGenerated\(\[\]\)/);
   assert.match(page, /if \(generationLockRef\.current\).*já está em andamento/s);
   assert.match(page, /if \(!pair \|\| exportLockRef\.current \|\| generationLockRef\.current \|\| processingBusy\) return/);
   assert.match(page, /disabled=\{!pair \|\| !availableNextModel \|\| processingBusy \|\| generating \|\| exporting\}/);
+});
+
+test("Fabricador oferece desfazer por gesto e restaura o estado completo do editor", async () => {
+  const [page, styles] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador.module.css"),
+  ]);
+
+  assert.match(page, /undoLastEditorChange/);
+  assert.match(page, /editorHistoryRef/);
+  assert.match(page, /pushEditorHistory\(\);\s*event\.currentTarget\.setPointerCapture/s);
+  assert.match(page, /setPlacementForKind\(dragging, next, true, false\)/);
+  assert.match(page, /setPresets\(previous\.presets\)/);
+  assert.match(page, /Desfazer/);
+  assert.match(styles, /\.undoButton\s*\{/);
 });
 
 test("Fabricador não desativa regras de hooks para esconder arquitetura inválida", async () => {
