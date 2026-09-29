@@ -1404,7 +1404,14 @@ async function route(request, response) {
       }
       const expectedFiles = [
         `${modelId}.json`,
-        ...keys.flatMap((key) => [`${key}.png`, `${key}_talk.png`, `${key}_blink.png`]),
+        ...keys.flatMap((key) => [
+          `${key}.png`,
+          `${key}_talk.png`,
+          `${key}_blink.png`,
+          `pt_${key}.png`,
+          `pt_${key}_talk.png`,
+          `pt_${key}_blink.png`,
+        ]),
       ];
       const result = await commitModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId, expectedFiles });
       sendJson(response, request, 200, { ok: true, gender, id: modelId, files: result.files });

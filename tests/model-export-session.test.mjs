@@ -50,15 +50,16 @@ test("commit recusa exportação incompleta e só publica pasta completa", async
   assert.equal(await exists(join(modelsRoot, "masculino", "modelo-3")), false);
 
   await writeFile(join(stagingFolder, "normal.png"), "png");
+  await writeFile(join(stagingFolder, "pt_normal.png"), "png");
   const result = await commitModelExportSession({
     modelsRoot,
     stagingRoot,
     gender: "masculino",
     modelId: "modelo-3",
-    expectedFiles: ["modelo-3.json", "normal.png"],
+    expectedFiles: ["modelo-3.json", "normal.png", "pt_normal.png"],
   });
 
-  assert.equal(result.files, 2);
+  assert.equal(result.files, 3);
   assert.equal(await exists(join(modelsRoot, "masculino", "modelo-3")), true);
   assert.equal(await exists(stagingFolder), false);
 });
