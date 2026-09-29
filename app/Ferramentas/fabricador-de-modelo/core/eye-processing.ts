@@ -140,17 +140,15 @@ function splitColumn(structural: ImageData, row: { top: number; bottom: number }
 
 function splitRow(structural: ImageData, visual: ImageData, row: { top: number; bottom: number }): [EyePiece, EyePiece] {
   const split = splitColumn(structural, row);
-  const leftBox = bounds(structural, row.top, row.bottom, 0, split);
-  const rightBox = bounds(structural, row.top, row.bottom, split, structural.width);
-  if (!leftBox || !rightBox) throw new Error("A folha não contém dois elementos visíveis nessa linha.");
-  const registeredCenterY = ((leftBox.top + leftBox.bottom) / 2 + (rightBox.top + rightBox.bottom) / 2) / 2;
-  const makePiece = (left: number, right: number, box: NonNullable<typeof leftBox>): EyePiece => {
+  const makePiece = (left: number, right: number): EyePiece => {
+    const box = bounds(structural, row.top, row.bottom, left, right);
+    if (!box) throw new Error("A folha não contém dois elementos visíveis nessa linha.");
     const local = { left: Math.max(left, box.left), right: Math.min(right, box.right), top: box.top, bottom: box.bottom };
     const image = trim(visual, local.left, local.top, local.right, local.bottom);
     const canvas = document.createElement("canvas"); canvas.width = image.width; canvas.height = image.height; canvas.getContext("2d")!.putImageData(image, 0, 0);
-    return { dataUrl: canvas.toDataURL("image/png"), width: image.width, height: image.height, anchorY: registeredCenterY - (local.top + local.bottom) / 2 };
+    return { dataUrl: canvas.toDataURL("image/png"), width: image.width, height: image.height };
   };
-  return [makePiece(0, split, leftBox), makePiece(split, structural.width, rightBox)];
+  return [makePiece(0, split), makePiece(split, structural.width)];
 }
 
 /**
@@ -197,7 +195,7 @@ function preserveWhiteEyeInteriors(source: ImageData, output: ImageData, structu
 }
 
 function mergePair(left: EyePiece, right: EyePiece): EyePiece {
-  return { dataUrl: JSON.stringify([left, right]), width: left.width + right.width, height: Math.max(left.height, right.height) };
+  return { dataUrl: JSON.stringify([left.dataUrl, right.dataUrl]), width: left.width + right.width, height: Math.max(left.height, right.height) };
 }
 
 export async function processEyeSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePair> {
@@ -318,14 +316,8 @@ export async function processEffectImage(file: File, settings: ChromaSettings = 
   } finally { URL.revokeObjectURL(url); }
 }
 
-export function splitPair(pair: EyePiece): [EyePiece, EyePiece] {
-  try {
-    const parsed = JSON.parse(pair.dataUrl) as Array<string | EyePiece>;
-    const normalize = (piece: string | EyePiece): EyePiece => typeof piece === "string" ? { dataUrl: piece, width: 0, height: 0 } : piece;
-    return [normalize(parsed[0]), normalize(parsed[1])];
-  } catch {
-    return [{ dataUrl: pair.dataUrl, width: pair.width, height: pair.height }, { dataUrl: pair.dataUrl, width: pair.width, height: pair.height }];
-  }
+export function splitPair(pair: EyePiece): [string, string] {
+  try { const parsed = JSON.parse(pair.dataUrl) as string[]; return [parsed[0], parsed[1]]; } catch { return [pair.dataUrl, pair.dataUrl]; }
 }
 
 export function loadImage(dataUrl: string): Promise<HTMLImageElement> {
