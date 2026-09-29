@@ -88,6 +88,9 @@ test("Fabricador exibe as 21 células de manpu para seleção por expressão", a
   assert.match(page, /manpuPieces\.map/);
   assert.match(page, /updateEffectPieceIndex\("manpu", pieceIndex\)/);
   assert.match(page, /effectPieceIndexes\.manpu/);
+  assert.match(page, /const saveCurrentAssetState = async \(\) =>/);
+  assert.match(page, /await saveCurrentAssetState\(\);/);
+  assert.match(page, /placement: placementForKind\(kind\), chroma: chromaForKind\(kind\)/);
 });
 
 test("exportação do Fabricador usa staging e commit atômico", async () => {

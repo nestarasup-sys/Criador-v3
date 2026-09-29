@@ -1088,9 +1088,32 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
+  const saveCurrentAssetState = async () => {
+    const kinds: FabricatorAssetKind[] = ["eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"];
+    const pending = kinds.flatMap((kind) => {
+      const assetId = activeAssetIdForKind(kind);
+      if (!assetId) return [];
+      const placementTimer = placementSaveTimers.current[kind];
+      if (placementTimer) { clearTimeout(placementTimer); delete placementSaveTimers.current[kind]; }
+      const chromaTimer = chromaSaveTimers.current[kind];
+      if (chromaTimer) { clearTimeout(chromaTimer); delete chromaSaveTimers.current[kind]; }
+      return [{
+        assetId,
+        updates: { placement: placementForKind(kind), chroma: chromaForKind(kind) },
+      }];
+    });
+    await Promise.all(pending.map(async ({ assetId, updates }) => {
+      await updateFabricatorAsset(assetId, updates);
+      setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, ...updates } : asset));
+    }));
+  };
+
   const savePresets = async () => {
     setSavingPresets(true);
     try {
+      // O botão é o checkpoint manual: além do JSON dos 21 presets, força
+      // imediatamente os metadados dos assets que possuem posição/chroma.
+      await saveCurrentAssetState();
       const result = await saveFabricatorPresets(presetCollectionFromState(presets));
       setStatus(result.pcSaved
         ? "Presets salvos no PC."
