@@ -602,7 +602,8 @@ export default function FabricadorDeModeloPage() {
     let cancelled = false;
     Promise.all(EFFECT_KINDS.map(async (kind) => {
       if (kind === "manpu") {
-        const piece = manpuPieces[presetIndex];
+        const pieceIndex = activePreset.effectPieceIndexes.manpu ?? presetIndex;
+        const piece = manpuPieces[pieceIndex];
         return [kind, piece ? await loadImage(piece.dataUrl) : undefined] as const;
       }
       const piece = effectPieces[kind];
@@ -614,7 +615,7 @@ export default function FabricadorDeModeloPage() {
       setEffectLoaded(next);
     });
     return () => { cancelled = true; };
-  }, [effectPieces, manpuPieces, presetIndex]);
+  }, [effectPieces, manpuPieces, activePreset.effectPieceIndexes.manpu, presetIndex]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1028,7 +1029,7 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
-  const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean | FaceEffectSource) => {
+  const updateEffectSetting = (key: keyof FaceEffectSettings, value: number | boolean | string | FaceEffectSource) => {
     if (!EFFECT_KINDS.includes(presetLayer as FaceEffectKind)) return;
     const kind = presetLayer as FaceEffectKind;
     setPresets((current) => current.map((preset, index) => {
@@ -1036,6 +1037,19 @@ export default function FabricadorDeModeloPage() {
       const next = { ...preset, effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], [key]: value } } };
       return key === "source" && value === "gradient" ? { ...next, enabledEffects: { ...next.enabledEffects, [kind]: true } } : next;
     }));
+    clearGenerated();
+  };
+
+  const updateEffectPieceIndex = (kind: FaceEffectKind, pieceIndex: number) => {
+    if (kind !== "manpu" || pieceIndex < 0 || pieceIndex >= 21) return;
+    const assetId = activeEffectAssetIds.manpu;
+    if (!assetId) { setStatus("Carregue uma folha de manpu da biblioteca antes de escolher a célula."); return; }
+    setPresets((current) => current.map((preset, index) => index === presetIndex ? {
+      ...preset,
+      enabledEffects: { ...preset.enabledEffects, manpu: true },
+      effectAssets: { ...preset.effectAssets, manpu: assetId },
+      effectPieceIndexes: { ...preset.effectPieceIndexes, manpu: pieceIndex },
+    } : preset));
     clearGenerated();
   };
 
@@ -1056,6 +1070,7 @@ export default function FabricadorDeModeloPage() {
         effectSettings: { ...preset.effectSettings, [kind]: { ...preset.effectSettings[kind], source: "asset" } },
         enabledEffects: { ...preset.enabledEffects, [kind]: true },
         effectAssets: { ...preset.effectAssets, [kind]: asset.id },
+         effectPieceIndexes: { ...preset.effectPieceIndexes, [kind]: kind === "manpu" ? presetIndex : preset.effectPieceIndexes[kind] },
       } : preset));
       clearGenerated();
       setStatus(`${asset.name} aplicado à expressão ${String(presetIndex + 1).padStart(2, "0")}.`);
@@ -1112,7 +1127,8 @@ export default function FabricadorDeModeloPage() {
       const processed = await processEffectAssetForRender(asset, effectiveChroma);
       if (kind === "manpu") {
         const pieces = processed as EyePiece[];
-        if (pieces[expressionIndex]) images[kind] = await loadImage(pieces[expressionIndex].dataUrl);
+        const pieceIndex = preset.effectPieceIndexes.manpu ?? expressionIndex;
+        if (pieces[pieceIndex]) images[kind] = await loadImage(pieces[pieceIndex].dataUrl);
       } else {
         images[kind] = await loadImage((processed as EyePiece).dataUrl);
       }
@@ -1454,7 +1470,7 @@ export default function FabricadorDeModeloPage() {
               </div>}
             </PanelBlock>
 
-            {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Asset do efeito" description="A folha de manpu fornece automaticamente a célula correspondente à expressão selecionada.">
+            {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Asset do efeito" description={effectCatalogKind === "manpu" ? "Escolha qualquer uma das 21 células recortadas para esta expressão." : "Escolha o asset que será usado nesta expressão."}>
               <div className={styles.segmented}>
                 {EFFECT_KINDS.map((kind) => <button key={kind} className={effectCatalogKind === kind ? styles.tabActive : ""} onClick={() => setEffectCatalogKind(kind)}>{KIND_LABEL[kind]}</button>)}
               </div>
@@ -1465,6 +1481,11 @@ export default function FabricadorDeModeloPage() {
                   <span><b>{asset.name}</b><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</small></span>
                 </button>)}
               </div>
+               {effectCatalogKind === "manpu" && manpuPieces.length === 21 && <div className={styles.manpuPieceGrid}>
+                 {manpuPieces.map((piece, pieceIndex) => <button key={pieceIndex} className={activePreset.effectPieceIndexes.manpu === pieceIndex ? styles.manpuPieceActive : styles.manpuPiece} onClick={() => updateEffectPieceIndex("manpu", pieceIndex)} title={`Usar manpu ${pieceIndex + 1}`}>
+                   <img src={piece.dataUrl} alt={`Manpu ${pieceIndex + 1}`} /><small>{String(pieceIndex + 1).padStart(2, "0")}</small>
+                 </button>)}
+               </div>}
             </PanelBlock>}
 
             {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Composição do efeito" description="O molde funciona como máscara para impedir que o efeito escape da cabeça.">
@@ -1473,6 +1494,7 @@ export default function FabricadorDeModeloPage() {
                 {(effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <button className={(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" ? styles.tabActive : ""} onClick={() => updateEffectSetting("source", "gradient")}>{effectCatalogKind === "blush" ? "Blush automático" : "Shadow automático"}</button>}
               </div>
               {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && (effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <div className={styles.controlStack}>
+                 {effectCatalogKind === "blush" && <label className={styles.colorControl}><span><b>Cor do blush</b><output>{activePreset.effectSettings.blush?.color ?? "#ff90ae"}</output></span><input type="color" value={activePreset.effectSettings.blush?.color ?? "#ff90ae"} onChange={(event) => updateEffectSetting("color", event.target.value)} /></label>}
                 {effectCatalogKind === "shadow" && <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />}
                 {effectCatalogKind === "blush" && <><RangeControl label="Largura da área" value={activePreset.effectSettings[effectCatalogKind]?.gradientWidth ?? 420} display={`${Math.round(activePreset.effectSettings[effectCatalogKind]?.gradientWidth ?? 420)} px`} min={80} max={1000} step={1} onChange={(value) => updateEffectSetting("gradientWidth", value)} /><RangeControl label="Altura da área" value={activePreset.effectSettings[effectCatalogKind]?.gradientHeight ?? 220} display={`${Math.round(activePreset.effectSettings[effectCatalogKind]?.gradientHeight ?? 220)} px`} min={50} max={700} step={1} onChange={(value) => updateEffectSetting("gradientHeight", value)} /></>}
                 <RangeControl label="Suavidade do degradê" value={activePreset.effectSettings[effectCatalogKind]?.softness ?? .18} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.softness ?? .18) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("softness", value)} />

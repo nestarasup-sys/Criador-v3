@@ -551,6 +551,84 @@
   font-size: 9px;
 }
 
+.manpuPieceGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 5px;
+  max-height: 300px;
+  margin-top: 10px;
+  overflow-y: auto;
+}
+
+.manpuPiece,
+.manpuPieceActive {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid #e5dce9;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.manpuPieceActive {
+  border-color: #7c568c;
+  background: #f1e7f5;
+  box-shadow: 0 0 0 2px #7c568c33;
+}
+
+.manpuPiece img,
+.manpuPieceActive img {
+  width: 100%;
+  height: 38px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: #eeeaf0;
+}
+
+.manpuPiece small,
+.manpuPieceActive small {
+  color: #75647d;
+  font-size: 8px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.colorControl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorControl span {
+  display: grid;
+  gap: 3px;
+}
+
+.colorControl b {
+  color: #6a5b70;
+  font-size: 10px;
+}
+
+.colorControl output {
+  color: #b14274;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.colorControl input {
+  width: 42px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid #ded2e4;
+  border-radius: 7px;
+  background: #fff;
+  cursor: pointer;
+}
+
 .checkRow {
   display: flex;
   gap: 9px;

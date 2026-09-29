@@ -3,6 +3,12 @@ import type { FabricatorAsset } from "../fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
 import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
+function rgbaColor(hex: string, alpha: number) {
+  const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#ff90ae";
+  const value = Number.parseInt(normalized.slice(1), 16);
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
 export type LoadedPair = { left: HTMLImageElement; right: HTMLImageElement };
 
 export function imageFromPair(pair: EyePair, state: EyeState): Promise<LoadedPair> {
@@ -82,7 +88,7 @@ export function drawComposition(
     };
     if (settings.source === "gradient") {
       if (kind !== "shadow" && kind !== "blush") return;
-      const color = kind === "blush" ? "255, 144, 174" : "44, 31, 52";
+      const color = settings.color;
       if (kind === "blush") {
         const softness = Math.min(1, Math.max(.01, settings.softness));
         layerContext.save();
@@ -92,9 +98,9 @@ export function drawComposition(
         layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
         layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
         const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
-        gradient.addColorStop(0, `rgba(${color}, .54)`);
-        gradient.addColorStop(Math.max(.01, 1 - softness), `rgba(${color}, .30)`);
-        gradient.addColorStop(1, `rgba(${color}, 0)`);
+        gradient.addColorStop(0, rgbaColor(color, .54));
+        gradient.addColorStop(Math.max(.01, 1 - softness), rgbaColor(color, .30));
+        gradient.addColorStop(1, rgbaColor(color, 0));
         layerContext.fillStyle = gradient;
         layerContext.fillRect(-1, -1, 2, 2);
         layerContext.restore();
@@ -103,10 +109,10 @@ export function drawComposition(
         const softness = Math.min(coverage, Math.max(.01, settings.softness));
         const edge = Math.max(.01, coverage - softness);
         const gradient = layerContext.createLinearGradient(0, 0, 0, CANVAS_SIZE);
-        gradient.addColorStop(0, `rgba(${color}, .78)`);
-        gradient.addColorStop(edge, `rgba(${color}, .60)`);
-        gradient.addColorStop(coverage, `rgba(${color}, 0)`);
-        gradient.addColorStop(Math.min(1, coverage + .001), `rgba(${color}, 0)`);
+        gradient.addColorStop(0, rgbaColor(color, .78));
+        gradient.addColorStop(edge, rgbaColor(color, .60));
+        gradient.addColorStop(coverage, rgbaColor(color, 0));
+        gradient.addColorStop(Math.min(1, coverage + .001), rgbaColor(color, 0));
         layerContext.fillStyle = gradient;
         layerContext.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
       }

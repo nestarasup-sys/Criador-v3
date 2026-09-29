@@ -64,7 +64,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(compositor, /destination-in/);
   assert.match(compositor, /globalAlpha/);
   assert.match(compositor, /createLinearGradient/);
-  assert.match(compositor, /255, 144, 174/);
+  assert.match(compositor, /rgbaColor\(color/);
   assert.match(compositor, /transform\.x/);
   assert.match(compositor, /transform\.scaleX/);
   assert.match(compositor, /placement\.rotation \+ transform\.rotation/);
@@ -81,12 +81,13 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);
 });
 
-test("Fabricador não simula seleção individual de manpu que o modelo de dados não suporta", async () => {
+test("Fabricador exibe as 21 células de manpu para seleção por expressão", async () => {
   const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
 
-  assert.match(page, /A folha de manpu fornece automaticamente a célula correspondente à expressão selecionada/);
-  assert.doesNotMatch(page, /manpuCatalogPieces/);
-  assert.doesNotMatch(page, /Manpu \$\{String\(pieceIndex \+ 1\)/);
+  assert.match(page, /Escolha qualquer uma das 21 células recortadas/);
+  assert.match(page, /manpuPieces\.map/);
+  assert.match(page, /updateEffectPieceIndex\("manpu", pieceIndex\)/);
+  assert.match(page, /effectPieceIndexes\.manpu/);
 });
 
 test("exportação do Fabricador usa staging e commit atômico", async () => {

@@ -564,6 +564,7 @@ function normalizeFabricatorPresets(value) {
         opacity: Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 1,
         clipToTemplate: source?.clipToTemplate !== false,
         source: source?.source === "gradient" ? "gradient" : "asset",
+         color: typeof source?.color === "string" && /^#[0-9a-f]{6}$/i.test(source.color) ? source.color : effect === "blush" ? "#ff90ae" : effect === "shadow" ? "#2c1f34" : "#ffffff",
         verticalCoverage: Number.isFinite(coverage) ? Math.min(1, Math.max(.01, coverage)) : .5,
         softness: Number.isFinite(softness) ? Math.min(1, Math.max(.01, softness)) : .18,
         gradientWidth: Number.isFinite(gradientWidth) ? Math.min(1000, Math.max(80, gradientWidth)) : 420,
@@ -571,7 +572,11 @@ function normalizeFabricatorPresets(value) {
       }];
     }));
     const mouthTalkIndex = Number.isInteger(preset.mouthTalkIndex) && preset.mouthTalkIndex >= 0 && preset.mouthTalkIndex < 21 ? preset.mouthTalkIndex : Object.keys(value).indexOf(key);
-    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
+    const effectPieceIndexes = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => {
+      const candidate = preset.effectPieceIndexes?.[effect];
+      return [effect, Number.isInteger(candidate) && candidate >= 0 && candidate < 21 ? candidate : effect === "manpu" ? Object.keys(value).indexOf(key) : null];
+    }));
+    if (eyes && eyebrows && mouth) result[key] = { eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
 }
