@@ -140,13 +140,26 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const source = context.getImageData(0, 0, canvas.width, canvas.height);
     const cleaned = removeConnectedChroma(source, settings);
     const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
+    const third = Math.floor(structural.height / 3);
+    const top = bounds(structural, 0, third);
+    const pt = bounds(structural, third, third * 2);
+    const bottom = bounds(structural, third * 2, structural.height);
+    if (top && pt && bottom) {
+      const [openLeft, openRight] = splitRow(structural, cleaned, top);
+      const [ptLeft, ptRight] = splitRow(structural, cleaned, pt);
+      const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
+      return { open: mergePair(openLeft, openRight), pt: mergePair(ptLeft, ptRight), closed: mergePair(closedLeft, closedRight) };
+    }
+    // Compatibilidade com folhas antigas de duas linhas: PT usa o mesmo recorte
+    // do aberto até o usuário enviar a nova folha de três linhas.
     const half = Math.floor(structural.height / 2);
-    const top = bounds(structural, 0, half);
-    const bottom = bounds(structural, half, structural.height);
-    if (!top || !bottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas duas linhas.");
-    const [openLeft, openRight] = splitRow(structural, cleaned, top);
-    const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
-    return { open: mergePair(openLeft, openRight), closed: mergePair(closedLeft, closedRight) };
+    const legacyTop = bounds(structural, 0, half);
+    const legacyBottom = bounds(structural, half, structural.height);
+    if (!legacyTop || !legacyBottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas três linhas: aberto, PT e fechado.");
+    const [openLeft, openRight] = splitRow(structural, cleaned, legacyTop);
+    const [closedLeft, closedRight] = splitRow(structural, cleaned, legacyBottom);
+    const open = mergePair(openLeft, openRight);
+    return { open, pt: open, closed: mergePair(closedLeft, closedRight) };
   } finally { URL.revokeObjectURL(url); }
 }
 

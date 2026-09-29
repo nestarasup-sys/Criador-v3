@@ -58,10 +58,15 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Configurar vínculos de fala/);
   assert.match(page, /mouthTalkIndex/);
   assert.match(page, /mouths-talk/);
-  assert.match(page, /type GeneratedOutputs = \{ base: string\[\]; talk: string\[\]; blink: string\[\] \}/);
+  assert.match(page, /type GeneratedOutputs = \{ base: string\[\]; pt: string\[\]; talk: string\[\]; blink: string\[\] \}/);
+  assert.match(page, /renderOutput\(index, "pt", "base"\)/);
   assert.match(page, /renderOutput\(index, "open", "talk"\)/);
   assert.match(page, /renderOutput\(index, "closed", "base"\)/);
-  assert.match(page, /21 base \+ 21 talk \+ 21 blink/);
+  assert.match(page, /21 base \+ 21 PT \+ 21 talk \+ 21 blink/);
+  assert.match(page, /pt_\$\{key\}\.png/);
+  assert.match(page, /Olhos PT/);
+  assert.match(processing, /const third = Math\.floor\(structural\.height \/ 3\)/);
+  assert.match(processing, /return \{ open: mergePair\(openLeft, openRight\), pt: mergePair\(ptLeft, ptRight\), closed:/);
 
   assert.match(config, /export const DEFAULT_PLACEMENT/);
   assert.match(config, /DEFAULT_EFFECT_SETTINGS/);

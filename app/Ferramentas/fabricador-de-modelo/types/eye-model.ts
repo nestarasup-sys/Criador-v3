@@ -1,4 +1,4 @@
-export type EyeState = "open" | "closed";
+export type EyeState = "open" | "pt" | "closed";
 export type FaceEffectKind = "blush" | "shadow" | "manpu";
 export type FaceEffectSource = "asset" | "gradient";
 export type FaceEffectSettings = { opacity: number; clipToTemplate: boolean; source: FaceEffectSource; color: string; verticalCoverage: number; softness: number; gradientWidth: number; gradientHeight: number };
@@ -14,6 +14,8 @@ export type MouthExpressionSheet = MouthPiece[];
 
 export type EyePair = {
   open: EyePiece;
+  /** Olhos olhando para trás, usados nos arquivos pt_*.png do catálogo. */
+  pt: EyePiece;
   closed: EyePiece;
 };
 
