@@ -22,13 +22,14 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing, server] = await Promise.all([
+  const [page, config, compositor, storage, processing, server, controls] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
     read("local-data-server.mjs"),
+    read("app/Ferramentas/fabricador-de-modelo/components/ControlPrimitives.tsx"),
   ]);
 
   assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -38,6 +39,8 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Exportar/);
   assert.match(page, /UploadTile/);
   assert.match(page, /PlacementControls/);
+  assert.match(controls, /RangeControl label="Horizontal"/);
+  assert.match(controls, /RangeControl label="Vertical"/);
   assert.match(page, /ChromaControls/);
   assert.match(page, /resultGrid/);
   assert.match(page, /libraryPanel/);
