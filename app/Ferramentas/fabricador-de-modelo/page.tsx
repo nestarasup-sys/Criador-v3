@@ -972,7 +972,7 @@ export default function FabricadorDeModeloPage() {
       : activeLayer === "mouths" ? mouthPieces.length > 0
       : activeLayer === "mouths-talk" ? mouthTalkPieces.length > 0
         : activeLayer === "manpu" ? manpuPieces.length > 0
-          : EFFECT_KINDS.includes(activeLayer as FaceEffectKind) && (activePreset.enabledEffects[activeLayer as FaceEffectKind] && activePreset.effectSettings[activeLayer as FaceEffectKind]?.source === "gradient" || Boolean(effectPieces[activeLayer as FaceEffectKind]));
+        : EFFECT_KINDS.includes(activeLayer as FaceEffectKind) && (previewPreset.enabledEffects[activeLayer as FaceEffectKind] && previewPreset.effectSettings[activeLayer as FaceEffectKind]?.source === "gradient" || Boolean(effectPieces[activeLayer as FaceEffectKind]));
 
   const activeLayerChroma = chromaForKind(activeLayer);
   const activeLayerPlacement = placementForKind(activeLayer);
@@ -994,7 +994,7 @@ export default function FabricadorDeModeloPage() {
   };
 
   const insideProceduralEffect = (point: { x: number; y: number }, kind: FaceEffectKind) => {
-    const settings = activePreset.effectSettings[kind];
+    const settings = previewPreset.effectSettings[kind];
     if (!settings || settings.source !== "gradient") return false;
     const itemPlacement = effectPlacements[kind];
     const width = settings.gradientWidth * itemPlacement.scale * itemPlacement.scaleX;
@@ -1027,8 +1027,8 @@ export default function FabricadorDeModeloPage() {
       for (const kind of [...EFFECT_KINDS].reverse()) {
         const image = effectLoaded[kind];
         const hit = image
-          ? activePreset.enabledEffects[kind] && activePreset.effectAssets[kind] && insideSingle(point, image, effectPlacements[kind])
-          : activePreset.enabledEffects[kind] && insideProceduralEffect(point, kind);
+          ? previewPreset.enabledEffects[kind] && previewPreset.effectAssets[kind] && insideSingle(point, image, effectPlacements[kind])
+          : previewPreset.enabledEffects[kind] && insideProceduralEffect(point, kind);
         if (hit) {
           target = kind;
           break;
