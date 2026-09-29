@@ -287,6 +287,8 @@ export default function FabricadorDeModeloPage() {
           return { ...preset, effectAssets, enabledEffects };
         });
         setPresets(merged);
+        const savedEffectPlacements = merged[0]?.effectPlacements;
+        if (savedEffectPlacements) setEffectPlacements(savedEffectPlacements);
         if (repaired) void saveFabricatorPresets(presetCollectionFromState(merged));
       })
       .catch(() => setStatus("A biblioteca não pôde ser carregada por completo."));
@@ -934,7 +936,7 @@ export default function FabricadorDeModeloPage() {
             enabledEffects: { ...preset.enabledEffects, [kind]: false },
             effectAssets: { ...preset.effectAssets, [kind]: null },
           } : preset);
-          void saveFabricatorPresets(presetCollectionFromState(next));
+          void saveFabricatorPresets(presetCollectionFromState(presetsWithCurrentEffectPlacements(next)));
           return next;
         });
       }
@@ -1170,13 +1172,18 @@ export default function FabricadorDeModeloPage() {
     }));
   };
 
+  const presetsWithCurrentEffectPlacements = (source: FacePreset[]) => source.map((preset) => ({
+    ...preset,
+    effectPlacements: cloneEditorValue(effectPlacements),
+  }));
+
   const savePresets = async () => {
     setSavingPresets(true);
     try {
       // O botão é o checkpoint manual: além do JSON dos 21 presets, força
       // imediatamente os metadados dos assets que possuem posição/chroma.
       await saveCurrentAssetState();
-      const result = await saveFabricatorPresets(presetCollectionFromState(presets));
+      const result = await saveFabricatorPresets(presetCollectionFromState(presetsWithCurrentEffectPlacements(presets)));
       setStatus(result.pcSaved
         ? "Presets salvos no PC."
         : result.localSaved

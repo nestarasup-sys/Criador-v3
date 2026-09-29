@@ -551,6 +551,7 @@ function normalizeFabricatorPresets(value) {
     const eyebrows = normalizeFabricatorVariation(preset.eyebrows);
     const mouth = normalizeFabricatorTransform(preset.mouth);
     const templateScaleX = Number(preset.templateScaleX);
+    const effectPlacements = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, normalizeFabricatorPlacement(preset.effectPlacements?.[effect]) ?? { x: effect === "blush" ? 500 : effect === "shadow" ? 500 : 500, y: effect === "blush" ? 520 : effect === "shadow" ? 420 : 360, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 }]));
     const effects = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, normalizeFabricatorTransform(preset.effects?.[effect]) ?? { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 }]));
     const enabledEffects = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, preset.enabledEffects?.[effect] !== false]));
     const effectAssets = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => [effect, typeof preset.effectAssets?.[effect] === "string" ? preset.effectAssets[effect] : null]));
@@ -577,7 +578,7 @@ function normalizeFabricatorPresets(value) {
       const candidate = preset.effectPieceIndexes?.[effect];
       return [effect, Number.isInteger(candidate) && candidate >= 0 && candidate < 21 ? candidate : effect === "manpu" ? Object.keys(value).indexOf(key) : null];
     }));
-    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
+    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
 }

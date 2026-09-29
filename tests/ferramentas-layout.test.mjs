@@ -75,6 +75,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(storage, /localAssets\.filter\(\(asset\) => asset\.localOnly\)/);
   assert.match(storage, /localSaved/);
   assert.match(server, /effectSettings/);
+  assert.match(server, /effectPlacements/);
   assert.match(server, /mouths-talk/);
 
   assert.match(processing, /1 - mask \* strength/);
@@ -94,10 +95,13 @@ test("Fabricador exibe as 21 células de manpu para seleção por expressão", a
   assert.match(page, /effectPieceIndexes\.manpu/);
   assert.match(page, /const saveCurrentAssetState = async \(\) =>/);
   assert.match(page, /await saveCurrentAssetState\(\);/);
+  assert.match(page, /presetsWithCurrentEffectPlacements/);
+  assert.match(page, /setEffectPlacements\(savedEffectPlacements\)/);
   assert.match(page, /updateTemplateScaleX/);
   assert.match(page, /Largura do molde/);
   assert.match(page, /templateScaleX/);
   assert.match(config, /TEMPLATE_SCALE_X_LIMITS/);
+  assert.match(config, /effectPlacements:/);
   assert.match(compositor, /function drawTemplate/);
   assert.match(page, /placement: placementForKind\(kind\), chroma: chromaForKind\(kind\)/);
 });

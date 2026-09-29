@@ -47,6 +47,7 @@ const cloneVariation = (variation: EyeExpressionVariation): EyeExpressionVariati
 export function defaultPresetForIndex(index: number): FacePreset {
   return {
     templateScaleX: 1,
+    effectPlacements: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_PLACEMENTS[kind] }])) as Record<FaceEffectKind, EyePlacement>,
     eyes: cloneVariation(EXPRESSION_VARIATIONS[index]),
     eyebrows: cloneVariation(BROW_VARIATIONS[index]),
     mouth: cloneTransform(DEFAULT_PRESET_MOUTH),
@@ -67,6 +68,7 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
       templateScaleX: Number.isFinite(preset.templateScaleX)
         ? Math.min(TEMPLATE_SCALE_X_LIMITS.max, Math.max(TEMPLATE_SCALE_X_LIMITS.min, preset.templateScaleX))
         : 1,
+      effectPlacements: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_PLACEMENTS[kind], ...(preset.effectPlacements?.[kind] ?? {}) }])) as Record<FaceEffectKind, EyePlacement>,
       eyes: cloneVariation(preset.eyes),
       eyebrows: cloneVariation(preset.eyebrows),
       mouth: cloneTransform(preset.mouth),
