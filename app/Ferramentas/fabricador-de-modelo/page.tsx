@@ -45,6 +45,7 @@ type DragLayer = "eyes" | "eyebrows" | "mouths" | FaceEffectKind;
 type GeneratedOutputs = { base: string[]; talk: string[]; blink: string[] };
 type GeneratedVariant = keyof GeneratedOutputs;
 const EMPTY_GENERATED_OUTPUTS: GeneratedOutputs = { base: [], talk: [], blink: [] };
+const NORMAL_PRESET_INDEX = EYE_EXPRESSIONS.findIndex(([key]) => key === "normal");
 
 type EditorSnapshot = {
   presets: FacePreset[];
@@ -308,6 +309,8 @@ export default function FabricadorDeModeloPage() {
   }, [exportGender]);
 
   const activePreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
+  const previewIndex = section === "adjust" ? NORMAL_PRESET_INDEX : presetIndex;
+  const previewPreset = presets[previewIndex] ?? defaultPresetForIndex(previewIndex);
 
   const activeAssetIdForKind = useCallback((kind: FabricatorAssetKind) =>
     kind === "eyes" ? activeEyeAssetId
@@ -575,13 +578,13 @@ export default function FabricadorDeModeloPage() {
   useEffect(() => {
     if (!mouthPieces.length) return;
     let cancelled = false;
-    const talkIndex = activePreset.mouthTalkIndex ?? presetIndex;
+    const talkIndex = previewPreset.mouthTalkIndex ?? previewIndex;
     const piece = mouthPreviewMode === "talk" && mouthTalkPieces.length === EYE_EXPRESSIONS.length
       ? mouthTalkPieces[talkIndex] ?? mouthTalkPieces[0]
-      : mouthPieces[presetIndex] ?? mouthPieces[0];
+      : mouthPieces[previewIndex] ?? mouthPieces[0];
     loadImage(piece.dataUrl).then((image) => { if (!cancelled) setMouthLoaded(image); });
     return () => { cancelled = true; };
-  }, [mouthPieces, mouthTalkPieces, mouthPreviewMode, activePreset.mouthTalkIndex, presetIndex]);
+  }, [mouthPieces, mouthTalkPieces, mouthPreviewMode, previewPreset.mouthTalkIndex, previewIndex]);
 
   useEffect(() => {
     const file = effectFiles.blush;
@@ -652,7 +655,7 @@ export default function FabricadorDeModeloPage() {
     let cancelled = false;
     Promise.all(EFFECT_KINDS.map(async (kind) => {
       if (kind === "manpu") {
-        const pieceIndex = activePreset.effectPieceIndexes.manpu ?? presetIndex;
+        const pieceIndex = previewPreset.effectPieceIndexes.manpu ?? previewIndex;
         const piece = manpuPieces[pieceIndex];
         return [kind, piece ? await loadImage(piece.dataUrl) : undefined] as const;
       }
@@ -665,13 +668,13 @@ export default function FabricadorDeModeloPage() {
       setEffectLoaded(next);
     });
     return () => { cancelled = true; };
-  }, [effectPieces, manpuPieces, activePreset.effectPieceIndexes.manpu, presetIndex]);
+  }, [effectPieces, manpuPieces, previewPreset.effectPieceIndexes.manpu, previewIndex]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       for (const kind of EFFECT_KINDS) {
-        const selectedId = activePreset.effectAssets[kind];
+        const selectedId = previewPreset.effectAssets[kind];
         if (!selectedId) continue;
         if (activeEffectAssetIds[kind] === selectedId) continue;
         const asset = libraryAssets.find((entry) => entry.id === selectedId && entry.kind === kind);
@@ -690,7 +693,7 @@ export default function FabricadorDeModeloPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [activePreset.effectAssets, libraryAssets]);
+  }, [previewPreset.effectAssets, libraryAssets]);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -703,22 +706,22 @@ export default function FabricadorDeModeloPage() {
       loaded,
       placement,
       state,
-      activePreset.eyes,
+      previewPreset.eyes,
       eyebrowsLoaded,
       eyebrowPlacement,
-      activePreset.eyebrows,
+      previewPreset.eyebrows,
       mouthLoaded,
       mouthPlacement,
-      activePreset.mouth,
+      previewPreset.mouth,
       effectLoaded,
       effectPlacements,
-      activePreset.effects,
-      activePreset.enabledEffects,
-      activePreset.effectAssets,
-      activePreset.effectSettings,
-      activePreset.templateScaleX,
+      previewPreset.effects,
+      previewPreset.enabledEffects,
+      previewPreset.effectAssets,
+      previewPreset.effectSettings,
+      previewPreset.templateScaleX,
     );
-  }, [template, loaded, placement, state, activePreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
+  }, [template, loaded, placement, state, previewPreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
 
   useEffect(() => { redraw(); }, [redraw]);
 
@@ -1632,7 +1635,7 @@ export default function FabricadorDeModeloPage() {
 
         <section className={styles.previewPanel}>
           <header className={styles.previewHeader}>
-            <div><span>PREVIEW</span><h2>{EYE_EXPRESSIONS[presetIndex][1]}</h2></div>
+            <div><span>PREVIEW</span><h2>{EYE_EXPRESSIONS[previewIndex][1]}</h2></div>
             <div className={styles.previewMeta}>
               <span>{state === "open" ? "Olhos abertos" : "Olhos fechados"}</span>
               <span>{dragging ? `Movendo ${KIND_LABEL[dragging]}` : "Arraste uma camada para reposicionar"}</span>

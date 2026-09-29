@@ -39,6 +39,8 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Exportar/);
   assert.match(page, /UploadTile/);
   assert.match(page, /PlacementControls/);
+  assert.match(page, /const previewIndex = section === "adjust" \? NORMAL_PRESET_INDEX : presetIndex/);
+  assert.match(page, /const previewPreset = presets\[previewIndex\]/);
   assert.match(controls, /RangeControl label="Horizontal"/);
   assert.match(controls, /RangeControl label="Vertical"/);
   assert.match(page, /ChromaControls/);
