@@ -31,6 +31,8 @@ export type EyeExpressionVariation = {
 };
 
 export type FacePreset = {
+  /** Escala horizontal global do molde, compartilhada por todas as expressões. */
+  templateScaleX: number;
   eyes: EyeExpressionVariation;
   eyebrows: EyeExpressionVariation;
   mouth: EyeTransform;

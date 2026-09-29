@@ -82,7 +82,11 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
 });
 
 test("Fabricador exibe as 21 células de manpu para seleção por expressão", async () => {
-  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+  const [page, config, compositor] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
+  ]);
 
   assert.match(page, /Escolha qualquer uma das 21 células recortadas/);
   assert.match(page, /manpuPieces\.map/);
@@ -90,6 +94,11 @@ test("Fabricador exibe as 21 células de manpu para seleção por expressão", a
   assert.match(page, /effectPieceIndexes\.manpu/);
   assert.match(page, /const saveCurrentAssetState = async \(\) =>/);
   assert.match(page, /await saveCurrentAssetState\(\);/);
+  assert.match(page, /updateTemplateScaleX/);
+  assert.match(page, /Largura do molde/);
+  assert.match(page, /templateScaleX/);
+  assert.match(config, /TEMPLATE_SCALE_X_LIMITS/);
+  assert.match(compositor, /function drawTemplate/);
   assert.match(page, /placement: placementForKind\(kind\), chroma: chromaForKind\(kind\)/);
 });
 

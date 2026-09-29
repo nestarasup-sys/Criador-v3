@@ -28,6 +28,8 @@ export const DEFAULT_EFFECT_PLACEMENTS: Record<FaceEffectKind, EyePlacement> = {
   manpu: { x: 500, y: 360, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
 };
 
+export const TEMPLATE_SCALE_X_LIMITS = { min: .5, max: 1.2 } as const;
+
 export const PLACEMENT_LIMITS = {
   scale: { min: .35, max: 12 },
   scaleX: { min: .5, max: 6.8 },
@@ -44,6 +46,7 @@ const cloneVariation = (variation: EyeExpressionVariation): EyeExpressionVariati
 
 export function defaultPresetForIndex(index: number): FacePreset {
   return {
+    templateScaleX: 1,
     eyes: cloneVariation(EXPRESSION_VARIATIONS[index]),
     eyebrows: cloneVariation(BROW_VARIATIONS[index]),
     mouth: cloneTransform(DEFAULT_PRESET_MOUTH),
@@ -61,6 +64,9 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
     const preset = saved[key];
     if (!preset) return defaultPresetForIndex(index);
     return {
+      templateScaleX: Number.isFinite(preset.templateScaleX)
+        ? Math.min(TEMPLATE_SCALE_X_LIMITS.max, Math.max(TEMPLATE_SCALE_X_LIMITS.min, preset.templateScaleX))
+        : 1,
       eyes: cloneVariation(preset.eyes),
       eyebrows: cloneVariation(preset.eyebrows),
       mouth: cloneTransform(preset.mouth),

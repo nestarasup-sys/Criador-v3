@@ -3,6 +3,12 @@ import type { FabricatorAsset } from "../fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
 import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
+function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElement, templateScaleX: number) {
+  const scaleX = Math.min(1.2, Math.max(.5, Number.isFinite(templateScaleX) ? templateScaleX : 1));
+  const width = CANVAS_SIZE * scaleX;
+  context.drawImage(template, (CANVAS_SIZE - width) / 2, 0, width, CANVAS_SIZE);
+}
+
 function rgbaColor(hex: string, alpha: number) {
   const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex : "#ff90ae";
   const value = Number.parseInt(normalized.slice(1), 16);
@@ -47,9 +53,10 @@ export function drawComposition(
   enabledEffects: Record<FaceEffectKind, boolean> = defaultPresetForIndex(13).enabledEffects,
   effectAssets: Record<FaceEffectKind, string | null> = defaultPresetForIndex(13).effectAssets,
   effectSettings: Record<FaceEffectKind, FaceEffectSettings> = DEFAULT_EFFECT_SETTINGS,
+  templateScaleX = 1,
 ) {
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-  context.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  drawTemplate(context, template, templateScaleX);
 
   const drawFeature = (image: HTMLImageElement, featurePlacement: EyePlacement, side: -1 | 0 | 1, transform: EyeTransform) => {
     const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
@@ -122,7 +129,7 @@ export function drawComposition(
     }
     if (settings.clipToTemplate) {
       layerContext.globalCompositeOperation = "destination-in";
-      layerContext.drawImage(template, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+      drawTemplate(layerContext, template, templateScaleX);
       layerContext.globalCompositeOperation = "source-over";
     }
     context.save();

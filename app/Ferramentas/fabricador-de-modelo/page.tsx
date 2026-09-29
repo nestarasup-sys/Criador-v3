@@ -16,6 +16,7 @@ import {
   DEFAULT_MOUTH_PLACEMENT,
   DEFAULT_PLACEMENT,
   EFFECT_KINDS,
+  TEMPLATE_SCALE_X_LIMITS,
   defaultPresetForIndex,
   mergeSavedPresets,
   presetCollectionFromState,
@@ -713,6 +714,7 @@ export default function FabricadorDeModeloPage() {
       activePreset.enabledEffects,
       activePreset.effectAssets,
       activePreset.effectSettings,
+      activePreset.templateScaleX,
     );
   }, [template, loaded, placement, state, activePreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
 
@@ -1072,6 +1074,14 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
+  const updateTemplateScaleX = (value: number) => {
+    const next = Math.min(TEMPLATE_SCALE_X_LIMITS.max, Math.max(TEMPLATE_SCALE_X_LIMITS.min, value));
+    if (next === activePreset.templateScaleX) return;
+    pushEditorHistory();
+    setPresets((current) => current.map((preset) => ({ ...preset, templateScaleX: next })));
+    clearGenerated();
+  };
+
   const updateMouthTalkLink = (expressionIndex: number, talkIndex: number) => {
     if (!Number.isInteger(talkIndex) || talkIndex < 0 || talkIndex >= EYE_EXPRESSIONS.length) return;
     pushEditorHistory();
@@ -1260,7 +1270,7 @@ export default function FabricadorDeModeloPage() {
     canvas.height = CANVAS_SIZE;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas indisponível.");
-    drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings);
+    drawComposition(context, template, images, placement, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.templateScaleX);
     return canvas.toDataURL("image/png");
   };
 
@@ -1493,6 +1503,9 @@ export default function FabricadorDeModeloPage() {
           </>}
 
           {section === "adjust" && <>
+            <PanelBlock title="Molde" description="Esprema ou alargue o molde inteiro. A medida fica salva para todas as expressões e exportações.">
+              <RangeControl label="Largura do molde" value={activePreset.templateScaleX ?? 1} display={`${Math.round((activePreset.templateScaleX ?? 1) * 100)}%`} min={TEMPLATE_SCALE_X_LIMITS.min} max={TEMPLATE_SCALE_X_LIMITS.max} step=".01" onChange={updateTemplateScaleX} />
+            </PanelBlock>
             <PanelBlock title="Camada" description="Escolha o que deseja calibrar. O preview continua fixo no centro.">
               <div className={styles.layerTabs}>
                  {(["eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"] as FabricatorAssetKind[]).map((kind) =>
