@@ -110,6 +110,9 @@ test("Fabricador exibe as 21 células de manpu para seleção por expressão", a
   assert.match(config, /TEMPLATE_SCALE_X_LIMITS/);
   assert.match(config, /effectPlacements:/);
   assert.match(compositor, /function drawTemplate/);
+  assert.match(compositor, /function compressX/);
+  assert.match(compositor, /compositionScaleX/);
+  assert.match(compositor, /featurePlacement\.gap \* featurePlacement\.scale \* compositionScaleX/);
   assert.match(page, /placement: placementForKind\(kind\), chroma: chromaForKind\(kind\)/);
 });
 

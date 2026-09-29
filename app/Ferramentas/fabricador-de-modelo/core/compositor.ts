@@ -4,9 +4,17 @@ import type { EyeExpressionVariation, EyePair, EyePiece, EyePlacement, EyeState,
 import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
 function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElement, templateScaleX: number) {
-  const scaleX = Math.min(1.2, Math.max(.5, Number.isFinite(templateScaleX) ? templateScaleX : 1));
+  const scaleX = normalizeTemplateScaleX(templateScaleX);
   const width = CANVAS_SIZE * scaleX;
   context.drawImage(template, (CANVAS_SIZE - width) / 2, 0, width, CANVAS_SIZE);
+}
+
+function normalizeTemplateScaleX(value: number) {
+  return Math.min(1.2, Math.max(.5, Number.isFinite(value) ? value : 1));
+}
+
+function compressX(value: number, scaleX: number) {
+  return CANVAS_SIZE / 2 + (value - CANVAS_SIZE / 2) * scaleX;
 }
 
 function rgbaColor(hex: string, alpha: number) {
@@ -55,15 +63,21 @@ export function drawComposition(
   effectSettings: Record<FaceEffectKind, FaceEffectSettings> = DEFAULT_EFFECT_SETTINGS,
   templateScaleX = 1,
 ) {
+  const compositionScaleX = normalizeTemplateScaleX(templateScaleX);
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-  drawTemplate(context, template, templateScaleX);
+  drawTemplate(context, template, compositionScaleX);
 
   const drawFeature = (image: HTMLImageElement, featurePlacement: EyePlacement, side: -1 | 0 | 1, transform: EyeTransform) => {
-    const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
+    const width = image.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX * compositionScaleX;
     const height = image.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
     const angle = (featurePlacement.rotation + transform.rotation) * Math.PI / 180;
     context.save();
-    context.translate(featurePlacement.x + side * featurePlacement.gap * featurePlacement.scale / 2 + transform.x, featurePlacement.y + transform.y);
+    context.translate(
+      compressX(featurePlacement.x, compositionScaleX)
+        + side * featurePlacement.gap * featurePlacement.scale * compositionScaleX / 2
+        + transform.x * compositionScaleX,
+      featurePlacement.y + transform.y,
+    );
     context.rotate(angle);
     context.drawImage(image, -width / 2, -height / 2, width, height);
     context.restore();
@@ -84,11 +98,11 @@ export function drawComposition(
     const layerContext = layer.getContext("2d");
     if (!layerContext) return;
     const drawOnLayer = (featureImage: HTMLImageElement, featurePlacement: EyePlacement, transform: EyeTransform) => {
-      const width = featureImage.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX;
+      const width = featureImage.naturalWidth * featurePlacement.scale * featurePlacement.scaleX * transform.scaleX * compositionScaleX;
       const height = featureImage.naturalHeight * featurePlacement.scale * featurePlacement.scaleY * transform.scaleY;
       const angle = (featurePlacement.rotation + transform.rotation) * Math.PI / 180;
       layerContext.save();
-      layerContext.translate(featurePlacement.x + transform.x, featurePlacement.y + transform.y);
+      layerContext.translate(compressX(featurePlacement.x, compositionScaleX) + transform.x * compositionScaleX, featurePlacement.y + transform.y);
       layerContext.rotate(angle);
       layerContext.drawImage(featureImage, -width / 2, -height / 2, width, height);
       layerContext.restore();
@@ -101,9 +115,9 @@ export function drawComposition(
         layerContext.save();
         const placement = effectPlacements[kind];
         const transform = effectVariations[kind];
-        layerContext.translate(placement.x + transform.x, placement.y + transform.y);
+        layerContext.translate(compressX(placement.x, compositionScaleX) + transform.x * compositionScaleX, placement.y + transform.y);
         layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
-        layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
+        layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX * compositionScaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
         const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
         gradient.addColorStop(0, rgbaColor(color, .54));
         gradient.addColorStop(Math.max(.01, 1 - softness), rgbaColor(color, .30));
@@ -129,7 +143,7 @@ export function drawComposition(
     }
     if (settings.clipToTemplate) {
       layerContext.globalCompositeOperation = "destination-in";
-      drawTemplate(layerContext, template, templateScaleX);
+      drawTemplate(layerContext, template, compositionScaleX);
       layerContext.globalCompositeOperation = "source-over";
     }
     context.save();
