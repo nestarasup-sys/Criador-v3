@@ -579,14 +579,24 @@ function normalizeFabricatorPresets(value) {
         softness: Number.isFinite(softness) ? Math.min(1, Math.max(.01, softness)) : .18,
         gradientWidth: Number.isFinite(gradientWidth) ? Math.min(1000, Math.max(80, gradientWidth)) : 420,
         gradientHeight: Number.isFinite(gradientHeight) ? Math.min(700, Math.max(50, gradientHeight)) : 220,
+        blushStyle: effect === "blush" && ["oval", "cheeks", "bands", "diagonal", "spot"].includes(source?.blushStyle) ? source.blushStyle : undefined,
       }];
     }));
+    const mouthHaloSource = preset.mouthHalo;
+    const mouthHalo = {
+      enabled: mouthHaloSource?.enabled === true,
+      color: typeof mouthHaloSource?.color === "string" && /^#[0-9a-f]{6}$/i.test(mouthHaloSource.color) ? mouthHaloSource.color : "#ff90ae",
+      opacity: Number.isFinite(Number(mouthHaloSource?.opacity)) ? Math.min(1, Math.max(0, Number(mouthHaloSource.opacity))) : .58,
+      softness: Number.isFinite(Number(mouthHaloSource?.softness)) ? Math.min(1, Math.max(.01, Number(mouthHaloSource.softness))) : .35,
+      width: Number.isFinite(Number(mouthHaloSource?.width)) ? Math.min(500, Math.max(40, Number(mouthHaloSource.width))) : 170,
+      height: Number.isFinite(Number(mouthHaloSource?.height)) ? Math.min(300, Math.max(20, Number(mouthHaloSource.height))) : 90,
+    };
     const mouthTalkIndex = Number.isInteger(preset.mouthTalkIndex) && preset.mouthTalkIndex >= 0 && preset.mouthTalkIndex < 21 ? preset.mouthTalkIndex : Object.keys(value).indexOf(key);
     const effectPieceIndexes = Object.fromEntries(["blush", "shadow", "manpu"].map((effect) => {
       const candidate = preset.effectPieceIndexes?.[effect];
       return [effect, Number.isInteger(candidate) && candidate >= 0 && candidate < 21 ? candidate : effect === "manpu" ? Object.keys(value).indexOf(key) : null];
     }));
-    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
+    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthHalo, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
 }
