@@ -119,8 +119,11 @@ export function drawComposition(
         const softness = Math.min(1, Math.max(.01, settings.softness));
         const style = settings.blushStyle ?? "oval";
         layerContext.save();
-        const placement = effectPlacements[kind];
-        const transform = effectVariations[kind];
+        // O halo da boca acompanha a boca da expressão atual. O efeito continua
+        // sendo desenhado antes das feições, portanto fica atrás da arte da boca.
+        const followsMouth = style === "mouth-halo";
+        const placement = followsMouth ? mouthPlacement : effectPlacements[kind];
+        const transform = followsMouth ? mouthVariation : effectVariations[kind];
         layerContext.translate(compressX(placement.x, compositionScaleX) + transform.x * compositionScaleX, placement.y + transform.y);
         layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
         layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX * compositionScaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
@@ -150,6 +153,8 @@ export function drawComposition(
           layerContext.restore();
         } else if (style === "spot") {
           drawBlob(0, 0, .62, .62, .68);
+        } else if (style === "mouth-halo") {
+          drawBlob(0, 0, .9, .72, .62);
         } else {
           drawBlob(0, 0, 1, 1);
         }
