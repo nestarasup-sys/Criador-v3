@@ -117,18 +117,42 @@ export function drawComposition(
       const color = settings.color;
       if (kind === "blush") {
         const softness = Math.min(1, Math.max(.01, settings.softness));
+        const style = settings.blushStyle ?? "oval";
         layerContext.save();
         const placement = effectPlacements[kind];
         const transform = effectVariations[kind];
         layerContext.translate(compressX(placement.x, compositionScaleX) + transform.x * compositionScaleX, placement.y + transform.y);
         layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
         layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX * compositionScaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
-        const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
-        gradient.addColorStop(0, rgbaColor(color, .54));
-        gradient.addColorStop(Math.max(.01, 1 - softness), rgbaColor(color, .30));
-        gradient.addColorStop(1, rgbaColor(color, 0));
-        layerContext.fillStyle = gradient;
-        layerContext.fillRect(-1, -1, 2, 2);
+        const drawBlob = (x: number, y: number, scaleX: number, scaleY: number, alpha = .54) => {
+          layerContext.save();
+          layerContext.translate(x, y);
+          layerContext.scale(scaleX, scaleY);
+          const gradient = layerContext.createRadialGradient(0, 0, 0, 0, 0, 1);
+          gradient.addColorStop(0, rgbaColor(color, alpha));
+          gradient.addColorStop(Math.max(.01, 1 - softness), rgbaColor(color, alpha * .56));
+          gradient.addColorStop(1, rgbaColor(color, 0));
+          layerContext.fillStyle = gradient;
+          layerContext.fillRect(-1, -1, 2, 2);
+          layerContext.restore();
+        };
+        if (style === "cheeks") {
+          drawBlob(-.46, 0, .54, .82);
+          drawBlob(.46, 0, .54, .82);
+        } else if (style === "bands") {
+          drawBlob(0, -.24, .92, .28, .44);
+          drawBlob(0, 0, .96, .28, .38);
+          drawBlob(0, .24, .92, .28, .32);
+        } else if (style === "diagonal") {
+          layerContext.save();
+          layerContext.rotate(-.28);
+          drawBlob(0, 0, .92, .58);
+          layerContext.restore();
+        } else if (style === "spot") {
+          drawBlob(0, 0, .62, .62, .68);
+        } else {
+          drawBlob(0, 0, 1, 1);
+        }
         layerContext.restore();
       } else {
         const coverage = Math.min(1, Math.max(.01, settings.verticalCoverage));

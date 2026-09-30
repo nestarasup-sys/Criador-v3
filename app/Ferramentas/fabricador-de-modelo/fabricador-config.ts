@@ -22,7 +22,7 @@ export const DEFAULT_MOUTH_PLACEMENT: EyePlacement = { x: 500, y: 610, scale: 1,
 export const DEFAULT_PRESET_MOUTH: EyeTransform = { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 };
 export const EFFECT_KINDS: FaceEffectKind[] = ["blush", "shadow", "manpu"];
 export const DEFAULT_EFFECT_SETTINGS: Record<FaceEffectKind, FaceEffectSettings> = {
-  blush: { opacity: 1, clipToTemplate: true, source: "asset", color: "#ff90ae", verticalCoverage: .5, softness: .18, gradientWidth: 420, gradientHeight: 220 },
+  blush: { opacity: 1, clipToTemplate: true, source: "asset", color: "#ff90ae", verticalCoverage: .5, softness: .18, gradientWidth: 420, gradientHeight: 220, blushStyle: "oval" },
   shadow: { opacity: 1, clipToTemplate: true, source: "asset", color: "#2c1f34", verticalCoverage: .5, softness: .18, gradientWidth: 420, gradientHeight: 220 },
   manpu: { opacity: 1, clipToTemplate: true, source: "asset", color: "#ffffff", verticalCoverage: .5, softness: .18, gradientWidth: 420, gradientHeight: 220 },
 };

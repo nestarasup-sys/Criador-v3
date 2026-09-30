@@ -53,6 +53,9 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Transparência/);
   assert.match(page, /Shadow automático/);
   assert.match(page, /Blush automático/);
+  assert.match(page, /Design do blush/);
+  assert.match(page, /Duas bochechas/);
+  assert.match(page, /Faixas de anime/);
   assert.match(page, /Cobertura vertical/);
   assert.match(page, /Bocas de fala/);
   assert.match(page, /Configurar vínculos de fala/);
