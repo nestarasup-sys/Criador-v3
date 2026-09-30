@@ -1501,6 +1501,7 @@ export default function FabricadorDeModeloPage() {
             ...(eyebrowPair ? ["eyebrows"] : []),
             ...(mouthPieces.length ? ["mouths"] : []),
             ...(mouthTalkPieces.length ? ["mouths-talk"] : []),
+            ...(presets.some((preset) => preset.mouthHalo.enabled) ? ["mouth-halo"] : []),
             ...EFFECT_KINDS.filter((kind) => presets.some((preset) => preset.enabledEffects[kind] && preset.effectAssets[kind])),
           ],
         },
