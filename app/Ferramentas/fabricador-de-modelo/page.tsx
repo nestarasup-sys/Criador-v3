@@ -757,6 +757,7 @@ export default function FabricadorDeModeloPage() {
       previewPreset.enabledEffects,
       previewPreset.effectAssets,
       previewPreset.effectSettings,
+      previewPreset.mouthHalo,
       previewPreset.templateScaleX,
     );
   }, [template, loaded, eyePlacements, state, previewPreset, eyebrowsLoaded, eyebrowPlacement, mouthLoaded, mouthPlacement, effectLoaded, effectPlacements]);
@@ -1215,6 +1216,14 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
+  const updateMouthHalo = (patch: Partial<FacePreset["mouthHalo"]>) => {
+    pushEditorHistory();
+    setPresets((current) => current.map((preset, index) => index === presetIndex
+      ? { ...preset, mouthHalo: { ...preset.mouthHalo, ...patch } }
+      : preset));
+    clearGenerated();
+  };
+
   const updateEffectPieceIndex = (kind: FaceEffectKind, pieceIndex: number) => {
     if (kind !== "manpu" || pieceIndex < 0 || pieceIndex >= manpuCellCount) return;
     const assetId = activeEffectAssetIds.manpu;
@@ -1389,7 +1398,7 @@ export default function FabricadorDeModeloPage() {
     canvas.height = CANVAS_SIZE;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Canvas indisponível.");
-    drawComposition(context, template, images, eyePlacements, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.templateScaleX);
+    drawComposition(context, template, images, eyePlacements, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.mouthHalo, preset.templateScaleX);
     return canvas.toDataURL("image/png");
   };
 
@@ -1724,6 +1733,17 @@ export default function FabricadorDeModeloPage() {
               </div>}
             </PanelBlock>
 
+            {presetLayer === "mouth" && <PanelBlock title="Halo rosa da boca" description="Configuração independente do blush normal. Fica atrás da boca e acompanha a posição, escala e rotação dela.">
+              <label className={styles.checkRow}><input type="checkbox" checked={activePreset.mouthHalo.enabled} onChange={(event) => updateMouthHalo({ enabled: event.target.checked })} /><span><b>Ativar halo atrás da boca</b><small>Funciona tanto na boca normal quanto na boca de fala.</small></span></label>
+              <div className={styles.colorControl}><span><b>Cor do halo</b><output>{activePreset.mouthHalo.color}</output></span><input type="color" value={activePreset.mouthHalo.color} onChange={(event) => updateMouthHalo({ color: event.target.value })} /></div>
+              <div className={styles.controlStack}>
+                <RangeControl label="Largura" value={activePreset.mouthHalo.width} display={`${Math.round(activePreset.mouthHalo.width)} px`} min={40} max={500} step={1} onChange={(value) => updateMouthHalo({ width: value })} />
+                <RangeControl label="Altura" value={activePreset.mouthHalo.height} display={`${Math.round(activePreset.mouthHalo.height)} px`} min={20} max={300} step={1} onChange={(value) => updateMouthHalo({ height: value })} />
+                <RangeControl label="Suavidade" value={activePreset.mouthHalo.softness} display={`${Math.round(activePreset.mouthHalo.softness * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateMouthHalo({ softness: value })} />
+                <RangeControl label="Transparência" value={activePreset.mouthHalo.opacity} display={`${Math.round(activePreset.mouthHalo.opacity * 100)}%`} min={0} max={1} step=".01" onChange={(value) => updateMouthHalo({ opacity: value })} />
+              </div>
+            </PanelBlock>}
+
             {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Asset do efeito" description={effectCatalogKind === "manpu" ? `Escolha qualquer uma das ${manpuCellCount} células recortadas para esta expressão.` : "Escolha o asset que será usado nesta expressão."}>
               <div className={styles.segmented}>
                 {EFFECT_KINDS.map((kind) => <button key={kind} className={effectCatalogKind === kind ? styles.tabActive : ""} onClick={() => setEffectCatalogKind(kind)}>{KIND_LABEL[kind]}</button>)}
@@ -1749,7 +1769,7 @@ export default function FabricadorDeModeloPage() {
               </div>
               {(activePreset.effectSettings[effectCatalogKind]?.source ?? "asset") === "gradient" && (effectCatalogKind === "shadow" || effectCatalogKind === "blush") && <div className={styles.controlStack}>
                 {effectCatalogKind === "blush" && <>
-                  <label className={styles.field}><span><b>Design do blush</b><small>Escolha o formato visual desta expressão.</small></span><select className={styles.select} value={activePreset.effectSettings.blush?.blushStyle ?? "oval"} onChange={(event) => updateEffectSetting("blushStyle", event.target.value)}><option value="oval">Oval suave</option><option value="cheeks">Duas bochechas</option><option value="bands">Faixas de anime</option><option value="diagonal">Diagonal</option><option value="spot">Ponto concentrado</option><option value="mouth-halo">Halo atrás da boca</option></select></label>
+                  <label className={styles.field}><span><b>Design do blush</b><small>Escolha o formato visual desta expressão.</small></span><select className={styles.select} value={activePreset.effectSettings.blush?.blushStyle ?? "oval"} onChange={(event) => updateEffectSetting("blushStyle", event.target.value)}><option value="oval">Oval suave</option><option value="cheeks">Duas bochechas</option><option value="bands">Faixas de anime</option><option value="diagonal">Diagonal</option><option value="spot">Ponto concentrado</option></select></label>
                   <label className={styles.colorControl}><span><b>Cor do blush</b><output>{activePreset.effectSettings.blush?.color ?? "#ff90ae"}</output></span><input type="color" value={activePreset.effectSettings.blush?.color ?? "#ff90ae"} onChange={(event) => updateEffectSetting("color", event.target.value)} /></label>
                 </>}
                 {effectCatalogKind === "shadow" && <RangeControl label="Cobertura vertical" value={activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5} display={`${Math.round((activePreset.effectSettings[effectCatalogKind]?.verticalCoverage ?? .5) * 100)}%`} min={.01} max={1} step=".01" onChange={(value) => updateEffectSetting("verticalCoverage", value)} />}

@@ -1,6 +1,6 @@
 import { loadImage, splitPair } from "./eye-processing";
 import type { FabricatorAsset } from "../fabricador-storage";
-import type { EyeExpressionVariation, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings } from "../types/eye-model";
+import type { EyeExpressionVariation, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, MouthHaloSettings } from "../types/eye-model";
 import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
 function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElement, templateScaleX: number) {
@@ -61,6 +61,7 @@ export function drawComposition(
   enabledEffects: Record<FaceEffectKind, boolean> = defaultPresetForIndex(13).enabledEffects,
   effectAssets: Record<FaceEffectKind, string | null> = defaultPresetForIndex(13).effectAssets,
   effectSettings: Record<FaceEffectKind, FaceEffectSettings> = DEFAULT_EFFECT_SETTINGS,
+  mouthHalo: MouthHaloSettings = defaultPresetForIndex(13).mouthHalo,
   templateScaleX = 1,
 ) {
   const compositionScaleX = normalizeTemplateScaleX(templateScaleX);
@@ -121,9 +122,8 @@ export function drawComposition(
         layerContext.save();
         // O halo da boca acompanha a boca da expressão atual. O efeito continua
         // sendo desenhado antes das feições, portanto fica atrás da arte da boca.
-        const followsMouth = style === "mouth-halo";
-        const placement = followsMouth ? mouthPlacement : effectPlacements[kind];
-        const transform = followsMouth ? mouthVariation : effectVariations[kind];
+        const placement = effectPlacements[kind];
+        const transform = effectVariations[kind];
         layerContext.translate(compressX(placement.x, compositionScaleX) + transform.x * compositionScaleX, placement.y + transform.y);
         layerContext.rotate((placement.rotation + transform.rotation) * Math.PI / 180);
         layerContext.scale(settings.gradientWidth * placement.scale * placement.scaleX * transform.scaleX * compositionScaleX / 2, settings.gradientHeight * placement.scale * placement.scaleY * transform.scaleY / 2);
@@ -153,8 +153,6 @@ export function drawComposition(
           layerContext.restore();
         } else if (style === "spot") {
           drawBlob(0, 0, .62, .62, .68);
-        } else if (style === "mouth-halo") {
-          drawBlob(0, 0, .9, .72, .62);
         } else {
           drawBlob(0, 0, 1, 1);
         }
@@ -188,6 +186,39 @@ export function drawComposition(
 
   for (const kind of EFFECT_KINDS) {
     drawEffect(kind);
+  }
+  if (mouthHalo.enabled && mouth) {
+    const haloLayer = document.createElement("canvas");
+    haloLayer.width = CANVAS_SIZE;
+    haloLayer.height = CANVAS_SIZE;
+    const haloContext = haloLayer.getContext("2d");
+    if (haloContext) {
+      const width = Math.max(20, mouthHalo.width * mouthPlacement.scale * mouthVariation.scaleX * compositionScaleX);
+      const height = Math.max(20, mouthHalo.height * mouthPlacement.scale * mouthVariation.scaleY);
+      const centerX = compressX(mouthPlacement.x, compositionScaleX) + mouthVariation.x * compositionScaleX;
+      const centerY = mouthPlacement.y + mouthVariation.y;
+      const radius = Math.max(width, height) / 2;
+      const softness = Math.min(1, Math.max(.01, mouthHalo.softness));
+      const gradient = haloContext.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      gradient.addColorStop(0, rgbaColor(mouthHalo.color, 1));
+      gradient.addColorStop(Math.max(.01, 1 - softness), rgbaColor(mouthHalo.color, .42));
+      gradient.addColorStop(1, rgbaColor(mouthHalo.color, 0));
+      haloContext.save();
+      haloContext.translate(centerX, centerY);
+      haloContext.rotate((mouthPlacement.rotation + mouthVariation.rotation) * Math.PI / 180);
+      haloContext.scale(width / Math.max(1, radius * 2), height / Math.max(1, radius * 2));
+      haloContext.translate(-centerX, -centerY);
+      haloContext.fillStyle = gradient;
+      haloContext.fillRect(centerX - radius, centerY - radius, radius * 2, radius * 2);
+      haloContext.restore();
+      haloContext.globalCompositeOperation = "destination-in";
+      drawTemplate(haloContext, template, compositionScaleX);
+      haloContext.globalCompositeOperation = "source-over";
+      context.save();
+      context.globalAlpha = Math.min(1, Math.max(0, mouthHalo.opacity));
+      context.drawImage(haloLayer, 0, 0);
+      context.restore();
+    }
   }
   if (eyebrows) drawSharedPair(eyebrows, eyebrowPlacement, eyebrowVariation);
   if (mouth) drawFeature(mouth, mouthPlacement, 0, mouthVariation);

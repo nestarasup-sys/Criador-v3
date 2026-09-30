@@ -2,8 +2,9 @@ export type EyeState = "open" | "pt" | "closed";
 export type ManpuGrid = "7x3" | "5x8";
 export type FaceEffectKind = "blush" | "shadow" | "manpu";
 export type FaceEffectSource = "asset" | "gradient";
-export type BlushStyle = "oval" | "cheeks" | "bands" | "diagonal" | "spot" | "mouth-halo";
+export type BlushStyle = "oval" | "cheeks" | "bands" | "diagonal" | "spot";
 export type FaceEffectSettings = { opacity: number; clipToTemplate: boolean; source: FaceEffectSource; color: string; verticalCoverage: number; softness: number; gradientWidth: number; gradientHeight: number; blushStyle?: BlushStyle };
+export type MouthHaloSettings = { enabled: boolean; color: string; opacity: number; softness: number; width: number; height: number };
 
 export type EyePiece = {
   dataUrl: string;
@@ -46,6 +47,7 @@ export type FacePreset = {
   enabledEffects: Record<FaceEffectKind, boolean>;
   effectAssets: Record<FaceEffectKind, string | null>;
   effectSettings: Record<FaceEffectKind, FaceEffectSettings>;
+  mouthHalo: MouthHaloSettings;
   /** Célula da folha 7x3 escolhida para cada efeito com múltiplas peças. */
   effectPieceIndexes: Record<FaceEffectKind, number | null>;
   /** Índice da célula de boca usada na variação _talk desta expressão. */

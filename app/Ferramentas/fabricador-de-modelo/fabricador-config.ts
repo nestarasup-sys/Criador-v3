@@ -1,5 +1,5 @@
 import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
-import type { EyeExpressionVariation, EyePairPlacement, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection } from "./types/eye-model";
+import type { EyeExpressionVariation, EyePairPlacement, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection, MouthHaloSettings } from "./types/eye-model";
 
 export const CANVAS_SIZE = 1000;
 export const CATALOG_CANVAS_WIDTH = 1920;
@@ -31,6 +31,7 @@ export const DEFAULT_EFFECT_PLACEMENTS: Record<FaceEffectKind, EyePlacement> = {
   shadow: { x: 500, y: 420, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
   manpu: { x: 500, y: 360, scale: 1, scaleX: 1, scaleY: 1, rotation: 0, gap: 0 },
 };
+export const DEFAULT_MOUTH_HALO: MouthHaloSettings = { enabled: false, color: "#ff90ae", opacity: .58, softness: .35, width: 170, height: 90 };
 
 export const TEMPLATE_SCALE_X_LIMITS = { min: .5, max: 1.2 } as const;
 
@@ -59,6 +60,7 @@ export function defaultPresetForIndex(index: number): FacePreset {
     enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, true])) as Record<FaceEffectKind, boolean>,
     effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, null])) as Record<FaceEffectKind, string | null>,
     effectSettings: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_SETTINGS[kind] }])) as Record<FaceEffectKind, FaceEffectSettings>,
+    mouthHalo: { ...DEFAULT_MOUTH_HALO },
     effectPieceIndexes: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, kind === "manpu" ? index : null])) as Record<FaceEffectKind, number | null>,
     mouthTalkIndex: index,
   };
@@ -80,6 +82,7 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
       enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.enabledEffects?.[kind] ?? true])) as Record<FaceEffectKind, boolean>,
       effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.effectAssets?.[kind] ?? null])) as Record<FaceEffectKind, string | null>,
       effectSettings: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_SETTINGS[kind], ...(preset.effectSettings?.[kind] ?? {}) }])) as Record<FaceEffectKind, FaceEffectSettings>,
+      mouthHalo: { ...DEFAULT_MOUTH_HALO, ...(preset.mouthHalo ?? {}) },
       effectPieceIndexes: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, Number.isInteger(preset.effectPieceIndexes?.[kind]) && (preset.effectPieceIndexes?.[kind] as number) >= 0 && (preset.effectPieceIndexes?.[kind] as number) < 40 ? preset.effectPieceIndexes?.[kind] : kind === "manpu" ? index : null])) as Record<FaceEffectKind, number | null>,
       mouthTalkIndex: Number.isInteger(preset.mouthTalkIndex) && preset.mouthTalkIndex >= 0 && preset.mouthTalkIndex < EYE_EXPRESSIONS.length ? preset.mouthTalkIndex : index,
     };
