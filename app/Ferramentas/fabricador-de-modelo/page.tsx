@@ -37,7 +37,7 @@ import {
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
-import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, MouthPiece } from "./types/eye-model";
+import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, ManpuGrid, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -146,6 +146,7 @@ export default function FabricadorDeModeloPage() {
   const [effectFiles, setEffectFiles] = useState<Partial<Record<FaceEffectKind, File>>>({});
   const [effectPieces, setEffectPieces] = useState<Partial<Record<FaceEffectKind, EyePiece>>>({});
   const [manpuPieces, setManpuPieces] = useState<EyePiece[]>([]);
+  const [manpuGrid, setManpuGrid] = useState<ManpuGrid>("7x3");
 
   const [loaded, setLoaded] = useState<LoadedPair | null>(null);
   const [eyebrowsLoaded, setEyebrowsLoaded] = useState<LoadedPair | null>(null);
@@ -197,6 +198,7 @@ export default function FabricadorDeModeloPage() {
   const [generating, setGenerating] = useState(false);
   const [processingLayers, setProcessingLayers] = useState<Partial<Record<FabricatorAssetKind, boolean>>>({});
   const [exportGender, setExportGender] = useState<ModelGender>("feminino");
+  const manpuCellCount = manpuGrid === "5x8" ? 40 : 21;
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
@@ -415,15 +417,15 @@ export default function FabricadorDeModeloPage() {
 
   const persistProcessedUpload = async (file: File, kind: FabricatorAssetKind, chroma: ChromaSettings, sequence: number) => {
     try {
-      const asset = await uploadFabricatorAsset(file, kind, chroma);
+      const asset = await uploadFabricatorAsset(file, kind, chroma, kind === "manpu" ? manpuGrid : undefined);
       setLibraryAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
       if (uploadSequenceRef.current[kind] !== sequence) return asset;
 
       const latestChroma = latestChromaRef.current[kind] ?? chroma;
       const latestPlacement = latestPlacementRef.current[kind] ?? defaultPlacementForKind(kind);
-      const synchronizedAsset = { ...asset, chroma: latestChroma, placement: latestPlacement };
+      const synchronizedAsset = { ...asset, chroma: latestChroma, placement: latestPlacement, ...(kind === "manpu" ? { grid: manpuGrid } : {}) };
       setLibraryAssets((current) => current.map((entry) => entry.id === asset.id ? synchronizedAsset : entry));
-      await updateFabricatorAsset(asset.id, { chroma: latestChroma, placement: latestPlacement }).catch(() => undefined);
+      await updateFabricatorAsset(asset.id, { chroma: latestChroma, placement: latestPlacement, ...(kind === "manpu" ? { grid: manpuGrid } : {}) }).catch(() => undefined);
 
       if (kind === "eyes") setActiveEyeAssetId(asset.id);
       else if (kind === "eyebrows") setActiveEyebrowAssetId(asset.id);
@@ -520,6 +522,15 @@ export default function FabricadorDeModeloPage() {
       setActiveEffectAssetIds((current) => ({ ...current, [kind]: "" }));
       queuePersistenceAfterProcessing(file, kind);
     }
+  };
+
+  const changeManpuGrid = (grid: ManpuGrid) => {
+    setManpuGrid(grid);
+    clearGenerated();
+    const assetId = activeEffectAssetIds.manpu;
+    if (!assetId) return;
+    setLibraryAssets((current) => current.map((asset) => asset.id === assetId ? { ...asset, grid } : asset));
+    void updateFabricatorAsset(assetId, { grid }).catch(() => undefined);
   };
 
   useEffect(() => {
@@ -667,7 +678,7 @@ export default function FabricadorDeModeloPage() {
     const file = effectFiles.manpu;
     if (!file) return;
     let cancelled = false;
-    processManpuSheet(file, effectChromaSettings.manpu)
+    processManpuSheet(file, effectChromaSettings.manpu, manpuGrid)
       .then(async (pieces) => {
         if (cancelled) return;
         setManpuPieces(pieces);
@@ -676,7 +687,7 @@ export default function FabricadorDeModeloPage() {
       })
       .catch((error) => { if (!cancelled) { discardPendingPersistence("manpu", file); setManpuPieces([]); setProcessingLayers((current) => ({ ...current, manpu: false })); setStatus(error instanceof Error ? error.message : "Não consegui processar a folha de manpu."); } });
     return () => { cancelled = true; };
-  }, [effectFiles.manpu, effectChromaSettings.manpu]);
+  }, [effectFiles.manpu, effectChromaSettings.manpu, manpuGrid]);
 
   useEffect(() => {
     let cancelled = false;
@@ -880,6 +891,7 @@ export default function FabricadorDeModeloPage() {
       else if (asset.kind === "mouths") { setActiveMouthAssetId(asset.id); onMouthUpload(file, false); }
       else if (asset.kind === "mouths-talk") { setActiveMouthTalkAssetId(asset.id); setMouthPreviewMode("talk"); onMouthTalkUpload(file, false); }
       else {
+        if (asset.kind === "manpu") setManpuGrid(asset.grid ?? "7x3");
         markLayerProcessing(asset.kind, true);
         setActiveEffectAssetIds((current) => ({ ...current, [asset.kind]: asset.id }));
         setEffectFiles((current) => ({ ...current, [asset.kind]: file }));
@@ -1204,7 +1216,7 @@ export default function FabricadorDeModeloPage() {
   };
 
   const updateEffectPieceIndex = (kind: FaceEffectKind, pieceIndex: number) => {
-    if (kind !== "manpu" || pieceIndex < 0 || pieceIndex >= 21) return;
+    if (kind !== "manpu" || pieceIndex < 0 || pieceIndex >= manpuCellCount) return;
     const assetId = activeEffectAssetIds.manpu;
     if (!assetId) { setStatus("Carregue uma folha de manpu da biblioteca antes de escolher a célula."); return; }
     pushEditorHistory();
@@ -1295,12 +1307,12 @@ export default function FabricadorDeModeloPage() {
   };
 
   const processEffectAssetForRender = (asset: FabricatorAsset, chroma: ChromaSettings = asset.chroma ?? DEFAULT_CHROMA_SETTINGS) => {
-    const cacheKey = `${asset.id}:${asset.kind}:${chroma.strength}:${chroma.tolerance}:${chroma.softness}`;
+    const cacheKey = `${asset.id}:${asset.kind}:${asset.grid ?? "7x3"}:${chroma.strength}:${chroma.tolerance}:${chroma.softness}`;
     const cached = effectProcessingCache.current.get(cacheKey);
     if (cached) return cached;
     const operation: Promise<EyePiece | EyePiece[]> = assetToFile(asset).then<EyePiece | EyePiece[]>((file) =>
       asset.kind === "manpu"
-        ? processManpuSheet(file, chroma)
+        ? processManpuSheet(file, chroma, asset.grid ?? "7x3")
         : processEffectImage(file, chroma)
     );
     effectProcessingCache.current.set(cacheKey, operation);
@@ -1623,7 +1635,14 @@ export default function FabricadorDeModeloPage() {
               <div className={styles.uploadGrid}>
                 <UploadTile title="Blush" detail="imagem única" onFile={(file) => onEffectUpload("blush", file)} />
                 <UploadTile title="Shadow" detail="imagem única" onFile={(file) => onEffectUpload("shadow", file)} />
-                <UploadTile title="Manpu" detail="grade 7×3 · 21 células" onFile={(file) => onEffectUpload("manpu", file)} />
+                <div className={styles.gridUploadTile}>
+                  <div><b>Manpu</b><small>{manpuGrid === "5x8" ? "grade 5×8 · 40 células" : "grade 7×3 · 21 células"}</small></div>
+                  <select className={styles.select} value={manpuGrid} onChange={(event) => changeManpuGrid(event.target.value as ManpuGrid)} aria-label="Formato da folha de manpu">
+                    <option value="7x3">7 colunas × 3 linhas</option>
+                    <option value="5x8">5 colunas × 8 linhas</option>
+                  </select>
+                  <UploadTile title="Enviar folha" detail="recorte automático" onFile={(file) => onEffectUpload("manpu", file)} />
+                </div>
               </div>
             </PanelBlock>
           </>}
@@ -1705,7 +1724,7 @@ export default function FabricadorDeModeloPage() {
               </div>}
             </PanelBlock>
 
-            {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Asset do efeito" description={effectCatalogKind === "manpu" ? "Escolha qualquer uma das 21 células recortadas para esta expressão." : "Escolha o asset que será usado nesta expressão."}>
+            {EFFECT_KINDS.includes(presetLayer as FaceEffectKind) && <PanelBlock title="Asset do efeito" description={effectCatalogKind === "manpu" ? `Escolha qualquer uma das ${manpuCellCount} células recortadas para esta expressão.` : "Escolha o asset que será usado nesta expressão."}>
               <div className={styles.segmented}>
                 {EFFECT_KINDS.map((kind) => <button key={kind} className={effectCatalogKind === kind ? styles.tabActive : ""} onClick={() => setEffectCatalogKind(kind)}>{KIND_LABEL[kind]}</button>)}
               </div>
@@ -1716,7 +1735,7 @@ export default function FabricadorDeModeloPage() {
                   <span><b>{asset.name}</b><small>{activePreset.effectAssets[effectCatalogKind] === asset.id ? "Selecionado" : "Usar nesta expressão"}</small></span>
                 </button>)}
               </div>
-               {effectCatalogKind === "manpu" && manpuPieces.length === 21 && <div className={styles.manpuPieceGrid}>
+               {effectCatalogKind === "manpu" && manpuPieces.length > 0 && <div className={styles.manpuPieceGrid} style={{ gridTemplateColumns: `repeat(${manpuGrid === "5x8" ? 5 : 7}, minmax(0, 1fr))` }}>
                  {manpuPieces.map((piece, pieceIndex) => <button key={pieceIndex} className={activePreset.effectPieceIndexes.manpu === pieceIndex ? styles.manpuPieceActive : styles.manpuPiece} onClick={() => updateEffectPieceIndex("manpu", pieceIndex)} title={`Usar manpu ${pieceIndex + 1}`}>
                    <img src={piece.dataUrl} alt={`Manpu ${pieceIndex + 1}`} /><small>{String(pieceIndex + 1).padStart(2, "0")}</small>
                  </button>)}

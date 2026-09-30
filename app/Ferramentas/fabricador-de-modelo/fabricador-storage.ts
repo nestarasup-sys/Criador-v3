@@ -1,6 +1,6 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
-import type { AssetPlacement, FaceEffectKind, FacePresetCollection } from "./types/eye-model";
+import type { AssetPlacement, FaceEffectKind, FacePresetCollection, ManpuGrid } from "./types/eye-model";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths" | "mouths-talk" | FaceEffectKind;
 
@@ -12,6 +12,7 @@ export type FabricatorAsset = {
   fileUrl: string;
   createdAt: string;
   chroma?: ChromaSettings;
+  grid?: ManpuGrid;
   placement?: AssetPlacement;
   localOnly?: boolean;
   pendingSync?: boolean;
@@ -112,6 +113,7 @@ async function persistAsset(asset: FabricatorAsset, body: Blob | File) {
         createdAt: asset.createdAt,
         chroma: asset.chroma,
         placement: asset.placement,
+        grid: asset.grid,
       })),
     },
     body,
@@ -146,7 +148,7 @@ export async function loadFabricatorAssets() {
     const reconciledServerAssets = await Promise.all(serverAssets.map(async (serverAsset) => {
       const localAsset = localAssets.find((asset) => asset.id === serverAsset.id && asset.pendingSync && !asset.localOnly);
       if (!localAsset) return serverAsset;
-      const updates = { chroma: localAsset.chroma, placement: localAsset.placement };
+      const updates = { chroma: localAsset.chroma, placement: localAsset.placement, grid: localAsset.grid };
       try {
         const response = await localDataFetch(`/fabricador-modelos/${encodeURIComponent(serverAsset.id)}`, {
           method: "PATCH",
@@ -168,7 +170,7 @@ export async function loadFabricatorAssets() {
   }
 }
 
-export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKind, chroma: ChromaSettings) {
+export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKind, chroma: ChromaSettings, grid?: ManpuGrid) {
   const id = crypto.randomUUID();
   const asset: FabricatorAsset = {
     id,
@@ -178,6 +180,7 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
     fileUrl: "",
     createdAt: new Date().toISOString(),
     chroma,
+    ...(kind === "manpu" && grid ? { grid } : {}),
   };
   try {
     const saved = await persistAsset(asset, file);
@@ -195,7 +198,7 @@ export async function uploadFabricatorAsset(file: File, kind: FabricatorAssetKin
   }
 }
 
-export async function updateFabricatorAsset(assetId: string, updates: { chroma?: ChromaSettings; placement?: AssetPlacement }) {
+export async function updateFabricatorAsset(assetId: string, updates: { chroma?: ChromaSettings; placement?: AssetPlacement; grid?: ManpuGrid }) {
   if (volatileAssetIds.has(assetId)) {
     return { ...updates, pcSaved: false, localSaved: false, volatileOnly: true };
   }

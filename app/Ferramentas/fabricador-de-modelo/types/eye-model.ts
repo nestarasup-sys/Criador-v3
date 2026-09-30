@@ -1,4 +1,5 @@
 export type EyeState = "open" | "pt" | "closed";
+export type ManpuGrid = "7x3" | "5x8";
 export type FaceEffectKind = "blush" | "shadow" | "manpu";
 export type FaceEffectSource = "asset" | "gradient";
 export type BlushStyle = "oval" | "cheeks" | "bands" | "diagonal" | "spot";

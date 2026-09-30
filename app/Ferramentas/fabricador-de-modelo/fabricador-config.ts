@@ -80,7 +80,7 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
       enabledEffects: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.enabledEffects?.[kind] ?? true])) as Record<FaceEffectKind, boolean>,
       effectAssets: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, preset.effectAssets?.[kind] ?? null])) as Record<FaceEffectKind, string | null>,
       effectSettings: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_SETTINGS[kind], ...(preset.effectSettings?.[kind] ?? {}) }])) as Record<FaceEffectKind, FaceEffectSettings>,
-      effectPieceIndexes: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, Number.isInteger(preset.effectPieceIndexes?.[kind]) && (preset.effectPieceIndexes?.[kind] as number) >= 0 && (preset.effectPieceIndexes?.[kind] as number) < 21 ? preset.effectPieceIndexes?.[kind] : kind === "manpu" ? index : null])) as Record<FaceEffectKind, number | null>,
+      effectPieceIndexes: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, Number.isInteger(preset.effectPieceIndexes?.[kind]) && (preset.effectPieceIndexes?.[kind] as number) >= 0 && (preset.effectPieceIndexes?.[kind] as number) < 40 ? preset.effectPieceIndexes?.[kind] : kind === "manpu" ? index : null])) as Record<FaceEffectKind, number | null>,
       mouthTalkIndex: Number.isInteger(preset.mouthTalkIndex) && preset.mouthTalkIndex >= 0 && preset.mouthTalkIndex < EYE_EXPRESSIONS.length ? preset.mouthTalkIndex : index,
     };
   });

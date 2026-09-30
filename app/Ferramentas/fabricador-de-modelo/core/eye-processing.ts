@@ -1,4 +1,4 @@
-import type { EyePair, EyePiece } from "../types/eye-model";
+import type { EyePair, EyePiece, ManpuGrid } from "../types/eye-model";
 
 export type ChromaSettings = {
   strength: number;
@@ -253,8 +253,8 @@ export async function processEyebrowSheet(file: File, settings: ChromaSettings =
   } finally { URL.revokeObjectURL(url); }
 }
 
-/** Folha 7×3: limpa o fundo e recorta cada célula pelo último pixel visível. */
-async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS, allowEmpty = false): Promise<EyePiece[]> {
+/** Limpa o fundo e recorta cada célula pelo último pixel visível. */
+async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS, allowEmpty = false, grid: ManpuGrid = "7x3"): Promise<EyePiece[]> {
   const url = URL.createObjectURL(file);
   try {
     const image = new Image(); image.src = url; await image.decode(); assertSourceImageSize(image);
@@ -263,13 +263,14 @@ async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_C
     const source = context.getImageData(0, 0, canvas.width, canvas.height);
     const cleaned = removeConnectedChroma(source, settings);
     const structural = removeConnectedChroma(source, { ...settings, strength: 100 });
-    const columns = 7; const rows = 3;
+    const columns = grid === "5x8" ? 5 : 7; const rows = grid === "5x8" ? 8 : 3;
+    const gridLabel = `${columns}×${rows}`;
     const pieces: EyePiece[] = [];
     let visibleCells = 0;
     const makePiece = (x0: number, y0: number, x1: number, y1: number, cellIndex: number) => {
       const box = bounds(structural, y0, y1, x0, x1);
       if (!box) {
-        if (!allowEmpty) throw new Error(`A célula ${cellIndex + 1} da grade 7×3 ficou vazia depois do chroma.`);
+        if (!allowEmpty) throw new Error(`A célula ${cellIndex + 1} da grade ${gridLabel} ficou vazia depois do chroma.`);
         const empty = document.createElement("canvas");
         empty.width = 1;
         empty.height = 1;
@@ -285,7 +286,7 @@ async function processGridSheet(file: File, settings: ChromaSettings = DEFAULT_C
       const y0 = Math.floor(row * cleaned.height / rows); const y1 = Math.floor((row + 1) * cleaned.height / rows);
       pieces.push(makePiece(x0, y0, x1, y1, row * columns + column));
     }
-    if (allowEmpty && visibleCells === 0) throw new Error("A folha 7×3 não contém nenhum elemento visível depois do chroma.");
+    if (allowEmpty && visibleCells === 0) throw new Error(`A folha ${gridLabel} não contém nenhum elemento visível depois do chroma.`);
     return pieces;
   } finally { URL.revokeObjectURL(url); }
 }
@@ -294,8 +295,8 @@ export function processMouthSheet(file: File, settings: ChromaSettings = DEFAULT
   return processGridSheet(file, settings, false);
 }
 
-export function processManpuSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): Promise<EyePiece[]> {
-  return processGridSheet(file, settings, true);
+export function processManpuSheet(file: File, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS, grid: ManpuGrid = "7x3"): Promise<EyePiece[]> {
+  return processGridSheet(file, settings, true, grid);
 }
 
 /** Efeitos são camadas unitárias: remove o fundo e recorta o último pixel visível. */

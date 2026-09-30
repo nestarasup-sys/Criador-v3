@@ -192,6 +192,34 @@
   gap: 7px;
 }
 
+.gridUploadTile {
+  display: grid;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid #e2d6e7;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.gridUploadTile > div {
+  display: grid;
+  gap: 2px;
+}
+
+.gridUploadTile b {
+  color: #4c3755;
+  font-size: 11px;
+}
+
+.gridUploadTile small {
+  color: #93879a;
+  font-size: 9px;
+}
+
+.gridUploadTile .select {
+  margin-bottom: 0;
+}
+
 .uploadTile {
   position: relative;
   display: grid;

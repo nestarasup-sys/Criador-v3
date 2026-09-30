@@ -119,14 +119,16 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);
 });
 
-test("Fabricador exibe as 21 células de manpu para seleção por expressão", async () => {
+test("Fabricador exibe as grades de manpu para seleção por expressão", async () => {
   const [page, config, compositor] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
   ]);
 
-  assert.match(page, /Escolha qualquer uma das 21 células recortadas/);
+  assert.match(page, /Escolha qualquer uma das \$\{manpuCellCount\} células recortadas/);
+  assert.match(page, /5 colunas × 8 linhas/);
+  assert.match(page, /manpuGrid === "5x8" \? 40 : 21/);
   assert.match(page, /manpuPieces\.map/);
   assert.match(page, /updateEffectPieceIndex\("manpu", pieceIndex\)/);
   assert.match(page, /effectPieceIndexes\.manpu/);
