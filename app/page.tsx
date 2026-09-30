@@ -2325,31 +2325,11 @@ export default function Home() {
     markRenderDebug("layers:flattened", { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
     captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-    if (includeExpression && (renderBasePackIsHeadOnly || faceMode !== "base") && !faceBehindOutfit) {
-      if (renderBasePackIsHeadOnly && headOnlyImage) {
-        const sourceWidth = "naturalWidth" in headOnlyImage
-          ? Number(headOnlyImage.naturalWidth) || canvas.width
-          : "width" in headOnlyImage
-            ? Number(headOnlyImage.width) || canvas.width
-            : canvas.width;
-        const sourceHeight = "naturalHeight" in headOnlyImage
-          ? Number(headOnlyImage.naturalHeight) || canvas.height
-          : "height" in headOnlyImage
-            ? Number(headOnlyImage.height) || canvas.height
-            : canvas.height;
-        const sourceAnchorX = renderBasePackAnchorX ?? sourceWidth / 2;
-        const sourceAnchorY = renderBasePackAnchorY ?? sourceHeight;
-        const targetAnchorX = renderBasePackAnchorX ?? canvas.width / 2;
-        const targetAnchorY = renderBasePackAnchorY ?? canvas.height;
-        context.drawImage(
-          headOnlyImage,
-          SCENE_PADDING.x + targetAnchorX - sourceAnchorX,
-          SCENE_PADDING.y + targetAnchorY - sourceAnchorY,
-          sourceWidth,
-          sourceHeight,
-        );
-        markRenderDebug("layer:faceDone", { renderId, target, layer: "modelo-head-only" });
-      } else if (faceMode === "pack" && activeExpressionPack) {
+    // Head-only packs are already drawn into bodyLayer (or faceLayer in V2)
+    // and receive the body mask there. Drawing the same source again here
+    // would put an unmasked copy over erased pixels, especially on model 15+.
+    if (includeExpression && faceMode !== "base" && !faceBehindOutfit) {
+      if (faceMode === "pack" && activeExpressionPack) {
         const frame = activeExpressionPack.frames.find((entry) => entry.key === expressionKey);
         if (frame) {
           await drawLayer(

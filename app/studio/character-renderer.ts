@@ -487,21 +487,11 @@ async function renderStudioCharacterOutput(
   markRenderDebug("layers:flattened", { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
   captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target: "studio-render", layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
 
-  if ((faceMode !== "base" || headOnlyModel) && !faceBehindOutfit) {
-    if (headOnlyModel) {
-      const sourceAnchorX = discoveredPack?.anchorX ?? base.width / 2;
-      const sourceAnchorY = discoveredPack?.anchorY ?? base.height;
-      const targetAnchorX = discoveredPack?.anchorX ?? WIDTH / 2;
-      const targetAnchorY = discoveredPack?.anchorY ?? HEIGHT;
-      context.drawImage(
-        adjustedBaseForFace,
-        PADDING.x + targetAnchorX - sourceAnchorX,
-        PADDING.y + targetAnchorY - sourceAnchorY,
-        base.width,
-        base.height,
-      );
-      markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "modelo-head-only" });
-    } else if (faceMode === "pack") {
+  // Head-only packs are already present in bodyLayer (or faceLayer for V2),
+  // where the body mask has been applied. A second unmasked draw here would
+  // restore every erased pixel in the preview/export.
+  if (faceMode !== "base" && !faceBehindOutfit) {
+    if (faceMode === "pack") {
       const pack = character.expressionPackId ? packsById.get(character.expressionPackId) : undefined;
       const frame = pack?.frames.find((item) => item.key === key) ?? pack?.frames.find((item) => item.key === "normal");
       if (frame) {
