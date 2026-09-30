@@ -1218,9 +1218,13 @@ export default function FabricadorDeModeloPage() {
 
   const updateMouthHalo = (patch: Partial<FacePreset["mouthHalo"]>) => {
     pushEditorHistory();
-    setPresets((current) => current.map((preset, index) => index === presetIndex
-      ? { ...preset, mouthHalo: { ...preset.mouthHalo, ...patch } }
-      : preset));
+    // A configuração do halo é compartilhada pelas 21 expressões. A posição
+    // final continua sendo calculada por expressão, usando a transformação da
+    // boca de cada preset no compositor.
+    setPresets((current) => current.map((preset) => ({
+      ...preset,
+      mouthHalo: { ...preset.mouthHalo, ...patch },
+    })));
     clearGenerated();
   };
 
