@@ -55,16 +55,31 @@ export function ChromaControls({
   disabled,
   onChange,
   onReset,
+  manualMode = false,
+  manualSeedCount = 0,
+  onToggleManual,
+  onClearManual,
 }: {
   settings: ChromaSettings;
   disabled?: boolean;
   onChange: (key: keyof ChromaSettings, value: number) => void;
   onReset: () => void;
+  manualMode?: boolean;
+  manualSeedCount?: number;
+  onToggleManual?: () => void;
+  onClearManual?: () => void;
 }) {
   return <div className={styles.controlStack}>
     <RangeControl label="Força" value={settings.strength} display={`${settings.strength}%`} min={0} max={100} step={1} disabled={disabled} onChange={(value) => onChange("strength", value)} />
     <RangeControl label="Tolerância" value={settings.tolerance} display={String(settings.tolerance)} min={2} max={100} step={1} disabled={disabled} onChange={(value) => onChange("tolerance", value)} />
     <RangeControl label="Suavidade" value={settings.softness} display={String(settings.softness)} min={0} max={80} step={1} disabled={disabled} onChange={(value) => onChange("softness", value)} />
+    {onToggleManual && <>
+      <button className={manualMode ? styles.primarySmall : styles.secondaryButton} type="button" disabled={disabled} onClick={onToggleManual}>
+        {manualMode ? "Balde manual ativo" : "Ativar balde manual"}
+      </button>
+      <small className={styles.helperText}>{manualMode ? "Clique no verde dos olhos na prévia para remover a região conectada." : "Use para remover sobras específicas sem alterar o chroma automático."}</small>
+      {manualSeedCount > 0 && <button className={styles.secondaryButton} type="button" disabled={disabled} onClick={onClearManual}>Limpar {manualSeedCount} clique(s) manual(is)</button>}
+    </>}
     <button className={styles.secondaryButton} type="button" disabled={disabled} onClick={onReset}>Restaurar chroma</button>
   </div>;
 }

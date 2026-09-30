@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSettings } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
 import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame, type LoadedPair } from "./core/compositor";
 import {
   CANVAS_SIZE,
@@ -173,6 +173,7 @@ export default function FabricadorDeModeloPage() {
 
   const [state, setState] = useState<EyeState>("open");
   const [dragging, setDragging] = useState<DragLayer | null>(null);
+  const [manualChromaMode, setManualChromaMode] = useState(false);
 
   const [libraryAssets, setLibraryAssets] = useState<FabricatorAsset[]>([]);
   const [libraryFilter, setLibraryFilter] = useState<LibraryFilter>("all");
@@ -1075,6 +1076,45 @@ export default function FabricadorDeModeloPage() {
     };
   };
 
+  const addManualEyeSeed = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!loaded) return false;
+    const point = pointerPosition(event);
+    const templateScaleX = Math.min(1.2, Math.max(.5, previewPreset.templateScaleX ?? 1));
+    const compressX = (value: number) => CANVAS_SIZE / 2 + (value - CANVAS_SIZE / 2) * templateScaleX;
+    for (const side of ["left", "right"] as const) {
+      const placement = eyePlacements[side];
+      const variation = previewPreset.eyes[side];
+      const image = loaded[side];
+      const width = image.naturalWidth * placement.scale * placement.scaleX * variation.scaleX * templateScaleX;
+      const height = image.naturalHeight * placement.scale * placement.scaleY * variation.scaleY;
+      const centerX = compressX(placement.x) + variation.x * templateScaleX;
+      const centerY = placement.y + variation.y;
+      const angle = (placement.rotation + variation.rotation) * Math.PI / 180;
+      const dx = point.x - centerX;
+      const dy = point.y - centerY;
+      const localX = (dx * Math.cos(angle) + dy * Math.sin(angle)) / width + .5;
+      const localY = (-dx * Math.sin(angle) + dy * Math.cos(angle)) / height + .5;
+      if (localX < 0 || localX > 1 || localY < 0 || localY > 1) continue;
+      const seed: ChromaSeed = { side, x: Math.round(localX * 10000) / 10000, y: Math.round(localY * 10000) / 10000 };
+      const currentSeeds = eyeChromaSettings.manualSeeds ?? [];
+      if (currentSeeds.some((entry) => entry.side === seed.side && Math.hypot(entry.x - seed.x, entry.y - seed.y) < .025)) {
+        setStatus("Essa região já possui um clique manual.");
+        return true;
+      }
+      applyChromaSettings("eyes", { ...eyeChromaSettings, manualSeeds: [...currentSeeds, seed] });
+      setStatus(`Balde manual aplicado no olho ${side === "left" ? "esquerdo" : "direito"}.`);
+      return true;
+    }
+    setStatus("Clique dentro da área do olho que ainda contém verde.");
+    return false;
+  };
+
+  const clearManualEyeSeeds = () => {
+    applyChromaSettings("eyes", { ...eyeChromaSettings, manualSeeds: [] });
+    setManualChromaMode(false);
+    setStatus("Cliques manuais dos olhos removidos.");
+  };
+
   const insideSingle = (point: { x: number; y: number }, image: HTMLImageElement, itemPlacement: EyePlacement) => {
     const width = image.naturalWidth * itemPlacement.scale * itemPlacement.scaleX;
     const height = image.naturalHeight * itemPlacement.scale * itemPlacement.scaleY;
@@ -1117,6 +1157,11 @@ export default function FabricadorDeModeloPage() {
   };
 
   const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
+    if (manualChromaMode && activeLayer === "eyes") {
+      event.preventDefault();
+      addManualEyeSeed(event);
+      return;
+    }
     const point = pointerPosition(event);
     let target: DragLayer | null = null;
     // Hit-test na ordem inversa do desenho: olhos ficam por cima da boca,
@@ -1678,6 +1723,10 @@ export default function FabricadorDeModeloPage() {
                 settings={activeLayerChroma}
                 disabled={!activeLayerReady}
                 onChange={(key, value) => updateChroma(activeLayer, key, value)}
+                manualMode={activeLayer === "eyes" && manualChromaMode}
+                manualSeedCount={activeLayer === "eyes" ? (eyeChromaSettings.manualSeeds?.length ?? 0) : 0}
+                onToggleManual={activeLayer === "eyes" ? () => setManualChromaMode((current) => !current) : undefined}
+                onClearManual={activeLayer === "eyes" ? clearManualEyeSeeds : undefined}
                 onReset={() => applyChromaSettings(activeLayer, { ...DEFAULT_CHROMA_SETTINGS })}
               />
             </PanelBlock>

@@ -496,10 +496,18 @@ function normalizeFabricatorChroma(value) {
     const parsed = Number(candidate);
     return Number.isFinite(parsed) ? Math.min(maximum, Math.max(minimum, parsed)) : fallback;
   };
+  const manualSeeds = Array.isArray(value.manualSeeds)
+    ? value.manualSeeds.slice(0, 128).map((seed) => ({
+      side: seed?.side === "right" ? "right" : "left",
+      x: number(seed?.x, 0, 0, 1),
+      y: number(seed?.y, 0, 0, 1),
+    }))
+    : [];
   return {
     strength: number(value.strength, 72, 0, 100),
     tolerance: number(value.tolerance, 32, 2, 100),
     softness: number(value.softness, 18, 0, 80),
+    ...(manualSeeds.length > 0 ? { manualSeeds } : {}),
   };
 }
 

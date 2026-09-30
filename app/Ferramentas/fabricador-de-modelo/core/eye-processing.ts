@@ -4,7 +4,10 @@ export type ChromaSettings = {
   strength: number;
   tolerance: number;
   softness: number;
+  manualSeeds?: ChromaSeed[];
 };
+
+export type ChromaSeed = { side: "left" | "right"; x: number; y: number };
 
 export const DEFAULT_CHROMA_SETTINGS: ChromaSettings = {
   strength: 68,
@@ -100,6 +103,55 @@ function removeConnectedChroma(source: ImageData, settings: ChromaSettings = DEF
     output.data[i * 4 + 3] = Math.round(output.data[i * 4 + 3] * (1 - mask * strength));
   }
   return output;
+}
+
+async function applyManualSeeds(piece: EyePiece, seeds: ChromaSeed[], settings: ChromaSettings) {
+  if (!seeds.length) return piece;
+  const image = await loadImage(piece.dataUrl);
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return piece;
+  context.drawImage(image, 0, 0);
+  const output = context.getImageData(0, 0, canvas.width, canvas.height);
+  const tolerance = clamp(settings.tolerance + settings.softness * .35, 2, 140);
+  for (const seed of seeds) {
+    const startX = clamp(Math.round(seed.x * (output.width - 1)), 0, output.width - 1);
+    const startY = clamp(Math.round(seed.y * (output.height - 1)), 0, output.height - 1);
+    const start = startY * output.width + startX;
+    const startOffset = start * 4;
+    if (output.data[startOffset + 3] < 8) continue;
+    const target: [number, number, number] = [output.data[startOffset], output.data[startOffset + 1], output.data[startOffset + 2]];
+    const visited = new Uint8Array(output.width * output.height);
+    const queue: number[] = [start];
+    visited[start] = 1;
+    for (let head = 0; head < queue.length; head += 1) {
+      const index = queue[head];
+      const offset = index * 4;
+      if (distance(output.data[offset], output.data[offset + 1], output.data[offset + 2], target) > tolerance) continue;
+      output.data[offset + 3] = 0;
+      const x = index % output.width;
+      const y = Math.floor(index / output.width);
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+        const nx = x + dx; const ny = y + dy;
+        if (nx < 0 || nx >= output.width || ny < 0 || ny >= output.height) continue;
+        const next = ny * output.width + nx;
+        if (visited[next]) continue;
+        visited[next] = 1;
+        queue.push(next);
+      }
+    }
+  }
+  context.putImageData(output, 0, 0);
+  return { ...piece, dataUrl: canvas.toDataURL("image/png"), width: output.width, height: output.height };
+}
+
+async function applyManualSeedsToPair(pair: [EyePiece, EyePiece], seeds: ChromaSeed[], settings: ChromaSettings): Promise<[EyePiece, EyePiece]> {
+  if (!seeds.length) return pair;
+  const left = await applyManualSeeds(pair[0], seeds.filter((seed) => seed.side === "left"), settings);
+  const right = await applyManualSeeds(pair[1], seeds.filter((seed) => seed.side === "right"), settings);
+  return [left, right];
 }
 
 export function cleanChromaImage(source: ImageData, settings: ChromaSettings = DEFAULT_CHROMA_SETTINGS): ImageData {
@@ -213,9 +265,12 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const bottom = bounds(structural, third * 2, structural.height);
     if (top && pt && bottom) {
       preserveWhiteEyeInteriors(source, cleaned, structural, [top, pt, bottom], settings);
-      const [openLeft, openRight] = splitRow(structural, cleaned, top);
-      const [ptLeft, ptRight] = splitRow(structural, cleaned, pt);
-      const [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
+      let [openLeft, openRight] = splitRow(structural, cleaned, top);
+      let [ptLeft, ptRight] = splitRow(structural, cleaned, pt);
+      let [closedLeft, closedRight] = splitRow(structural, cleaned, bottom);
+      [openLeft, openRight] = await applyManualSeedsToPair([openLeft, openRight], settings.manualSeeds ?? [], settings);
+      [ptLeft, ptRight] = await applyManualSeedsToPair([ptLeft, ptRight], settings.manualSeeds ?? [], settings);
+      [closedLeft, closedRight] = await applyManualSeedsToPair([closedLeft, closedRight], settings.manualSeeds ?? [], settings);
       return { open: mergePair(openLeft, openRight), pt: mergePair(ptLeft, ptRight), closed: mergePair(closedLeft, closedRight) };
     }
     // Compatibilidade com folhas antigas de duas linhas: PT usa o mesmo recorte
@@ -225,10 +280,10 @@ export async function processEyeSheet(file: File, settings: ChromaSettings = DEF
     const legacyBottom = bounds(structural, half, structural.height);
     if (!legacyTop || !legacyBottom) throw new Error("A folha de olhos precisa ter conteúdo visível nas três linhas: aberto, PT e fechado.");
     preserveWhiteEyeInteriors(source, cleaned, structural, [legacyTop, legacyBottom], settings);
-    const [openLeft, openRight] = splitRow(structural, cleaned, legacyTop);
-    const [closedLeft, closedRight] = splitRow(structural, cleaned, legacyBottom);
-    const open = mergePair(openLeft, openRight);
-    return { open, pt: open, closed: mergePair(closedLeft, closedRight) };
+    const openPair = await applyManualSeedsToPair(splitRow(structural, cleaned, legacyTop), settings.manualSeeds ?? [], settings);
+    const closedPair = await applyManualSeedsToPair(splitRow(structural, cleaned, legacyBottom), settings.manualSeeds ?? [], settings);
+    const open = mergePair(openPair[0], openPair[1]);
+    return { open, pt: open, closed: mergePair(closedPair[0], closedPair[1]) };
   } finally { URL.revokeObjectURL(url); }
 }
 
