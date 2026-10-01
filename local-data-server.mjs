@@ -45,6 +45,7 @@ const STUDIO_ASSETS_ROOT = join(FILES_ROOT, "studio");
 const FABRICATOR_ROOT = join(FILES_ROOT, "fabricador-modelos");
 const FABRICATOR_MANIFEST_PATH = join(FABRICATOR_ROOT, "index.json");
 const FABRICATOR_PRESETS_PATH = join(FABRICATOR_ROOT, "presets.json");
+const FABRICATOR_PRESET_PROFILES_PATH = join(FABRICATOR_ROOT, "preset-profiles.json");
 const LEGACY_FABRICATOR_MANIFEST_PATH = join(ROOT, "fabricador-modelos.json");
 const VIDEO_MAKER_ROOT = join(ROOT, "video-maker");
 const VIDEO_MAKER_CHARACTERS_ROOT = join(VIDEO_MAKER_ROOT, "characters");
@@ -251,6 +252,7 @@ let stateMutationQueue = Promise.resolve();
 let fabricatorMutationQueue = Promise.resolve();
 let fabricatorAssets = [];
 let fabricatorPresets = {};
+let fabricatorPresetProfiles = { version: 1, activeProfileId: "padrao", profiles: [] };
 let lastBackupAt = 0;
 
 async function loadNormalizedCharacters() {
@@ -490,6 +492,16 @@ function queueFabricatorPresetsWrite() {
   return writeJsonAtomic(FABRICATOR_PRESETS_PATH, fabricatorPresets);
 }
 
+async function loadFabricatorPresetProfiles() {
+  const parsed = await readOptionalJson(FABRICATOR_PRESET_PROFILES_PATH);
+  fabricatorPresetProfiles = normalizeFabricatorPresetProfiles(parsed, fabricatorPresets);
+  if (parsed === null) await writeJsonAtomic(FABRICATOR_PRESET_PROFILES_PATH, fabricatorPresetProfiles);
+}
+
+function queueFabricatorPresetProfilesWrite() {
+  return writeJsonAtomic(FABRICATOR_PRESET_PROFILES_PATH, fabricatorPresetProfiles);
+}
+
 function normalizeFabricatorChroma(value) {
   if (!value || typeof value !== "object") return undefined;
   const number = (candidate, fallback, minimum, maximum) => {
@@ -607,6 +619,60 @@ function normalizeFabricatorPresets(value) {
     if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthHalo, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
+}
+
+function normalizePresetProfileId(value, fallback) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return normalized || fallback;
+}
+
+function normalizePresetProfileName(value, fallback) {
+  const name = String(value ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
+  return name || fallback;
+}
+
+function normalizeFabricatorPresetProfiles(value, legacyPresets = {}) {
+  const sourceProfiles = Array.isArray(value?.profiles) ? value.profiles : [];
+  const usedIds = new Set();
+  const profiles = [];
+  for (const [index, source] of sourceProfiles.slice(0, 32).entries()) {
+    if (!source || typeof source !== "object") continue;
+    const fallbackId = index === 0 ? "padrao" : `perfil-${index + 1}`;
+    let id = normalizePresetProfileId(source.id, fallbackId);
+    while (usedIds.has(id)) id = `${id}-${index + 1}`.slice(0, 64);
+    usedIds.add(id);
+    const presets = normalizeFabricatorPresets(source.presets);
+    profiles.push({
+      id,
+      name: normalizePresetProfileName(source.name, id === "padrao" ? "Padrão" : `Perfil ${index + 1}`),
+      description: String(source.description ?? "").trim().slice(0, 180),
+      createdAt: typeof source.createdAt === "string" && source.createdAt ? source.createdAt : new Date().toISOString(),
+      updatedAt: typeof source.updatedAt === "string" && source.updatedAt ? source.updatedAt : new Date().toISOString(),
+      presets,
+    });
+  }
+  if (!profiles.length) {
+    const now = new Date().toISOString();
+    profiles.push({
+      id: "padrao",
+      name: "Padrão",
+      description: "Conjunto base finalizado do Fabricador.",
+      createdAt: now,
+      updatedAt: now,
+      presets: normalizeFabricatorPresets(legacyPresets),
+    });
+  }
+  const activeProfileId = profiles.some((profile) => profile.id === value?.activeProfileId)
+    ? value.activeProfileId
+    : profiles[0].id;
+  return { version: 1, activeProfileId, profiles };
 }
 
 function openWindowsFolder(folder) {
@@ -1171,6 +1237,30 @@ async function route(request, response) {
   }
   if (request.method === "GET" && url.pathname === "/fabricador-modelos/presets") {
     sendJson(response, request, 200, fabricatorPresets);
+    return;
+  }
+  if (request.method === "GET" && url.pathname === "/fabricador-modelos/preset-profiles") {
+    sendJson(response, request, 200, fabricatorPresetProfiles);
+    return;
+  }
+  if (request.method === "PUT" && url.pathname === "/fabricador-modelos/preset-profiles") {
+    const body = await requestJson(request);
+    const normalized = normalizeFabricatorPresetProfiles(body, fabricatorPresets);
+    await queueFabricatorMutation(async () => {
+      const previousProfiles = fabricatorPresetProfiles;
+      const previousPresets = fabricatorPresets;
+      try {
+        fabricatorPresetProfiles = normalized;
+        const standardProfile = normalized.profiles.find((profile) => profile.id === "padrao");
+        if (standardProfile) fabricatorPresets = standardProfile.presets;
+        await Promise.all([queueFabricatorPresetProfilesWrite(), queueFabricatorPresetsWrite()]);
+      } catch (error) {
+        fabricatorPresetProfiles = previousProfiles;
+        fabricatorPresets = previousPresets;
+        throw error;
+      }
+    });
+    sendJson(response, request, 200, fabricatorPresetProfiles);
     return;
   }
   if (request.method === "PUT" && url.pathname === "/fabricador-modelos/presets") {
@@ -2392,6 +2482,7 @@ await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
 await loadFabricatorAssets();
 await loadFabricatorPresets();
+await loadFabricatorPresetProfiles();
 await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({

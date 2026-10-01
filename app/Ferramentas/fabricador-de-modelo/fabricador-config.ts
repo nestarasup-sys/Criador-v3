@@ -93,6 +93,23 @@ export function presetCollectionFromState(presets: FacePreset[]): FacePresetColl
   return Object.fromEntries(EYE_EXPRESSIONS.map(([key], index) => [key, presets[index] ?? defaultPresetForIndex(index)]));
 }
 
+export const DEFAULT_PRESET_PROFILE_ID = "padrao";
+
+export type PresetProfile = {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  presets: FacePresetCollection;
+};
+
+export type PresetProfilesDocument = {
+  version: 1;
+  activeProfileId: string;
+  profiles: PresetProfile[];
+};
+
 export type ModelGender = "feminino" | "masculino";
 export type NextModel = { gender: ModelGender; number: number; id: string };
 export type PresetLayer = "eyes" | "eyebrows" | "mouth" | FaceEffectKind;

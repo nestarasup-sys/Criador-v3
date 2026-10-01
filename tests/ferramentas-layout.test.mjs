@@ -148,6 +148,31 @@ test("Fabricador exibe as grades de manpu para seleção por expressão", async 
   assert.match(page, /placement: placementForKind\(kind\), chroma: chromaForKind\(kind\)/);
 });
 
+test("Fabricador mantém perfis de personagem separados do Padrão", async () => {
+  const [page, config, storage, server] = await Promise.all([
+    read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
+    read("local-data-server.mjs"),
+  ]);
+
+  assert.match(config, /DEFAULT_PRESET_PROFILE_ID = "padrao"/);
+  assert.match(config, /type PresetProfile =/);
+  assert.match(config, /type PresetProfilesDocument =/);
+  assert.match(page, /loadFabricatorPresetProfiles/);
+  assert.match(page, /saveFabricatorPresetProfiles/);
+  assert.match(page, /Criar cópia/);
+  assert.match(page, /Malvado, Bonzinho/);
+  assert.match(page, /Suas alterações ficam separadas/);
+  assert.match(page, /profileDocumentFromState/);
+  assert.match(page, /const nextPresets = mergeSavedPresets\(target\.presets\)/);
+  assert.match(storage, /nymi-fabricador-preset-profiles/);
+  assert.match(storage, /\/fabricador-modelos\/preset-profiles/);
+  assert.match(server, /FABRICATOR_PRESET_PROFILES_PATH/);
+  assert.match(server, /normalizeFabricatorPresetProfiles/);
+  assert.match(server, /\/fabricador-modelos\/preset-profiles/);
+});
+
 test("exportação do Fabricador usa staging e commit atômico", async () => {
   const [page, server, exportSessionService] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),

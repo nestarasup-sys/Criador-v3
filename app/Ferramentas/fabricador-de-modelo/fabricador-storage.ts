@@ -1,5 +1,6 @@
 import { localDataFetch } from "../../lib/local-data-client";
 import type { ChromaSettings } from "./core/eye-processing";
+import { DEFAULT_PRESET_PROFILE_ID, type PresetProfile, type PresetProfilesDocument } from "./fabricador-config";
 import type { AssetPlacement, FaceEffectKind, FacePresetCollection, ManpuGrid } from "./types/eye-model";
 
 export type FabricatorAssetKind = "eyes" | "eyebrows" | "mouths" | "mouths-talk" | FaceEffectKind;
@@ -22,6 +23,8 @@ export type FabricatorAsset = {
 const FALLBACK_KEY = "nymi-fabricador-modelos";
 const PRESETS_FALLBACK_KEY = "nymi-fabricador-presets";
 const PRESETS_DIRTY_KEY = "nymi-fabricador-presets-dirty";
+const PRESET_PROFILES_FALLBACK_KEY = "nymi-fabricador-preset-profiles";
+const PRESET_PROFILES_DIRTY_KEY = "nymi-fabricador-preset-profiles-dirty";
 const volatileAssetIds = new Set<string>();
 
 function readFallback() {
@@ -76,6 +79,30 @@ function writePresetFallback(presets: FacePresetCollection) {
   }
 }
 
+function readPresetProfilesFallbackState(): { document: PresetProfilesDocument; valid: boolean } {
+  if (typeof window === "undefined") return { document: { version: 1, activeProfileId: DEFAULT_PRESET_PROFILE_ID, profiles: [] }, valid: false };
+  try {
+    const raw = localStorage.getItem(PRESET_PROFILES_FALLBACK_KEY);
+    if (raw === null) return { document: { version: 1, activeProfileId: DEFAULT_PRESET_PROFILE_ID, profiles: [] }, valid: false };
+    const value = JSON.parse(raw) as Partial<PresetProfilesDocument>;
+    return value && value.version === 1 && typeof value.activeProfileId === "string" && Array.isArray(value.profiles)
+      ? { document: value as PresetProfilesDocument, valid: true }
+      : { document: { version: 1, activeProfileId: DEFAULT_PRESET_PROFILE_ID, profiles: [] }, valid: false };
+  } catch {
+    return { document: { version: 1, activeProfileId: DEFAULT_PRESET_PROFILE_ID, profiles: [] }, valid: false };
+  }
+}
+
+function writePresetProfilesFallback(document: PresetProfilesDocument) {
+  if (typeof window === "undefined") return false;
+  try {
+    localStorage.setItem(PRESET_PROFILES_FALLBACK_KEY, JSON.stringify(document));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function presetsAreDirty() {
   if (typeof window === "undefined") return false;
   try { return localStorage.getItem(PRESETS_DIRTY_KEY) === "1"; } catch { return false; }
@@ -86,6 +113,22 @@ function markPresetsDirty(dirty: boolean) {
   try {
     if (dirty) localStorage.setItem(PRESETS_DIRTY_KEY, "1");
     else localStorage.removeItem(PRESETS_DIRTY_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function presetProfilesAreDirty() {
+  if (typeof window === "undefined") return false;
+  try { return localStorage.getItem(PRESET_PROFILES_DIRTY_KEY) === "1"; } catch { return false; }
+}
+
+function markPresetProfilesDirty(dirty: boolean) {
+  if (typeof window === "undefined") return false;
+  try {
+    if (dirty) localStorage.setItem(PRESET_PROFILES_DIRTY_KEY, "1");
+    else localStorage.removeItem(PRESET_PROFILES_DIRTY_KEY);
     return true;
   } catch {
     return false;
@@ -300,4 +343,70 @@ export async function saveFabricatorPresets(presets: FacePresetCollection) {
   }
   const localSaved = localWritten && (dirtyMarked || pcSaved);
   return { presets, pcSaved, localSaved };
+}
+
+async function persistPresetProfiles(document: PresetProfilesDocument) {
+  const response = await localDataFetch("/fabricador-modelos/preset-profiles", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(document),
+  });
+  if (!response.ok) throw new Error("Perfis de presets rejeitados");
+}
+
+function legacyProfile(presets: FacePresetCollection): PresetProfile {
+  const now = new Date().toISOString();
+  return {
+    id: DEFAULT_PRESET_PROFILE_ID,
+    name: "Padrão",
+    description: "Conjunto base finalizado do Fabricador.",
+    createdAt: now,
+    updatedAt: now,
+    presets,
+  };
+}
+
+export async function loadFabricatorPresetProfiles(): Promise<PresetProfilesDocument> {
+  const localState = readPresetProfilesFallbackState();
+  if (presetProfilesAreDirty() && localState.valid) {
+    try {
+      await persistPresetProfiles(localState.document);
+      markPresetProfilesDirty(false);
+      return localState.document;
+    } catch {
+      return localState.document;
+    }
+  }
+
+  try {
+    const response = await localDataFetch("/fabricador-modelos/preset-profiles", { cache: "no-store" });
+    if (!response.ok) throw new Error("Perfis indisponíveis");
+    const document = await response.json() as PresetProfilesDocument;
+    writePresetProfilesFallback(document);
+    return document;
+  } catch {
+    const legacyPresets = await loadFabricatorPresets();
+    const document: PresetProfilesDocument = {
+      version: 1,
+      activeProfileId: DEFAULT_PRESET_PROFILE_ID,
+      profiles: [legacyProfile(legacyPresets)],
+    };
+    writePresetProfilesFallback(document);
+    return document;
+  }
+}
+
+export async function saveFabricatorPresetProfiles(document: PresetProfilesDocument) {
+  const localWritten = writePresetProfilesFallback(document);
+  const dirtyMarked = localWritten ? markPresetProfilesDirty(true) : false;
+  let pcSaved = false;
+  try {
+    await persistPresetProfiles(document);
+    markPresetProfilesDirty(false);
+    pcSaved = true;
+  } catch {
+    // Mantém uma cópia local pendente quando o servidor estiver indisponível.
+  }
+  const localSaved = localWritten && (dirtyMarked || pcSaved);
+  return { document, pcSaved, localSaved };
 }

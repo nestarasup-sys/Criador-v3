@@ -16,6 +16,7 @@ import {
   DEFAULT_MOUTH_PLACEMENT,
   DEFAULT_EYE_PLACEMENTS,
   DEFAULT_PLACEMENT,
+  DEFAULT_PRESET_PROFILE_ID,
   EFFECT_KINDS,
   PLACEMENT_LIMITS,
   TEMPLATE_SCALE_X_LIMITS,
@@ -24,20 +25,22 @@ import {
   presetCollectionFromState,
   type ModelGender,
   type NextModel,
+  type PresetProfile,
+  type PresetProfilesDocument,
   type PresetLayer,
   type PresetSide,
 } from "./fabricador-config";
 import {
   deleteFabricatorAsset,
   loadFabricatorAssets,
-  loadFabricatorPresets,
-  saveFabricatorPresets,
+  loadFabricatorPresetProfiles,
+  saveFabricatorPresetProfiles,
   updateFabricatorAsset,
   uploadFabricatorAsset,
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
-import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, ManpuGrid, MouthPiece } from "./types/eye-model";
+import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, FacePresetCollection, ManpuGrid, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import styles from "./fabricador.module.css";
 
@@ -111,6 +114,15 @@ function validateInputFile(file: File) {
   return null;
 }
 
+function profileIdForName(name: string, profiles: PresetProfile[]) {
+  const base = name.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 56) || "perfil";
+  const used = new Set(profiles.map((profile) => profile.id));
+  let candidate = base;
+  let suffix = 2;
+  while (used.has(candidate)) candidate = `${base}-${suffix++}`.slice(0, 64);
+  return candidate;
+}
+
 export default function FabricadorDeModeloPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const placementSaveTimers = useRef<Partial<Record<FabricatorAssetKind, ReturnType<typeof setTimeout>>>>({});
@@ -122,6 +134,7 @@ export default function FabricadorDeModeloPage() {
   const latestPlacementRef = useRef<Partial<Record<FabricatorAssetKind, AssetPlacement>>>({});
   const libraryUseSequenceRef = useRef(0);
   const effectAssignSequenceRef = useRef<Partial<Record<FaceEffectKind, number>>>({});
+  const activeProfileIdRef = useRef(DEFAULT_PRESET_PROFILE_ID);
   const generationLockRef = useRef(false);
   const exportLockRef = useRef(false);
   const generatedOutputsRef = useRef<GeneratedOutputs>(EMPTY_GENERATED_OUTPUTS);
@@ -185,6 +198,9 @@ export default function FabricadorDeModeloPage() {
   const [activeEffectAssetIds, setActiveEffectAssetIds] = useState<Partial<Record<FaceEffectKind, string>>>({});
 
   const [presets, setPresets] = useState<FacePreset[]>(() => EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index)));
+  const [presetProfiles, setPresetProfiles] = useState<PresetProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState(DEFAULT_PRESET_PROFILE_ID);
+  const [profileNameDraft, setProfileNameDraft] = useState("");
   const [presetIndex, setPresetIndex] = useState(13);
   const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
   const [presetSide, setPresetSide] = useState<PresetSide>("both");
@@ -299,12 +315,11 @@ export default function FabricadorDeModeloPage() {
   }, []);
 
   useEffect(() => {
-    Promise.all([loadFabricatorAssets(), loadFabricatorPresets()])
-      .then(([assets, saved]) => {
+    Promise.all([loadFabricatorAssets(), loadFabricatorPresetProfiles()])
+      .then(([assets, profileDocument]) => {
         setLibraryAssets(assets);
         const assetIds = new Set(assets.map((asset) => asset.id));
-        let repaired = false;
-        const merged = mergeSavedPresets(saved).map((preset) => {
+        const repairPresets = (source: FacePresetCollection) => mergeSavedPresets(source).map((preset) => {
           const effectAssets = { ...preset.effectAssets };
           const enabledEffects = { ...preset.enabledEffects };
           for (const kind of EFFECT_KINDS) {
@@ -312,15 +327,35 @@ export default function FabricadorDeModeloPage() {
             if (assetId && !assetIds.has(assetId)) {
               effectAssets[kind] = null;
               enabledEffects[kind] = false;
-              repaired = true;
             }
           }
           return { ...preset, effectAssets, enabledEffects };
         });
+        const profiles = profileDocument.profiles.length > 0 ? profileDocument.profiles : [{
+          id: DEFAULT_PRESET_PROFILE_ID,
+          name: "Padrão",
+          description: "Conjunto base finalizado do Fabricador.",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          presets: presetCollectionFromState(EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index))),
+        } satisfies PresetProfile];
+        const selectedProfile = profiles.find((profile) => profile.id === profileDocument.activeProfileId) ?? profiles[0];
+        const merged = repairPresets(selectedProfile.presets);
+        const repairedProfile: PresetProfile = {
+          ...selectedProfile,
+          presets: presetCollectionFromState(merged),
+          updatedAt: new Date().toISOString(),
+        };
+        const nextProfiles = profiles.map((profile) => profile.id === selectedProfile.id ? repairedProfile : profile);
+        setPresetProfiles(nextProfiles);
+        activeProfileIdRef.current = selectedProfile.id;
+        setActiveProfileId(selectedProfile.id);
         setPresets(merged);
         const savedEffectPlacements = merged[0]?.effectPlacements;
         if (savedEffectPlacements) setEffectPlacements(savedEffectPlacements);
-        if (repaired) void saveFabricatorPresets(presetCollectionFromState(merged));
+        if (JSON.stringify(repairedProfile.presets) !== JSON.stringify(selectedProfile.presets)) {
+          void saveFabricatorPresetProfiles({ ...profileDocument, activeProfileId: selectedProfile.id, profiles: nextProfiles });
+        }
       })
       .catch(() => setStatus("A biblioteca não pôde ser carregada por completo."));
   }, []);
@@ -980,7 +1015,7 @@ export default function FabricadorDeModeloPage() {
             enabledEffects: { ...preset.enabledEffects, [kind]: false },
             effectAssets: { ...preset.effectAssets, [kind]: null },
           } : preset);
-          void saveFabricatorPresets(presetCollectionFromState(presetsWithCurrentEffectPlacements(next)));
+          void saveActivePresetProfile(next);
           return next;
         });
       }
@@ -1347,15 +1382,115 @@ export default function FabricadorDeModeloPage() {
     effectPlacements: cloneEditorValue(effectPlacements),
   }));
 
+  const profileDocumentFromState = (sourceProfiles: PresetProfile[], sourcePresets: FacePreset[], sourceProfileId = activeProfileIdRef.current): PresetProfilesDocument => {
+    const currentCollection = presetCollectionFromState(presetsWithCurrentEffectPlacements(sourcePresets));
+    const profiles = sourceProfiles.length > 0 ? sourceProfiles : [{
+      id: DEFAULT_PRESET_PROFILE_ID,
+      name: "Padrão",
+      description: "Conjunto base finalizado do Fabricador.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      presets: currentCollection,
+    } satisfies PresetProfile];
+    const activeExists = profiles.some((profile) => profile.id === sourceProfileId);
+    const activeId = activeExists ? sourceProfileId : profiles[0].id;
+    return {
+      version: 1,
+      activeProfileId: activeId,
+      profiles: profiles.map((profile) => profile.id === activeId ? {
+        ...profile,
+        presets: currentCollection,
+        updatedAt: new Date().toISOString(),
+      } : profile),
+    };
+  };
+
+  const saveActivePresetProfile = async (sourcePresets = presets) => {
+    const document = profileDocumentFromState(presetProfiles, sourcePresets);
+    const result = await saveFabricatorPresetProfiles(document);
+    setPresetProfiles(document.profiles);
+    return result;
+  };
+
+  const switchPresetProfile = (profileId: string) => {
+    const target = presetProfiles.find((profile) => profile.id === profileId);
+    if (!target || target.id === activeProfileIdRef.current) return;
+    const currentDocument = profileDocumentFromState(presetProfiles, presets);
+    void saveFabricatorPresetProfiles(currentDocument);
+    const nextProfiles = currentDocument.profiles;
+    const nextPresets = mergeSavedPresets(target.presets);
+    activeProfileIdRef.current = target.id;
+    setActiveProfileId(target.id);
+    setPresetProfiles(nextProfiles);
+    setPresets(nextPresets);
+    if (nextPresets[0]?.effectPlacements) setEffectPlacements(nextPresets[0].effectPlacements);
+    setPresetIndex(NORMAL_PRESET_INDEX);
+    clearGenerated();
+    setStatus(`Perfil “${target.name}” ativado. Suas alterações ficam separadas dos outros perfis.`);
+  };
+
+  const createPresetProfile = () => {
+    const name = profileNameDraft.trim();
+    if (!name) {
+      setStatus("Digite um nome para o novo perfil, como Malvado ou Bonzinho.");
+      return;
+    }
+    const currentDocument = profileDocumentFromState(presetProfiles, presets);
+    const now = new Date().toISOString();
+    const profile: PresetProfile = {
+      id: profileIdForName(name, currentDocument.profiles),
+      name: name.slice(0, 80),
+      description: "Cópia independente do perfil anterior; edições futuras não misturam os conjuntos.",
+      createdAt: now,
+      updatedAt: now,
+      presets: currentDocument.profiles.find((entry) => entry.id === currentDocument.activeProfileId)?.presets ?? presetCollectionFromState(presets),
+    };
+    const nextDocument: PresetProfilesDocument = {
+      ...currentDocument,
+      activeProfileId: profile.id,
+      profiles: [...currentDocument.profiles, profile],
+    };
+    activeProfileIdRef.current = profile.id;
+    setActiveProfileId(profile.id);
+    setPresetProfiles(nextDocument.profiles);
+    setPresets(mergeSavedPresets(profile.presets));
+    if (profile.presets.normal?.effectPlacements) setEffectPlacements(profile.presets.normal.effectPlacements);
+    setProfileNameDraft("");
+    clearGenerated();
+    void saveFabricatorPresetProfiles(nextDocument);
+    setStatus(`Perfil “${profile.name}” criado e salvo. Agora você pode personalizar suas 21 expressões sem alterar o Padrão.`);
+  };
+
+  const deleteActivePresetProfile = () => {
+    const active = presetProfiles.find((profile) => profile.id === activeProfileIdRef.current);
+    if (!active || active.id === DEFAULT_PRESET_PROFILE_ID || presetProfiles.length <= 1) return;
+    const fallback = presetProfiles.find((profile) => profile.id === DEFAULT_PRESET_PROFILE_ID) ?? presetProfiles.find((profile) => profile.id !== active.id);
+    if (!fallback) return;
+    const currentDocument = profileDocumentFromState(presetProfiles, presets);
+    const nextDocument: PresetProfilesDocument = {
+      ...currentDocument,
+      activeProfileId: fallback.id,
+      profiles: currentDocument.profiles.filter((profile) => profile.id !== active.id),
+    };
+    activeProfileIdRef.current = fallback.id;
+    setActiveProfileId(fallback.id);
+    setPresetProfiles(nextDocument.profiles);
+    setPresets(mergeSavedPresets(fallback.presets));
+    if (fallback.presets.normal?.effectPlacements) setEffectPlacements(fallback.presets.normal.effectPlacements);
+    clearGenerated();
+    void saveFabricatorPresetProfiles(nextDocument);
+    setStatus(`Perfil “${active.name}” excluído. O perfil “${fallback.name}” continua intacto.`);
+  };
+
   const savePresets = async () => {
     setSavingPresets(true);
     try {
       // O botão é o checkpoint manual: além do JSON dos 21 presets, força
       // imediatamente os metadados dos assets que possuem posição/chroma.
       await saveCurrentAssetState();
-      const result = await saveFabricatorPresets(presetCollectionFromState(presetsWithCurrentEffectPlacements(presets)));
+      const result = await saveActivePresetProfile(presets);
       setStatus(result.pcSaved
-        ? "Presets salvos no PC."
+        ? `Perfil “${presetProfiles.find((profile) => profile.id === activeProfileIdRef.current)?.name ?? "atual"}” salvo no PC.`
         : result.localSaved
           ? "Presets salvos no navegador e pendentes de sincronização."
           : "Presets estão apenas nesta sessão; não houve persistência.");
@@ -1769,6 +1904,17 @@ export default function FabricadorDeModeloPage() {
           </>}
 
           {section === "expressions" && <>
+            <PanelBlock title="Perfil de personagem" description="Cada perfil guarda seu próprio conjunto de 21 expressões. O Padrão é a base finalizada; crie cópias como Malvado, Bonzinho ou qualquer variação sem misturar as alterações.">
+              <select className={styles.select} value={activeProfileId} disabled={presetProfiles.length === 0} onChange={(event) => switchPresetProfile(event.target.value)}>
+                {presetProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}{profile.id === DEFAULT_PRESET_PROFILE_ID ? " · base" : ""}</option>)}
+              </select>
+              <input className={styles.search} value={profileNameDraft} onChange={(event) => setProfileNameDraft(event.target.value)} placeholder="Nome da cópia: Malvado, Bonzinho…" maxLength={80} />
+              <div className={styles.inlineActions}>
+                <button className={styles.primarySmall} type="button" onClick={createPresetProfile} disabled={!profileNameDraft.trim()}>Criar cópia</button>
+                <button className={styles.dangerGhostButton} type="button" onClick={deleteActivePresetProfile} disabled={activeProfileId === DEFAULT_PRESET_PROFILE_ID || presetProfiles.length <= 1}>Excluir perfil</button>
+              </div>
+              <p className={styles.helperText}>A cópia começa igual ao perfil ativo. Depois, “Salvar presets” grava somente o perfil selecionado.</p>
+            </PanelBlock>
             <PanelBlock title="Expressão" description="Edite uma expressão de cada vez.">
               <select className={styles.select} value={presetIndex} onChange={(event) => setPresetIndex(Number(event.target.value))}>
                 {EYE_EXPRESSIONS.map(([key, label], index) => <option key={key} value={index}>{String(index + 1).padStart(2, "0")} · {label}</option>)}
