@@ -1225,7 +1225,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
   assert.match(editor, /Exportar para V4/);
   assert.match(editor, /ROTEIRO_EXPORT_TARGETS/);
-  assert.ok(editor.includes(String.raw`D:\EDITOR WEB 2\EDITOR V4\projects`));
+  assert.ok(editor.includes(String.raw`C:\TRABALHO 2\EDITOR V4\EDITOR V4`));
   assert.doesNotMatch(editor, /Versão 1 · PRIMEIRO-STUDIO/);
   assert.doesNotMatch(editor, /Versão 2 · GACHO EDITOR V2/);
   assert.match(storage, /exportRoteiroVideos\(script: ScriptProject, exportTarget: RoteiroExportTarget = "v4"\)/);

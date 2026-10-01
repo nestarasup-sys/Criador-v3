@@ -32,7 +32,7 @@ const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
 const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
-  v4: { label: "Editor V4", path: String.raw`D:\EDITOR WEB 2\EDITOR V4\projects` },
+  v4: { label: "Editor V4", path: String.raw`C:\TRABALHO 2\EDITOR V4\EDITOR V4` },
 };
 const MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS = 2;
 

@@ -63,7 +63,7 @@ const ROTEIRO_EXPORT_TARGETS = Object.freeze({
   v4: Object.freeze({
     id: "v4",
     label: "Editor V4",
-    root: resolve(process.env.GACHA_EDITOR_V4_PROJECTS_ROOT ?? "D:\\EDITOR WEB 2\\EDITOR V4\\projects"),
+    root: resolve(process.env.GACHA_EDITOR_V4_PROJECTS_ROOT ?? "C:\\TRABALHO 2\\EDITOR V4\\EDITOR V4"),
   }),
 });
 const ROTEIRO_V4_LOADING_ASSET = resolve(process.env.GACHA_EDITOR_V4_LOADING_ASSET ?? join(ROTEIRO_EXPORT_TARGETS.v4.root, "FYN — Visões do Retorno e Marek", "assets", "ui", "loading.gif"));
