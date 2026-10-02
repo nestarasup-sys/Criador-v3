@@ -50,13 +50,16 @@ test("limita e torna opcional o histórico local do prompt de preencher vazios",
   assert.match(editor, /Se a cota estiver completamente cheia/);
 });
 
-test("permite ocultar o contexto de cada TikTok e preserva a preferência por roteiro", async () => {
+test("preserva a preferência de contexto para todo o roteiro, inclusive novos TikToks", async () => {
   const [editor, css] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
   ]);
-  assert.match(editor, /nymi-roteiros-context-hidden:\$\{script\.id\}:\$\{section\.id\}/);
+  assert.match(editor, /nymi-roteiros-context-hidden:\$\{script\.id\}/);
+  assert.doesNotMatch(editor, /nymi-roteiros-context-hidden:\$\{script\.id\}:\$\{section\.id\}/);
   assert.match(editor, /window\.localStorage\.setItem\(contextVisibilityKey, String\(next\)\)/);
+  assert.match(editor, /window\.dispatchEvent\(new CustomEvent\(CONTEXT_VISIBILITY_EVENT/);
+  assert.match(editor, /legacyContextVisibilityPrefix/);
   assert.match(editor, /contextCollapsed \? "Mostrar contexto" : "Ocultar contexto"/);
   assert.match(editor, /!contextCollapsed && <>/);
   assert.match(css, /\.contextToolbar \{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(180px,1fr\)/s);

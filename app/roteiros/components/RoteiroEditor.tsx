@@ -33,6 +33,7 @@ import styles from "../roteiros.module.css";
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
 const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" } as const;
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
+const CONTEXT_VISIBILITY_EVENT = "nymi-roteiros-context-visibility-changed";
 const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
   v4: { label: "Editor V4", path: String.raw`C:\TRABALHO 2\EDITOR V4\EDITOR V4` },
 };
@@ -212,22 +213,44 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
   const [baseSelectingId, setBaseSelectingId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const aiControllerRef = useRef<AbortController | null>(null);
-  const contextVisibilityKey = `nymi-roteiros-context-hidden:${script.id}:${section.id}`;
+  const contextVisibilityKey = `nymi-roteiros-context-hidden:${script.id}`;
+  const legacyContextVisibilityPrefix = `${contextVisibilityKey}:`;
 
   useEffect(() => {
+    const readVisibility = () => {
+      try {
+        const persisted = window.localStorage.getItem(contextVisibilityKey);
+        if (persisted !== null) return persisted === "true";
+        for (let index = 0; index < window.localStorage.length; index += 1) {
+          const key = window.localStorage.key(index);
+          if (key?.startsWith(legacyContextVisibilityPrefix) && window.localStorage.getItem(key) === "true") {
+            window.localStorage.setItem(contextVisibilityKey, "true");
+            return true;
+          }
+        }
+      } catch {
+        return false;
+      }
+      return false;
+    };
     try {
-      setContextCollapsed(window.localStorage.getItem(contextVisibilityKey) === "true");
+      setContextCollapsed(readVisibility());
     } catch {
       setContextCollapsed(false);
     }
-  }, [contextVisibilityKey]);
+    const onVisibilityChanged = (event: Event) => {
+      const detail = (event as CustomEvent<{ scriptId?: string }>).detail;
+      if (!detail?.scriptId || detail.scriptId === script.id) setContextCollapsed(readVisibility());
+    };
+    window.addEventListener(CONTEXT_VISIBILITY_EVENT, onVisibilityChanged);
+    return () => window.removeEventListener(CONTEXT_VISIBILITY_EVENT, onVisibilityChanged);
+  }, [contextVisibilityKey, legacyContextVisibilityPrefix, script.id]);
 
   const toggleContextVisibility = () => {
-    setContextCollapsed((current) => {
-      const next = !current;
-      try { window.localStorage.setItem(contextVisibilityKey, String(next)); } catch { /* preferência visual opcional */ }
-      return next;
-    });
+    const next = !contextCollapsed;
+    setContextCollapsed(next);
+    try { window.localStorage.setItem(contextVisibilityKey, String(next)); } catch { /* preferência visual opcional */ }
+    window.dispatchEvent(new CustomEvent(CONTEXT_VISIBILITY_EVENT, { detail: { scriptId: script.id, hidden: next } }));
   };
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
   const previousSections = opening ? [] : script.tiktoks.slice(0, sectionIndex);
