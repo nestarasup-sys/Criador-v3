@@ -196,6 +196,7 @@ type TikTokCardProps = {
 
 function TikTokCard({ script, section, sectionIndex, characters, state, updateState, patch, moveSection, deleteSection, opening = false }: TikTokCardProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [contextCollapsed, setContextCollapsed] = useState(false);
   const [loading, setLoading] = useState("");
   const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
   const [message, setMessage] = useState("");
@@ -211,6 +212,23 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
   const [baseSelectingId, setBaseSelectingId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const aiControllerRef = useRef<AbortController | null>(null);
+  const contextVisibilityKey = `nymi-roteiros-context-hidden:${script.id}:${section.id}`;
+
+  useEffect(() => {
+    try {
+      setContextCollapsed(window.localStorage.getItem(contextVisibilityKey) === "true");
+    } catch {
+      setContextCollapsed(false);
+    }
+  }, [contextVisibilityKey]);
+
+  const toggleContextVisibility = () => {
+    setContextCollapsed((current) => {
+      const next = !current;
+      try { window.localStorage.setItem(contextVisibilityKey, String(next)); } catch { /* preferência visual opcional */ }
+      return next;
+    });
+  };
   const characterName = (id: string) => characters.find((character) => character.id === id)?.name || "Personagem removido";
   const previousSections = opening ? [] : script.tiktoks.slice(0, sectionIndex);
   const scriptAiContext = getScriptAiContext(script, state);
@@ -501,11 +519,15 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
           <strong>{opening ? "Contexto da abertura" : "Contexto do vídeo"}</strong>
         </header>
         <div className={styles.contextZoneBody}>
-          {!opening && <label className={`${styles.field} ${styles.contextTitleField}`}><span>Título opcional</span><input value={section.title} maxLength={120} onChange={(event) => patch({ title: event.target.value })} placeholder="Ex: O passado da FYN" /></label>}
+          {!opening && <div className={styles.contextToolbar}>
+            <label className={`${styles.field} ${styles.contextTitleField}`}><span>Título opcional</span><input value={section.title} maxLength={120} onChange={(event) => patch({ title: event.target.value })} placeholder="Ex: O passado da FYN" /></label>
+            <button type="button" className={styles.contextVisibilityButton} onClick={toggleContextVisibility}>{contextCollapsed ? "Mostrar contexto" : "Ocultar contexto"}</button>
+          </div>}
           {!opening && <div className={styles.videoUploadBox}>
             {section.video ? <video ref={videoElementRef} key={`${section.video.storedPath}-${section.video.updatedAt}`} className={styles.videoPreview} src={videoSrc} controls preload="metadata" playsInline onLoadedMetadata={(event) => { const duration = Number(event.currentTarget.duration); if (section.video && section.video.durationSeconds === undefined && Number.isFinite(duration) && duration >= 0) patch({ video: { ...section.video, durationSeconds: duration } }); }} /> : <div className={styles.videoEmpty}><span>▶</span><strong>Nenhum vídeo adicionado</strong><small>Use “Adicionar vídeo” no cabeçalho deste TikTok.</small></div>}
             <div className={styles.videoMeta}><div><strong>Vídeo deste TikTok</strong><small>{section.video ? `Arquivo salvo: ${section.video.name}` : "Opcional · MP4 copiado para os dados locais do PC"}</small></div><span className={styles.videoStatus}>{section.video ? "VÍDEO SALVO" : "NENHUM VÍDEO"}</span>{section.video && <button className={styles.removeVideoButton} disabled={videoLoading} onClick={() => void removeVideo()}>{videoLoading ? "Removendo…" : "Remover vídeo"}</button>}</div>
           </div>}
+          {!contextCollapsed && <>
           <div className={styles.descriptionLayout}>
             <label className={`${styles.field} ${styles.descriptionField}`}><span>Descrição detalhada do vídeo</span><textarea rows={9} value={section.description} maxLength={20000} onChange={(event) => patch({ description: event.target.value })} placeholder="Descreva literalmente o que acontece no vídeo, quem aparece e quais ações ocorrem…" /></label>
             <div className={styles.descriptionSide}>
@@ -530,6 +552,7 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
           {!opening && <div className={styles.contextActions}><button className={styles.aiButton} disabled={Boolean(loading) || !section.description.trim() || state.settings.aiProvider === "none"} onClick={() => void improve()}>✦ {loading === "improve" ? "Melhorando descrição…" : "Melhorar descrição do vídeo"}</button><span>A IA usa somente esta descrição e cria uma reescrita mais completa; nada é aplicado sem sua confirmação.</span></div>}
           {improvedContext && <div className={styles.suggestionBox}><div><span>SUGESTÃO PARA A DESCRIÇÃO DO VÍDEO</span><button onClick={() => setImprovedContext("")}>×</button></div><p>{improvedContext}</p><footer><button className={styles.secondaryButton} onClick={() => setImprovedContext("")}>Cancelar</button><button className={styles.primaryButton} onClick={() => { patch({ description: improvedContext }); setImprovedContext(""); }}>Aceitar sugestão</button></footer></div>}
           <label className={styles.field}><span>{opening ? "Regras da abertura" : "Regras específicas deste TikTok"}</span><textarea rows={3} value={section.specificRules} maxLength={6000} onChange={(event) => patch({ specificRules: event.target.value })} placeholder={opening ? "Regras que valem antes dos vídeos…" : "Regras que valem somente para este vídeo…"} /></label>
+          </>}
         </div>
       </section>
 

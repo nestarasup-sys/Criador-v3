@@ -1095,7 +1095,11 @@
 }
 .contextZoneIcon { background:linear-gradient(135deg,#8a65e4,#6845c4); }
 .contextZoneBody { padding:14px 16px 16px; }
-.contextTitleField { margin-bottom:12px; }
+.contextToolbar { display:grid; grid-template-columns:minmax(0,1fr) minmax(180px,1fr); align-items:end; gap:12px; margin-bottom:12px; }
+.contextTitleField { margin:0; }
+.contextVisibilityButton { min-height:43px; border:1px solid #d2c2f4; border-radius:10px; padding:11px 14px; background:#f4efff; color:#6845c4; font-weight:850; cursor:pointer; transition:background .16s ease, border-color .16s ease, transform .16s ease; }
+.contextVisibilityButton:hover { border-color:#a989e8; background:#ebe1ff; transform:translateY(-1px); }
+.contextDetails { display:flex; flex-direction:column; gap:0; }
 .timingPanel { display:flex; flex-direction:column; gap:10px; margin:14px 0 4px; }
 .sceneTimingCard,
 .reactionTimingCard { padding:12px; border:1px solid #ded4f4; border-radius:12px; }
@@ -1413,6 +1417,7 @@
   .blocksHeader .secondaryButton { width:100%; }
   .reactionBlock { grid-template-columns:1fr; }
   .descriptionLayout { grid-template-columns:1fr; }
+  .contextToolbar { grid-template-columns:1fr; }
   .reactionTimingGrid { grid-template-columns:1fr; }
   .descriptionField textarea { min-height:150px; }
   .blockIdentity { padding-top:0; }
