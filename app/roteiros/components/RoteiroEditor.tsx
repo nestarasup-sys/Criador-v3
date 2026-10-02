@@ -26,6 +26,8 @@ import RecoveryBanner from "./RecoveryBanner";
 import ScriptAiContextPanel from "./ScriptAiContextPanel";
 import type { AiUsageTotals, GeneratedReaction, NarrativeProfile, OpeningSection, PremiumCharacter, ReactionBlock, RoteirosState, ScriptProject, TikTokSection } from "../types";
 import { useRoteirosData } from "../useRoteirosData";
+import { compactSentPromptPreview } from "../prompt-preview";
+import type { SentPromptPreview } from "../prompt-preview";
 import styles from "../roteiros.module.css";
 
 const statusText = { idle: "Preparando", saving: "Salvando…", saved: "Salvo no PC", error: "Cópia de emergência", unsafe: "Sem cópia segura" } as const;
@@ -36,11 +38,26 @@ const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path:
 };
 const MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS = 2;
 
-type SentPromptPreview = { provider: string; operation: string; instructions: string; input: string; model?: string; attempts?: number; sentAt: string };
-
 function rememberSentPrompt(preview: Omit<SentPromptPreview, "sentAt">) {
-  const value: SentPromptPreview = { ...preview, sentAt: new Date().toISOString() };
-  window.localStorage.setItem(LAST_FILL_EMPTY_PROMPT_KEY, JSON.stringify(value));
+  const value = compactSentPromptPreview(preview);
+  const serialized = JSON.stringify(value);
+  try {
+    window.localStorage.setItem(LAST_FILL_EMPTY_PROMPT_KEY, serialized);
+  } catch {
+    // O histórico é apenas diagnóstico. Nunca pode interromper o preenchimento.
+    try {
+      window.localStorage.removeItem(LAST_FILL_EMPTY_PROMPT_KEY);
+      window.localStorage.setItem(LAST_FILL_EMPTY_PROMPT_KEY, JSON.stringify({
+        provider: value.provider,
+        operation: value.operation,
+        model: value.model,
+        attempts: value.attempts,
+        sentAt: value.sentAt,
+      }));
+    } catch {
+      // Se a cota estiver completamente cheia, o diagnóstico fica somente em memória/API.
+    }
+  }
   window.dispatchEvent(new Event("nymi-roteiros-prompt-updated"));
 }
 

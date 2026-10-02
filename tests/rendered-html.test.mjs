@@ -38,6 +38,18 @@ test("renders the Nymi Gacha application shell", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/);
 });
 
+test("limita e torna opcional o histórico local do prompt de preencher vazios", async () => {
+  const [editor, helper] = await Promise.all([
+    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/prompt-preview.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(helper, /PROMPT_PREVIEW_MAX_CHARS = 6_000/);
+  assert.match(helper, /truncado para diagnóstico local/);
+  assert.match(editor, /try \{\s*window\.localStorage\.setItem\(LAST_FILL_EMPTY_PROMPT_KEY/s);
+  assert.match(editor, /window\.localStorage\.removeItem\(LAST_FILL_EMPTY_PROMPT_KEY\)/);
+  assert.match(editor, /Se a cota estiver completamente cheia/);
+});
+
 test("permite selecionar e excluir vários personagens de uma vez", async () => {
   const [panel, page, css] = await Promise.all([
     readFile(new URL("../app/creator/components/CreatorLibraryPanel.tsx", import.meta.url), "utf8"),
