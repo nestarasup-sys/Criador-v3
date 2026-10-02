@@ -1095,6 +1095,22 @@
 }
 .contextZoneIcon { background:linear-gradient(135deg,#8a65e4,#6845c4); }
 .contextZoneBody { padding:14px 16px 16px; }
+.contextTitleField { margin-bottom:12px; }
+.timingPanel { display:flex; flex-direction:column; gap:10px; margin:14px 0 4px; }
+.sceneTimingCard,
+.reactionTimingCard { padding:12px; border:1px solid #ded4f4; border-radius:12px; }
+.sceneTimingCard { background:#f8f5ff; }
+.reactionTimingGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.firstReactionTiming { border-color:#d7c4ff; background:#f3edff; }
+.secondReactionTiming { border-color:#f2c9d8; background:#fff0f5; }
+.reactionTimingHeading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:9px; color:#3e334b; font-size:12px; font-weight:900; }
+.reactionTimingHeading b { flex:0 0 auto; padding:5px 8px; border-radius:999px; font-size:9px; letter-spacing:.04em; }
+.firstReactionTiming .reactionTimingHeading b { background:#dfd0ff; color:#6940bc; }
+.secondReactionTiming .reactionTimingHeading b { background:#ffd4e2; color:#be416d; }
+.timingControl { display:flex; align-items:center; gap:8px; min-width:0; }
+.timingControl input { min-width:0; flex:1; }
+.timingControl small { flex:0 0 auto; color:#756c80; font-size:10px; }
+.timingControl .secondaryButton { flex:0 0 auto; white-space:nowrap; }
 .descriptionLayout {
   display:grid;
   grid-template-columns:minmax(0,1fr) minmax(260px,.7fr);
@@ -1397,6 +1413,7 @@
   .blocksHeader .secondaryButton { width:100%; }
   .reactionBlock { grid-template-columns:1fr; }
   .descriptionLayout { grid-template-columns:1fr; }
+  .reactionTimingGrid { grid-template-columns:1fr; }
   .descriptionField textarea { min-height:150px; }
   .blockIdentity { padding-top:0; }
   .blockMain { grid-template-columns:1fr; }
