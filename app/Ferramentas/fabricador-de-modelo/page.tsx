@@ -2226,7 +2226,27 @@ export default function FabricadorDeModeloPage() {
               <span>{dragging ? `Movendo ${dragging === "eyes-left" ? "olho esquerdo" : dragging === "eyes-right" ? "olho direito" : KIND_LABEL[dragging]}` : "Arraste uma camada para reposicionar"}</span>
             </div>
           </header>
-          <div className={styles.canvasStage}>
+          {section === "expressions" && <div className={styles.comparisonToolbar}>
+            <span>Comparar com</span>
+            <button type="button" className={comparisonTarget === "normal" ? styles.tabActive : ""} disabled={!pair || renderingComparison} onClick={() => void refreshComparison("normal")}>Normal</button>
+            <button type="button" className={comparisonTarget === "saved" ? styles.tabActive : ""} disabled={!pair || !savedExpressionVersion || renderingComparison} onClick={() => void refreshComparison("saved")}>Versão salva</button>
+            {comparisonTarget !== "none" && <>
+              <button type="button" className={comparisonLayout === "side" ? styles.tabActive : ""} disabled={!comparisonImage} onClick={() => setComparisonLayout("side")}>Lado a lado</button>
+              <button type="button" className={comparisonLayout === "overlay" ? styles.tabActive : ""} disabled={!comparisonImage} onClick={() => setComparisonLayout("overlay")}>Sobrepor</button>
+              <button type="button" className={styles.secondaryButton} onClick={() => { setComparisonTarget("none"); setComparisonImage(null); }}>Fechar comparação</button>
+              <button type="button" className={styles.secondaryButton} disabled={renderingComparison} onClick={() => void refreshComparison(comparisonTarget)}>Atualizar</button>
+            </>}
+            {renderingComparison && <small>Gerando comparação…</small>}
+          </div>}
+          <div className={`${styles.canvasStage} ${comparisonTarget !== "none" && comparisonLayout === "side" ? styles.canvasStageCompareSide : comparisonTarget !== "none" ? styles.canvasStageCompareOverlay : ""}`}>
+            {comparisonTarget !== "none" && comparisonImage && comparisonLayout === "side" && <div className={styles.comparisonFrame}>
+              <small>{comparisonTarget === "normal" ? "NORMAL" : "VERSÃO SALVA"}</small>
+              <img src={comparisonImage} alt="Comparação da expressão" />
+            </div>}
+            {comparisonTarget !== "none" && comparisonImage && comparisonLayout === "overlay" && <>
+              <img className={styles.comparisonOverlay} src={comparisonImage} alt="Camada de comparação" />
+              <span className={styles.comparisonOverlayLabel}>{comparisonTarget === "normal" ? "NORMAL · 50%" : "SALVA · 50%"}</span>
+            </>}
             <canvas
               ref={canvasRef}
               width={CANVAS_SIZE}
