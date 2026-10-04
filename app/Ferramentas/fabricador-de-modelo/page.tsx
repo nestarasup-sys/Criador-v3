@@ -114,6 +114,25 @@ function validateInputFile(file: File) {
   return null;
 }
 
+async function encodeExpressionReference(file: File) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(objectUrl);
+    const scale = Math.min(1, 1200 / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Não consegui preparar a referência visual.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", .82);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function profileIdForName(name: string, profiles: PresetProfile[]) {
   const base = name.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 56) || "perfil";
   const used = new Set(profiles.map((profile) => profile.id));
@@ -125,6 +144,7 @@ function profileIdForName(name: string, profiles: PresetProfile[]) {
 
 export default function FabricadorDeModeloPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const expressionReferenceInputRef = useRef<HTMLInputElement>(null);
   const placementSaveTimers = useRef<Partial<Record<FabricatorAssetKind, ReturnType<typeof setTimeout>>>>({});
   const chromaSaveTimers = useRef<Partial<Record<FabricatorAssetKind, ReturnType<typeof setTimeout>>>>({});
   const persistChromaRef = useRef<((kind: FabricatorAssetKind, next: ChromaSettings) => void) | null>(null);
@@ -204,6 +224,13 @@ export default function FabricadorDeModeloPage() {
   const [presetIndex, setPresetIndex] = useState(13);
   const [presetLayer, setPresetLayer] = useState<PresetLayer>("eyes");
   const [presetSide, setPresetSide] = useState<PresetSide>("both");
+  const [expressionGrid, setExpressionGrid] = useState<(string | null)[]>(() => Array(EYE_EXPRESSIONS.length).fill(null));
+  const [renderingExpressionGrid, setRenderingExpressionGrid] = useState(false);
+  const [expressionGridOpen, setExpressionGridOpen] = useState(false);
+  const [comparisonTarget, setComparisonTarget] = useState<"none" | "normal" | "saved">("none");
+  const [comparisonLayout, setComparisonLayout] = useState<"side" | "overlay">("side");
+  const [comparisonImage, setComparisonImage] = useState<string | null>(null);
+  const [renderingComparison, setRenderingComparison] = useState(false);
   const [effectCatalogKind, setEffectCatalogKind] = useState<FaceEffectKind>("blush");
   const [savingPresets, setSavingPresets] = useState(false);
   const [talkConfigOpen, setTalkConfigOpen] = useState(false);
@@ -374,6 +401,10 @@ export default function FabricadorDeModeloPage() {
   }, [exportGender]);
 
   const activePreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
+  const activeProfile = presetProfiles.find((profile) => profile.id === activeProfileId);
+  const expressionKey = EYE_EXPRESSIONS[presetIndex][0];
+  const expressionReference = activeProfile?.expressionReferences?.[expressionKey] ?? { description: "", imageDataUrl: null };
+  const savedExpressionVersion = activeProfile?.savedExpressionVersions?.[expressionKey];
   const previewIndex = section === "adjust" ? NORMAL_PRESET_INDEX : presetIndex;
   const previewPreset = presets[previewIndex] ?? defaultPresetForIndex(previewIndex);
 
