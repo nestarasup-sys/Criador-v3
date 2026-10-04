@@ -763,10 +763,29 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => {
     let cancelled = false;
+    // A prévia precisa resolver o manpu pela mesma fonte de verdade da
+    // geração/exportação: asset escolhido + índice da célula da expressão.
+    // `manpuPieces` é apenas o estado do editor de upload e pode ainda conter
+    // as células do asset anterior durante a troca de expressão/asset.
+    setEffectLoaded((current) => {
+      if (!current.manpu) return current;
+      const next = { ...current };
+      delete next.manpu;
+      return next;
+    });
     Promise.all(EFFECT_KINDS.map(async (kind) => {
       if (kind === "manpu") {
+        const assetId = previewPreset.effectAssets.manpu;
+        if (!assetId || !previewPreset.enabledEffects.manpu) return [kind, undefined] as const;
+        const asset = libraryAssets.find((entry) => entry.id === assetId && entry.kind === "manpu");
+        if (!asset) return [kind, undefined] as const;
+        const chroma = activeEffectAssetIds.manpu === assetId
+          ? effectChromaSettings.manpu
+          : asset.chroma ?? DEFAULT_CHROMA_SETTINGS;
+        const file = await assetToFile(asset);
+        const pieces = await processManpuSheet(file, chroma, asset.grid ?? "7x3");
         const pieceIndex = previewPreset.effectPieceIndexes.manpu ?? previewIndex;
-        const piece = manpuPieces[pieceIndex];
+        const piece = pieces[pieceIndex];
         return [kind, piece ? await loadImage(piece.dataUrl) : undefined] as const;
       }
       const piece = effectPieces[kind];
@@ -776,9 +795,11 @@ export default function FabricadorDeModeloPage() {
       const next: Partial<Record<FaceEffectKind, HTMLImageElement>> = {};
       for (const [kind, image] of entries) if (image) next[kind] = image;
       setEffectLoaded(next);
+    }).catch((error) => {
+      if (!cancelled) setStatus(error instanceof Error ? `Não consegui atualizar o manpu da prévia: ${error.message}` : "Não consegui atualizar o manpu da prévia.");
     });
     return () => { cancelled = true; };
-  }, [effectPieces, manpuPieces, previewPreset.effectPieceIndexes.manpu, previewIndex]);
+  }, [effectPieces, previewPreset.effectPieceIndexes.manpu, previewPreset.effectAssets.manpu, previewPreset.enabledEffects.manpu, previewIndex, libraryAssets, activeEffectAssetIds.manpu, effectChromaSettings.manpu]);
 
   useEffect(() => {
     let cancelled = false;
