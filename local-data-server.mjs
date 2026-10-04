@@ -649,6 +649,15 @@ function normalizeFabricatorPresetProfiles(value, legacyPresets = {}) {
     while (usedIds.has(id)) id = `${id}-${index + 1}`.slice(0, 64);
     usedIds.add(id);
     const presets = normalizeFabricatorPresets(source.presets);
+    const savedExpressionVersions = normalizeFabricatorPresets(source.savedExpressionVersions);
+    const expressionReferences = Object.fromEntries(Object.entries(source.expressionReferences && typeof source.expressionReferences === "object" ? source.expressionReferences : {}).slice(0, 21).flatMap(([key, reference]) => {
+      if (!/^[a-z0-9_-]{1,80}$/i.test(key) || !reference || typeof reference !== "object") return [];
+      const description = String(reference.description ?? "").slice(0, 500);
+      const imageDataUrl = typeof reference.imageDataUrl === "string" && /^data:image\/(?:png|webp|jpeg);base64,/i.test(reference.imageDataUrl) && reference.imageDataUrl.length <= 2_000_000
+        ? reference.imageDataUrl
+        : null;
+      return [[key, { description, imageDataUrl }]];
+    }));
     profiles.push({
       id,
       name: normalizePresetProfileName(source.name, id === "padrao" ? "Padrão" : `Perfil ${index + 1}`),
@@ -656,6 +665,8 @@ function normalizeFabricatorPresetProfiles(value, legacyPresets = {}) {
       createdAt: typeof source.createdAt === "string" && source.createdAt ? source.createdAt : new Date().toISOString(),
       updatedAt: typeof source.updatedAt === "string" && source.updatedAt ? source.updatedAt : new Date().toISOString(),
       presets,
+      expressionReferences,
+      savedExpressionVersions,
     });
   }
   if (!profiles.length) {

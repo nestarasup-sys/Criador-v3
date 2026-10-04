@@ -102,6 +102,8 @@ export type PresetProfile = {
   createdAt: string;
   updatedAt: string;
   presets: FacePresetCollection;
+  expressionReferences?: Record<string, { description: string; imageDataUrl: string | null }>;
+  savedExpressionVersions?: FacePresetCollection;
 };
 
 export type PresetProfilesDocument = {
