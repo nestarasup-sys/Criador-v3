@@ -1099,3 +1099,202 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.expressionReviewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  max-height: 560px;
+  margin-top: 10px;
+  overflow: auto;
+  padding-right: 3px;
+}
+
+.expressionReviewCard,
+.expressionReviewActive {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid #e4dce9;
+  border-radius: 9px;
+  background: #faf8fb;
+  color: #584b60;
+  text-align: left;
+  cursor: pointer;
+}
+
+.expressionReviewActive {
+  border-color: #8a539d;
+  box-shadow: 0 0 0 2px #8a539d30;
+  background: #f5edf8;
+}
+
+.expressionReviewImage {
+  display: grid;
+  aspect-ratio: 1;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background-color: #f5f2f6;
+  background-image: linear-gradient(45deg, #e9e4eb 25%, transparent 25%), linear-gradient(-45deg, #e9e4eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e9e4eb 75%), linear-gradient(-45deg, transparent 75%, #e9e4eb 75%);
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-size: 12px 12px;
+}
+
+.expressionReviewImage img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.expressionReviewImage i {
+  color: #887b8f;
+  font-size: 9px;
+  font-style: normal;
+}
+
+.expressionReviewCard small,
+.expressionReviewActive small {
+  overflow: hidden;
+  font-size: 9px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.expressionReferenceImage {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  margin-bottom: 9px;
+  border: 1px solid #e5deeb;
+  border-radius: 9px;
+  background: #f7f5f8;
+  object-fit: contain;
+}
+
+.expressionReferenceNote {
+  display: block;
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  border: 1px solid #ded5e4;
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: #fff;
+  color: #493c52;
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.comparisonToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e7e2eb;
+  background: #342c3b;
+  color: #eee7f1;
+}
+
+.comparisonToolbar > span,
+.comparisonToolbar > small {
+  margin-right: 4px;
+  color: #c9bfce;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.comparisonToolbar button {
+  min-height: 27px;
+  padding: 4px 9px;
+  border: 1px solid #786a80;
+  border-radius: 7px;
+  background: #46394f;
+  color: #f7f1fa;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.comparisonToolbar button:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+.comparisonToolbar button.tabActive {
+  border-color: #d8a4e5;
+  background: #79508a;
+}
+
+.canvasStageCompareSide {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
+}
+
+.canvasStageCompareSide canvas {
+  width: min(100%, 520px);
+}
+
+.comparisonFrame {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #d9cfe0;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.comparisonFrame img {
+  display: block;
+  width: min(100%, 520px);
+  height: auto;
+}
+
+.canvasStageCompareOverlay {
+  position: relative;
+}
+
+.canvasStageCompareOverlay .comparisonOverlay {
+  position: absolute;
+  z-index: 1;
+  width: min(100%, 760px);
+  height: auto;
+  opacity: .5;
+  pointer-events: none;
+}
+
+.canvasStageCompareOverlay canvas {
+  position: relative;
+  z-index: 2;
+}
+
+.comparisonOverlayLabel {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  left: 8px;
+  border-radius: 6px;
+  padding: 4px 7px;
+  background: #251f2dcc;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .canvasStageCompareSide {
+    grid-template-columns: 1fr;
+  }
+}
