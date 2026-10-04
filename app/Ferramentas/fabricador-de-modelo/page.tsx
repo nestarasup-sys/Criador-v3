@@ -1300,6 +1300,103 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
+  const changePresetSide = (side: PresetSide) => {
+    if (side === "both" && (presetLayer === "eyes" || presetLayer === "eyebrows")) {
+      const variationKey = presetLayer;
+      const selected = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
+      const variation = selected[variationKey];
+      if (JSON.stringify(variation.left) !== JSON.stringify(variation.right)) {
+        pushEditorHistory();
+        setPresets((current) => current.map((preset, index) => index === presetIndex
+          ? { ...preset, [variationKey]: { left: { ...preset[variationKey].left }, right: { ...preset[variationKey].left } } }
+          : preset));
+        clearGenerated();
+      }
+    }
+    setPresetSide(side);
+  };
+
+  const updateExpressionReference = (update: Partial<{ description: string; imageDataUrl: string | null }>) => {
+    setPresetProfiles((current) => current.map((profile) => profile.id === activeProfileId ? {
+      ...profile,
+      expressionReferences: {
+        ...profile.expressionReferences,
+        [expressionKey]: { ...profile.expressionReferences?.[expressionKey], ...expressionReference, ...update },
+      },
+      updatedAt: new Date().toISOString(),
+    } : profile));
+  };
+
+  const persistProfileChanges = async (profiles: PresetProfile[], successMessage: string) => {
+    const document = profileDocumentFromState(profiles, presets);
+    const result = await saveFabricatorPresetProfiles(document);
+    setPresetProfiles(document.profiles);
+    setStatus(result.pcSaved ? successMessage : result.localSaved ? `${successMessage} A cópia local está pendente de sincronização.` : "Não foi possível salvar os dados do perfil.");
+  };
+
+  const saveExpressionReference = async (imageDataUrl?: string) => {
+    const currentProfile = presetProfiles.find((profile) => profile.id === activeProfileId);
+    if (!currentProfile) return;
+    const nextProfiles = presetProfiles.map((profile) => profile.id === activeProfileId ? {
+      ...profile,
+      expressionReferences: {
+        ...profile.expressionReferences,
+        [expressionKey]: {
+          ...expressionReference,
+          description: expressionReference.description,
+          imageDataUrl: imageDataUrl === undefined ? expressionReference.imageDataUrl : imageDataUrl,
+        },
+        },
+      updatedAt: new Date().toISOString(),
+    } : profile);
+    setPresetProfiles(nextProfiles);
+    await persistProfileChanges(nextProfiles, `Referência de ${EYE_EXPRESSIONS[presetIndex][1]} salva no perfil.`);
+  };
+
+  const uploadExpressionReference = async (file?: File) => {
+    if (!file) return;
+    const validationError = validateInputFile(file);
+    if (validationError) { setStatus(validationError); return; }
+    try {
+      const imageDataUrl = await encodeExpressionReference(file);
+      await saveExpressionReference(imageDataUrl);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Não consegui salvar a referência visual.");
+    }
+  };
+
+  const saveExpressionVersion = async () => {
+    const nextProfiles = presetProfiles.map((profile) => profile.id === activeProfileId ? {
+      ...profile,
+      savedExpressionVersions: { ...profile.savedExpressionVersions, [expressionKey]: cloneEditorValue(activePreset) },
+      updatedAt: new Date().toISOString(),
+    } : profile);
+    setPresetProfiles(nextProfiles);
+    await persistProfileChanges(nextProfiles, `Versão de ${EYE_EXPRESSIONS[presetIndex][1]} salva.`);
+  };
+
+  const restoreExpressionComponent = () => {
+    if (!savedExpressionVersion) return;
+    pushEditorHistory();
+    setPresets((current) => current.map((preset, index) => {
+      if (index !== presetIndex) return preset;
+      if (presetLayer === "eyes" || presetLayer === "eyebrows") return { ...preset, [presetLayer]: cloneEditorValue(savedExpressionVersion[presetLayer]) };
+      if (presetLayer === "mouth") return { ...preset, mouth: cloneEditorValue(savedExpressionVersion.mouth), mouthHalo: cloneEditorValue(savedExpressionVersion.mouthHalo) };
+      const kind = presetLayer as FaceEffectKind;
+      return {
+        ...preset,
+        effectPlacements: { ...preset.effectPlacements, [kind]: cloneEditorValue(savedExpressionVersion.effectPlacements[kind]) },
+        effects: { ...preset.effects, [kind]: cloneEditorValue(savedExpressionVersion.effects[kind]) },
+        enabledEffects: { ...preset.enabledEffects, [kind]: savedExpressionVersion.enabledEffects[kind] },
+        effectAssets: { ...preset.effectAssets, [kind]: savedExpressionVersion.effectAssets[kind] },
+        effectSettings: { ...preset.effectSettings, [kind]: cloneEditorValue(savedExpressionVersion.effectSettings[kind]) },
+        effectPieceIndexes: { ...preset.effectPieceIndexes, [kind]: savedExpressionVersion.effectPieceIndexes[kind] },
+      };
+    }));
+    clearGenerated();
+    setStatus(`Componente ${presetLayer} restaurado da versão salva. Use “Salvar presets” para gravar a alteração.`);
+  };
+
   const updateTemplateScaleX = (value: number) => {
     const next = Math.min(TEMPLATE_SCALE_X_LIMITS.max, Math.max(TEMPLATE_SCALE_X_LIMITS.min, value));
     if (next === activePreset.templateScaleX) return;
