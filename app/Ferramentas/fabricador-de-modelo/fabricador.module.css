@@ -1268,9 +1268,12 @@
 
 .canvasStageCompareOverlay .comparisonOverlay {
   position: absolute;
+  top: 50%;
+  left: 50%;
   z-index: 1;
   width: min(100%, 760px);
   height: auto;
+  transform: translate(-50%, -50%);
   opacity: .5;
   pointer-events: none;
 }
