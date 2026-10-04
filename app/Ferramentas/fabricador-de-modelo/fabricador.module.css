@@ -514,6 +514,46 @@
   opacity: .45;
 }
 
+.exportFeedback {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.exportFeedback strong {
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.exportFeedback_progress {
+  border-color: #d8c8e6;
+  background: #f6f0fa;
+  color: #58356c;
+}
+
+.exportFeedback_success {
+  border-color: #acd8bf;
+  background: #edf8f1;
+  color: #21633d;
+}
+
+.exportFeedback_error {
+  border-color: #e6b4b4;
+  background: #fff0f0;
+  color: #8a2e2e;
+}
+
+.exportFeedback_cancelled {
+  border-color: #e3d9c4;
+  background: #fbf7ec;
+  color: #705b27;
+}
+
 .inlineActions {
   display: grid;
   grid-template-columns: 1fr 1fr;

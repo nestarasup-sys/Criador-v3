@@ -252,6 +252,7 @@ export default function FabricadorDeModeloPage() {
   const manpuCellCount = manpuGrid === "5x8" ? 40 : 21;
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<{ kind: "progress" | "success" | "error" | "cancelled"; message: string } | null>(null);
   const [canUndo, setCanUndo] = useState(false);
 
   const clearGenerated = () => {
@@ -1856,8 +1857,8 @@ export default function FabricadorDeModeloPage() {
   const exportSessionRequest = async (gender: ModelGender, modelId: string, suffix = "", init: RequestInit = {}) => {
     const response = await localDataFetch(`/models/export-session/${gender}/${modelId}${suffix}`, init);
     if (!response.ok) {
-      const detail = await response.json().catch(() => ({})) as { error?: string };
-      throw new Error(detail.error || "Falha na sessão de exportação.");
+      const detail = await response.json().catch(() => ({})) as { error?: string; requestId?: string };
+      throw new Error(`${detail.error || "Falha na sessão de exportação."}${detail.requestId ? ` (código ${detail.requestId})` : ""}`);
     }
     return response;
   };
@@ -1878,9 +1879,13 @@ export default function FabricadorDeModeloPage() {
       setStatus("Não há um modelo compatível selecionado para substituir.");
       return;
     }
-    if (replaceExistingModel && !window.confirm(`Substituir as 126 imagens faciais de ${selectedReplacement.name}? Roupas, cabelos, arquivos adicionais e configurações existentes serão preservados; só a tag do preset será atualizada nos metadados.`)) return;
+    if (replaceExistingModel && !window.confirm(`Substituir as 126 imagens faciais de ${selectedReplacement.name}? Roupas, cabelos, arquivos adicionais e configurações existentes serão preservados; só a tag do preset será atualizada nos metadados.`)) {
+      setExportFeedback({ kind: "cancelled", message: "Operação cancelada. Nenhum arquivo foi alterado." });
+      return;
+    }
     exportLockRef.current = true;
     setExporting(true);
+    setExportFeedback({ kind: "progress", message: "Preparando a exportação…" });
     let exportSession: NextModel | null = null;
     try {
       let variants = generatedOutputsRef.current;
@@ -1929,6 +1934,7 @@ export default function FabricadorDeModeloPage() {
         },
       };
       setStatus(`${replaceExistingModel ? "Preparando substituição" : "Preparando"} ${targetModel.gender}/${targetModel.id}…`);
+      setExportFeedback({ kind: "progress", message: `Preparando ${targetModel.id}: gerando e enviando 126 imagens. Não feche esta página.` });
       await exportSessionRequest(targetModel.gender, targetModel.id, "", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1956,10 +1962,18 @@ export default function FabricadorDeModeloPage() {
         await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_talk.png`, await toCatalogFrame(ptTalk), "image/png");
         await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_blink.png`, await toCatalogFrame(ptBlink), "image/png");
         setStatus(`Exportando ${targetModel.id}: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
+        setExportFeedback({ kind: "progress", message: `Enviando ${targetModel.id}: expressão ${index + 1} de 21 (${Math.round(((index + 1) / EYE_EXPRESSIONS.length) * 100)}%).` });
       }
       setStatus(`Finalizando ${targetModel.id}…`);
       await exportSessionRequest(targetModel.gender, targetModel.id, "/commit", { method: "POST" });
       exportSession = null;
+
+      setExportFeedback({ kind: "progress", message: "Arquivos gravados. Atualizando catálogo…" });
+      const refreshedCatalog = await loadPcModels().catch(() => null);
+      if (refreshedCatalog) {
+        setCatalogModels(refreshedCatalog);
+        setCatalogModelsLoaded(true);
+      }
 
       if (!replaceExistingModel) {
         const nextResponse = await localDataFetch(`/models/next/${targetModel.gender}`, { cache: "no-store" }).catch(() => null);
@@ -1978,12 +1992,20 @@ export default function FabricadorDeModeloPage() {
       setStatus(replaceExistingModel
         ? `${targetModel.id}: as 126 imagens faciais e a tag do preset foram atualizadas; os demais dados do modelo foram preservados.`
         : `${targetModel.id} exportado com a tag ${presetTag.name}.`);
+      setExportFeedback({
+        kind: "success",
+        message: replaceExistingModel
+          ? `Sucesso: ${targetModel.id} foi atualizado. As 126 imagens faciais e a tag “${presetTag.name}” foram salvas; roupas, cabelo e outros dados foram preservados.`
+          : `Sucesso: ${targetModel.id} foi criado com 126 imagens e a tag “${presetTag.name}”.`,
+      });
       window.dispatchEvent(new CustomEvent("nymi:models-updated"));
     } catch (error) {
       if (exportSession) {
         await exportSessionRequest(exportSession.gender, exportSession.id, "", { method: "DELETE" }).catch(() => undefined);
       }
-      setStatus(`Exportação cancelada: ${error instanceof Error ? error.message : "erro desconhecido"}`);
+      const message = error instanceof Error ? error.message : "erro desconhecido";
+      setStatus(`Exportação não concluída: ${message}`);
+      setExportFeedback({ kind: "error", message: `Falha na exportação: ${message}. O modelo existente não foi alterado; corrija o problema e tente novamente.` });
     } finally {
       exportLockRef.current = false;
       setExporting(false);
@@ -2296,6 +2318,10 @@ export default function FabricadorDeModeloPage() {
                 {catalogModelsLoaded && replaceableModels.length === 0 && <small>Não encontrei modelos numerados deste gênero para substituir.</small>}
               </> : <div className={styles.exportState}><span>Próximo modelo</span><b>{availableNextModel?.id ?? "Consultando…"}</b></div>}
               <button className={styles.exportButton} onClick={() => void exportModel()} disabled={!pair || (replaceExistingModel ? !selectedReplacement : !availableNextModel) || processingBusy || generating || exporting}>{exporting ? "Exportando…" : generating ? "Gerando…" : processingBusy ? "Processando…" : replaceExistingModel ? "Substituir imagens do modelo" : "Exportar modelo"}</button>
+              {exportFeedback && <div className={`${styles.exportFeedback} ${styles[`exportFeedback_${exportFeedback.kind}`]}`} role={exportFeedback.kind === "error" ? "alert" : "status"} aria-live="polite">
+                <strong>{exportFeedback.kind === "success" ? "Exportação concluída" : exportFeedback.kind === "error" ? "Não foi possível exportar" : exportFeedback.kind === "cancelled" ? "Nada foi alterado" : "Exportação em andamento"}</strong>
+                <span>{exportFeedback.message}</span>
+              </div>}
             </PanelBlock>
           </>}
         </aside>
