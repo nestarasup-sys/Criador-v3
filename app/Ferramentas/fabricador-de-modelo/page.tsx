@@ -2104,10 +2104,42 @@ export default function FabricadorDeModeloPage() {
               </div>
               {(presetLayer === "eyes" || presetLayer === "eyebrows") && <div className={styles.segmented}>
                 {(["both", "left", "right"] as PresetSide[]).map((side) =>
-                  <button key={side} className={presetSide === side ? styles.tabActive : ""} onClick={() => setPresetSide(side)}>
-                    {side === "both" ? "Juntos" : side === "left" ? "Esquerdo" : "Direito"}
+                  <button key={side} className={presetSide === side ? styles.tabActive : ""} onClick={() => changePresetSide(side)}>
+                    {side === "both" ? "Juntos · igualar" : side === "left" ? "Esquerdo" : "Direito"}
                   </button>)}
               </div>}
+            </PanelBlock>
+
+            <PanelBlock title="Grade das expressões" description="Gere miniaturas das 21 expressões para revisar o conjunto e clicar direto na que deseja editar.">
+              <button className={styles.secondaryButton} type="button" onClick={() => void renderExpressionGrid()} disabled={!pair || renderingExpressionGrid}>
+                {renderingExpressionGrid ? "Montando grade…" : expressionGridOpen ? "Atualizar miniaturas" : "Gerar grade com 21"}
+              </button>
+              {expressionGridOpen && <div className={styles.expressionReviewGrid}>
+                {EYE_EXPRESSIONS.map(([key, label], index) => <button key={key} type="button" className={index === presetIndex ? styles.expressionReviewActive : styles.expressionReviewCard} onClick={() => setPresetIndex(index)} title={`Editar ${label}`}>
+                  <span className={styles.expressionReviewImage}>{expressionGrid[index] ? <img src={expressionGrid[index] ?? undefined} alt="" /> : <i>{renderingExpressionGrid ? "…" : "Prévia"}</i>}</span>
+                  <small>{String(index + 1).padStart(2, "0")} · {label}</small>
+                </button>)}
+              </div>}
+            </PanelBlock>
+
+            <PanelBlock title={`Referência · ${EYE_EXPRESSIONS[presetIndex][1]}`} description="Anexe uma imagem guia e uma nota sobre a intenção da expressão. A referência fica salva no perfil ativo.">
+              <input ref={expressionReferenceInputRef} className={styles.hiddenInput} type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void uploadExpressionReference(event.target.files?.[0]); event.currentTarget.value = ""; }} />
+              {expressionReference.imageDataUrl && <img className={styles.expressionReferenceImage} src={expressionReference.imageDataUrl} alt={`Referência de ${EYE_EXPRESSIONS[presetIndex][1]}`} />}
+              <textarea className={styles.expressionReferenceNote} value={expressionReference.description} onChange={(event) => updateExpressionReference({ description: event.target.value.slice(0, 500) })} placeholder="Ex.: sobrancelha interna levantada, olhar desconfiado e sorriso assimétrico…" maxLength={500} rows={3} />
+              <div className={styles.inlineActions}>
+                <button className={styles.secondaryButton} type="button" onClick={() => expressionReferenceInputRef.current?.click()}>{expressionReference.imageDataUrl ? "Trocar imagem guia" : "Anexar imagem guia"}</button>
+                {expressionReference.imageDataUrl && <button className={styles.dangerGhostButton} type="button" onClick={() => updateExpressionReference({ imageDataUrl: null })}>Remover imagem</button>}
+              </div>
+              <button className={styles.primaryButton} type="button" onClick={() => void saveExpressionReference()}>Salvar referência</button>
+            </PanelBlock>
+
+            <PanelBlock title="Versão desta expressão" description="Salve um ponto de comparação. Depois você pode ver o resultado salvo ou restaurar apenas o componente selecionado.">
+              <div className={styles.inlineActions}>
+                <button className={styles.primarySmall} type="button" onClick={() => void saveExpressionVersion()}>{savedExpressionVersion ? "Atualizar versão salva" : "Salvar versão atual"}</button>
+                <button className={styles.secondaryButton} type="button" disabled={!savedExpressionVersion} onClick={() => void refreshComparison("saved")}>Comparar com a salva</button>
+              </div>
+              {savedExpressionVersion && <button className={styles.secondaryButton} type="button" onClick={restoreExpressionComponent}>Restaurar {presetLayer === "eyes" ? "olhos" : presetLayer === "eyebrows" ? "sobrancelhas" : presetLayer === "mouth" ? "boca" : KIND_LABEL[presetLayer]} desta versão</button>}
+              <small className={styles.helperText}>A versão fica guardada dentro do perfil ativo, separada para cada expressão.</small>
             </PanelBlock>
 
             {presetLayer === "mouth" && <PanelBlock title="Halo rosa da boca" description="Configuração independente do blush normal. Fica atrás da boca e acompanha a posição, escala e rotação dela.">
