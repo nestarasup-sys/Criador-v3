@@ -746,6 +746,51 @@
   color: #4d3e56;
 }
 
+.replaceModelToggle {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  margin-top: 11px;
+  padding: 10px;
+  border: 1px solid #dfd6e7;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.replaceModelToggle input {
+  width: 15px;
+  height: 15px;
+  margin: 1px 0 0;
+  accent-color: #704783;
+}
+
+.replaceModelToggle span {
+  display: grid;
+  gap: 4px;
+}
+
+.replaceModelToggle strong {
+  color: #4d3e56;
+  font-size: 10px;
+}
+
+.replaceModelToggle small,
+.fieldLabel + small {
+  color: #84788c;
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.fieldLabel {
+  display: block;
+  margin: 10px 0 5px;
+  color: #685772;
+  font-size: 9px;
+  font-weight: 750;
+}
+
 .previewPanel {
   min-width: 0;
   overflow: hidden;

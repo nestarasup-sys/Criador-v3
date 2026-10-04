@@ -720,6 +720,15 @@ async function readModelConfig(folder, modelId) {
 
 const MODEL_CATALOG_METADATA_FILE = ".catalog.json";
 
+function normalizeModelPresetTag(value) {
+  if (!value || typeof value !== "object") return null;
+  const id = String(value.id ?? "").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 64);
+  const name = String(value.name ?? "").trim().replace(/\s+/g, " ").slice(0, 80);
+  const color = String(value.color ?? "");
+  if (!id || !name || !/^#[0-9a-f]{6}$/i.test(color)) return null;
+  return { id, name, color: color.toLowerCase() };
+}
+
 async function readModelCatalogVersion(folder, config) {
   const metadata = await readOptionalJson(join(folder, MODEL_CATALOG_METADATA_FILE));
   if (metadata?.catalogVersion === "v0" || metadata?.catalogVersion === "v1") return metadata.catalogVersion;
@@ -804,6 +813,7 @@ async function discoverModels() {
         ? undefined
         : { normal: defaultExpressionKey };
       const colorMap = normalizeModelColorMapMetadata(config?.colorMap);
+      const presetTag = normalizeModelPresetTag(config?.presetTag);
       const inferredLayout = config?.type === "head-only"
         ? null
         : await inferHeadOnlyLayout(folder, pngFiles);
@@ -853,6 +863,7 @@ async function discoverModels() {
           anchorY: Number.isFinite(config?.anchorY) ? Number(config.anchorY) : inferredLayout?.anchorY,
         } : {}),
         ...(colorMap ? { colorMap } : {}),
+        ...(presetTag ? { presetTag } : {}),
       });
     }
   }
@@ -1474,8 +1485,13 @@ async function route(request, response) {
     }
 
     if (request.method === "POST" && !fileName && !commitAction) {
-      await createModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId });
-      sendJson(response, request, 200, { ok: true, gender, id: modelId });
+      const options = await requestJson(request);
+      if (options !== null && (typeof options !== "object" || typeof options.replaceExisting !== "boolean")) {
+        throw Object.assign(new Error("Opção de exportação inválida."), { status: 400, code: "INVALID_EXPORT_SESSION_OPTIONS" });
+      }
+      const replaceExisting = options?.replaceExisting === true;
+      await createModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId, replaceExisting });
+      sendJson(response, request, 200, { ok: true, gender, id: modelId, replaced: replaceExisting });
       return;
     }
 
@@ -1539,7 +1555,7 @@ async function route(request, response) {
         ]),
       ];
       const result = await commitModelExportSession({ modelsRoot: MODELS_ROOT, stagingRoot: MODEL_EXPORT_STAGING_ROOT, gender, modelId, expectedFiles });
-      sendJson(response, request, 200, { ok: true, gender, id: modelId, files: result.files });
+      sendJson(response, request, 200, { ok: true, gender, id: modelId, files: result.files, replaced: result.replaced });
       return;
     }
   }

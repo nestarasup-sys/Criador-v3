@@ -388,6 +388,10 @@ a { color: inherit; }
 .base-pack-selector button:hover, .base-pack-selector > div:hover { border-color: #cfc7e8; background: white; }
 .base-pack-selector button.active, .base-pack-selector > div.active { border-color: var(--accent); background: white; box-shadow: 0 0 0 2px var(--accent-soft); color: var(--accent-dark); }
 .base-pack-selector img { width: 100%; height: 80px; display: block; object-fit: contain; }
+.base-pack-selector .base-pack-thumb-wrap { position: relative; width: 100%; height: 80px; min-width: 0; display: grid; place-items: center; overflow: hidden; }
+.base-pack-selector .base-pack-thumb-wrap > img { width: 100%; height: 80px; }
+.base-pack-selector .base-pack-thumb-wrap > .base-pack-thumbnail-loading { position: absolute; }
+.base-pack-selector .base-pack-preset-tag { position: absolute; right: 4px; bottom: 4px; max-width: calc(100% - 8px); padding: 3px 6px; overflow: hidden; border: 1px solid #ffffff85; border-radius: 999px; color: #fff; font-size: 8px; line-height: 1.2; font-weight: 850; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 1px 4px #0004; }
 .base-pack-thumbnail { object-position: center; }
 .base-pack-thumbnail-loading { width: 56px; height: 56px; place-self: center; border-radius: 50%; background: linear-gradient(110deg,#eeeaf1 25%,#faf8fb 42%,#eeeaf1 58%); background-size: 220% 100%; animation: base-pack-thumbnail-loading 1.1s linear infinite; }
 @keyframes base-pack-thumbnail-loading { to { background-position-x: -220%; } }

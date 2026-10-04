@@ -4,6 +4,8 @@
 import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
+import { loadPcModels } from "../../creator/creator-storage";
+import type { BasePackCollection } from "../../creator/base-packs";
 import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
@@ -23,6 +25,7 @@ import {
   defaultPresetForIndex,
   mergeSavedPresets,
   presetCollectionFromState,
+  presetTagForProfile,
   type ModelGender,
   type NextModel,
   type PresetProfile,
@@ -242,6 +245,10 @@ export default function FabricadorDeModeloPage() {
   const [generating, setGenerating] = useState(false);
   const [processingLayers, setProcessingLayers] = useState<Partial<Record<FabricatorAssetKind, boolean>>>({});
   const [exportGender, setExportGender] = useState<ModelGender>("feminino");
+  const [catalogModels, setCatalogModels] = useState<BasePackCollection>({ feminino: [], masculino: [] });
+  const [catalogModelsLoaded, setCatalogModelsLoaded] = useState(false);
+  const [replaceExistingModel, setReplaceExistingModel] = useState(false);
+  const [replacementModelId, setReplacementModelId] = useState("");
   const manpuCellCount = manpuGrid === "5x8" ? 40 : 21;
   const [nextModel, setNextModel] = useState<NextModel | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -399,6 +406,18 @@ export default function FabricadorDeModeloPage() {
       .catch(() => { if (!cancelled) setStatus("Não foi possível consultar a próxima numeração do catálogo."); });
     return () => { cancelled = true; };
   }, [exportGender]);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadPcModels()
+      .then((models) => {
+        if (cancelled) return;
+        setCatalogModels(models);
+        setCatalogModelsLoaded(true);
+      })
+      .catch(() => { if (!cancelled) setCatalogModelsLoaded(true); });
+    return () => { cancelled = true; };
+  }, []);
 
   const activePreset = presets[presetIndex] ?? defaultPresetForIndex(presetIndex);
   const activeProfile = presetProfiles.find((profile) => profile.id === activeProfileId);
@@ -1853,6 +1872,13 @@ export default function FabricadorDeModeloPage() {
 
   const exportModel = async () => {
     if (!pair || exportLockRef.current || generationLockRef.current || processingBusy) return;
+    const replaceableModels = catalogModels[exportGender].filter((model) => /^modelo-\d+$/i.test(model.id));
+    const selectedReplacement = replaceableModels.find((model) => model.id === replacementModelId) ?? replaceableModels[0];
+    if (replaceExistingModel && !selectedReplacement) {
+      setStatus("Não há um modelo compatível selecionado para substituir.");
+      return;
+    }
+    if (replaceExistingModel && !window.confirm(`Substituir as 126 imagens faciais de ${selectedReplacement.name}? Roupas, cabelos, arquivos adicionais e configurações existentes serão preservados; só a tag do preset será atualizada nos metadados.`)) return;
     exportLockRef.current = true;
     setExporting(true);
     let exportSession: NextModel | null = null;
@@ -1863,11 +1889,19 @@ export default function FabricadorDeModeloPage() {
         : await generateExpressionOutputs();
       variants = generatedOutputsRef.current;
       if (!outputs || outputs.length !== EYE_EXPRESSIONS.length) throw new Error("As 21 expressões precisam estar prontas.");
-      const numberResponse = await localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" });
-      if (!numberResponse.ok) throw new Error("Não consegui calcular o próximo número.");
-      const numberData = await numberResponse.json() as Partial<NextModel>;
-      if (typeof numberData.number !== "number" || !Number.isInteger(numberData.number) || numberData.number < 1) throw new Error("Numeração inválida.");
-      const targetModel: NextModel = { gender: exportGender, number: numberData.number, id: `modelo-${numberData.number}` };
+      let targetModel: NextModel;
+      if (replaceExistingModel && selectedReplacement) {
+        const number = Number(selectedReplacement.id.match(/^modelo-(\d+)$/i)?.[1]);
+        if (!Number.isInteger(number) || number < 1) throw new Error("O modelo selecionado não tem uma numeração válida.");
+        targetModel = { gender: exportGender, number, id: selectedReplacement.id };
+      } else {
+        const numberResponse = await localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" });
+        if (!numberResponse.ok) throw new Error("Não consegui calcular o próximo número.");
+        const numberData = await numberResponse.json() as Partial<NextModel>;
+        if (typeof numberData.number !== "number" || !Number.isInteger(numberData.number) || numberData.number < 1) throw new Error("Numeração inválida.");
+        targetModel = { gender: exportGender, number: numberData.number, id: `modelo-${numberData.number}` };
+      }
+      const presetTag = presetTagForProfile(activeProfile);
       const manifest = {
         name: `Modelo ${targetModel.number}`,
         gender: targetModel.gender,
@@ -1879,6 +1913,7 @@ export default function FabricadorDeModeloPage() {
         width: 1920,
         height: 1080,
         source: "fabricador-de-modelo-v2",
+        presetTag,
         expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
         generator: {
           version: 3,
@@ -1893,8 +1928,12 @@ export default function FabricadorDeModeloPage() {
           ],
         },
       };
-      setStatus(`Preparando ${targetModel.gender}/${targetModel.id}…`);
-      await exportSessionRequest(targetModel.gender, targetModel.id, "", { method: "POST" });
+      setStatus(`${replaceExistingModel ? "Preparando substituição" : "Preparando"} ${targetModel.gender}/${targetModel.id}…`);
+      await exportSessionRequest(targetModel.gender, targetModel.id, "", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ replaceExisting: replaceExistingModel }),
+      });
       exportSession = targetModel;
       await uploadCatalogFile(targetModel.gender, targetModel.id, `${targetModel.id}.json`, JSON.stringify(manifest, null, 2), "application/json");
       for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
@@ -1922,19 +1961,23 @@ export default function FabricadorDeModeloPage() {
       await exportSessionRequest(targetModel.gender, targetModel.id, "/commit", { method: "POST" });
       exportSession = null;
 
-      const nextResponse = await localDataFetch(`/models/next/${targetModel.gender}`, { cache: "no-store" }).catch(() => null);
-      if (nextResponse?.ok) {
-        const nextData = await nextResponse.json().catch(() => null) as Partial<NextModel> | null;
-        if (nextData && typeof nextData.number === "number" && Number.isInteger(nextData.number) && nextData.number > 0 && nextData.id === `modelo-${nextData.number}`) {
-          setNextModel({ gender: targetModel.gender, number: nextData.number, id: nextData.id });
+      if (!replaceExistingModel) {
+        const nextResponse = await localDataFetch(`/models/next/${targetModel.gender}`, { cache: "no-store" }).catch(() => null);
+        if (nextResponse?.ok) {
+          const nextData = await nextResponse.json().catch(() => null) as Partial<NextModel> | null;
+          if (nextData && typeof nextData.number === "number" && Number.isInteger(nextData.number) && nextData.number > 0 && nextData.id === `modelo-${nextData.number}`) {
+            setNextModel({ gender: targetModel.gender, number: nextData.number, id: nextData.id });
+          } else {
+            setNextModel(null);
+          }
         } else {
           setNextModel(null);
         }
-      } else {
-        setNextModel(null);
       }
 
-      setStatus(`${targetModel.id} exportado com sucesso.`);
+      setStatus(replaceExistingModel
+        ? `${targetModel.id}: as 126 imagens faciais e a tag do preset foram atualizadas; os demais dados do modelo foram preservados.`
+        : `${targetModel.id} exportado com a tag ${presetTag.name}.`);
       window.dispatchEvent(new CustomEvent("nymi:models-updated"));
     } catch (error) {
       if (exportSession) {
@@ -1976,6 +2019,8 @@ export default function FabricadorDeModeloPage() {
 
   const effectsForCatalog = libraryAssets.filter((asset) => asset.kind === effectCatalogKind);
   const availableNextModel = nextModel?.gender === exportGender ? nextModel : null;
+  const replaceableModels = catalogModels[exportGender].filter((model) => /^modelo-\d+$/i.test(model.id));
+  const selectedReplacement = replaceableModels.find((model) => model.id === replacementModelId) ?? replaceableModels[0];
 
   return <div className={styles.page}>
     <ToolsTopbar title="Fabricador de Modelo" subtitle="V2 · montagem, expressões e exportação" />
@@ -2233,13 +2278,24 @@ export default function FabricadorDeModeloPage() {
               <button className={styles.secondaryButton} onClick={() => void downloadPackage()} disabled={!pair || processingBusy || generating || exporting}>Baixar ZIP</button>
               <div className={styles.exportState}><span>Resultado</span><b>{generated.length === 21 ? "21 base + 21 PT + 21 talk + 21 blink + 21 PT talk + 21 PT blink" : "Ainda não gerado"}</b></div>
             </PanelBlock>
-            <PanelBlock title="Exportar para o Criador" description="Cria um novo modelo sem sobrescrever os existentes.">
+            <PanelBlock title="Exportar para o Criador" description="Crie um novo modelo ou atualize apenas as imagens faciais de um existente.">
               <div className={styles.segmented}>
                 <button className={exportGender === "feminino" ? styles.tabActive : ""} onClick={() => setExportGender("feminino")} disabled={exporting}>Feminino</button>
                 <button className={exportGender === "masculino" ? styles.tabActive : ""} onClick={() => setExportGender("masculino")} disabled={exporting}>Masculino</button>
               </div>
-              <div className={styles.exportState}><span>Próximo modelo</span><b>{availableNextModel?.id ?? "Consultando…"}</b></div>
-              <button className={styles.exportButton} onClick={() => void exportModel()} disabled={!pair || !availableNextModel || processingBusy || generating || exporting}>{exporting ? "Exportando…" : generating ? "Gerando…" : processingBusy ? "Processando…" : "Exportar modelo"}</button>
+              <label className={styles.replaceModelToggle}>
+                <input type="checkbox" checked={replaceExistingModel} onChange={(event) => setReplaceExistingModel(event.target.checked)} disabled={exporting || !catalogModelsLoaded || replaceableModels.length === 0} />
+                <span><strong>Substituir modelo existente</strong><small>Atualiza somente as 126 imagens de expressões; cabelos, roupas e outros dados ficam intactos.</small></span>
+              </label>
+              {replaceExistingModel ? <>
+                <label className={styles.fieldLabel} htmlFor="fabricator-replacement-model">Modelo a atualizar</label>
+                <select id="fabricator-replacement-model" className={styles.select} value={selectedReplacement?.id ?? ""} onChange={(event) => setReplacementModelId(event.target.value)} disabled={exporting || !selectedReplacement}>
+                  {replaceableModels.map((model) => <option key={model.id} value={model.id}>{model.name} · {model.id}</option>)}
+                </select>
+                {!catalogModelsLoaded && <small>Carregando modelos do catálogo…</small>}
+                {catalogModelsLoaded && replaceableModels.length === 0 && <small>Não encontrei modelos numerados deste gênero para substituir.</small>}
+              </> : <div className={styles.exportState}><span>Próximo modelo</span><b>{availableNextModel?.id ?? "Consultando…"}</b></div>}
+              <button className={styles.exportButton} onClick={() => void exportModel()} disabled={!pair || (replaceExistingModel ? !selectedReplacement : !availableNextModel) || processingBusy || generating || exporting}>{exporting ? "Exportando…" : generating ? "Gerando…" : processingBusy ? "Processando…" : replaceExistingModel ? "Substituir imagens do modelo" : "Exportar modelo"}</button>
             </PanelBlock>
           </>}
         </aside>

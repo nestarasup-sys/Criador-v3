@@ -12,6 +12,12 @@ export type ModelColorMapMetadata = {
   expressions: string[];
 };
 
+export type ModelPresetTag = {
+  id: string;
+  name: string;
+  color: string;
+};
+
 export type BasePackDefinition = {
   id: BasePackId;
   name: string;
@@ -27,6 +33,7 @@ export type BasePackDefinition = {
   anchorX?: number;
   anchorY?: number;
   colorMap?: ModelColorMapMetadata;
+  presetTag?: ModelPresetTag;
 };
 
 export type BasePackCollection = Record<Model, readonly BasePackDefinition[]>;

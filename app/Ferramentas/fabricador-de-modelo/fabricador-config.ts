@@ -112,6 +112,24 @@ export type PresetProfilesDocument = {
   profiles: PresetProfile[];
 };
 
+const PRESET_TAG_COLORS: Record<string, string> = {
+  padrao: "#111827",
+  vilao: "#dc2626",
+  marvado: "#dc2626",
+  bonzinho: "#2563eb",
+  medroso: "#16a34a",
+};
+
+export function presetTagForProfile(profile: Pick<PresetProfile, "id" | "name"> | null | undefined) {
+  const id = profile?.id?.trim().toLowerCase() || DEFAULT_PRESET_PROFILE_ID;
+  const knownNames: Record<string, string> = { padrao: "Padrão", vilao: "Vilão", bonzinho: "Bonzinho", medroso: "Medroso" };
+  return {
+    id,
+    name: knownNames[id] ?? profile?.name?.trim() ?? "Padrão",
+    color: PRESET_TAG_COLORS[id] ?? "#475569",
+  };
+}
+
 export type ModelGender = "feminino" | "masculino";
 export type NextModel = { gender: ModelGender; number: number; id: string };
 export type PresetLayer = "eyes" | "eyebrows" | "mouth" | FaceEffectKind;

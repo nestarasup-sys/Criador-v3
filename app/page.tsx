@@ -6643,7 +6643,10 @@ export default function Home() {
                       aria-pressed={assetDeleteMode ? selectedForDelete : undefined}
                       title={assetDeleteMode ? `Selecionar ${pack.name} para apagar` : `Selecionar ${pack.name}`}
                     >
-                      <BasePackThumbnail src={baseExpressionSource(pack, "normal")} name={pack.name} />
+                      <span className="base-pack-thumb-wrap">
+                        <BasePackThumbnail src={baseExpressionSource(pack, "normal")} name={pack.name} />
+                        {pack.presetTag && <span className="base-pack-preset-tag" style={{ backgroundColor: pack.presetTag.color }} title={`Preset: ${pack.presetTag.name}`}>{pack.presetTag.name}</span>}
+                      </span>
                       <span>{pack.name}</span>
                       <small>{pack.expressionKeys.length} expressões</small>
                       {assetDeleteMode && <span className="asset-selection-indicator" aria-hidden="true">{selectedForDelete ? "✓" : ""}</span>}
