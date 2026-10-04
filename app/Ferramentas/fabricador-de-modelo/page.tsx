@@ -1678,14 +1678,14 @@ export default function FabricadorDeModeloPage() {
     return browImageCache.current.value;
   };
 
-  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open", mouthVariant: "base" | "talk" = "base") => {
+  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open", mouthVariant: "base" | "talk" = "base", presetOverride?: FacePreset) => {
     if (!template || !pair) return null;
     const eyeImages = imagesForEyeState(expressionState);
     if (!eyeImages) return null;
     const images = await eyeImages;
     const browPromise = imagesForBrows();
     const browImages = browPromise ? await browPromise : null;
-    const preset = presets[expressionIndex] ?? defaultPresetForIndex(expressionIndex);
+    const preset = presetOverride ?? presets[expressionIndex] ?? defaultPresetForIndex(expressionIndex);
     const talkIndex = Number.isInteger(preset.mouthTalkIndex) ? preset.mouthTalkIndex : expressionIndex;
     const mouthSource = mouthVariant === "talk" && mouthTalkPieces.length === EYE_EXPRESSIONS.length
       ? mouthTalkPieces[talkIndex] ?? mouthTalkPieces[expressionIndex]
@@ -1712,6 +1712,55 @@ export default function FabricadorDeModeloPage() {
     if (!context) throw new Error("Canvas indisponível.");
     drawComposition(context, template, images, eyePlacements, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.mouthHalo, preset.templateScaleX);
     return canvas.toDataURL("image/png");
+  };
+
+  const renderExpressionGrid = async () => {
+    if (renderingExpressionGrid) return;
+    setExpressionGridOpen(true);
+    setRenderingExpressionGrid(true);
+    setExpressionGrid(Array(EYE_EXPRESSIONS.length).fill(null));
+    try {
+      for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
+        const output = await renderOutput(index, "open", "base");
+        if (!output) continue;
+        const image = await loadImage(output);
+        const thumbnail = document.createElement("canvas");
+        thumbnail.width = 180;
+        thumbnail.height = 180;
+        const context = thumbnail.getContext("2d");
+        if (!context) continue;
+        context.clearRect(0, 0, thumbnail.width, thumbnail.height);
+        context.drawImage(image, 0, 0, thumbnail.width, thumbnail.height);
+        setExpressionGrid((current) => current.map((value, entryIndex) => entryIndex === index ? thumbnail.toDataURL("image/webp", .78) : value));
+      }
+    } catch (error) {
+      setStatus(error instanceof Error ? `Falha ao montar grade: ${error.message}` : "Não consegui montar a grade de expressões.");
+    } finally {
+      setRenderingExpressionGrid(false);
+    }
+  };
+
+  const refreshComparison = async (target: "normal" | "saved", layout = comparisonLayout) => {
+    const saved = activeProfile?.savedExpressionVersions?.[expressionKey];
+    if (target === "saved" && !saved) {
+      setStatus("Salve uma versão desta expressão antes de comparar.");
+      return;
+    }
+    setComparisonTarget(target);
+    setComparisonLayout(layout);
+    setRenderingComparison(true);
+    try {
+      const output = target === "normal"
+        ? await renderOutput(NORMAL_PRESET_INDEX, state, mouthPreviewMode)
+        : await renderOutput(presetIndex, state, mouthPreviewMode, saved);
+      setComparisonImage(output);
+      if (!output) setStatus("Carregue os olhos antes de comparar as expressões.");
+    } catch (error) {
+      setComparisonImage(null);
+      setStatus(error instanceof Error ? `Falha ao gerar comparação: ${error.message}` : "Não consegui gerar a comparação.");
+    } finally {
+      setRenderingComparison(false);
+    }
   };
 
   const generateExpressionOutputs = async () => {
