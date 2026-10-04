@@ -405,6 +405,11 @@ export default function FabricadorDeModeloPage() {
   const expressionKey = EYE_EXPRESSIONS[presetIndex][0];
   const expressionReference = activeProfile?.expressionReferences?.[expressionKey] ?? { description: "", imageDataUrl: null };
   const savedExpressionVersion = activeProfile?.savedExpressionVersions?.[expressionKey];
+  const selectPresetExpression = (index: number) => {
+    setPresetIndex(index);
+    setComparisonTarget("none");
+    setComparisonImage(null);
+  };
   const previewIndex = section === "adjust" ? NORMAL_PRESET_INDEX : presetIndex;
   const previewPreset = presets[previewIndex] ?? defaultPresetForIndex(previewIndex);
 
@@ -1552,7 +1557,7 @@ export default function FabricadorDeModeloPage() {
     setPresetProfiles(nextProfiles);
     setPresets(nextPresets);
     if (nextPresets[0]?.effectPlacements) setEffectPlacements(nextPresets[0].effectPlacements);
-    setPresetIndex(NORMAL_PRESET_INDEX);
+    selectPresetExpression(NORMAL_PRESET_INDEX);
     clearGenerated();
     setStatus(`Perfil “${target.name}” ativado. Suas alterações ficam separadas dos outros perfis.`);
   };
@@ -1995,7 +2000,7 @@ export default function FabricadorDeModeloPage() {
                  <div className={styles.talkMapList}>
                    {EYE_EXPRESSIONS.map(([key, label], index) => <label key={key} className={styles.talkMapRow}>
                      <span><b>{String(index + 1).padStart(2, "0")}</b>{label}</span>
-                     <select value={presets[index]?.mouthTalkIndex ?? index} onChange={(event) => { setPresetIndex(index); updateMouthTalkLink(index, Number(event.target.value)); }}>
+                     <select value={presets[index]?.mouthTalkIndex ?? index} onChange={(event) => { selectPresetExpression(index); updateMouthTalkLink(index, Number(event.target.value)); }}>
                        {EYE_EXPRESSIONS.map(([, sourceLabel], sourceIndex) => <option key={sourceIndex} value={sourceIndex}>{String(sourceIndex + 1).padStart(2, "0")} · {sourceLabel}</option>)}
                      </select>
                    </label>)}
@@ -2093,7 +2098,7 @@ export default function FabricadorDeModeloPage() {
               <p className={styles.helperText}>A cópia começa igual ao perfil ativo. Depois, “Salvar presets” grava somente o perfil selecionado.</p>
             </PanelBlock>
             <PanelBlock title="Expressão" description="Edite uma expressão de cada vez.">
-              <select className={styles.select} value={presetIndex} onChange={(event) => setPresetIndex(Number(event.target.value))}>
+              <select className={styles.select} value={presetIndex} onChange={(event) => selectPresetExpression(Number(event.target.value))}>
                 {EYE_EXPRESSIONS.map(([key, label], index) => <option key={key} value={index}>{String(index + 1).padStart(2, "0")} · {label}</option>)}
               </select>
               <div className={styles.layerTabs}>
@@ -2115,7 +2120,7 @@ export default function FabricadorDeModeloPage() {
                 {renderingExpressionGrid ? "Montando grade…" : expressionGridOpen ? "Atualizar miniaturas" : "Gerar grade com 21"}
               </button>
               {expressionGridOpen && <div className={styles.expressionReviewGrid}>
-                {EYE_EXPRESSIONS.map(([key, label], index) => <button key={key} type="button" className={index === presetIndex ? styles.expressionReviewActive : styles.expressionReviewCard} onClick={() => setPresetIndex(index)} title={`Editar ${label}`}>
+                {EYE_EXPRESSIONS.map(([key, label], index) => <button key={key} type="button" className={index === presetIndex ? styles.expressionReviewActive : styles.expressionReviewCard} onClick={() => selectPresetExpression(index)} title={`Editar ${label}`}>
                   <span className={styles.expressionReviewImage}>{expressionGrid[index] ? <img src={expressionGrid[index] ?? undefined} alt="" /> : <i>{renderingExpressionGrid ? "…" : "Prévia"}</i>}</span>
                   <small>{String(index + 1).padStart(2, "0")} · {label}</small>
                 </button>)}
@@ -2263,7 +2268,7 @@ export default function FabricadorDeModeloPage() {
               {(["base", "pt", "talk", "blink", "ptTalk", "ptBlink"] as GeneratedVariant[]).map((variant) => <button key={variant} className={generatedVariant === variant ? styles.tabActive : ""} onClick={() => setGeneratedVariant(variant)}>{variant === "base" ? "Base" : variant === "pt" ? "PT" : variant === "talk" ? "Talk" : variant === "blink" ? "Blink" : variant === "ptTalk" ? "PT Talk" : "PT Blink"}</button>)}
             </div>
             <div className={styles.resultGrid}>
-              {generatedOutputs[generatedVariant].map((dataUrl, index) => <button key={`${generatedVariant}-${EYE_EXPRESSIONS[index][0]}`} onClick={() => { setPresetIndex(index); setSection("expressions"); }}>
+              {generatedOutputs[generatedVariant].map((dataUrl, index) => <button key={`${generatedVariant}-${EYE_EXPRESSIONS[index][0]}`} onClick={() => { selectPresetExpression(index); setSection("expressions"); }}>
                 <img src={dataUrl} alt={EYE_EXPRESSIONS[index][1]} />
                 <span>{String(index + 1).padStart(2, "0")} · {EYE_EXPRESSIONS[index][1]}</span>
               </button>)}
