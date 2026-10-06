@@ -426,7 +426,11 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.ok(backLayerPosition >= 0 && baseLayerPosition > backLayerPosition);
   assert.match(page, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
   assert.match(page, /const outfitLayer = document\.createElement\("canvas"\)/);
-  assert.match(page, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, faceLayer, outfitLayer\]\)/);
+  assert.match(page, /const orderedBaseLayers = faceAfterOutfit\s*\?\s*\[backHairLayer, bodyLayer, outfitLayer, faceLayer\]\s*:\s*\[backHairLayer, bodyLayer, faceLayer, outfitLayer\]/);
+  assert.match(page, /compositeCharacterLayers\(context, orderedBaseLayers\)/);
+  const accessoryLayerPosition = page.indexOf("const accessory = catalog.find", page.indexOf("compositeCharacterLayers(context, orderedBaseLayers)"));
+  const frontHairLayerPosition = page.indexOf("const hair = catalog.find", accessoryLayerPosition);
+  assert.ok(accessoryLayerPosition > 0 && frontHairLayerPosition > accessoryLayerPosition, "acessório deve ficar entre as camadas-base e o cabelo frontal");
   assert.match(page, /faceBehindOutfit/);
   assert.match(page, /drawLayer\(backHair, adjustments\.cabelosTras/);
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fitByBasePack\?\.\[basePackId\] \?\? linkedBackHair\?\.fit\)/);

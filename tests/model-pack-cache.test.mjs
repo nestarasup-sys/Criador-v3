@@ -55,7 +55,8 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /faceContext\.globalCompositeOperation = "destination-in"/);
   assert.match(renderer, /if \(faceMode !== "base" && !faceBehindOutfit\)/);
   assert.doesNotMatch(renderer, /\(faceMode !== "base" \|\| headOnlyModel\) && !faceBehindOutfit/);
-  assert.match(creatorPage, /const headOnlyBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && renderBasePackIsHeadOnly/);
+  assert.match(creatorPage, /const layeredBaseFace = renderBasePackIsHeadOnly \|\| faceMode !== "base"/);
+  assert.match(creatorPage, /const faceBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && layeredBaseFace/);
   assert.match(creatorPage, /renderLayerMasks\.body\.length > 0[\s\S]*faceContext\.globalCompositeOperation = "destination-in"/);
   assert.match(creatorPage, /if \(includeExpression && faceMode !== "base" && !faceBehindOutfit\)/);
   assert.doesNotMatch(creatorPage, /\(renderBasePackIsHeadOnly \|\| faceMode !== "base"\) && !faceBehindOutfit/);

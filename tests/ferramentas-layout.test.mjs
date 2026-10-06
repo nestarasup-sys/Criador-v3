@@ -222,11 +222,11 @@ test("Fabricador não invalida resultado só por navegar e bloqueia geração co
   assert.match(page, /generationLockRef/);
   assert.match(page, /exportLockRef/);
   assert.match(page, /setPlacementForKind\(kind, asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\], false, false\)/);
-  assert.match(page, /onChange=\{\(event\) => setPresetIndex\(Number\(event\.target\.value\)\)\}/);
+  assert.match(page, /onChange=\{\(event\) => selectPresetExpression\(Number\(event\.target\.value\)\)\}/);
   assert.doesNotMatch(page, /setPresetIndex\(Number\(event\.target\.value\)\); setGenerated\(\[\]\)/);
   assert.match(page, /if \(generationLockRef\.current\).*já está em andamento/s);
   assert.match(page, /if \(!pair \|\| exportLockRef\.current \|\| generationLockRef\.current \|\| processingBusy\) return/);
-  assert.match(page, /disabled=\{!pair \|\| !availableNextModel \|\| processingBusy \|\| generating \|\| exporting\}/);
+  assert.match(page, /disabled=\{!pair \|\| \(replaceExistingModel \? !selectedReplacement : !availableNextModel\) \|\| processingBusy \|\| generating \|\| exporting\}/);
 });
 
 test("Fabricador oferece desfazer por gesto e restaura o estado completo do editor", async () => {
