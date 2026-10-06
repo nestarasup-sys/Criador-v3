@@ -24,6 +24,12 @@ try {
   // substituir a massa temporária usada exclusivamente pelo teste.
   await page.waitForTimeout(1_500);
   await seedCreatorAutosaveFixture(page);
+  const accessoriesTab = page.getByRole("tab", { name: "Acessórios", exact: true });
+  await assertVisible(accessoriesTab);
+  await accessoriesTab.click();
+  assert.equal(await accessoriesTab.getAttribute("aria-selected"), "true");
+  await assertVisible(page.getByRole("button", { name: "＋ Item", exact: true }));
+  assert.equal(await page.getByRole("button", { name: /Catálogo V[01]/ }).count(), 0, "A categoria de acessórios não deve exibir o seletor V0/V1");
   await seedStudioQualityFixture(page);
 
   // Direct route loads are intentional here: Vinext's development HMR can

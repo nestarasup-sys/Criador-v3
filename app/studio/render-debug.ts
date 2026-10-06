@@ -34,6 +34,7 @@ const DEBUG_LAYER_COLORS: Record<string, [number, number, number]> = {
   cabelosTras: [255, 0, 255],
   corpo: [255, 220, 0],
   roupas: [0, 255, 255],
+  acessorios: [255, 150, 0],
   rosto: [40, 100, 255],
   cabelos: [255, 40, 40],
 };

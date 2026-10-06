@@ -242,6 +242,7 @@ async function renderStudioCharacterOutput(
     hairFront: character.layerMasks?.hairFront ?? character.layerMasks?.hair ?? [],
     hairBack: character.layerMasks?.hairBack ?? [],
     outfit: character.layerMasks?.outfit ?? [],
+    accessory: character.layerMasks?.accessory ?? [],
   };
   const catalogById = session?.catalogById ?? new Map(catalog.map((item) => [item.id, item]));
   const packsById = session?.packsById ?? new Map(packs.map((pack) => [pack.id, pack]));
@@ -505,6 +506,13 @@ async function renderStudioCharacterOutput(
         markRenderDebug("layer:faceDone", { renderId, target: "studio-render", layer: "rosto" });
       }
     }
+  }
+
+  // Mantém os acessórios acima do rosto/roupa e abaixo do cabelo frontal.
+  const accessory = character.selections.acessorios ? catalogById.get(character.selections.acessorios) : undefined;
+  if (accessory) {
+    await drawItem(accessory, normalizedTransform(character.adjustments.acessorios), masks.accessory, "acessorios");
+    markRenderDebug("layer:accessoryDone", { renderId, target: "studio-render", layer: "acessorios" });
   }
 
   const frontHair = character.selections.cabelos ? catalogById.get(character.selections.cabelos) : undefined;

@@ -33,6 +33,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   cabelosTras: "Cabelo (trás)",
   rostos: "Rostos",
   roupas: "Roupas",
+  acessorios: "Acessórios",
 };
 
 export function CreatorCatalogHeader({ category, faceMode, compositionMode, compositionAvailable, isProcessing, hasFrontHair, fileInputRef, sheetInputRef, singleHairInputRef, hairPairV2InputRef, hairPairSheetInputRef, expressionPackInputRef, deleteMode, selectedCount, canDeleteAssets, onImportItem, onImportSheet, onImportFrontHair, onImportHairPairV2, onImportHairPairSheet, onImportExpressionPack, onToggleDeleteMode, onDeleteSelected, onToggleCompositionMode }: CreatorCatalogHeaderProps) {

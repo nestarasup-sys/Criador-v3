@@ -96,7 +96,7 @@ import type {
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
 
 type BrushMode = "erase" | "restore";
-type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit";
+type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit" | "accessory";
 type LayerMasks = Record<MaskTarget, MaskStroke[]>;
 type CharacterHistory = { past: string[]; future: string[]; current: string | null; changedAt: number };
 
@@ -161,6 +161,7 @@ const EMPTY_SELECTIONS: Record<Category, string | null> = {
   cabelosTras: null,
   rostos: null,
   roupas: null,
+  acessorios: null,
 };
 
 // Compensa a borda antialiasada da cabeça da roupa sem alcançar o pescoço.
@@ -202,6 +203,7 @@ function emptyAdjustments(): Record<Category, ItemTransform> {
     cabelosTras: { ...DEFAULT_TRANSFORM },
     rostos: { ...DEFAULT_TRANSFORM },
     roupas: { ...DEFAULT_TRANSFORM },
+    acessorios: { ...DEFAULT_TRANSFORM },
   };
 }
 
@@ -211,6 +213,7 @@ function emptyColorAdjustments(): ColorAdjustments {
     cabelosTras: { ...DEFAULT_COLOR_ADJUSTMENT },
     rostos: { ...DEFAULT_COLOR_ADJUSTMENT },
     roupas: { ...DEFAULT_COLOR_ADJUSTMENT },
+    acessorios: { ...DEFAULT_COLOR_ADJUSTMENT },
   };
 }
 
@@ -237,7 +240,7 @@ function canvasHasVisibleAlpha(canvas: HTMLCanvasElement) {
 }
 
 function emptyLayerMasks(): LayerMasks {
-  return { body: [], hairFront: [], hairBack: [], outfit: [] };
+  return { body: [], hairFront: [], hairBack: [], outfit: [], accessory: [] };
 }
 
 function saveCharactersToBrowser(characters: Character[]) {
@@ -262,6 +265,7 @@ function normalizeLayerMasks(layerMasks?: StoredLayerMasks, legacyBodyMask?: Mas
     hairFront: layerMasks?.hairFront ?? legacyHairMask,
     hairBack: layerMasks?.hairBack ?? legacyHairMask,
     outfit: layerMasks?.outfit ?? [],
+    accessory: layerMasks?.accessory ?? [],
   };
 }
 
@@ -270,6 +274,7 @@ const MASK_TARGET_LABELS: Record<MaskTarget, string> = {
   hairFront: "cabelo frontal",
   hairBack: "cabelo traseiro",
   outfit: "roupa",
+  accessory: "acessório",
 };
 
 function normalizeSelections(selections?: Partial<Record<Category, string | null>>) {
@@ -278,6 +283,7 @@ function normalizeSelections(selections?: Partial<Record<Category, string | null
     cabelosTras: selections?.cabelosTras ?? null,
     rostos: selections?.rostos ?? null,
     roupas: selections?.roupas ?? null,
+    acessorios: selections?.acessorios ?? null,
   } satisfies Record<Category, string | null>;
 }
 
@@ -287,6 +293,7 @@ function normalizeAdjustments(adjustments?: Partial<Record<Category, Partial<Ite
     cabelosTras: normalizeTransform(adjustments?.cabelosTras),
     rostos: normalizeTransform(adjustments?.rostos),
     roupas: normalizeTransform(adjustments?.roupas),
+    acessorios: normalizeTransform(adjustments?.acessorios),
   } satisfies Record<Category, ItemTransform>;
 }
 
@@ -333,6 +340,7 @@ const CATEGORY_LABELS: Record<Category, string> = {
   cabelosTras: "Cabelo (trás)",
   rostos: "Rostos",
   roupas: "Roupas",
+  acessorios: "Acessórios",
 };
 
 // A decoded 1920x1080 image costs roughly 8 MiB regardless of the compressed
@@ -2389,6 +2397,14 @@ export default function Home() {
       }
     }
 
+    // Sobre rosto/roupa e abaixo do cabelo frontal.
+    const accessory = catalog.find((entry) => entry.id === renderSelections.acessorios);
+    if (accessory) {
+      await drawLayer(accessory, renderAdjustments.acessorios, category === "acessorios", renderLayerMasks.accessory, "acessorios");
+      ensureCurrentPreview();
+      markRenderDebug("layer:accessoryDone", { renderId, target, layer: "acessorios" });
+    }
+
     const hair = catalog.find((entry) => entry.id === renderSelections.cabelos);
     if (hair) {
       if (variantStateKey) {
@@ -2943,7 +2959,7 @@ export default function Home() {
         category,
         catalogVersion: category === "roupas" ? "v1" : undefined,
         // Roupas são compartilhadas entre todos os modelos do mesmo gênero.
-        basePackId: category === "cabelosTras" || category === "roupas" ? undefined : basePackId,
+        basePackId: category === "cabelosTras" || category === "roupas" || category === "acessorios" ? undefined : basePackId,
         linkedHairId: category === "cabelosTras" ? selections.cabelos ?? undefined : undefined,
         ...prepared,
         fit: initialFit,
@@ -3003,7 +3019,7 @@ export default function Home() {
         name: `${baseName} ${index + 1}`,
         model,
         category,
-        basePackId: category === "cabelos" || category === "cabelosTras" ? undefined : basePackId,
+        basePackId: category === "cabelos" || category === "cabelosTras" || category === "acessorios" ? undefined : basePackId,
         ...prepared,
         fit: { ...DEFAULT_TRANSFORM },
         url: URL.createObjectURL(prepared.blob),
@@ -4242,6 +4258,7 @@ export default function Home() {
       };
       addCatalogBounds(selections.cabelosTras, "cabelosTras");
       addCatalogBounds(selections.roupas, "roupas");
+      addCatalogBounds(selections.acessorios, "acessorios");
       if (faceMode === "single") addCatalogBounds(selections.rostos, "rostos");
       if (faceMode === "pack" && activeExpressionPack) {
         const frame = activeExpressionPack.frames.find((entry) => entry.key === activeExpressionKey);
@@ -4828,6 +4845,10 @@ export default function Home() {
     if (selections[item.category] === item.id) {
       setAdjustments((current) => ({ ...current, [item.category]: { ...DEFAULT_TRANSFORM } }));
     }
+    if (item.category === "acessorios" && selections.acessorios === item.id) {
+      setLayerMasks((current) => ({ ...current, accessory: [] }));
+      setMaskRedo((current) => ({ ...current, accessory: [] }));
+    }
     if (item.category === "roupas") {
       const key = outfitColorGroupKey(item);
       if (key) setOutfitColorAdjustmentsByGroup((current) => Object.fromEntries(
@@ -5108,6 +5129,7 @@ export default function Home() {
       setActivePackId(null);
       setAnimationMode(null);
     }
+    if (nextCategory === "acessorios") setMaskTarget("accessory");
   }
 
   function copyCharacterAppearance(source: Character) {
@@ -5512,7 +5534,9 @@ export default function Home() {
         && item.category === category
         && (category === "cabelos" || category === "cabelosTras"
           ? (item.catalogVersion ?? "v1") === outfitCatalogVersion
-          : normalizeBasePackId(item.basePackId) === basePackId),
+          : category === "acessorios"
+            ? true
+            : normalizeBasePackId(item.basePackId) === basePackId),
       );
   const selectedAssetCount = category === "rostos" && faceMode === "base"
     ? selectedBaseModelIds.length
@@ -5561,7 +5585,7 @@ export default function Home() {
       ? outfitColorAdjustmentsByGroup[activeOutfitColorGroupKey] ?? colorAdjustments.roupas
       : colorAdjustments[category]);
   const colorEligible = modelColorEditorActive
-    || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas"));
+    || (Boolean(selections[category]) && (category === "cabelos" || category === "cabelosTras" || category === "roupas" || category === "acessorios"));
   const selectedColorItem = catalog.find((entry) => entry.id === selections[category]);
   const colorEditingTitle = modelColorEditorActive
     ? activeBasePack.name
@@ -6313,13 +6337,13 @@ export default function Home() {
           {eraserMode && (
             <div className="eraser-toolbar">
               <div className="eraser-target-switch" aria-label="Camada que será apagada">
-                {(["body", "hairFront", "hairBack", "outfit"] as MaskTarget[]).map((target) => (
+                {(["body", "hairFront", "hairBack", "outfit", "accessory"] as MaskTarget[]).map((target) => (
                   <button
                     key={target}
                     className={maskTarget === target ? "active" : ""}
                     onClick={() => { setMaskTarget(target); setBrushCursor((current) => ({ ...current, visible: false })); }}
                   >
-                    {target === "body" ? "Corpo" : target === "hairFront" ? "Cabelo frente" : target === "hairBack" ? "Cabelo trás" : "Roupa"}
+                    {target === "body" ? "Corpo" : target === "hairFront" ? "Cabelo frente" : target === "hairBack" ? "Cabelo trás" : target === "outfit" ? "Roupa" : "Acessório"}
                   </button>
                 ))}
               </div>
@@ -6558,10 +6582,10 @@ export default function Home() {
           />
 
           <div className="tabs" role="tablist" aria-label="Categorias do catálogo">
-            {(["cabelos", "rostos", "roupas"] as Category[]).map((tab) => (
+            {(["cabelos", "rostos", "roupas", "acessorios"] as Category[]).map((tab) => (
               <button key={tab} role="tab" aria-selected={category === tab || (tab === "cabelos" && category === "cabelosTras")} className={category === tab || (tab === "cabelos" && category === "cabelosTras") ? "active" : ""} onClick={() => changeCatalogCategory(tab)}>
-                <span aria-hidden="true">{tab === "cabelos" ? "♟" : tab === "rostos" ? "☺" : "♜"}</span>
-                {tab === "cabelos" ? "Cabelo" : tab === "rostos" ? "Rosto" : "Roupas"}
+                <span aria-hidden="true">{tab === "cabelos" ? "♟" : tab === "rostos" ? "☺" : tab === "roupas" ? "♜" : "✦"}</span>
+                {tab === "cabelos" ? "Cabelo" : tab === "rostos" ? "Rosto" : tab === "roupas" ? "Roupas" : "Acessórios"}
               </button>
             ))}
           </div>
@@ -6624,7 +6648,7 @@ export default function Home() {
           {(colorEligible || versionedCatalogCategory) && (
             <section className={`color-panel color-editor-dedicated ${modelColorEditorActive ? "model-color-panel" : ""}`} aria-label={modelColorEditorActive ? "Ajustes de cor do modelo" : "Ajustes de cor"}>
               {!colorPanelOpen && <div className="color-tool-dock" aria-label="Ferramentas do item">
-                <button
+                {versionedCatalogCategory && <button
                   type="button"
                   className="color-tool-button color-tool-v0"
                   onClick={() => {
@@ -6635,7 +6659,7 @@ export default function Home() {
                       if (isBaseModelCatalog) changeCatalogVersion("v0");
                     }
                   }}
-                >{outfitCatalogVersion === "v0" ? "Catálogo V1" : "Catálogo V0"}</button>
+                >{outfitCatalogVersion === "v0" ? "Catálogo V1" : "Catálogo V0"}</button>}
                 {colorEligible && <button type="button" className="color-tool-button color-tool-colors" onClick={() => setColorPanelOpen(true)} aria-expanded={false}>CORES</button>}
               </div>}
               {colorPanelOpen && <div className="color-editor-topbar">

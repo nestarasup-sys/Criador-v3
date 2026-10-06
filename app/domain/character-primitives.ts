@@ -1,7 +1,7 @@
 export type BasePackId = string;
 export { CATEGORIES, FACE_MODES, MODELS, isCategory, isModel } from "./character-values.mjs";
 export type Model = "feminino" | "masculino";
-export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas";
+export type Category = "cabelos" | "cabelosTras" | "rostos" | "roupas" | "acessorios";
 export type FaceMode = "base" | "single" | "pack";
 /** Ordem opcional das camadas para personagens que precisam do pescoço da roupa sobre o rosto. */
 export type CompositionMode = "legacy" | "outfit-over-face";
@@ -54,7 +54,7 @@ export type MaskStroke = {
 };
 
 export type StoredLayerMasks = Partial<
-  Record<"body" | "hairFront" | "hairBack" | "outfit", MaskStroke[]>
+  Record<"body" | "hairFront" | "hairBack" | "outfit" | "accessory", MaskStroke[]>
 > & {
   /** Campo histórico anterior à separação das camadas de cabelo. */
   hair?: MaskStroke[];

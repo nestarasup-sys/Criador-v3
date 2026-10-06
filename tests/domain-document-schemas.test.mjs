@@ -17,12 +17,17 @@ test("estado v2 moderno faz round-trip sem perda de dados", () => {
     futureRootField: { keep: true },
     characters: [{
       id: "char-1", name: "Nymi", model: "feminino", basePackId: "modelo-2",
-      selections: { cabelos: "hair-1", cabelosTras: null, rostos: null, roupas: "outfit-1" },
-      adjustments: { cabelos: transform, cabelosTras: transform, rostos: transform, roupas: transform },
+      selections: { cabelos: "hair-1", cabelosTras: null, rostos: null, roupas: "outfit-1", acessorios: "accessory-1" },
+      adjustments: { cabelos: transform, cabelosTras: transform, rostos: transform, roupas: transform, acessorios: transform },
+      layerMasks: { accessory: [{ id: "mask-1", mode: "erase", size: 10, points: [{ x: 1, y: 2 }] }] },
+      templateScaleX: 1,
       compositionMode: "outfit-over-face",
       updatedAt: "2026-08-02T00:00:00.000Z", futureCharacterField: "preservado",
     }],
-    catalog: [{ id: "outfit-1", name: "Roupa", model: "feminino", category: "roupas", fileUrl: "/file.png", outfitGroupId: "group-1", outfitVariantIndex: 0 }],
+    catalog: [
+      { id: "outfit-1", name: "Roupa", model: "feminino", category: "roupas", fileUrl: "/file.png", outfitGroupId: "group-1", outfitVariantIndex: 0 },
+      { id: "accessory-1", name: "Óculos", model: "feminino", category: "acessorios", fileUrl: "/accessory.png" },
+    ],
     expressionPacks: [{ id: "face-1", name: "Face", model: "feminino", basePackId: "modelo-2", frames: [], createdAt: "2026-08-02T00:00:00.000Z" }],
     studios: [{ id: "studio-1", name: "Cena", rosterIds: ["char-1"], background: null, characters: [], objects: [], bubbles: [], narrators: [], uiPreferences: { characterPositionsLocked: true, backgroundCollapsed: true, rosterCompact: false, inspectorDockSide: "left", characterInspectorExpanded: true }, createdAt: "2026-08-02T00:00:00.000Z", updatedAt: "2026-08-02T00:00:00.000Z" }],
     studioAssets: [],
@@ -45,7 +50,8 @@ test("estado legado recebe defaults, migra modelos e preserva extensões", () =>
   assert.equal(normalized.characters[0].basePackId, "modelo-3");
   assert.equal(normalized.characters[0].compositionMode, undefined);
   assert.equal(normalized.characters[0].custom, "keep");
-  assert.deepEqual(normalized.characters[0].selections, { cabelos: null, cabelosTras: null, rostos: null, roupas: null });
+  assert.deepEqual(normalized.characters[0].selections, { cabelos: null, cabelosTras: null, rostos: null, roupas: null, acessorios: null });
+  assert.deepEqual(normalized.characters[0].adjustments.acessorios, transform);
   assert.equal(normalized.expressionPacks[0].basePackId, "modelo-1");
   assert.deepEqual(normalized.expressionPacks[0].frames, []);
 });

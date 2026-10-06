@@ -623,7 +623,7 @@ body { background: #f8f6f7; }
 .catalog-header .import-actions .composition-toggle-button { background: #f2effb; color: #6546c4; border-color: #d9cff8; font-weight: 850; }
 .catalog-header .import-actions .composition-toggle-button.active { background: linear-gradient(135deg, #7257d9, #8b68e9); color: white; border-color: #7257d9; box-shadow: 0 4px 10px rgba(114,87,217,.18); }
 .catalog-header .import-actions .composition-toggle-button:disabled { opacity: .55; cursor: not-allowed; }
-.catalog-panel > .tabs { order: 2; min-height: 76px; flex: 0 0 76px; display: grid; grid-template-columns: repeat(3,1fr); gap: 0; margin: 0 -4px 10px; padding: 0; border: 1px solid #ede8eb; border-radius: 12px; background: white; overflow: hidden; }
+.catalog-panel > .tabs { order: 2; min-height: 76px; flex: 0 0 76px; display: grid; grid-template-columns: repeat(4,1fr); gap: 0; margin: 0 -4px 10px; padding: 0; border: 1px solid #ede8eb; border-radius: 12px; background: white; overflow: hidden; }
 .tabs button { min-height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-right: 1px solid #f0ecef; border-radius: 0; padding: 8px 2px; font-size: 12.5px; }
 .tabs button > span { color: #3a3d59; font-size: 28.75px; }
 .tabs button.active { background: linear-gradient(145deg,#ff746a,#ff554e); color: white; box-shadow: none; }
