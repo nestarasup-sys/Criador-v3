@@ -40,11 +40,14 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(compositor, /globalAlpha = 1/);
   assert.match(compositor, /context\.save\(\)/);
   assert.match(compositor, /context\.restore\(\)/);
-  assert.match(renderer, /const backHairLayer = backHair \? document\.createElement\("canvas"\) : null/);
-  assert.match(renderer, /const outfitLayer = document\.createElement\("canvas"\)/);
+  assert.match(renderer, /const backHairLayer = backHair \? scratchCanvas\(\) : null/);
+  assert.match(renderer, /const outfitLayer = sharedLayerPreparation \? null : scratchCanvas\(\)/);
+  assert.match(renderer, /for \(const canvas of scratchCanvases\)[\s\S]*canvas\.width = 0;[\s\S]*canvas\.height = 0/);
   assert.match(renderer, /stroke\.shape === "polygon"/);
   assert.match(renderer, /stroke\.paths \?\? \[\]/);
-  assert.match(renderer, /compositeCharacterLayers\(context, \[backHairLayer, bodyLayer, faceLayer, outfitLayer\]\)/);
+  assert.match(renderer, /compositeCharacterLayers\(context, sharedLayers[\s\S]*\[backHairLayer, bodyLayer, faceLayer, outfitLayer\]/);
+  assert.match(renderer, /export type StudioCharacterSharedLayers/);
+  assert.match(renderer, /underOutfit, overOutfit: overlayLayers, dispose/);
   assert.match(renderer, /character\.adjustments\.cabelosTras \?\? packAdjustments\?\.cabelosTras/);
   assert.match(renderer, /character\.adjustments\.cabelos \?\? packAdjustments\?\.cabelos/);
   assert.match(renderer, /discoveredPack\?\.type === "head-only"/);
@@ -95,13 +98,17 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
   assert.match(source, /onProgress\?\.\(\{ phase: "rendering"/);
   assert.match(source, /phase: "packaging"/);
   assert.match(source, /const MAX_PARALLEL_VARIANTS = 2/);
+  assert.match(source, /options\.variantConcurrency \?\? 1/);
   assert.match(source, /const MAX_PARALLEL_EXPORT_TASKS = 2/);
   assert.match(source, /const exportTaskGate = new ExportTaskGate\(\)/);
   assert.match(source, /createStudioCharacterRenderSession/);
   assert.match(source, /session\.clear\(\)/);
   assert.match(source, /onDiagnostics\?:/);
   assert.match(source, /asset\.width === crop\.width && asset\.height === crop\.height/);
-  assert.match(source, /mapWithConcurrency\(options\.variants, MAX_PARALLEL_VARIANTS/);
+  assert.match(source, /mapWithConcurrency\(variants, variantConcurrency/);
+  assert.match(source, /for \(let expressionIndex = 0; expressionIndex < expressions\.length; expressionIndex \+= 1\)/);
+  assert.match(source, /prepareSharedExpression/);
+  assert.match(source, /renderVariantWithSharedLayers/);
   assert.doesNotMatch(source, /Promise\.all\(options\.variants\.map/);
 });
 

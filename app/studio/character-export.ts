@@ -1,8 +1,8 @@
 "use client";
 
 import JSZip from "jszip";
-import { createStudioCharacterRenderSession, renderStudioCharacterPng } from "./character-renderer";
-import type { StudioCharacterRenderedPng } from "./character-renderer";
+import { createStudioCharacterRenderSession, prepareStudioCharacterSharedLayers, renderStudioCharacterPng, renderStudioCharacterPngWithSharedLayers } from "./character-renderer";
+import type { StudioCharacterRenderMetrics, StudioCharacterRenderedPng, StudioCharacterSharedLayers } from "./character-renderer";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack } from "./types";
 
 const PACK_EXPRESSION_KEYS = [
@@ -52,8 +52,12 @@ export type CharacterExportDiagnostics = ExportTiming & {
   poses: number;
   expressions: number;
   packageMs: number;
+  zipGenerateMs: number;
   totalMs: number;
   packageBytes?: number;
+  maxConcurrentHeavyTasks?: number;
+  renderCache?: StudioCharacterRenderMetrics;
+  heapBytes?: number;
 };
 
 type CharacterExpressionProgress = { expressionIndex: number; expressionCount: number };
@@ -64,11 +68,17 @@ function nowMs() {
 
 class ExportTaskGate {
   private active = 0;
+  private peakActive = 0;
   private queue: Array<() => void> = [];
+
+  get maxConcurrentObserved() {
+    return this.peakActive;
+  }
 
   async run<T>(task: () => Promise<T> | T) {
     if (this.active >= MAX_PARALLEL_EXPORT_TASKS) await new Promise<void>((resolve) => this.queue.push(resolve));
     this.active += 1;
+    this.peakActive = Math.max(this.peakActive, this.active);
     try { return await task(); }
     finally {
       this.active -= 1;
@@ -202,6 +212,19 @@ async function inspectPngBlob(blob: Blob) {
   };
 }
 
+const inspectedPngCache = new WeakMap<Blob, Promise<Awaited<ReturnType<typeof inspectPngBlob>>>>();
+
+function inspectPngBlobCached(blob: Blob) {
+  const cached = inspectedPngCache.get(blob);
+  if (cached) return cached;
+  const pending = inspectPngBlob(blob).catch((error) => {
+    inspectedPngCache.delete(blob);
+    throw error;
+  });
+  inspectedPngCache.set(blob, pending);
+  return pending;
+}
+
 function cropPadding(bounds: ImageBounds, width: number, height: number): CropRect {
   // Um pixel de margem evita cortar bordas antialiasadas e mantém o recorte seguro.
   const left = Math.max(0, bounds.left - 1);
@@ -271,105 +294,96 @@ type PreparedCharacterBundle = {
   timing: ExportTiming;
 };
 
+function createPreparedCharacterBundle(options: CharacterBundleOptions): PreparedCharacterBundle {
+  return {
+    assets: [],
+    sourceCanvas: { width: 0, height: 0 },
+    bounds: fullImageBounds(1, 1),
+    manifest: {
+      format: "gacha-maker-expression-pack",
+      version: 1,
+      character: { id: options.character.id, name: options.character.name.trim() || "Sem nome", model: options.character.model, basePackId: options.character.basePackId, basePackName: options.character.basePackName, faceMode: options.character.faceMode },
+      expressions: options.expressions,
+      output: options.usesBuiltInBase ? "final-character-frames" : "faces-and-complete-frames",
+      generatedAt: new Date().toISOString(),
+    },
+    timing: emptyExportTiming(),
+  };
+}
+
+function addPreparedAsset(prepared: PreparedCharacterBundle, asset: PreparedAsset) {
+  prepared.assets.push(asset);
+  prepared.sourceCanvas.width = Math.max(prepared.sourceCanvas.width, asset.width);
+  prepared.sourceCanvas.height = Math.max(prepared.sourceCanvas.height, asset.height);
+  prepared.bounds = prepared.assets.length === 1
+    ? asset.bounds
+    : unionBounds(prepared.bounds, asset.bounds);
+}
+
+async function recordPreparedAsset(prepared: PreparedCharacterBundle, path: string, result: RenderedPng) {
+  const timing = prepared.timing;
+  timing.assets += 1;
+  if (isRenderedPng(result)) {
+    timing.pngEncodeMs += result.metadata.encodeMs;
+    timing.alphaScanMs += result.metadata.alphaScanMs;
+    return { path, blob: result.blob, width: result.metadata.width, height: result.metadata.height, bounds: result.metadata.bounds } satisfies PreparedAsset;
+  }
+  const inspectStarted = nowMs();
+  const inspected = await exportTaskGate.run(() => inspectPngBlobCached(result));
+  timing.inspectMs += nowMs() - inspectStarted;
+  return { path, blob: result, width: inspected.width, height: inspected.height, bounds: inspected.bounds } satisfies PreparedAsset;
+}
+
+async function renderPreparedAsset(prepared: PreparedCharacterBundle, path: string, render: () => Promise<RenderedPng>) {
+  const renderStarted = nowMs();
+  const result = await exportTaskGate.run(render);
+  prepared.timing.renderMs += nowMs() - renderStarted;
+  return recordPreparedAsset(prepared, path, result);
+}
+
+async function recordPreparedBlob(prepared: PreparedCharacterBundle, path: string, blob: Blob) {
+  const timing = prepared.timing;
+  timing.assets += 1;
+  const inspectStarted = nowMs();
+  const inspected = await exportTaskGate.run(() => inspectPngBlobCached(blob));
+  timing.inspectMs += nowMs() - inspectStarted;
+  return { path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds } satisfies PreparedAsset;
+}
+
+function finalizePreparedCharacterBundle(prepared: PreparedCharacterBundle) {
+  if (!prepared.assets.length) throw new Error("A exportação do personagem não gerou arquivos");
+  prepared.manifest = {
+    ...prepared.manifest,
+    canvas: prepared.sourceCanvas,
+  };
+  return prepared;
+}
+
 async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<PreparedCharacterBundle> {
+  const prepared = createPreparedCharacterBundle(options);
   const expressions = options.expressions;
-  const assets: PreparedAsset[] = [];
-  const timing = emptyExportTiming();
-  const addAsset = async (path: string, result: RenderedPng) => {
-    timing.assets += 1;
-    if (isRenderedPng(result)) {
-      timing.pngEncodeMs += result.metadata.encodeMs;
-      timing.alphaScanMs += result.metadata.alphaScanMs;
-      assets.push({ path, blob: result.blob, width: result.metadata.width, height: result.metadata.height, bounds: result.metadata.bounds });
-      return;
-    }
-    const inspectStarted = nowMs();
-    const inspected = await exportTaskGate.run(() => inspectPngBlob(result));
-    timing.inspectMs += nowMs() - inspectStarted;
-    assets.push({ path, blob: result, width: inspected.width, height: inspected.height, bounds: inspected.bounds });
-  };
-  const renderAsset = async (path: string, render: () => Promise<RenderedPng>) => {
-    const renderStarted = nowMs();
-    const result = await exportTaskGate.run(render);
-    timing.renderMs += nowMs() - renderStarted;
-    await addAsset(path, result);
-  };
-  await renderAsset("preview.png", options.renderPreview);
+  addPreparedAsset(prepared, await renderPreparedAsset(prepared, "preview.png", options.renderPreview));
   if (options.usesBuiltInBase) {
     const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key, expressionIndex) => {
       options.onExpressionProgress?.({ expressionIndex, expressionCount: expressions.length });
-      const path = `${key}.png`;
-      const renderStarted = nowMs();
-      const result = await exportTaskGate.run(() => options.renderComplete(key));
-      timing.renderMs += nowMs() - renderStarted;
-      if (isRenderedPng(result)) {
-        timing.assets += 1;
-        timing.pngEncodeMs += result.metadata.encodeMs;
-        timing.alphaScanMs += result.metadata.alphaScanMs;
-        return { path, blob: result.blob, width: result.metadata.width, height: result.metadata.height, bounds: result.metadata.bounds };
-      }
-      const inspectStarted = nowMs();
-      const inspected = await exportTaskGate.run(() => inspectPngBlob(result));
-      timing.inspectMs += nowMs() - inspectStarted;
-      timing.assets += 1;
-      return { path, blob: result, width: inspected.width, height: inspected.height, bounds: inspected.bounds };
+      return renderPreparedAsset(prepared, `${key}.png`, () => options.renderComplete(key));
     });
-    assets.push(...rendered);
+    rendered.forEach((asset) => addPreparedAsset(prepared, asset));
   } else {
     if (!options.renderWithoutFace || !options.faceFrame) throw new Error("Pack de rosto incompleto");
-    const faceFrame = options.faceFrame;
-    await renderAsset("base/personagem_sem_rosto.png", options.renderWithoutFace);
+    addPreparedAsset(prepared, await renderPreparedAsset(prepared, "base/personagem_sem_rosto.png", options.renderWithoutFace));
     const rendered = await mapWithConcurrency(expressions, MAX_PARALLEL_ASSETS, async (key, expressionIndex) => {
       options.onExpressionProgress?.({ expressionIndex, expressionCount: expressions.length });
-      const face = await faceFrame(key);
+      const face = await options.faceFrame?.(key);
       if (!face) throw new Error(`Expressão ausente: ${key}`);
-      const faceInspectStarted = nowMs();
-      const faceInspected = await exportTaskGate.run(() => inspectPngBlob(face));
-      timing.inspectMs += nowMs() - faceInspectStarted;
-      timing.assets += 1;
-      const renderStarted = nowMs();
-      const complete = await exportTaskGate.run(() => options.renderComplete(key));
-      timing.renderMs += nowMs() - renderStarted;
-      let completeAsset: PreparedAsset;
-      if (isRenderedPng(complete)) {
-        timing.assets += 1;
-        timing.pngEncodeMs += complete.metadata.encodeMs;
-        timing.alphaScanMs += complete.metadata.alphaScanMs;
-        completeAsset = { path: `completos/${key}.png`, blob: complete.blob, width: complete.metadata.width, height: complete.metadata.height, bounds: complete.metadata.bounds };
-      } else {
-        const completeInspectStarted = nowMs();
-        const completeInspected = await exportTaskGate.run(() => inspectPngBlob(complete));
-        timing.inspectMs += nowMs() - completeInspectStarted;
-        timing.assets += 1;
-        completeAsset = { path: `completos/${key}.png`, blob: complete, width: completeInspected.width, height: completeInspected.height, bounds: completeInspected.bounds };
-      }
       return [
-        { path: `rostos/${key}.png`, blob: face, width: faceInspected.width, height: faceInspected.height, bounds: faceInspected.bounds },
-        completeAsset,
+        await recordPreparedBlob(prepared, `rostos/${key}.png`, face),
+        await renderPreparedAsset(prepared, `completos/${key}.png`, () => options.renderComplete(key)),
       ];
     });
-    rendered.forEach((entries) => assets.push(...entries));
+    rendered.flat().forEach((asset) => addPreparedAsset(prepared, asset));
   }
-  const sourceCanvas = assets.reduce((current, asset) => ({
-    width: Math.max(current.width, asset.width),
-    height: Math.max(current.height, asset.height),
-  }), { width: 0, height: 0 });
-  const bounds = assets.reduce<ImageBounds | null>((current, asset) => unionBounds(current, asset.bounds), null) ?? fullImageBounds(sourceCanvas.width, sourceCanvas.height);
-  return {
-    assets,
-    sourceCanvas,
-    bounds,
-    timing,
-    manifest: {
-    format: "gacha-maker-expression-pack",
-    version: 1,
-    character: { id: options.character.id, name: options.character.name.trim() || "Sem nome", model: options.character.model, basePackId: options.character.basePackId, basePackName: options.character.basePackName, faceMode: options.character.faceMode },
-    canvas: { width: sourceCanvas.width, height: sourceCanvas.height },
-    expressions,
-    output: options.usesBuiltInBase ? "final-character-frames" : "faces-and-complete-frames",
-    generatedAt: new Date().toISOString(),
-    },
-  };
+  return finalizePreparedCharacterBundle(prepared);
 }
 
 async function writePreparedCharacterBundle(root: JSZip, prepared: PreparedCharacterBundle, crop: CropRect) {
@@ -436,7 +450,12 @@ export type CharacterVariantsBundleOptions = {
   character: CharacterBundleOptions["character"];
   variants: readonly CharacterVariant[];
   createVariantBundle: (variant: CharacterVariant) => CharacterBundleOptions;
+  prepareSharedExpression?: (key: string) => Promise<StudioCharacterSharedLayers>;
+  renderVariantWithSharedLayers?: (variant: CharacterVariant, key: string, shared: StudioCharacterSharedLayers) => Promise<RenderedPng>;
+  prepareWithoutFaceShared?: () => Promise<StudioCharacterSharedLayers>;
+  renderWithoutFaceWithSharedLayers?: (variant: CharacterVariant, shared: StudioCharacterSharedLayers) => Promise<RenderedPng>;
   expressionCount?: number;
+  variantConcurrency?: number;
   onProgress?: (progress: { phase: "rendering" | "packaging"; variantIndex: number; variantCount: number; expressionIndex?: number; expressionCount?: number }) => void;
   onDiagnostics?: (diagnostics: CharacterExportDiagnostics) => void;
 };
@@ -445,20 +464,118 @@ export type CharacterVariantsBundleOptions = {
 export async function createCharacterVariantsBundle(options: CharacterVariantsBundleOptions) {
   if (!options.variants.length) throw new Error("Este personagem não possui roupa para exportar");
   const startedAt = nowMs();
+  const variantConcurrency = Math.max(1, Math.min(MAX_PARALLEL_VARIANTS, Math.floor(options.variantConcurrency ?? 1)));
   const zip = new JSZip();
   const root = zip.folder(safeFolderName(options.folderName));
   if (!root) throw new Error("Falha ao criar pasta do personagem");
-  const preparedVariants = await mapWithConcurrency(options.variants, MAX_PARALLEL_VARIANTS, async (variant, variantIndex) => {
-    options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length });
-    const variantOptions = options.createVariantBundle(variant);
-    return {
-      variant,
-      prepared: await prepareCharacterBundle({
-        ...variantOptions,
-        onExpressionProgress: ({ expressionIndex, expressionCount }) => options.onProgress?.({ phase: "rendering", variantIndex, variantCount: options.variants.length, expressionIndex, expressionCount }),
-      }),
-    };
-  });
+  const variants = options.variants.map((variant, variantIndex) => ({
+    variant,
+    variantIndex,
+    bundleOptions: options.createVariantBundle(variant),
+    prepared: null as PreparedCharacterBundle | null,
+    baseWithoutFaceAsset: null as PreparedAsset | null,
+  }));
+  const hasSharedExpressionRenderer = Boolean(options.prepareSharedExpression && options.renderVariantWithSharedLayers);
+  if (Boolean(options.prepareSharedExpression) !== Boolean(options.renderVariantWithSharedLayers)) {
+    throw new Error("A preparação e a composição das camadas compartilhadas precisam ser configuradas juntas");
+  }
+  for (const state of variants) {
+    const variantOptions = state.bundleOptions;
+    state.prepared = createPreparedCharacterBundle(variantOptions);
+    options.onProgress?.({ phase: "rendering", variantIndex: state.variantIndex, variantCount: variants.length });
+    if (!hasSharedExpressionRenderer) {
+      addPreparedAsset(state.prepared, await renderPreparedAsset(state.prepared, "preview.png", variantOptions.renderPreview));
+    }
+    if (!variantOptions.usesBuiltInBase && !hasSharedExpressionRenderer) {
+      if (!variantOptions.renderWithoutFace || !variantOptions.faceFrame) throw new Error("Pack de rosto incompleto");
+      addPreparedAsset(state.prepared, await renderPreparedAsset(state.prepared, "base/personagem_sem_rosto.png", variantOptions.renderWithoutFace));
+    }
+  }
+
+  const usesBuiltInBase = variants[0].bundleOptions.usesBuiltInBase;
+  if (variants.some((state) => state.bundleOptions.usesBuiltInBase !== usesBuiltInBase)) {
+    throw new Error("As variantes do personagem precisam usar o mesmo tipo de rosto");
+  }
+  const expressions = variants[0].bundleOptions.expressions;
+  if (variants.some((state) => state.bundleOptions.expressions.length !== expressions.length)) {
+    throw new Error("As variantes do personagem precisam ter a mesma lista de expressões");
+  }
+  if (hasSharedExpressionRenderer && !usesBuiltInBase) {
+    if (!options.prepareWithoutFaceShared || !options.renderWithoutFaceWithSharedLayers) {
+      throw new Error("A preparação compartilhada de pack de rosto está incompleta");
+    }
+    const sharedWithoutFace = await exportTaskGate.run(options.prepareWithoutFaceShared);
+    try {
+      const baseAssets = await mapWithConcurrency(variants, variantConcurrency, async (state) => {
+        if (!options.renderWithoutFaceWithSharedLayers) throw new Error("Renderer de base sem rosto indisponível");
+        return renderPreparedAsset(
+          state.prepared!,
+          "base/personagem_sem_rosto.png",
+          () => options.renderWithoutFaceWithSharedLayers!(state.variant, sharedWithoutFace),
+        );
+      });
+      baseAssets.forEach((asset, index) => { variants[index].baseWithoutFaceAsset = asset; });
+    } finally {
+      sharedWithoutFace.dispose();
+    }
+  }
+  for (let expressionIndex = 0; expressionIndex < expressions.length; expressionIndex += 1) {
+    const key = expressions[expressionIndex];
+    const shared = hasSharedExpressionRenderer
+      ? await exportTaskGate.run(() => options.prepareSharedExpression!(key))
+      : undefined;
+    try {
+      const renderedByVariant = await mapWithConcurrency(variants, variantConcurrency, async (state) => {
+        const variantOptions = state.bundleOptions;
+        options.onProgress?.({ phase: "rendering", variantIndex: state.variantIndex, variantCount: variants.length, expressionIndex, expressionCount: expressions.length });
+        if (shared) {
+          const render = options.renderVariantWithSharedLayers;
+          if (!render) throw new Error("Renderer de variante compartilhada indisponível");
+          const outputPath = usesBuiltInBase ? `${key}.png` : `completos/${key}.png`;
+          const complete = await renderPreparedAsset(state.prepared!, outputPath, () => render(state.variant, key, shared));
+          let assets: PreparedAsset[] = [complete];
+          if (!usesBuiltInBase) {
+            if (!variantOptions.faceFrame) throw new Error("Pack de rosto incompleto");
+            const face = await variantOptions.faceFrame(key);
+            if (!face) throw new Error(`Expressão ausente: ${key}`);
+            assets = [await recordPreparedBlob(state.prepared!, `rostos/${key}.png`, face), complete];
+          }
+          return {
+            assets,
+            preview: expressionIndex === 0 ? { ...complete, path: "preview.png" } : null,
+          };
+        }
+        if (usesBuiltInBase) {
+          return { assets: [await renderPreparedAsset(state.prepared!, `${key}.png`, () => variantOptions.renderComplete(key))], preview: null };
+        }
+        if (!variantOptions.faceFrame) throw new Error("Pack de rosto incompleto");
+        const face = await variantOptions.faceFrame(key);
+        if (!face) throw new Error(`Expressão ausente: ${key}`);
+        return {
+          assets: [
+            await recordPreparedBlob(state.prepared!, `rostos/${key}.png`, face),
+            await renderPreparedAsset(state.prepared!, `completos/${key}.png`, () => variantOptions.renderComplete(key)),
+          ],
+          preview: null,
+        };
+      });
+      renderedByVariant.forEach(({ assets, preview }, variantIndex) => {
+        const state = variants[variantIndex];
+        if (preview) {
+          state.prepared!.timing.assets += 1;
+          addPreparedAsset(state.prepared!, preview);
+          if (state.baseWithoutFaceAsset) addPreparedAsset(state.prepared!, state.baseWithoutFaceAsset);
+        }
+        assets.forEach((asset) => addPreparedAsset(state.prepared!, asset));
+      });
+    } finally {
+      shared?.dispose();
+    }
+  }
+  const preparedVariants = variants.map((state) => ({
+    variant: state.variant,
+    prepared: finalizePreparedCharacterBundle(state.prepared!),
+  }));
   options.onProgress?.({ phase: "packaging", variantIndex: options.variants.length, variantCount: options.variants.length });
   const crop = cropForPreparedBundles(preparedVariants.map((item) => item.prepared));
   const packageStarted = nowMs();
@@ -478,6 +595,7 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
   }, null, 2));
   // As poses são compostas por PNGs; STORE evita uma segunda compressão lenta
   // sem degradar nem alterar os assets exportados.
+  const zipStarted = nowMs();
   const bundle = await zip.generateAsync({ type: "blob", compression: "STORE" });
   const timing = preparedVariants.reduce<ExportTiming>((total, item) => ({
     renderMs: total.renderMs + item.prepared.timing.renderMs,
@@ -492,8 +610,10 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
     poses: options.variants.length,
     expressions: options.variants.length * (options.expressionCount ?? 0),
     packageMs: nowMs() - packageStarted,
+    zipGenerateMs: nowMs() - zipStarted,
     totalMs: nowMs() - startedAt,
     packageBytes: bundle.size,
+    maxConcurrentHeavyTasks: exportTaskGate.maxConcurrentObserved,
   });
   return bundle;
 }
@@ -541,6 +661,32 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
   const expressions = expressionKeysForCharacter(character, packs, modelPacks);
   const pack = packs.find((item) => item.id === character.expressionPackId);
   const session = createStudioCharacterRenderSession(catalog, packs);
+  const variantCharacterFor = (variant: CharacterVariant) => {
+    const packId = normalizedPackId(character.basePackId);
+    const variantKey = `${variant.id}:${packId}`;
+    return {
+      ...character,
+      selections: { ...character.selections, roupas: variant.id },
+      adjustments: {
+        ...character.adjustments,
+        roupas: character.outfitAdjustmentsByBasePack?.[variantKey]
+          ?? character.outfitAdjustmentsByBasePack?.[packId]
+          ?? character.adjustments.roupas,
+      },
+      layerMasks: {
+        ...(character.layerMasks ?? {}),
+        outfit: character.outfitLayerMasksByBasePack?.[variantKey]
+          ?? character.outfitLayerMasksByBasePack?.[packId]
+          ?? (variant.id === character.selections.roupas ? character.layerMasks?.outfit ?? [] : []),
+      },
+      protectionMasks: {
+        ...(character.protectionMasks ?? {}),
+        roupas: character.outfitProtectionMasksByBasePack?.[variantKey]
+          ?? character.outfitProtectionMasksByBasePack?.[packId]
+          ?? (variant.id === character.selections.roupas ? character.protectionMasks?.roupas : undefined),
+      },
+    };
+  };
   try {
     return await createCharacterVariantsBundle({
     folderName: character.name,
@@ -548,32 +694,17 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
     variants,
     expressionCount: expressions.length,
     onProgress,
-    onDiagnostics,
+    onDiagnostics: (metrics) => onDiagnostics?.({
+      ...metrics,
+      renderCache: { ...session.metrics },
+      heapBytes: (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize,
+    }),
+    prepareSharedExpression: (key) => prepareStudioCharacterSharedLayers(character, key as ExpressionKey, catalog, packs, modelPacks, session),
+    renderVariantWithSharedLayers: (variant, key, shared) => renderStudioCharacterPngWithSharedLayers(variantCharacterFor(variant), key as ExpressionKey, catalog, packs, modelPacks, session, shared),
+    prepareWithoutFaceShared: () => prepareStudioCharacterSharedLayers({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
+    renderWithoutFaceWithSharedLayers: (variant, shared) => renderStudioCharacterPngWithSharedLayers({ ...variantCharacterFor(variant), faceMode: "base" }, "normal", catalog, packs, modelPacks, session, shared),
     createVariantBundle: (variant) => {
-      const packId = normalizedPackId(character.basePackId);
-      const variantKey = `${variant.id}:${packId}`;
-      const variantCharacter = {
-        ...character,
-        selections: { ...character.selections, roupas: variant.id },
-        adjustments: {
-          ...character.adjustments,
-          roupas: character.outfitAdjustmentsByBasePack?.[variantKey]
-            ?? character.outfitAdjustmentsByBasePack?.[packId]
-            ?? character.adjustments.roupas,
-        },
-        layerMasks: {
-          ...(character.layerMasks ?? {}),
-          outfit: character.outfitLayerMasksByBasePack?.[variantKey]
-            ?? character.outfitLayerMasksByBasePack?.[packId]
-            ?? (variant.id === character.selections.roupas ? character.layerMasks?.outfit ?? [] : []),
-        },
-        protectionMasks: {
-          ...(character.protectionMasks ?? {}),
-          roupas: character.outfitProtectionMasksByBasePack?.[variantKey]
-            ?? character.outfitProtectionMasksByBasePack?.[packId]
-            ?? (variant.id === character.selections.roupas ? character.protectionMasks?.roupas : undefined),
-        },
-      };
+      const variantCharacter = variantCharacterFor(variant);
       const rendered = new Map<string, Promise<RenderedPng>>();
       const render = (key: string) => {
         const cached = rendered.get(key);

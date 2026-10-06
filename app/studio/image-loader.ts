@@ -3,6 +3,14 @@
 const MAX_CACHED_IMAGES = 24;
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
 
+export type StudioImageCacheStats = { imageCacheHits: number; imageCacheMisses: number; imageLoadMs: number };
+
+function measureLoad(image: Promise<HTMLImageElement>, stats?: StudioImageCacheStats) {
+  if (!stats) return image;
+  const startedAt = performance.now();
+  return image.finally(() => { stats.imageLoadMs += performance.now() - startedAt; });
+}
+
 export function clearStudioImageCache() {
   imageCache.clear();
 }
@@ -17,13 +25,15 @@ function remember(src: string, image: Promise<HTMLImageElement>) {
   return image;
 }
 
-export function loadStudioImage(src: string) {
+export function loadStudioImage(src: string, stats?: StudioImageCacheStats) {
   const cached = imageCache.get(src);
   if (cached) {
+    if (stats) stats.imageCacheHits += 1;
     imageCache.delete(src);
     imageCache.set(src, cached);
-    return cached;
+    return measureLoad(cached, stats);
   }
+  if (stats) stats.imageCacheMisses += 1;
   const pending = new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.crossOrigin = "anonymous";
@@ -35,5 +45,5 @@ export function loadStudioImage(src: string) {
     };
     image.src = src;
   });
-  return remember(src, pending);
+  return measureLoad(remember(src, pending), stats);
 }
