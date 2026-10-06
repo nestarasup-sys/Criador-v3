@@ -48,7 +48,7 @@ export function loadImage(src: string) {
   return pending;
 }
 
-async export function removeChroma(source: Blob | string) {
+export async function removeChroma(source: Blob | string) {
   const temporaryUrl = typeof source === "string" ? source : URL.createObjectURL(source);
   try {
     const image = await loadImage(temporaryUrl);
@@ -106,7 +106,7 @@ export function createChromaResult(
   return output;
 }
 
-async export function createChromaResultAsync(
+export async function createChromaResultAsync(
   source: HTMLCanvasElement,
   color: ChromaColor,
   tolerance: number,
