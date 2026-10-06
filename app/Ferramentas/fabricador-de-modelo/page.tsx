@@ -1,5 +1,6 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- editor previews use dynamic Blob/data URLs and local assets. */
 
 import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -366,7 +367,7 @@ export default function FabricadorDeModeloPage() {
     canvas.height = baseTemplate.naturalHeight;
     const context = canvas.getContext("2d", { willReadFrequently: true });
     if (!context) {
-      setStatus("Não foi possível preparar a cor da pele do molde.");
+      console.error("[fabricador] Canvas 2D indisponível ao preparar a cor da pele do molde.");
       return;
     }
     context.drawImage(baseTemplate, 0, 0);
@@ -480,11 +481,11 @@ export default function FabricadorDeModeloPage() {
           : effectPlacements[kind],
   [eyePlacements, eyebrowPlacement, mouthPlacement, effectPlacements]);
 
-  const defaultPlacementForKind = (kind: FabricatorAssetKind): AssetPlacement =>
+  const defaultPlacementForKind = useCallback((kind: FabricatorAssetKind): AssetPlacement =>
     kind === "eyes" ? DEFAULT_EYE_PLACEMENTS
       : kind === "eyebrows" ? DEFAULT_BROW_PLACEMENT
         : kind === "mouths" || kind === "mouths-talk" ? DEFAULT_MOUTH_PLACEMENT
-          : DEFAULT_EFFECT_PLACEMENTS[kind];
+          : DEFAULT_EFFECT_PLACEMENTS[kind], []);
 
   const setPlacementForKind = (kind: FabricatorAssetKind, next: AssetPlacement, invalidateGenerated = true, trackHistory = true) => {
     if (trackHistory) pushEditorHistory();
@@ -539,7 +540,7 @@ export default function FabricadorDeModeloPage() {
     if (pendingPersistRef.current[kind]?.file === file) delete pendingPersistRef.current[kind];
   };
 
-  const persistProcessedUpload = async (file: File, kind: FabricatorAssetKind, chroma: ChromaSettings, sequence: number) => {
+  const persistProcessedUpload = useCallback(async (file: File, kind: FabricatorAssetKind, chroma: ChromaSettings, sequence: number) => {
     try {
       const asset = await uploadFabricatorAsset(file, kind, chroma, kind === "manpu" ? manpuGrid : undefined);
       setLibraryAssets((current) => [asset, ...current.filter((entry) => entry.id !== asset.id)]);
@@ -576,14 +577,14 @@ export default function FabricadorDeModeloPage() {
       }
       return null;
     }
-  };
+  }, [defaultPlacementForKind, manpuGrid, presetIndex]);
 
-  const completePendingPersistence = async (kind: FabricatorAssetKind, file: File, chroma: ChromaSettings) => {
+  const completePendingPersistence = useCallback(async (kind: FabricatorAssetKind, file: File, chroma: ChromaSettings) => {
     const pending = pendingPersistRef.current[kind];
     if (!pending || pending.file !== file) return;
     delete pendingPersistRef.current[kind];
     await persistProcessedUpload(file, kind, chroma, pending.sequence);
-  };
+  }, [persistProcessedUpload]);
 
   const onUpload = (file?: File, persist = true) => {
     if (!file) return;
@@ -670,7 +671,7 @@ export default function FabricadorDeModeloPage() {
       })
       .catch((error) => { if (!cancelled) { discardPendingPersistence("eyes", sourceFile); setPair(null); setLoaded(null); setProcessingLayers((current) => ({ ...current, eyes: false })); setStatus(error instanceof Error ? error.message : "Não consegui separar os olhos."); } });
     return () => { cancelled = true; };
-  }, [sourceFile, eyeChromaSettings]);
+  }, [sourceFile, eyeChromaSettings, completePendingPersistence]);
 
   useEffect(() => {
     if (!pair) return;
@@ -692,7 +693,7 @@ export default function FabricadorDeModeloPage() {
       })
       .catch((error) => { if (!cancelled) { discardPendingPersistence("eyebrows", eyebrowFile); setEyebrowPair(null); setEyebrowsLoaded(null); setProcessingLayers((current) => ({ ...current, eyebrows: false })); setStatus(error instanceof Error ? error.message : "Não consegui separar as sobrancelhas."); } });
     return () => { cancelled = true; };
-  }, [eyebrowFile, eyebrowChromaSettings]);
+  }, [eyebrowFile, eyebrowChromaSettings, completePendingPersistence]);
 
   useEffect(() => {
     if (!eyebrowPair) return;
@@ -714,7 +715,7 @@ export default function FabricadorDeModeloPage() {
       })
       .catch((error) => { if (!cancelled) { discardPendingPersistence("mouths", mouthFile); setMouthPieces([]); setMouthLoaded(null); setProcessingLayers((current) => ({ ...current, mouths: false })); setStatus(error instanceof Error ? error.message : "Não consegui recortar a folha de bocas."); } });
     return () => { cancelled = true; };
-  }, [mouthFile, mouthChromaSettings]);
+  }, [mouthFile, mouthChromaSettings, completePendingPersistence]);
 
   useEffect(() => {
     if (!mouthTalkFile) return;
@@ -735,7 +736,7 @@ export default function FabricadorDeModeloPage() {
         setStatus(error instanceof Error ? error.message : "Não consegui recortar a folha de bocas de fala.");
       });
     return () => { cancelled = true; };
-  }, [mouthTalkFile, mouthTalkChromaSettings]);
+  }, [mouthTalkFile, mouthTalkChromaSettings, completePendingPersistence]);
 
   useEffect(() => {
     if (!mouthPieces.length) return;
@@ -771,7 +772,7 @@ export default function FabricadorDeModeloPage() {
         setStatus(error instanceof Error ? error.message : "Não consegui processar o blush.");
       });
     return () => { cancelled = true; };
-  }, [effectFiles.blush, effectChromaSettings.blush]);
+  }, [effectFiles.blush, effectChromaSettings.blush, completePendingPersistence]);
 
   useEffect(() => {
     const file = effectFiles.shadow;
@@ -796,7 +797,7 @@ export default function FabricadorDeModeloPage() {
         setStatus(error instanceof Error ? error.message : "Não consegui processar o shadow.");
       });
     return () => { cancelled = true; };
-  }, [effectFiles.shadow, effectChromaSettings.shadow]);
+  }, [effectFiles.shadow, effectChromaSettings.shadow, completePendingPersistence]);
 
   useEffect(() => {
     const file = effectFiles.manpu;
@@ -811,20 +812,13 @@ export default function FabricadorDeModeloPage() {
       })
       .catch((error) => { if (!cancelled) { discardPendingPersistence("manpu", file); setManpuPieces([]); setProcessingLayers((current) => ({ ...current, manpu: false })); setStatus(error instanceof Error ? error.message : "Não consegui processar a folha de manpu."); } });
     return () => { cancelled = true; };
-  }, [effectFiles.manpu, effectChromaSettings.manpu, manpuGrid]);
+  }, [effectFiles.manpu, effectChromaSettings.manpu, manpuGrid, completePendingPersistence]);
 
   useEffect(() => {
     let cancelled = false;
-    // A prévia precisa resolver o manpu pela mesma fonte de verdade da
-    // geração/exportação: asset escolhido + índice da célula da expressão.
-    // `manpuPieces` é apenas o estado do editor de upload e pode ainda conter
-    // as células do asset anterior durante a troca de expressão/asset.
-    setEffectLoaded((current) => {
-      if (!current.manpu) return current;
-      const next = { ...current };
-      delete next.manpu;
-      return next;
-    });
+    // A prévia resolve o manpu pela mesma fonte de verdade da exportação.
+    // O resultado anterior permanece visível apenas até a nova resolução assíncrona terminar,
+    // evitando uma atualização de estado síncrona só para limpar estado derivado.
     Promise.all(EFFECT_KINDS.map(async (kind) => {
       if (kind === "manpu") {
         const assetId = previewPreset.effectAssets.manpu;
@@ -867,7 +861,10 @@ export default function FabricadorDeModeloPage() {
           if (cancelled) return;
           markLayerProcessing(kind, true);
           setChromaForKind(kind, asset.chroma ?? DEFAULT_CHROMA_SETTINGS);
-          setPlacementForKind(kind, asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind], false, false);
+          setEffectPlacements((current) => ({
+            ...current,
+            [kind]: (asset.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind]) as EyePlacement,
+          }));
           setEffectFiles((current) => ({ ...current, [kind]: file }));
           setActiveEffectAssetIds((current) => ({ ...current, [kind]: asset.id }));
         } catch {
@@ -876,7 +873,7 @@ export default function FabricadorDeModeloPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [previewPreset.effectAssets, libraryAssets]);
+  }, [previewPreset.effectAssets, libraryAssets, activeEffectAssetIds]);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
