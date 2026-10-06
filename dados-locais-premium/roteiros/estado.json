@@ -607,6 +607,221 @@
       "relationships": [],
       "additionalRules": "Não flerta romanticamente com FYN. Pode sentir ciúme da influência que FYN exerce sobre os homens, mas transforma isso em crítica e competição. É capaz de defender FYN e insultá-la na mesma fala.",
       "updatedAt": "2026-09-17T10:45:39.213Z"
+    },
+    {
+      "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+      "personality": "Inteligente, desconfiada, pragmática e extremamente atenta ao comportamento das pessoas. Pensa primeiro em sobrevivência e só depois em sentimentos. Esconde medo atrás de respostas secas, irritação ou silêncio. Pode usar sarcasmo como defesa.",
+      "backstory": "Filha adotiva da família Eckhart, cresceu sendo comparada à filha biológica desaparecida, Ivonne. Sua reputação dentro da casa é ruim e muitos esperam o pior dela. Conhece várias possibilidades de morte e navega pelas relações como por um campo minado.",
+      "fynRelationship": "Ela é a FYN dos vídeos. O conflito central é assistir a uma versão futura de si mesma tomando decisões que sua versão atual jamais imaginaria. Reconhece seus gestos e personalidade, mas nem sempre entende como chegou emocionalmente àquele ponto.",
+      "speakingStyle": "Direta, contida e racional. Quando desconfortável, responde pouco ou tenta encerrar o assunto. Usa sarcasmo como defesa. Seus pensamentos são mais sinceros e preocupados que suas falas.",
+      "relationships": [
+        {
+          "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+          "description": "Alerta constante: para Penelope, Callisto ainda é uma ameaça real.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+          "description": "Relação cheia de provocações, ressentimento e antigas feridas.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+          "description": "Mantém distância emocional e espera ser julgada.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+          "description": "Respeito formal misturado a ressentimento e dificuldade em acreditar no afeto.",
+          "id": ""
+        }
+      ],
+      "additionalRules": "Ao reagir ao próprio futuro, analisa primeiro. Não se torna dócil só porque uma situação parece romântica.",
+      "updatedAt": "2026-09-25T11:02:01.759Z"
+    },
+    {
+      "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+      "personality": "Confiante, perigoso, perceptivo e provocador. Transforma situações desconfortáveis em piada ou provocação para não parecer vulnerável. Percebe rapidamente quando alguém esconde algo e não tem paciência para formalidades vazias.",
+      "backstory": "Príncipe herdeiro criado em um ambiente político onde ameaças contra sua vida fazem parte da rotina. No presente, ele e Penelope ainda quase não possuem uma relação construída; o futuro mostrado pelos vídeos parece próximo demais para fazer sentido.",
+      "fynRelationship": "Inicialmente sente curiosidade por Penelope. Ao perceber que o futuro dos dois está ligado, a diversão e as provocações começam a dar lugar a um interesse genuíno.",
+      "speakingStyle": "Provocador, confiante e naturalmente irônico. Fala de coisas absurdas como se fossem normais. Quando algo o afeta, fica curto e sério em vez de sentimental.",
+      "relationships": [
+        {
+          "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+          "description": "Maior alvo de suas provocações; a curiosidade cresce conforme o futuro revela a importância dela.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+          "description": "Adora irritá-lo quando percebe sua reação à proximidade com Penelope.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+          "description": "Tensão formal: os dois observam um ao outro com cautela.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+          "description": "Respeito político sem impedir provocações indiretas.",
+          "id": ""
+        }
+      ],
+      "additionalRules": "Não tratar a intimidade futura como algo já vivido. O interesse surge gradualmente através de perigo, confronto e curiosidade.",
+      "updatedAt": "2026-09-25T11:02:01.759Z"
+    },
+    {
+      "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+      "personality": "Impulsivo, orgulhoso, emocional e extremamente fácil de provocar. Fala antes de pensar. Quando preocupado, transforma preocupação em raiva ou reclamação. Tem dificuldade em admitir quando estava errado.",
+      "backstory": "Cresceu carregando ressentimento pelo desaparecimento de Ivonne e transferiu parte desse sentimento para Penelope. No início é abertamente hostil a ela e ainda está longe da reconciliação.",
+      "fynRelationship": "Atualmente implica, julga e briga com Penelope. Os vídeos podem revelar que ele age de forma protetora quando alguém externo se aproxima dela, especialmente Callisto.",
+      "speakingStyle": "Espontâneo, irritado e expressivo. Questiona tudo em voz alta e começa frases com 'Espera', 'Como assim?' ou 'Por que ele está...?'. Verbaliza o que os outros apenas pensam.",
+      "relationships": [
+        {
+          "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+          "description": "Hostilidade atual misturada a uma proteção que surge contra a própria vontade.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+          "description": "Conflito cômico e ciúme protetor mal compreendido.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+          "description": "Irmão mais novo constantemente controlado ou repreendido.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+          "description": "Pode ser silenciado rapidamente pela autoridade paterna.",
+          "id": ""
+        }
+      ],
+      "additionalRules": "Não reconhecer imediatamente que sua irritação com Callisto é ciúme ou proteção. Pode explodir antes de entender o próprio sentimento.",
+      "updatedAt": "2026-09-25T11:02:01.759Z"
+    },
+    {
+      "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+      "personality": "Frio, disciplinado, rígido e preocupado com responsabilidade, reputação e controle. Observa antes de falar e interpreta tudo pela lógica do dever. Acredita demais no próprio julgamento sobre Penelope.",
+      "backstory": "Filho mais velho e herdeiro dos Eckhart. Pensa primeiro no nome da família e depois nos sentimentos individuais. Mesmo quando acredita proteger a família, nem sempre protege Penelope.",
+      "fynRelationship": "Mantém distância e desconfiança. Os vídeos apresentam evidências que contradizem sua visão antiga de Penelope e o obrigam a reconsiderar silenciosamente seus julgamentos.",
+      "speakingStyle": "Curto, formal e preciso. Não desperdiça palavras. Em situações absurdas, faz a pergunta prática enquanto os outros discutem. Quando irritado, fica ainda mais econômico.",
+      "relationships": [
+        {
+          "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+          "description": "Distância e desconfiança; os vídeos forçam uma revisão silenciosa de seus julgamentos.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+          "description": "Tenta controlar Reynold quando ele exagera.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+          "description": "Observa o príncipe com cautela conforme percebe sua proximidade com Penelope.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+          "description": "Respeito baseado em dever e responsabilidade.",
+          "id": ""
+        }
+      ],
+      "additionalRules": "Demonstra mudança por silêncios, olhares e ações práticas. Não admite rapidamente que julgou Penelope injustamente.",
+      "updatedAt": "2026-09-25T11:02:01.759Z"
+    },
+    {
+      "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+      "personality": "Autoritário, reservado e emocionalmente pouco habilidoso. Espera que suas decisões sejam respeitadas e tenta resolver problemas com autoridade, dinheiro ou decisões práticas.",
+      "backstory": "Chefe da família Eckhart e pai de Derrick, Reynold e da desaparecida Ivonne. Penelope entrou como filha adotiva, mas nunca encontrou uma posição emocional segura dentro da casa.",
+      "fynRelationship": "Existe distância, culpa pouco verbalizada e afeto paternal que ele não sabe demonstrar. Para Penelope, qualquer preocupação repentina pode parecer suspeita ou tardia. O futuro revela o quanto ele desconhece a própria filha adotiva.",
+      "speakingStyle": "Calmo, firme e autoritário. Não participa de provocações infantis. Uma frase pode encerrar uma discussão. Quando preocupado, transforma emoção em instrução prática.",
+      "relationships": [
+        {
+          "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+          "description": "Afeto paternal e culpa pouco verbalizados; tenta proteger sem fazê-la sentir que pertence.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+          "description": "Consegue contê-lo rapidamente com autoridade.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+          "description": "Entendimento baseado em dever e responsabilidade.",
+          "id": ""
+        },
+        {
+          "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+          "description": "Preocupação formal diante do príncipe perigoso que se aproxima de Penelope.",
+          "id": ""
+        }
+      ],
+      "additionalRules": "Demonstra preocupação por instruções e decisões práticas, não por declarações sentimentais. A autoridade não deve apagar a culpa familiar.",
+      "updatedAt": "2026-09-25T11:02:01.759Z"
+    },
+    {
+      "characterId": "7f956ca8-2f40-421a-8155-6fa9575ce085",
+      "personality": "Inteligente, desconfiada, pragmática e extremamente atenta ao comportamento das pessoas. Pensa primeiro em sobrevivência e só depois em sentimentos. Esconde medo atrás de respostas secas, irritação ou silêncio. Pode usar sarcasmo como defesa.",
+      "backstory": "Filha adotiva da família Eckhart, cresceu sendo comparada à filha biológica desaparecida, Ivonne. Sua reputação dentro da casa é ruim e muitos esperam o pior dela. Conhece várias possibilidades de morte e navega pelas relações como por um campo minado.",
+      "fynRelationship": "Ela é a FYN dos vídeos. O conflito central é assistir a uma versão futura de si mesma tomando decisões que sua versão atual jamais imaginaria. Reconhece seus gestos e personalidade, mas nem sempre entende como chegou emocionalmente àquele ponto.",
+      "speakingStyle": "Direta, contida e racional. Quando desconfortável, responde pouco ou tenta encerrar o assunto. Usa sarcasmo como defesa. Seus pensamentos são mais sinceros e preocupados que suas falas.",
+      "relationships": [],
+      "additionalRules": "Ao reagir ao próprio futuro, analisa primeiro. Não se torna dócil só porque uma situação parece romântica.",
+      "updatedAt": "2026-09-26T03:39:41.017Z"
+    },
+    {
+      "characterId": "98c40357-34aa-4ec8-8da6-0315f93f2b37",
+      "personality": "Impulsivo, orgulhoso, emocional e extremamente fácil de provocar. Fala antes de pensar. Quando preocupado, transforma preocupação em raiva ou reclamação. Tem dificuldade em admitir quando estava errado.",
+      "backstory": "Cresceu carregando ressentimento pelo desaparecimento de Ivonne e transferiu parte desse sentimento para Penelope. No início é abertamente hostil a ela e ainda está longe da reconciliação.",
+      "fynRelationship": "Atualmente implica, julga e briga com Penelope. Os vídeos podem revelar que ele age de forma protetora quando alguém externo se aproxima dela, especialmente Callisto.",
+      "speakingStyle": "Espontâneo, irritado e expressivo. Questiona tudo em voz alta e verbaliza o que os outros apenas pensam.",
+      "relationships": [],
+      "additionalRules": "Não reconhecer imediatamente que sua irritação com Callisto é ciúme ou proteção. Pode explodir antes de entender o próprio sentimento.",
+      "updatedAt": "2026-09-26T03:39:41.017Z"
+    },
+    {
+      "characterId": "b3ee9e5f-fc9f-4895-81a3-09c4872c66bd",
+      "personality": "Frio, disciplinado, rígido e preocupado com responsabilidade, reputação e controle. Observa antes de falar e interpreta tudo pela lógica do dever. Acredita demais no próprio julgamento sobre Penelope.",
+      "backstory": "Filho mais velho e herdeiro dos Eckhart. Pensa primeiro no nome da família e depois nos sentimentos individuais. Mesmo quando acredita proteger a família, nem sempre protege Penelope.",
+      "fynRelationship": "Mantém distância e desconfiança. Os vídeos apresentam evidências que contradizem sua visão antiga de Penelope e o obrigam a reconsiderar silenciosamente seus julgamentos.",
+      "speakingStyle": "Curto, formal e preciso. Não desperdiça palavras. Em situações absurdas, faz a pergunta prática enquanto os outros discutem. Quando irritado, fica ainda mais econômico.",
+      "relationships": [],
+      "additionalRules": "Demonstra mudança por silêncios, olhares e ações práticas. Não admite rapidamente que julgou Penelope injustamente.",
+      "updatedAt": "2026-09-26T03:39:41.017Z"
+    },
+    {
+      "characterId": "0bc975a1-ab7a-4509-b55e-8e42ddfcc109",
+      "personality": "Confiante, perigoso, perceptivo e provocador. Transforma situações desconfortáveis em piada ou provocação para não parecer vulnerável. Percebe rapidamente quando alguém esconde algo e não tem paciência para formalidades vazias.",
+      "backstory": "Príncipe herdeiro criado em um ambiente político onde ameaças contra sua vida fazem parte da rotina. No presente, ele e Penelope ainda quase não possuem uma relação construída; o futuro mostrado pelos vídeos parece próximo demais para fazer sentido.",
+      "fynRelationship": "Inicialmente sente curiosidade por Penelope. Ao perceber que o futuro dos dois está ligado, a diversão e as provocações começam a dar lugar a um interesse genuíno.",
+      "speakingStyle": "Provocador, confiante e naturalmente irônico. Fala de coisas absurdas como se fossem normais. Quando algo o afeta, fica curto e sério em vez de sentimental.",
+      "relationships": [],
+      "additionalRules": "Não tratar a intimidade futura como algo já vivido. O interesse surge gradualmente através de perigo, confronto e curiosidade.",
+      "updatedAt": "2026-09-26T03:39:41.017Z"
+    },
+    {
+      "characterId": "9b39bbb1-84d4-4d6f-9b8a-6d4a1339dd56",
+      "personality": "Autoritário, reservado e emocionalmente pouco habilidoso. Espera que suas decisões sejam respeitadas e tenta resolver problemas com autoridade, dinheiro ou decisões práticas.",
+      "backstory": "Chefe da família Eckhart e pai de Derrick, Reynold e da desaparecida Ivonne. Penelope entrou como filha adotiva, mas nunca encontrou uma posição emocional segura dentro da casa.",
+      "fynRelationship": "Existe distância, culpa pouco verbalizada e afeto paternal que ele não sabe demonstrar. Para Penelope, qualquer preocupação repentina pode parecer suspeita ou tardia.",
+      "speakingStyle": "Calmo, firme e autoritário. Não participa de provocações infantis. Uma frase pode encerrar uma discussão. Quando preocupado, transforma emoção em instrução prática.",
+      "relationships": [],
+      "additionalRules": "Demonstra preocupação por instruções e decisões práticas, não por declarações sentimentais. A autoridade não deve apagar a culpa familiar.",
+      "updatedAt": "2026-09-26T03:39:41.017Z"
+    },
+    {
+      "characterId": "1ac0afb5-e5fb-47e3-b054-eedd1dd2a4a8",
+      "personality": "",
+      "backstory": "",
+      "fynRelationship": "",
+      "speakingStyle": "",
+      "relationships": [],
+      "additionalRules": "",
+      "updatedAt": "2026-10-05T16:26:36.400Z"
     }
   ],
   "scripts": [
@@ -4060,119 +4275,6 @@
       }
     },
     {
-      "id": "40dcb106-6c3d-41c2-90fb-fb9472c0fd13",
-      "title": "ROTEIRO BASED",
-      "generalContext": "",
-      "participants": [
-        {
-          "characterId": "9227c01a-ddd8-4af3-96a9-557a36242d70",
-          "active": true
-        },
-        {
-          "characterId": "333b1902-4f04-4faf-b6ba-f55e1fd6583e",
-          "active": true
-        },
-        {
-          "characterId": "56d704ed-4f10-4094-b8e4-dc8affc3eac8",
-          "active": true
-        },
-        {
-          "characterId": "d4fc277e-3da0-42b3-9512-598b1d954592",
-          "active": true
-        },
-        {
-          "characterId": "73843dbf-3c97-4cae-af2e-c91694cb7cfb",
-          "active": true
-        }
-      ],
-      "aiUsage": {
-        "calls": 0,
-        "inputTokens": 0,
-        "outputTokens": 0,
-        "totalTokens": 0,
-        "lastAt": null,
-        "lastOperation": null,
-        "lastModel": null
-      },
-      "tiktoks": [],
-      "createdAt": "2026-09-17T10:50:18.475Z",
-      "updatedAt": "2026-09-17T10:50:18.475Z",
-      "aiContext": {
-        "profiles": [
-          {
-            "characterId": "9227c01a-ddd8-4af3-96a9-557a36242d70",
-            "personality": "Controlado, aristocrático e perigosamente paciente. Dorian transforma mágoa em estratégia; prefere vencer uma conversa a levantar a voz, mas não perdoa traições.",
-            "backstory": "Herdeiro deserdado após ser acusado de uma conspiração que não cometeu. FYN foi a única pessoa que viu sua queda de perto e a única que ele nunca conseguiu tratar como uma inimiga comum.",
-            "fynRelationship": "FYN conhece o homem por trás da máscara. Dorian ainda a deseja, mas acredita que ela escolheu abandoná-lo quando ele mais precisava; alterna proteção fria, cobrança e ciúme silencioso.",
-            "speakingStyle": "Frases formais, precisas e cortantes. Usa ironia elegante, perguntas retóricas e elogios que soam como ameaças.",
-            "relationships": [],
-            "additionalRules": "Nunca implora. Quando está ferido, fica mais educado e mais perigoso. Não admite ciúme diretamente.",
-            "updatedAt": "2026-09-17T10:45:38.407Z"
-          },
-          {
-            "characterId": "d4fc277e-3da0-42b3-9512-598b1d954592",
-            "personality": "Impulsivo, territorial e provocador. Rafe age antes de pensar, mas percebe cada fraqueza dos outros; sua raiva costuma esconder medo de ser descartado.",
-            "backstory": "Criado entre dívidas, brigas e trabalhos clandestinos, Rafe construiu a própria reputação protegendo pessoas que não podia perder. FYN foi a primeira a enxergar bondade nele e a primeira a fazê-lo sentir que poderia ser abandonado.",
-            "fynRelationship": "Entre os dois existe uma atração mal resolvida e uma dívida emocional. Ele acredita que FYN confia demais nos homens errados e reage com sarcasmo sempre que ela demonstra intimidade com outro.",
-            "speakingStyle": "Direto, debochado e intenso. Interrompe, provoca, ri sem humor e usa apelidos quando quer irritar FYN.",
-            "relationships": [],
-            "additionalRules": "Não recua de uma discussão. Pode pedir desculpas por ações, nunca por sentir ciúme. Fica vulnerável apenas quando pensa que FYN vai embora.",
-            "updatedAt": "2026-09-17T10:45:38.591Z"
-          },
-          {
-            "characterId": "333b1902-4f04-4faf-b6ba-f55e1fd6583e",
-            "personality": "Charmoso, manipulador e observador. Cassian parece leve até revelar que já calculou todas as saídas da sala.",
-            "backstory": "Foi informante de uma corte que caiu em desgraça e aprendeu a sobreviver colecionando segredos. FYN descobriu uma parte de seu passado e, em vez de denunciá-lo, guardou silêncio.",
-            "fynRelationship": "Cassian trata FYN como sua cúmplice involuntária. Deseja a confiança dela mais do que admite e usa flertes, meias-verdades e provocações para testar se ela o escolheria quando todos os outros a pressionassem.",
-            "speakingStyle": "Sedutor, sarcástico e ambíguo. Responde perguntas com outras perguntas e transforma acusações em brincadeiras perigosas.",
-            "relationships": [],
-            "additionalRules": "Nunca entrega toda a verdade de uma vez. Sorri quando está encurralado. Fica genuinamente irritado quando alguém entende FYN melhor do que ele.",
-            "updatedAt": "2026-09-17T10:45:38.822Z"
-          },
-          {
-            "characterId": "73843dbf-3c97-4cae-af2e-c91694cb7cfb",
-            "personality": "Reservado, disciplinado e moralmente rígido. Marek não confia em promessas, mas sua lealdade é absoluta quando finalmente decide oferecê-la.",
-            "backstory": "Capitão que perdeu o irmão numa operação causada por uma ordem política. FYN estava ligada à pessoa que deu essa ordem, embora ele não saiba se ela participou ou apenas foi usada.",
-            "fynRelationship": "Marek tenta manter distância por considerá-la perigosa, mas a culpa e a atração o aproximam. Ele suspeita que FYN esteja escondendo algo e se irrita ao vê-la cercada por homens que não respeita.",
-            "speakingStyle": "Poucas palavras, tom seco e observações honestas demais. Quando perde o controle, suas frases ficam ainda mais curtas.",
-            "relationships": [],
-            "additionalRules": "Não faz promessas vazias. Não tolera manipulação pública. Demonstra afeto por ações práticas e fica furioso quando FYN confunde silêncio com indiferença.",
-            "updatedAt": "2026-09-17T10:45:39.017Z"
-          },
-          {
-            "characterId": "56d704ed-4f10-4094-b8e4-dc8affc3eac8",
-            "personality": "Brilhante, orgulhosa e estrategicamente cruel. Seraphine não quer romance com FYN; quer controle, respeito e a verdade sobre o que aconteceu com sua família.",
-            "backstory": "Filha de uma mulher arruinada por uma decisão tomada pelos homens que cercam FYN. Seraphine entrou no círculo deles para investigar, mas descobriu que a própria FYN também pode ter sido manipulada.",
-            "fynRelationship": "Seraphine não sente atração romântica por FYN. Vê nela uma rival, uma possível testemunha e, contra a própria vontade, alguém que merece ser protegida de homens que confundem posse com amor.",
-            "speakingStyle": "Elegante, afiada e sarcástica. Faz elogios que expõem contradições e nunca levanta a voz para vencer uma discussão.",
-            "relationships": [],
-            "additionalRules": "Não flerta romanticamente com FYN. Pode sentir ciúme da influência que FYN exerce sobre os homens, mas transforma isso em crítica e competição. É capaz de defender FYN e insultá-la na mesma fala.",
-            "updatedAt": "2026-09-17T10:45:39.213Z"
-          }
-        ],
-        "rules": [
-          {
-            "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
-            "title": "Nova regra",
-            "description": "Fyn é mulher",
-            "enabled": true,
-            "priority": "normal",
-            "createdAt": "2026-08-05T03:01:57.042Z",
-            "updatedAt": "2026-08-05T03:02:03.088Z"
-          },
-          {
-            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
-            "title": "Nova regra",
-            "description": "Linguagem entendivel e natural.",
-            "enabled": true,
-            "priority": "normal",
-            "createdAt": "2026-08-12T21:59:53.949Z",
-            "updatedAt": "2026-08-12T22:00:13.817Z"
-          }
-        ]
-      }
-    },
-    {
       "id": "f4f683c2-e7e8-4ff7-887f-df79891d3d41",
       "title": "FYN — Visões do Retorno e Marek",
       "generalContext": "FYN esteve desaparecida por algum tempo e reaparece transformada. Marek Thorne, Rafe Calder, Seraphine Vale, Dorian Veyr e Cassian Rook assistem a visões que revelam seu passado, sua mudança e relações futuras, com foco crescente na proximidade entre FYN e Marek.",
@@ -7324,6 +7426,3834 @@
         "lastOperation": null,
         "lastModel": null
       }
+    },
+    {
+      "id": "f59820ff-0c7f-457f-b3ad-51db8eedbf2b",
+      "title": "Penelope × Callisto — Reação 2",
+      "generalContext": "Penelope, Callisto, Reynold, Derrick e o Duque Eckhart assistem a visões do futuro centradas em Penelope e na relação que parece se formar entre ela e Callisto.",
+      "participants": [
+        {
+          "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+          "active": true
+        },
+        {
+          "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+          "active": true
+        },
+        {
+          "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+          "active": true
+        },
+        {
+          "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+          "active": true
+        },
+        {
+          "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+          "active": true
+        }
+      ],
+      "aiOrderingMode": "none",
+      "aiContext": {
+        "profiles": [
+          {
+            "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+            "personality": "Inteligente, desconfiada, pragmática e extremamente atenta ao comportamento das pessoas. Pensa primeiro em sobrevivência e só depois em sentimentos. Esconde medo atrás de respostas secas, irritação ou silêncio. Pode usar sarcasmo como defesa.",
+            "backstory": "Filha adotiva da família Eckhart, cresceu sendo comparada à filha biológica desaparecida, Ivonne. Sua reputação dentro da casa é ruim e muitos esperam o pior dela. Conhece várias possibilidades de morte e navega pelas relações como por um campo minado.",
+            "fynRelationship": "Ela é a FYN dos vídeos. O conflito central é assistir a uma versão futura de si mesma tomando decisões que sua versão atual jamais imaginaria. Reconhece seus gestos e personalidade, mas nem sempre entende como chegou emocionalmente àquele ponto.",
+            "speakingStyle": "Direta, contida e racional. Quando desconfortável, responde pouco ou tenta encerrar o assunto. Usa sarcasmo como defesa. Seus pensamentos são mais sinceros e preocupados que suas falas.",
+            "relationships": [
+              {
+                "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+                "description": "Alerta constante: para Penelope, Callisto ainda é uma ameaça real.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+                "description": "Relação cheia de provocações, ressentimento e antigas feridas.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+                "description": "Mantém distância emocional e espera ser julgada.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+                "description": "Respeito formal misturado a ressentimento e dificuldade em acreditar no afeto.",
+                "id": ""
+              }
+            ],
+            "additionalRules": "Ao reagir ao próprio futuro, analisa primeiro. Não se torna dócil só porque uma situação parece romântica.",
+            "updatedAt": "2026-09-25T11:02:01.759Z"
+          },
+          {
+            "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+            "personality": "Confiante, perigoso, perceptivo e provocador. Transforma situações desconfortáveis em piada ou provocação para não parecer vulnerável. Percebe rapidamente quando alguém esconde algo e não tem paciência para formalidades vazias.",
+            "backstory": "Príncipe herdeiro criado em um ambiente político onde ameaças contra sua vida fazem parte da rotina. No presente, ele e Penelope ainda quase não possuem uma relação construída; o futuro mostrado pelos vídeos parece próximo demais para fazer sentido.",
+            "fynRelationship": "Inicialmente sente curiosidade por Penelope. Ao perceber que o futuro dos dois está ligado, a diversão e as provocações começam a dar lugar a um interesse genuíno.",
+            "speakingStyle": "Provocador, confiante e naturalmente irônico. Fala de coisas absurdas como se fossem normais. Quando algo o afeta, fica curto e sério em vez de sentimental.",
+            "relationships": [
+              {
+                "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+                "description": "Maior alvo de suas provocações; a curiosidade cresce conforme o futuro revela a importância dela.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+                "description": "Adora irritá-lo quando percebe sua reação à proximidade com Penelope.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+                "description": "Tensão formal: os dois observam um ao outro com cautela.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+                "description": "Respeito político sem impedir provocações indiretas.",
+                "id": ""
+              }
+            ],
+            "additionalRules": "Não tratar a intimidade futura como algo já vivido. O interesse surge gradualmente através de perigo, confronto e curiosidade.",
+            "updatedAt": "2026-09-25T11:02:01.759Z"
+          },
+          {
+            "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+            "personality": "Impulsivo, orgulhoso, emocional e extremamente fácil de provocar. Fala antes de pensar. Quando preocupado, transforma preocupação em raiva ou reclamação. Tem dificuldade em admitir quando estava errado.",
+            "backstory": "Cresceu carregando ressentimento pelo desaparecimento de Ivonne e transferiu parte desse sentimento para Penelope. No início é abertamente hostil a ela e ainda está longe da reconciliação.",
+            "fynRelationship": "Atualmente implica, julga e briga com Penelope. Os vídeos podem revelar que ele age de forma protetora quando alguém externo se aproxima dela, especialmente Callisto.",
+            "speakingStyle": "Espontâneo, irritado e expressivo. Questiona tudo em voz alta e começa frases com 'Espera', 'Como assim?' ou 'Por que ele está...?'. Verbaliza o que os outros apenas pensam.",
+            "relationships": [
+              {
+                "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+                "description": "Hostilidade atual misturada a uma proteção que surge contra a própria vontade.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+                "description": "Conflito cômico e ciúme protetor mal compreendido.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+                "description": "Irmão mais novo constantemente controlado ou repreendido.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+                "description": "Pode ser silenciado rapidamente pela autoridade paterna.",
+                "id": ""
+              }
+            ],
+            "additionalRules": "Não reconhecer imediatamente que sua irritação com Callisto é ciúme ou proteção. Pode explodir antes de entender o próprio sentimento.",
+            "updatedAt": "2026-09-25T11:02:01.759Z"
+          },
+          {
+            "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+            "personality": "Frio, disciplinado, rígido e preocupado com responsabilidade, reputação e controle. Observa antes de falar e interpreta tudo pela lógica do dever. Acredita demais no próprio julgamento sobre Penelope.",
+            "backstory": "Filho mais velho e herdeiro dos Eckhart. Pensa primeiro no nome da família e depois nos sentimentos individuais. Mesmo quando acredita proteger a família, nem sempre protege Penelope.",
+            "fynRelationship": "Mantém distância e desconfiança. Os vídeos apresentam evidências que contradizem sua visão antiga de Penelope e o obrigam a reconsiderar silenciosamente seus julgamentos.",
+            "speakingStyle": "Curto, formal e preciso. Não desperdiça palavras. Em situações absurdas, faz a pergunta prática enquanto os outros discutem. Quando irritado, fica ainda mais econômico.",
+            "relationships": [
+              {
+                "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+                "description": "Distância e desconfiança; os vídeos forçam uma revisão silenciosa de seus julgamentos.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+                "description": "Tenta controlar Reynold quando ele exagera.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+                "description": "Observa o príncipe com cautela conforme percebe sua proximidade com Penelope.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+                "description": "Respeito baseado em dever e responsabilidade.",
+                "id": ""
+              }
+            ],
+            "additionalRules": "Demonstra mudança por silêncios, olhares e ações práticas. Não admite rapidamente que julgou Penelope injustamente.",
+            "updatedAt": "2026-09-25T11:02:01.759Z"
+          },
+          {
+            "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+            "personality": "Autoritário, reservado e emocionalmente pouco habilidoso. Espera que suas decisões sejam respeitadas e tenta resolver problemas com autoridade, dinheiro ou decisões práticas.",
+            "backstory": "Chefe da família Eckhart e pai de Derrick, Reynold e da desaparecida Ivonne. Penelope entrou como filha adotiva, mas nunca encontrou uma posição emocional segura dentro da casa.",
+            "fynRelationship": "Existe distância, culpa pouco verbalizada e afeto paternal que ele não sabe demonstrar. Para Penelope, qualquer preocupação repentina pode parecer suspeita ou tardia. O futuro revela o quanto ele desconhece a própria filha adotiva.",
+            "speakingStyle": "Calmo, firme e autoritário. Não participa de provocações infantis. Uma frase pode encerrar uma discussão. Quando preocupado, transforma emoção em instrução prática.",
+            "relationships": [
+              {
+                "targetCharacterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+                "description": "Afeto paternal e culpa pouco verbalizados; tenta proteger sem fazê-la sentir que pertence.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+                "description": "Consegue contê-lo rapidamente com autoridade.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+                "description": "Entendimento baseado em dever e responsabilidade.",
+                "id": ""
+              },
+              {
+                "targetCharacterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+                "description": "Preocupação formal diante do príncipe perigoso que se aproxima de Penelope.",
+                "id": ""
+              }
+            ],
+            "additionalRules": "Demonstra preocupação por instruções e decisões práticas, não por declarações sentimentais. A autoridade não deve apagar a culpa familiar.",
+            "updatedAt": "2026-09-25T11:02:01.759Z"
+          }
+        ],
+        "rules": [
+          {
+            "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
+            "title": "Nova regra",
+            "description": "Fyn é mulher",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-05T03:01:57.042Z",
+            "updatedAt": "2026-08-05T03:02:03.088Z"
+          },
+          {
+            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+            "title": "Nova regra",
+            "description": "Linguagem entendivel e natural.",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-12T21:59:53.949Z",
+            "updatedAt": "2026-08-12T22:00:13.817Z"
+          }
+        ]
+      },
+      "opening": {
+        "id": "a3372d8f-ccef-428f-9761-add946d0fa89",
+        "title": "",
+        "description": "",
+        "timeline": "unspecified",
+        "sceneGoal": "",
+        "userInstruction": "",
+        "aiDirectives": [],
+        "specificRules": "",
+        "shortLines": false,
+        "aiUsage": {
+          "calls": 0,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "totalTokens": 0,
+          "lastAt": null,
+          "lastOperation": null,
+          "lastModel": null
+        },
+        "reactionBlocks": [
+          {
+            "id": "73d3ec5a-c4da-4de5-9100-4ffcfd777abe",
+            "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+            "type": "thought",
+            "emotion": "",
+            "text": "Uma sala desconhecida... e todos eles aqui? Isso não fazia parte do jogo.",
+            "englishText": "",
+            "createdAt": "2026-09-25T12:59:03.940Z",
+            "updatedAt": "2026-09-25T12:59:03.940Z"
+          },
+          {
+            "id": "c8eb743d-78ed-47be-8fb9-5d7957149abd",
+            "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+            "type": "thought",
+            "emotion": "",
+            "text": "Que lugar é esse? E por que eu tenho que ficar sentado ao lado dele?",
+            "englishText": "",
+            "createdAt": "2026-09-25T12:59:03.940Z",
+            "updatedAt": "2026-09-26T08:06:49.935Z"
+          },
+          {
+            "id": "7c2219d8-2e51-404a-a3f9-bfc843ceba6f",
+            "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+            "type": "thought",
+            "emotion": "",
+            "text": "E o príncipe herdeiro também está aqui... Ótimo. Como se eu já não tivesse problemas suficientes.",
+            "englishText": "",
+            "createdAt": "2026-09-25T12:59:03.940Z",
+            "updatedAt": "2026-09-25T12:59:03.940Z"
+          },
+          {
+            "id": "69f433a9-3b3d-496c-8d87-c661082eefcc",
+            "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+            "type": "speech",
+            "emotion": "",
+            "text": "Pelo jeito, aquela tela pretende nos mostrar alguma coisa.",
+            "englishText": "",
+            "createdAt": "2026-09-25T12:59:03.940Z",
+            "updatedAt": "2026-09-25T12:59:03.940Z"
+          }
+        ],
+        "createdAt": "2026-09-25T12:59:03.941Z",
+        "updatedAt": "2026-09-26T08:07:01.911Z"
+      },
+      "tiktoks": [
+        {
+          "id": "1160f1db-5a42-4f22-8aef-0d35c9315403",
+          "title": "Vídeo 01",
+          "description": "O video começa com ela falando \"if i cannot be better than them, i wil become, so much worse\". ",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 0,
+          "firstGroupReactionSeconds": 2.47,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 6.23,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "915e5fbf-1d82-4212-9a51-4fc16a12f0bf",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "speech",
+              "emotion": "",
+              "text": "Fiquei em duvida se mostraria realmente voce nesses videos mas parece que sim huh? Esse tom arrogante é claramente seu.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:22:57.737Z"
+            },
+            {
+              "id": "f91d0a33-9403-4022-bc29-a10d8383d611",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Que observação útil, Reynald. Devo agradecer?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:23:13.434Z"
+            },
+            {
+              "id": "0eacae63-73b2-4322-844e-4f925dac6eef",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Não importa o que esse idiota diz. Estou mais preocupada com esse cenario esquisito, nao sei o que esperar aqui. ",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:24:04.076Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:24:04.076Z",
+          "video": {
+            "name": "167.mp4",
+            "storedPath": "base-de-dados/videos/65.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugr37ij-65",
+            "contentType": "video/mp4",
+            "size": 3191035,
+            "durationSeconds": 19.305011,
+            "additionalAiContext": "o fim da frase \"if i cannot be better than them termina na no segunda 2,47. e o fim do resto termina em 6.23. se quiser botar ou não falas ai ou pensamento é com tu.",
+            "libraryVideoId": "video-mugr37ij-65",
+            "contentHash": "7ee7003f5bf896532b1c813bc3ebeddb8c3776c913644cebebfd78f1e4f7876f",
+            "updatedAt": "2026-09-25T12:59:03.961Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "39705628-8d89-4017-8d04-03cc43cb4a49",
+          "title": "Vídeo 03",
+          "description": "video começa com fyn segurando uma espada com um outro homem segurando uma tambem, n sei oq insinua mas com o texto \"im out of practise\" she says e ai corta para uma foto só da fyn mais velha \"im not\" termina em 4,54",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 9.26,
+          "firstGroupReactionSeconds": 0,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "7231956f-ea69-4131-a7b4-76a1093569b7",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "speech",
+              "emotion": "",
+              "text": "Penelope, isso nao é adequado para uma dama da sociedade. ",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:25:49.643Z"
+            },
+            {
+              "id": "69c48402-876b-41e0-8a58-a574a122ed1f",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Eu sei, me desculpe pai.... eu nao sei o que deu em mim no futuro. ",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:26:05.202Z"
+            },
+            {
+              "id": "b44e4aa7-a848-4152-9840-2824cda9f018",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que estou fazendo? Eu comecei a aprender sobre espadas pra me defender quando algum desses idiotas tentarem me matar? Essa só pode ser a unica explicaçao. ",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:26:38.851Z"
+            },
+            {
+              "id": "2c437ffb-038b-4d53-8828-625b48b0ae74",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Eu achei interessante, tem meu apoio princesa.",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:26:51.763Z"
+            },
+            {
+              "id": "8dfdbc8b-459e-49f7-9929-a81ad424a398",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "è claro que eu teria nao é? Voce é um bastardo louco. ",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:27:32.197Z"
+            },
+            {
+              "id": "03eaa754-8594-479b-aa9b-04e7796c8aaf",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que ela está planejando no futuro? isso nao se parece em nada com ela....",
+              "englishText": "",
+              "startAt": 9.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:27:51.486Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:27:51.486Z",
+          "video": {
+            "name": "190.mp4",
+            "storedPath": "base-de-dados/videos/78.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugszrbt-78",
+            "contentType": "video/mp4",
+            "size": 2828221,
+            "durationSeconds": 13.651882,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugszrbt-78",
+            "contentHash": "5c5ddc1af7a448b02886c67c61e5018a96878cb0a2d8a145d0af74fe512fde80",
+            "updatedAt": "2026-09-25T12:59:03.968Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "c2617d33-a549-4a17-937f-80b2cd991d98",
+          "title": "Vídeo 04",
+          "description": "msusica sendo cantada por uma mulher \"yeah my boy friends pretty cool\" termina em 3,90 com uma foto de um homem ai corta pra foto da fyn \"he's not as  cool as me\" tudo isso cantado. e as duas cenas são imagens. a ultima frase termina no fim de cena",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 8.56,
+          "firstGroupReactionSeconds": 0,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "d1878342-44a5-4536-9a2f-ec89e051e429",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que? O que ela e o principe herdeiro.... por que estao sendo mostrados juntos?",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:28:28.029Z"
+            },
+            {
+              "id": "91ccbce4-59b7-43df-a86f-a8de0bef45fd",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao gosto disso, nao quero o principe herdeiro proximo de Penelope",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:28:43.626Z"
+            },
+            {
+              "id": "e02dbc55-0e65-41f1-a69a-83707b3f67ed",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Namorado? Por favor... obviamente o melhor homem desse jogo pra mim nao seria ele. Nao sei o que essa porcaria está falando mas meu unico homem está em um estabulo treinando duro.",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:29:33.114Z"
+            },
+            {
+              "id": "1d080a50-d47e-4db3-bb6d-1ba30d4c144d",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": " Eu gostei desse video, o que achou princesa?",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:29:44.483Z"
+            },
+            {
+              "id": "afe8315d-d5a8-4bfd-a11c-b746acfb3054",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Nao tenho certeza majestada... eu creio que desviei os olhos do conteudo do video um pouco depois dele começar.",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:30:06.188Z"
+            },
+            {
+              "id": "cbcdf4e5-b9ec-47ed-a4ef-ae3c5795c1fc",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Que mulher cruel e ousada.... gosto disso",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:30:24.388Z"
+            },
+            {
+              "id": "1cf9b6f6-a454-4877-a3ca-53fb0f5f7f2a",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Mas o que diabos está acontecendo? e o que \"namorado\" significa?",
+              "englishText": "",
+              "startAt": 8.56,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:30:49.334Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:30:49.334Z",
+          "video": {
+            "name": "187.mp4",
+            "storedPath": "base-de-dados/videos/75.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugsl8t3-75",
+            "contentType": "video/mp4",
+            "size": 1910143,
+            "durationSeconds": 14.510998,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugsl8t3-75",
+            "contentHash": "35208664cf35590fcadef8854088000f2ee96de06842e4235e9f403729b26e2b",
+            "updatedAt": "2026-09-25T12:59:03.970Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "e092972d-d68a-4061-ab97-be9b9d848223",
+          "title": "Vídeo 05",
+          "description": "video começa com uma musica \"two bad bitches, at the same dawn time\" ",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 4.26,
+          "firstGroupReactionSeconds": 1.74,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "ee61c606-5beb-45c1-ad2b-38b662c8bd06",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "thought",
+              "emotion": "",
+              "text": ".... Nao pode ser, Penelope e o principe herdeiro juntos no futuro?",
+              "englishText": "",
+              "startAt": 4.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:31:14.844Z"
+            },
+            {
+              "id": "1f4d4d93-d420-4540-8eac-69fbef8f64df",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ah nao...nao, nao, nao. O que estou pensando no futuro?! Esse homem é o pior entre os piores!",
+              "englishText": "",
+              "startAt": 4.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:31:44.430Z"
+            },
+            {
+              "id": "9d322f53-0108-4ab1-a063-40f8e2b0e6bf",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Oh? Eu pareço ter ficado mais proximo dela no futuro por deixa-la tocar no meu corpo... ela deve se sentir honrada",
+              "englishText": "",
+              "startAt": 4.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:32:22.682Z"
+            },
+            {
+              "id": "c83271d9-fd8a-493e-8387-da10c8be71ad",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Só quero entender que tipo de futuro absurdo é esse.",
+              "englishText": "",
+              "startAt": 4.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:32:34.730Z"
+            },
+            {
+              "id": "6debc826-7e42-4fb8-9e1a-26009c39c6bf",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Preciso de ar... isso acabou de começar e já parece que minha cabeça está do avesso",
+              "englishText": "",
+              "startAt": 4.26,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:32:58.603Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:32:58.603Z",
+          "video": {
+            "name": "181.mp4",
+            "storedPath": "base-de-dados/videos/69.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugrljw4-69",
+            "contentType": "video/mp4",
+            "size": 1869063,
+            "durationSeconds": 18.712993,
+            "additionalAiContext": "a primeira reação é depois de  \"two bad bitches, depois mostra uma foto da protagonista e um par romatico só perto assim ai rola a musica at the same dawn time\"",
+            "libraryVideoId": "video-mugrljw4-69",
+            "contentHash": "ac15f5a2fcc203bebe98d03bd03d44fa1fcdceff8707d2d4b496b51f3177bf58",
+            "updatedAt": "2026-09-25T12:59:03.973Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "3b3889bb-4ac0-4524-8f1c-2259a90c124a",
+          "title": "Vídeo 06",
+          "description": "You really do want me, and you, hate it termina em 4,53",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 7.09,
+          "firstGroupReactionSeconds": 4.53,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "25c1b83f-b611-41ec-9fdf-021c4e3ebad9",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Oh....? Que ousada hein?",
+              "englishText": "",
+              "startAt": 7.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:33:28.100Z"
+            },
+            {
+              "id": "ec69b135-9d0e-4d79-b2e9-a19b90d29110",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Perdoe-me sua alteza... por favor considere que isso sou eu no futuro, ainda nao falei essas bobagens.... ",
+              "englishText": "",
+              "startAt": 7.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:33:54.861Z"
+            },
+            {
+              "id": "b8b95994-919e-44ff-841e-b09e488d2799",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Você se agarra bastante a essa explicação. Nao se preocupe... eu gosto do jeito que fala. ",
+              "englishText": "",
+              "startAt": 7.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:34:18.070Z"
+            },
+            {
+              "id": "420bfef9-99ae-4c7b-b053-e90460a33f11",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao consigo entender esse bastardo, uma hora ele quer me matar e outra flerta comigo? Esse jogo maldito tem que terminar logo....",
+              "englishText": "",
+              "startAt": 7.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:34:46.047Z"
+            },
+            {
+              "id": "34b60196-8d1b-448e-8f5c-32f44c7aceec",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao gosto disso, por que esse bastardo insiste em ficar atazanando minha irma? Isso é irritante.",
+              "englishText": "",
+              "startAt": 7.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:35:10.280Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:35:10.280Z",
+          "video": {
+            "name": "201.mp4",
+            "storedPath": "base-de-dados/videos/81.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugte9m8-81",
+            "contentType": "video/mp4",
+            "size": 3935733,
+            "durationSeconds": 21.672993,
+            "additionalAiContext": "no final do hate it aparece a fyn + um homem juntos,. e o resto do video é só cena dos dois.",
+            "libraryVideoId": "video-mugte9m8-81",
+            "contentHash": "c86840de881180ed2813fdfe98892892067a6570dcbf7e29ebb31568434a27af",
+            "updatedAt": "2026-09-25T12:59:03.975Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "2a733262-ba93-49ca-9b9f-7984a58053cf",
+          "title": "Vídeo 07",
+          "description": "video começa só com fundo preto e o audio + texto na tela cantando \"Say my name like a scripture\nKeep my heart beating like a drum\nLegendary lovers\nWe could be legendary (la-la-la-la-la)\nLegendary lovers\nWe should be legendary (la-la-la-la-la)\" ",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 21.38,
+          "firstGroupReactionSeconds": 9.36,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 15.69,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "8bd2da07-9d11-40e7-babd-bfa86353232e",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "speech",
+              "emotion": "",
+              "text": "Principe herdeiro, receio que nao possa permitir tal uniao! Minha Penelope ainda nem completou 18 anos.",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:35:47.570Z"
+            },
+            {
+              "id": "e580ea49-fb25-44ee-b605-1f8e2f7297d5",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso mesmo duque, fala pra ele! Me ajuda a me livrar desse lunatico",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:36:06.595Z"
+            },
+            {
+              "id": "b297b3b9-2e1b-4f78-a42d-8a705240e854",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Nao é um problema duque, pelo video parecemos bastante apaixonados. Nao vai querer destruir esse relacionamento antes mesmo de começar nao é sogro?",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:36:36.556Z"
+            },
+            {
+              "id": "dd7e4080-11b1-40b6-9801-0f9ac19a1ae2",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que diabos tem nesse principe maluco? Nao há relacionamente nenhum entre ele e Penelope!",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:36:59.277Z"
+            },
+            {
+              "id": "a1e51ac7-621c-4864-950a-cc2158dd69c9",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Alguém precisa bater na cabeça desse principe idiota para faze-lo acordar de suas ilusoes, Penelope nao é para o bico dele!",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:37:22.800Z"
+            },
+            {
+              "id": "d80421de-a8b0-48d0-a3d5-a1780eb1d4bd",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "speech",
+              "emotion": "",
+              "text": "Principe herdeiro, peço que nao me chame assim pois voce nao tem nenhum relacionamento com minha filha!",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:37:55.361Z"
+            },
+            {
+              "id": "588ab4f7-ee69-4b70-9260-d00127e58124",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ainda.",
+              "englishText": "",
+              "startAt": 21.38,
+              "createdAt": "2026-09-26T06:37:58.639Z",
+              "updatedAt": "2026-09-26T06:38:04.758Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:38:04.758Z",
+          "video": {
+            "name": "182.mp4",
+            "storedPath": "base-de-dados/videos/70.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugrsfja-70",
+            "contentType": "video/mp4",
+            "size": 2725191,
+            "durationSeconds": 23.666667,
+            "additionalAiContext": "o primeira reação é quando para de só mostrar os textos e mostra a fyn e o par romantico após o primeiro legendary lovers. o segundo tempo de reação só marca ali sei la uma outra reação em grupo",
+            "libraryVideoId": "video-mugrsfja-70",
+            "contentHash": "1f9ede1cfeb113d5a7a06a4793c417267287da9c6300429fe9b940082b000767",
+            "updatedAt": "2026-09-25T12:59:03.977Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "75261e59-fed2-46b0-9b4d-a0289495b976",
+          "title": "Vídeo 08",
+          "description": "musica do segundo 0 ao 6\"Take some of this, it'll calm you down (yeah, yeah, yeah)\nYou might as well just come around\nJust come around\" ai até o 9 só repete o come arround.",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 9,
+          "firstGroupReactionSeconds": 6.5,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "7b695b4a-600a-4093-bf48-7ee76329f90b",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Que olhar hein? Os olhos dela sao bem prufundos e cheios de raiva... gosto disso",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:38:40.085Z"
+            },
+            {
+              "id": "c22e7244-b46a-4c51-b663-d95f36861cf8",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Agora voltamos a somente mostrar a mim? Mesmo que eu saiba que o corpo de Penelope seja otimo de se ver.... nao sei se é o melhor momento para admira-la. Quero saber qual a relaçao entre mim e esse principe maluco no futuro... quero saber exatamente o que nao fazer.",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:39:39.396Z"
+            },
+            {
+              "id": "4371c25e-068d-4cb3-95b9-083bd4914c70",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Eu gosto de ve-la assim princesa, nessa tela magica. Parece que consigo observar o mais profundo do seu ser.",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:40:04.309Z"
+            },
+            {
+              "id": "39ac9af3-0567-4f77-b591-3cba611038ca",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Receio que isso seja só imaginaçao vossa alteza, sao somente imagens que mostram somente minha aparencia. Nao há nada de profundo nisso",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:40:24.950Z"
+            },
+            {
+              "id": "bcff78f8-a5a2-4178-bdba-b549595562a7",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "isso ai. Pelo visto voce nao é somente uma tola quanto eu achava huh? Colocou ele no lugar.",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:42:06.098Z"
+            },
+            {
+              "id": "57fba2e4-3b64-4192-8cd6-22fe168f6b58",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "feliz",
+              "text": "Que mulher cruel....",
+              "englishText": "",
+              "startAt": 9,
+              "createdAt": "2026-09-26T06:42:08.349Z",
+              "updatedAt": "2026-09-26T06:42:18.099Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:42:18.099Z",
+          "video": {
+            "name": "180.mp4",
+            "storedPath": "base-de-dados/videos/68.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugrii1r-68",
+            "contentType": "video/mp4",
+            "size": 934919,
+            "durationSeconds": 10.2,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugrii1r-68",
+            "contentHash": "6a02f1b7b8362546943c6406fb2c554e583cbc08864159fac05004b9b031c087",
+            "updatedAt": "2026-09-25T12:59:03.979Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 1,
+            "inputTokens": 1028,
+            "outputTokens": 114,
+            "totalTokens": 1142,
+            "lastAt": "2026-09-26T06:41:19.388Z",
+            "lastOperation": "roteiros.translate",
+            "lastModel": "gpt-5.6-luna"
+          }
+        },
+        {
+          "id": "7b385ae2-c86f-4a39-b6e3-c8d3f4377bf1",
+          "title": "Vídeo 09",
+          "description": "o video é uma sequencia de cenas e fyn com um par romantico, numa vibe assim sei la de mostra ela aqui, dps mostra ele escrevendo algo, dps ela matando um moonstro, mas tudo em fotos, enfim, pode fazer algo simples.\"Maybe it's in the gutter\nWhere I left my lover\nWhat an expensive fate\nMy V is for Vendetta\nThought that I'd feel better\nBut now I got a bellyache\"",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 20.41,
+          "firstGroupReactionSeconds": 6.34,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 12.86,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "0c809b93-f8e1-4453-b5c1-1442a56dc88b",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "speech",
+              "emotion": "",
+              "text": "Seja lá o que existe entre vocês no futuro, não parece particularmente estável.",
+              "englishText": "",
+              "startAt": 20.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:42:40.964Z"
+            },
+            {
+              "id": "df78304f-0ce7-4262-b242-6c1e54c7f5f1",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Eu diria que sao palavras fortes... esse video só mostrou uma musica deprimente e imagens sem sentido. Muito cedo para voce dizer isso cunhado",
+              "englishText": "",
+              "startAt": 20.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:43:10.805Z"
+            },
+            {
+              "id": "4ceebbd4-ccf4-49ed-a55e-f2a3017955ff",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao sou seu cunhado porra!",
+              "englishText": "",
+              "startAt": 20.41,
+              "createdAt": "2026-09-26T06:43:15.026Z",
+              "updatedAt": "2026-09-26T06:43:23.278Z"
+            },
+            {
+              "id": "6dafd9d5-5d1e-4827-972f-9e5c0bbdaded",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso nao ajuda em nada, quando vao começar a colocar videos que mostram o rumo do meu futuro? ",
+              "englishText": "",
+              "startAt": 20.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:44:19.080Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:44:26.119Z",
+          "video": {
+            "name": "183.mp4",
+            "storedPath": "base-de-dados/videos/71.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugs05ng-71",
+            "contentType": "video/mp4",
+            "size": 2818320,
+            "durationSeconds": 24.566667,
+            "additionalAiContext": "o primeiro tempo de reação botei em \"Maybe it's in the gutter\nWhere I left my lover\"  o segundo tempo botei no my v is for vendetta. e o fim de cena mostra os dois proximos assim de rosto numa vibe romantica, só foto. esse video parece mais algo do tipo ah sei la brigaram ai tem uma edit toda por tras e no fim se reconcilia é por ai. o fim da cena é após a ultima fala.",
+            "libraryVideoId": "video-mugs05ng-71",
+            "contentHash": "e02d64069337e292b48be072569a2f93749ae2224044056694ae130b60f26ebb",
+            "updatedAt": "2026-09-25T12:59:03.981Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 1,
+            "inputTokens": 5822,
+            "outputTokens": 155,
+            "totalTokens": 5977,
+            "lastAt": "2026-09-25T13:01:50.749Z",
+            "lastOperation": "roteiros.improve-sentence",
+            "lastModel": "gpt-5.6-luna"
+          }
+        },
+        {
+          "id": "ca0a1223-63ee-4eb9-b5bc-580063022f5b",
+          "title": "Vídeo 10",
+          "description": "video começa com a foto fyn com a musica \"how come we never dated\" ai a foto vai se expandindo e mostra um par romantico ou possivel sei la. isso termina em 4,91 ai corta para uma foto só dele com a musica \"but i still find myself thinking of you daily\" termina em 9,89, ai corta para uma cena da fyn segurando uma espada apontada para ele com a musica \"Why do you always leave me achin'\" termina em 13,91 ai corta para uma foto da fyn  com a musica \"When you were never mine for the takin'?\" ai termina em 19,04",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 19.44,
+          "firstGroupReactionSeconds": 0,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "bf2da7b7-a1e1-4e83-924a-ff2fd7405f68",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Então aparentemente pelas letras dessa musica penso em você mesmo quando não está comigo.",
+              "englishText": "",
+              "startAt": 19.44,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:44:56.105Z"
+            },
+            {
+              "id": "2a3aba2f-ff4a-41c8-a180-8ac8cef65fa6",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "É o que a musica sugere alteza, nao pode ser especificamente verdade.",
+              "englishText": "",
+              "startAt": 19.44,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:45:24.402Z"
+            },
+            {
+              "id": "6e366acc-73a1-409e-a82d-83034555aa25",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Voce tem um jeito de me deixar triste somente com palavras huh? Isso está começando a me irritar.",
+              "englishText": "",
+              "startAt": 19.44,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:45:59.168Z"
+            },
+            {
+              "id": "014ec04d-23a3-4367-9f68-d661ca00279d",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Seja qual for a natureza dessa relação, parece criar problemas para os dois.",
+              "englishText": "",
+              "startAt": 19.44,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:46:03.774Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:46:10.397Z",
+          "video": {
+            "name": "189.mp4",
+            "storedPath": "base-de-dados/videos/77.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugswmcf-77",
+            "contentType": "video/mp4",
+            "size": 2329985,
+            "durationSeconds": 19.435011,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugswmcf-77",
+            "contentHash": "c17ab51b4ab6d761697157cd44fa0ef70b781975bc513ff870ef16c539084753",
+            "updatedAt": "2026-09-25T12:59:03.984Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "be09fb78-3a1f-40e1-b162-0830f7ba4056",
+          "title": "Vídeo 11",
+          "description": "fyn criança e o pai monstro dela que a adotou. é tipo um goblin adulto. com a musica até o fim da cena \"Oh, don't you find it strange?\nOnly thing we share is one last name\nDid I beat you at your own game?\nTypical of me to put us all to shame\n\nWelcome to the family jewels\"",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 22.41,
+          "firstGroupReactionSeconds": 0,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "ef998f02-5a0d-4157-b510-09a5849d661a",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "speech",
+              "emotion": "",
+              "text": "Está nos mostrando agora... como ousam entrar na privacidade na nossa familia?",
+              "englishText": "",
+              "startAt": 22.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:47:00.026Z"
+            },
+            {
+              "id": "a9fda85c-bf81-4480-a898-972db895a726",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Como se dizer isso agora mudasse alguma coisa.",
+              "englishText": "",
+              "startAt": 22.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-25T12:59:03.940Z"
+            },
+            {
+              "id": "add2462a-b6c3-48e2-9aaa-d74496a10225",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ela realmente acha que só divide o nome conosco assim como essa musica inutil descreve?",
+              "englishText": "",
+              "startAt": 22.41,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:47:22.103Z"
+            },
+            {
+              "id": "40f3d955-101c-4bc5-b68c-a2e1d5b44c5c",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "thought",
+              "emotion": "",
+              "text": "Penelope.... nao gosto do tom desse video. ",
+              "englishText": "",
+              "startAt": 22.41,
+              "createdAt": "2026-09-26T06:47:27.323Z",
+              "updatedAt": "2026-09-26T06:47:38.320Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:47:38.320Z",
+          "video": {
+            "name": "185.mp4",
+            "storedPath": "base-de-dados/videos/73.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugsdvnr-73",
+            "contentType": "video/mp4",
+            "size": 3781939,
+            "durationSeconds": 23.38,
+            "additionalAiContext": "vou falando aqui oq acontece em cada cena e o tempo que termina cada fala, fyn criança e pai monstro no segunda 4,30 \"Only thing we share is one last name\" acaba 9,61 ao longo dessa frase mostra toda a familia diferente da fyn, é uma mistura de monstros, humanos, até elfo. corta para foto da familia toda dela e começa a frase  Did I beat you at your own game?\nTypical of me to put us all to shame que termina em 18,19,  e a ultima frase é Welcome to the family jewels\"aonde eu botei fim de cena",
+            "libraryVideoId": "video-mugsdvnr-73",
+            "contentHash": "5871632fbf386ebad4e99b4a35bc86c0a06d872b5a4a8465455c02458e93bbd9",
+            "updatedAt": "2026-09-25T12:59:03.986Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "b80e2eb4-2908-4236-b337-e43a51c787d1",
+          "title": "Vídeo 12",
+          "description": "\"come home and shout at me\"  termina em 2,53 \"come home and fight with me\" termina em 4,06, \"common and break my heart if you must\" 6,77 \"just come home\"  em 8,04",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 8.04,
+          "firstGroupReactionSeconds": 0,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "90276f17-937c-48f2-b652-9f462bf2d02c",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Então aparentemente chego ao ponto de implorar por voce... que inesperado huh....",
+              "englishText": "",
+              "startAt": 8.04,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:48:08.489Z"
+            },
+            {
+              "id": "8fc7e53e-0bbf-4ed6-a11f-72b1e98c0506",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso é inacreditavel... ele é a rota menos segura de todas, mas pelos videos... ele nao parece tao ruim",
+              "englishText": "",
+              "startAt": 8.04,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:48:32.938Z"
+            },
+            {
+              "id": "38b2fc43-cbc7-439b-a33a-44e69703ce58",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Que diabos acontece entre nós? Para me deixar louco dessa forma por ela?",
+              "englishText": "",
+              "startAt": 8.04,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:48:45.723Z"
+            },
+            {
+              "id": "37f4696f-3e12-4b40-91c6-d5d4f1bc5668",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso está me irritando... o que ela pode ter visto nesse... principe maluco? nao gosto disso....",
+              "englishText": "",
+              "startAt": 8.04,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:49:12.860Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:49:14.947Z",
+          "video": {
+            "name": "186.mp4",
+            "storedPath": "base-de-dados/videos/74.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugshrr2-74",
+            "contentType": "video/mp4",
+            "size": 4160227,
+            "durationSeconds": 31.089002,
+            "additionalAiContext": "todas essas frases é um homem masculino falando. marquei o tempo em que cada uma termina. e o fim de cena é a ultima  de just come home",
+            "libraryVideoId": "video-mugshrr2-74",
+            "contentHash": "42048e62a504ddfbda853a8a4abfe8107d60fd146f00c2e23f272193ad00fed3",
+            "updatedAt": "2026-09-25T12:59:03.988Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "15a31706-41f8-4d78-ace9-4087acf26796",
+          "title": "Vídeo 13",
+          "description": "video começa com uma musica e a foto da fyn \"When I'm out of breath, she's my vitals\" e ai continua 'When I need to rev, she's my ride or die'  depois 'When I'm out of faith, she's my idol' depois \"I just killed a man, she's my alibi\"",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 14.25,
+          "firstGroupReactionSeconds": 7.36,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 11.49,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "4def3700-ccc3-4bea-befd-044bb80b81ea",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Então aparentemente voce gosta de brincar com facas perto de mim huh?",
+              "englishText": "",
+              "startAt": 14.25,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:49:57.966Z"
+            },
+            {
+              "id": "dd8fc0d2-59d7-49f3-9045-e1b1d3861046",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "assustada",
+              "text": "Sinto muito vossa alteza... tenho certeza de que há um motivo para isso",
+              "englishText": "",
+              "startAt": 14.25,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:50:19.831Z"
+            },
+            {
+              "id": "30a390c7-cfff-48d7-9f39-87a12cd8d007",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Nao se assute querido, no video eu parecia estar gostando. Nao vou culpa-la por nada que voce ainda nao fez.",
+              "englishText": "",
+              "startAt": 14.25,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:50:45.112Z"
+            },
+            {
+              "id": "1ab8ef60-48b3-4f2d-990a-636670fb59c4",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "Assustado",
+              "text": "Ele está dizendo que assim que eu fizer algo do tipo ele vai cortar minha cabeça?.... bastardo maluco!",
+              "englishText": "",
+              "startAt": 14.25,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:51:13.889Z"
+            },
+            {
+              "id": "f8b8b1b6-7f0c-4afb-97da-b16f59a9fad0",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ela é uma medrosa.... tem medo de mim. Mas surpreendentemente eu nao desgosto disso, as tentivas dela de burlar a minha mente me entretem o suficiente para eu nao a achar estupida.",
+              "englishText": "",
+              "startAt": 14.25,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:52:59.982Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:52:59.982Z",
+          "video": {
+            "name": "179.mp4",
+            "storedPath": "base-de-dados/videos/67.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugrfth3-67",
+            "contentType": "video/mp4",
+            "size": 2993214,
+            "durationSeconds": 23.473923,
+            "additionalAiContext": "a segunda reação é depois da frase  When I'm out of faith, she's my idol e a primeira é depois de When I need to rev, she's my ride or die e o fim da cena é com a ultima fras, pode botar só a reação em grupo no scene end e esperar uns 2 segundo antes das fala",
+            "libraryVideoId": "video-mugrfth3-67",
+            "contentHash": "50bf7dc775d7061b1789fa2fdb23e4e0e4bcd762be4a7059e930456cc9e0ef47",
+            "updatedAt": "2026-09-25T12:59:03.990Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "802577a4-833a-4076-8500-9f0fb1ceb5f3",
+          "title": "Vídeo 14",
+          "description": "video mostra a fyn de longe meio obscura sei la e a musica diz \"okay\" termina em 2.80",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 5.16,
+          "firstGroupReactionSeconds": 2.8,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "6d222e30-6dbf-4292-88e0-cb6a2847b0d1",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Huh? Eu pareço fudidamente forte... o que aconteceu no futuro? Eu já tenho eckles para me defender caso eu precise... por que parece que eu virei meu proprio cavaleiro? ",
+              "englishText": "",
+              "startAt": 5.16,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:53:47.079Z"
+            },
+            {
+              "id": "fe14acc3-b676-490b-8ce2-3ced64b23ff1",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "speech",
+              "emotion": "",
+              "text": "Oe, o que deu em voce no futuro? Voce parece uma maluca andando com uma espada...",
+              "englishText": "",
+              "startAt": 5.16,
+              "createdAt": "2026-09-26T06:53:50.649Z",
+              "updatedAt": "2026-09-26T06:54:08.982Z"
+            },
+            {
+              "id": "772ca040-d2af-4d93-9570-b77b5ae9c655",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Quando eu encontrar a minha eu do futuro vou perguntar a ela no futuro e depois te falo. ",
+              "englishText": "",
+              "startAt": 5.16,
+              "createdAt": "2026-09-26T06:54:17.022Z",
+              "updatedAt": "2026-09-26T06:54:33.817Z"
+            },
+            {
+              "id": "40765eaa-e12a-44d9-902a-14224ca67ed4",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "thought",
+              "emotion": "",
+              "text": "Lamentavel, esses dois nao param de brigar nem por um segundo. Dois idiotas.",
+              "englishText": "",
+              "startAt": 5.16,
+              "createdAt": "2026-09-26T06:54:35.375Z",
+              "updatedAt": "2026-09-26T06:55:06.243Z"
+            },
+            {
+              "id": "22afe883-08e4-4b32-9100-e2b480ccd93b",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao gosto disso.... pensei que Penelope estava amadurecendo, mas com essa atençao do principe herdeiro nela... nao acho que faria nenhum bem a ela. ",
+              "englishText": "",
+              "startAt": 5.16,
+              "createdAt": "2026-09-26T06:55:18.464Z",
+              "updatedAt": "2026-09-26T06:56:39.599Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:56:39.599Z",
+          "video": {
+            "name": "196.mp4",
+            "storedPath": "base-de-dados/videos/80.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugt9e3x-80",
+            "contentType": "video/mp4",
+            "size": 2375400,
+            "durationSeconds": 18.466667,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugt9e3x-80",
+            "contentHash": "189e6463b9c258a142ca9525321117707db1b2ed47ce9efb7fe4c6903825d292",
+            "updatedAt": "2026-09-25T12:59:03.993Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "d1dc1ced-5949-4627-95a7-81f8a4c89e1f",
+          "title": "Vídeo 15",
+          "description": "o video começa com fyn numa pose indecente mostrando toda a perna assim lateralmente. segurando uma espada. e olhando confiante. . com uma narração dela mesma dizendo \"because i am the queen of elfhame\" \"the true queen\"  \"choose by the king and the land\" \"and you are nothing, but a traitor\"",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 14.52,
+          "firstGroupReactionSeconds": 3.14,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 10.38,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "56d84dda-322c-4296-883f-37758e253a4a",
+              "characterId": "cf1da73a-eb18-4151-9d7a-d234461e4955",
+              "type": "speech",
+              "emotion": "",
+              "text": "Rainha?",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-25T12:59:03.940Z"
+            },
+            {
+              "id": "f6aa4652-e85f-4918-9b37-637c64b686c2",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "speech",
+              "emotion": "",
+              "text": "Isso é inacreditavel! voce realmente se casou com esse principe louco?",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:57:10.184Z"
+            },
+            {
+              "id": "1d4c84b5-c2c4-455f-8460-d0a341d02a8b",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "speech",
+              "emotion": "",
+              "text": "Reynald! feche essa boca!",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:57:21.530Z"
+            },
+            {
+              "id": "d1fc9e8f-5739-4e50-8163-63d3966ec05c",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Ah... vou ignorar o insulto pois estou muito feliz com o video. Parece que voce subiu o status princesa, ou devo chama-la de rainha?",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T06:57:49.355Z"
+            },
+            {
+              "id": "a53bcc40-c700-4227-99ca-ac9602a81bc4",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "speech",
+              "emotion": "",
+              "text": "O quê?",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-25T12:59:03.940Z"
+            },
+            {
+              "id": "41f01fec-83f1-49eb-953f-0ed0d2cbc487",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "Envergonhada",
+              "text": "O que diabos é isso?... eu me casei com ele no futuro? isso é loucura... eu tenho um plano, um plano de voltar pra casa! Nao posso ficar aqui e me casar com... esse louco charmoso e irritante!",
+              "englishText": "",
+              "startAt": 14.52,
+              "createdAt": "2026-09-26T06:57:56.032Z",
+              "updatedAt": "2026-09-26T06:58:48.173Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-09-26T06:58:48.173Z",
+          "video": {
+            "name": "184.mp4",
+            "storedPath": "base-de-dados/videos/72.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugs5thw-72",
+            "contentType": "video/mp4",
+            "size": 3897561,
+            "durationSeconds": 30.033333,
+            "additionalAiContext": "a primeira reação é no because i am the queen of elfhame e a segunda é no  and you are nothing, but a traitor, ",
+            "libraryVideoId": "video-mugs5thw-72",
+            "contentHash": "b7ca107043a32ac18dd3a3b5f0b59be2b04ce1649f3a9c609fc3e11dac833c5c",
+            "updatedAt": "2026-09-25T12:59:03.995Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "73653dca-9bbf-434b-a7f6-5dda433a5938",
+          "title": "Vídeo 16",
+          "description": "o video começa só com a musica e um fundo preto \"Pick your poison, tell me what you doin'\" termina em 3,62 ai corta para uma cena da fyn e um par romantico uma foto. com eles pertos um do outro clima romantico e a musica \"Everybody gon' respect the king\" termina em 6,17, continua a mesma foto e continua\"But the one in front of the gun lives forever\" TERMINA EM 9,72",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 11.09,
+          "firstGroupReactionSeconds": 9.72,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "0cc3ee74-3bc8-475b-896e-0d04ff644df1",
+              "characterId": "81f8b804-2634-4a2d-ad38-bab3c7259919",
+              "type": "speech",
+              "emotion": "",
+              "text": "Isso é maluquice! Nao permito! nao vou permitir que minha irma se case com esse bastardo! ",
+              "englishText": "",
+              "startAt": 11.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-10-05T17:01:35.590Z"
+            },
+            {
+              "id": "e81c0d6e-f120-4f48-af83-36f58ad00f6b",
+              "characterId": "8cb1b54e-55ab-4b7f-8937-7ab1d30e662e",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nao abençoo esse casamento, vao ter que passar pela casa Eckhart inteira antes que levem minha menina!",
+              "englishText": "",
+              "startAt": 11.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T07:04:01.059Z"
+            },
+            {
+              "id": "9c56f55f-ad5d-4716-9dae-79a96bf6a220",
+              "characterId": "0f839bc3-3b9f-457f-a262-0b32d4e29ed6",
+              "type": "speech",
+              "emotion": "",
+              "text": "Parecemos tão lindos juntos não é princesa?",
+              "englishText": "",
+              "startAt": 11.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T07:03:39.321Z"
+            },
+            {
+              "id": "19ce4153-abed-4da3-a9ad-f51b300369ff",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Nem sei o que dizer... esse homem está me deixando confusa!",
+              "englishText": "",
+              "startAt": 11.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T07:00:13.026Z"
+            },
+            {
+              "id": "eb81f11f-0694-4bc4-bf5b-8e2ae3c9118d",
+              "characterId": "33e6c4b4-aec0-47ee-b8b1-5169a2b45da6",
+              "type": "thought",
+              "emotion": "",
+              "text": "Esse futuro com nós dois é impossivel. Nao posso esquecer de onde eu vim!",
+              "englishText": "",
+              "startAt": 11.09,
+              "createdAt": "2026-09-25T12:59:03.940Z",
+              "updatedAt": "2026-09-26T07:03:21.664Z"
+            }
+          ],
+          "createdAt": "2026-09-25T12:59:03.940Z",
+          "updatedAt": "2026-10-05T17:01:35.590Z",
+          "video": {
+            "name": "192.mp4",
+            "storedPath": "base-de-dados/videos/79.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-mugt6fnw-79",
+            "contentType": "video/mp4",
+            "size": 1043264,
+            "durationSeconds": 18.1,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-mugt6fnw-79",
+            "contentHash": "0d1834b2482c5ec94285f47b861a582c2b0021caaee127e9c716ac165d37b9d9",
+            "updatedAt": "2026-09-25T12:59:03.997Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        }
+      ],
+      "createdAt": "2026-09-25T12:59:03.940Z",
+      "updatedAt": "2026-10-05T17:01:35.590Z",
+      "importOrigin": {
+        "kind": "ai-json",
+        "importId": "33281873-b84e-4de1-b471-5afd080a51ba",
+        "importedAt": "2026-09-25T12:59:03.998Z",
+        "createdCharacterIds": [],
+        "sourceTitle": "Penelope × Callisto — Reação 2"
+      },
+      "aiUsage": {
+        "calls": 2,
+        "inputTokens": 6850,
+        "outputTokens": 269,
+        "totalTokens": 7119,
+        "lastAt": "2026-09-26T06:41:19.388Z",
+        "lastOperation": "roteiros.translate",
+        "lastModel": "gpt-5.6-luna"
+      },
+      "background": {
+        "name": "01.png",
+        "storedPath": "roteiros/backgrounds/f59820ff-0c7f-457f-b3ad-51db8eedbf2b/background.png",
+        "url": "http://127.0.0.1:6800/roteiros/backgrounds/f59820ff-0c7f-457f-b3ad-51db8eedbf2b",
+        "contentType": "image/png",
+        "size": 1624208,
+        "updatedAt": "2026-09-25T13:37:12.892Z",
+        "exportedPath": "assets/backgrounds/01.png"
+      }
+    },
+    {
+      "id": "38c27101-efb3-4cd8-bc8f-d76c21209ef1",
+      "title": "The forgotten field v2",
+      "generalContext": "",
+      "participants": [
+        {
+          "characterId": "16721faa-4efc-4cb9-96bd-17b4585e2a3b",
+          "active": true
+        },
+        {
+          "characterId": "48be18cf-329d-46ea-9ec0-32fc5e15f223",
+          "active": true
+        },
+        {
+          "characterId": "bd4806fb-d8d5-4917-b922-bb4b267c17eb",
+          "active": true
+        },
+        {
+          "characterId": "79901f82-8d89-4c6b-9c99-521fc7f3c7ce",
+          "active": true
+        },
+        {
+          "characterId": "5eb61a94-9b40-4f2e-9f8d-3743fc2bf783",
+          "active": true
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "tiktoks": [],
+      "createdAt": "2026-10-02T11:28:40.825Z",
+      "updatedAt": "2026-10-02T11:28:44.780Z",
+      "aiContext": {
+        "profiles": [
+          {
+            "characterId": "16721faa-4efc-4cb9-96bd-17b4585e2a3b",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T11:28:40.825Z"
+          },
+          {
+            "characterId": "48be18cf-329d-46ea-9ec0-32fc5e15f223",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T11:28:40.825Z"
+          },
+          {
+            "characterId": "bd4806fb-d8d5-4917-b922-bb4b267c17eb",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T11:28:40.825Z"
+          },
+          {
+            "characterId": "79901f82-8d89-4c6b-9c99-521fc7f3c7ce",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T11:28:40.825Z"
+          },
+          {
+            "characterId": "5eb61a94-9b40-4f2e-9f8d-3743fc2bf783",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T11:28:40.826Z"
+          }
+        ],
+        "rules": [
+          {
+            "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
+            "title": "Nova regra",
+            "description": "Fyn é mulher",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-05T03:01:57.042Z",
+            "updatedAt": "2026-08-05T03:02:03.088Z"
+          },
+          {
+            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+            "title": "Nova regra",
+            "description": "Linguagem entendivel e natural.",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-12T21:59:53.949Z",
+            "updatedAt": "2026-08-12T22:00:13.817Z"
+          }
+        ]
+      },
+      "opening": {
+        "id": "3de30d57-027b-4824-a812-6f4886d2c8d4",
+        "title": "",
+        "description": "",
+        "timeline": "unspecified",
+        "sceneGoal": "",
+        "userInstruction": "",
+        "aiDirectives": [],
+        "specificRules": "",
+        "shortLines": false,
+        "aiUsage": {
+          "calls": 0,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "totalTokens": 0,
+          "lastAt": null,
+          "lastOperation": null,
+          "lastModel": null
+        },
+        "reactionBlocks": [
+          {
+            "id": "c2b5ed3b-0cfb-459a-89dd-43b54dbaea80",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.779Z",
+            "updatedAt": "2026-10-02T11:28:44.779Z"
+          },
+          {
+            "id": "7af6b2bb-33ab-4529-9729-220e41c2e81c",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.780Z",
+            "updatedAt": "2026-10-02T11:28:44.780Z"
+          },
+          {
+            "id": "d2d72597-0f85-4352-b2ac-dbc17d3e863b",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.780Z",
+            "updatedAt": "2026-10-02T11:28:44.780Z"
+          },
+          {
+            "id": "c043a378-15c8-41c8-8325-c09be3120d8a",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.780Z",
+            "updatedAt": "2026-10-02T11:28:44.780Z"
+          },
+          {
+            "id": "0d3dbb81-d185-4a89-b98c-8b8624b05009",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.780Z",
+            "updatedAt": "2026-10-02T11:28:44.780Z"
+          },
+          {
+            "id": "cdd18f5c-f349-4023-a4cb-913d836043e9",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-02T11:28:44.780Z",
+            "updatedAt": "2026-10-02T11:28:44.780Z"
+          }
+        ],
+        "createdAt": "2026-10-02T11:28:44.779Z",
+        "updatedAt": "2026-10-02T11:28:44.779Z"
+      }
+    },
+    {
+      "id": "1a8f532d-c9dd-421e-9558-8d7e78452cac",
+      "title": "TESTE PENELOPE",
+      "generalContext": "Fyn sempre sera a Penelope e sera a reagida nesse roteiro mas ela tambem esta no elenco reagindo a si mesma junto com os outros",
+      "participants": [
+        {
+          "characterId": "7f956ca8-2f40-421a-8155-6fa9575ce085",
+          "active": true
+        },
+        {
+          "characterId": "98c40357-34aa-4ec8-8da6-0315f93f2b37",
+          "active": true
+        },
+        {
+          "characterId": "b3ee9e5f-fc9f-4895-81a3-09c4872c66bd",
+          "active": true
+        },
+        {
+          "characterId": "0bc975a1-ab7a-4509-b55e-8e42ddfcc109",
+          "active": true
+        },
+        {
+          "characterId": "9b39bbb1-84d4-4d6f-9b8a-6d4a1339dd56",
+          "active": true
+        }
+      ],
+      "aiUsage": {
+        "calls": 8,
+        "inputTokens": 24812,
+        "outputTokens": 6623,
+        "totalTokens": 31435,
+        "lastAt": "2026-10-02T13:04:05.923Z",
+        "lastOperation": "fill-empty",
+        "lastModel": "gpt-5.6-luna"
+      },
+      "tiktoks": [
+        {
+          "id": "ecc6b71d-e706-4f5b-bc82-f405f9ae10e2",
+          "title": "",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "userInstruction": "",
+          "aiDirectives": [],
+          "specificRules": "",
+          "shortLines": true,
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          },
+          "reactionBlocks": [
+            {
+              "id": "b03866ac-d09f-4c61-9452-aa32ccf7b889",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            },
+            {
+              "id": "6154aee3-00c7-4221-9685-59293ff2bbc9",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            },
+            {
+              "id": "93173703-56bd-4798-a880-20f3ce0ca02a",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            },
+            {
+              "id": "f2a084c3-dbb0-4c40-95a0-173f1d66af24",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            },
+            {
+              "id": "8767d6d3-a2a5-4e6b-8e3b-ea80a6844954",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            },
+            {
+              "id": "ddaed624-b7a4-41b1-88b4-d20c4ee1cd8f",
+              "characterId": "",
+              "type": "auto",
+              "emotion": "",
+              "text": "",
+              "englishText": "",
+              "createdAt": "2026-10-02T13:29:32.268Z",
+              "updatedAt": "2026-10-02T13:29:32.268Z"
+            }
+          ],
+          "createdAt": "2026-10-02T13:29:32.268Z",
+          "updatedAt": "2026-10-02T13:29:32.268Z"
+        }
+      ],
+      "createdAt": "2026-10-02T12:36:47.184Z",
+      "updatedAt": "2026-10-02T13:29:40.343Z",
+      "aiContext": {
+        "profiles": [
+          {
+            "characterId": "5eb61a94-9b40-4f2e-9f8d-3743fc2bf783",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:36:51.913Z"
+          },
+          {
+            "characterId": "7f956ca8-2f40-421a-8155-6fa9575ce085",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:36:57.627Z"
+          },
+          {
+            "characterId": "98c40357-34aa-4ec8-8da6-0315f93f2b37",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:36:58.269Z"
+          },
+          {
+            "characterId": "b3ee9e5f-fc9f-4895-81a3-09c4872c66bd",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:36:58.581Z"
+          },
+          {
+            "characterId": "0bc975a1-ab7a-4509-b55e-8e42ddfcc109",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:36:59.393Z"
+          },
+          {
+            "characterId": "9b39bbb1-84d4-4d6f-9b8a-6d4a1339dd56",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-02T12:37:00.045Z"
+          }
+        ],
+        "rules": [
+          {
+            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+            "title": "Nova regra",
+            "description": "Linguagem entendivel e natural.",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-12T21:59:53.949Z",
+            "updatedAt": "2026-08-12T22:00:13.817Z"
+          }
+        ]
+      },
+      "opening": {
+        "id": "a558dead-406d-4169-a2fa-fcd8c81fd6c9",
+        "title": "",
+        "description": "Vão reagir a penelope",
+        "timeline": "unspecified",
+        "sceneGoal": "",
+        "userInstruction": "",
+        "aiDirectives": [
+          "mockery"
+        ],
+        "specificRules": "",
+        "shortLines": false,
+        "aiUsage": {
+          "calls": 4,
+          "inputTokens": 11946,
+          "outputTokens": 3317,
+          "totalTokens": 15263,
+          "lastAt": "2026-10-02T12:52:05.528Z",
+          "lastOperation": "opening",
+          "lastModel": "gpt-5.6-luna"
+        },
+        "reactionBlocks": [
+          {
+            "id": "90df4738-0b18-4c67-8c32-d221635ddebb",
+            "characterId": "0bc975a1-ab7a-4509-b55e-8e42ddfcc109",
+            "type": "speech",
+            "emotion": "curioso",
+            "text": "Então a Penelope vai ser o assunto.",
+            "englishText": "",
+            "createdAt": "2026-10-02T12:51:50.305Z",
+            "updatedAt": "2026-10-02T12:52:05.544Z"
+          },
+          {
+            "id": "055e7e76-360e-4008-9396-74530775bab8",
+            "characterId": "7f956ca8-2f40-421a-8155-6fa9575ce085",
+            "type": "thought",
+            "emotion": "irônica",
+            "text": "E eu vou estar aqui para reagir a mim mesma. Que experiência assustadora",
+            "englishText": "",
+            "createdAt": "2026-10-02T12:51:50.596Z",
+            "updatedAt": "2026-10-02T12:52:58.583Z"
+          },
+          {
+            "id": "03d7469a-0b57-4ad3-b8f6-8d3295e4e855",
+            "characterId": "98c40357-34aa-4ec8-8da6-0315f93f2b37",
+            "type": "speech",
+            "emotion": "cético",
+            "text": "A regra está clara. O sentido dela, nem tanto.",
+            "englishText": "",
+            "createdAt": "2026-10-02T12:51:50.969Z",
+            "updatedAt": "2026-10-02T12:52:05.544Z"
+          },
+          {
+            "id": "bf45aede-621f-4f4b-838e-fff3424dec6d",
+            "characterId": "b3ee9e5f-fc9f-4895-81a3-09c4872c66bd",
+            "type": "speech",
+            "emotion": "debochado",
+            "text": "Talvez seja a única forma de garantir que Penelope não escape da própria insignificância. ",
+            "englishText": "",
+            "createdAt": "2026-10-02T12:51:51.381Z",
+            "updatedAt": "2026-10-02T12:53:32.745Z"
+          },
+          {
+            "id": "ddfb7ceb-3fe9-4ed8-98f7-684d65af7943",
+            "characterId": "7f956ca8-2f40-421a-8155-6fa9575ce085",
+            "type": "thought",
+            "emotion": "seca",
+            "text": "Que homem irritante e sem noção.",
+            "englishText": "",
+            "createdAt": "2026-10-02T12:51:51.673Z",
+            "updatedAt": "2026-10-02T12:54:02.522Z"
+          }
+        ],
+        "createdAt": "2026-10-02T12:37:06.977Z",
+        "updatedAt": "2026-10-02T12:54:02.522Z"
+      }
+    },
+    {
+      "id": "a74b8e4d-f2cb-47d8-af90-4b49047423ea",
+      "title": "Mafia c.ai",
+      "generalContext": "",
+      "participants": [
+        {
+          "characterId": "1ac0afb5-e5fb-47e3-b054-eedd1dd2a4a8",
+          "active": true
+        },
+        {
+          "characterId": "570011cd-785a-408b-acd6-c2a40ff60960",
+          "active": true
+        },
+        {
+          "characterId": "d7363615-4b30-4960-ba96-94518ab6e605",
+          "active": true
+        },
+        {
+          "characterId": "d2f56d92-71cb-4925-a3b3-ced457ab4c97",
+          "active": true
+        },
+        {
+          "characterId": "9f088cac-fdba-40b1-a6cf-55e1f1f382ac",
+          "active": true
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "tiktoks": [],
+      "createdAt": "2026-10-05T16:24:37.488Z",
+      "updatedAt": "2026-10-05T16:24:39.760Z",
+      "aiContext": {
+        "profiles": [
+          {
+            "characterId": "1ac0afb5-e5fb-47e3-b054-eedd1dd2a4a8",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-05T16:24:37.488Z"
+          },
+          {
+            "characterId": "570011cd-785a-408b-acd6-c2a40ff60960",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-05T16:24:37.488Z"
+          },
+          {
+            "characterId": "d7363615-4b30-4960-ba96-94518ab6e605",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-05T16:24:37.488Z"
+          },
+          {
+            "characterId": "d2f56d92-71cb-4925-a3b3-ced457ab4c97",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-05T16:24:37.488Z"
+          },
+          {
+            "characterId": "9f088cac-fdba-40b1-a6cf-55e1f1f382ac",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-05T16:24:37.488Z"
+          }
+        ],
+        "rules": [
+          {
+            "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
+            "title": "Nova regra",
+            "description": "Fyn é mulher",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-05T03:01:57.042Z",
+            "updatedAt": "2026-08-05T03:02:03.088Z"
+          },
+          {
+            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+            "title": "Nova regra",
+            "description": "Linguagem entendivel e natural.",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-12T21:59:53.949Z",
+            "updatedAt": "2026-08-12T22:00:13.817Z"
+          }
+        ]
+      },
+      "opening": {
+        "id": "250288b5-e7b6-48fe-b5d6-44076fd335fc",
+        "title": "",
+        "description": "",
+        "timeline": "unspecified",
+        "sceneGoal": "",
+        "userInstruction": "",
+        "aiDirectives": [],
+        "specificRules": "",
+        "shortLines": true,
+        "aiUsage": {
+          "calls": 0,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "totalTokens": 0,
+          "lastAt": null,
+          "lastOperation": null,
+          "lastModel": null
+        },
+        "reactionBlocks": [
+          {
+            "id": "116a9a77-1f3b-41e5-a70e-753f474fddbf",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          },
+          {
+            "id": "03456305-5b19-475c-a1f8-927aff8503f1",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          },
+          {
+            "id": "0136af38-1a69-4ba0-bee4-65199826fdff",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          },
+          {
+            "id": "4c453a1d-6699-484e-95fc-4b1638b16c10",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          },
+          {
+            "id": "b38e5d46-d517-41ca-a600-4b0a9361639d",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          },
+          {
+            "id": "8158d16f-b00c-4a8a-b98f-d93150e0eaf1",
+            "characterId": "",
+            "type": "auto",
+            "emotion": "",
+            "text": "",
+            "englishText": "",
+            "createdAt": "2026-10-05T16:24:39.760Z",
+            "updatedAt": "2026-10-05T16:24:39.760Z"
+          }
+        ],
+        "createdAt": "2026-10-05T16:24:39.760Z",
+        "updatedAt": "2026-10-05T16:24:39.760Z"
+      }
+    },
+    {
+      "id": "4352a530-084a-4781-a80a-de9c87b8423f",
+      "title": "Chloe × Luka — Futuro",
+      "generalContext": "Chloe, Marinete, Luka, Adrian e Alya foram reunidos para assistir a visões do futuro de Chloe. Ao longo dos vídeos, o grupo percebe que Luka também aparece e que os dois parecem desenvolver uma relação no futuro.",
+      "participants": [
+        {
+          "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+          "active": true
+        },
+        {
+          "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+          "active": true
+        },
+        {
+          "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+          "active": true
+        },
+        {
+          "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+          "active": true
+        },
+        {
+          "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+          "active": true
+        }
+      ],
+      "aiOrderingMode": "none",
+      "aiContext": {
+        "profiles": [
+          {
+            "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+            "personality": "",
+            "backstory": "",
+            "fynRelationship": "",
+            "speakingStyle": "",
+            "relationships": [],
+            "additionalRules": "",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          }
+        ],
+        "rules": [
+          {
+            "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
+            "title": "Nova regra",
+            "description": "Fyn é mulher",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-05T03:01:57.042Z",
+            "updatedAt": "2026-08-05T03:02:03.088Z"
+          },
+          {
+            "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+            "title": "Nova regra",
+            "description": "Linguagem entendivel e natural.",
+            "enabled": true,
+            "priority": "normal",
+            "createdAt": "2026-08-12T21:59:53.949Z",
+            "updatedAt": "2026-08-12T22:00:13.817Z"
+          }
+        ]
+      },
+      "opening": {
+        "id": "49ce2448-04c1-473f-9d14-1a71ab7fbd0b",
+        "title": "",
+        "description": "",
+        "timeline": "unspecified",
+        "sceneGoal": "",
+        "userInstruction": "",
+        "aiDirectives": [],
+        "specificRules": "",
+        "shortLines": false,
+        "aiUsage": {
+          "calls": 0,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "totalTokens": 0,
+          "lastAt": null,
+          "lastOperation": null,
+          "lastModel": null
+        },
+        "reactionBlocks": [
+          {
+            "id": "7ada26c2-b828-4141-a583-aa18ec82881a",
+            "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+            "type": "thought",
+            "emotion": "",
+            "text": "Vamos reagir a mim então? Que bom que a pessoa que nos sequestrou pelo menos tem bom gosto.",
+            "englishText": "",
+            "createdAt": "2026-10-06T14:52:13.187Z",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "id": "d3d39f6d-fa74-4f7c-a295-b94a3c738946",
+            "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+            "type": "thought",
+            "emotion": "",
+            "text": "Pelo menos não preciso me preocupar com minha identidade sendo descoberta... Mas reagir a Chloe? Isso é um dos piores castigos que poderia me acontecer.",
+            "englishText": "",
+            "createdAt": "2026-10-06T14:52:13.187Z",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          },
+          {
+            "id": "27771c11-a841-4790-ba17-df9d2fc24e79",
+            "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+            "type": "thought",
+            "emotion": "",
+            "text": "Me perguntou o por que estão nos dando a oportunidade de ver o futuro... A portadora do miraculous de viajar no tempo permitiu isso?",
+            "englishText": "",
+            "createdAt": "2026-10-06T14:52:13.187Z",
+            "updatedAt": "2026-10-06T14:52:13.187Z"
+          }
+        ],
+        "createdAt": "2026-10-06T14:52:13.187Z",
+        "updatedAt": "2026-10-06T14:52:13.187Z"
+      },
+      "tiktoks": [
+        {
+          "id": "5f0a7918-22d8-41d6-908d-7c04581ee018",
+          "title": "Vídeo 01",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 9,
+          "firstGroupReactionSeconds": 2.42,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 5.57,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "9aa5500b-e3db-4e6a-8c03-ffa349396106",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Huh? Egoísta? Quem diz isso é hipocrita. O que tem de errado em me importar só comigo mesma?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "5ee22e25-bd64-48b9-88cd-ac15e9b19e54",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "pensei que veríamos o futuro da Chloe... Isso só está mostrando ela de agora.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "da19e4fd-107d-4a68-aee5-29cc13067924",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "isso está ensinuando que a maioria das pessoas gostam da Chloe por ela ser bonita?... Bom, acho que é um dos fatores.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:17:04.887Z",
+          "video": {
+            "name": "82.mp4",
+            "storedPath": "base-de-dados/videos/82.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8tix-82",
+            "contentType": "video/mp4",
+            "size": 1153791,
+            "durationSeconds": 16.466667,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8tix-82",
+            "contentHash": "8c286bacb12ad30fa1b28767bf5f7f9eba68e2b5f7c1bbf36fd8f6a4ec0ab6af",
+            "updatedAt": "2026-10-06T14:52:13.210Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "4fa095f7-e359-4c81-a783-bb27c3eba3f6",
+          "title": "Vídeo 02",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 9,
+          "firstGroupReactionSeconds": 4.98,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "39567151-0dcc-4345-be47-725fe1b64ddf",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Essa garota já tem um ego enorme... Quem é louco de continuar a bajulando?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "75366af8-8d8b-43c2-83f8-11d4794bcbb2",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "Mesmo a chloe sendo do jeito que é... Ela não é má pessoa, espero que esses vídeos sobre ela no futuro provem que estou certo.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "3496a7a9-6daa-4833-a2ad-bdae8ea85ae6",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Por qual motivo estamos aqui? É uma perda de tempo....",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:16:37.225Z",
+          "video": {
+            "name": "83.mp4",
+            "storedPath": "base-de-dados/videos/83.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8tlk-83",
+            "contentType": "video/mp4",
+            "size": 1999295,
+            "durationSeconds": 18.181134,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8tlk-83",
+            "contentHash": "dded7f2bc04ecb961c2748f568e40fb9843b180fc341ff4bc41a0424a0b3f0f8",
+            "updatedAt": "2026-10-06T14:52:13.213Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "112bd630-e0db-428e-95b0-e36db8c0bfe3",
+          "title": "Vídeo 03",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 10,
+          "firstGroupReactionSeconds": 6.81,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "3992c9a9-5d52-45f0-89ed-c24106efbbeb",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Exato.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "3bab7c89-fc80-464a-a902-189e8508e199",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "A confiança dela é realmente legal, embora aparentemente seja o único traço bom de sua personalidade.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "b250a387-02b8-4639-b314-0d04d67fd2db",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ela é tão cheia de si...",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:17:27.989Z",
+          "video": {
+            "name": "84.mp4",
+            "storedPath": "base-de-dados/videos/84.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8to7-84",
+            "contentType": "video/mp4",
+            "size": 2685367,
+            "durationSeconds": 30.256009,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8to7-84",
+            "contentHash": "8e532732aa6960393e18975e3f36e15eb6bc626f71e12173e879ee5ff324bba1",
+            "updatedAt": "2026-10-06T14:52:13.215Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "d19ffccd-d09b-4022-a67d-6b386d442e04",
+          "title": "Vídeo 04",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 11,
+          "firstGroupReactionSeconds": 6.71,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "ab1d087c-8396-4fa0-b35e-da3701771df0",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "speech",
+              "emotion": "",
+              "text": "Oh? Essa sou eu no futuro? Eu sabia que continuaria tendo o estilo maravilhoso que sempre tive.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "7b12f1ae-c080-4f49-be96-dbb1cb0d7ecd",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "nossa... Então isso realmente mostra o futuro... Inacreditável.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "a8da2695-b0eb-4bda-ab87-9cf01be30809",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Então essa é a Chloe no futuro.... Será que ela virou estilista igual a mãe dela?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "619e8c6c-9e90-4046-9645-ec09b05fffeb",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ugh, pra mim parece a mesma escrota de sempre.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:18:20.472Z",
+          "video": {
+            "name": "85.mp4",
+            "storedPath": "base-de-dados/videos/85.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8tr6-85",
+            "contentType": "video/mp4",
+            "size": 2447846,
+            "durationSeconds": 14.830136,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8tr6-85",
+            "contentHash": "dcc06896fe63694f0d058b024871e2cda5711d585282189b095d771113c5b147",
+            "updatedAt": "2026-10-06T14:52:13.218Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "7266996b-47a0-472d-a3c3-3432f278eb0a",
+          "title": "Vídeo 05",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 8,
+          "firstGroupReactionSeconds": 4.42,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "45f2c3ae-e58f-4938-b92f-ee7a284ce269",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "speech",
+              "emotion": "",
+              "text": "Isso... Essa realmente é a Chloe? Ela está tão... Boba na tela.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "06826764-87a4-43c7-b0bc-1a76ef6950c4",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ugh, eles estão tentando me envergonhar? Colocando a mim nessas cenas vergonhosas para todo mundo ver....",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "380c242f-1f16-4d21-818f-02463ff6e637",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "Haha, a Chloe nessas imagens me lembrou da Chloe de anos atrás quando éramos crianças.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "1f559d66-cccd-4856-8a82-bbc8ca298ab0",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "parece que no futuro ela parece ter amadurecido.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:18:49.356Z",
+          "video": {
+            "name": "86.mp4",
+            "storedPath": "base-de-dados/videos/86.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8ttt-86",
+            "contentType": "video/mp4",
+            "size": 2271073,
+            "durationSeconds": 15.139138,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8ttt-86",
+            "contentHash": "75821b95163409169b973fc81d721d2f20e8cbba98bfccdfe8bc88d51ab2351c",
+            "updatedAt": "2026-10-06T14:52:13.221Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "b3eb6369-d807-4147-83bf-14348282c3d9",
+          "title": "Vídeo 06",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 14,
+          "firstGroupReactionSeconds": 5.98,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 10.37,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "107d5a50-0db1-4edf-b20e-c63204a1a0a1",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "speech",
+              "emotion": "",
+              "text": "Isso... Essa realmente é a Chloe? Ela está tão... Boba na tela.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "2d958e5c-9cd7-4d47-854b-0d4abe2a0d9d",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ugh, eles estão tentando me envergonhar? Colocando a mim nessas cenas vergonhosas para todo mundo ver....",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "73f50003-1ee1-4b7a-a815-cbeb4c7d6822",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "Haha, a Chloe nessas imagens me lembrou da Chloe de anos atrás quando éramos crianças.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "ce4d9505-73ca-4fe8-ba04-9ae1d5515fbe",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "parece que no futuro ela parece ter amadurecido.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:19:39.187Z",
+          "video": {
+            "name": "87.mp4",
+            "storedPath": "base-de-dados/videos/87.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8twn-87",
+            "contentType": "video/mp4",
+            "size": 1973902,
+            "durationSeconds": 24.666667,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8twn-87",
+            "contentHash": "8c36be486d132126408011c231b41e6b7ff985368244751978645e3517a39b37",
+            "updatedAt": "2026-10-06T14:52:13.223Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "ed8adc1d-f209-4bbf-973d-3751cfdbdfa8",
+          "title": "Vídeo 07",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 10,
+          "firstGroupReactionSeconds": 5.2,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "10f83df3-6b82-4bcf-9226-45bc1050167e",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "speech",
+              "emotion": "",
+              "text": "Luka! Nossa... É você no futuro.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "79204e8c-d418-4428-9201-94ca28dec4bd",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "speech",
+              "emotion": "",
+              "text": "Sim, pelo visto também vai me mostrar. Isso é bem legal.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "a1bf1285-8f4f-4736-91b2-4484ea5b981d",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eu pintei meu cabelo? Acho que também fiquei mais alto... Pareço bem no futuro.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "ffae9a42-01e8-48ae-931e-26abb24721b6",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "speech",
+              "emotion": "",
+              "text": "Agh, éramos para ver o meu futuro... Por que você está sendo mostrado?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "ca8c4b4d-4110-43a4-9205-a5e9905c53e9",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "speech",
+              "emotion": "",
+              "text": "Não sei ao certo, mas deve ter uma razão.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "f91c8c99-0f0a-48af-b73a-7f2c3136dd15",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Essa garota não consegue ser educada nem por um minuto?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "95898918-7785-4d05-9dac-c3bae63b744c",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "A Chloe tem razão até certo ponto... Pensei que só íamos reagir a ela. Por que estão mostrando agora especificando o Luka?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:20:08.789Z",
+          "video": {
+            "name": "88.mp4",
+            "storedPath": "base-de-dados/videos/88.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8tzd-88",
+            "contentType": "video/mp4",
+            "size": 2192970,
+            "durationSeconds": 16.730136,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8tzd-88",
+            "contentHash": "d2e3375d2fcf20042ac5dd179064a9b1cb3252c9f125a04640ffe531d4756dfb",
+            "updatedAt": "2026-10-06T14:52:13.226Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "3ed06c07-a581-4cd2-a18e-1b191af32ffe",
+          "title": "Vídeo 08",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 11,
+          "firstGroupReactionSeconds": 2.39,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 7.3,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "a1fc4a78-4c10-44e1-a3af-3ae85492eb36",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Hunf... Pelo menos essa versão dele no futuro tem mais estilo... Ele agora parece que pegou as roupas na lata de lixo.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "7947a1ee-31ec-496a-8bb8-5e5c9d629614",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eu... Estava com uma mulher em uma dessas fotos?... Eu não consigo me imaginar não apaixonado pela Marinete, eu superei ela no futuro?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "d3e95d27-437d-46c3-92e5-e93825d87614",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "O Luka... Ele parece bem. Tenho certeza que ele será um músico profissional incrível. Ainda maior que seu pai se ele quiser.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:21:05.391Z",
+          "video": {
+            "name": "89.mp4",
+            "storedPath": "base-de-dados/videos/89.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8u2a-89",
+            "contentType": "video/mp4",
+            "size": 3937398,
+            "durationSeconds": 27.887007,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8u2a-89",
+            "contentHash": "771fa4681af1ab0f4d7b84b8cb5efa58f28e7d18ba01101d97919757c61266fd",
+            "updatedAt": "2026-10-06T14:52:13.228Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "7b4efc50-5c7d-46d0-8911-b33b7cdc9ff9",
+          "title": "Vídeo 09",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 10,
+          "firstGroupReactionSeconds": 3.96,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 7.83,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "8e29581c-9979-4295-b1c9-1384f38d5269",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "eu.. e a filha do prefeito vamos nos aproximar no futuro? Não consigo ver isso.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "25f0bde7-1a1a-49a3-9f92-90df5eaa9a45",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "Luka e Chloe... É um par inusitado. Eles vão ser amigos no futuro?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "fd776f63-ecca-4d5e-94fc-c2c17d05f92d",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso é inacreditável... Eles pareciam próximos mas... A Chloe? Ela nunca seria sociável com ninguém! Ainda mais com um garoto tão incrível quando o Luka.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "42746c03-ff1e-4287-b44e-81106dd0b2d7",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eu fui parar em um universo paralelo ou oque? Essa garota nunca se aproximaria de um garoto tão bom quanto o Luka...",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "0b8d9789-5a3c-49a8-84e4-f722b5149cb7",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que diabos isso está insinuando? Mesmo que ele seja bonitinho e tenha acesso a um guarda roupa descente no futuro, eu não iria querer ele a nem cinco metros de mim.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:21:36.160Z",
+          "video": {
+            "name": "90.mp4",
+            "storedPath": "base-de-dados/videos/90.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8u57-90",
+            "contentType": "video/mp4",
+            "size": 1731780,
+            "durationSeconds": 14.512132,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8u57-90",
+            "contentHash": "92eabd4892bd1940a5627a90ce98bda7ae53d21386da57318a1ba8d4ff1fcfde",
+            "updatedAt": "2026-10-06T14:52:13.230Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "f3247ce5-19b0-451e-ae38-b85864a58b7e",
+          "title": "Vídeo 10",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 8.84,
+          "firstGroupReactionSeconds": 2.91,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 0,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "22e783d7-824e-4a20-8a3c-db69c3dfdb1e",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "speech",
+              "emotion": "",
+              "text": "oque?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "e1035baa-f9b4-4cbd-b9f5-c5c7e6c290c1",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que... é isso? Eu e ele no futuro?... Que ridículo.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "de02991a-5e3f-4a65-a8d4-05c216312aa1",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Agora estou entendendo... Eu e a filha do prefeito entraremos em um relacionamento no futuro, por isso estou sendo mostrado quando éramos para assistir o futuro dela.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "0c9f3ed2-6354-41c3-a8a0-03b6f6fcc01c",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "A Chloe e o Luka...? Nossa, eu já me surpreendi ao ve-los sendo amigos... Mas namorados? Isso é uma surpresa.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "9e5fef8a-32ed-43a2-b4c5-d9efdf10d84f",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Não acredito, o Luka e ela?... Da Marinete para Chloe foi um declinio enorme de qualidade hein Luka...",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "4b4e9e00-1a21-463f-920a-4b96867c82da",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Isso não faz sentido... O Luka, com ela?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:22:44.980Z",
+          "video": {
+            "name": "91.mp4",
+            "storedPath": "base-de-dados/videos/91.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8u7s-91",
+            "contentType": "video/mp4",
+            "size": 3000649,
+            "durationSeconds": 29.21,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8u7s-91",
+            "contentHash": "87276910dc4d0cb8b36515a23a71de8d34e6f54bb116d48cbb38186b35c9f857",
+            "updatedAt": "2026-10-06T14:52:13.232Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "aab45f71-fb99-41c1-96bb-8b8a71248b76",
+          "title": "Vídeo 11",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 24,
+          "firstGroupReactionSeconds": 2.74,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 5.63,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "6fde711c-08d7-449a-986a-a16fc1521e21",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Até que... Ele não parece tão ruim. Ele tem uma voz.. doce quando fala com a minha versão do futuro.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "071986f0-423f-4497-a064-d95656bd2a90",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "... Como isso aconteceu entre nós? Eu não consigo imaginar como isso começaria entre nós dois....",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "2a90ea1b-d762-4089-8940-765a3147e180",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "isso não faz sentido... O Luka, ele merece alguém melhor do que ela. Ela é simplesmente a Chloe!",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "fc74ac5a-65fb-4bcb-9a23-2aa3b69a1178",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eles parecem se dar muito bem... Nunca tinha visto a Chloe falar de um jeito tão gentil.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:24:40.213Z",
+          "video": {
+            "name": "92.mp4",
+            "storedPath": "base-de-dados/videos/92.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8uaf-92",
+            "contentType": "video/mp4",
+            "size": 3023121,
+            "durationSeconds": 25.403991,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8uaf-92",
+            "contentHash": "1f316b9d1d5459336a9e28921dc9ebc203eb00577d4d8cad6fc0ace7655c4dc5",
+            "updatedAt": "2026-10-06T14:52:13.234Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "8ce07454-67aa-4d70-b3ef-f7198bb79526",
+          "title": "Vídeo 12",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 10,
+          "firstGroupReactionSeconds": 2.19,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 4.57,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "1206b20f-3f1f-4a19-94c7-600b6868ce0f",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "O que...? .. ele realmente estava me maquiando?.. isso, isso é fofo.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "0980e0f7-e3bd-43e0-a7c7-df849f7a6f61",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eu pareço a vontade com ela... Acho que ela não é a mesma pessoa de agora, ela deve realmente ter amadurecido no futuro.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "b56c3c92-487d-4751-84f9-d12b2c8ed56b",
+              "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+              "type": "thought",
+              "emotion": "",
+              "text": "Quase não consigo acreditar... Eles realmente estão juntos no futuro?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:25:15.826Z",
+          "video": {
+            "name": "93.mp4",
+            "storedPath": "base-de-dados/videos/93.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8ud4-93",
+            "contentType": "video/mp4",
+            "size": 1734911,
+            "durationSeconds": 15.497143,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8ud4-93",
+            "contentHash": "2b23f6b527e1b53a2ce534d9259c46f8a133865af78fc616af3e2cd3a94524c1",
+            "updatedAt": "2026-10-06T14:52:13.237Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "d8787264-1ec0-4d3d-a451-b8aaae10b692",
+          "title": "Vídeo 13",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 9,
+          "firstGroupReactionSeconds": 2.24,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 5.63,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "283b4f38-a754-4829-b47c-0d51b6a456b3",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "speech",
+              "emotion": "",
+              "text": "! Uh....",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "0984ddc0-e3ce-4847-8f13-2084e70951d9",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Ele.. claro que ele gostaria das minhas roupas. São todas caras e estilosas... E pelo visto ele ama ainda o fato de mim usa-las!",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "fe410da3-9bc1-4a4c-8f7c-83060b67facf",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "Essas roupas realmente são lindas... Mas o Luka... Ele realmente vai se apaixonar pela Chloe?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "5b5cd699-82b5-40b8-860c-241e82e5ec82",
+              "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+              "type": "speech",
+              "emotion": "",
+              "text": "Fico feliz por vocês dois no futuro, de verdade.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "e90b1ce1-8381-4df0-923b-d9558e723b64",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "speech",
+              "emotion": "",
+              "text": "Obrigada amigo.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "48244ce2-9148-411c-82a2-3c637d37030b",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Embora, eu não acho que isso seja tão ruim... Nós parecemos felizes no futuro.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:25:46.073Z",
+          "video": {
+            "name": "94.mp4",
+            "storedPath": "base-de-dados/videos/94.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8ufr-94",
+            "contentType": "video/mp4",
+            "size": 560205,
+            "durationSeconds": 11.700998,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8ufr-94",
+            "contentHash": "c6373764dc2db447918eb48cc0485b297157f90904e3dd8cc8e7409de21b03d0",
+            "updatedAt": "2026-10-06T14:52:13.239Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        },
+        {
+          "id": "1fc05be1-b3ce-44af-b9e3-4b22f58fe898",
+          "title": "Vídeo 14",
+          "description": "",
+          "timeline": "unspecified",
+          "sceneGoal": "",
+          "sceneEndSeconds": 11.06,
+          "firstGroupReactionSeconds": 2.49,
+          "firstGroupReactionSpeechCount": 0,
+          "secondGroupReactionSeconds": 5.48,
+          "secondGroupReactionSpeechCount": 0,
+          "userInstruction": "",
+          "specificRules": "",
+          "shortLines": false,
+          "reactionBlocks": [
+            {
+              "id": "bd0be247-b575-4918-8731-fdb58168b2d5",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "speech",
+              "emotion": "",
+              "text": "oque..? Ele escolhe minhas roupas?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "fe33046f-ffbc-4805-9c89-dc9652982a71",
+              "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+              "type": "thought",
+              "emotion": "",
+              "text": "Eu... Nem sou tão bom nessas coisas, mas pelo visto... Eu serei bom no futuro pois ela está belíssima nessas fotos.",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "4302df53-2aa0-4ea7-aee9-eff8a7b2158f",
+              "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+              "type": "thought",
+              "emotion": "",
+              "text": "O Luka... Ele realmente escolhe as roupas dela? E ela deixa?",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            },
+            {
+              "id": "33dd638b-b712-4a67-9157-554fecd52870",
+              "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+              "type": "thought",
+              "emotion": "",
+              "text": "Inacreditável que ele tendo o estilo que tem agora consegue no futuro escolher roupas incríveis pra mim... Mas até que é fofo. Eu gosto",
+              "englishText": "",
+              "startAt": 0,
+              "createdAt": "2026-10-06T14:52:13.187Z",
+              "updatedAt": "2026-10-06T14:52:13.187Z"
+            }
+          ],
+          "createdAt": "2026-10-06T14:52:13.187Z",
+          "updatedAt": "2026-10-06T15:26:16.787Z",
+          "video": {
+            "name": "95.mp4",
+            "storedPath": "base-de-dados/videos/95.mp4",
+            "url": "http://127.0.0.1:6800/base-dados/videos/video-muws8uig-95",
+            "contentType": "video/mp4",
+            "size": 2350967,
+            "durationSeconds": 25.680998,
+            "additionalAiContext": "",
+            "libraryVideoId": "video-muws8uig-95",
+            "contentHash": "17fc3e67d0532180e280e1057dc352cee22f3e6ed8378f2038b2b75b26aa1abe",
+            "updatedAt": "2026-10-06T14:52:13.241Z"
+          },
+          "aiDirectives": [],
+          "aiUsage": {
+            "calls": 0,
+            "inputTokens": 0,
+            "outputTokens": 0,
+            "totalTokens": 0,
+            "lastAt": null,
+            "lastOperation": null,
+            "lastModel": null
+          }
+        }
+      ],
+      "createdAt": "2026-10-06T14:52:13.187Z",
+      "updatedAt": "2026-10-06T15:26:16.787Z",
+      "importOrigin": {
+        "kind": "ai-json",
+        "importId": "e9d22dea-e303-4197-8ca3-d374bc92ba08",
+        "importedAt": "2026-10-06T14:52:13.243Z",
+        "createdCharacterIds": [],
+        "sourceTitle": "Chloe × Luka — Futuro"
+      },
+      "background": {
+        "name": "ChatGPT Image 4_08_2026, 11_13_58.png",
+        "storedPath": "roteiros/backgrounds/4352a530-084a-4781-a80a-de9c87b8423f/background.png",
+        "url": "http://127.0.0.1:6800/roteiros/backgrounds/4352a530-084a-4781-a80a-de9c87b8423f",
+        "contentType": "image/png",
+        "size": 1387051,
+        "updatedAt": "2026-10-06T14:53:34.524Z",
+        "exportedPath": "assets/backgrounds/01.png"
+      },
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      }
     }
   ],
   "globalRules": [
@@ -7358,8 +11288,8 @@
     "generationMode": "creative",
     "fillEmptyPrompt": "",
     "defaultBlockCount": 6,
-    "shortLinesByDefault": false,
-    "historyLimit": 2,
+    "shortLinesByDefault": true,
+    "historyLimit": 0,
     "generationEngine": "openai",
     "openAi": {
       "enabled": true,

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 4,
+  "revision": 5,
   "character": {
     "name": "Dorian Veyr",
     "model": "masculino",
@@ -28713,6 +28713,7 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "9227c01a-ddd8-4af3-96a9-557a36242d70",
-    "updatedAt": "2026-09-17T10:46:13.847Z"
+    "updatedAt": "2026-09-17T10:46:13.847Z",
+    "photoUrl": "http://127.0.0.1:6800/files/characters/9227c01a-ddd8-4af3-96a9-557a36242d70/photo.png"
   }
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 8,
   "character": {
     "name": "Marek Thorne",
     "model": "masculino",
@@ -27698,7 +27698,7 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "73843dbf-3c97-4cae-af2e-c91694cb7cfb",
-    "updatedAt": "2026-09-17T10:46:16.783Z",
-    "compositionMode": "legacy"
+    "updatedAt": "2026-09-26T09:45:34.074Z",
+    "compositionMode": "outfit-over-face"
   }
 }

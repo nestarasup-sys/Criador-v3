@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 3,
   "character": {
     "name": "Rafe Calder",
     "model": "masculino",
@@ -23615,6 +23615,7 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "d4fc277e-3da0-42b3-9512-598b1d954592",
-    "updatedAt": "2026-09-17T10:45:59.813Z"
+    "updatedAt": "2026-09-17T10:45:59.813Z",
+    "photoUrl": "http://127.0.0.1:6800/files/characters/d4fc277e-3da0-42b3-9512-598b1d954592/photo.png"
   }
 }

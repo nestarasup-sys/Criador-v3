@@ -1,0 +1,52 @@
+{
+  "name": "Modelo 20",
+  "gender": "masculino",
+  "type": "head-only",
+  "anchor": "neck-base",
+  "anchorX": 960,
+  "anchorY": 346,
+  "baseScale": 1,
+  "width": 1920,
+  "height": 1080,
+  "source": "fabricador-de-modelo-v2",
+  "expressionKeys": [
+    "aliviada",
+    "animada",
+    "apaixonada",
+    "cansada",
+    "ciumenta",
+    "confusa",
+    "decepcionada",
+    "desconfiada",
+    "envergonhada",
+    "impressionada",
+    "indignada",
+    "irritada",
+    "nojo",
+    "normal",
+    "orgulhosa",
+    "preocupada",
+    "seria",
+    "sorrindo_de_canto",
+    "sorriso_maligno",
+    "surpresa",
+    "triste_magoada"
+  ],
+  "generator": {
+    "version": 3,
+    "includes": [
+      "eyes",
+      "eyes-pt",
+      "eyebrows",
+      "mouths",
+      "mouths-talk",
+      "manpu"
+    ]
+  },
+  "catalogVersion": "v1",
+  "presetTag": {
+    "id": "vilao",
+    "name": "Vilão",
+    "color": "#dc2626"
+  }
+}

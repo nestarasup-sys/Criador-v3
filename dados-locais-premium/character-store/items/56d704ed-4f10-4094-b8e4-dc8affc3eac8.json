@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 56,
+  "revision": 72,
   "character": {
     "name": "Seraphine Vale",
     "model": "feminino",
@@ -299,7 +299,7 @@
     "faceMode": "base",
     "compositionMode": "outfit-over-face",
     "expressionPackId": null,
-    "expressionEmotion": "sorriso_maligno",
+    "expressionEmotion": "triste_magoada",
     "expressionState": "default",
     "layerMasks": {
       "body": [],
@@ -4694,9 +4694,9 @@
       "y": 0
     },
     "exportFrame": {
-      "x": 0,
-      "y": 0,
-      "scale": 1
+      "scale": 0.772,
+      "x": -80.7,
+      "y": -60.6
     },
     "hairAdjustmentsByBasePack": {
       "modelo-1": {
@@ -18758,6 +18758,6 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "56d704ed-4f10-4094-b8e4-dc8affc3eac8",
-    "updatedAt": "2026-09-17T10:49:25.791Z"
+    "updatedAt": "2026-09-29T16:16:03.900Z"
   }
 }

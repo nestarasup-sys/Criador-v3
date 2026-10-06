@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "calls": 54,
-  "inputTokens": 144235,
-  "outputTokens": 42452,
-  "totalTokens": 186687,
+  "calls": 65,
+  "inputTokens": 185220,
+  "outputTokens": 49750,
+  "totalTokens": 234970,
   "errors": 2,
-  "lastCallAt": "2026-09-16T11:15:18.026Z",
+  "lastCallAt": "2026-10-05T16:26:02.545Z",
   "lastModel": "gpt-5.6-luna",
-  "lastOperation": "fill-empty",
-  "lastDurationMs": 14483,
+  "lastOperation": "organize-profile-relations",
+  "lastDurationMs": 8006,
   "lastError": null
 }

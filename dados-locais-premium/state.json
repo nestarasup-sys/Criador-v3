@@ -2441,118 +2441,6 @@
       }
     },
     {
-      "id": "ed001e27-399d-4356-8f82-5f14dec0bbf2",
-      "name": "Imagem do Codex 3 de set. de 2026, 21_33_27 · Variante 1",
-      "model": "feminino",
-      "category": "roupas",
-      "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
-      "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_33_27",
-      "outfitVariantIndex": 1,
-      "outfitCover": false,
-      "width": 1024,
-      "height": 1024,
-      "defaultX": 960,
-      "defaultY": 560,
-      "contentX": 273,
-      "contentY": 48,
-      "contentWidth": 479,
-      "contentHeight": 928,
-      "fitReferenceWidth": 487,
-      "fitReferenceHeight": 928,
-      "fit": {
-        "x": -30,
-        "y": 115,
-        "scale": 0.787,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": 101.6,
-          "y": 88.81,
-          "scale": 1,
-          "scaleX": 1.2467,
-          "scaleY": 1.3814,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "layerMasksByBasePack": {
-        "modelo-9": []
-      }
-    },
-    {
-      "id": "61eaac3b-1216-45b6-a7fe-ba7afb610670",
-      "name": "Imagem do Codex 3 de set. de 2026, 21_33_27 · Variante 2",
-      "model": "feminino",
-      "category": "roupas",
-      "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
-      "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_33_27",
-      "outfitVariantIndex": 2,
-      "outfitCover": false,
-      "width": 1024,
-      "height": 1024,
-      "defaultX": 960,
-      "defaultY": 560,
-      "contentX": 269,
-      "contentY": 51,
-      "contentWidth": 487,
-      "contentHeight": 925,
-      "fitReferenceWidth": 487,
-      "fitReferenceHeight": 928,
-      "fit": {
-        "x": -30,
-        "y": 115,
-        "scale": 0.787,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": 110.33,
-          "y": 81.99,
-          "scale": 1,
-          "scaleX": 1.2467,
-          "scaleY": 1.3755,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "layerMasksByBasePack": {
-        "modelo-9": []
-      }
-    },
-    {
       "id": "bc953dfb-deb0-4790-ad8e-e2f238260e7c",
       "name": "Imagem do Codex 3 de set. de 2026, 21_44_05",
       "model": "feminino",
@@ -3061,132 +2949,6 @@
       },
       "colorAdjustmentsByBasePack": {
         "modelo-11": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      }
-    },
-    {
-      "id": "8d41939d-988e-4b96-a525-9f92b8033bd4",
-      "name": "ChatGPT Image 7_09_2026, 23_09_21 1 (frente)",
-      "model": "feminino",
-      "category": "cabelos",
-      "width": 377,
-      "height": 611,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      }
-    },
-    {
-      "id": "abc5d2aa-e194-44f2-8208-c703866c777e",
-      "name": "ChatGPT Image 7_09_2026, 23_09_21 1 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "8d41939d-988e-4b96-a525-9f92b8033bd4",
-      "width": 377,
-      "height": 611,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      }
-    },
-    {
-      "id": "e17f5d80-1c7d-435c-b68f-48eb5087c696",
-      "name": "ChatGPT Image 7_09_2026, 23_09_21 3 (frente)",
-      "model": "feminino",
-      "category": "cabelos",
-      "width": 377,
-      "height": 611,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-7": {
-          "x": -15.5,
-          "y": 8.7,
-          "scale": 1,
-          "scaleX": 1,
-          "scaleY": 0.94,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-7": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      }
-    },
-    {
-      "id": "4fa47e70-1ed4-4a89-a943-90285a93547c",
-      "name": "ChatGPT Image 7_09_2026, 23_09_21 3 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "e17f5d80-1c7d-435c-b68f-48eb5087c696",
-      "width": 377,
-      "height": 611,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-7": {
-          "x": -22.5,
-          "y": 95.4,
-          "scale": 1,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-7": {
           "hue": 0,
           "saturation": 100,
           "brightness": 100,
@@ -7059,28 +6821,6 @@
       "updatedAt": "2026-09-10T03:52:48.239Z"
     },
     {
-      "id": "769ec2aa-e0ab-4445-9e80-a2893b4b4b2d",
-      "name": "ChatGPT Image 29_07_2026, 05_50_18 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "1deb780a-a54e-421e-b115-4db001869d56",
-      "width": 507,
-      "height": 885,
-      "defaultX": 950.5,
-      "defaultY": 516.5,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "catalogVersion": "v0",
-      "updatedAt": "2026-09-10T03:52:48.395Z"
-    },
-    {
       "id": "b5b6e2c7-29d7-4d49-adb5-0525cdd069f2",
       "name": "ChatGPT Image 28_07_2026, 21_42_03 (trás)",
       "model": "feminino",
@@ -7517,61 +7257,6 @@
       "updatedAt": "2026-09-10T03:52:50.955Z"
     },
     {
-      "id": "652deef6-5e3a-4049-b908-35301b5df22c",
-      "name": "ChatGPT Image 20_08_2026, 22_49_16 3 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "4db2e457-8f9d-405e-acaf-7ac39b60523d",
-      "width": 413,
-      "height": 464,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-4": {
-          "x": -23,
-          "y": 66.7,
-          "scale": 1,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-5": {
-          "x": 0,
-          "y": 24.9,
-          "scale": 1,
-          "scaleX": 0.78,
-          "scaleY": 1.1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-5": {
-          "hue": 0,
-          "saturation": 0,
-          "brightness": 95,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 110,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "catalogVersion": "v0",
-      "updatedAt": "2026-09-10T03:52:51.108Z"
-    },
-    {
       "id": "e621c89e-7d2f-48ea-bddd-66f4d0fd875a",
       "name": "ChatGPT Image 20_08_2026, 23_22_26 2 (frente)",
       "model": "feminino",
@@ -7637,72 +7322,6 @@
       "updatedAt": "2026-09-10T03:52:51.254Z"
     },
     {
-      "id": "41a725a6-bd94-453f-b044-20292ea777a5",
-      "name": "ChatGPT Image 20_08_2026, 23_22_26 2 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "e621c89e-7d2f-48ea-bddd-66f4d0fd875a",
-      "width": 377,
-      "height": 535,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-5": {
-          "x": -13.9,
-          "y": 133.7,
-          "scale": 1.266,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-7": {
-          "x": -15.6,
-          "y": 97.6,
-          "scale": 1,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-5": {
-          "hue": 0,
-          "saturation": 204,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#efddc3",
-          "tintStrength": 100,
-          "contrast": 192,
-          "detailPreservation": 100,
-          "colorSpace": "oklch"
-        },
-        "modelo-7": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "catalogVersion": "v0",
-      "updatedAt": "2026-09-10T03:52:51.409Z"
-    },
-    {
       "id": "3f7c25a7-6c72-406c-92ee-c7cbde986625",
       "name": "Imagem do Codex 4 de set. de 2026, 20_33_01 (frente)",
       "model": "feminino",
@@ -7728,39 +7347,6 @@
       "fitReferenceHeight": 789,
       "catalogVersion": "v0",
       "updatedAt": "2026-09-10T03:52:51.565Z"
-    },
-    {
-      "id": "2b3ce657-a074-485d-b220-1bbf971315e4",
-      "name": "ChatGPT Image 20_08_2026, 23_14_32 2 (trás)",
-      "model": "feminino",
-      "category": "cabelosTras",
-      "linkedHairId": "82102c34-c15b-479c-8567-074ea1064028",
-      "width": 335,
-      "height": 460,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": 2.2,
-          "y": 105.6,
-          "scale": 1.196,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "catalogVersion": "v0",
-      "updatedAt": "2026-09-10T03:52:51.718Z"
     },
     {
       "id": "89685ad9-4fec-4ff5-8764-a424198b9036",
@@ -15181,139 +14767,6 @@
       "updatedAt": "2026-09-11T03:27:36.285Z"
     },
     {
-      "id": "720debf1-d359-4d77-af6c-60619eb285b8",
-      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 2 (frente)",
-      "model": "masculino",
-      "category": "cabelos",
-      "width": 497,
-      "height": 410,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -14.2,
-          "y": -156.2,
-          "scale": 0.695,
-          "scaleX": 0.98,
-          "scaleY": 1.04,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T03:30:36.707Z"
-    },
-    {
-      "id": "136eee7e-3030-47d5-99c5-06a034c0e394",
-      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 2 (trás)",
-      "model": "masculino",
-      "category": "cabelosTras",
-      "linkedHairId": "720debf1-d359-4d77-af6c-60619eb285b8",
-      "width": 497,
-      "height": 410,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -27.2,
-          "y": -86.8,
-          "scale": 0.672,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T03:30:36.707Z"
-    },
-    {
-      "id": "8dc8a4ee-59f0-45a2-bc1a-5d13adcab662",
-      "name": "88d03298-d156-4fa3-93c2-2e8c6e29aab7 3 (frente)",
-      "model": "masculino",
-      "category": "cabelos",
-      "width": 507,
-      "height": 456,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -8.8,
-          "y": -147.7,
-          "scale": 0.7,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T03:39:34.400Z"
-    },
-    {
       "id": "9d00d300-4d54-45ed-bcde-6cf41789a5b8",
       "name": "ChatGPT Image 11_09_2026, 00_45_17 1 (frente)",
       "model": "masculino",
@@ -15572,283 +15025,6 @@
         "flipX": false
       },
       "updatedAt": "2026-09-11T04:07:21.082Z"
-    },
-    {
-      "id": "73908b54-02bf-4d38-b183-e9e9aeba86b0",
-      "name": "ChatGPT Image 11_09_2026, 01_07_13 3 (frente)",
-      "model": "masculino",
-      "category": "cabelos",
-      "width": 519,
-      "height": 500,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -22.1,
-          "y": -157.3,
-          "scale": 0.656,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T04:10:55.322Z"
-    },
-    {
-      "id": "e29c3b97-3868-4a8f-817e-c80fe0e97b29",
-      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 1 (frente)",
-      "model": "masculino",
-      "category": "cabelos",
-      "width": 497,
-      "height": 410,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -20.7,
-          "y": -174.8,
-          "scale": 0.703,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-11": {
-          "x": -20,
-          "y": -174.9,
-          "scale": 0.754,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-12": {
-          "x": -13,
-          "y": -165.6,
-          "scale": 0.774,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        },
-        "modelo-11": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        },
-        "modelo-12": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T12:55:50.813Z"
-    },
-    {
-      "id": "2bf38e22-9ab5-4da2-b84d-7b5268d141a7",
-      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 1 (trás)",
-      "model": "masculino",
-      "category": "cabelosTras",
-      "linkedHairId": "e29c3b97-3868-4a8f-817e-c80fe0e97b29",
-      "width": 497,
-      "height": 410,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -31.3,
-          "y": -105,
-          "scale": 0.723,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-11": {
-          "x": -25.7,
-          "y": -82.8,
-          "scale": 0.76,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        },
-        "modelo-12": {
-          "x": -35.8,
-          "y": -76.9,
-          "scale": 0.683,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        },
-        "modelo-11": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        },
-        "modelo-12": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T12:55:50.813Z"
-    },
-    {
-      "id": "5c4f9fe7-cf5f-4d71-9d69-6ac68ffaae43",
-      "name": "88d03298-d156-4fa3-93c2-2e8c6e29aab7 3 (trás)",
-      "model": "masculino",
-      "category": "cabelosTras",
-      "width": 507,
-      "height": 456,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "fitByBasePack": {
-        "modelo-9": {
-          "x": -25.9,
-          "y": -95.9,
-          "scale": 0.72,
-          "scaleX": 1,
-          "scaleY": 1,
-          "rotation": 0,
-          "flipX": false
-        }
-      },
-      "colorAdjustmentsByBasePack": {
-        "modelo-9": {
-          "hue": 0,
-          "saturation": 100,
-          "brightness": 100,
-          "enabled": true,
-          "tint": "#ffffff",
-          "tintStrength": 0,
-          "contrast": 100,
-          "detailPreservation": 78,
-          "colorSpace": "oklch"
-        }
-      },
-      "updatedAt": "2026-09-11T12:56:06.215Z"
-    },
-    {
-      "id": "875ab74b-756c-4ead-be29-fa973df1d8bf",
-      "name": "ChatGPT Image 11_09_2026, 01_07_13 3 (trás)",
-      "model": "masculino",
-      "category": "cabelosTras",
-      "width": 519,
-      "height": 500,
-      "defaultX": 970,
-      "defaultY": 285,
-      "fit": {
-        "x": 0,
-        "y": 0,
-        "scale": 1,
-        "scaleX": 1,
-        "scaleY": 1,
-        "rotation": 0,
-        "flipX": false
-      },
-      "updatedAt": "2026-09-11T12:56:08.117Z"
     },
     {
       "id": "db5ae8af-0b10-486a-adeb-7cbee8b0add8",
@@ -17636,10 +16812,4242 @@
         }
       },
       "updatedAt": "2026-09-17T10:49:23.085Z"
+    },
+    {
+      "id": "d4fb266f-7563-4a37-9b6f-8aee5b86cdba",
+      "name": "Imagem do Codex 25 de set. de 2026, 08_37_09 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 853,
+      "height": 754,
+      "defaultX": 969.5,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 853,
+      "contentHeight": 754,
+      "fitReferenceWidth": 853,
+      "fitReferenceHeight": 754,
+      "updatedAt": "2026-09-25T11:37:31.642Z"
+    },
+    {
+      "id": "fc201295-2f9e-44f5-897e-5ba433078927",
+      "name": "Imagem do Codex 25 de set. de 2026, 08_37_09 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "d4fb266f-7563-4a37-9b6f-8aee5b86cdba",
+      "width": 814,
+      "height": 753,
+      "defaultX": 970.5,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 814,
+      "contentHeight": 753,
+      "fitReferenceWidth": 814,
+      "fitReferenceHeight": 753,
+      "updatedAt": "2026-09-25T11:37:31.755Z"
+    },
+    {
+      "id": "6e828746-7b17-443c-bd4c-a86bfe52c397",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_25_29 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 809,
+      "height": 681,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 809,
+      "contentHeight": 681,
+      "fitReferenceWidth": 809,
+      "fitReferenceHeight": 681,
+      "updatedAt": "2026-09-25T11:39:08.319Z"
+    },
+    {
+      "id": "e6427224-3da4-48bf-b465-b58f7eca070d",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_25_29 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "6e828746-7b17-443c-bd4c-a86bfe52c397",
+      "width": 923,
+      "height": 761,
+      "defaultX": 969.5,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 923,
+      "contentHeight": 761,
+      "fitReferenceWidth": 923,
+      "fitReferenceHeight": 761,
+      "updatedAt": "2026-09-25T11:39:08.429Z"
+    },
+    {
+      "id": "6201ba8c-2464-4ec5-9c5e-36273470a2a5",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_25_47 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 865,
+      "height": 733,
+      "defaultX": 970.5,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 865,
+      "contentHeight": 733,
+      "fitReferenceWidth": 865,
+      "fitReferenceHeight": 733,
+      "updatedAt": "2026-09-25T11:40:23.026Z"
+    },
+    {
+      "id": "72faca7b-985a-46a3-8bc6-65bf494000d3",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_25_47 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "6201ba8c-2464-4ec5-9c5e-36273470a2a5",
+      "width": 792,
+      "height": 711,
+      "defaultX": 970.5,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 792,
+      "contentHeight": 711,
+      "fitReferenceWidth": 792,
+      "fitReferenceHeight": 711,
+      "updatedAt": "2026-09-25T11:40:23.130Z"
+    },
+    {
+      "id": "607b6988-9b5d-410d-92f8-f97ddb7eee05",
+      "name": "Imagem ChatGPT 25_09_2026, 10_18_06",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "c1f5abeb-c069-42a2-b05e-fd0e3c3974b3",
+      "outfitGroupName": "Imagem ChatGPT 25_09_2026, 10_18_06",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 259,
+      "contentY": 60,
+      "contentWidth": 506,
+      "contentHeight": 916,
+      "fitReferenceWidth": 506,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T13:25:38.866Z"
+    },
+    {
+      "id": "abf814b7-816b-40ee-9282-7ec9b3f863fd",
+      "name": "Imagem ChatGPT 25_09_2026, 10_18_06 · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "c1f5abeb-c069-42a2-b05e-fd0e3c3974b3",
+      "outfitGroupName": "Imagem ChatGPT 25_09_2026, 10_18_06",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 275,
+      "contentY": 49,
+      "contentWidth": 474,
+      "contentHeight": 927,
+      "fitReferenceWidth": 506,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T13:25:38.867Z"
+    },
+    {
+      "id": "ca3fd294-bdc3-4f56-bd71-a0f6a3416c26",
+      "name": "Imagem ChatGPT 25_09_2026, 10_18_06 · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "c1f5abeb-c069-42a2-b05e-fd0e3c3974b3",
+      "outfitGroupName": "Imagem ChatGPT 25_09_2026, 10_18_06",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 271,
+      "contentY": 48,
+      "contentWidth": 482,
+      "contentHeight": 928,
+      "fitReferenceWidth": 506,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T13:25:38.867Z"
+    },
+    {
+      "id": "022952a1-aa91-428c-ae9f-21ddfb8bff5d",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_01_37",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "6f41c588-6884-4047-a5bd-437998f5a425",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_01_37",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 282,
+      "contentY": 60,
+      "contentWidth": 461,
+      "contentHeight": 916,
+      "fitReferenceWidth": 461,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:03:10.996Z"
+    },
+    {
+      "id": "a6311010-2189-4acf-b629-c92187bf4b44",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_01_37 · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "6f41c588-6884-4047-a5bd-437998f5a425",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_01_37",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 294,
+      "contentY": 48,
+      "contentWidth": 437,
+      "contentHeight": 928,
+      "fitReferenceWidth": 461,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:03:10.996Z"
+    },
+    {
+      "id": "629738fa-e406-4d3f-bed6-987d115d589e",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_01_37 · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "6f41c588-6884-4047-a5bd-437998f5a425",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_01_37",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 302,
+      "contentY": 50,
+      "contentWidth": 420,
+      "contentHeight": 926,
+      "fitReferenceWidth": 461,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:03:10.996Z"
+    },
+    {
+      "id": "6b0c4c72-8643-4bec-b376-cc04baa00bcc",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_20_39",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "726b96ce-1936-4258-af71-2760184bd1bc",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_20_39",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 253,
+      "contentY": 69,
+      "contentWidth": 519,
+      "contentHeight": 907,
+      "fitReferenceWidth": 519,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:21:05.456Z"
+    },
+    {
+      "id": "0de05337-704c-4164-90d2-7f53968feb06",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_20_39 · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "726b96ce-1936-4258-af71-2760184bd1bc",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_20_39",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 267,
+      "contentY": 51,
+      "contentWidth": 491,
+      "contentHeight": 925,
+      "fitReferenceWidth": 519,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:21:05.456Z"
+    },
+    {
+      "id": "bf363b3c-4439-4e59-bab2-21cf1afe971c",
+      "name": "Imagem do Codex 25 de set. de 2026, 11_20_39 · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "726b96ce-1936-4258-af71-2760184bd1bc",
+      "outfitGroupName": "Imagem do Codex 25 de set. de 2026, 11_20_39",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 280,
+      "contentY": 48,
+      "contentWidth": 465,
+      "contentHeight": 928,
+      "fitReferenceWidth": 519,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-25T14:21:05.456Z"
+    },
+    {
+      "id": "720debf1-d359-4d77-af6c-60619eb285b8",
+      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 2 (frente)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 497,
+      "height": 368,
+      "defaultX": 970,
+      "defaultY": 286,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -14.2,
+          "y": -156.2,
+          "scale": 0.695,
+          "scaleX": 0.98,
+          "scaleY": 1.04,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-16": {
+          "x": -7.7,
+          "y": -140.1,
+          "scale": 0.789,
+          "scaleX": 0.96,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-16": {
+          "hue": 333,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:28:38.999Z",
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 497,
+      "contentHeight": 368,
+      "fitReferenceWidth": 497,
+      "fitReferenceHeight": 368
+    },
+    {
+      "id": "136eee7e-3030-47d5-99c5-06a034c0e394",
+      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 2 (trás)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "720debf1-d359-4d77-af6c-60619eb285b8",
+      "width": 484,
+      "height": 402,
+      "defaultX": 970.5,
+      "defaultY": 284,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -27.2,
+          "y": -86.8,
+          "scale": 0.672,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-16": {
+          "x": -15.6,
+          "y": -66.3,
+          "scale": 0.702,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-16": {
+          "hue": 333,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:28:38.999Z",
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 484,
+      "contentHeight": 402,
+      "fitReferenceWidth": 484,
+      "fitReferenceHeight": 402
+    },
+    {
+      "id": "73908b54-02bf-4d38-b183-e9e9aeba86b0",
+      "name": "ChatGPT Image 11_09_2026, 01_07_13 3 (frente)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 508,
+      "height": 419,
+      "defaultX": 966.5,
+      "defaultY": 282.5,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -22.1,
+          "y": -157.3,
+          "scale": 0.656,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-19": {
+          "x": -19.8,
+          "y": -144.8,
+          "scale": 0.669,
+          "scaleX": 1,
+          "scaleY": 1.02,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-19": {
+          "hue": 303,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:26.435Z",
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 508,
+      "contentHeight": 419,
+      "fitReferenceWidth": 519,
+      "fitReferenceHeight": 475
+    },
+    {
+      "id": "875ab74b-756c-4ead-be29-fa973df1d8bf",
+      "name": "ChatGPT Image 11_09_2026, 01_07_13 3 (trás)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "width": 487,
+      "height": 418,
+      "defaultX": 970,
+      "defaultY": 259,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-28T04:33:26.435Z",
+      "linkedHairId": "73908b54-02bf-4d38-b183-e9e9aeba86b0",
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 487,
+      "contentHeight": 418,
+      "fitReferenceWidth": 487,
+      "fitReferenceHeight": 468,
+      "fitByBasePack": {
+        "modelo-19": {
+          "x": -10.8,
+          "y": -77.4,
+          "scale": 0.792,
+          "scaleX": 0.92,
+          "scaleY": 1,
+          "rotation": -12,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-19": {
+          "hue": 303,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "e29c3b97-3868-4a8f-817e-c80fe0e97b29",
+      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 1 (frente)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 497,
+      "height": 410,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -20.7,
+          "y": -174.8,
+          "scale": 0.703,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-11": {
+          "x": -20,
+          "y": -174.9,
+          "scale": 0.754,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-12": {
+          "x": -13,
+          "y": -165.6,
+          "scale": 0.774,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-15": {
+          "x": -17.6,
+          "y": -165.4,
+          "scale": 0.79,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-11": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-12": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-15": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:32.451Z"
+    },
+    {
+      "id": "2bf38e22-9ab5-4da2-b84d-7b5268d141a7",
+      "name": "21f468ae-43fa-4972-a2a9-6f4aafef12ac 1 (trás)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "e29c3b97-3868-4a8f-817e-c80fe0e97b29",
+      "width": 497,
+      "height": 410,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -31.3,
+          "y": -105,
+          "scale": 0.723,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-11": {
+          "x": -25.7,
+          "y": -82.8,
+          "scale": 0.76,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-12": {
+          "x": -35.8,
+          "y": -76.9,
+          "scale": 0.683,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-15": {
+          "x": -30.4,
+          "y": -74.4,
+          "scale": 0.724,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-11": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-12": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-15": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:32.451Z"
+    },
+    {
+      "id": "b112420f-3211-466e-8c29-ec1b00e99967",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_03_01 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 833,
+      "height": 681,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-28T04:33:34.403Z",
+      "fitByBasePack": {
+        "modelo-19": {
+          "x": -17.4,
+          "y": -143,
+          "scale": 0.496,
+          "scaleX": 0.9,
+          "scaleY": 0.86,
+          "rotation": 3,
+          "flipX": false
+        },
+        "modelo-18": {
+          "x": -25.8,
+          "y": -149.9,
+          "scale": 0.468,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-18": {
+          "hue": 64,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "6d9cf466-f9ad-4d9c-a58d-9f3c0534d04e",
+      "name": "Imagem do Codex 24 de set. de 2026, 23_03_01 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "b112420f-3211-466e-8c29-ec1b00e99967",
+      "width": 781,
+      "height": 705,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-28T04:33:34.403Z",
+      "fitByBasePack": {
+        "modelo-19": {
+          "x": -17.7,
+          "y": -77.9,
+          "scale": 0.424,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-18": {
+          "x": -8.5,
+          "y": -115.6,
+          "scale": 0.494,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-18": {
+          "hue": 64,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "8dc8a4ee-59f0-45a2-bc1a-5d13adcab662",
+      "name": "88d03298-d156-4fa3-93c2-2e8c6e29aab7 3 (frente)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 507,
+      "height": 456,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -8.8,
+          "y": -147.7,
+          "scale": 0.7,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-16": {
+          "x": -6.1,
+          "y": -128.8,
+          "scale": 0.729,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-16": {
+          "hue": 0,
+          "saturation": 118,
+          "brightness": 96,
+          "enabled": true,
+          "tint": "#f1ddc0",
+          "tintStrength": 68,
+          "contrast": 200,
+          "detailPreservation": 77,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:35.798Z"
+    },
+    {
+      "id": "5c4f9fe7-cf5f-4d71-9d69-6ac68ffaae43",
+      "name": "88d03298-d156-4fa3-93c2-2e8c6e29aab7 3 (trás)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "width": 507,
+      "height": 456,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": -25.9,
+          "y": -95.9,
+          "scale": 0.72,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-16": {
+          "x": -29.9,
+          "y": -87.2,
+          "scale": 0.705,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-16": {
+          "hue": 0,
+          "saturation": 118,
+          "brightness": 96,
+          "enabled": true,
+          "tint": "#f1ddc0",
+          "tintStrength": 68,
+          "contrast": 200,
+          "detailPreservation": 77,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:35.798Z",
+      "linkedHairId": "8dc8a4ee-59f0-45a2-bc1a-5d13adcab662"
+    },
+    {
+      "id": "8d41939d-988e-4b96-a525-9f92b8033bd4",
+      "name": "ChatGPT Image 7_09_2026, 23_09_21 1 (frente)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 377,
+      "height": 611,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-17": {
+          "x": -17.6,
+          "y": 4.9,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 0.92,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-17": {
+          "hue": 0,
+          "saturation": 118,
+          "brightness": 96,
+          "enabled": true,
+          "tint": "#f3ae86",
+          "tintStrength": 68,
+          "contrast": 100,
+          "detailPreservation": 23,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:36.673Z"
+    },
+    {
+      "id": "abc5d2aa-e194-44f2-8208-c703866c777e",
+      "name": "ChatGPT Image 7_09_2026, 23_09_21 1 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "8d41939d-988e-4b96-a525-9f92b8033bd4",
+      "width": 377,
+      "height": 611,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-17": {
+          "x": -27.4,
+          "y": 57,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-17": {
+          "hue": 0,
+          "saturation": 118,
+          "brightness": 96,
+          "enabled": true,
+          "tint": "#f3ae86",
+          "tintStrength": 68,
+          "contrast": 100,
+          "detailPreservation": 23,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T04:33:36.673Z"
+    },
+    {
+      "id": "e17f5d80-1c7d-435c-b68f-48eb5087c696",
+      "name": "ChatGPT Image 7_09_2026, 23_09_21 3 (frente)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 377,
+      "height": 611,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-7": {
+          "x": -15.5,
+          "y": 8.7,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 0.94,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-19": {
+          "x": -17.1,
+          "y": 9.6,
+          "scale": 1,
+          "scaleX": 1.08,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-7": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-28T20:51:07.051Z"
+    },
+    {
+      "id": "ed001e27-399d-4356-8f82-5f14dec0bbf2",
+      "name": "Imagem do Codex 3 de set. de 2026, 21_33_27 · Variante 1",
+      "model": "feminino",
+      "category": "roupas",
+      "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
+      "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_33_27",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 273,
+      "contentY": 48,
+      "contentWidth": 479,
+      "contentHeight": 928,
+      "fitReferenceWidth": 487,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": 101.6,
+          "y": 88.81,
+          "scale": 1,
+          "scaleX": 1.2467,
+          "scaleY": 1.3814,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-19": {
+          "x": 97.83,
+          "y": 67.91,
+          "scale": 1,
+          "scaleX": 1.3483,
+          "scaleY": 1.33383,
+          "rotation": 0,
+          "flipX": false,
+          "headWarp": {
+            "version": 1,
+            "top": 50.989226513123924,
+            "bottom": 291.6495805312521,
+            "confidence": 0.9817,
+            "baselineError": 0.09371,
+            "candidateError": 0.01748,
+            "improvement": 0.8134,
+            "maxDisplacement": 12.59,
+            "knots": [
+              {
+                "y": 50.989,
+                "sourceY": 51,
+                "sourceLeft": 407.2,
+                "sourceRight": 468.8,
+                "targetLeft": 397.491,
+                "targetRight": 462.656,
+                "strength": 0.9
+              },
+              {
+                "y": 57.006,
+                "sourceY": 59.85,
+                "sourceLeft": 396.2,
+                "sourceRight": 479.8,
+                "targetLeft": 394.886,
+                "targetRight": 465.808,
+                "strength": 0.9
+              },
+              {
+                "y": 63.022,
+                "sourceY": 62.8,
+                "sourceLeft": 396.2,
+                "sourceRight": 479.8,
+                "targetLeft": 389.676,
+                "targetRight": 472.113,
+                "strength": 0.9
+              },
+              {
+                "y": 69.039,
+                "sourceY": 68.7,
+                "sourceLeft": 388.3,
+                "sourceRight": 488.7,
+                "targetLeft": 381.536,
+                "targetRight": 481.031,
+                "strength": 0.9
+              },
+              {
+                "y": 75.055,
+                "sourceY": 74.6,
+                "sourceLeft": 381.4,
+                "sourceRight": 495.6,
+                "targetLeft": 374.842,
+                "targetRight": 488.392,
+                "strength": 0.9
+              },
+              {
+                "y": 81.072,
+                "sourceY": 80.5,
+                "sourceLeft": 376.5,
+                "sourceRight": 501,
+                "targetLeft": 368.89,
+                "targetRight": 494.326,
+                "strength": 0.9
+              },
+              {
+                "y": 87.088,
+                "sourceY": 86.4,
+                "sourceLeft": 371.6,
+                "sourceRight": 506.4,
+                "targetLeft": 364.422,
+                "targetRight": 498.887,
+                "strength": 0.9
+              },
+              {
+                "y": 93.105,
+                "sourceY": 92.3,
+                "sourceLeft": 367.7,
+                "sourceRight": 510.3,
+                "targetLeft": 360.695,
+                "targetRight": 503.356,
+                "strength": 0.9
+              },
+              {
+                "y": 99.121,
+                "sourceY": 98.2,
+                "sourceLeft": 364,
+                "sourceRight": 514,
+                "targetLeft": 356.968,
+                "targetRight": 506.934,
+                "strength": 0.9
+              },
+              {
+                "y": 105.138,
+                "sourceY": 104.1,
+                "sourceLeft": 361.9,
+                "sourceRight": 516.1,
+                "targetLeft": 353.982,
+                "targetRight": 509.901,
+                "strength": 0.9
+              },
+              {
+                "y": 111.154,
+                "sourceY": 110,
+                "sourceLeft": 359,
+                "sourceRight": 519,
+                "targetLeft": 351.739,
+                "targetRight": 511.57,
+                "strength": 0.9
+              },
+              {
+                "y": 117.171,
+                "sourceY": 115.9,
+                "sourceLeft": 357.1,
+                "sourceRight": 521,
+                "targetLeft": 349.699,
+                "targetRight": 513.813,
+                "strength": 0.9
+              },
+              {
+                "y": 123.187,
+                "sourceY": 121.8,
+                "sourceLeft": 356,
+                "sourceRight": 523,
+                "targetLeft": 348.216,
+                "targetRight": 515.834,
+                "strength": 0.9
+              },
+              {
+                "y": 129.204,
+                "sourceY": 127.7,
+                "sourceLeft": 354,
+                "sourceRight": 524.7,
+                "targetLeft": 346.733,
+                "targetRight": 517.318,
+                "strength": 0.9
+              },
+              {
+                "y": 135.22,
+                "sourceY": 127.7,
+                "sourceLeft": 354,
+                "sourceRight": 524.7,
+                "targetLeft": 345.731,
+                "targetRight": 518.801,
+                "strength": 0.9
+              },
+              {
+                "y": 141.237,
+                "sourceY": 133.6,
+                "sourceLeft": 353,
+                "sourceRight": 526,
+                "targetLeft": 345.249,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 147.253,
+                "sourceY": 139.5,
+                "sourceLeft": 352,
+                "sourceRight": 526.5,
+                "targetLeft": 343.766,
+                "targetRight": 520.285,
+                "strength": 0.9
+              },
+              {
+                "y": 153.27,
+                "sourceY": 145.4,
+                "sourceLeft": 352,
+                "sourceRight": 527,
+                "targetLeft": 343.766,
+                "targetRight": 521.026,
+                "strength": 0.9
+              },
+              {
+                "y": 159.286,
+                "sourceY": 151.3,
+                "sourceLeft": 351,
+                "sourceRight": 528,
+                "targetLeft": 343.766,
+                "targetRight": 521.768,
+                "strength": 0.9
+              },
+              {
+                "y": 165.303,
+                "sourceY": 157.2,
+                "sourceLeft": 351,
+                "sourceRight": 528,
+                "targetLeft": 343.766,
+                "targetRight": 521.768,
+                "strength": 0.9
+              },
+              {
+                "y": 171.319,
+                "sourceY": 163.1,
+                "sourceLeft": 351,
+                "sourceRight": 529,
+                "targetLeft": 343.766,
+                "targetRight": 521.768,
+                "strength": 0.9
+              },
+              {
+                "y": 177.336,
+                "sourceY": 169,
+                "sourceLeft": 351,
+                "sourceRight": 529,
+                "targetLeft": 343.766,
+                "targetRight": 522.936,
+                "strength": 0.9
+              },
+              {
+                "y": 183.352,
+                "sourceY": 174.9,
+                "sourceLeft": 351.9,
+                "sourceRight": 529,
+                "targetLeft": 344.508,
+                "targetRight": 527.998,
+                "strength": 0.9
+              },
+              {
+                "y": 189.369,
+                "sourceY": 180.8,
+                "sourceLeft": 352,
+                "sourceRight": 529,
+                "targetLeft": 345.249,
+                "targetRight": 527.998,
+                "strength": 0.9
+              },
+              {
+                "y": 195.385,
+                "sourceY": 186.7,
+                "sourceLeft": 353,
+                "sourceRight": 528,
+                "targetLeft": 346.733,
+                "targetRight": 527.998,
+                "strength": 0.9
+              },
+              {
+                "y": 201.402,
+                "sourceY": 192.6,
+                "sourceLeft": 353,
+                "sourceRight": 528,
+                "targetLeft": 346.733,
+                "targetRight": 524.735,
+                "strength": 0.9
+              },
+              {
+                "y": 207.418,
+                "sourceY": 198.5,
+                "sourceLeft": 353,
+                "sourceRight": 528,
+                "targetLeft": 346.733,
+                "targetRight": 521.768,
+                "strength": 0.9
+              },
+              {
+                "y": 213.435,
+                "sourceY": 204.4,
+                "sourceLeft": 350.6,
+                "sourceRight": 528,
+                "targetLeft": 342.524,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 219.451,
+                "sourceY": 213.25,
+                "sourceLeft": 347,
+                "sourceRight": 527,
+                "targetLeft": 340.799,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 225.468,
+                "sourceY": 222.1,
+                "sourceLeft": 347,
+                "sourceRight": 527,
+                "targetLeft": 340.799,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 231.484,
+                "sourceY": 228,
+                "sourceLeft": 348,
+                "sourceRight": 526,
+                "targetLeft": 340.799,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 237.501,
+                "sourceY": 233.9,
+                "sourceLeft": 350.9,
+                "sourceRight": 525.1,
+                "targetLeft": 343.024,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 243.518,
+                "sourceY": 239.8,
+                "sourceLeft": 354.8,
+                "sourceRight": 524.2,
+                "targetLeft": 346.584,
+                "targetRight": 519.543,
+                "strength": 0.9
+              },
+              {
+                "y": 249.534,
+                "sourceY": 245.7,
+                "sourceLeft": 359.7,
+                "sourceRight": 522.3,
+                "targetLeft": 350.923,
+                "targetRight": 518.189,
+                "strength": 0.9
+              },
+              {
+                "y": 255.551,
+                "sourceY": 251.6,
+                "sourceLeft": 375.6,
+                "sourceRight": 519.4,
+                "targetLeft": 359.04,
+                "targetRight": 515.834,
+                "strength": 0.732
+              },
+              {
+                "y": 261.567,
+                "sourceY": 257.5,
+                "sourceLeft": 381.5,
+                "sourceRight": 515.5,
+                "targetLeft": 373.989,
+                "targetRight": 512.219,
+                "strength": 0.61
+              },
+              {
+                "y": 267.584,
+                "sourceY": 263.4,
+                "sourceLeft": 388.8,
+                "sourceRight": 510.6,
+                "targetLeft": 381.517,
+                "targetRight": 507.009,
+                "strength": 0.488
+              },
+              {
+                "y": 273.6,
+                "sourceY": 269.3,
+                "sourceLeft": 394,
+                "sourceRight": 503.7,
+                "targetLeft": 390.436,
+                "targetRight": 499.573,
+                "strength": 0.366
+              },
+              {
+                "y": 279.617,
+                "sourceY": 275.2,
+                "sourceLeft": 394.2,
+                "sourceRight": 493.6,
+                "targetLeft": 398.65,
+                "targetRight": 489.171,
+                "strength": 0.244
+              },
+              {
+                "y": 285.633,
+                "sourceY": 278.15,
+                "sourceLeft": 394.6,
+                "sourceRight": 486.6,
+                "targetLeft": 398.65,
+                "targetRight": 482.496,
+                "strength": 0.122
+              },
+              {
+                "y": 291.65,
+                "sourceY": 287,
+                "sourceLeft": 395,
+                "sourceRight": 479.6,
+                "targetLeft": 398.65,
+                "targetRight": 479.159,
+                "strength": 0
+              }
+            ]
+          }
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "layerMasksByBasePack": {
+        "modelo-9": [],
+        "modelo-19": []
+      },
+      "updatedAt": "2026-09-28T20:51:09.025Z"
+    },
+    {
+      "id": "61eaac3b-1216-45b6-a7fe-ba7afb610670",
+      "name": "Imagem do Codex 3 de set. de 2026, 21_33_27 · Variante 2",
+      "model": "feminino",
+      "category": "roupas",
+      "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
+      "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_33_27",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 269,
+      "contentY": 51,
+      "contentWidth": 487,
+      "contentHeight": 925,
+      "fitReferenceWidth": 487,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": 110.33,
+          "y": 81.99,
+          "scale": 1,
+          "scaleX": 1.2467,
+          "scaleY": 1.3755,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-19": {
+          "x": 106.35,
+          "y": 65.9,
+          "scale": 1,
+          "scaleX": 1.3463,
+          "scaleY": 1.33819,
+          "rotation": 0,
+          "flipX": false,
+          "headWarp": {
+            "version": 1,
+            "top": 53.99328944320314,
+            "bottom": 293.86954019982215,
+            "confidence": 1,
+            "baselineError": 0.09206,
+            "candidateError": 0.01518,
+            "improvement": 0.8351,
+            "maxDisplacement": 13.76,
+            "knots": [
+              {
+                "y": 53.993,
+                "sourceY": 54,
+                "sourceLeft": 400.225,
+                "sourceRight": 462.85,
+                "targetLeft": 390.992,
+                "targetRight": 456.255,
+                "strength": 0.9
+              },
+              {
+                "y": 59.99,
+                "sourceY": 62.888,
+                "sourceLeft": 390.15,
+                "sourceRight": 474.7,
+                "targetLeft": 388.383,
+                "targetRight": 459.411,
+                "strength": 0.9
+              },
+              {
+                "y": 65.987,
+                "sourceY": 65.85,
+                "sourceLeft": 390.15,
+                "sourceRight": 474.7,
+                "targetLeft": 383.165,
+                "targetRight": 465.725,
+                "strength": 0.9
+              },
+              {
+                "y": 71.984,
+                "sourceY": 71.775,
+                "sourceLeft": 382.225,
+                "sourceRight": 483.775,
+                "targetLeft": 375.013,
+                "targetRight": 474.657,
+                "strength": 0.9
+              },
+              {
+                "y": 77.981,
+                "sourceY": 77.7,
+                "sourceLeft": 375.3,
+                "sourceRight": 490,
+                "targetLeft": 368.31,
+                "targetRight": 482.029,
+                "strength": 0.9
+              },
+              {
+                "y": 83.978,
+                "sourceY": 83.625,
+                "sourceLeft": 370.375,
+                "sourceRight": 495.625,
+                "targetLeft": 362.349,
+                "targetRight": 487.971,
+                "strength": 0.9
+              },
+              {
+                "y": 89.975,
+                "sourceY": 89.55,
+                "sourceLeft": 365.45,
+                "sourceRight": 501,
+                "targetLeft": 357.874,
+                "targetRight": 492.539,
+                "strength": 0.9
+              },
+              {
+                "y": 95.972,
+                "sourceY": 95.475,
+                "sourceLeft": 361.525,
+                "sourceRight": 505,
+                "targetLeft": 354.141,
+                "targetRight": 497.014,
+                "strength": 0.9
+              },
+              {
+                "y": 101.969,
+                "sourceY": 101.4,
+                "sourceLeft": 358,
+                "sourceRight": 508.4,
+                "targetLeft": 350.409,
+                "targetRight": 500.598,
+                "strength": 0.9
+              },
+              {
+                "y": 107.965,
+                "sourceY": 107.325,
+                "sourceLeft": 355.675,
+                "sourceRight": 511,
+                "targetLeft": 347.419,
+                "targetRight": 503.569,
+                "strength": 0.9
+              },
+              {
+                "y": 113.962,
+                "sourceY": 113.25,
+                "sourceLeft": 353,
+                "sourceRight": 513.25,
+                "targetLeft": 345.172,
+                "targetRight": 505.241,
+                "strength": 0.9
+              },
+              {
+                "y": 119.959,
+                "sourceY": 119.175,
+                "sourceLeft": 351,
+                "sourceRight": 515.175,
+                "targetLeft": 343.13,
+                "targetRight": 507.488,
+                "strength": 0.9
+              },
+              {
+                "y": 125.956,
+                "sourceY": 125.1,
+                "sourceLeft": 349.9,
+                "sourceRight": 517.1,
+                "targetLeft": 341.644,
+                "targetRight": 509.512,
+                "strength": 0.9
+              },
+              {
+                "y": 131.953,
+                "sourceY": 131.025,
+                "sourceLeft": 348,
+                "sourceRight": 519,
+                "targetLeft": 340.159,
+                "targetRight": 510.997,
+                "strength": 0.9
+              },
+              {
+                "y": 137.95,
+                "sourceY": 136.95,
+                "sourceLeft": 347,
+                "sourceRight": 520,
+                "targetLeft": 339.156,
+                "targetRight": 512.483,
+                "strength": 0.9
+              },
+              {
+                "y": 143.947,
+                "sourceY": 136.95,
+                "sourceLeft": 347,
+                "sourceRight": 520,
+                "targetLeft": 338.673,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 149.944,
+                "sourceY": 142.875,
+                "sourceLeft": 346,
+                "sourceRight": 521,
+                "targetLeft": 337.188,
+                "targetRight": 513.968,
+                "strength": 0.9
+              },
+              {
+                "y": 155.941,
+                "sourceY": 148.8,
+                "sourceLeft": 345,
+                "sourceRight": 521.8,
+                "targetLeft": 337.188,
+                "targetRight": 514.711,
+                "strength": 0.9
+              },
+              {
+                "y": 161.938,
+                "sourceY": 154.725,
+                "sourceLeft": 345,
+                "sourceRight": 522,
+                "targetLeft": 337.188,
+                "targetRight": 515.454,
+                "strength": 0.9
+              },
+              {
+                "y": 167.935,
+                "sourceY": 160.65,
+                "sourceLeft": 345,
+                "sourceRight": 522,
+                "targetLeft": 337.188,
+                "targetRight": 515.454,
+                "strength": 0.9
+              },
+              {
+                "y": 173.931,
+                "sourceY": 166.575,
+                "sourceLeft": 345,
+                "sourceRight": 522,
+                "targetLeft": 337.188,
+                "targetRight": 515.454,
+                "strength": 0.9
+              },
+              {
+                "y": 179.928,
+                "sourceY": 172.5,
+                "sourceLeft": 345,
+                "sourceRight": 522,
+                "targetLeft": 337.188,
+                "targetRight": 516.624,
+                "strength": 0.9
+              },
+              {
+                "y": 185.925,
+                "sourceY": 178.425,
+                "sourceLeft": 345,
+                "sourceRight": 522,
+                "targetLeft": 337.93,
+                "targetRight": 521.693,
+                "strength": 0.9
+              },
+              {
+                "y": 191.922,
+                "sourceY": 184.35,
+                "sourceLeft": 346,
+                "sourceRight": 522,
+                "targetLeft": 338.673,
+                "targetRight": 521.693,
+                "strength": 0.9
+              },
+              {
+                "y": 197.919,
+                "sourceY": 190.275,
+                "sourceLeft": 346,
+                "sourceRight": 522,
+                "targetLeft": 340.159,
+                "targetRight": 521.693,
+                "strength": 0.9
+              },
+              {
+                "y": 203.916,
+                "sourceY": 196.2,
+                "sourceLeft": 346,
+                "sourceRight": 522,
+                "targetLeft": 340.159,
+                "targetRight": 518.425,
+                "strength": 0.9
+              },
+              {
+                "y": 209.913,
+                "sourceY": 202.125,
+                "sourceLeft": 345.75,
+                "sourceRight": 522,
+                "targetLeft": 340.159,
+                "targetRight": 515.454,
+                "strength": 0.9
+              },
+              {
+                "y": 215.91,
+                "sourceY": 208.05,
+                "sourceLeft": 340.95,
+                "sourceRight": 521,
+                "targetLeft": 335.943,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 221.907,
+                "sourceY": 213.975,
+                "sourceLeft": 340,
+                "sourceRight": 521,
+                "targetLeft": 334.216,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 227.904,
+                "sourceY": 219.9,
+                "sourceLeft": 340,
+                "sourceRight": 520,
+                "targetLeft": 334.216,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 233.9,
+                "sourceY": 225.825,
+                "sourceLeft": 340,
+                "sourceRight": 520,
+                "targetLeft": 334.216,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 239.897,
+                "sourceY": 231.75,
+                "sourceLeft": 342,
+                "sourceRight": 519,
+                "targetLeft": 336.445,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 245.894,
+                "sourceY": 237.675,
+                "sourceLeft": 345.675,
+                "sourceRight": 518.325,
+                "targetLeft": 340.01,
+                "targetRight": 513.226,
+                "strength": 0.9
+              },
+              {
+                "y": 251.891,
+                "sourceY": 243.6,
+                "sourceLeft": 350,
+                "sourceRight": 517,
+                "targetLeft": 344.355,
+                "targetRight": 511.87,
+                "strength": 0.9
+              },
+              {
+                "y": 257.888,
+                "sourceY": 249.525,
+                "sourceLeft": 361.725,
+                "sourceRight": 515,
+                "targetLeft": 351.709,
+                "targetRight": 509.512,
+                "strength": 0.732
+              },
+              {
+                "y": 263.885,
+                "sourceY": 255.45,
+                "sourceLeft": 371.45,
+                "sourceRight": 511.55,
+                "targetLeft": 367.456,
+                "targetRight": 505.891,
+                "strength": 0.61
+              },
+              {
+                "y": 269.882,
+                "sourceY": 264.337,
+                "sourceLeft": 385.3,
+                "sourceRight": 502.7,
+                "targetLeft": 374.995,
+                "targetRight": 500.673,
+                "strength": 0.488
+              },
+              {
+                "y": 275.879,
+                "sourceY": 273.225,
+                "sourceLeft": 388,
+                "sourceRight": 495.55,
+                "targetLeft": 383.927,
+                "targetRight": 493.226,
+                "strength": 0.366
+              },
+              {
+                "y": 281.876,
+                "sourceY": 279.15,
+                "sourceLeft": 388,
+                "sourceRight": 485.7,
+                "targetLeft": 392.153,
+                "targetRight": 482.809,
+                "strength": 0.244
+              },
+              {
+                "y": 287.873,
+                "sourceY": 282.113,
+                "sourceLeft": 388.5,
+                "sourceRight": 477.2,
+                "targetLeft": 392.153,
+                "targetRight": 476.124,
+                "strength": 0.122
+              },
+              {
+                "y": 293.87,
+                "sourceY": 291,
+                "sourceLeft": 389,
+                "sourceRight": 468.7,
+                "targetLeft": 392.153,
+                "targetRight": 472.781,
+                "strength": 0
+              }
+            ]
+          }
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-9": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "layerMasksByBasePack": {
+        "modelo-9": [],
+        "modelo-19": []
+      },
+      "updatedAt": "2026-09-28T20:51:09.025Z"
+    },
+    {
+      "id": "b47aa4ef-a69b-4a85-afb1-85e2acb76a10",
+      "name": "Design sem nome (38) (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 612,
+      "height": 712,
+      "defaultX": 970,
+      "defaultY": 285.5,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 612,
+      "contentHeight": 712,
+      "fitReferenceWidth": 614,
+      "fitReferenceHeight": 713,
+      "updatedAt": "2026-09-30T12:43:48.837Z"
+    },
+    {
+      "id": "9f86bb34-c456-437d-bc60-d05b80e482c1",
+      "name": "Design sem nome (38) (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "b47aa4ef-a69b-4a85-afb1-85e2acb76a10",
+      "width": 660,
+      "height": 716,
+      "defaultX": 969.5,
+      "defaultY": 284.5,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 660,
+      "contentHeight": 716,
+      "fitReferenceWidth": 663,
+      "fitReferenceHeight": 717,
+      "updatedAt": "2026-09-30T12:43:48.941Z"
+    },
+    {
+      "id": "95b94504-11aa-40d3-960c-275f4b96eec8",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_18_49 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 973,
+      "height": 759,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-20": {
+          "x": -22.5,
+          "y": -144.9,
+          "scale": 0.356,
+          "scaleX": 1,
+          "scaleY": 0.96,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-20": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-30T20:22:53.689Z"
+    },
+    {
+      "id": "3805ee05-a02b-43b6-8937-1b8c667b39e6",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_18_49 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "95b94504-11aa-40d3-960c-275f4b96eec8",
+      "width": 808,
+      "height": 757,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-20": {
+          "x": -31.4,
+          "y": -92.8,
+          "scale": 0.401,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-20": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-09-30T20:22:53.689Z"
+    },
+    {
+      "id": "0710eff1-1d03-4ef4-8d8f-67061c66172b",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_32_13 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 560,
+      "height": 751,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T20:32:35.894Z"
+    },
+    {
+      "id": "a190d39e-017e-479b-8a4f-3c403456104a",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_32_13 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "0710eff1-1d03-4ef4-8d8f-67061c66172b",
+      "width": 624,
+      "height": 739,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T20:32:35.895Z"
+    },
+    {
+      "id": "7e598757-f535-4603-83b8-1a44bb5cc90c",
+      "name": "Design sem nome (45) (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 815,
+      "height": 695,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T20:52:44.508Z"
+    },
+    {
+      "id": "9aea44fe-eba1-4906-a37f-3e5f848640ca",
+      "name": "Design sem nome (45) (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "7e598757-f535-4603-83b8-1a44bb5cc90c",
+      "width": 773,
+      "height": 723,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T20:52:44.508Z"
+    },
+    {
+      "id": "1ae4ac7b-ceee-411e-969f-7cbf7f5cfdb2",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 18_27_16 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 675,
+      "height": 833,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T21:29:37.303Z"
+    },
+    {
+      "id": "ddea15ac-9194-4726-a07e-c66cff252d2d",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 18_27_16 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "1ae4ac7b-ceee-411e-969f-7cbf7f5cfdb2",
+      "width": 702,
+      "height": 846,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-09-30T21:29:37.303Z"
+    },
+    {
+      "id": "b6c57ab0-e408-46c1-97eb-d1c5f6fcc322",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 05_52_48 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 941,
+      "height": 756,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T08:53:02.238Z"
+    },
+    {
+      "id": "74735f0b-1350-446c-ba90-3a28f68f6375",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 05_52_48 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "b6c57ab0-e408-46c1-97eb-d1c5f6fcc322",
+      "width": 830,
+      "height": 738,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T08:53:02.238Z"
+    },
+    {
+      "id": "de9e5e77-d3ad-4c09-ab62-8abc274df190",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 05_56_32 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 929,
+      "height": 756,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T08:56:44.311Z"
+    },
+    {
+      "id": "38614818-eb1f-49bf-a7db-7641ce417ad1",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 05_56_32 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "de9e5e77-d3ad-4c09-ab62-8abc274df190",
+      "width": 827,
+      "height": 738,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T08:56:44.312Z"
+    },
+    {
+      "id": "58311795-5dc0-47fd-a121-a13bca89206b",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 06_20_11 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 842,
+      "height": 760,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T09:20:48.744Z"
+    },
+    {
+      "id": "68bb58a8-3f9f-43ec-b602-dd1ceb3c2058",
+      "name": "Imagem do ChatGPT 1 de out. de 2026, 06_20_11 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "58311795-5dc0-47fd-a121-a13bca89206b",
+      "width": 731,
+      "height": 699,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T09:20:48.744Z"
+    },
+    {
+      "id": "3d0d25b8-8d7d-4dae-82e8-fcef5dbd73be",
+      "name": "Trio de cavaleiros medievais chibi",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "f1b0414c-2d5f-487e-9c22-4d958d055bf2",
+      "outfitGroupName": "Trio de cavaleiros medievais chibi",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 253,
+      "contentY": 63,
+      "contentWidth": 519,
+      "contentHeight": 913,
+      "fitReferenceWidth": 559,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T09:43:48.769Z"
+    },
+    {
+      "id": "04292b87-151b-4d46-a76a-7b9a03debc45",
+      "name": "Trio de cavaleiros medievais chibi · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "f1b0414c-2d5f-487e-9c22-4d958d055bf2",
+      "outfitGroupName": "Trio de cavaleiros medievais chibi",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 262,
+      "contentY": 51,
+      "contentWidth": 501,
+      "contentHeight": 925,
+      "fitReferenceWidth": 559,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T09:43:48.769Z"
+    },
+    {
+      "id": "0a7dd8f8-ab52-4a9d-95dc-9734fc5cd9ef",
+      "name": "Trio de cavaleiros medievais chibi · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "f1b0414c-2d5f-487e-9c22-4d958d055bf2",
+      "outfitGroupName": "Trio de cavaleiros medievais chibi",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 233,
+      "contentY": 48,
+      "contentWidth": 559,
+      "contentHeight": 928,
+      "fitReferenceWidth": 559,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T09:43:48.769Z"
+    },
+    {
+      "id": "5160c200-fc88-4381-b9d7-ff91cab52d07",
+      "name": "Três Poses de Manto Fantástico",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "185229ae-2c66-404d-ae9a-0c6048f84b95",
+      "outfitGroupName": "Três Poses de Manto Fantástico",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 239,
+      "contentY": 59,
+      "contentWidth": 547,
+      "contentHeight": 917,
+      "fitReferenceWidth": 547,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T10:05:54.455Z"
+    },
+    {
+      "id": "d3d7eab1-1ee3-44f3-9b15-cc7dfdc07f46",
+      "name": "Três Poses de Manto Fantástico · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "185229ae-2c66-404d-ae9a-0c6048f84b95",
+      "outfitGroupName": "Três Poses de Manto Fantástico",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 247,
+      "contentY": 55,
+      "contentWidth": 530,
+      "contentHeight": 921,
+      "fitReferenceWidth": 547,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T10:05:54.455Z"
+    },
+    {
+      "id": "f639958b-457f-47eb-82d6-95ee50a85a10",
+      "name": "Três Poses de Manto Fantástico · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "185229ae-2c66-404d-ae9a-0c6048f84b95",
+      "outfitGroupName": "Três Poses de Manto Fantástico",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 260,
+      "contentY": 48,
+      "contentWidth": 504,
+      "contentHeight": 928,
+      "fitReferenceWidth": 547,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-01T10:05:54.455Z"
+    },
+    {
+      "id": "df1a8ecd-c38c-4724-ab1c-4fc2848348ca",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_51_20 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 863,
+      "height": 731,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-03T01:57:16.177Z"
+    },
+    {
+      "id": "4fa47e70-1ed4-4a89-a943-90285a93547c",
+      "name": "ChatGPT Image 7_09_2026, 23_09_21 3 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "width": 377,
+      "height": 611,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-7": {
+          "x": -22.5,
+          "y": 95.4,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-19": {
+          "x": -43.7,
+          "y": 17.4,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-7": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        },
+        "modelo-19": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "updatedAt": "2026-10-03T02:05:34.719Z"
+    },
+    {
+      "id": "652deef6-5e3a-4049-b908-35301b5df22c",
+      "name": "ChatGPT Image 20_08_2026, 22_49_16 3 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "3bfe3d01-8af0-46b8-b67e-8790bbb3e997",
+      "width": 413,
+      "height": 464,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-4": {
+          "x": -23,
+          "y": 66.7,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-5": {
+          "x": 0,
+          "y": 24.9,
+          "scale": 1,
+          "scaleX": 0.78,
+          "scaleY": 1.1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-5": {
+          "hue": 0,
+          "saturation": 0,
+          "brightness": 95,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 110,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "catalogVersion": "v0",
+      "updatedAt": "2026-10-03T02:08:43.748Z"
+    },
+    {
+      "id": "2b3ce657-a074-485d-b220-1bbf971315e4",
+      "name": "ChatGPT Image 20_08_2026, 23_14_32 2 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "width": 335,
+      "height": 460,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-9": {
+          "x": 2.2,
+          "y": 105.6,
+          "scale": 1.196,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "catalogVersion": "v0",
+      "updatedAt": "2026-10-03T02:08:43.748Z"
+    },
+    {
+      "id": "769ec2aa-e0ab-4445-9e80-a2893b4b4b2d",
+      "name": "ChatGPT Image 29_07_2026, 05_50_18 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "width": 507,
+      "height": 885,
+      "defaultX": 950.5,
+      "defaultY": 516.5,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "catalogVersion": "v0",
+      "updatedAt": "2026-10-03T02:10:05.530Z"
+    },
+    {
+      "id": "41a725a6-bd94-453f-b044-20292ea777a5",
+      "name": "ChatGPT Image 20_08_2026, 23_22_26 2 (trás)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "1deb780a-a54e-421e-b115-4db001869d56",
+      "width": 377,
+      "height": 535,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "fitByBasePack": {
+        "modelo-5": {
+          "x": -13.9,
+          "y": 133.7,
+          "scale": 1.266,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "modelo-7": {
+          "x": -15.6,
+          "y": 97.6,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-5": {
+          "hue": 0,
+          "saturation": 204,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#efddc3",
+          "tintStrength": 100,
+          "contrast": 192,
+          "detailPreservation": 100,
+          "colorSpace": "oklch"
+        },
+        "modelo-7": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      },
+      "catalogVersion": "v0",
+      "updatedAt": "2026-10-03T02:10:05.530Z"
+    },
+    {
+      "id": "4b0ed872-be1d-41d5-aaf1-cd86f2065dd0",
+      "name": "Imagem do ChatGPT 30 de set. de 2026, 17_51_20 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "width": 800,
+      "height": 713,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T00:28:34.496Z"
+    },
+    {
+      "id": "847643e0-2e55-4d40-9f36-f8aa7b34be56",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_36_03 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 684,
+      "height": 764,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T00:38:10.627Z"
+    },
+    {
+      "id": "d2c460e4-1547-4836-944a-285d0903c577",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_36_03 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "847643e0-2e55-4d40-9f36-f8aa7b34be56",
+      "width": 663,
+      "height": 708,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T00:38:10.627Z"
+    },
+    {
+      "id": "873d332f-4c41-4c91-8cc6-8f3a2e1da3cd",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_41_21 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 673,
+      "height": 708,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T00:45:39.750Z"
+    },
+    {
+      "id": "f5e520d3-e2d3-49aa-81bb-5a6e26888641",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_41_21 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "873d332f-4c41-4c91-8cc6-8f3a2e1da3cd",
+      "width": 782,
+      "height": 730,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T00:45:39.751Z"
+    },
+    {
+      "id": "b148225f-a29d-4432-a3c3-ee49dd96c6c0",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_01_53 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 705,
+      "height": 733,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:02:02.440Z"
+    },
+    {
+      "id": "ab7e4d95-6242-4122-8af5-ae7bee64514a",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_01_53 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "b148225f-a29d-4432-a3c3-ee49dd96c6c0",
+      "width": 761,
+      "height": 727,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:02:02.440Z"
+    },
+    {
+      "id": "4dc2f942-6a21-4363-b0ca-5a13739c760e",
+      "name": "Design sem nome (46) (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 778,
+      "height": 715,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:07:22.513Z",
+      "fitByBasePack": {
+        "modelo-24": {
+          "x": -17.5,
+          "y": -106.8,
+          "scale": 0.549,
+          "scaleX": 0.84,
+          "scaleY": 0.92,
+          "rotation": -5,
+          "flipX": false
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-24": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "6b8d7d41-95e3-42d4-9b71-201b886f7404",
+      "name": "Design sem nome (46) (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "4dc2f942-6a21-4363-b0ca-5a13739c760e",
+      "width": 744,
+      "height": 636,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:07:22.513Z",
+      "fitByBasePack": {
+        "modelo-24": {
+          "x": -21.2,
+          "y": -97,
+          "scale": 0.53,
+          "scaleX": 0.86,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": true
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-24": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "f4c89df5-5349-4796-ba9c-e59451fa6d46",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_07_03 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 897,
+      "height": 712,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:07:27.301Z"
+    },
+    {
+      "id": "cd7a1c45-36b7-4c67-ac2b-ec3d2200e649",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_07_03 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "f4c89df5-5349-4796-ba9c-e59451fa6d46",
+      "width": 777,
+      "height": 674,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:07:27.301Z"
+    },
+    {
+      "id": "22b58acd-c033-482f-9345-c81b11539214",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_16_16 (frente V2)",
+      "model": "masculino",
+      "category": "cabelos",
+      "width": 860,
+      "height": 655,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:16:25.959Z"
+    },
+    {
+      "id": "33ef6877-ac26-4d9a-b9f7-51af0c8b9fe1",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_16_16 (trás V2)",
+      "model": "masculino",
+      "category": "cabelosTras",
+      "linkedHairId": "22b58acd-c033-482f-9345-c81b11539214",
+      "width": 763,
+      "height": 637,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:16:25.959Z"
+    },
+    {
+      "id": "5305c945-dd14-442d-9353-75b6e6cc6acd",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_49_44 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 882,
+      "height": 736,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:26:29.398Z"
+    },
+    {
+      "id": "a06da529-064d-411d-aec6-b0cabd6eb94b",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 21_49_44 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "width": 823,
+      "height": 732,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T01:30:43.169Z"
+    },
+    {
+      "id": "4433abcf-ceb2-483c-b6f8-42d474f6e123",
+      "name": "Três Manequins Chibi em Poses Sentadas",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "7695cbff-f256-40e6-a97c-17c9b7f7add5",
+      "outfitGroupName": "Três Manequins Chibi em Poses Sentadas",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 293,
+      "contentY": 62,
+      "contentWidth": 438,
+      "contentHeight": 914,
+      "fitReferenceWidth": 438,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:06:48.420Z"
+    },
+    {
+      "id": "ee8e3f84-fc0f-4786-982f-b16bc53722f9",
+      "name": "Três Manequins Chibi em Poses Sentadas · Variante 1",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "7695cbff-f256-40e6-a97c-17c9b7f7add5",
+      "outfitGroupName": "Três Manequins Chibi em Poses Sentadas",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 305,
+      "contentY": 49,
+      "contentWidth": 414,
+      "contentHeight": 927,
+      "fitReferenceWidth": 438,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:06:48.420Z"
+    },
+    {
+      "id": "1676f28e-3498-4b16-bc44-58c1ddef5d00",
+      "name": "Três Manequins Chibi em Poses Sentadas · Variante 2",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "7695cbff-f256-40e6-a97c-17c9b7f7add5",
+      "outfitGroupName": "Três Manequins Chibi em Poses Sentadas",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 309,
+      "contentY": 48,
+      "contentWidth": 407,
+      "contentHeight": 928,
+      "fitReferenceWidth": 438,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:06:48.420Z"
+    },
+    {
+      "id": "57cd0e6f-4074-49eb-98d1-985457731c47",
+      "name": "Modelo de Poses com Três Figuras sentadas",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "ed9da49a-a6b3-416d-8510-7257fc96bf1e",
+      "outfitGroupName": "Modelo de Poses com Três Figuras sentadas",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 284,
+      "contentY": 61,
+      "contentWidth": 456,
+      "contentHeight": 915,
+      "fitReferenceWidth": 456,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:08:48.431Z"
+    },
+    {
+      "id": "fe760e2a-dfa5-410a-ba2f-be2b03e8b917",
+      "name": "Modelo de Poses com Três Figuras sentadas · Variante 1",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "ed9da49a-a6b3-416d-8510-7257fc96bf1e",
+      "outfitGroupName": "Modelo de Poses com Três Figuras sentadas",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 307,
+      "contentY": 49,
+      "contentWidth": 410,
+      "contentHeight": 927,
+      "fitReferenceWidth": 456,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:08:48.431Z"
+    },
+    {
+      "id": "d44646e2-f1cf-4373-9e17-fc527b99676d",
+      "name": "Modelo de Poses com Três Figuras sentadas · Variante 2",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "ed9da49a-a6b3-416d-8510-7257fc96bf1e",
+      "outfitGroupName": "Modelo de Poses com Três Figuras sentadas",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 316,
+      "contentY": 48,
+      "contentWidth": 393,
+      "contentHeight": 928,
+      "fitReferenceWidth": 456,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:08:48.431Z"
+    },
+    {
+      "id": "c5f31998-4088-47e6-96ff-2237628672e8",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_00_02 (frente V2)",
+      "model": "feminino",
+      "category": "cabelos",
+      "width": 752,
+      "height": 759,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:26:42.058Z",
+      "fitByBasePack": {
+        "modelo-22": {
+          "x": -26.2,
+          "y": -18,
+          "scale": 0.654,
+          "scaleX": 0.8,
+          "scaleY": 1,
+          "rotation": -7,
+          "flipX": true
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-22": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "563f5cad-154c-4f8c-ba51-58343eea5da1",
+      "name": "Imagem do ChatGPT 5 de out. de 2026, 22_00_02 (trás V2)",
+      "model": "feminino",
+      "category": "cabelosTras",
+      "linkedHairId": "c5f31998-4088-47e6-96ff-2237628672e8",
+      "width": 718,
+      "height": 767,
+      "defaultX": 970,
+      "defaultY": 285,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:26:42.058Z",
+      "fitByBasePack": {
+        "modelo-22": {
+          "x": -12.5,
+          "y": 34.8,
+          "scale": 0.575,
+          "scaleX": 0.88,
+          "scaleY": 1,
+          "rotation": -8,
+          "flipX": true
+        }
+      },
+      "colorAdjustmentsByBasePack": {
+        "modelo-22": {
+          "hue": 0,
+          "saturation": 100,
+          "brightness": 100,
+          "enabled": true,
+          "tint": "#ffffff",
+          "tintStrength": 0,
+          "contrast": 100,
+          "detailPreservation": 78,
+          "colorSpace": "oklch"
+        }
+      }
+    },
+    {
+      "id": "842b03f0-1838-4503-a267-284b46512692",
+      "name": "Folha de Referência com Três Poses",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "337d2573-0b80-440b-82b0-afe082b0cae1",
+      "outfitGroupName": "Folha de Referência com Três Poses",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 290,
+      "contentY": 65,
+      "contentWidth": 445,
+      "contentHeight": 911,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:34:54.782Z"
+    },
+    {
+      "id": "c272ea1c-49ae-4072-b9fb-7ab762068eaa",
+      "name": "Folha de Referência com Três Poses · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "337d2573-0b80-440b-82b0-afe082b0cae1",
+      "outfitGroupName": "Folha de Referência com Três Poses",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 313,
+      "contentY": 55,
+      "contentWidth": 399,
+      "contentHeight": 921,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:34:54.782Z"
+    },
+    {
+      "id": "ea1659a1-18a3-4d9b-8eec-21ce5bcb7fd2",
+      "name": "Folha de Referência com Três Poses · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "337d2573-0b80-440b-82b0-afe082b0cae1",
+      "outfitGroupName": "Folha de Referência com Três Poses",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 311,
+      "contentY": 48,
+      "contentWidth": 403,
+      "contentHeight": 928,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:34:54.782Z"
+    },
+    {
+      "id": "ab5e41f7-ba7a-4cdb-acfa-fcde6504111d",
+      "name": "Três Figuras Gacha em Verde Vivo",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "1e68a5ed-8b21-422d-b105-49c13712689b",
+      "outfitGroupName": "Três Figuras Gacha em Verde Vivo",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 290,
+      "contentY": 60,
+      "contentWidth": 445,
+      "contentHeight": 916,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:36:58.635Z"
+    },
+    {
+      "id": "03b33d5d-9092-4583-98c0-636dec383d74",
+      "name": "Três Figuras Gacha em Verde Vivo · Variante 1",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "1e68a5ed-8b21-422d-b105-49c13712689b",
+      "outfitGroupName": "Três Figuras Gacha em Verde Vivo",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 311,
+      "contentY": 48,
+      "contentWidth": 403,
+      "contentHeight": 928,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:36:58.635Z"
+    },
+    {
+      "id": "ff5ed49d-68a5-4dc1-b363-abdb1ee16eff",
+      "name": "Três Figuras Gacha em Verde Vivo · Variante 2",
+      "model": "masculino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "1e68a5ed-8b21-422d-b105-49c13712689b",
+      "outfitGroupName": "Três Figuras Gacha em Verde Vivo",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 310,
+      "contentY": 48,
+      "contentWidth": 405,
+      "contentHeight": 928,
+      "fitReferenceWidth": 445,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.776,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:36:58.635Z"
+    },
+    {
+      "id": "29861e6b-385b-4d12-9ed6-49807bf96425",
+      "name": "Modelo Gacha em Três Poses Sentadas",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "2e9e39a6-0c0e-419a-a1b6-a034b36b1904",
+      "outfitGroupName": "Modelo Gacha em Três Poses Sentadas",
+      "outfitVariantIndex": 0,
+      "outfitCover": true,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 284,
+      "contentY": 59,
+      "contentWidth": 457,
+      "contentHeight": 917,
+      "fitReferenceWidth": 457,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:43:44.737Z"
+    },
+    {
+      "id": "6e74e908-790a-43da-9d7a-cac2ef150555",
+      "name": "Modelo Gacha em Três Poses Sentadas · Variante 1",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "2e9e39a6-0c0e-419a-a1b6-a034b36b1904",
+      "outfitGroupName": "Modelo Gacha em Três Poses Sentadas",
+      "outfitVariantIndex": 1,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 313,
+      "contentY": 48,
+      "contentWidth": 399,
+      "contentHeight": 928,
+      "fitReferenceWidth": 457,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:43:44.737Z"
+    },
+    {
+      "id": "a9260c63-bfb4-491b-861c-5efd40c71f76",
+      "name": "Modelo Gacha em Três Poses Sentadas · Variante 2",
+      "model": "feminino",
+      "category": "roupas",
+      "catalogVersion": "v1",
+      "outfitGroupId": "2e9e39a6-0c0e-419a-a1b6-a034b36b1904",
+      "outfitGroupName": "Modelo Gacha em Três Poses Sentadas",
+      "outfitVariantIndex": 2,
+      "outfitCover": false,
+      "width": 1024,
+      "height": 1024,
+      "defaultX": 960,
+      "defaultY": 560,
+      "contentX": 310,
+      "contentY": 49,
+      "contentWidth": 404,
+      "contentHeight": 927,
+      "fitReferenceWidth": 457,
+      "fitReferenceHeight": 928,
+      "fit": {
+        "x": -30,
+        "y": 115,
+        "scale": 0.787,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "updatedAt": "2026-10-06T13:43:44.737Z"
+    },
+    {
+      "id": "0bd3f4bb-d2ed-473d-ad4b-e656c34c193b",
+      "name": "Óculos Redondos Pretos com Lentes Verdes",
+      "model": "feminino",
+      "category": "acessorios",
+      "width": 1246,
+      "height": 377,
+      "defaultX": 629,
+      "defaultY": 633.5,
+      "fit": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "contentX": 0,
+      "contentY": 0,
+      "contentWidth": 1246,
+      "contentHeight": 377,
+      "fitReferenceWidth": 1246,
+      "fitReferenceHeight": 377,
+      "updatedAt": "2026-10-06T14:25:13.796Z"
     }
   ],
   "expressionPacks": [],
   "studios": [
+    {
+      "id": "8df34628-ac6b-4a7b-8c49-4a2b76dbec3b",
+      "name": "tses",
+      "rosterIds": [
+        "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+        "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+        "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+        "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+        "1b8fa92d-d64c-4389-a2bc-c41158788674"
+      ],
+      "background": null,
+      "characters": [
+        {
+          "id": "80ea99c8-6fe2-46f9-be4a-9fec3b806042",
+          "characterId": "1b8fa92d-d64c-4389-a2bc-c41158788674",
+          "x": 0.48307071396040785,
+          "y": 0.5221218875071799,
+          "scale": 0.85,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 1
+        },
+        {
+          "id": "6a3cf1f2-bdc1-409f-a391-88de9a2ebc38",
+          "characterId": "4860a75a-0b62-4b6a-b473-42a38eab8bf8",
+          "x": 0.3437289640500267,
+          "y": 0.530224759754041,
+          "scale": 0.85,
+          "flipX": false,
+          "expressionEmotion": "decepcionada",
+          "expressionState": "default",
+          "z": 2
+        },
+        {
+          "id": "3bf997db-f773-4633-90e8-f3ed8c214eb5",
+          "characterId": "0941bf98-6586-4f51-bbe2-3c01e25c0032",
+          "x": 0.5813912823834032,
+          "y": 0.5128613108866394,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "surpresa",
+          "expressionState": "default",
+          "z": 3
+        },
+        {
+          "id": "cdff2a18-b31a-4644-a884-49d5d55f4e11",
+          "characterId": "94d6ec02-f0cc-498e-b625-b2dcab6e6d56",
+          "x": 0.6972923024847881,
+          "y": 0.5452730266674185,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "pt_indignada",
+          "expressionState": "default",
+          "z": 4
+        },
+        {
+          "id": "8cee0b7c-1d45-4073-ade1-a02e43b0e20d",
+          "characterId": "2b95b633-b0bf-4951-89ea-5265f9d69f39",
+          "x": 0.806030543083114,
+          "y": 0.5186491523750327,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 5
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": false,
+        "rosterCompact": false,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": true
+      },
+      "createdAt": "2026-10-06T01:33:28.418Z",
+      "updatedAt": "2026-10-06T14:27:50.808Z"
+    },
+    {
+      "id": "7540998e-d619-4b15-954d-e22f111c3db3",
+      "name": "da",
+      "rosterIds": [
+        "bb82835a-afac-4a5a-b49b-1f64781df27e"
+      ],
+      "background": null,
+      "characters": [
+        {
+          "id": "f57d8a98-b66e-4f01-b7fd-498554931e8c",
+          "characterId": "bb82835a-afac-4a5a-b49b-1f64781df27e",
+          "x": 0.5019534543926785,
+          "y": 0.7686830957773954,
+          "scale": 1.7,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 1,
+          "outfitGroupId": "814073fd-132b-4c49-924a-95792ce16ebc",
+          "outfitVariantIndex": 0
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": false,
+        "rosterCompact": false,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": true
+      },
+      "createdAt": "2026-09-30T14:15:24.911Z",
+      "updatedAt": "2026-09-30T14:15:56.792Z"
+    },
+    {
+      "id": "97dfd685-5f45-470c-b7ca-47dd1a403539",
+      "name": "teste",
+      "rosterIds": [
+        "4f00c3ad-2ced-4504-9b08-7ab9311af22e",
+        "c4e9116c-4bc4-4473-863a-c1125ad4f5fe",
+        "d1f25de0-d7c7-408c-b3c2-457aa254164b",
+        "3cb3ad5e-24e5-4c77-b422-86a2c8c8de65",
+        "3561c10a-bf10-4f87-8c88-fe87c3f8cac1",
+        "59943d1a-b03d-4bd5-be24-73db593e77d2"
+      ],
+      "background": {
+        "assetId": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+        "src": "http://127.0.0.1:6800/files/studio/dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+        "fit": "cover",
+        "offsetX": -124,
+        "offsetY": -93,
+        "scale": 1.15
+      },
+      "characters": [
+        {
+          "id": "ce46335c-08af-4e60-bbba-773f2448a1c5",
+          "characterId": "3561c10a-bf10-4f87-8c88-fe87c3f8cac1",
+          "x": 0.5006511231150832,
+          "y": 0.58,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 1,
+          "outfitGroupId": "1529efa1-a6aa-45b0-bd49-d9208d5c6ad0",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "575e4856-f4d9-41f0-8a03-183956e4c4d1",
+          "characterId": "3cb3ad5e-24e5-4c77-b422-86a2c8c8de65",
+          "x": 0.3990749391166719,
+          "y": 0.3947896771536408,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 2,
+          "outfitGroupId": "2f5f21b9-5991-493a-a4f9-cd9ba775a5d0",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "693f710d-e1c0-4d6a-9828-b250d98b8a2c",
+          "characterId": "d1f25de0-d7c7-408c-b3c2-457aa254164b",
+          "x": 0.5390674294287067,
+          "y": 0.6783930596099064,
+          "scale": 1.35,
+          "flipX": true,
+          "expressionEmotion": "confusa",
+          "expressionState": "default",
+          "z": 3,
+          "outfitGroupId": "d6815cde-4b50-4e47-ad4b-f9af299dec1c",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "8fc3933a-f2d3-4a63-88fa-7fb133ddabbc",
+          "characterId": "c4e9116c-4bc4-4473-863a-c1125ad4f5fe",
+          "x": 0.9225832391078695,
+          "y": 0.6019936993787827,
+          "scale": 1.4,
+          "flipX": true,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 4,
+          "outfitGroupId": "c1f5abeb-c069-42a2-b05e-fd0e3c3974b3",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "bdecf3b1-87f1-4c8e-a88a-fab979702b39",
+          "characterId": "4f00c3ad-2ced-4504-9b08-7ab9311af22e",
+          "x": 0.32810183919317204,
+          "y": 0.5950483425111556,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "pt_orgulhosa",
+          "expressionState": "default",
+          "z": 5,
+          "outfitGroupId": "726b96ce-1936-4258-af71-2760184bd1bc",
+          "outfitVariantIndex": 2
+        },
+        {
+          "id": "68f97d60-4881-4379-8222-95d9e5a55bf4",
+          "characterId": "59943d1a-b03d-4bd5-be24-73db593e77d2",
+          "x": 0.34177555218106254,
+          "y": 0.6945987852041843,
+          "scale": 1.65,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "blink",
+          "z": 6,
+          "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
+          "outfitVariantIndex": 0
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": true,
+        "rosterCompact": false,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": true
+      },
+      "createdAt": "2026-09-28T04:26:04.128Z",
+      "updatedAt": "2026-09-28T21:14:57.697Z"
+    },
     {
       "id": "96aab280-cc0f-45ac-96fd-15be3ea0151b",
       "name": "Casais react to they passado",
@@ -17656,7 +21064,8 @@
         "a1e69f04-40d9-43e9-be7f-d04ee24fb056",
         "bf928f1f-fbc1-40b7-8557-db1fcc71a154",
         "b0e231e6-66c2-41ab-914a-7189c1b17fa4",
-        "eccb1da3-a21d-41a6-9c59-277b22949bd8"
+        "eccb1da3-a21d-41a6-9c59-277b22949bd8",
+        "c92c7e57-61a4-4abb-b726-e31ad22b1312"
       ],
       "background": {
         "assetId": "4c5005bf-1393-4d6b-8a31-2557089380a2",
@@ -17761,11 +21170,11 @@
         {
           "id": "11aa2657-9b67-46c5-901a-700ca651afe8",
           "characterId": "793780c1-9149-43a8-ab8d-7df6f1c00452",
-          "x": 0.980489743394947,
-          "y": 0.4709326048954281,
+          "x": 0.8945406417296757,
+          "y": 0.48713842498692866,
           "scale": 1.4,
           "flipX": true,
-          "expressionEmotion": "indignada",
+          "expressionEmotion": "ciumenta",
           "expressionState": "default",
           "z": 9,
           "outfitGroupId": "d9870999-5905-40cb-854f-8e0a257cb723",
@@ -17774,8 +21183,8 @@
         {
           "id": "d188891c-914b-45a9-a321-4bb77c4bd4ff",
           "characterId": "a1e69f04-40d9-43e9-be7f-d04ee24fb056",
-          "x": 0.38019202858954376,
-          "y": 0.3751109707344371,
+          "x": 0.4661410877311005,
+          "y": 0.3820563654009534,
           "scale": 1.3,
           "flipX": false,
           "expressionEmotion": "assustado_2",
@@ -17822,6 +21231,19 @@
           "z": 13,
           "outfitGroupId": "a1fd6b54-082d-4336-bbd0-53e84afe6ec8",
           "outfitVariantIndex": 0
+        },
+        {
+          "id": "59915875-b948-4395-a914-31c1ffb5e131",
+          "characterId": "c92c7e57-61a4-4abb-b726-e31ad22b1312",
+          "x": 0.5,
+          "y": 0.58,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "pt_cansada",
+          "expressionState": "talk",
+          "z": 14,
+          "outfitGroupId": "2f5f21b9-5991-493a-a4f9-cd9ba775a5d0",
+          "outfitVariantIndex": 0
         }
       ],
       "objects": [],
@@ -17835,7 +21257,268 @@
         "characterInspectorExpanded": true
       },
       "createdAt": "2026-09-10T01:59:10.637Z",
-      "updatedAt": "2026-09-15T10:44:24.834Z"
+      "updatedAt": "2026-09-26T09:45:46.596Z",
+      "revision": 1,
+      "migratedFrom": "storage-v1",
+      "persistenceRevision": 1
+    },
+    {
+      "id": "64917ca7-92df-4895-a323-c3f73560c1e5",
+      "name": "teste",
+      "rosterIds": [
+        "1a3bae66-5e15-4a02-9786-624d15f2691e"
+      ],
+      "background": null,
+      "characters": [
+        {
+          "id": "8865488e-3f70-4e68-9bf1-bae99babd62b",
+          "characterId": "1a3bae66-5e15-4a02-9786-624d15f2691e",
+          "x": 0.5,
+          "y": 0.58,
+          "scale": 1.3,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 1,
+          "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
+          "outfitVariantIndex": 0
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": false,
+        "rosterCompact": false,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": true
+      },
+      "createdAt": "2026-09-19T19:45:29.287Z",
+      "updatedAt": "2026-09-19T19:46:11.011Z",
+      "revision": 1,
+      "migratedFrom": "storage-v1",
+      "persistenceRevision": 1
+    },
+    {
+      "id": "2d3b85b0-faaa-42f8-b61b-14a89d792f8a",
+      "name": "C.AI REACT",
+      "rosterIds": [
+        "f15745fb-4b40-4886-a5c3-3436b5ed4174",
+        "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
+        "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+        "bb411040-2a24-4bc2-a8ce-7662801dea38",
+        "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
+        "12fc9865-b1b9-44ff-9dde-af22df68284a",
+        "5315eaeb-2f2b-4989-9069-0cd8f82198d7"
+      ],
+      "background": {
+        "assetId": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+        "src": "http://127.0.0.1:6800/files/studio/dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+        "fit": "cover",
+        "offsetX": 0,
+        "offsetY": 0,
+        "scale": 1
+      },
+      "characters": [
+        {
+          "id": "384921e3-d694-4e67-8ea7-8bf3dd7c4324",
+          "characterId": "12fc9865-b1b9-44ff-9dde-af22df68284a",
+          "x": 0.17207325830252698,
+          "y": 0.5661701272873534,
+          "scale": 1.5,
+          "flipX": true,
+          "expressionEmotion": "sorriso_canto",
+          "expressionState": "default",
+          "z": 5,
+          "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
+          "outfitVariantIndex": 3
+        },
+        {
+          "id": "6557907d-dc6e-4665-937d-fee4d6d7a8c7",
+          "characterId": "f15745fb-4b40-4886-a5c3-3436b5ed4174",
+          "x": 0.4055391745901914,
+          "y": 0.6115565355502507,
+          "scale": 1.35,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 16,
+          "outfitGroupId": "b3a9fce4-754e-4caa-9059-e9b2f50a6b6f",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "af021042-2c53-4283-a9d1-112543259a0f",
+          "characterId": "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
+          "x": 0.3127033096354137,
+          "y": 0.5567693910077303,
+          "scale": 1.85,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 17,
+          "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
+          "outfitVariantIndex": 2
+        },
+        {
+          "id": "8c076bc3-38d2-4a27-a8c9-238c0ea7c33a",
+          "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+          "x": 0.6456062727463576,
+          "y": 0.5069895094353962,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 18
+        },
+        {
+          "id": "01e8d2fa-51ec-47fc-984c-fd57e33f6fc5",
+          "characterId": "bb411040-2a24-4bc2-a8ce-7662801dea38",
+          "x": 0.51493405379907,
+          "y": 0.5125205913335246,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 19,
+          "outfitGroupId": "f61ccc48-8786-4bf4-8220-445d6ae0d596",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "7478e2a8-cbc1-4af7-b263-f2b774b937c1",
+          "characterId": "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
+          "x": 0.622582949965511,
+          "y": 0.578893826967128,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 20,
+          "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
+          "outfitVariantIndex": 1
+        },
+        {
+          "id": "20023627-5e24-49a1-8779-7c4c8e1b7af9",
+          "characterId": "5315eaeb-2f2b-4989-9069-0cd8f82198d7",
+          "x": 0.8945051781578399,
+          "y": 0.5545569726973969,
+          "scale": 0.82,
+          "flipX": false,
+          "expressionEmotion": "normal",
+          "expressionState": "default",
+          "z": 21
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "createdAt": "2026-08-02T08:16:43.865Z",
+      "updatedAt": "2026-09-15T04:34:18.664Z",
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": true,
+        "rosterCompact": true,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": true
+      }
+    },
+    {
+      "id": "6df7f870-b134-4ee9-857d-33e4004e576b",
+      "name": "THE FORGOTTEN FIELD",
+      "rosterIds": [
+        "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
+        "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+        "bad00760-218b-437b-ac60-78160a4ff1fb",
+        "777fc438-6582-4d58-b55a-534f8da50204",
+        "5eb61a94-9b40-4f2e-9f8d-3743fc2bf783"
+      ],
+      "background": {
+        "assetId": "f31a4aa5-c3d4-482a-a6fc-7915eaa41ecb",
+        "src": "http://127.0.0.1:6800/files/studio/f31a4aa5-c3d4-482a-a6fc-7915eaa41ecb",
+        "fit": "cover",
+        "offsetX": 0,
+        "offsetY": 0,
+        "scale": 1.4
+      },
+      "characters": [
+        {
+          "id": "d8fb4c19-0654-4a10-8c80-4b9c567b7e16",
+          "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
+          "x": 0.1103137133067721,
+          "y": 0.7240269232137232,
+          "scale": 1.4,
+          "flipX": false,
+          "expressionEmotion": "corado",
+          "expressionState": "default",
+          "z": 24,
+          "outfitGroupId": "f1b0414c-2d5f-487e-9c22-4d958d055bf2",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "b3d169f7-96db-4192-b460-e661e4aaf8fd",
+          "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
+          "x": 0.675264511099155,
+          "y": 0.6715746415831197,
+          "scale": 1.2,
+          "flipX": true,
+          "expressionEmotion": "surpreso_2",
+          "expressionState": "default",
+          "z": 18,
+          "outfitGroupId": "b3a9fce4-754e-4caa-9059-e9b2f50a6b6f",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "e0c43494-2e54-489d-99aa-9f82dacfacbb",
+          "characterId": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
+          "x": 1,
+          "y": 0.6642052075077788,
+          "scale": 1.45,
+          "flipX": true,
+          "expressionEmotion": "raiva",
+          "expressionState": "default",
+          "z": 22,
+          "outfitGroupId": "f3d48224-208a-4d9b-8f8f-0cfbb667530d",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "31ab570c-158a-4413-a610-bcbc56ec09a7",
+          "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
+          "x": 0.7797419446599816,
+          "y": 0.7182084960154373,
+          "scale": 1.3,
+          "flipX": true,
+          "expressionEmotion": "surpreso",
+          "expressionState": "default",
+          "z": 21,
+          "outfitGroupId": "41e8305c-ea8d-4813-b53f-d102bfbb3156",
+          "outfitVariantIndex": 0
+        },
+        {
+          "id": "dfe80407-0188-402e-b23a-f441858bf2e1",
+          "characterId": "5eb61a94-9b40-4f2e-9f8d-3743fc2bf783",
+          "x": 0.2702260483430648,
+          "y": 0.6954969588810004,
+          "scale": 1.3,
+          "flipX": false,
+          "expressionEmotion": "pt_apaixonada",
+          "expressionState": "default",
+          "z": 23,
+          "outfitGroupId": "e0341992-eaea-4ccd-a789-0a0ecd2a273a",
+          "outfitVariantIndex": 0
+        }
+      ],
+      "objects": [],
+      "bubbles": [],
+      "narrators": [],
+      "createdAt": "2026-07-29T08:28:40.662Z",
+      "updatedAt": "2026-10-03T08:32:58.436Z",
+      "uiPreferences": {
+        "characterPositionsLocked": false,
+        "backgroundCollapsed": true,
+        "rosterCompact": true,
+        "inspectorDockSide": "right",
+        "characterInspectorExpanded": false
+      }
     },
     {
       "id": "dbdf069b-0d31-40c2-99a0-778d7890bdcc",
@@ -17921,95 +21604,6 @@
       },
       "createdAt": "2026-09-03T20:44:38.851Z",
       "updatedAt": "2026-09-10T19:20:21.485Z"
-    },
-    {
-      "id": "6df7f870-b134-4ee9-857d-33e4004e576b",
-      "name": "THE FORGOTTEN FIELD",
-      "rosterIds": [
-        "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
-        "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
-        "bad00760-218b-437b-ac60-78160a4ff1fb",
-        "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
-        "777fc438-6582-4d58-b55a-534f8da50204"
-      ],
-      "background": null,
-      "characters": [
-        {
-          "id": "62042763-b90d-424f-9d64-76167620d6b2",
-          "characterId": "49c4aaf4-8456-4ef3-aab8-e769f43825d4",
-          "x": 0.2303542463215753,
-          "y": 0.6904136878474999,
-          "scale": 1.1,
-          "flipX": false,
-          "expressionEmotion": "corado_4",
-          "expressionState": "default",
-          "z": 16,
-          "outfitGroupId": "f32287f5-b0f5-408b-a91b-9e8222a3aaa1",
-          "outfitVariantIndex": 0
-        },
-        {
-          "id": "d8fb4c19-0654-4a10-8c80-4b9c567b7e16",
-          "characterId": "777fc438-6582-4d58-b55a-534f8da50204",
-          "x": 0.06827784577772801,
-          "y": 0.6396560846560845,
-          "scale": 1.4,
-          "flipX": false,
-          "expressionEmotion": "corado",
-          "expressionState": "default",
-          "z": 17
-        },
-        {
-          "id": "b3d169f7-96db-4192-b460-e661e4aaf8fd",
-          "characterId": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
-          "x": 0.6406255012073998,
-          "y": 0.6682986489650966,
-          "scale": 1.2,
-          "flipX": true,
-          "expressionEmotion": "surpreso_2",
-          "expressionState": "default",
-          "z": 18,
-          "outfitGroupId": "b3a9fce4-754e-4caa-9059-e9b2f50a6b6f",
-          "outfitVariantIndex": 1
-        },
-        {
-          "id": "80f9c745-528a-4ea9-9a12-b1c93d1e77de",
-          "characterId": "bad00760-218b-437b-ac60-78160a4ff1fb",
-          "x": 0.7686843435892444,
-          "y": 0.6544687137233544,
-          "scale": 1.05,
-          "flipX": true,
-          "expressionEmotion": "surpreso_2",
-          "expressionState": "default",
-          "z": 19,
-          "outfitGroupId": "0e9535ac-fd43-48ca-9a7a-523286cc9d49",
-          "outfitVariantIndex": 2
-        },
-        {
-          "id": "e0c43494-2e54-489d-99aa-9f82dacfacbb",
-          "characterId": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
-          "x": 0.9140973427074007,
-          "y": 0.6374472934437305,
-          "scale": 1.4,
-          "flipX": true,
-          "expressionEmotion": "serio",
-          "expressionState": "default",
-          "z": 20,
-          "outfitGroupId": "f3d48224-208a-4d9b-8f8f-0cfbb667530d",
-          "outfitVariantIndex": 0
-        }
-      ],
-      "objects": [],
-      "bubbles": [],
-      "narrators": [],
-      "createdAt": "2026-07-29T08:28:40.662Z",
-      "updatedAt": "2026-09-14T15:42:45.438Z",
-      "uiPreferences": {
-        "characterPositionsLocked": false,
-        "backgroundCollapsed": true,
-        "rosterCompact": true,
-        "inspectorDockSide": "right",
-        "characterInspectorExpanded": true
-      }
     },
     {
       "id": "50df817c-7654-4d65-9a49-eaa85da4760a",
@@ -18312,128 +21906,6 @@
       "updatedAt": "2026-08-28T03:18:32.153Z"
     },
     {
-      "id": "2d3b85b0-faaa-42f8-b61b-14a89d792f8a",
-      "name": "C.AI REACT",
-      "rosterIds": [
-        "f15745fb-4b40-4886-a5c3-3436b5ed4174",
-        "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
-        "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
-        "bb411040-2a24-4bc2-a8ce-7662801dea38",
-        "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
-        "12fc9865-b1b9-44ff-9dde-af22df68284a",
-        "5315eaeb-2f2b-4989-9069-0cd8f82198d7"
-      ],
-      "background": {
-        "assetId": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
-        "src": "http://127.0.0.1:6800/files/studio/dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
-        "fit": "cover",
-        "offsetX": 0,
-        "offsetY": 0,
-        "scale": 1
-      },
-      "characters": [
-        {
-          "id": "384921e3-d694-4e67-8ea7-8bf3dd7c4324",
-          "characterId": "12fc9865-b1b9-44ff-9dde-af22df68284a",
-          "x": 0.17207325830252698,
-          "y": 0.5661701272873534,
-          "scale": 1.5,
-          "flipX": true,
-          "expressionEmotion": "sorriso_canto",
-          "expressionState": "default",
-          "z": 5,
-          "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
-          "outfitVariantIndex": 3
-        },
-        {
-          "id": "6557907d-dc6e-4665-937d-fee4d6d7a8c7",
-          "characterId": "f15745fb-4b40-4886-a5c3-3436b5ed4174",
-          "x": 0.4055391745901914,
-          "y": 0.6115565355502507,
-          "scale": 1.35,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 16,
-          "outfitGroupId": "b3a9fce4-754e-4caa-9059-e9b2f50a6b6f",
-          "outfitVariantIndex": 0
-        },
-        {
-          "id": "af021042-2c53-4283-a9d1-112543259a0f",
-          "characterId": "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
-          "x": 0.3127033096354137,
-          "y": 0.5567693910077303,
-          "scale": 1.85,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 17,
-          "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
-          "outfitVariantIndex": 2
-        },
-        {
-          "id": "8c076bc3-38d2-4a27-a8c9-238c0ea7c33a",
-          "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
-          "x": 0.6456062727463576,
-          "y": 0.5069895094353962,
-          "scale": 0.82,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 18
-        },
-        {
-          "id": "01e8d2fa-51ec-47fc-984c-fd57e33f6fc5",
-          "characterId": "bb411040-2a24-4bc2-a8ce-7662801dea38",
-          "x": 0.51493405379907,
-          "y": 0.5125205913335246,
-          "scale": 0.82,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 19,
-          "outfitGroupId": "f61ccc48-8786-4bf4-8220-445d6ae0d596",
-          "outfitVariantIndex": 0
-        },
-        {
-          "id": "7478e2a8-cbc1-4af7-b263-f2b774b937c1",
-          "characterId": "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
-          "x": 0.622582949965511,
-          "y": 0.578893826967128,
-          "scale": 0.82,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 20,
-          "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
-          "outfitVariantIndex": 1
-        },
-        {
-          "id": "20023627-5e24-49a1-8779-7c4c8e1b7af9",
-          "characterId": "5315eaeb-2f2b-4989-9069-0cd8f82198d7",
-          "x": 0.8945051781578399,
-          "y": 0.5545569726973969,
-          "scale": 0.82,
-          "flipX": false,
-          "expressionEmotion": "normal",
-          "expressionState": "default",
-          "z": 21
-        }
-      ],
-      "objects": [],
-      "bubbles": [],
-      "narrators": [],
-      "createdAt": "2026-08-02T08:16:43.865Z",
-      "updatedAt": "2026-09-15T04:34:18.664Z",
-      "uiPreferences": {
-        "characterPositionsLocked": false,
-        "backgroundCollapsed": true,
-        "rosterCompact": true,
-        "inspectorDockSide": "right",
-        "characterInspectorExpanded": true
-      }
-    },
-    {
       "id": "bdd36495-0e4b-4296-a8e5-629b2377c2dc",
       "name": "ZZ\\XZZXZ",
       "rosterIds": [
@@ -18646,14 +22118,14 @@
   ],
   "studioAssets": [
     {
-      "id": "4c5005bf-1393-4d6b-8a31-2557089380a2",
-      "name": "01.png",
+      "id": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+      "name": "upscalemedia-transformed.png",
       "contentType": "image/png",
       "kind": "background"
     },
     {
-      "id": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
-      "name": "upscalemedia-transformed.png",
+      "id": "f31a4aa5-c3d4-482a-a6fc-7915eaa41ecb",
+      "name": "Captura de tela 2026-07-29 034625.png",
       "contentType": "image/png",
       "kind": "background"
     }

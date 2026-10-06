@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 4,
   "character": {
     "name": "GARETH",
     "model": "masculino",
@@ -6963,7 +6963,6 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "65b6792f-a0c9-4dae-9391-416bfec0f3fc",
-    "updatedAt": "2026-09-10T03:51:37.937Z",
-    "photoUrl": "http://127.0.0.1:6800/files/characters/65b6792f-a0c9-4dae-9391-416bfec0f3fc/photo.png"
+    "updatedAt": "2026-09-30T20:24:37.264Z"
   }
 }

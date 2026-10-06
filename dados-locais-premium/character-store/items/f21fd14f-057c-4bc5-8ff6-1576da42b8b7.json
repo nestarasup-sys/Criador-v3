@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 2,
+  "revision": 20,
   "character": {
     "name": "VARKAS",
     "model": "masculino",
@@ -58,7 +58,8 @@
         "tint": "#ffffff",
         "tintStrength": 0,
         "contrast": 100,
-        "detailPreservation": 100
+        "detailPreservation": 100,
+        "colorSpace": "oklch"
       },
       "cabelosTras": {
         "hue": 0,
@@ -68,7 +69,8 @@
         "tint": "#ffffff",
         "tintStrength": 0,
         "contrast": 100,
-        "detailPreservation": 100
+        "detailPreservation": 100,
+        "colorSpace": "oklch"
       },
       "rostos": {
         "hue": 0,
@@ -78,7 +80,8 @@
         "tint": "#ffffff",
         "tintStrength": 0,
         "contrast": 100,
-        "detailPreservation": 100
+        "detailPreservation": 100,
+        "colorSpace": "oklch"
       },
       "roupas": {
         "hue": 0,
@@ -88,7 +91,8 @@
         "tint": "#ffffff",
         "tintStrength": 0,
         "contrast": 100,
-        "detailPreservation": 100
+        "detailPreservation": 100,
+        "colorSpace": "oklch"
       }
     },
     "outfitColorAdjustmentsByGroup": {},
@@ -7203,7 +7207,50 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "f21fd14f-057c-4bc5-8ff6-1576da42b8b7",
-    "updatedAt": "2026-09-04T22:55:47.176Z",
-    "photoUrl": "http://127.0.0.1:6800/files/characters/f21fd14f-057c-4bc5-8ff6-1576da42b8b7/photo.png"
+    "updatedAt": "2026-10-03T02:13:21.585Z",
+    "modelColorAdjustments": {
+      "pupils": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "pupilsBrows": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "skin": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "brows": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      }
+    },
+    "modelColorScope": "pupilsBrows",
+    "compositionMode": "legacy"
   }
 }

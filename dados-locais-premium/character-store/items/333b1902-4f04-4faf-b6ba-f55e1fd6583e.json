@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 4,
+  "revision": 11,
   "character": {
     "name": "Cassian Rook",
     "model": "masculino",
@@ -9,7 +9,8 @@
       "cabelos": "e29c3b97-3868-4a8f-817e-c80fe0e97b29",
       "cabelosTras": "2bf38e22-9ab5-4da2-b84d-7b5268d141a7",
       "rostos": null,
-      "roupas": "e8ad33cd-d6e4-4aa1-8e60-72a4a01ec09d"
+      "roupas": "e8ad33cd-d6e4-4aa1-8e60-72a4a01ec09d",
+      "acessorios": null
     },
     "adjustments": {
       "cabelos": {
@@ -428,6 +429,15 @@
             }
           ]
         }
+      },
+      "acessorios": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
       }
     },
     "colorAdjustments": {
@@ -4935,9 +4945,9 @@
       "y": 0
     },
     "exportFrame": {
-      "scale": 0.734,
-      "x": -60,
-      "y": -66.9
+      "scale": 0.743,
+      "x": -80,
+      "y": -54.8
     },
     "hairAdjustmentsByBasePack": {
       "modelo-1": {
@@ -23977,6 +23987,7 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "333b1902-4f04-4faf-b6ba-f55e1fd6583e",
-    "updatedAt": "2026-09-17T10:46:14.960Z"
+    "updatedAt": "2026-10-06T14:24:47.612Z",
+    "templateScaleX": 1
   }
 }

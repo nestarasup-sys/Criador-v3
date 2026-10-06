@@ -1,0 +1,30 @@
+{
+  "name": "Modelo 17",
+  "gender": "feminino",
+  "type": "head-only",
+  "anchor": "neck-base",
+  "anchorX": 960,
+  "anchorY": 346,
+  "baseScale": 1.1,
+  "width": 1920,
+  "height": 1080,
+  "aligner": {
+    "version": "9.1",
+    "canonicalRevision": 6,
+    "inputEngines": {
+      "A": "chroma2",
+      "APT": "chroma2",
+      "B": "chroma2",
+      "BPT": "chroma2",
+      "C": "chroma2",
+      "CPT": "chroma2"
+    },
+    "qa": {
+      "ok": 126,
+      "warn": 0,
+      "review": 0
+    },
+    "finishLock": null
+  },
+  "catalogVersion": "v1"
+}

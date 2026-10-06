@@ -1,0 +1,53 @@
+{
+  "name": "Modelo 22",
+  "gender": "feminino",
+  "type": "head-only",
+  "anchor": "neck-base",
+  "anchorX": 960,
+  "anchorY": 346,
+  "baseScale": 1,
+  "width": 1920,
+  "height": 1080,
+  "source": "fabricador-de-modelo-v2",
+  "presetTag": {
+    "id": "ayla",
+    "name": "Ayla",
+    "color": "#475569"
+  },
+  "expressionKeys": [
+    "aliviada",
+    "animada",
+    "apaixonada",
+    "cansada",
+    "ciumenta",
+    "confusa",
+    "decepcionada",
+    "desconfiada",
+    "envergonhada",
+    "impressionada",
+    "indignada",
+    "irritada",
+    "nojo",
+    "normal",
+    "orgulhosa",
+    "preocupada",
+    "seria",
+    "sorrindo_de_canto",
+    "sorriso_maligno",
+    "surpresa",
+    "triste_magoada"
+  ],
+  "generator": {
+    "version": 3,
+    "includes": [
+      "eyes",
+      "eyes-pt",
+      "eyebrows",
+      "mouths",
+      "mouths-talk",
+      "mouth-halo",
+      "manpu"
+    ]
+  },
+  "catalogVersion": "v1"
+}

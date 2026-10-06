@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 3,
+  "revision": 4,
   "character": {
     "name": "MILO",
     "model": "masculino",
@@ -4109,6 +4109,7 @@
     "outfitProtectionMasksByBasePack": {},
     "id": "c542bb2a-e478-4dba-82ca-d542a5405617",
     "updatedAt": "2026-09-17T07:46:55.730Z",
-    "outfitColorAdjustmentsByGroup": {}
+    "outfitColorAdjustmentsByGroup": {},
+    "photoUrl": "http://127.0.0.1:6800/files/characters/c542bb2a-e478-4dba-82ca-d542a5405617/photo.png"
   }
 }

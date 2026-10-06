@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "revision": 6,
+  "revision": 7,
   "character": {
     "name": "Novo personagem",
     "model": "feminino",
@@ -49218,6 +49218,7 @@
     },
     "outfitProtectionMasksByBasePack": {},
     "id": "83243b8a-062a-44c6-acb2-e416d29eac6e",
-    "updatedAt": "2026-09-17T10:46:51.045Z"
+    "updatedAt": "2026-09-17T10:46:51.045Z",
+    "photoUrl": "http://127.0.0.1:6800/files/characters/83243b8a-062a-44c6-acb2-e416d29eac6e/photo.png"
   }
 }
