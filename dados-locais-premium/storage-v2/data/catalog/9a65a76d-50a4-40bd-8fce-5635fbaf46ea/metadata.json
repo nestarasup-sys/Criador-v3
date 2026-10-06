@@ -1,0 +1,32 @@
+{
+  "id": "9a65a76d-50a4-40bd-8fce-5635fbaf46ea",
+  "name": "Imagem do Codex 3 de set. de 2026, 21_49_24 · Variante 2",
+  "model": "masculino",
+  "category": "roupas",
+  "outfitGroupId": "5775e70e-5b48-46d1-8ca9-81cb554d9a72",
+  "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_49_24",
+  "outfitVariantIndex": 2,
+  "outfitCover": false,
+  "width": 1024,
+  "height": 1024,
+  "defaultX": 960,
+  "defaultY": 560,
+  "contentX": 324,
+  "contentY": 140,
+  "contentWidth": 377,
+  "contentHeight": 744,
+  "fitReferenceWidth": 395,
+  "fitReferenceHeight": 744,
+  "fit": {
+    "x": -10,
+    "y": 105,
+    "scale": 0.968,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

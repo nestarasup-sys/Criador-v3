@@ -1,0 +1,24 @@
+{
+  "id": "51849694-50ce-4729-b17e-b2d1b81c3d99",
+  "name": "ChatGPT Image 28_07_2026, 18_35_25",
+  "model": "feminino",
+  "category": "roupas",
+  "width": 465,
+  "height": 769,
+  "defaultX": 828.5,
+  "defaultY": 501.5,
+  "fit": {
+    "x": 102,
+    "y": 174,
+    "scale": 0.949,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T03:51:18.167Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

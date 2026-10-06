@@ -1,0 +1,24 @@
+{
+  "id": "f14059ba-720f-4773-9356-6db2439df19f",
+  "name": "ChatGPT Image 20_08_2026, 23_37_05 1 (frente)",
+  "model": "masculino",
+  "category": "cabelos",
+  "width": 430,
+  "height": 456,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:14.993Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

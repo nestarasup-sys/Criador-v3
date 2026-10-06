@@ -1,0 +1,51 @@
+{
+  "id": "27d73ff8-36ff-41fc-bd40-983323a83427",
+  "name": "nkji",
+  "rosterIds": [
+    "e92a6a6c-158c-4d64-ab15-33fee6e1de17"
+  ],
+  "background": null,
+  "characters": [
+    {
+      "id": "990dcdf1-a8ee-4a27-9ab8-438fbe10b21f",
+      "characterId": "e92a6a6c-158c-4d64-ab15-33fee6e1de17",
+      "x": 0.3079720216470446,
+      "y": 0.5646322722283205,
+      "scale": 1.2,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 1,
+      "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
+      "outfitVariantIndex": 2,
+      "outfitVariantOffsets": {
+        "0ebee5a5-6723-4359-9d08-93ca471e91c4": {
+          "x": 40,
+          "y": 0
+        },
+        "86403865-43d3-4871-8cf6-72d89b56952d": {
+          "x": 48,
+          "y": -8
+        },
+        "36d519b0-19fe-4d53-8949-e7ed2d1e628c": {
+          "x": 0,
+          "y": -8
+        }
+      }
+    }
+  ],
+  "objects": [],
+  "bubbles": [],
+  "narrators": [],
+  "uiPreferences": {
+    "characterPositionsLocked": true,
+    "backgroundCollapsed": true,
+    "rosterCompact": true,
+    "inspectorDockSide": "right",
+    "characterInspectorExpanded": true
+  },
+  "createdAt": "2026-08-05T14:51:11.095Z",
+  "updatedAt": "2026-08-05T14:55:12.578Z",
+  "revision": 1,
+  "migratedFrom": "storage-v1"
+}

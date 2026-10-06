@@ -1,0 +1,214 @@
+{
+  "version": 1,
+  "revision": 4,
+  "character": {
+    "name": "cara 5",
+    "model": "masculino",
+    "basePackId": "modelo-1",
+    "selections": {
+      "cabelos": null,
+      "cabelosTras": null,
+      "rostos": null,
+      "roupas": null
+    },
+    "adjustments": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "rostos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "roupas": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "colorAdjustments": {
+      "cabelos": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78,
+        "colorSpace": "oklch"
+      },
+      "cabelosTras": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78,
+        "colorSpace": "oklch"
+      },
+      "rostos": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78,
+        "colorSpace": "oklch"
+      },
+      "roupas": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78,
+        "colorSpace": "oklch"
+      }
+    },
+    "modelColorAdjustments": {
+      "pupils": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "pupilsBrows": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "skin": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      },
+      "brows": {
+        "hue": 0,
+        "saturation": 100,
+        "brightness": 100,
+        "enabled": true,
+        "tint": "#ffffff",
+        "tintStrength": 0,
+        "contrast": 100,
+        "detailPreservation": 78
+      }
+    },
+    "modelColorScope": "pupilsBrows",
+    "outfitColorAdjustmentsByGroup": {},
+    "protectionMasks": {},
+    "faceMode": "base",
+    "compositionMode": "legacy",
+    "expressionPackId": null,
+    "expressionEmotion": "normal",
+    "expressionState": "default",
+    "layerMasks": {
+      "body": [],
+      "hairFront": [],
+      "hairBack": [],
+      "outfit": []
+    },
+    "maskStrokes": [],
+    "previewPan": {
+      "x": 0,
+      "y": 0
+    },
+    "exportFrame": {
+      "x": 0,
+      "y": 0,
+      "scale": 1
+    },
+    "hairAdjustmentsByBasePack": {
+      "modelo-1": {
+        "cabelos": {
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        },
+        "cabelosTras": {
+          "x": 0,
+          "y": 0,
+          "scale": 1,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "flipX": false
+        }
+      }
+    },
+    "outfitAdjustmentsByBasePack": {
+      "aaafd058-9513-453b-b355-234560e86be0:modelo-1": {
+        "x": -10,
+        "y": 105,
+        "scale": 0.738,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "nenhuma:modelo-1": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "outfitLayerMasksByBasePack": {
+      "aaafd058-9513-453b-b355-234560e86be0:modelo-1": [],
+      "nenhuma:modelo-1": []
+    },
+    "outfitProtectionMasksByBasePack": {},
+    "id": "9f088cac-fdba-40b1-a6cf-55e1f1f382ac",
+    "updatedAt": "2026-10-06T00:37:42.416Z"
+  }
+}

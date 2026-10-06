@@ -1,0 +1,59 @@
+{
+  "id": "ed001e27-399d-4356-8f82-5f14dec0bbf2",
+  "name": "Imagem do Codex 3 de set. de 2026, 21_33_27 · Variante 1",
+  "model": "feminino",
+  "category": "roupas",
+  "outfitGroupId": "a5660875-b7f2-411f-913e-e08071552ee7",
+  "outfitGroupName": "Imagem do Codex 3 de set. de 2026, 21_33_27",
+  "outfitVariantIndex": 1,
+  "outfitCover": false,
+  "width": 1024,
+  "height": 1024,
+  "defaultX": 960,
+  "defaultY": 560,
+  "contentX": 273,
+  "contentY": 48,
+  "contentWidth": 479,
+  "contentHeight": 928,
+  "fitReferenceWidth": 487,
+  "fitReferenceHeight": 928,
+  "fit": {
+    "x": -30,
+    "y": 115,
+    "scale": 0.787,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "fitByBasePack": {
+    "modelo-9": {
+      "x": 101.6,
+      "y": 88.81,
+      "scale": 1,
+      "scaleX": 1.2467,
+      "scaleY": 1.3814,
+      "rotation": 0,
+      "flipX": false
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-9": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "layerMasksByBasePack": {
+    "modelo-9": []
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "revision": 1,
+  "categories": [
+    {
+      "id": "custom-principe-cruel-muf370xd",
+      "label": "Príncipe cruel",
+      "color": "#356f9d",
+      "softColor": "#edf7ff",
+      "borderColor": "#c3dfef",
+      "recoveredFromLegacyReference": true,
+      "updatedAt": "2026-09-25T02:23:32.390Z"
+    }
+  ],
+  "deletedIds": [
+    "custom-princepe-cruel-mug76k26"
+  ],
+  "updatedAt": "2026-09-25T02:40:42.916Z"
+}

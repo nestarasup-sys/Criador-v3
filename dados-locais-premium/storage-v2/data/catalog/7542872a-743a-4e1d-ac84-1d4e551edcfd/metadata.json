@@ -1,0 +1,25 @@
+{
+  "id": "7542872a-743a-4e1d-ac84-1d4e551edcfd",
+  "name": "exec-c2faaf0f-9cf4-45e6-be55-061ececab718 1 (trás)",
+  "model": "masculino",
+  "category": "cabelosTras",
+  "linkedHairId": "6d3c70d9-934d-4188-995d-f7c69d360bd6",
+  "width": 485,
+  "height": 424,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:41.072Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

@@ -1,0 +1,54 @@
+{
+  "id": "d150167b-57e9-46ab-943c-005b48b2ebbf",
+  "name": "Imagem do Codex 4 de set. de 2026, 21_07_24 (frente)",
+  "model": "masculino",
+  "category": "cabelos",
+  "width": 687,
+  "height": 639,
+  "defaultX": 962,
+  "defaultY": 514.5,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "contentX": 0,
+  "contentY": 0,
+  "contentWidth": 687,
+  "contentHeight": 639,
+  "fitReferenceWidth": 687,
+  "fitReferenceHeight": 639,
+  "fitByBasePack": {
+    "modelo-9": {
+      "x": 6.7,
+      "y": -365.2,
+      "scale": 0.469,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": -4,
+      "flipX": false
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-9": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:20.511Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

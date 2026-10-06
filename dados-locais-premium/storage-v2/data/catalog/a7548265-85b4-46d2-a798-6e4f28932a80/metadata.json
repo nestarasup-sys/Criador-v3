@@ -1,0 +1,55 @@
+{
+  "id": "a7548265-85b4-46d2-a798-6e4f28932a80",
+  "name": "Imagem do Codex 4 de set. de 2026, 21_10_56 (trás)",
+  "model": "masculino",
+  "category": "cabelosTras",
+  "linkedHairId": "47937878-f64a-4fa2-94c2-ffb6fd486623",
+  "width": 645,
+  "height": 737,
+  "defaultX": 951.5,
+  "defaultY": 505.5,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "contentX": 0,
+  "contentY": 0,
+  "contentWidth": 645,
+  "contentHeight": 737,
+  "fitReferenceWidth": 645,
+  "fitReferenceHeight": 737,
+  "fitByBasePack": {
+    "modelo-9": {
+      "x": -14.7,
+      "y": -327.2,
+      "scale": 0.413,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-9": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:20.961Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

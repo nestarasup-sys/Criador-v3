@@ -1,0 +1,124 @@
+{
+  "id": "2d3b85b0-faaa-42f8-b61b-14a89d792f8a",
+  "name": "C.AI REACT",
+  "rosterIds": [
+    "f15745fb-4b40-4886-a5c3-3436b5ed4174",
+    "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
+    "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+    "bb411040-2a24-4bc2-a8ce-7662801dea38",
+    "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
+    "12fc9865-b1b9-44ff-9dde-af22df68284a",
+    "5315eaeb-2f2b-4989-9069-0cd8f82198d7"
+  ],
+  "background": {
+    "assetId": "dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+    "src": "http://127.0.0.1:6800/files/studio/dd0eafa8-12f1-4fa7-925a-6f1ce4ea76e7",
+    "fit": "cover",
+    "offsetX": 0,
+    "offsetY": 0,
+    "scale": 1
+  },
+  "characters": [
+    {
+      "id": "384921e3-d694-4e67-8ea7-8bf3dd7c4324",
+      "characterId": "12fc9865-b1b9-44ff-9dde-af22df68284a",
+      "x": 0.17207325830252698,
+      "y": 0.5661701272873534,
+      "scale": 1.5,
+      "flipX": true,
+      "expressionEmotion": "sorriso_canto",
+      "expressionState": "default",
+      "z": 5,
+      "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
+      "outfitVariantIndex": 3
+    },
+    {
+      "id": "6557907d-dc6e-4665-937d-fee4d6d7a8c7",
+      "characterId": "f15745fb-4b40-4886-a5c3-3436b5ed4174",
+      "x": 0.4055391745901914,
+      "y": 0.6115565355502507,
+      "scale": 1.35,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 16,
+      "outfitGroupId": "b3a9fce4-754e-4caa-9059-e9b2f50a6b6f",
+      "outfitVariantIndex": 0
+    },
+    {
+      "id": "af021042-2c53-4283-a9d1-112543259a0f",
+      "characterId": "e279f972-2dfc-4d1f-a865-97379d9d9ac9",
+      "x": 0.3127033096354137,
+      "y": 0.5567693910077303,
+      "scale": 1.85,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 17,
+      "outfitGroupId": "cf19a23f-e2ae-4134-b714-3f2c169096d4",
+      "outfitVariantIndex": 2
+    },
+    {
+      "id": "8c076bc3-38d2-4a27-a8c9-238c0ea7c33a",
+      "characterId": "dd72643b-e25c-4ac7-a2d1-948493c6ae3b",
+      "x": 0.6456062727463576,
+      "y": 0.5069895094353962,
+      "scale": 0.82,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 18
+    },
+    {
+      "id": "01e8d2fa-51ec-47fc-984c-fd57e33f6fc5",
+      "characterId": "bb411040-2a24-4bc2-a8ce-7662801dea38",
+      "x": 0.51493405379907,
+      "y": 0.5125205913335246,
+      "scale": 0.82,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 19,
+      "outfitGroupId": "f61ccc48-8786-4bf4-8220-445d6ae0d596",
+      "outfitVariantIndex": 0
+    },
+    {
+      "id": "7478e2a8-cbc1-4af7-b263-f2b774b937c1",
+      "characterId": "bbf03ab9-2853-45e1-a3a1-cb54ada02bff",
+      "x": 0.622582949965511,
+      "y": 0.578893826967128,
+      "scale": 0.82,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 20,
+      "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
+      "outfitVariantIndex": 1
+    },
+    {
+      "id": "20023627-5e24-49a1-8779-7c4c8e1b7af9",
+      "characterId": "5315eaeb-2f2b-4989-9069-0cd8f82198d7",
+      "x": 0.8945051781578399,
+      "y": 0.5545569726973969,
+      "scale": 0.82,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 21
+    }
+  ],
+  "objects": [],
+  "bubbles": [],
+  "narrators": [],
+  "createdAt": "2026-08-02T08:16:43.865Z",
+  "updatedAt": "2026-09-15T04:34:18.664Z",
+  "uiPreferences": {
+    "characterPositionsLocked": false,
+    "backgroundCollapsed": true,
+    "rosterCompact": true,
+    "inspectorDockSide": "right",
+    "characterInspectorExpanded": true
+  },
+  "revision": 1,
+  "migratedFrom": "storage-v1"
+}

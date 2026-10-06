@@ -1,0 +1,31 @@
+{
+  "id": "616345fd-6ae1-434a-a903-4cc07dcf8ba5",
+  "name": "Imagem do Codex 3 de set. de 2026, 21_03_08 (1) 1 (trás)",
+  "model": "masculino",
+  "category": "cabelosTras",
+  "linkedHairId": "cca47f0a-7079-49a9-8cf8-736432c13f08",
+  "width": 363,
+  "height": 333,
+  "defaultX": 970.5,
+  "defaultY": 283.5,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "contentX": 0,
+  "contentY": 0,
+  "contentWidth": 363,
+  "contentHeight": 333,
+  "fitReferenceWidth": 364,
+  "fitReferenceHeight": 334,
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:19.167Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

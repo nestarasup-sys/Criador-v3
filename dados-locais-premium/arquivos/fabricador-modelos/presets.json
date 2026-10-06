@@ -1,0 +1,3173 @@
+{
+  "aliviada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.98,
+        "scaleY": 0.81,
+        "rotation": 0,
+        "x": 0,
+        "y": 1
+      },
+      "right": {
+        "scaleX": 0.98,
+        "scaleY": 0.81,
+        "rotation": 0,
+        "x": 0,
+        "y": 1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.9,
+        "rotation": -9,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.9,
+        "rotation": 10,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1.17,
+      "scaleY": 0.79,
+      "rotation": 8.5,
+      "x": -4,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.07,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.12,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 8
+    },
+    "mouthTalkIndex": 0
+  },
+  "animada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.99,
+        "scaleY": 1.08,
+        "rotation": -1.5,
+        "x": -1,
+        "y": -1
+      },
+      "right": {
+        "scaleX": 0.99,
+        "scaleY": 1.08,
+        "rotation": 1.5,
+        "x": 1,
+        "y": -1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1.08,
+        "rotation": 10,
+        "x": 0,
+        "y": -23
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1.17,
+        "rotation": -11.5,
+        "x": 0,
+        "y": -32
+      }
+    },
+    "mouth": {
+      "scaleX": 1.51,
+      "scaleY": 0.66,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.36,
+        "scaleY": 0.87,
+        "rotation": -0.5,
+        "x": 103,
+        "y": 83
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.16,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 1
+    },
+    "mouthTalkIndex": 1
+  },
+  "apaixonada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.98,
+        "scaleY": 1.04,
+        "rotation": -4,
+        "x": -1,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 0.98,
+        "scaleY": 1.04,
+        "rotation": 4,
+        "x": 1,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1.04,
+        "rotation": -14,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1.04,
+        "rotation": 14,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 0.84,
+      "scaleY": 0.55,
+      "rotation": 0,
+      "x": -7,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 106,
+        "y": 129
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 0.69,
+        "scaleY": 0.44,
+        "rotation": 0,
+        "x": 116,
+        "y": 264
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.4,
+        "gradientWidth": 704,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.31,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 2
+    },
+    "mouthTalkIndex": 2
+  },
+  "cansada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.04,
+        "scaleY": 0.7,
+        "rotation": 2,
+        "x": 0,
+        "y": 2
+      },
+      "right": {
+        "scaleX": 1.04,
+        "scaleY": 0.7,
+        "rotation": -2,
+        "x": 0,
+        "y": 2
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": -1.5,
+        "x": 0,
+        "y": 24
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": 1.5,
+        "x": 0,
+        "y": 24
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1.6,
+        "scaleY": 4,
+        "rotation": 0,
+        "x": 40,
+        "y": 24
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": -101
+      },
+      "manpu": {
+        "scaleX": 1.91,
+        "scaleY": 0.88,
+        "rotation": 0,
+        "x": -72,
+        "y": 376
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#080808",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 634,
+        "gradientHeight": 69,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.68,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.39,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 12
+    },
+    "mouthTalkIndex": 3
+  },
+  "ciumenta": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.96,
+        "scaleY": 0.9,
+        "rotation": 3,
+        "x": 1,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 0.96,
+        "scaleY": 0.9,
+        "rotation": -1,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.88,
+        "rotation": 12,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.88,
+        "rotation": -5,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 0.95,
+        "rotation": 0,
+        "x": 40,
+        "y": 66
+      },
+      "shadow": {
+        "scaleX": 1.41,
+        "scaleY": 1.52,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.15,
+        "scaleY": 1.25,
+        "rotation": 0,
+        "x": -105,
+        "y": 399
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.23,
+        "gradientWidth": 1000,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.72,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.55,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 4
+    },
+    "mouthTalkIndex": 4
+  },
+  "confusa": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.95,
+        "scaleY": 1,
+        "rotation": -7,
+        "x": -2,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1.02,
+        "scaleY": 0.82,
+        "rotation": 5,
+        "x": 2,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.86,
+        "rotation": -18,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.84,
+        "rotation": -2,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": -20.5,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.09,
+        "scaleY": 0.89,
+        "rotation": 0,
+        "x": -118,
+        "y": 395
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.87,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 20
+    },
+    "mouthTalkIndex": 5
+  },
+  "decepcionada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.92,
+        "scaleY": 0.78,
+        "rotation": -2.5,
+        "x": 0,
+        "y": 3
+      },
+      "right": {
+        "scaleX": 0.92,
+        "scaleY": 0.78,
+        "rotation": 2,
+        "x": 0,
+        "y": 3
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.74,
+        "rotation": 16,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.74,
+        "rotation": -10.5,
+        "x": -36,
+        "y": 24
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.08,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": -108,
+        "y": 382
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.81,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.78,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 6
+    },
+    "mouthTalkIndex": 6
+  },
+  "desconfiada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.9,
+        "rotation": -4,
+        "x": -2,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 0.95,
+        "scaleY": 0.63,
+        "rotation": 2,
+        "x": 2,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.86,
+        "rotation": -16,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.99,
+        "rotation": -2.5,
+        "x": 0,
+        "y": 31
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 0.78,
+      "rotation": -13,
+      "x": 0,
+      "y": 15
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.46,
+        "scaleY": 0.83,
+        "rotation": 0,
+        "x": -134,
+        "y": 392
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 19
+    },
+    "mouthTalkIndex": 7
+  },
+  "envergonhada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.03,
+        "scaleY": 0.9,
+        "rotation": -2,
+        "x": 2,
+        "y": 1
+      },
+      "right": {
+        "scaleX": 1.03,
+        "scaleY": 0.9,
+        "rotation": 2,
+        "x": -2,
+        "y": 1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.8,
+        "rotation": -8,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.8,
+        "rotation": 8,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1.92,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 0.93,
+        "scaleY": 0.72,
+        "rotation": 0.5,
+        "x": -121,
+        "y": 191
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 0.6,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#c60639",
+        "verticalCoverage": 0.5,
+        "softness": 0.14,
+        "gradientWidth": 259,
+        "gradientHeight": 288,
+        "blushStyle": "bands"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 8
+    },
+    "mouthTalkIndex": 8
+  },
+  "impressionada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1.12,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1.12,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1.01,
+        "scaleY": 0.76,
+        "rotation": -4,
+        "x": -28,
+        "y": -42
+      },
+      "right": {
+        "scaleX": 1.01,
+        "scaleY": 0.76,
+        "rotation": 4,
+        "x": -28,
+        "y": -36
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": -39,
+        "y": -171
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 303,
+        "y": 395
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.65,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 2
+    },
+    "mouthTalkIndex": 9
+  },
+  "indignada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.08,
+        "scaleY": 0.97,
+        "rotation": -4,
+        "x": 0,
+        "y": 1
+      },
+      "right": {
+        "scaleX": 1.08,
+        "scaleY": 0.79,
+        "rotation": 4,
+        "x": 0,
+        "y": 5
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.84,
+        "rotation": 3,
+        "x": -33,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.84,
+        "rotation": -4.5,
+        "x": -33,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.09,
+        "scaleY": 0.86,
+        "rotation": 0,
+        "x": -118,
+        "y": 376
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": false,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.68,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.61,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 5
+    },
+    "mouthTalkIndex": 10
+  },
+  "irritada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.82,
+        "rotation": 3.5,
+        "x": -1,
+        "y": 5
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.82,
+        "rotation": -7,
+        "x": 1,
+        "y": 2
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": 6.5,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": -17.5,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.43,
+        "scaleY": 0.72,
+        "rotation": 0,
+        "x": -144,
+        "y": 382
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.8,
+        "softness": 0.33,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 10
+    },
+    "mouthTalkIndex": 11
+  },
+  "nojo": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.09,
+        "scaleY": 0.78,
+        "rotation": 2,
+        "x": -1,
+        "y": 2
+      },
+      "right": {
+        "scaleX": 1.09,
+        "scaleY": 0.78,
+        "rotation": -2,
+        "x": 1,
+        "y": 2
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": 1.5,
+        "x": 0,
+        "y": 8
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": 1.5,
+        "x": 0,
+        "y": 18
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1.78,
+      "rotation": 0,
+      "x": 0,
+      "y": -17
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.52,
+        "scaleY": 1.11,
+        "rotation": 0,
+        "x": -108,
+        "y": 389
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.69,
+        "softness": 0.41,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.54,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 12
+    },
+    "mouthTalkIndex": 12
+  },
+  "normal": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.59,
+        "scaleY": 0.7,
+        "rotation": 0,
+        "x": 122,
+        "y": 129
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.01,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 13
+    },
+    "mouthTalkIndex": 13
+  },
+  "orgulhosa": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.05,
+        "scaleY": 0.9,
+        "rotation": -4,
+        "x": 0,
+        "y": -1
+      },
+      "right": {
+        "scaleX": 1.05,
+        "scaleY": 0.9,
+        "rotation": 4,
+        "x": 0,
+        "y": -1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.88,
+        "rotation": -11,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.88,
+        "rotation": 11,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.89,
+        "scaleY": 0.45,
+        "rotation": 0,
+        "x": 116,
+        "y": 73
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.08,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 14
+    },
+    "mouthTalkIndex": 14
+  },
+  "preocupada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.9,
+        "scaleY": 1.1,
+        "rotation": -3,
+        "x": 0,
+        "y": -2
+      },
+      "right": {
+        "scaleX": 0.9,
+        "scaleY": 1.1,
+        "rotation": 3,
+        "x": 0,
+        "y": -2
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1.08,
+        "rotation": -10,
+        "x": -28,
+        "y": -19
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1.08,
+        "rotation": 10,
+        "x": -28,
+        "y": -19
+      }
+    },
+    "mouth": {
+      "scaleX": 1.08,
+      "scaleY": 1,
+      "rotation": -11.5,
+      "x": 2,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 2.03,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 27,
+        "y": 392
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.77,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.13,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 3
+    },
+    "mouthTalkIndex": 15
+  },
+  "seria": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.96,
+        "scaleY": 0.86,
+        "rotation": -1,
+        "x": 0,
+        "y": 1
+      },
+      "right": {
+        "scaleX": 0.96,
+        "scaleY": 0.86,
+        "rotation": 1,
+        "x": 0,
+        "y": 1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.8,
+        "rotation": 8,
+        "x": 2,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.8,
+        "rotation": -10.5,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.66,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 16
+    },
+    "mouthTalkIndex": 16
+  },
+  "sorrindo_de_canto": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.08,
+        "scaleY": 0.92,
+        "rotation": -3,
+        "x": -1,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 0.96,
+        "scaleY": 0.98,
+        "rotation": 2,
+        "x": 1,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.88,
+        "rotation": -13,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.94,
+        "rotation": 9,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1.36,
+      "scaleY": 1,
+      "rotation": 20,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 43
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 19
+    },
+    "mouthTalkIndex": 17
+  },
+  "sorriso_maligno": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1.04,
+        "scaleY": 0.76,
+        "rotation": 2,
+        "x": -1,
+        "y": 1
+      },
+      "right": {
+        "scaleX": 1.04,
+        "scaleY": 0.76,
+        "rotation": -2,
+        "x": 1,
+        "y": 1
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": 14,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.78,
+        "rotation": -14,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1.43,
+      "scaleY": 1,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.74,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 109,
+        "y": 96
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": false
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": null
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.66,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 9
+    },
+    "mouthTalkIndex": 18
+  },
+  "surpresa": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 1.12,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 1.12,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 0.99,
+        "scaleY": 1.2,
+        "rotation": 0.5,
+        "x": 0,
+        "y": -32
+      },
+      "right": {
+        "scaleX": 0.98,
+        "scaleY": 1.2,
+        "rotation": 1,
+        "x": 0,
+        "y": -32
+      }
+    },
+    "mouth": {
+      "scaleX": 1,
+      "scaleY": 0.96,
+      "rotation": 0,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": -121,
+        "y": 412
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.77,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 0
+    },
+    "mouthTalkIndex": 19
+  },
+  "triste_magoada": {
+    "templateScaleX": 0.95,
+    "effectPlacements": {
+      "blush": {
+        "x": 477.63420552845696,
+        "y": 540.9253533146777,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "shadow": {
+        "x": 500,
+        "y": 420,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      },
+      "manpu": {
+        "x": 500,
+        "y": 360,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "gap": 0
+      }
+    },
+    "eyes": {
+      "left": {
+        "scaleX": 0.99,
+        "scaleY": 0.92,
+        "rotation": -3,
+        "x": 0,
+        "y": 2
+      },
+      "right": {
+        "scaleX": 0.99,
+        "scaleY": 0.92,
+        "rotation": 3,
+        "x": 0,
+        "y": 2
+      }
+    },
+    "eyebrows": {
+      "left": {
+        "scaleX": 1,
+        "scaleY": 0.76,
+        "rotation": -12,
+        "x": 0,
+        "y": 0
+      },
+      "right": {
+        "scaleX": 1,
+        "scaleY": 0.76,
+        "rotation": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    "mouth": {
+      "scaleX": 1.12,
+      "scaleY": 1,
+      "rotation": -10,
+      "x": 0,
+      "y": 0
+    },
+    "effects": {
+      "blush": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "shadow": {
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "x": 0,
+        "y": 0
+      },
+      "manpu": {
+        "scaleX": 1.5,
+        "scaleY": 0.62,
+        "rotation": 0,
+        "x": -82,
+        "y": 339
+      }
+    },
+    "enabledEffects": {
+      "blush": true,
+      "shadow": true,
+      "manpu": true
+    },
+    "effectAssets": {
+      "blush": null,
+      "shadow": null,
+      "manpu": "a6fef777-e740-4e7c-8127-c085447ffbfa"
+    },
+    "effectSettings": {
+      "blush": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ff90ae",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220,
+        "blushStyle": "oval"
+      },
+      "shadow": {
+        "opacity": 1,
+        "clipToTemplate": true,
+        "source": "gradient",
+        "color": "#2c1f34",
+        "verticalCoverage": 0.82,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      },
+      "manpu": {
+        "opacity": 0.55,
+        "clipToTemplate": true,
+        "source": "asset",
+        "color": "#ffffff",
+        "verticalCoverage": 0.5,
+        "softness": 0.18,
+        "gradientWidth": 420,
+        "gradientHeight": 220
+      }
+    },
+    "mouthHalo": {
+      "enabled": true,
+      "color": "#ff90ae",
+      "opacity": 1,
+      "softness": 0.35,
+      "width": 114,
+      "height": 48
+    },
+    "effectPieceIndexes": {
+      "blush": null,
+      "shadow": null,
+      "manpu": 7
+    },
+    "mouthTalkIndex": 20
+  }
+}

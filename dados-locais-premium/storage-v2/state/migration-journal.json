@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "status": "copy-complete",
+  "completedPhases": [
+    "categories",
+    "base-dados",
+    "characters",
+    "catalog",
+    "expression-packs",
+    "roteiros",
+    "studio",
+    "auxiliary",
+    "roteiros-settings"
+  ],
+  "errors": [],
+  "currentPhase": null,
+  "updatedAt": "2026-09-25T04:01:36.807Z"
+}

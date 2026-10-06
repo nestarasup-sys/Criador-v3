@@ -1,0 +1,49 @@
+{
+  "id": "f9a98e55-f446-44b3-9625-dc413f4031c7",
+  "name": "exec-c2faaf0f-9cf4-45e6-be55-061ececab718 3 (trás)",
+  "model": "masculino",
+  "category": "cabelosTras",
+  "linkedHairId": "868e7f92-400c-4f05-afd8-abcf3efea78f",
+  "width": 485,
+  "height": 424,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "fitByBasePack": {
+    "modelo-9": {
+      "x": -37.7,
+      "y": -93.8,
+      "scale": 0.67,
+      "scaleX": 0.96,
+      "scaleY": 1,
+      "rotation": -15,
+      "flipX": false
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-9": {
+      "hue": 0,
+      "saturation": 105,
+      "brightness": 93,
+      "enabled": true,
+      "tint": "#777b82",
+      "tintStrength": 52,
+      "contrast": 146,
+      "detailPreservation": 73,
+      "colorSpace": "oklch"
+    }
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:20.065Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

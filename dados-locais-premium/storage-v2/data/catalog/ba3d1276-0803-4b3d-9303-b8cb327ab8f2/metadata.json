@@ -1,0 +1,32 @@
+{
+  "id": "ba3d1276-0803-4b3d-9303-b8cb327ab8f2",
+  "name": "ChatGPT Image 4_09_2026, 18_09_04",
+  "model": "masculino",
+  "category": "roupas",
+  "outfitGroupId": "d9870999-5905-40cb-854f-8e0a257cb723",
+  "outfitGroupName": "ChatGPT Image 4_09_2026, 18_09_04",
+  "outfitVariantIndex": 0,
+  "outfitCover": true,
+  "width": 1024,
+  "height": 1024,
+  "defaultX": 960,
+  "defaultY": 560,
+  "contentX": 242,
+  "contentY": 65,
+  "contentWidth": 541,
+  "contentHeight": 911,
+  "fitReferenceWidth": 541,
+  "fitReferenceHeight": 928,
+  "fit": {
+    "x": -10,
+    "y": 105,
+    "scale": 0.776,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

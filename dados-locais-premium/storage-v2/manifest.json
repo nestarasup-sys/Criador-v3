@@ -1,0 +1,11 @@
+{
+  "app": "NYMI_GACHA",
+  "storageVersion": 2,
+  "schemaVersion": 1,
+  "activeStorage": "v2",
+  "migrationStatus": "complete",
+  "migrationSource": "storage-v1",
+  "createdAt": "2026-09-25T02:40:42.894Z",
+  "lastMigrationAt": "2026-09-25T04:20:53.200Z",
+  "lastCompletedPhase": "roteiros-settings"
+}

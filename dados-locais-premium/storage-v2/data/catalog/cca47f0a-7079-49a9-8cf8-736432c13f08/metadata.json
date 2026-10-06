@@ -1,0 +1,30 @@
+{
+  "id": "cca47f0a-7079-49a9-8cf8-736432c13f08",
+  "name": "Imagem do Codex 3 de set. de 2026, 21_03_08 (1) 1 (frente)",
+  "model": "masculino",
+  "category": "cabelos",
+  "width": 468,
+  "height": 404,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "contentX": 0,
+  "contentY": 0,
+  "contentWidth": 468,
+  "contentHeight": 404,
+  "fitReferenceWidth": 468,
+  "fitReferenceHeight": 404,
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:49:19.019Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

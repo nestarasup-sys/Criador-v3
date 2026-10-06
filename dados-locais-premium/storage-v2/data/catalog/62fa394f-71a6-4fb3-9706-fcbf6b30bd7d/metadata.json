@@ -1,0 +1,25 @@
+{
+  "id": "62fa394f-71a6-4fb3-9706-fcbf6b30bd7d",
+  "name": "ChatGPT Image 20_08_2026, 23_14_32 1 (trás)",
+  "model": "feminino",
+  "category": "cabelosTras",
+  "linkedHairId": "d5f068f6-3014-435c-9c58-b65e8409e395",
+  "width": 335,
+  "height": 460,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T03:52:49.894Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

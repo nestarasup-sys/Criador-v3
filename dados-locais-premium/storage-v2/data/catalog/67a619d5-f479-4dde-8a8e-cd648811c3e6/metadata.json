@@ -1,0 +1,32 @@
+{
+  "id": "67a619d5-f479-4dde-8a8e-cd648811c3e6",
+  "name": "ChatGPT Image 1_08_2026, 04_12_52 · Variante 1",
+  "model": "feminino",
+  "category": "roupas",
+  "outfitGroupId": "c5c90eb4-4453-45de-85f4-34a2439172e0",
+  "outfitGroupName": "ChatGPT Image 1_08_2026, 04_12_52",
+  "outfitVariantIndex": 0,
+  "outfitCover": true,
+  "width": 356,
+  "height": 756,
+  "defaultX": 959,
+  "defaultY": 638,
+  "contentX": 0,
+  "contentY": 0,
+  "contentWidth": 356,
+  "contentHeight": 756,
+  "fitReferenceWidth": 928,
+  "fitReferenceHeight": 872,
+  "fit": {
+    "x": 99.4,
+    "y": -49.7,
+    "scale": 1.281,
+    "scaleX": 1.06,
+    "scaleY": 1.08,
+    "rotation": 0,
+    "flipX": false
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

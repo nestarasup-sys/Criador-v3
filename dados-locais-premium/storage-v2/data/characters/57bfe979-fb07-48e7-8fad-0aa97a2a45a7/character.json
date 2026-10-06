@@ -1,0 +1,341 @@
+{
+  "name": "Novo personagem",
+  "model": "feminino",
+  "basePackId": "modelo-17",
+  "selections": {
+    "cabelos": null,
+    "cabelosTras": null,
+    "rostos": null,
+    "roupas": "89685ad9-4fec-4ff5-8764-a424198b9036"
+  },
+  "adjustments": {
+    "cabelos": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "cabelosTras": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "rostos": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "roupas": {
+      "x": -30,
+      "y": 115,
+      "scale": 0.787,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    }
+  },
+  "colorAdjustments": {
+    "cabelos": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    },
+    "cabelosTras": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    },
+    "rostos": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    },
+    "roupas": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "modelColorAdjustments": {
+    "pupils": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78
+    },
+    "pupilsBrows": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78
+    },
+    "skin": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78
+    },
+    "brows": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78
+    }
+  },
+  "modelColorScope": "pupilsBrows",
+  "outfitColorAdjustmentsByGroup": {},
+  "protectionMasks": {},
+  "faceMode": "base",
+  "compositionMode": "legacy",
+  "expressionPackId": null,
+  "expressionEmotion": "normal",
+  "expressionState": "default",
+  "layerMasks": {
+    "body": [],
+    "hairFront": [],
+    "hairBack": [],
+    "outfit": []
+  },
+  "maskStrokes": [],
+  "previewPan": {
+    "x": 0,
+    "y": 0
+  },
+  "exportFrame": {
+    "x": 0,
+    "y": 0,
+    "scale": 1
+  },
+  "hairAdjustmentsByBasePack": {
+    "modelo-1": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "modelo-16": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "modelo-18": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "modelo-15": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    },
+    "modelo-17": {
+      "cabelos": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      },
+      "cabelosTras": {
+        "x": 0,
+        "y": 0,
+        "scale": 1,
+        "scaleX": 1,
+        "scaleY": 1,
+        "rotation": 0,
+        "flipX": false
+      }
+    }
+  },
+  "outfitAdjustmentsByBasePack": {
+    "nenhuma:modelo-1": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "nenhuma:modelo-16": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "nenhuma:modelo-18": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "nenhuma:modelo-15": {
+      "x": 0,
+      "y": 0,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "bc953dfb-deb0-4790-ad8e-e2f238260e7c:modelo-17": {
+      "x": -30,
+      "y": 115,
+      "scale": 0.748,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "ee020c56-e21b-47ab-9ab9-3fe26cef311f:modelo-17": {
+      "x": -30,
+      "y": 115,
+      "scale": 0.787,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    },
+    "89685ad9-4fec-4ff5-8764-a424198b9036:modelo-17": {
+      "x": -30,
+      "y": 115,
+      "scale": 0.787,
+      "scaleX": 1,
+      "scaleY": 1,
+      "rotation": 0,
+      "flipX": false
+    }
+  },
+  "outfitLayerMasksByBasePack": {
+    "nenhuma:modelo-1": [],
+    "nenhuma:modelo-16": [],
+    "nenhuma:modelo-18": [],
+    "nenhuma:modelo-15": [],
+    "bc953dfb-deb0-4790-ad8e-e2f238260e7c:modelo-17": [],
+    "ee020c56-e21b-47ab-9ab9-3fe26cef311f:modelo-17": [],
+    "89685ad9-4fec-4ff5-8764-a424198b9036:modelo-17": []
+  },
+  "outfitProtectionMasksByBasePack": {},
+  "id": "57bfe979-fb07-48e7-8fad-0aa97a2a45a7",
+  "updatedAt": "2026-09-25T08:07:03.918Z",
+  "revision": 2
+}

@@ -1,0 +1,199 @@
+{
+  "id": "092d7a62-66d8-443c-9c67-9041b95b2126",
+  "name": "KAKAKA",
+  "rosterIds": [
+    "7f541c80-4259-4977-9ddc-b2f293ce5efe",
+    "e0572ccd-9de8-4a14-9d7b-9c1161d5e493",
+    "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+    "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+    "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+    "abcddedb-193d-4977-a287-7f69dc82bbed",
+    "7dbe65cd-4943-4a39-adf3-743734c841e1",
+    "f991e01d-8f4d-4e12-bd38-94717d3ceb88"
+  ],
+  "background": null,
+  "characters": [
+    {
+      "id": "c789fa90-c467-47d6-8c28-cc7e43866a29",
+      "characterId": "7f541c80-4259-4977-9ddc-b2f293ce5efe",
+      "x": 0.4518386420851109,
+      "y": 0.4504720087815587,
+      "scale": 1.1,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 1,
+      "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
+      "outfitVariantIndex": 1,
+      "outfitVariantOffsets": {
+        "36d519b0-19fe-4d53-8949-e7ed2d1e628c": {
+          "x": 0,
+          "y": 0
+        },
+        "0ebee5a5-6723-4359-9d08-93ca471e91c4": {
+          "x": 40,
+          "y": 8
+        },
+        "86403865-43d3-4871-8cf6-72d89b56952d": {
+          "x": 48,
+          "y": -8
+        }
+      }
+    },
+    {
+      "id": "17540620-b66c-4081-97e3-1d268359b15b",
+      "characterId": "e0572ccd-9de8-4a14-9d7b-9c1161d5e493",
+      "x": 1,
+      "y": 0.9034028540065862,
+      "scale": 1.15,
+      "flipX": true,
+      "expressionEmotion": "raiva",
+      "expressionState": "talk",
+      "z": 2,
+      "outfitGroupId": "fb88588d-ecef-403c-8c58-ec89b568f80d",
+      "outfitVariantIndex": 2,
+      "outfitVariantOffsets": {
+        "0ebee5a5-6723-4359-9d08-93ca471e91c4": {
+          "x": 40,
+          "y": 8
+        },
+        "86403865-43d3-4871-8cf6-72d89b56952d": {
+          "x": 48,
+          "y": -8
+        },
+        "36d519b0-19fe-4d53-8949-e7ed2d1e628c": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "657df33a-163f-422f-8f21-7713c165924e",
+      "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+      "x": 0.7266053635226193,
+      "y": 0.5789023051591657,
+      "scale": 1.1,
+      "flipX": true,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 3,
+      "outfitGroupId": "71a129fb-96af-42c1-b923-b8755f061128",
+      "outfitVariantIndex": 1,
+      "outfitVariantOffsets": {
+        "7e86ae25-fd9a-4d4a-994a-f0afcd7489e3": {
+          "x": 24,
+          "y": -8
+        },
+        "ba3efa7c-2062-4f4e-9dcb-ac7f2b2689d9": {
+          "x": 32,
+          "y": 0
+        }
+      }
+    },
+    {
+      "id": "90d7e12e-5c75-4aee-8ef3-b6f500a23650",
+      "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+      "x": 0.0961855374828527,
+      "y": 0.5262129527991218,
+      "scale": 1.25,
+      "flipX": false,
+      "expressionEmotion": "serio",
+      "expressionState": "default",
+      "z": 11,
+      "outfitGroupId": "f3d48224-208a-4d9b-8f8f-0cfbb667530d",
+      "outfitVariantIndex": 0
+    },
+    {
+      "id": "5269e17c-ad09-4df3-9a39-969ea204553a",
+      "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+      "x": 0.8896130364653211,
+      "y": 0.5492645444566411,
+      "scale": 1.25,
+      "flipX": true,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 8,
+      "outfitGroupId": "8d4111fe-ec2d-463c-aed1-dc70b0d8e58c",
+      "outfitVariantIndex": 0
+    },
+    {
+      "id": "04a7a275-1f95-41da-b87c-bc3d3bd53daa",
+      "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+      "x": 0.24005215792091905,
+      "y": 0.5569484083424808,
+      "scale": 1.1,
+      "flipX": false,
+      "expressionEmotion": "sorriso_canto",
+      "expressionState": "talk",
+      "z": 10
+    },
+    {
+      "id": "74371bc9-e365-4f6b-adc8-62058e761f19",
+      "characterId": "7dbe65cd-4943-4a39-adf3-743734c841e1",
+      "x": 0.8013172136213575,
+      "y": 0.6195170142700328,
+      "scale": 0.95,
+      "flipX": true,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 7
+    },
+    {
+      "id": "6bf47d97-38b2-4013-bc35-1e7048ffd15b",
+      "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+      "x": 0.38515368497218744,
+      "y": 0.5745115257958288,
+      "scale": 1.05,
+      "flipX": false,
+      "expressionEmotion": "normal",
+      "expressionState": "default",
+      "z": 9,
+      "outfitGroupId": "c5c90eb4-4453-45de-85f4-34a2439172e0",
+      "outfitVariantIndex": 0
+    }
+  ],
+  "objects": [],
+  "bubbles": [
+    {
+      "id": "855970ef-7022-44d0-92c3-89f719e23849",
+      "characterInstanceId": "04a7a275-1f95-41da-b87c-bc3d3bd53daa",
+      "bubbleType": "fala",
+      "text": "eu sou gostosao bonitao,tapadao, laraada.perdido na floresta maazonica com tres tigres tristes e  felizes para sempre",
+      "language": "pt",
+      "x": 0.2719075378568339,
+      "y": 0.5518604716613785,
+      "scale": 1.1,
+      "width": 386,
+      "fontSize": 26,
+      "tailSide": "left",
+      "z": 12
+    },
+    {
+      "id": "41698d9f-1347-427b-9810-f8be3970365d",
+      "characterInstanceId": "04a7a275-1f95-41da-b87c-bc3d3bd53daa",
+      "bubbleType": "fala",
+      "text": "I'm hot, beautiful, clueless, and lovely. Lost in the Amazon rainforest with three tigers forever happy.",
+      "language": "en",
+      "x": 0.264104283424514,
+      "y": 0.7575312257111805,
+      "scale": 1.1,
+      "width": 386,
+      "fontSize": 26,
+      "tailSide": "left",
+      "z": 13,
+      "translationOf": "855970ef-7022-44d0-92c3-89f719e23849"
+    }
+  ],
+  "narrators": [],
+  "uiPreferences": {
+    "characterPositionsLocked": false,
+    "backgroundCollapsed": false,
+    "rosterCompact": true,
+    "inspectorDockSide": "right",
+    "characterInspectorExpanded": true
+  },
+  "createdAt": "2026-08-05T09:04:40.799Z",
+  "updatedAt": "2026-08-28T03:18:32.153Z",
+  "revision": 1,
+  "migratedFrom": "storage-v1"
+}

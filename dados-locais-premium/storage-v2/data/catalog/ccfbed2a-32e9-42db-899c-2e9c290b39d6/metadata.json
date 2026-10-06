@@ -1,0 +1,442 @@
+{
+  "id": "ccfbed2a-32e9-42db-899c-2e9c290b39d6",
+  "name": "ChatGPT Image 10_09_2026, 04_26_56 · Variante 1",
+  "model": "feminino",
+  "category": "roupas",
+  "catalogVersion": "v1",
+  "outfitGroupId": "65441c82-e4f9-4d7e-b71a-95a005adc531",
+  "outfitGroupName": "ChatGPT Image 10_09_2026, 04_26_56",
+  "outfitVariantIndex": 1,
+  "outfitCover": false,
+  "width": 1024,
+  "height": 1024,
+  "defaultX": 960,
+  "defaultY": 560,
+  "contentX": 256,
+  "contentY": 48,
+  "contentWidth": 512,
+  "contentHeight": 928,
+  "fitReferenceWidth": 575,
+  "fitReferenceHeight": 928,
+  "fit": {
+    "x": -30,
+    "y": 115,
+    "scale": 0.787,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "updatedAt": "2026-09-10T10:59:38.144Z",
+  "fitByBasePack": {
+    "modelo-12": {
+      "x": 156.04,
+      "y": 86.62,
+      "scale": 1,
+      "scaleX": 1.3224,
+      "scaleY": 1.3766,
+      "rotation": 0,
+      "flipX": false,
+      "headWarp": {
+        "version": 1,
+        "top": 50.99462443701873,
+        "bottom": 281.9985471451402,
+        "confidence": 1,
+        "baselineError": 0.03776,
+        "candidateError": 0.01841,
+        "improvement": 0.5123,
+        "maxDisplacement": 4.58,
+        "knots": [
+          {
+            "y": 50.995,
+            "sourceY": 51,
+            "sourceLeft": 362.675,
+            "sourceRight": 424.55,
+            "targetLeft": 359.501,
+            "targetRight": 432.257,
+            "strength": 0.9
+          },
+          {
+            "y": 56.77,
+            "sourceY": 59.663,
+            "sourceLeft": 352.9,
+            "sourceRight": 437.1,
+            "targetLeft": 356.684,
+            "targetRight": 435.083,
+            "strength": 0.9
+          },
+          {
+            "y": 62.545,
+            "sourceY": 62.55,
+            "sourceLeft": 352.9,
+            "sourceRight": 437.1,
+            "targetLeft": 351.05,
+            "targetRight": 440.736,
+            "strength": 0.9
+          },
+          {
+            "y": 68.32,
+            "sourceY": 68.325,
+            "sourceLeft": 344.35,
+            "sourceRight": 446.325,
+            "targetLeft": 342.808,
+            "targetRight": 448.335,
+            "strength": 0.9
+          },
+          {
+            "y": 74.095,
+            "sourceY": 74.1,
+            "sourceLeft": 336.9,
+            "sourceRight": 453.1,
+            "targetLeft": 336.682,
+            "targetRight": 454.347,
+            "strength": 0.9
+          },
+          {
+            "y": 79.87,
+            "sourceY": 79.875,
+            "sourceLeft": 331.125,
+            "sourceRight": 459.875,
+            "targetLeft": 330.671,
+            "targetRight": 460.359,
+            "strength": 0.9
+          },
+          {
+            "y": 85.645,
+            "sourceY": 85.65,
+            "sourceLeft": 325.35,
+            "sourceRight": 464.65,
+            "targetLeft": 325.415,
+            "targetRight": 464.102,
+            "strength": 0.9
+          },
+          {
+            "y": 91.42,
+            "sourceY": 91.425,
+            "sourceLeft": 321.575,
+            "sourceRight": 468.425,
+            "targetLeft": 321.407,
+            "targetRight": 468.602,
+            "strength": 0.9
+          },
+          {
+            "y": 97.195,
+            "sourceY": 97.2,
+            "sourceLeft": 317.8,
+            "sourceRight": 472.2,
+            "targetLeft": 317.626,
+            "targetRight": 471.891,
+            "strength": 0.9
+          },
+          {
+            "y": 102.971,
+            "sourceY": 102.975,
+            "sourceLeft": 314.025,
+            "sourceRight": 475,
+            "targetLeft": 314.601,
+            "targetRight": 474.16,
+            "strength": 0.9
+          },
+          {
+            "y": 108.746,
+            "sourceY": 108.75,
+            "sourceLeft": 311.25,
+            "sourceRight": 477,
+            "targetLeft": 311.577,
+            "targetRight": 476.428,
+            "strength": 0.9
+          },
+          {
+            "y": 114.521,
+            "sourceY": 114.525,
+            "sourceLeft": 309,
+            "sourceRight": 479,
+            "targetLeft": 309.724,
+            "targetRight": 478.357,
+            "strength": 0.9
+          },
+          {
+            "y": 120.296,
+            "sourceY": 120.3,
+            "sourceLeft": 307.7,
+            "sourceRight": 481,
+            "targetLeft": 307.493,
+            "targetRight": 480.209,
+            "strength": 0.9
+          },
+          {
+            "y": 126.071,
+            "sourceY": 126.075,
+            "sourceLeft": 306,
+            "sourceRight": 482,
+            "targetLeft": 306.283,
+            "targetRight": 481.722,
+            "strength": 0.9
+          },
+          {
+            "y": 131.846,
+            "sourceY": 131.85,
+            "sourceLeft": 304.15,
+            "sourceRight": 483,
+            "targetLeft": 304.771,
+            "targetRight": 482.478,
+            "strength": 0.9
+          },
+          {
+            "y": 137.621,
+            "sourceY": 137.625,
+            "sourceLeft": 303,
+            "sourceRight": 484,
+            "targetLeft": 304.015,
+            "targetRight": 483.99,
+            "strength": 0.9
+          },
+          {
+            "y": 143.396,
+            "sourceY": 143.4,
+            "sourceLeft": 302.6,
+            "sourceRight": 485,
+            "targetLeft": 303.258,
+            "targetRight": 484.747,
+            "strength": 0.9
+          },
+          {
+            "y": 149.171,
+            "sourceY": 149.175,
+            "sourceLeft": 302,
+            "sourceRight": 485,
+            "targetLeft": 303.258,
+            "targetRight": 484.747,
+            "strength": 0.9
+          },
+          {
+            "y": 154.946,
+            "sourceY": 154.95,
+            "sourceLeft": 302,
+            "sourceRight": 485,
+            "targetLeft": 303.258,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 160.721,
+            "sourceY": 160.725,
+            "sourceLeft": 302,
+            "sourceRight": 485,
+            "targetLeft": 303.258,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 166.497,
+            "sourceY": 166.5,
+            "sourceLeft": 302,
+            "sourceRight": 485,
+            "targetLeft": 303.258,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 172.272,
+            "sourceY": 172.275,
+            "sourceLeft": 302.275,
+            "sourceRight": 485,
+            "targetLeft": 304.015,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 178.047,
+            "sourceY": 178.05,
+            "sourceLeft": 303,
+            "sourceRight": 484.95,
+            "targetLeft": 304.771,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 183.822,
+            "sourceY": 183.825,
+            "sourceLeft": 304,
+            "sourceRight": 484,
+            "targetLeft": 305.527,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 189.597,
+            "sourceY": 189.6,
+            "sourceLeft": 304,
+            "sourceRight": 484,
+            "targetLeft": 306.283,
+            "targetRight": 486.259,
+            "strength": 0.9
+          },
+          {
+            "y": 195.372,
+            "sourceY": 195.375,
+            "sourceLeft": 304,
+            "sourceRight": 483,
+            "targetLeft": 306.283,
+            "targetRight": 484.747,
+            "strength": 0.9
+          },
+          {
+            "y": 201.147,
+            "sourceY": 195.375,
+            "sourceLeft": 304,
+            "sourceRight": 483,
+            "targetLeft": 306.283,
+            "targetRight": 484.595,
+            "strength": 0.9
+          },
+          {
+            "y": 206.922,
+            "sourceY": 201.15,
+            "sourceLeft": 300.85,
+            "sourceRight": 482,
+            "targetLeft": 302.011,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 212.697,
+            "sourceY": 206.925,
+            "sourceLeft": 298.075,
+            "sourceRight": 481,
+            "targetLeft": 300.99,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 218.472,
+            "sourceY": 212.7,
+            "sourceLeft": 298.075,
+            "sourceRight": 481,
+            "targetLeft": 300.99,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 224.248,
+            "sourceY": 218.475,
+            "sourceLeft": 298.075,
+            "sourceRight": 481,
+            "targetLeft": 300.99,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 230.023,
+            "sourceY": 224.25,
+            "sourceLeft": 300,
+            "sourceRight": 481,
+            "targetLeft": 303.599,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 235.798,
+            "sourceY": 230.025,
+            "sourceLeft": 303,
+            "sourceRight": 481,
+            "targetLeft": 306.586,
+            "targetRight": 483.234,
+            "strength": 0.9
+          },
+          {
+            "y": 241.573,
+            "sourceY": 235.8,
+            "sourceLeft": 306,
+            "sourceRight": 480,
+            "targetLeft": 311.085,
+            "targetRight": 481.457,
+            "strength": 0.9
+          },
+          {
+            "y": 247.348,
+            "sourceY": 241.575,
+            "sourceLeft": 312.15,
+            "sourceRight": 478,
+            "targetLeft": 318.307,
+            "targetRight": 478.47,
+            "strength": 0.732
+          },
+          {
+            "y": 253.123,
+            "sourceY": 250.238,
+            "sourceLeft": 335.125,
+            "sourceRight": 470.875,
+            "targetLeft": 335.208,
+            "targetRight": 474.16,
+            "strength": 0.61
+          },
+          {
+            "y": 258.898,
+            "sourceY": 258.9,
+            "sourceLeft": 342.9,
+            "sourceRight": 465.1,
+            "targetLeft": 341.976,
+            "targetRight": 468.715,
+            "strength": 0.488
+          },
+          {
+            "y": 264.673,
+            "sourceY": 264.675,
+            "sourceLeft": 348,
+            "sourceRight": 457.325,
+            "targetLeft": 350.37,
+            "targetRight": 461.834,
+            "strength": 0.366
+          },
+          {
+            "y": 270.448,
+            "sourceY": 270.45,
+            "sourceLeft": 348,
+            "sourceRight": 445.1,
+            "targetLeft": 359.293,
+            "targetRight": 452.003,
+            "strength": 0.244
+          },
+          {
+            "y": 276.223,
+            "sourceY": 273.337,
+            "sourceLeft": 348,
+            "sourceRight": 436.987,
+            "targetLeft": 359.633,
+            "targetRight": 445.254,
+            "strength": 0.122
+          },
+          {
+            "y": 281.999,
+            "sourceY": 282,
+            "sourceLeft": 348,
+            "sourceRight": 428.875,
+            "targetLeft": 359.803,
+            "targetRight": 441.879,
+            "strength": 0
+          }
+        ]
+      }
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-12": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "layerMasksByBasePack": {
+    "modelo-12": []
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

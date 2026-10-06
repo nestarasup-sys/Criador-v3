@@ -1,0 +1,1837 @@
+{
+  "id": "fad6c548-6398-4864-904f-9613836b7fed",
+  "title": "C.AI HISTORICAL 1 (cópia)",
+  "generalContext": "O contexto central gira em torno da personagem FYN. Ela é apresentada como uma nobre de prestígio, com laços próximos à família real do reino. Em um ponto crucial da narrativa, ela se viu forçada a fugir do reino após ser acusada e considerada traidora por alguém ou algo dentro da corte. Posteriormente, ocorre um evento que resulta na inocentação de FYN, o que permite seu retorno ao cenário principal do reino.",
+  "participants": [
+    {
+      "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+      "active": true
+    },
+    {
+      "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+      "active": true
+    },
+    {
+      "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+      "active": true
+    },
+    {
+      "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+      "active": true
+    },
+    {
+      "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+      "active": true
+    }
+  ],
+  "tiktoks": [
+    {
+      "id": "f0fc4593-8e3f-421d-bd02-bc829a3252c0",
+      "title": "ELIAS COM FTN",
+      "description": "O vídeo inicia com elias ward observando algo, acompanhado por uma sequência de pensamentos visuais ou falados: ele questiona se é 'A red snowstorm?', nega ('No...'), e então afirma que é 'Its FYN'. e então o restando do video exibido é a FYN em varias fotos e clima de mostrando a beleza",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "63f4e48d-f7e2-47b8-b457-562506d85ea6",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "surpresa",
+          "text": "É a Fyn...",
+          "englishText": "It's the Fyn...",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        },
+        {
+          "id": "bb48ff88-6f55-4c07-9b10-0b5c2e0bec37",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "irônica",
+          "text": "Uma apresentação bastante dramática. Elias ward.",
+          "englishText": "Quite a dramatic presentation. Elias Ward.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        },
+        {
+          "id": "30eb2081-9277-48e4-84c3-67454285d5fd",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "observadora",
+          "text": "É difícil não se assustar.",
+          "englishText": "It's hard not to be startled.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        },
+        {
+          "id": "c2ad7a69-7913-461a-9d29-39877028fb26",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "divertida",
+          "text": "É só a FYN. O que há de tão extraordinário nisso?",
+          "englishText": "It's just the FYN. What's so extraordinary about it?",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        },
+        {
+          "id": "77f29d54-c264-4e33-bb02-4c5314e831fe",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "magoada",
+          "text": "Depois de tanto tempo desaparecida, é estranho vê-la, Cassian.",
+          "englishText": "After being missing for so long, it's strange to see her, Cassian.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        },
+        {
+          "id": "92c65a8f-0631-433d-a890-1e58ced564cd",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "contida",
+          "text": "...",
+          "englishText": "...",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:11:00.102Z"
+        }
+      ],
+      "createdAt": "2026-08-16T14:55:39.685Z",
+      "updatedAt": "2026-08-23T22:39:04.826Z",
+      "sceneEndSeconds": 5,
+      "video": {
+        "name": "snaptik_7643828540705672481_v3.mp4",
+        "storedPath": "roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/3e97258d-7348-47c6-a970-37ebf443bdb9.mp4",
+        "url": "http://127.0.0.1:6800/roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/3e97258d-7348-47c6-a970-37ebf443bdb9",
+        "contentType": "video/mp4",
+        "size": 3810850,
+        "updatedAt": "2026-08-16T18:12:49.878Z",
+        "durationSeconds": 22.545011
+      },
+      "characterReferences": [
+        {
+          "id": "19:29:elias ward",
+          "text": "elias ward",
+          "normalizedText": "elias ward",
+          "start": 19,
+          "end": 29,
+          "confidence": "normalized",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "candidateIds": [
+            "58d1898d-cdbf-48ab-bc4b-e5f833dae510"
+          ]
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoAssetId": "legacy-f0fc4593-8e3f-421d-bd02-bc829a3252c0"
+    },
+    {
+      "id": "1e37f53b-bf27-403f-bbb7-530b3f26c6d7",
+      "title": "FYN LINDA",
+      "description": "Em várias cenas distintas capturadas na fonte única, a personagem Fyn Sendro é exibida em múltiplas tomadas que enfatizam sua beleza física. O conteúdo mostra uma sequência de aparições onde o foco visual principal é sempre ela, destacando diferentes ângulos e aspectos de sua aparência em diversos cenários.",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "ee8f86c7-e5a2-42c6-82df-fa0044f97ce6",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "irônica",
+          "text": "Outro vídeo inteiro mostrando a beleza da Fyn.",
+          "englishText": "Another whole video showing Fyn's beauty.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:12:32.279Z"
+        },
+        {
+          "id": "44493b40-a23d-44b1-9e75-6bc198e3a192",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "provocadora",
+          "text": "Você parece estar prestando bastante atenção nisso, Duque.",
+          "englishText": "You seem quite focused on that, Duke.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:12:32.279Z"
+        },
+        {
+          "id": "f5d3ad60-fe9e-4808-93bc-241f14f8ae7c",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "contida",
+          "text": "Estou apenas assistindo a mesma coisa que todos vocês.",
+          "englishText": "I'm just watching the same thing as all of you.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:12:32.279Z"
+        },
+        {
+          "id": "d2818e24-57aa-4b35-a134-3e36539d3de5",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "nostálgica",
+          "text": "Para mim ela parece meio que... Esquisita?",
+          "englishText": "To me, she seems a little... strange?",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:12:32.279Z"
+        },
+        {
+          "id": "d0f8e07d-38df-4ac7-b392-3edc8b3c652e",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "calma",
+          "text": "Alguns anos fazem diferença.",
+          "englishText": "A few years make a difference.",
+          "createdAt": "2026-08-17T18:29:01.171Z",
+          "updatedAt": "2026-08-21T15:12:32.279Z"
+        }
+      ],
+      "createdAt": "2026-08-16T18:32:58.106Z",
+      "updatedAt": "2026-08-21T15:12:32.279Z",
+      "video": {
+        "name": "Download - 2026-08-16T153903.348.mp4",
+        "storedPath": "roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/919ef8bc-c228-41e8-b4f5-63b64ebfe912.mp4",
+        "url": "http://127.0.0.1:6800/roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/919ef8bc-c228-41e8-b4f5-63b64ebfe912",
+        "contentType": "video/mp4",
+        "size": 2660463,
+        "updatedAt": "2026-08-16T18:39:22.076Z",
+        "durationSeconds": 21.2
+      },
+      "sceneEndSeconds": 4,
+      "characterReferences": [],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoAssetId": "legacy-1e37f53b-bf27-403f-bbb7-530b3f26c6d7"
+    },
+    {
+      "id": "875403dc-948b-4106-b64f-fa5206f3418a",
+      "title": "FYN TIME SKIP ",
+      "description": "Video começa mostrando a FYN timida depois com a personalidade confiante",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "c44dff38-0655-47ef-a248-fe6254fba72f",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "curioso",
+          "text": "Então, ela realmente mudou tanto? Para mim parece a mesma coisa.",
+          "englishText": "So, she's really changed that much? To me, she seems the same.",
+          "createdAt": "2026-08-19T17:52:03.346Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "acc88aad-a570-453e-81c2-53c14032f32b",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "melancólica",
+          "text": "É quase como se fosse outra pessoa.",
+          "englishText": "It's almost like she's a different person.",
+          "createdAt": "2026-08-19T17:52:04.910Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "ce4a752f-71e7-4783-af27-3ca8cdc1da16",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "tensa",
+          "text": "A personalidade dela... ",
+          "englishText": "Her personality...",
+          "createdAt": "2026-08-19T17:52:05.284Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "04705338-953c-4b5d-91ff-6808475d0afd",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "cautelosa",
+          "text": "Não estamos vendo a mesma FYN de anos atrás, Isso é um fato.",
+          "englishText": "We are not seeing the same FYN from years ago. That's a fact.",
+          "createdAt": "2026-08-19T17:52:05.436Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "3a01010e-fcbb-4b36-8699-818ac2ad1d90",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "",
+          "text": "Talvez vocês só tenham conhecido a versão dela que cabia neste palácio.",
+          "englishText": "Perhaps you only knew the version of her that fit within these walls.",
+          "createdAt": "2026-08-19T22:01:40.785Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "83f04c87-e9f2-45ab-8147-9faa54543f16",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "",
+          "text": "Ou talvez ela sempre tenha sido assim e nós simplesmente nunca percebemos.",
+          "englishText": "Or maybe she always was like this, and we just never noticed.",
+          "createdAt": "2026-08-19T22:01:41.480Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        },
+        {
+          "id": "f1b0dfba-722d-4729-a871-69344659a480",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "",
+          "text": "O que aconteceu com você FYN?...",
+          "englishText": "What happened to you, FYN?...",
+          "createdAt": "2026-08-19T22:01:41.188Z",
+          "updatedAt": "2026-08-21T15:12:54.475Z"
+        }
+      ],
+      "createdAt": "2026-08-19T02:12:09.848Z",
+      "updatedAt": "2026-08-28T02:56:20.683Z",
+      "video": {
+        "name": "SWIF.mp4",
+        "storedPath": "base-de-dados/videos/04.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd15fb-4",
+        "contentType": "video/mp4",
+        "size": 33709204,
+        "durationSeconds": 16.085333,
+        "libraryVideoId": "video-mtcd15fb-4",
+        "contentHash": "2d76e499b85a81d6e278b1b4330850f1770a4c801c6f38e8f78d84bd0b3f2623",
+        "updatedAt": "2026-08-28T02:56:20.683Z"
+      },
+      "sceneEndSeconds": 5,
+      "characterReferences": [],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd15fb-4"
+    },
+    {
+      "id": "4584f01d-0a20-4b2c-8804-44b036fb4062",
+      "title": "FYN TIMESKIP",
+      "description": "Fyn fazendo coisas que não fazia.",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "9382636e-04ca-41fa-b0e9-cc25b5659c8d",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "surpresa",
+          "text": "Ela parece tão... livre agora.",
+          "englishText": "She looks so... free now.",
+          "createdAt": "2026-08-19T18:54:51.499Z",
+          "updatedAt": "2026-08-21T15:13:06.400Z"
+        },
+        {
+          "id": "0ab6df8e-dd03-4e44-807d-a2d05fff4532",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "thought",
+          "emotion": "curiosa",
+          "text": "Demorou bastante até ela conseguir ser assim...",
+          "englishText": "It took her a long time to get to this point...",
+          "createdAt": "2026-08-19T18:54:52.243Z",
+          "updatedAt": "2026-08-21T15:13:06.400Z"
+        },
+        {
+          "id": "4c5d13a2-7da6-44d9-8f20-c89d7ab5937f",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "",
+          "text": "Curioso. Antes ela pensava duas vezes antes de fazer qualquer coisa que pudesse chamar atenção.",
+          "englishText": "Curious. Before, she used to think twice before doing anything that might draw attention.",
+          "createdAt": "2026-08-20T20:56:07.954Z",
+          "updatedAt": "2026-08-21T15:13:06.400Z"
+        },
+        {
+          "id": "e20ba633-4036-4764-add3-61bda9dd2bb5",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "",
+          "text": "Talvez ela só tenha cansado de se preocupar com o que os outros pensam.",
+          "englishText": "Maybe she's just tired of caring what other people think.",
+          "createdAt": "2026-08-20T20:57:57.454Z",
+          "updatedAt": "2026-08-21T15:13:06.400Z"
+        },
+        {
+          "id": "1a47f09e-1771-4115-9996-3bc04cf82cb5",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "",
+          "text": "Eles continuam tentando encontrar a antiga FYN nela...",
+          "englishText": "They keep trying to find the old FYN in her...",
+          "createdAt": "2026-08-20T20:58:27.930Z",
+          "updatedAt": "2026-08-21T15:13:06.400Z"
+        }
+      ],
+      "createdAt": "2026-08-19T18:43:26.684Z",
+      "updatedAt": "2026-08-28T02:57:30.653Z",
+      "video": {
+        "name": "I CANT MOVE MY BORE.mp4",
+        "storedPath": "base-de-dados/videos/05.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2nfa-5",
+        "contentType": "video/mp4",
+        "size": 1265783,
+        "durationSeconds": 16.066667,
+        "libraryVideoId": "video-mtcd2nfa-5",
+        "contentHash": "d01664493e183fba38ac5bea08a8fd56a1eabead05f5514d1240588cb18c7223",
+        "updatedAt": "2026-08-28T02:57:30.653Z"
+      },
+      "sceneEndSeconds": 7,
+      "characterReferences": [],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2nfa-5"
+    },
+    {
+      "id": "018ec23d-bcd0-43e9-bc3d-1e9d46373a04",
+      "title": "FYN CHEGANDO NO REINO APÓS SER DESBANIDA",
+      "description": "FYN encontra o homem que o acusou falsamente eles discutem um pouco, fyn diz \"You are Finished\" depois \"Remove him from the grounds\" e os guardas prendem ele",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "18105219-dd79-4498-9e20-5831562afe83",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "interesse",
+          "text": "Essa postura... é algo que ela aprendeu fora daqui...",
+          "englishText": "This bearing... is something she learned outside these walls...",
+          "createdAt": "2026-08-19T21:35:20.250Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        },
+        {
+          "id": "41e504b6-21f4-43ce-a381-add3f3abbc70",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "choque",
+          "text": "Ela o confrontou... tão friamente.",
+          "englishText": "She confronted him... so coldly.",
+          "createdAt": "2026-08-19T21:34:55.623Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        },
+        {
+          "id": "077939b2-5529-4788-b5b2-9a2dfb6de465",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "surpresa contida",
+          "text": "Contra um homem que ajudou a destruir a vida dela? Eu diria que foi bastante contida.",
+          "englishText": "Against a man who helped destroy her life? I'd say she was quite restrained.",
+          "createdAt": "2026-08-19T21:35:18.619Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        },
+        {
+          "id": "1a2ccd6f-92a4-4607-8da3-7f786e869c4a",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "",
+          "text": "Fyn aqui de volta a esse reino... ficou bem menos paciente.",
+          "englishText": "Fyn returning to this kingdom... has become much less patient.",
+          "createdAt": "2026-08-19T22:03:42.551Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        },
+        {
+          "id": "44526396-255c-4492-a5cf-c6ba89d4bf16",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "",
+          "text": "Ela não hesitou. Antes, teria pensado em todas as consequências primeiro.",
+          "englishText": "She didn't hesitate. Before, she would have considered all the consequences first.",
+          "createdAt": "2026-08-19T22:03:42.843Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        },
+        {
+          "id": "546709ff-0862-4380-9776-bd33db0b7f37",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "",
+          "text": "Ela não era assim... Que irritante.",
+          "englishText": "She wasn't like this... How irritating.",
+          "createdAt": "2026-08-19T22:03:43.055Z",
+          "updatedAt": "2026-08-21T15:13:29.914Z"
+        }
+      ],
+      "createdAt": "2026-08-19T19:01:58.105Z",
+      "updatedAt": "2026-08-28T02:57:32.305Z",
+      "video": {
+        "name": "É ESSE AQUI.mp4",
+        "storedPath": "base-de-dados/videos/06.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2op7-6",
+        "contentType": "video/mp4",
+        "size": 2929892,
+        "durationSeconds": 20.85,
+        "libraryVideoId": "video-mtcd2op7-6",
+        "contentHash": "5fe7988d963fff508856cd53a4f51f49227b687a9cca6c776f5b354764f0411c",
+        "updatedAt": "2026-08-28T02:57:32.305Z"
+      },
+      "sceneEndSeconds": 9,
+      "characterReferences": [],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2op7-6"
+    },
+    {
+      "id": "1a65de77-ec49-46c6-a642-6110ef07a680",
+      "title": "dog do rei pra fyn",
+      "description": "No cenário apresentado, o Rei Lucien realiza um ato de presenteando a personagem FYN com um cachorro. Ao receber o animal, a reação imediata de FYN é de estranheza e descontentamento aparente. Ela expressa sua dúvida sobre o presente ao questionar: \"Isso é...?\", indicando visualmente que o cão não corresponde às suas expectativas estéticas ou conceituais de algo grandioso e majestoso.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "fedeb0ba-5a2a-4c23-a7c2-848f593aedf0",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "amarga",
+          "text": "Pelo menos, isso não mudou nela.",
+          "englishText": "At least, that hasn't changed in her.",
+          "createdAt": "2026-08-19T21:39:03.012Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        },
+        {
+          "id": "cc4e037e-088f-4aed-b272-42889d3dc1ae",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "confusa",
+          "text": "Um cachorro? Lucien, você realmente acha que isso é... apropriado?",
+          "englishText": "A dog? Lucien, do you really think this is... appropriate?",
+          "createdAt": "2026-08-19T21:39:03.012Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        },
+        {
+          "id": "3f7ef697-77fe-49a1-b9cb-8c17dd69f126",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "irritação",
+          "text": "Ele sempre faz essas demonstrações grandiosas e sem noção.",
+          "englishText": "He always makes these grand and clueless displays.",
+          "createdAt": "2026-08-19T21:39:03.012Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        },
+        {
+          "id": "89df3ca3-d428-40d5-b16e-3f1afceb0714",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "thought",
+          "emotion": "sorriso forçado",
+          "text": "Ora, ora. O Rei presenteando a FYN um pet. Que gesto... íntimo.",
+          "englishText": "Oh my. The King gifting FYN a pet. What an... intimate gesture.",
+          "createdAt": "2026-08-19T21:39:03.012Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        },
+        {
+          "id": "fc9d4935-ab70-4971-bd2a-eba97b0546e5",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "",
+          "text": "Espera... Lucien, você ainda lembrava que ela gostava de cachorros?",
+          "englishText": "Wait... Lucien, did you even remember she liked dogs?",
+          "createdAt": "2026-08-20T20:59:17.394Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        },
+        {
+          "id": "b71af07a-d4c2-4ec3-92e5-8fd449e8b968",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "",
+          "text": "Não vejo por que eu teria esquecido.",
+          "englishText": "I see no reason why I would have forgotten.",
+          "createdAt": "2026-08-20T20:59:35.408Z",
+          "updatedAt": "2026-08-21T15:16:17.784Z"
+        }
+      ],
+      "createdAt": "2026-08-19T21:39:03.012Z",
+      "updatedAt": "2026-08-28T02:57:34.054Z",
+      "video": {
+        "name": "HIPS.mp4",
+        "storedPath": "base-de-dados/videos/07.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2q1s-7",
+        "contentType": "video/mp4",
+        "size": 3517280,
+        "durationSeconds": 33.002653,
+        "libraryVideoId": "video-mtcd2q1s-7",
+        "contentHash": "0de3341ef1b967e76511349c0ef2e6c173729c74be63788fe3397c75c38f5335",
+        "updatedAt": "2026-08-28T02:57:34.054Z"
+      },
+      "sceneEndSeconds": 14.99,
+      "characterReferences": [
+        {
+          "id": "26:36:rei lucien",
+          "text": "Rei Lucien",
+          "normalizedText": "rei lucien",
+          "start": 26,
+          "end": 36,
+          "confidence": "normalized",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "candidateIds": [
+            "abcddedb-193d-4977-a287-7f69dc82bbed"
+          ]
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2q1s-7"
+    },
+    {
+      "id": "fed619a5-f519-4363-9857-a53cfabe2b44",
+      "title": "capitão confiante",
+      "description": "FYN observando o capitão elias ward andando confiante.",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "25e8972a-7118-4f71-8d87-7c65d85f0885",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "curiosidade",
+          "text": "Esse olhar pro Elias... ",
+          "englishText": "That look towards Elias...",
+          "createdAt": "2026-08-20T17:14:33.562Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        },
+        {
+          "id": "e9b7c659-86cd-4511-8d81-897e34097007",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "surpresa contida",
+          "text": "Primeiro a FYN, depois Elias. Que esquisito.",
+          "englishText": "First FYN, then Elias. How odd.",
+          "createdAt": "2026-08-20T17:14:33.562Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        },
+        {
+          "id": "ebfd8694-a820-4c06-bca6-b80d58c4a85d",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "desaprovação",
+          "text": "A confiança dele é irritante de assistir.",
+          "englishText": "His confidence is irritating to watch.",
+          "createdAt": "2026-08-20T17:14:33.562Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        },
+        {
+          "id": "573c8315-ae1c-4bf9-8eed-559f0202c621",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "",
+          "text": "Foi impressão minha ou ela olhou diferente pra você?",
+          "englishText": "Or was it just me, did she look at you differently?",
+          "createdAt": "2026-08-20T21:00:59.954Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        },
+        {
+          "id": "45e586c8-cd97-4a7b-aca5-68ab3f0ca445",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "",
+          "text": "Não significa nada, Eleanor.",
+          "englishText": "It means nothing, Eleanor.",
+          "createdAt": "2026-08-20T21:01:13.793Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        },
+        {
+          "id": "bb99de27-eb3d-4c6b-a71a-2be2af0d6523",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "",
+          "text": "ele sempre é péssimo mentindo quando o assunto é ela.",
+          "englishText": "He's always terrible at lying when she's involved.",
+          "createdAt": "2026-08-20T21:01:28.803Z",
+          "updatedAt": "2026-08-21T15:16:33.589Z"
+        }
+      ],
+      "createdAt": "2026-08-20T17:14:33.562Z",
+      "updatedAt": "2026-08-28T02:57:35.810Z",
+      "video": {
+        "name": "GONA ATITUTE.mp4",
+        "storedPath": "base-de-dados/videos/08.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2rel-8",
+        "contentType": "video/mp4",
+        "size": 915112,
+        "durationSeconds": 11.733333,
+        "libraryVideoId": "video-mtcd2rel-8",
+        "contentHash": "a46799ca04ab1f2d1a3e24077fe3dd0daf10ad3acac972e4d8cbad9fb11d5159",
+        "updatedAt": "2026-08-28T02:57:35.810Z"
+      },
+      "sceneEndSeconds": 6,
+      "characterReferences": [
+        {
+          "id": "17:35:capitao elias ward",
+          "text": "capitão elias ward",
+          "normalizedText": "capitao elias ward",
+          "start": 17,
+          "end": 35,
+          "confidence": "normalized",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "candidateIds": [
+            "58d1898d-cdbf-48ab-bc4b-e5f833dae510"
+          ]
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2rel-8"
+    },
+    {
+      "id": "f6acfff8-e9cd-4f79-92fd-481b618996d2",
+      "title": "Fyn no baile",
+      "description": "Em um cenário não especificado, o Capitão - Elias Ward está presente com outro homem. O Capitão - Elias Ward realiza um aceno de mão direcionado a uma pessoa identificada como 'Fyn'. Este gesto é feito à distância, indicando que ele e o segundo indivíduo estão observando ou interagindo com Fyn remotamente.",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "o capitão citado no video é o elias ward do elenco atual",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "5a365d69-b775-49fa-8d79-fc534e5df929",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "surpresa",
+          "text": "Ele parece muito à vontade com ela. Isso é estranho.",
+          "englishText": "He seems too comfortable with her. This is strange.",
+          "createdAt": "2026-08-20T20:33:18.317Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        },
+        {
+          "id": "7d685e40-4ab8-408d-be9f-949f40a44552",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "desaprovação",
+          "text": "Eu não devia ter feito isso na frente de todos...",
+          "englishText": "I shouldn't have done that in front of everyone...",
+          "createdAt": "2026-08-20T20:35:17.808Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        },
+        {
+          "id": "5e3f3ad0-6de5-40b8-8ca6-1845f5f7e8bc",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "sarcasmo",
+          "text": "Olha só. O Capitão ainda sabe fazer um aceno discreto.",
+          "englishText": "Look at that. Captain still knows how to give a subtle wave.",
+          "createdAt": "2026-08-20T20:33:18.995Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        },
+        {
+          "id": "365eb069-5f32-4010-88f7-7a49b5255e77",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "",
+          "text": "Vocês costumavam se encontrar fora do reino quando ela ainda era foragida?",
+          "englishText": "Did you two used to meet outside the kingdom when she was still an outlaw?",
+          "createdAt": "2026-08-20T21:04:56.402Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        },
+        {
+          "id": "a9573311-7e27-4656-b7b9-18a2709bfe96",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "séria",
+          "text": "Não tire conclusões precipitadas apenas por causa de um aceno meu para a FYN.",
+          "englishText": "Don't jump to conclusions just because of a wave I gave to FYN.",
+          "createdAt": "2026-08-20T21:05:35.892Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        },
+        {
+          "id": "24bb35fa-3bf4-4a39-ace5-9f6d52ef4c11",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "desaprovação",
+          "text": "O duque sempre foi discreto. Mas isso é fora do comum... ",
+          "englishText": "The Duke has always been discreet. But this is unusual...",
+          "createdAt": "2026-08-20T20:35:17.616Z",
+          "updatedAt": "2026-08-21T15:16:52.074Z"
+        }
+      ],
+      "createdAt": "2026-08-20T20:20:19.469Z",
+      "updatedAt": "2026-08-28T02:57:37.305Z",
+      "video": {
+        "name": "DOIS CARA DANDO ALO.mp4",
+        "storedPath": "base-de-dados/videos/09.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2sk3-9",
+        "contentType": "video/mp4",
+        "size": 2182260,
+        "durationSeconds": 18.837007,
+        "libraryVideoId": "video-mtcd2sk3-9",
+        "contentHash": "a76df79fa5e87dc3461e82fe7021af38eb035690065eebbc5ba2bdcd358661d1",
+        "updatedAt": "2026-08-28T02:57:37.305Z"
+      },
+      "sceneEndSeconds": 7,
+      "characterReferences": [
+        {
+          "id": "34:54:capitao elias ward",
+          "text": "Capitão - Elias Ward",
+          "normalizedText": "capitao elias ward",
+          "start": 34,
+          "end": 54,
+          "confidence": "exact",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "candidateIds": [
+            "58d1898d-cdbf-48ab-bc4b-e5f833dae510"
+          ]
+        },
+        {
+          "id": "88:108:capitao elias ward",
+          "text": "Capitão - Elias Ward",
+          "normalizedText": "capitao elias ward",
+          "start": 88,
+          "end": 108,
+          "confidence": "exact",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "candidateIds": [
+            "58d1898d-cdbf-48ab-bc4b-e5f833dae510"
+          ]
+        }
+      ],
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2sk3-9"
+    },
+    {
+      "id": "1137b9bb-06ef-4796-abcb-13adfa455777",
+      "title": "",
+      "description": "Tensão romantica entre fyn e elias ward",
+      "timeline": "past",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "id": "41e149d1-cafb-4adb-b227-5de9da743a54",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "cautela",
+          "text": "O jeito como ele a olha... isso me incomoda.",
+          "englishText": "The way he's looking at her... it bothers me.",
+          "createdAt": "2026-08-23T22:57:39.507Z",
+          "updatedAt": "2026-08-26T03:37:06.627Z"
+        },
+        {
+          "id": "f23681aa-0a1b-4bb7-8ba8-12312165c166",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "cautela",
+          "text": "Vocês dois parecem ter muita história para compartilhar.",
+          "englishText": "You two seem to have quite a story to share.",
+          "createdAt": "2026-08-23T23:33:15.402Z",
+          "updatedAt": "2026-08-26T03:37:06.627Z"
+        },
+        {
+          "id": "beff01a4-3ade-47d9-ad78-00e0c966830b",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "desconforto",
+          "text": "Isso é... um tanto exagerado, não acha?",
+          "englishText": "That's... a bit much, don't you think?",
+          "createdAt": "2026-08-23T23:38:29.178Z",
+          "updatedAt": "2026-08-26T03:37:06.627Z"
+        },
+        {
+          "id": "0f8d2482-532e-4ae0-81ee-c93511d8c4e8",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "thought",
+          "emotion": "irritação",
+          "text": "Tanta tensão por um simples olhar...",
+          "englishText": "So much tension over just a look...",
+          "createdAt": "2026-08-24T20:09:26.641Z",
+          "updatedAt": "2026-08-26T03:37:06.627Z"
+        }
+      ],
+      "createdAt": "2026-08-23T19:03:10.445Z",
+      "updatedAt": "2026-08-28T02:57:38.737Z",
+      "video": {
+        "name": "Download - 2026-08-22T013914.965.mp4",
+        "storedPath": "base-de-dados/videos/10.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2tnx-10",
+        "contentType": "video/mp4",
+        "size": 434422,
+        "durationSeconds": 15.3,
+        "libraryVideoId": "video-mtcd2tnx-10",
+        "contentHash": "435f236af3e14c5c7e5c2adad8b93a73e5ab40252040d695f3ae6fc734bea8e2",
+        "updatedAt": "2026-08-28T02:57:38.737Z"
+      },
+      "characterReferences": [
+        {
+          "id": "52:62:elias ward",
+          "text": "Elias Ward",
+          "normalizedText": "elias ward",
+          "start": 52,
+          "end": 62,
+          "confidence": "normalized",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "candidateIds": [
+            "58d1898d-cdbf-48ab-bc4b-e5f833dae510"
+          ]
+        }
+      ],
+      "sceneEndSeconds": 4,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2tnx-10"
+    },
+    {
+      "id": "d9233135-6b5c-4d2f-9678-ff66d5a06988",
+      "title": "TIKTOK 10",
+      "description": "Elias aparece conversando com uma mulher chamada Elena. Os dois parecem próximos. Durante a conversa, Elena diz alguma coisa que faz Elias sorrir. Ele toca levemente o nariz dela antes de os dois irem embora juntos. Depois, o vídeo mostra Elena sozinha em casa, claramente feliz após o encontro. A edição faz a interação parecer romântica, mas não confirma o que realmente existe entre eles.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "f2665aa3-16c0-4273-8ebe-f503ca36a116",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "curiosa",
+          "text": "Quem é ela?",
+          "englishText": "Who is she?",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "a0acae57-e1d6-4331-8e82-a27602bed9f4",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "simples",
+          "text": "Elena.",
+          "englishText": "Elena.",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "5e296c61-fd1b-4541-a769-a4e3442d4ce6",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "irônico",
+          "text": "Só Elena?",
+          "englishText": "Only Elena?",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "be59a54a-d3fb-4224-b9d4-ef55016e5011",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "seco",
+          "text": "Foi o que eu disse.",
+          "englishText": "It's what I said.",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "6152ac0b-ba19-487f-a791-c989a7bf6e67",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "divertido",
+          "text": "Não sabia que você conseguia ser tão gentil, Ward.",
+          "englishText": "Didn't know you could be so kind, Ward.",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "0aaa01e9-4989-41d7-8159-87fe9a3be73f",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "observador",
+          "text": "Ele não costuma permitir esse tipo de proximidade.",
+          "englishText": "He doesn't usually allow this kind of closeness.",
+          "createdAt": "2026-08-26T00:45:07.727Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z"
+        },
+        {
+          "id": "78adfb97-18fd-4bf7-9c9e-ced774545712",
+          "createdAt": "2026-08-26T01:55:24.202Z",
+          "updatedAt": "2026-08-26T03:38:36.034Z",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "curiosa",
+          "text": "Ela parece gostar dele.",
+          "englishText": "She seems fond of him."
+        }
+      ],
+      "createdAt": "2026-08-26T00:45:07.726Z",
+      "updatedAt": "2026-08-28T02:57:40.921Z",
+      "video": {
+        "name": "snaptik_7626765214012574997_v3.mp4",
+        "storedPath": "base-de-dados/videos/11.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2vcf-11",
+        "contentType": "video/mp4",
+        "size": 4643858,
+        "durationSeconds": 17.916667,
+        "libraryVideoId": "video-mtcd2vcf-11",
+        "contentHash": "cae4a29341c74ee2f292c3548ae7a157921d1467bf2231f14d1c24eb6e7af4fa",
+        "updatedAt": "2026-08-28T02:57:40.921Z"
+      },
+      "sceneEndSeconds": 6,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2vcf-11"
+    },
+    {
+      "id": "61a74ba9-149f-4482-b692-01c963545994",
+      "title": "TIKTOK 11",
+      "description": "FYN confronta Elias pouco depois dos acontecimentos envolvendo Elena. FYN ordena que ele se mantenha longe dela. Elias questiona o motivo, mas FYN se recusa a explicar completamente. Quando ele insiste, FYN deixa claro que Elena poderá acabar morta caso ele continue se aproximando dela. À primeira vista, a cena pode parecer ciúme. Entretanto, a seriedade de FYN sugere que há algo além disso.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": true,
+      "reactionBlocks": [
+        {
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "surpresa",
+          "text": "Elena? É a mulher do vídeo anterior.",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "interessado",
+          "text": "Então FYN estava prestando atenção.",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "tranquilo",
+          "text": "Ou sabia de alguma coisa.",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "frio",
+          "text": "Por que ela se importaria com quem Ward encontra?",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "sério",
+          "text": "Não sei.",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "irônico",
+          "text": "Conveniente.",
+          "englishText": "",
+          "id": "",
+          "createdAt": "",
+          "updatedAt": ""
+        },
+        {
+          "id": "8eb7e208-305e-4508-9bef-db220dfdccad",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T01:55:24.203Z",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "atento",
+          "text": "Ela estava falando sério.",
+          "englishText": ""
+        },
+        {
+          "id": "187fff2a-1cf1-4803-af24-3f24a9863f5e",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T01:55:24.203Z",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "thought",
+          "emotion": "desconfiado",
+          "text": "FYN não ameaça alguém assim por capricho.",
+          "englishText": ""
+        }
+      ],
+      "createdAt": "2026-08-25T11:28:41.778Z",
+      "updatedAt": "2026-08-28T02:57:42.437Z",
+      "video": {
+        "name": "DA PRA CONSTRUI ALGO EM VOLTA.mp4",
+        "storedPath": "base-de-dados/videos/12.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2wio-12",
+        "contentType": "video/mp4",
+        "size": 980537,
+        "durationSeconds": 22.5,
+        "libraryVideoId": "video-mtcd2wio-12",
+        "contentHash": "b2e3767ba511bb711715668df5b112dd428ef1add5a8c43c2ea86eef3ff5ab9a",
+        "updatedAt": "2026-08-28T02:57:42.437Z"
+      },
+      "sceneEndSeconds": 9.97,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2wio-12"
+    },
+    {
+      "id": "e6495784-a9f5-4126-8882-4564c0a87623",
+      "title": "TIKTOK 12",
+      "description": "Algumas mulheres conversam durante um evento e elogiam FYN. Comentam sua beleza, roupas, elegância e principalmente a confiança que ela demonstra agora. Uma delas comenta que FYN parece muito diferente da jovem nobre sobre quem costumavam ouvir histórias. O vídeo então se transforma em uma edição elegante mostrando FYN em diferentes momentos.",
+      "timeline": "unspecified",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "edc6ef8a-3c00-4580-a0fa-8ce81e2bb867",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "aliviada",
+          "text": "Pelo menos estão falando bem dela.",
+          "englishText": "At least they're speaking well of her.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        },
+        {
+          "id": "8ac654b1-1bf7-4e79-bcfd-983c4cde1691",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "seco",
+          "text": "Isso é uma novidade.",
+          "englishText": "That's a novelty.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        },
+        {
+          "id": "17667ef8-60b8-47ef-8661-53308039912f",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "tranquilo",
+          "text": "FYN sempre chamou atenção.",
+          "englishText": "FYN has always drawn attention.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        },
+        {
+          "id": "73d265c2-9306-451f-a8c5-8c16662ab3d1",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "nostálgica",
+          "text": "Antes ela odiava isso.",
+          "englishText": "She used to hate that.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        },
+        {
+          "id": "7454db82-1094-4b96-976e-31af737cc9a1",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "nostálgico",
+          "text": "Ela teria odiado toda essa atenção anos atrás.",
+          "englishText": "She would have hated all this attention years ago.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        },
+        {
+          "id": "52423c0c-fd84-46c2-b29e-dce9a0ef5957",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "observador",
+          "text": "Ela parece confortável sendo observada agora.",
+          "englishText": "She looks comfortable being watched now.",
+          "createdAt": "2026-08-26T00:43:56.882Z",
+          "updatedAt": "2026-08-26T03:41:10.976Z"
+        }
+      ],
+      "createdAt": "2026-08-26T00:43:56.882Z",
+      "updatedAt": "2026-08-28T02:57:44.381Z",
+      "video": {
+        "name": "snaptik_7613861007282179350_v3.mp4",
+        "storedPath": "base-de-dados/videos/13.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2y0o-13",
+        "contentType": "video/mp4",
+        "size": 1482325,
+        "durationSeconds": 17.066009,
+        "libraryVideoId": "video-mtcd2y0o-13",
+        "contentHash": "a7e711e6c09f63faba276727fe1921c843285bd7a0868e7eaba5f745faf07009",
+        "updatedAt": "2026-08-28T02:57:44.381Z"
+      },
+      "sceneEndSeconds": 6,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2y0o-13"
+    },
+    {
+      "id": "92798644-2f79-4c96-8697-a73eef64c8db",
+      "title": "TIKTOK 13",
+      "description": "Durante uma grande festa de casamento, FYN deixa seu lenço cair sem perceber. Cassian percebe primeiro, se abaixa, pega o lenço e o devolve a ela com uma pequena reverência. Ele diz alguma coisa que faz FYN sorrir. Quando a câmera muda de ângulo, Elias aparece ao fundo observando os dois.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "1b83cd15-41b7-4dbc-b159-f4713b6363f4",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "divertido",
+          "text": "Foi apenas um lenço.",
+          "englishText": "It was just a handkerchief.",
+          "createdAt": "2026-08-26T00:43:59.606Z",
+          "updatedAt": "2026-08-26T03:41:26.841Z"
+        },
+        {
+          "id": "4601ee08-f9cf-42e6-88e7-1c8de746fb1f",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "irônico",
+          "text": "E ainda assim você conseguiu transformar aquilo em uma apresentação.",
+          "englishText": "And yet you still managed to turn it into a performance.",
+          "createdAt": "2026-08-26T00:43:59.606Z",
+          "updatedAt": "2026-08-26T03:41:26.841Z"
+        },
+        {
+          "id": "3f70ccea-1865-4aed-b1d9-70909f0ec68e",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "satisfeito",
+          "text": "Ela sorriu. Então funcionou.",
+          "englishText": "She smiled. So it worked.",
+          "createdAt": "2026-08-26T00:43:59.606Z",
+          "updatedAt": "2026-08-26T03:41:26.841Z"
+        },
+        {
+          "id": "63bd6e4a-8acf-41bc-b2d9-efcc4a896fc8",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "curiosa",
+          "text": "Ela parece tão confortável com Cassian.",
+          "englishText": "She looks so at ease with Cassian.",
+          "createdAt": "2026-08-26T00:43:59.606Z",
+          "updatedAt": "2026-08-26T03:41:26.841Z"
+        },
+        {
+          "id": "780fbd01-5c09-4ba0-90f1-13eb98780d2b",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "incomodado",
+          "text": "Claro que ele precisava fazer aquilo.",
+          "englishText": "Of course he had to do that.",
+          "createdAt": "2026-08-26T00:43:59.606Z",
+          "updatedAt": "2026-08-26T03:41:26.841Z"
+        }
+      ],
+      "createdAt": "2026-08-26T00:43:59.606Z",
+      "updatedAt": "2026-08-28T02:57:45.956Z",
+      "video": {
+        "name": "snaptik_7620645239543336212_v3.mp4",
+        "storedPath": "base-de-dados/videos/14.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd2z8f-14",
+        "contentType": "video/mp4",
+        "size": 2032878,
+        "durationSeconds": 23.405011,
+        "libraryVideoId": "video-mtcd2z8f-14",
+        "contentHash": "d0b81e374211e9888d3db35fcf5e4cad00995789114035d6b5a9ad36dec401df",
+        "updatedAt": "2026-08-28T02:57:45.956Z"
+      },
+      "sceneEndSeconds": 12,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd2z8f-14"
+    },
+    {
+      "id": "fc5a4314-9286-43b9-9b06-7dea2f85d271",
+      "title": "TIKTOK 14",
+      "description": "Durante um baile, FYN e Elias dançam juntos. Diferente de várias interações anteriores, os dois parecem completamente à vontade um com o outro. Conversam em voz baixa durante a dança e FYN ri de alguma coisa que Elias diz. No meio da cena, Elena surge na entrada do salão. Ela para ao perceber os dois dançando. Seu sorriso desaparece.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "a497b88c-16bc-4a79-bc01-dab000366e94",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "baixa",
+          "text": "Ah.",
+          "englishText": "Ah.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "72977bd3-731c-434d-b8d1-a752c1a545cf",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "interessado",
+          "text": "Agora ficou interessante.",
+          "englishText": "Now this is interesting.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "3564f30b-3df4-4a59-8385-ba09ab7cfac1",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "sério",
+          "text": "Não tire conclusões.",
+          "englishText": "Don't jump to conclusions.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "408627f6-96e7-424d-b4dc-092068016a38",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "divertido",
+          "text": "Essa frase nunca impediu ninguém de tirar conclusões.",
+          "englishText": "That has never stopped anyone from jumping to conclusions.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "e6c6bdaf-cb3d-49e9-b1ed-634832bdef7a",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "rígido",
+          "text": "Ela parece confortável demais com ele.",
+          "englishText": "She seems far too comfortable with him.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "cc27d6d5-1843-4886-bdde-860f1b5ff290",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "preocupada",
+          "text": "Elena não gostou nada disso.",
+          "englishText": "Elena did not like that at all.",
+          "createdAt": "2026-08-26T00:43:58.334Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z"
+        },
+        {
+          "id": "c149f322-f71b-4275-9133-ba7ed0d11233",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T03:41:35.946Z",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "thought",
+          "emotion": "incomodado",
+          "text": "Ward sequer parece perceber como os dois estão sendo vistos.",
+          "englishText": "Ward doesn't even seem to realize how the two of them are being seen."
+        }
+      ],
+      "createdAt": "2026-08-26T00:43:58.334Z",
+      "updatedAt": "2026-08-28T02:57:47.691Z",
+      "video": {
+        "name": "snaptik_7618976305236741409_v3.mp4",
+        "storedPath": "base-de-dados/videos/15.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd30kl-15",
+        "contentType": "video/mp4",
+        "size": 2134057,
+        "durationSeconds": 29.742993,
+        "libraryVideoId": "video-mtcd30kl-15",
+        "contentHash": "ee0517cb4f61c5e279585c7054ba794cb395c7b09aab7d0f655d471b080b3d55",
+        "updatedAt": "2026-08-28T02:57:47.691Z"
+      },
+      "sceneEndSeconds": 5,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd30kl-15"
+    },
+    {
+      "id": "4537802e-25c3-4172-9520-3da285cfd37b",
+      "title": "TIKTOK 15",
+      "description": "FYN e Elias aparecem conversando durante outro evento. Existem várias pessoas ao redor, mas os dois parecem momentaneamente alheios ao restante do salão. Em determinado momento, Elias se aproxima para dizer alguma coisa no ouvido de FYN. Ela olha para ele e sorri. Duas mulheres próximas percebem a interação e imediatamente trocam olhares. O vídeo termina antes que qualquer outra coisa aconteça.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "d6f2a354-0579-4642-8459-ceed744bc39b",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "speech",
+          "emotion": "incrédula",
+          "text": "Até elas perceberam.",
+          "englishText": "Even they noticed.",
+          "createdAt": "2026-08-26T00:43:55.900Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z"
+        },
+        {
+          "id": "a9416f18-e572-4d59-a162-aaa9c8fcf437",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "seco",
+          "text": "Seria difícil não perceber.",
+          "englishText": "It would be hard not to notice.",
+          "createdAt": "2026-08-26T00:43:55.900Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z"
+        },
+        {
+          "id": "b1347467-cb2a-43bf-9d9e-6381596fd6cb",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "provocador",
+          "text": "Você está tornando bastante difícil defendê-lo, Capitão.",
+          "englishText": "You’re making it rather hard to defend you, Captain.",
+          "createdAt": "2026-08-26T00:43:55.900Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z"
+        },
+        {
+          "id": "852258ad-1529-447d-9ec2-ad48f70579fd",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "speech",
+          "emotion": "confuso",
+          "text": "Defender-me de quê?",
+          "englishText": "Defend me from what?",
+          "createdAt": "2026-08-26T00:43:55.900Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z"
+        },
+        {
+          "id": "628fab47-0181-48a5-91cc-f0a14d967339",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "speech",
+          "emotion": "divertido",
+          "text": "Exatamente.",
+          "englishText": "Exactly.",
+          "createdAt": "2026-08-26T00:43:55.900Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z"
+        },
+        {
+          "id": "ea5420de-3b1f-4ada-b5fb-63f62b38a587",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "confusa",
+          "text": "Existe alguma coisa entre eles. Só não sei o quê.",
+          "englishText": "There’s something between them. I just don’t know what."
+        },
+        {
+          "id": "37376871-3460-411d-8710-fc00ad9bc38d",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T03:42:04.696Z",
+          "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+          "type": "thought",
+          "emotion": "sério",
+          "text": "Eles estão vendo o que querem ver.",
+          "englishText": "They’re seeing what they want to see."
+        }
+      ],
+      "createdAt": "2026-08-26T00:43:55.899Z",
+      "updatedAt": "2026-08-28T02:57:49.054Z",
+      "video": {
+        "name": "snaptik_7602344886855159053_v3.mp4",
+        "storedPath": "base-de-dados/videos/16.mp4",
+        "url": "http://127.0.0.1:6800/base-dados/videos/video-mtcd31mh-16",
+        "contentType": "video/mp4",
+        "size": 2266597,
+        "durationSeconds": 28.42,
+        "libraryVideoId": "video-mtcd31mh-16",
+        "contentHash": "4d589ae4eb02cf1689bd3941e022fb5f4b132038637443c48c67d982bd529b04",
+        "updatedAt": "2026-08-28T02:57:49.054Z"
+      },
+      "sceneEndSeconds": 11,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": [],
+      "videoId": "video-mtcd31mh-16"
+    },
+    {
+      "id": "bd46e943-0219-47a2-8b91-d045f6c7eb35",
+      "title": "TIKTOK 16",
+      "description": "FYN e Lucien aparecem sozinhos durante uma discussão. FYN parece prestes a ir embora quando Lucien perde parte de sua habitual frieza. Ele diz que passou anos tentando esquecer tudo que aconteceu entre eles e que não conseguiu. FYN permanece em silêncio. Lucien então pergunta: “Você acha que eu consegui simplesmente deixar de me importar com você?” FYN continua olhando para ele. Depois de alguns segundos, Lucien acrescenta: “Eu tentei.” O vídeo termina abruptamente antes que FYN responda.",
+      "timeline": "future",
+      "sceneGoal": "",
+      "userInstruction": "",
+      "specificRules": "",
+      "shortLines": false,
+      "reactionBlocks": [
+        {
+          "id": "1df0cf45-3dfb-4bad-a798-a8f3e6b21903",
+          "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+          "type": "thought",
+          "emotion": "chocada",
+          "text": "Lucien...",
+          "englishText": "Lucien...",
+          "createdAt": "2026-08-26T00:43:54.838Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z"
+        },
+        {
+          "id": "66a0faa4-3b22-44ed-9fdb-08bba34b00e6",
+          "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+          "type": "thought",
+          "emotion": "sério",
+          "text": "O rei gostava da FYN?? ",
+          "englishText": "Did the king like FYN??",
+          "createdAt": "2026-08-26T00:43:54.838Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z"
+        },
+        {
+          "id": "e7240a0d-5889-43a0-af5a-81ab5f5b66f2",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "baixo, venenoso",
+          "text": "Finalmente confessou.",
+          "englishText": "Finally confessed.",
+          "createdAt": "2026-08-26T00:43:54.838Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z"
+        },
+        {
+          "id": "4b0ae987-3cae-49c2-a184-6d34957cb8b5",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "frio",
+          "text": "Cuidado, Alexander.",
+          "englishText": "Watch it, Alexander.",
+          "createdAt": "2026-08-26T00:43:54.838Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z"
+        },
+        {
+          "id": "10173cbb-a42e-4434-b60f-23d2c7ea4361",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z",
+          "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+          "type": "speech",
+          "emotion": "controlado",
+          "text": "Não disse nada além do necessário, Majestade.",
+          "englishText": "I said nothing more than what was necessary, Your Majesty."
+        },
+        {
+          "id": "f87d8e50-2627-455c-8632-8c45c326cef9",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "speech",
+          "emotion": "",
+          "text": "Chega!",
+          "englishText": " That's enough\"",
+          "createdAt": "2026-08-26T02:00:56.441Z",
+          "updatedAt": "2026-08-26T03:43:37.464Z"
+        },
+        {
+          "id": "6d7b990f-5e7a-4184-b250-f9ed4633781a",
+          "createdAt": "2026-08-26T01:55:24.203Z",
+          "updatedAt": "2026-08-26T03:42:27.013Z",
+          "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+          "type": "thought",
+          "emotion": "tenso",
+          "text": "Por que o video terminou justamente ali...? Eu queria saber o resto!..",
+          "englishText": "Why did the video end right there...? I wanted to know the rest!.."
+        }
+      ],
+      "createdAt": "2026-08-26T00:43:54.838Z",
+      "updatedAt": "2026-09-17T09:55:57.864Z",
+      "sceneEndSeconds": 29,
+      "aiUsage": {
+        "calls": 0,
+        "inputTokens": 0,
+        "outputTokens": 0,
+        "totalTokens": 0,
+        "lastAt": null,
+        "lastOperation": null,
+        "lastModel": null
+      },
+      "aiDirectives": []
+    }
+  ],
+  "createdAt": "2026-08-17T17:53:31.524Z",
+  "updatedAt": "2026-09-25T07:43:05.946Z",
+  "background": {
+    "name": "ChatGPT Image 4_08_2026, 11_13_58.png",
+    "storedPath": "roteiros/backgrounds/fad6c548-6398-4864-904f-9613836b7fed/background.png",
+    "url": "http://127.0.0.1:6800/roteiros/backgrounds/fad6c548-6398-4864-904f-9613836b7fed",
+    "contentType": "image/png",
+    "size": 1387051,
+    "updatedAt": "2026-08-17T18:43:11.384Z",
+    "exportedPath": "assets/backgrounds/C.AI HISTORICAL 1 (cópia)/01.png"
+  },
+  "aiContext": {
+    "profiles": [
+      {
+        "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+        "personality": "inteligente, emotiva, educada, teimosa. Mais perceptiva do que parece.",
+        "backstory": "irmã mais nova de Lucien. Cresceu ao lado de FYN e a via praticamente como uma irmã.",
+        "fynRelationship": "amor de amizade misturado com mágoa. Ela ficou anos sem entender por que A FYN desapareceu sem procurá-la.",
+        "speakingStyle": "mais natural que os homens. Pergunta, confronta e fala coisas que os outros evitam.",
+        "relationships": [],
+        "additionalRules": "",
+        "updatedAt": "2026-08-15T14:49:20.969Z"
+      },
+      {
+        "characterId": "7a0acf4b-5d9b-45d1-b79b-d92599559977",
+        "personality": "orgulhoso, inteligente, provocador, elegante. Sabe guardar rancor.",
+        "backstory": "foi noivo de FYN durante alguns anos por acordo político. O casamento acabou quando ela foi acusada.",
+        "fynRelationship": "não sabe exatamente se amava FYN ou se só percebeu o que sentia depois que perdeu ela. Conhece o lado mais cotidiano dela.",
+        "speakingStyle": "irônico, educado e venenoso. Provoca sem levantar a voz.",
+        "relationships": [],
+        "additionalRules": "",
+        "updatedAt": "2026-08-10T16:31:57.035Z"
+      },
+      {
+        "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+        "personality": "frio, educado, controlado, observador. Raramente demonstra ciúme de forma óbvia.",
+        "backstory": "era príncipe quando FYN foi acusada de traição. Assinou a ordem de prisão dela e depois virou rei.",
+        "fynRelationship": "sentimento nunca assumido. Eles quase tiveram algo, mas nunca chegaram a ficar juntos oficialmente. Existe culpa e ressentimento dos dois lados.",
+        "speakingStyle": "curto, seco, formal. Quanto mais afetado ele está, menos fala.",
+        "relationships": [],
+        "additionalRules": "",
+        "updatedAt": "2026-08-10T16:30:37.743Z"
+      },
+      {
+        "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+        "personality": "charmoso, debochado, inteligente, imprevisível.",
+        "backstory": "príncipe do reino que estava em guerra com o reino de Lucien. Conheceu FYN durante as negociações e continuou próximo dela depois da fuga.",
+        "fynRelationship": "conhece a versão atual dela. Sabe coisas sobre os anos em que ela desapareceu que nenhum dos outros sabe. Pode brincar com a possibilidade de romance sem confirmar nada.",
+        "speakingStyle": "provocador, tranquilo, quase sempre parece estar se divertindo.",
+        "relationships": [],
+        "additionalRules": "",
+        "updatedAt": "2026-08-10T16:30:23.594Z"
+      },
+      {
+        "characterId": "58d1898d-cdbf-48ab-bc4b-e5f833dae510",
+        "personality": "sério, paciente, leal, extremamente observador.",
+        "backstory": "amigo antigo de FYN e oficial responsável por encontrá-la na noite em que ela fugiu. Foi ele quem deixou ela escapar.",
+        "fynRelationship": "confiança profunda. Pode existir ambiguidade, mas não precisa virar romance. FYN confiava nele quando não conseguia confiar em mais ninguém.",
+        "speakingStyle": "simples e direto. Não faz discursos. Normalmente fala quando tem certeza.",
+        "relationships": [],
+        "additionalRules": "",
+        "updatedAt": "2026-08-10T16:32:19.428Z"
+      }
+    ],
+    "rules": [
+      {
+        "id": "6d36ae57-ec49-4a65-b6f2-c7cecfece5b1",
+        "title": "Nova regra",
+        "description": "Fyn é mulher",
+        "enabled": true,
+        "priority": "normal",
+        "createdAt": "2026-08-05T03:01:57.042Z",
+        "updatedAt": "2026-08-05T03:02:03.088Z"
+      },
+      {
+        "id": "b9169073-dc9f-448c-a254-64d2e5232dd6",
+        "title": "Nova regra",
+        "description": "Linguagem entendivel e natural.",
+        "enabled": true,
+        "priority": "normal",
+        "createdAt": "2026-08-12T21:59:53.949Z",
+        "updatedAt": "2026-08-12T22:00:13.817Z"
+      }
+    ]
+  },
+  "opening": {
+    "id": "e7f484ff-845b-4cfb-990f-edd4018b2307",
+    "title": "",
+    "description": "Fyn fugiu e esta desaparecida a muito tempo",
+    "timeline": "unspecified",
+    "sceneGoal": "",
+    "userInstruction": "",
+    "specificRules": "",
+    "shortLines": true,
+    "reactionBlocks": [
+      {
+        "id": "d536eb66-b41e-4183-ab52-948b38a8bd36",
+        "characterId": "f991e01d-8f4d-4e12-bd38-94717d3ceb88",
+        "type": "speech",
+        "emotion": "inquieta",
+        "text": "Fyn está desaparecida há tanto tempo... por que vamos reagir a ela agora, Lucien?",
+        "englishText": "Fyn has been missing for so long... why are we reacting to her now, Lucien?",
+        "createdAt": "2026-08-17T18:29:01.171Z",
+        "updatedAt": "2026-08-21T15:17:13.055Z"
+      },
+      {
+        "id": "0409b373-250c-4d4a-b87e-d0e3c43c9087",
+        "characterId": "abcddedb-193d-4977-a287-7f69dc82bbed",
+        "type": "speech",
+        "emotion": "controlada",
+        "text": "É preciso manter a calma, Eleanor. Não há motivo para pressa.",
+        "englishText": "We need to remain calm, Eleanor. There's no need to rush.",
+        "createdAt": "2026-08-20T21:07:11.742Z",
+        "updatedAt": "2026-08-21T15:17:13.055Z"
+      },
+      {
+        "id": "b274a6b9-76cb-459f-86bc-474c706f0928",
+        "characterId": "e0c3d605-d7c1-427c-b2c6-9dfe0c7ca57d",
+        "type": "thought",
+        "emotion": "divertida",
+        "text": "Isso pode ser interessante.",
+        "englishText": "This could be interesting.",
+        "createdAt": "2026-08-17T18:29:01.171Z",
+        "updatedAt": "2026-08-21T15:17:13.055Z"
+      }
+    ],
+    "createdAt": "2026-08-16T14:54:53.277Z",
+    "updatedAt": "2026-08-21T15:17:13.055Z",
+    "characterReferences": [],
+    "aiUsage": {
+      "calls": 0,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "totalTokens": 0,
+      "lastAt": null,
+      "lastOperation": null,
+      "lastModel": null
+    },
+    "aiDirectives": []
+  },
+  "characterAliases": [],
+  "aiUsage": {
+    "calls": 0,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "totalTokens": 0,
+    "lastAt": null,
+    "lastOperation": null,
+    "lastModel": null
+  },
+  "revision": 5,
+  "migratedFrom": "storage-v1",
+  "legacyVideoAssets": [
+    {
+      "id": "legacy-f0fc4593-8e3f-421d-bd02-bc829a3252c0",
+      "tiktokId": "f0fc4593-8e3f-421d-bd02-bc829a3252c0",
+      "extension": ".mp4",
+      "storedPath": "roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/3e97258d-7348-47c6-a970-37ebf443bdb9.mp4"
+    },
+    {
+      "id": "legacy-1e37f53b-bf27-403f-bbb7-530b3f26c6d7",
+      "tiktokId": "1e37f53b-bf27-403f-bbb7-530b3f26c6d7",
+      "extension": ".mp4",
+      "storedPath": "roteiros/videos/14baaff0-c217-47ee-8efb-1108ed5bad17/919ef8bc-c228-41e8-b4f5-63b64ebfe912.mp4"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "id": "e17f5d80-1c7d-435c-b68f-48eb5087c696",
+  "name": "ChatGPT Image 7_09_2026, 23_09_21 3 (frente)",
+  "model": "feminino",
+  "category": "cabelos",
+  "width": 377,
+  "height": 611,
+  "defaultX": 970,
+  "defaultY": 285,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "fitByBasePack": {
+    "modelo-7": {
+      "x": -15.5,
+      "y": 8.7,
+      "scale": 1,
+      "scaleX": 1,
+      "scaleY": 0.94,
+      "rotation": 0,
+      "flipX": false
+    }
+  },
+  "colorAdjustmentsByBasePack": {
+    "modelo-7": {
+      "hue": 0,
+      "saturation": 100,
+      "brightness": 100,
+      "enabled": true,
+      "tint": "#ffffff",
+      "tintStrength": 0,
+      "contrast": 100,
+      "detailPreservation": 78,
+      "colorSpace": "oklch"
+    }
+  },
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

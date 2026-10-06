@@ -1,0 +1,24 @@
+{
+  "id": "bf5d17ba-815e-47ff-8f40-751323e1d09a",
+  "name": "ChatGPT Image 28_07_2026, 20_47_02 (frente)",
+  "model": "feminino",
+  "category": "cabelos",
+  "width": 350,
+  "height": 461,
+  "defaultX": 891,
+  "defaultY": 496.5,
+  "fit": {
+    "x": 0,
+    "y": 0,
+    "scale": 1,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T03:52:47.483Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}

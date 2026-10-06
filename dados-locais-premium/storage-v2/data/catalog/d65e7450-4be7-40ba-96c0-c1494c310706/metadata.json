@@ -1,0 +1,24 @@
+{
+  "id": "d65e7450-4be7-40ba-96c0-c1494c310706",
+  "name": "ChatGPT Image 29_07_2026, 06_03_21",
+  "model": "masculino",
+  "category": "roupas",
+  "width": 293,
+  "height": 711,
+  "defaultX": 828.5,
+  "defaultY": 471.5,
+  "fit": {
+    "x": 114,
+    "y": 195,
+    "scale": 0.383,
+    "scaleX": 1,
+    "scaleY": 1,
+    "rotation": 0,
+    "flipX": false
+  },
+  "catalogVersion": "v0",
+  "updatedAt": "2026-09-10T04:48:45.428Z",
+  "revision": 1,
+  "assetExtension": ".png",
+  "migratedFrom": "storage-v1"
+}
