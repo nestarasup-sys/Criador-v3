@@ -35,7 +35,7 @@ const typeLabel = { auto: "Automático", speech: "Fala", thought: "Pensamento" }
 const LAST_FILL_EMPTY_PROMPT_KEY = "nymi-roteiros-last-fill-empty-prompt";
 const CONTEXT_VISIBILITY_EVENT = "nymi-roteiros-context-visibility-changed";
 const ROTEIRO_EXPORT_TARGETS: Record<RoteiroExportTarget, { label: string; path: string }> = {
-  v4: { label: "Editor V4", path: String.raw`C:\TRABALHO 2\EDITOR V4\EDITOR V4` },
+  v4: { label: "Editor V4", path: String.raw`C:\TRABALHO 2\EDITOR V4\EDITOR V4\projects` },
 };
 const MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS = 2;
 
