@@ -329,7 +329,7 @@ export default function FabricadorDeModeloPage() {
 
   useEffect(() => {
     let objectUrl = "";
-    fetch("/Ferramentas/fabricador-de-modelo/molde.png")
+    fetch("/Ferramentas/fabricador-de-modelo/molde.png", { cache: "no-store" })
       .then((response) => {
         if (!response.ok) throw new Error("molde");
         return response.blob();
