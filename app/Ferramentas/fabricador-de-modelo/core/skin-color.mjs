@@ -10,7 +10,9 @@ export const TEMPLATE_SKIN_PALETTE = [
 ];
 
 const SOURCE_SKIN = [255, 240, 231];
-const SKIN_COLOR_DISTANCE = 72;
+// Inclui pixels antialias e os traços cinza bem suaves do nariz no molde atualizado.
+// O contorno marrom e o chroma verde ficam muito além deste limite.
+const SKIN_COLOR_DISTANCE = 132;
 
 export function normalizeTemplateSkinColor(value) {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
