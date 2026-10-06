@@ -1,51 +1,74 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
+# Dependencies
+/node_modules/
+/.pnp/
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+/.yarn/*
+!/.yarn/patches/
+!/.yarn/plugins/
+!/.yarn/releases/
+!/.yarn/versions/
 
-# testing
-/coverage
-
-# next.js
+# Build and framework output
 /.next/
 /.vinext/
 /out/
+/dist/
+/.wrangler/
+/coverage/
+/test-results/
+/playwright-report/
+*.tsbuildinfo
+.eslintcache
 
-# misc
-.DS_Store
+# Local runtime data — never commit user/work data
+/dados-locais/
+/dados-locais-premium/
+/backups/
+/work/
+/outputs/
+/NÃO MEXA NESSA PASTA CODEX/
+
+# Generated/local model library. Keep only its documentation sentinel.
+/public/models/modelos/*
+!/public/models/modelos/README.md
+
+# Test output and generated visual baselines
+/tests/golden/
+/tests/**/reports/*
+!/tests/**/reports/.gitignore
+
+# Python/tool caches
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
 *.pem
+*.key
+*.p12
+*.pfx
 
-# debug
+# Debug/runtime noise
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
+*.tmp
+*.temp
+*.bak
+*.old
 
-# env files (can opt-in for committing if needed)
-.env*
+# OS/editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
 
-# vercel
-.vercel
-
-# typescript
-next-env.d.ts
-/dist/
-/.wrangler/
-/outputs/
-/work/
-/dados-locais/
-/dados-locais-premium/
-/backups/
-/NÃO MEXA NESSA PASTA CODEX/
-*.tsbuildinfo
-
-# Assets are kept in the local project/ZIP backup, not in the code repository.
-/tests/golden/
+# Local desktop artifacts
 /Gacha-Nymi.ico
