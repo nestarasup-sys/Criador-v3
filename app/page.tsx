@@ -2024,7 +2024,9 @@ export default function Home() {
     const renderModelColorMapSource = baseExpressionColorMapSource(renderBasePack, renderModelColorExpressionKey);
     const renderModelColorMap = renderModelColorMapSource ? await loadImage(renderModelColorMapSource).catch(() => null) : null;
     ensureCurrentPreview();
-    const headOnlyBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && renderBasePackIsHeadOnly;
+    const headOnlySeparateFace = renderBasePackIsHeadOnly
+      && includeExpression
+      && (faceMode === "base" || compositionMode === "outfit-over-face");
     const manualPupilMaskUrl = manualModelColorMasks[manualModelColorMaskKey(model, basePackId, renderModelColorExpressionKey, "pupils")];
     const manualPupilMask = manualPupilMaskUrl ? await loadImage(manualPupilMaskUrl).catch(() => null) : null;
     ensureCurrentPreview();
@@ -2241,7 +2243,7 @@ export default function Home() {
       adjustedBaseForLayer = adjustedBase;
       const debugBody = colorizeRenderDebugLayer(adjustedBase, sourceWidth, sourceHeight, "corpo");
       const headOnly = renderBasePackIsHeadOnly;
-      if (!headOnlyBehindOutfit && headOnly) {
+      if (!headOnlySeparateFace && headOnly) {
         // The anchor is expressed in the model's original 1920×1080 canvas.
         // Keep the native canvas and translate only when a future model uses
         // a different source size; this avoids bottom-centering a head-only PNG.
@@ -2255,10 +2257,10 @@ export default function Home() {
           sourceWidth,
           sourceHeight,
         );
-      } else if (!headOnlyBehindOutfit) {
+      } else if (!headOnlySeparateFace) {
         bodyContext.drawImage(debugBody, SCENE_PADDING.x, SCENE_PADDING.y, canvas.width, canvas.height);
       }
-      if (!headOnlyBehindOutfit && renderLayerMasks.body.length > 0) {
+      if (!headOnlySeparateFace && renderLayerMasks.body.length > 0) {
         bodyContext.globalCompositeOperation = "destination-in";
         bodyContext.drawImage(createBodyMask(renderLayerMasks.body, sceneCanvas.width, sceneCanvas.height, SCENE_PADDING.x, SCENE_PADDING.y), 0, 0);
         bodyContext.globalCompositeOperation = "source-over";
@@ -2298,13 +2300,11 @@ export default function Home() {
       captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target, layer: "roupas" });
     }
 
-    // Head-only packs (the model 15+ assets) are already the model's face,
-    // but historically they were rendered as the body layer. Treat them as a
-    // layered face too, so V2 can put the outfit in front without changing
-    // the geometry or the persisted character data.
+    // Head-only packs (model 15+) are a separate face layer in both modes:
+    // V1 puts that layer above the outfit, while V2 puts the outfit above it.
     const layeredBaseFace = renderBasePackIsHeadOnly || faceMode !== "base";
     const faceBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && layeredBaseFace;
-    const faceLayer = faceBehindOutfit ? document.createElement("canvas") : null;
+    const faceLayer = faceBehindOutfit || headOnlySeparateFace ? document.createElement("canvas") : null;
     const headOnlyImage = adjustedBaseForLayer ?? baseImage;
     if (faceLayer) {
       faceLayer.width = sceneCanvas.width;
@@ -2355,9 +2355,14 @@ export default function Home() {
 
     // A exportação gera um PNG achatado. Componha as camadas na ordem
     // definitiva antes de entregar a imagem ao outro aplicativo.
-    compositeCharacterLayers(context, [backHairLayer, bodyLayer, faceLayer, outfitLayer]);
-    markRenderDebug("layers:flattened", { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
-    captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: faceBehindOutfit ? "backHair→body→face→outfit" : "backHair→body→outfit" });
+    const faceAfterOutfit = headOnlySeparateFace && !faceBehindOutfit;
+    const orderedBaseLayers = faceAfterOutfit
+      ? [backHairLayer, bodyLayer, outfitLayer, faceLayer]
+      : [backHairLayer, bodyLayer, faceLayer, outfitLayer];
+    compositeCharacterLayers(context, orderedBaseLayers);
+    const baseLayerOrder = faceAfterOutfit ? "backHair→body→outfit→face" : "backHair→body→face→outfit";
+    markRenderDebug("layers:flattened", { renderId, target, layer: baseLayerOrder });
+    captureRenderDebug("snapshot:after-base-layers", context.canvas, { renderId, target, layer: baseLayerOrder });
 
     // Head-only packs are already drawn into bodyLayer (or faceLayer in V2)
     // and receive the body mask there. Drawing the same source again here
