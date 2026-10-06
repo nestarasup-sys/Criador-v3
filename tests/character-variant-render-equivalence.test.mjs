@@ -276,7 +276,9 @@ test("variantes com camadas compartilhadas mantêm pixels, máscaras e estrutura
     assert.equal(result.renderMetrics.variantCompositions, 9);
     assert.ok(result.renderMetrics.imageCacheHits > 0);
     assert.ok(result.renderMetrics.imageCacheMisses > 0);
+    assert.ok(result.renderMetrics.imageLoadMs >= 0);
     assert.ok(result.renderMetrics.chromaCacheMisses > 0);
+    assert.ok(result.renderMetrics.chromaMs >= 0);
     assert.equal(result.exportDiagnostics.maxConcurrentHeavyTasks, 2);
     assert.ok(result.exportDiagnostics.zipGenerateMs >= 0);
     assert.ok(names.includes("Synthetic/POSE 1/preview.png"));

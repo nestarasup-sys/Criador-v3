@@ -15,6 +15,7 @@ import { createRoteiroExportDocument } from "../export-contract";
 import { aiRequest, copyRoteiroTikTokToBase, createRoteiroBackup, exportJson, exportRoteiroBackground, exportRoteiroCharacter, exportRoteiroText, exportRoteiroVideos, exportTextFile, importBaseDadosVideoIntoRoteiro, loadPremiumStudioData, openRoteiroExportFolder, removeRoteiroVideo, roteiroVideoUrl, uploadRoteiroBackground, uploadRoteiroVideo } from "../storage";
 import type { RoteiroExportTarget } from "../storage";
 import { buildCharacterBundle, buildCharacterVariantsBundle, expressionKeysForCharacter, outfitVariantsForExport } from "../../studio/character-export";
+import type { CharacterExportDiagnostics } from "../../studio/character-export";
 import { AI_DIRECTIVES } from "../ai-directives.mjs";
 import { readBaseDadosDrafts } from "../../base de dados/draft-storage";
 import { mergeBaseDadosDrafts } from "../../base de dados/export-contract";
@@ -726,6 +727,7 @@ export default function RoteiroEditor() {
   };
   const exportCharacterVariants = async () => {
     setExportLoading("character-variants"); setExportMessage("");
+    const exportWallStartedAt = performance.now();
     let lastProgressAt = 0;
     let progressTimer: ReturnType<typeof setTimeout> | undefined;
     let pendingProgress: string | undefined;
@@ -746,11 +748,14 @@ export default function RoteiroEditor() {
       }
     };
     try {
+      const assetLoadStartedAt = performance.now();
       const assets = await loadPremiumStudioData();
+      const assetLoadMs = performance.now() - assetLoadStartedAt;
       const selected = [...new Set(script.participants.map((participant) => participant.characterId))];
       const results: string[] = [];
       const failures: string[] = [];
-      const diagnostics: Array<{ totalMs: number; renderMs: number; inspectMs: number; pngMs: number; packageMs: number; packageBytes: number }> = [];
+      const diagnostics: CharacterExportDiagnostics[] = [];
+      const uploads: Array<Awaited<ReturnType<typeof exportRoteiroCharacter>>> = [];
       await mapWithConcurrency(selected, MAX_PARALLEL_CHARACTER_VARIANT_EXPORTS, async (characterId, characterIndex) => {
         const character = assets.characters.find((item) => item.id === characterId);
         const fallback = characterMap.get(characterId);
@@ -764,10 +769,10 @@ export default function RoteiroEditor() {
                 : `pose ${progress.variantIndex + 1}/${progress.variantCount} · expressão ${progress.expressionIndex + 1}/${progress.expressionCount}`;
             reportProgress(`Exportando poses · personagem ${characterIndex + 1}/${selected.length} · ${phase} · ${character.name}`);
           }, (metrics) => {
-            diagnostics.push({ ...metrics, packageBytes: metrics.packageBytes ?? 0 });
-            reportProgress(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · pacote ${Math.round(metrics.packageMs)}ms`, true);
+            diagnostics.push(metrics);
+            reportProgress(`Exportando poses · ${character.name} · render ${Math.round(metrics.renderMs)}ms · PNG ${Math.round(metrics.pngMs)}ms · ZIP ${Math.round(metrics.zipGenerateMs)}ms`, true);
           });
-          await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget);
+          uploads.push(await exportRoteiroCharacter(script.id, script.title, character.id, character.name, bundle, exportTarget));
           results.push(character.name);
         } catch (error) { failures.push(`${character.name}: ${error instanceof Error ? error.message : "erro desconhecido"}`); }
       });
@@ -776,10 +781,41 @@ export default function RoteiroEditor() {
         renderMs: total.renderMs + item.renderMs,
         inspectMs: total.inspectMs + item.inspectMs,
         pngMs: total.pngMs + item.pngMs,
+        pngEncodeMs: total.pngEncodeMs + item.pngEncodeMs,
+        alphaScanMs: total.alphaScanMs + item.alphaScanMs,
         packageMs: total.packageMs + item.packageMs,
+        zipGenerateMs: total.zipGenerateMs + item.zipGenerateMs,
         packageBytes: total.packageBytes + (item.packageBytes ?? 0),
-      }), { totalMs: 0, renderMs: 0, inspectMs: 0, pngMs: 0, packageMs: 0, packageBytes: 0 });
-      const metricsMessage = diagnostics.length ? ` Tempo: ${(totalMetrics.totalMs / 1000).toFixed(1)}s · render ${(totalMetrics.renderMs / 1000).toFixed(1)}s · PNG ${(totalMetrics.pngMs / 1000).toFixed(1)}s · pacote ${(totalMetrics.packageMs / 1000).toFixed(1)}s · ${(totalMetrics.packageBytes / 1024 / 1024).toFixed(1)}MB.` : "";
+      }), { totalMs: 0, renderMs: 0, inspectMs: 0, pngMs: 0, pngEncodeMs: 0, alphaScanMs: 0, packageMs: 0, zipGenerateMs: 0, packageBytes: 0 });
+      const cacheMetrics = diagnostics.reduce((total, item) => ({
+        imageLoadMs: total.imageLoadMs + (item.renderCache?.imageLoadMs ?? 0),
+        imageHits: total.imageHits + (item.renderCache?.imageCacheHits ?? 0),
+        imageMisses: total.imageMisses + (item.renderCache?.imageCacheMisses ?? 0),
+        chromaMs: total.chromaMs + (item.renderCache?.chromaMs ?? 0),
+        chromaHits: total.chromaHits + (item.renderCache?.chromaCacheHits ?? 0),
+        chromaMisses: total.chromaMisses + (item.renderCache?.chromaCacheMisses ?? 0),
+        maskHits: total.maskHits + (item.renderCache?.maskCacheHits ?? 0),
+        maskMisses: total.maskMisses + (item.renderCache?.maskCacheMisses ?? 0),
+      }), { imageLoadMs: 0, imageHits: 0, imageMisses: 0, chromaMs: 0, chromaHits: 0, chromaMisses: 0, maskHits: 0, maskMisses: 0 });
+      const serverTimings = uploads.reduce((total, upload) => ({
+        requestBodyMs: total.requestBodyMs + (upload.timings?.requestBodyMs ?? 0),
+        zipParseMs: total.zipParseMs + (upload.timings?.zipParseMs ?? 0),
+        extractWriteMs: total.extractWriteMs + (upload.timings?.extractWriteMs ?? 0),
+        publishMs: total.publishMs + (upload.timings?.publishMs ?? 0),
+      }), { requestBodyMs: 0, zipParseMs: 0, extractWriteMs: 0, publishMs: 0 });
+      const uploadClientMs = uploads.reduce((total, upload) => total + upload.clientMs, 0);
+      const maxConcurrent = Math.max(0, ...diagnostics.map((item) => item.maxConcurrentHeavyTasks ?? 0));
+      const maxHeapBytes = Math.max(0, ...diagnostics.map((item) => item.heapBytes ?? 0));
+      const poseCount = diagnostics.reduce((total, item) => total + item.poses, 0);
+      const expressionCount = diagnostics.reduce((total, item) => total + item.expressions, 0);
+      const metricsMessage = diagnostics.length ? [
+        `Tempo total ${((performance.now() - exportWallStartedAt) / 1000).toFixed(1)}s · ${poseCount} poses/${expressionCount} expressões`,
+        `assets ${assetLoadMs.toFixed(0)}ms · render acumulado ${totalMetrics.renderMs.toFixed(0)}ms · imagens ${cacheMetrics.imageLoadMs.toFixed(0)}ms · chroma ${cacheMetrics.chromaMs.toFixed(0)}ms`,
+        `inspeção PNG ${totalMetrics.inspectMs.toFixed(0)}ms · alfa ${totalMetrics.alphaScanMs.toFixed(0)}ms · encode PNG ${totalMetrics.pngEncodeMs.toFixed(0)}ms · recorte PNG ${totalMetrics.pngMs.toFixed(0)}ms`,
+        `montagem pacote ${totalMetrics.packageMs.toFixed(0)}ms (ZIP ${totalMetrics.zipGenerateMs.toFixed(0)}ms) · pacote ${(totalMetrics.packageBytes / 1024 / 1024).toFixed(1)}MB`,
+        `envio cliente ${uploadClientMs.toFixed(0)}ms · servidor body ${serverTimings.requestBodyMs.toFixed(0)} + leitura ZIP ${serverTimings.zipParseMs.toFixed(0)} + extração/gravação ${serverTimings.extractWriteMs.toFixed(0)} + publicação ${serverTimings.publishMs.toFixed(0)}ms`,
+        `cache imagem ${cacheMetrics.imageHits}/${cacheMetrics.imageMisses}, chroma ${cacheMetrics.chromaHits}/${cacheMetrics.chromaMisses}, máscaras ${cacheMetrics.maskHits}/${cacheMetrics.maskMisses} · concorrência máx. na sessão ${maxConcurrent}${maxHeapBytes ? ` · heap JS ${(maxHeapBytes / 1024 / 1024).toFixed(0)}MB` : ""}`,
+      ].join(" · ") + "." : "";
       reportProgress(`Variantes exportadas: ${results.length}/${selected.length}.${metricsMessage}${failures.length ? ` Falhas: ${failures.join(" | ")}` : ""}`, true);
     } catch (error) { setExportMessage(error instanceof Error ? error.message : "Falha ao carregar os personagens."); }
     finally {

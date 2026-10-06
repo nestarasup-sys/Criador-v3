@@ -1246,6 +1246,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /nymi-character-staging/);
   assert.match(server, /nymi-character-previous/);
   assert.match(server, /runWithConcurrency\(exportEntries, 2/);
+  assert.match(server, /timings\.zipParseMs = performance\.now\(\) - phaseStartedAt/);
+  assert.match(server, /timings\.extractWriteMs = performance\.now\(\) - phaseStartedAt/);
+  assert.match(server, /roundedTimings/);
   assert.match(server, /target === "videos"/);
   assert.match(server, /function insideOrSame\(parent, target\)/);
   assert.match(server, /insideOrSame\(exportRoot, folder\)/);

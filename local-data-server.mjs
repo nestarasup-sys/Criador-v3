@@ -2010,10 +2010,14 @@ async function route(request, response) {
 
   const roteiroCharacterMatch = url.pathname.match(/^\/roteiros\/export-characters\/([a-zA-Z0-9_-]+)$/);
   if (roteiroCharacterMatch && request.method === "POST") {
+    const exportStartedAt = performance.now();
+    let phaseStartedAt = exportStartedAt;
+    const timings = { requestBodyMs: 0, zipParseMs: 0, extractWriteMs: 0, publishMs: 0, totalMs: 0 };
     const characterId = safeId(roteiroCharacterMatch[1]);
     const metadata = readMetadata(request);
     assertMimeType(contentTypeOf(request, metadata), new Set(["application/zip", "application/x-zip-compressed"]), "O pacote do personagem precisa ser ZIP.");
     const body = await requestBody(request, BODY_LIMITS.zip);
+    timings.requestBodyMs = performance.now() - phaseStartedAt;
     if (!body.length) throw new Error("ZIP do personagem vazio");
     const exportTarget = roteiroExportTarget(metadata.exportTarget);
     const exportRoot = roteiroCharacterExportRoot(metadata.scriptTitle, exportTarget.id);
@@ -2022,7 +2026,9 @@ async function route(request, response) {
     const scriptFolder = roteiroProjectRoot(metadata.scriptTitle || "Roteiro", exportTarget.id);
     const folder = join(exportRoot, characterFolderName);
     if (!inside(exportRoot, folder)) throw new Error("Destino do personagem inválido");
+    phaseStartedAt = performance.now();
     const zip = await JSZip.loadAsync(body);
+    timings.zipParseMs = performance.now() - phaseStartedAt;
     const exportEntries = Object.entries(zip.files).filter(([, entry]) => !entry.dir);
     if (!exportEntries.length) throw new Error("ZIP sem arquivos exportáveis");
     const stagingFolder = join(exportRoot, `.nymi-character-staging-${characterId}-${randomBytes(8).toString("hex")}`);
@@ -2032,6 +2038,7 @@ async function route(request, response) {
     let previousMoved = false;
     let promoted = false;
     try {
+      phaseStartedAt = performance.now();
       await mkdir(stagingFolder, { recursive: true });
       const written = await runWithConcurrency(exportEntries, 2, async ([zipName, entry]) => {
         const segments = String(zipName).split(/[\\/]/).filter(Boolean);
@@ -2044,7 +2051,9 @@ async function route(request, response) {
         return true;
       });
       files = written.filter(Boolean).length;
+      timings.extractWriteMs = performance.now() - phaseStartedAt;
       if (!files) throw new Error("ZIP sem arquivos exportáveis");
+      phaseStartedAt = performance.now();
       await stat(stagingFolder);
       try {
         await rename(folder, previousFolder);
@@ -2061,6 +2070,7 @@ async function route(request, response) {
       promoted = true;
       await writeRoteiroExportManifest(scriptFolder, scriptId, metadata.scriptTitle, "characters", exportTarget.id);
       if (previousMoved) await rm(previousFolder, { recursive: true, force: true });
+      timings.publishMs = performance.now() - phaseStartedAt;
     } catch (error) {
       await rm(stagingFolder, { recursive: true, force: true }).catch(() => undefined);
       if (previousMoved) {
@@ -2069,7 +2079,9 @@ async function route(request, response) {
       }
       throw error;
     }
-    sendJson(response, request, 200, { ok: true, characterId, folder, files, exportTarget: exportTarget.id });
+    timings.totalMs = performance.now() - exportStartedAt;
+    const roundedTimings = Object.fromEntries(Object.entries(timings).map(([key, value]) => [key, Math.round(value * 100) / 100]));
+    sendJson(response, request, 200, { ok: true, characterId, folder, files, bytes: body.length, timings: roundedTimings, exportTarget: exportTarget.id });
     return;
   }
 

@@ -81,6 +81,12 @@ test("publica exportação de personagem atomicamente e preserva a anterior em f
     valid.file("Personagem Teste/POSE 1/normal.png", Buffer.from("png-um"));
     const first = await exportBundle(server.baseUrl, valid);
     assert.equal(first.status, 200);
+    const firstResult = await first.json();
+    for (const key of ["requestBodyMs", "zipParseMs", "extractWriteMs", "publishMs", "totalMs"]) {
+      assert.equal(Number.isFinite(firstResult.timings?.[key]), true, `timing ${key}`);
+      assert.ok(firstResult.timings[key] >= 0, `timing ${key} must be non-negative`);
+    }
+    assert.ok(firstResult.bytes > 0);
     const folder = join(exportRoot, "Teste de exportação", "assets", "characters", "Personagem Teste");
     assert.equal(await readFile(join(folder, "POSE 1", "normal.png"), "utf8"), "png-um");
 
