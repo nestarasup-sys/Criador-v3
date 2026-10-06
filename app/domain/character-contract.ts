@@ -72,6 +72,8 @@ export type Character = {
   maskStrokes?: MaskStroke[];
   previewPan?: PreviewPan;
   exportFrame?: ExportFrame;
+  /** Escala horizontal da composição completa, configurada no Criador. */
+  templateScaleX?: number;
   aliases?: string[];
   importedFrom?: { importId: string; scriptId: string; importedAt: string; sourceTitle?: string };
   hairAdjustmentsByBasePack?: HairAdjustmentsByBasePack;

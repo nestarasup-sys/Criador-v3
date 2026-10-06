@@ -406,6 +406,12 @@ a { color: inherit; }
 .pack-summary small { color: #aaa5b5; font-size: 10px; text-transform: capitalize; }
 .pack-summary > button { width: 27px; height: 27px; border: 0; border-radius: 7px; background: rgba(255,255,255,.08); color: #d5d1df; cursor: pointer; }
 .pack-summary > button:hover { background: #5a3040; color: white; }
+.pack-summary > .base-model-width-control { flex: 1 1 190px; min-width: 150px; max-width: 310px; display: grid; grid-template-columns: minmax(75px, auto) minmax(52px, 1fr) auto auto; align-items: center; gap: 7px; }
+.pack-summary > .base-model-width-control > span { color: #d4ccef; font-size: 9px; letter-spacing: 0; font-weight: 750; white-space: nowrap; }
+.pack-summary > .base-model-width-control > input { width: 100%; min-width: 45px; margin: 0; accent-color: #a990ff; }
+.pack-summary > .base-model-width-control > strong { color: white; font-size: 10px; white-space: nowrap; }
+.pack-summary > .base-model-width-control > button { padding: 5px 7px; border: 1px solid #ffffff30; border-radius: 7px; background: #ffffff12; color: white; font-size: 9px; font-weight: 750; cursor: pointer; }
+.pack-summary > .base-model-width-control > button:disabled { opacity: .5; cursor: default; }
 .expression-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
 .expression-grid button { position: relative; min-width: 0; height: 92px; border: 1px solid #e7e3ed; border-radius: 10px; background: #faf9fc; overflow: hidden; cursor: pointer; padding: 4px; }
 .expression-grid button.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); background: white; }
@@ -465,6 +471,8 @@ a { color: inherit; }
   .item-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
   .chroma-toolbar { grid-template-columns: 1fr; }
   .chroma-actions { flex-wrap: wrap; }
+  .pack-summary { flex-wrap: wrap; }
+  .pack-summary > .base-model-width-control { flex-basis: 100%; max-width: none; }
 }
 
 /* As barras respondem à largura real da pré-visualização, não só à janela. */

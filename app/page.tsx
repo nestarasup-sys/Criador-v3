@@ -1490,6 +1490,7 @@ export default function Home() {
   const [previewPan, setPreviewPan] = useState<PreviewPan>({ ...DEFAULT_PREVIEW_PAN });
   const [exportFrameMode, setExportFrameMode] = useState(false);
   const [exportFrame, setExportFrame] = useState<ExportFrame>({ ...DEFAULT_EXPORT_FRAME });
+  const [templateScaleX, setTemplateScaleX] = useState(1);
   const [exportTouchesEdge, setExportTouchesEdge] = useState(false);
   const [fitMode, setFitMode] = useState(false);
   const [isCanvasDragging, setIsCanvasDragging] = useState(false);
@@ -1748,6 +1749,7 @@ export default function Home() {
     maskStrokes: layerMasks.body,
     previewPan,
     exportFrame,
+    templateScaleX,
     hairAdjustmentsByBasePack: {
       ...hairAdjustmentsByBasePack,
       [basePackId]: {
@@ -1789,6 +1791,7 @@ export default function Home() {
     layerMasks,
     previewPan,
     exportFrame,
+    templateScaleX,
     hairAdjustmentsByBasePack,
     outfitAdjustmentsByBasePack,
     outfitLayerMasksByBasePack,
@@ -1910,6 +1913,7 @@ export default function Home() {
     setMaskTarget("body");
     setPreviewPan(snapshot.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
     setExportFrame(snapshot.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+    setTemplateScaleX(snapshot.templateScaleX ?? 1);
     setAnimationMode(null);
     setFitMode(false);
     setEraserMode(false);
@@ -2397,14 +2401,14 @@ export default function Home() {
     }
     finalContext.save();
     finalContext.translate(960 + exportFrame.x, 540 + exportFrame.y);
-    finalContext.scale(exportFrame.scale, exportFrame.scale);
+    finalContext.scale(exportFrame.scale * templateScaleX, exportFrame.scale);
     finalContext.translate(-960, -540);
     finalContext.drawImage(sceneCanvas, -SCENE_PADDING.x, -SCENE_PADDING.y);
     finalContext.restore();
     captureRenderDebug("snapshot:before-export", canvas, { renderId, target, layer: "final-canvas" });
     markRenderDebug("render:complete", { renderId, target });
     return canvas;
-  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, compositionMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
+  }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, compositionMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask, templateScaleX]);
 
   const renderCharacter = useCallback(async (version: number) => {
     const visibleCanvas = canvasRef.current;
@@ -4415,7 +4419,7 @@ export default function Home() {
     const finalX = ((event.clientX - bounds.left) / bounds.width) * 1920;
     const finalY = ((event.clientY - bounds.top) / bounds.height) * 1080;
     return {
-      x: 960 + (finalX - 960 - exportFrame.x) / exportFrame.scale,
+      x: 960 + (finalX - 960 - exportFrame.x) / (exportFrame.scale * templateScaleX),
       y: 540 + (finalY - 540 - exportFrame.y) / exportFrame.scale,
     };
   }
@@ -4951,6 +4955,7 @@ export default function Home() {
       setPreviewPan(character.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
       setPreviewPanMode(false);
       setExportFrame(character.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+      setTemplateScaleX(character.templateScaleX ?? 1);
       setExportFrameMode(false);
       setAnimationMode(null);
       setFitMode(false);
@@ -4999,6 +5004,7 @@ export default function Home() {
     setPreviewPan({ ...DEFAULT_PREVIEW_PAN });
     setPreviewPanMode(false);
     setExportFrame({ ...DEFAULT_EXPORT_FRAME });
+    setTemplateScaleX(1);
     setExportFrameMode(false);
     setAnimationMode(null);
     setFitMode(false);
@@ -5125,6 +5131,7 @@ export default function Home() {
     setCharacterPhoto(source.photoUrl ?? source.photoDataUrl ?? null);
     setPreviewPan(source.previewPan ?? { ...DEFAULT_PREVIEW_PAN });
     setExportFrame(source.exportFrame ?? { ...DEFAULT_EXPORT_FRAME });
+    setTemplateScaleX(source.templateScaleX ?? 1);
     setOutfitCatalogMode("standard");
     setOutfitCatalogVersion("v1");
     setV0TransferOpen(false);
@@ -6773,6 +6780,20 @@ export default function Home() {
                   <strong>{activeBasePack.name}</strong>
                   <small>{activeBaseExpressionKeys.length} quadros · {activeBaseExpressionKeys.length / 3} emoções com blink e talk</small>
                 </div>
+                <label className="base-model-width-control">
+                  <span>Espremer largura</span>
+                  <input
+                    type="range"
+                    min="50"
+                    max="120"
+                    step="1"
+                    value={Math.round(templateScaleX * 100)}
+                    onChange={(event) => setTemplateScaleX(Number(event.target.value) / 100)}
+                    aria-label="Largura horizontal do personagem"
+                  />
+                  <strong>{Math.round(templateScaleX * 100)}%</strong>
+                  <button type="button" onClick={() => setTemplateScaleX(1)} disabled={templateScaleX === 1} title="Restaurar largura original">100%</button>
+                </label>
               </div>
 
               <div className="expression-grid">

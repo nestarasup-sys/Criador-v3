@@ -50,6 +50,9 @@ export function normalizeCharacterDocument(value) {
   return {
     ...source,
     basePackId: normalizeBasePackId(source.basePackId),
+    templateScaleX: source.templateScaleX !== undefined && source.templateScaleX !== null && Number.isFinite(Number(source.templateScaleX))
+      ? Math.min(1.2, Math.max(.5, Number(source.templateScaleX)))
+      : 1,
     selections: normalizeSelections(source.selections),
     adjustments: normalizeAdjustments(source.adjustments),
     ...(aliases.length ? { aliases } : {}),
