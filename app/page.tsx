@@ -39,6 +39,7 @@ import {
   normalizeColorAdjustments,
   normalizeLayerMasks,
   normalizeSelections,
+  normalizeTransform,
   outfitColorGroupKey,
   suggestedFit,
   type LayerMasks,
