@@ -521,6 +521,7 @@ const BASE_PACK_THUMBNAIL_CACHE_LIMIT = 24;
 const basePackThumbnailCache = new Map<string, Promise<string>>();
 const MAX_CREATOR_COLOR_CACHE = 16;
 const MAX_CREATOR_HEAD_WARP_CACHE = 8;
+const CREATOR_DRAG_COMMIT_INTERVAL_MS = 40;
 const MAX_PROCESSED_BASE_EXPRESSIONS = 12;
 
 function trimProcessedBaseExpressions(
@@ -1313,6 +1314,8 @@ export default function Home() {
   const processedBases = useRef<Partial<Record<Model, HTMLImageElement>>>({});
   const processedBaseExpressions = useRef<Record<string, Partial<Record<ExpressionKey, HTMLImageElement>>>>({});
   const renderVersionRef = useRef(0);
+  const previewRenderQueueRef = useRef({ running: false, pending: false });
+  const renderCharacterRef = useRef<((version: number) => Promise<void>) | null>(null);
   const photoGenerationBusyRef = useRef(false);
   const photoGenerationTimerRef = useRef<number | null>(null);
   const generateCharacterPhotoRef = useRef<((automatic?: boolean) => Promise<boolean>) | null>(null);
@@ -1354,6 +1357,9 @@ export default function Home() {
     startDistance?: number;
     startScale?: number;
   } | null>(null);
+  const pendingLayerDragRef = useRef<{ pointerId: number; point: { x: number; y: number }; timeStamp: number } | null>(null);
+  const layerDragFrameRef = useRef<number | null>(null);
+  const lastLayerDragCommitAtRef = useRef(0);
   const previewPanDragRef = useRef<{
     pointerId: number;
     clientX: number;
@@ -1437,6 +1443,8 @@ export default function Home() {
   const [isSavingModelItem, setIsSavingModelItem] = useState(false);
 
   useEffect(() => () => {
+    if (layerDragFrameRef.current !== null) window.cancelAnimationFrame(layerDragFrameRef.current);
+    pendingLayerDragRef.current = null;
     retainedAssetUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     retainedAssetUrlsRef.current.clear();
     pageImageCache.clear();
@@ -1484,6 +1492,8 @@ export default function Home() {
   const [exportFrame, setExportFrame] = useState<ExportFrame>({ ...DEFAULT_EXPORT_FRAME });
   const [exportTouchesEdge, setExportTouchesEdge] = useState(false);
   const [fitMode, setFitMode] = useState(false);
+  const [isCanvasDragging, setIsCanvasDragging] = useState(false);
+  const [dragEditorSnapshot, setDragEditorSnapshot] = useState<string | null>(null);
   const [fitOpacity, setFitOpacity] = useState(65);
   const [chromaMode, setChromaMode] = useState(false);
   const [chromaColor, setChromaColor] = useState<ChromaColor>({ r: 0, g: 195, b: 102 });
@@ -1716,7 +1726,9 @@ export default function Home() {
     const stored = parseModelColorCalibrations(window.localStorage.getItem(MODEL_COLOR_CALIBRATIONS_STORAGE_KEY));
     return stored[modelColorCalibrationKey(model, basePackId)] ?? null;
   }, [model, basePackId, modelColorCalibrationRevision]);
-  const editorSnapshot = useMemo(() => JSON.stringify({
+  const editorSnapshot = useMemo(() => {
+    if (isCanvasDragging && dragEditorSnapshot !== null) return dragEditorSnapshot;
+    const snapshot = JSON.stringify({
     name: characterName.trim() || "Sem nome",
     model,
     basePackId,
@@ -1755,7 +1767,9 @@ export default function Home() {
       ...Object.fromEntries(Object.entries(outfitProtectionMasksByBasePack).filter(([key]) => key !== activeOutfitStateKey)),
       ...(protectionMasks.roupas ? { [activeOutfitStateKey]: protectionMasks.roupas } : {}),
     },
-  } satisfies CharacterSnapshot), [
+    } satisfies CharacterSnapshot);
+    return snapshot;
+  }, [
     characterName,
     model,
     basePackId,
@@ -1780,6 +1794,8 @@ export default function Home() {
     outfitLayerMasksByBasePack,
     outfitProtectionMasksByBasePack,
     activeOutfitStateKey,
+    isCanvasDragging,
+    dragEditorSnapshot,
   ]);
   const hasRealCustomization = Object.values(selections).some(Boolean)
     || Boolean(activePackId)
@@ -1930,6 +1946,7 @@ export default function Home() {
   }
 
   useEffect(() => {
+    if (isCanvasDragging) return;
     if (suspendAutoSaveRef.current) {
       suspendAutoSaveRef.current = false;
       autoSaveBaselineRef.current = editorSnapshot;
@@ -1967,7 +1984,7 @@ export default function Home() {
     return () => {
       if (autoSaveTimerRef.current !== null) window.clearTimeout(autoSaveTimerRef.current);
     };
-  }, [activeCharacter, draftStarted, editorSnapshot, hasRealCustomization]);
+  }, [activeCharacter, draftStarted, editorSnapshot, hasRealCustomization, isCanvasDragging]);
 
   const composeCharacter = useCallback(async (
     expressionKey: ExpressionKey = activeExpressionKey,
@@ -1975,7 +1992,11 @@ export default function Home() {
     editingPreview = false,
     variantOutfitId?: string,
     previewMode: ColorPreviewMode = "after",
+    shouldCancel?: () => boolean,
   ) => {
+    const ensureCurrentPreview = () => {
+      if (shouldCancel?.()) throw new DOMException("Prévia obsoleta", "AbortError");
+    };
     const renderId = `creator-${crypto.randomUUID()}`;
     const target = variantOutfitId ? "creator-variant" : editingPreview ? "preview" : "single-export";
     markRenderDebug("render:start", { renderId, target, layer: expressionKey });
@@ -1998,9 +2019,11 @@ export default function Home() {
     const renderBasePackAnchorY = renderBasePack.anchorY;
     const renderModelColorMapSource = baseExpressionColorMapSource(renderBasePack, renderModelColorExpressionKey);
     const renderModelColorMap = renderModelColorMapSource ? await loadImage(renderModelColorMapSource).catch(() => null) : null;
+    ensureCurrentPreview();
     const headOnlyBehindOutfit = compositionMode === "outfit-over-face" && includeExpression && renderBasePackIsHeadOnly;
     const manualPupilMaskUrl = manualModelColorMasks[manualModelColorMaskKey(model, basePackId, renderModelColorExpressionKey, "pupils")];
     const manualPupilMask = manualPupilMaskUrl ? await loadImage(manualPupilMaskUrl).catch(() => null) : null;
+    ensureCurrentPreview();
     const canvas = document.createElement("canvas");
     canvas.width = 1920;
     canvas.height = 1080;
@@ -2016,6 +2039,7 @@ export default function Home() {
 
     if (!processedBases.current[model]) {
       const transparentBase = await removeChroma(`/models/${model}.png`);
+      ensureCurrentPreview();
       const url = URL.createObjectURL(transparentBase);
       processedBases.current[model] = await loadImage(url);
       URL.revokeObjectURL(url);
@@ -2033,6 +2057,7 @@ export default function Home() {
       if (!item.url) return;
       markRenderDebug("layer:start", { renderId, target, layer: layerCategory ?? "unknown", source: item.url });
       const image = await loadImage(item.url);
+      ensureCurrentPreview();
       markRenderDebug("asset:ready", {
         renderId,
         target,
@@ -2057,6 +2082,7 @@ export default function Home() {
           renderSource = cached;
         } else {
           renderSource = await renderColorLayer(image, width, height, color, protectionMask, loadImage);
+          ensureCurrentPreview();
           colorLayerCacheRef.current.set(cacheKey, renderSource);
           while (colorLayerCacheRef.current.size > MAX_CREATOR_COLOR_CACHE) {
             const oldest = colorLayerCacheRef.current.keys().next().value;
@@ -2139,6 +2165,7 @@ export default function Home() {
       processedBaseExpressions.current[cacheKey] ??= {};
       if (!processedBaseExpressions.current[cacheKey][resolvedExpressionKey]) {
         const transparentExpression = await removeChroma(baseExpressionSource(currentBasePack, resolvedExpressionKey));
+        ensureCurrentPreview();
         const expressionUrl = URL.createObjectURL(transparentExpression);
         processedBaseExpressions.current[cacheKey][resolvedExpressionKey] = await loadImage(expressionUrl);
         trimProcessedBaseExpressions(processedBaseExpressions.current, cacheKey, resolvedExpressionKey);
@@ -2162,6 +2189,7 @@ export default function Home() {
       } else {
         await drawLayer(backHair, adjustments.cabelosTras, category === "cabelosTras", layerMasks.hairBack, "cabelosTras", backHairContext ?? context);
       }
+      ensureCurrentPreview();
       markRenderDebug("layer:backHairDone", { renderId, target, layer: "cabelosTras" });
       if (backHairLayer) captureRenderDebug("snapshot:after-backHair", backHairLayer, { renderId, target, layer: "cabelosTras" });
     }
@@ -2261,6 +2289,7 @@ export default function Home() {
           outfitContext ?? context,
         );
       }
+      ensureCurrentPreview();
       markRenderDebug("layer:clothesDone", { renderId, target, layer: "roupas" });
       captureRenderDebug("snapshot:after-clothes", outfitLayer, { renderId, target, layer: "roupas" });
     }
@@ -2316,6 +2345,7 @@ export default function Home() {
         const face = catalog.find((entry) => entry.id === renderSelections.rostos);
         if (face) await drawLayer(face, renderAdjustments.rostos, false, [], "rostos", faceContext);
       }
+      ensureCurrentPreview();
       captureRenderDebug("snapshot:faceBehindOutfit", faceLayer, { renderId, target, layer: "rosto→roupa" });
     }
 
@@ -2337,12 +2367,14 @@ export default function Home() {
             renderAdjustments.rostos,
             category === "rostos",
           );
+          ensureCurrentPreview();
           markRenderDebug("layer:faceDone", { renderId, target, layer: "rosto" });
         }
       } else {
         const face = catalog.find((entry) => entry.id === renderSelections.rostos);
         if (face) {
           await drawLayer(face, renderAdjustments.rostos, category === "rostos", [], "rostos");
+          ensureCurrentPreview();
           markRenderDebug("layer:faceDone", { renderId, target, layer: "rosto" });
         }
       }
@@ -2355,6 +2387,7 @@ export default function Home() {
       } else {
         await drawLayer(hair, adjustments.cabelos, category === "cabelos", layerMasks.hairFront, "cabelos");
       }
+      ensureCurrentPreview();
       markRenderDebug("layer:frontHairDone", { renderId, target, layer: "cabelos" });
       captureRenderDebug("snapshot:after-frontHair", context.canvas, { renderId, target, layer: "cabelos" });
     }
@@ -2373,11 +2406,17 @@ export default function Home() {
     return canvas;
   }, [activeExpressionKey, activeExpressionPack, adjustments, basePackId, basePacks, catalog, category, colorAdjustments, compositionMode, eraserMode, exportFrame, faceMode, fitMode, fitOpacity, layerMasks, manualModelColorMasks, maskTarget, model, modelColorAdjustments, modelColorCalibration, modelColorScope, outfitAdjustmentsByBasePack, outfitColorAdjustmentsByGroup, outfitLayerMasksByBasePack, outfitProtectionMasksByBasePack, protectionMasks, selections, showEraseMask]);
 
-  const renderCharacter = useCallback(async () => {
+  const renderCharacter = useCallback(async (version: number) => {
     const visibleCanvas = canvasRef.current;
     if (!visibleCanvas) return;
-    const version = ++renderVersionRef.current;
-    const composition = await composeCharacter(activeExpressionKey, true, true, undefined, colorPreviewMode);
+    const composition = await composeCharacter(
+      activeExpressionKey,
+      true,
+      true,
+      undefined,
+      colorPreviewMode,
+      () => version !== renderVersionRef.current,
+    );
     if (version !== renderVersionRef.current) return;
     setExportTouchesEdge(canvasTouchesEdge(composition));
     visibleCanvas.width = composition.width;
@@ -2388,7 +2427,15 @@ export default function Home() {
     context.drawImage(composition, 0, 0);
     const beforeCanvas = colorBeforeCanvasRef.current;
     if (beforeCanvas && colorPreviewMode === "split") {
-      const before = await composeCharacter(activeExpressionKey, true, true, undefined, "before");
+      const before = await composeCharacter(
+        activeExpressionKey,
+        true,
+        true,
+        undefined,
+        "before",
+        () => version !== renderVersionRef.current,
+      );
+      if (version !== renderVersionRef.current) return;
       beforeCanvas.width = before.width;
       beforeCanvas.height = before.height;
       const beforeContext = beforeCanvas.getContext("2d");
@@ -2400,7 +2447,30 @@ export default function Home() {
   }, [activeExpressionKey, colorPreviewMode, composeCharacter]);
 
   useEffect(() => {
-    renderCharacter().catch(() => setNotice("Não foi possível renderizar uma das imagens"));
+    renderCharacterRef.current = renderCharacter;
+    renderVersionRef.current += 1;
+    const queue = previewRenderQueueRef.current;
+    queue.pending = true;
+    if (queue.running) return;
+
+    queue.running = true;
+    void (async () => {
+      try {
+        while (queue.pending) {
+          queue.pending = false;
+          const version = renderVersionRef.current;
+          try {
+            await renderCharacterRef.current?.(version);
+          } catch (error) {
+            if (version === renderVersionRef.current && !(error instanceof DOMException && error.name === "AbortError")) {
+              setNotice("Não foi possível renderizar uma das imagens");
+            }
+          }
+        }
+      } finally {
+        queue.running = false;
+      }
+    })();
   }, [renderCharacter]);
 
   const generateCharacterPhoto = useCallback(async (automatic = false): Promise<boolean> => {
@@ -4443,7 +4513,44 @@ export default function Home() {
     dragRef.current = overHandle
       ? { pointerId: event.pointerId, mode: "resize", ...point, centerX, centerY, startDistance: distance, startScale: transform.scale }
       : { pointerId: event.pointerId, mode: "move", ...point };
+    lastLayerDragCommitAtRef.current = 0;
+    setDragEditorSnapshot(editorSnapshot);
+    setIsCanvasDragging(true);
     event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function applyLayerDragPoint(pointerId: number, point: { x: number; y: number }) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== pointerId) return;
+    if (drag.mode === "resize" && drag.centerX !== undefined && drag.centerY !== undefined && drag.startDistance && drag.startScale) {
+      const distance = Math.hypot(point.x - drag.centerX, point.y - drag.centerY);
+      const scale = Math.max(.1, Math.min(4, drag.startScale * distance / drag.startDistance));
+      updateAdjustment({ scale: +scale.toFixed(3) });
+      return;
+    }
+    const deltaX = point.x - drag.x;
+    const deltaY = point.y - drag.y;
+    dragRef.current = { pointerId, mode: "move", ...point };
+    setAdjustments((current) => {
+      const transform = normalizeTransform(current[category]);
+      return {
+        ...current,
+        [category]: {
+          ...transform,
+          x: +(transform.x + deltaX).toFixed(1),
+          y: +(transform.y + deltaY).toFixed(1),
+        },
+      };
+    });
+  }
+
+  function flushPendingLayerDrag(pointerId: number) {
+    const pending = pendingLayerDragRef.current;
+    if (pending?.pointerId !== pointerId) return;
+    if (layerDragFrameRef.current !== null) window.cancelAnimationFrame(layerDragFrameRef.current);
+    layerDragFrameRef.current = null;
+    pendingLayerDragRef.current = null;
+    applyLayerDragPoint(pointerId, pending.point);
   }
 
   function moveCanvasDrag(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -4487,24 +4594,26 @@ export default function Home() {
     }
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    const point = canvasPoint(event);
-    if (drag.mode === "resize" && drag.centerX !== undefined && drag.centerY !== undefined && drag.startDistance && drag.startScale) {
-      const distance = Math.hypot(point.x - drag.centerX, point.y - drag.centerY);
-      const scale = Math.max(.1, Math.min(4, drag.startScale * distance / drag.startDistance));
-      updateAdjustment({ scale: +scale.toFixed(3) });
-      return;
+    pendingLayerDragRef.current = { pointerId: event.pointerId, point: canvasPoint(event), timeStamp: event.timeStamp };
+    if (layerDragFrameRef.current === null) {
+      const commitLatestDragPoint = () => {
+        const pending = pendingLayerDragRef.current;
+        if (!pending) {
+          layerDragFrameRef.current = null;
+          return;
+        }
+        const elapsed = pending.timeStamp - lastLayerDragCommitAtRef.current;
+        if (elapsed < CREATOR_DRAG_COMMIT_INTERVAL_MS) {
+          layerDragFrameRef.current = window.requestAnimationFrame(commitLatestDragPoint);
+          return;
+        }
+        layerDragFrameRef.current = null;
+        pendingLayerDragRef.current = null;
+        lastLayerDragCommitAtRef.current = pending.timeStamp;
+        applyLayerDragPoint(pending.pointerId, pending.point);
+      };
+      layerDragFrameRef.current = window.requestAnimationFrame(commitLatestDragPoint);
     }
-    const deltaX = point.x - drag.x;
-    const deltaY = point.y - drag.y;
-    dragRef.current = { pointerId: event.pointerId, mode: "move", ...point };
-    setAdjustments((current) => ({
-      ...current,
-      [category]: {
-        ...normalizeTransform(current[category]),
-        x: +(normalizeTransform(current[category]).x + deltaX).toFixed(1),
-        y: +(normalizeTransform(current[category]).y + deltaY).toFixed(1),
-      },
-    }));
   }
 
   function stopCanvasDrag(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -4524,7 +4633,10 @@ export default function Home() {
       return;
     }
     if (dragRef.current?.pointerId !== event.pointerId) return;
+    flushPendingLayerDrag(event.pointerId);
     dragRef.current = null;
+    setIsCanvasDragging(false);
+    setDragEditorSnapshot(null);
     event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
