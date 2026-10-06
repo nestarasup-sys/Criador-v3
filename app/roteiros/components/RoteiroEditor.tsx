@@ -183,6 +183,24 @@ function RoteiroHeader({ script, saveStatus, pcAvailable, saveNow, addTikTok }: 
   return <header className={styles.editorTopbar}><Link href="/roteiros" className={styles.backButton}>←</Link><NymiBrand compact /><div className={styles.editorTitle}><span>ROTEIRO</span><strong>{script.title}</strong></div><div className={styles.editorStats}><span>{script.participants.length} personagens</span><span>{script.tiktoks.length} TikToks</span><span>{blockCount} blocos</span><span>{new Intl.NumberFormat("pt-BR").format(usage?.totalTokens || 0)} tokens IA</span></div><div className={styles.editorTopActions}><NymiConnectionStatus connected={pcAvailable} detail={statusText[saveStatus]} /><NymiNavigation active="roteiros" compact /><button className={styles.ghostButton} onClick={saveNow}>Salvar</button><button className={styles.secondaryButton} onClick={() => exportJson(`${script.title.replace(/[^a-z0-9]+/gi, "-").toLowerCase() || "roteiro"}.json`, createRoteiroExportDocument(script))}>{"{ }"} JSON</button><button className={styles.primaryButton} onClick={addTikTok}>＋ TikTok</button></div></header>;
 }
 
+function readContextVisibility(contextVisibilityKey: string, legacyContextVisibilityPrefix: string) {
+  if (typeof window === "undefined") return false;
+  try {
+    const persisted = window.localStorage.getItem(contextVisibilityKey);
+    if (persisted !== null) return persisted === "true";
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index);
+      if (key?.startsWith(legacyContextVisibilityPrefix) && window.localStorage.getItem(key) === "true") {
+        window.localStorage.setItem(contextVisibilityKey, "true");
+        return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}
+
 type TikTokCardProps = {
   script: ScriptProject;
   section: TikTokSection;
@@ -197,8 +215,10 @@ type TikTokCardProps = {
 };
 
 function TikTokCard({ script, section, sectionIndex, characters, state, updateState, patch, moveSection, deleteSection, opening = false }: TikTokCardProps) {
+  const contextVisibilityKey = `nymi-roteiros-context-hidden:${script.id}`;
+  const legacyContextVisibilityPrefix = `${contextVisibilityKey}:`;
   const [collapsed, setCollapsed] = useState(false);
-  const [contextCollapsed, setContextCollapsed] = useState(false);
+  const [contextCollapsed, setContextCollapsed] = useState(() => readContextVisibility(contextVisibilityKey, legacyContextVisibilityPrefix));
   const [loading, setLoading] = useState("");
   const [aiElapsedSeconds, setAiElapsedSeconds] = useState(0);
   const [message, setMessage] = useState("");
@@ -214,34 +234,12 @@ function TikTokCard({ script, section, sectionIndex, characters, state, updateSt
   const [baseSelectingId, setBaseSelectingId] = useState<string | null>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const aiControllerRef = useRef<AbortController | null>(null);
-  const contextVisibilityKey = `nymi-roteiros-context-hidden:${script.id}`;
-  const legacyContextVisibilityPrefix = `${contextVisibilityKey}:`;
-
   useEffect(() => {
-    const readVisibility = () => {
-      try {
-        const persisted = window.localStorage.getItem(contextVisibilityKey);
-        if (persisted !== null) return persisted === "true";
-        for (let index = 0; index < window.localStorage.length; index += 1) {
-          const key = window.localStorage.key(index);
-          if (key?.startsWith(legacyContextVisibilityPrefix) && window.localStorage.getItem(key) === "true") {
-            window.localStorage.setItem(contextVisibilityKey, "true");
-            return true;
-          }
-        }
-      } catch {
-        return false;
-      }
-      return false;
-    };
-    try {
-      setContextCollapsed(readVisibility());
-    } catch {
-      setContextCollapsed(false);
-    }
     const onVisibilityChanged = (event: Event) => {
       const detail = (event as CustomEvent<{ scriptId?: string }>).detail;
-      if (!detail?.scriptId || detail.scriptId === script.id) setContextCollapsed(readVisibility());
+      if (!detail?.scriptId || detail.scriptId === script.id) {
+        setContextCollapsed(readContextVisibility(contextVisibilityKey, legacyContextVisibilityPrefix));
+      }
     };
     window.addEventListener(CONTEXT_VISIBILITY_EVENT, onVisibilityChanged);
     return () => window.removeEventListener(CONTEXT_VISIBILITY_EVENT, onVisibilityChanged);
