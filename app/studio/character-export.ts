@@ -1,7 +1,8 @@
 "use client";
 
 import JSZip from "jszip";
-import { createStudioCharacterRenderSession, renderStudioCharacterBlob } from "./character-renderer";
+import { createStudioCharacterRenderSession, renderStudioCharacterPng } from "./character-renderer";
+import type { StudioCharacterRenderedPng } from "./character-renderer";
 import type { Character, ExpressionKey, PcCatalogItem, PcExpressionPack } from "./types";
 
 const PACK_EXPRESSION_KEYS = [
@@ -42,6 +43,8 @@ type ExportTiming = {
   renderMs: number;
   inspectMs: number;
   pngMs: number;
+  pngEncodeMs: number;
+  alphaScanMs: number;
   assets: number;
 };
 
@@ -93,7 +96,13 @@ async function mapWithConcurrency<T, R>(items: readonly T[], limit: number, mapp
 }
 
 function emptyExportTiming(): ExportTiming {
-  return { renderMs: 0, inspectMs: 0, pngMs: 0, assets: 0 };
+  return { renderMs: 0, inspectMs: 0, pngMs: 0, pngEncodeMs: 0, alphaScanMs: 0, assets: 0 };
+}
+
+type RenderedPng = Blob | StudioCharacterRenderedPng;
+
+function isRenderedPng(result: RenderedPng): result is StudioCharacterRenderedPng {
+  return !(result instanceof Blob) && typeof result === "object" && result !== null && "blob" in result && "metadata" in result;
 }
 
 function normalizedPackId(value?: string) {
@@ -247,9 +256,9 @@ export type CharacterBundleOptions = {
   character: { id?: string; name: string; model: string; basePackId?: string; basePackName?: string; faceMode?: string };
   usesBuiltInBase: boolean;
   expressions: readonly string[];
-  renderPreview: () => Promise<Blob>;
-  renderComplete: (key: string) => Promise<Blob>;
-  renderWithoutFace?: () => Promise<Blob>;
+  renderPreview: () => Promise<RenderedPng>;
+  renderComplete: (key: string) => Promise<RenderedPng>;
+  renderWithoutFace?: () => Promise<RenderedPng>;
   faceFrame?: (key: string) => Promise<Blob | null>;
   onExpressionProgress?: (progress: CharacterExpressionProgress) => void;
 };
@@ -266,18 +275,24 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
   const expressions = options.expressions;
   const assets: PreparedAsset[] = [];
   const timing = emptyExportTiming();
-  const addAsset = async (path: string, blob: Blob) => {
+  const addAsset = async (path: string, result: RenderedPng) => {
     timing.assets += 1;
+    if (isRenderedPng(result)) {
+      timing.pngEncodeMs += result.metadata.encodeMs;
+      timing.alphaScanMs += result.metadata.alphaScanMs;
+      assets.push({ path, blob: result.blob, width: result.metadata.width, height: result.metadata.height, bounds: result.metadata.bounds });
+      return;
+    }
     const inspectStarted = nowMs();
-    const inspected = await exportTaskGate.run(() => inspectPngBlob(blob));
+    const inspected = await exportTaskGate.run(() => inspectPngBlob(result));
     timing.inspectMs += nowMs() - inspectStarted;
-    assets.push({ path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds });
+    assets.push({ path, blob: result, width: inspected.width, height: inspected.height, bounds: inspected.bounds });
   };
-  const renderAsset = async (path: string, render: () => Promise<Blob>) => {
+  const renderAsset = async (path: string, render: () => Promise<RenderedPng>) => {
     const renderStarted = nowMs();
-    const blob = await exportTaskGate.run(render);
+    const result = await exportTaskGate.run(render);
     timing.renderMs += nowMs() - renderStarted;
-    await addAsset(path, blob);
+    await addAsset(path, result);
   };
   await renderAsset("preview.png", options.renderPreview);
   if (options.usesBuiltInBase) {
@@ -285,13 +300,19 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
       options.onExpressionProgress?.({ expressionIndex, expressionCount: expressions.length });
       const path = `${key}.png`;
       const renderStarted = nowMs();
-      const blob = await exportTaskGate.run(() => options.renderComplete(key));
+      const result = await exportTaskGate.run(() => options.renderComplete(key));
       timing.renderMs += nowMs() - renderStarted;
+      if (isRenderedPng(result)) {
+        timing.assets += 1;
+        timing.pngEncodeMs += result.metadata.encodeMs;
+        timing.alphaScanMs += result.metadata.alphaScanMs;
+        return { path, blob: result.blob, width: result.metadata.width, height: result.metadata.height, bounds: result.metadata.bounds };
+      }
       const inspectStarted = nowMs();
-      const inspected = await exportTaskGate.run(() => inspectPngBlob(blob));
+      const inspected = await exportTaskGate.run(() => inspectPngBlob(result));
       timing.inspectMs += nowMs() - inspectStarted;
       timing.assets += 1;
-      return { path, blob, width: inspected.width, height: inspected.height, bounds: inspected.bounds };
+      return { path, blob: result, width: inspected.width, height: inspected.height, bounds: inspected.bounds };
     });
     assets.push(...rendered);
   } else {
@@ -309,13 +330,22 @@ async function prepareCharacterBundle(options: CharacterBundleOptions): Promise<
       const renderStarted = nowMs();
       const complete = await exportTaskGate.run(() => options.renderComplete(key));
       timing.renderMs += nowMs() - renderStarted;
-      const completeInspectStarted = nowMs();
-      const completeInspected = await exportTaskGate.run(() => inspectPngBlob(complete));
-      timing.inspectMs += nowMs() - completeInspectStarted;
-      timing.assets += 1;
+      let completeAsset: PreparedAsset;
+      if (isRenderedPng(complete)) {
+        timing.assets += 1;
+        timing.pngEncodeMs += complete.metadata.encodeMs;
+        timing.alphaScanMs += complete.metadata.alphaScanMs;
+        completeAsset = { path: `completos/${key}.png`, blob: complete.blob, width: complete.metadata.width, height: complete.metadata.height, bounds: complete.metadata.bounds };
+      } else {
+        const completeInspectStarted = nowMs();
+        const completeInspected = await exportTaskGate.run(() => inspectPngBlob(complete));
+        timing.inspectMs += nowMs() - completeInspectStarted;
+        timing.assets += 1;
+        completeAsset = { path: `completos/${key}.png`, blob: complete, width: completeInspected.width, height: completeInspected.height, bounds: completeInspected.bounds };
+      }
       return [
         { path: `rostos/${key}.png`, blob: face, width: faceInspected.width, height: faceInspected.height, bounds: faceInspected.bounds },
-        { path: `completos/${key}.png`, blob: complete, width: completeInspected.width, height: completeInspected.height, bounds: completeInspected.bounds },
+        completeAsset,
       ];
     });
     rendered.forEach((entries) => assets.push(...entries));
@@ -453,6 +483,8 @@ export async function createCharacterVariantsBundle(options: CharacterVariantsBu
     renderMs: total.renderMs + item.prepared.timing.renderMs,
     inspectMs: total.inspectMs + item.prepared.timing.inspectMs,
     pngMs: total.pngMs + item.prepared.timing.pngMs,
+    pngEncodeMs: total.pngEncodeMs + item.prepared.timing.pngEncodeMs,
+    alphaScanMs: total.alphaScanMs + item.prepared.timing.alphaScanMs,
     assets: total.assets + item.prepared.timing.assets,
   }), emptyExportTiming());
   options.onDiagnostics?.({
@@ -472,11 +504,11 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
   const usesBuiltInBase = character.faceMode !== "single" && character.faceMode !== "pack";
   const pack = packs.find((item) => item.id === character.expressionPackId);
   const session = createStudioCharacterRenderSession(catalog, packs);
-  const rendered = new Map<string, Promise<Blob>>();
+  const rendered = new Map<string, Promise<RenderedPng>>();
   const render = (key: string) => {
     const cached = rendered.get(key);
     if (cached) return cached;
-    const pending = renderStudioCharacterBlob(character, key as ExpressionKey, catalog, packs, modelPacks, session)
+    const pending = renderStudioCharacterPng(character, key as ExpressionKey, catalog, packs, modelPacks, session)
       .catch((error) => {
         rendered.delete(key);
         throw error;
@@ -492,7 +524,7 @@ export async function buildCharacterBundle(character: Character, catalog: PcCata
     expressions: keys,
     renderPreview: () => render(keys[0]),
     renderComplete: (key) => render(key),
-    renderWithoutFace: () => renderStudioCharacterBlob({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
+    renderWithoutFace: () => renderStudioCharacterPng({ ...character, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
     faceFrame: async (key) => {
       const frame = pack?.frames.find((item) => item.key === key);
       return frame ? frameBlob(frame) : null;
@@ -542,11 +574,11 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
             ?? (variant.id === character.selections.roupas ? character.protectionMasks?.roupas : undefined),
         },
       };
-      const rendered = new Map<string, Promise<Blob>>();
+      const rendered = new Map<string, Promise<RenderedPng>>();
       const render = (key: string) => {
         const cached = rendered.get(key);
         if (cached) return cached;
-        const pending = renderStudioCharacterBlob(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks, session)
+        const pending = renderStudioCharacterPng(variantCharacter, key as ExpressionKey, catalog, packs, modelPacks, session)
           .catch((error) => {
             rendered.delete(key);
             throw error;
@@ -561,7 +593,7 @@ export async function buildCharacterVariantsBundle(character: Character, catalog
         expressions,
         renderPreview: () => render(expressions[0]),
         renderComplete: (key) => render(key),
-        renderWithoutFace: () => renderStudioCharacterBlob({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
+        renderWithoutFace: () => renderStudioCharacterPng({ ...variantCharacter, faceMode: "base" }, "normal", catalog, packs, modelPacks, session),
         faceFrame: async (key) => {
           const frame = pack?.frames.find((item) => item.key === key);
           return frame ? frameBlob(frame) : null;

@@ -64,7 +64,9 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
   assert.match(renderer, /captureRenderDebug\("snapshot:before-export"/);
   assert.match(renderer, /output === "blob"/);
   assert.match(renderer, /final\.toBlob/);
-  assert.match(characterExport, /renderStudioCharacterBlob/);
+  assert.match(renderer, /blob-with-metadata/);
+  assert.match(renderer, /alphaBoundsFromRgba\(pixels, final\.width, final\.height\)/);
+  assert.match(characterExport, /renderStudioCharacterPng/);
   assert.doesNotMatch(characterExport, /function dataUrlBlob/);
   assert.doesNotMatch(characterExport, /fetch\(dataUrl\)/);
   assert.match(studioPage, /renderStudioCharacter\(request\.character, expressionKey\(request\.emotion, request\.state\), data\.catalog, data\.expressionPacks, modelPacks\)/);

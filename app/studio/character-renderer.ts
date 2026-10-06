@@ -19,6 +19,7 @@ import { normalizeBasePackId } from "../domain/base-model.mjs";
 import { compositeCharacterLayers } from "./layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./render-debug";
 import { contourWarpCacheKey, renderHeadContourWarp } from "../creator/head-contour-warp";
+import { alphaBoundsFromRgba } from "./png-alpha-bounds.mjs";
 
 const WIDTH = 1920;
 const HEIGHT = 1080;
@@ -211,7 +212,21 @@ export function expressionKey(emotion: string, state: string) {
   return (state === "default" ? emotion : `${emotion}_${state}`) as ExpressionKey;
 }
 
-type RenderOutput = "data-url" | "blob";
+type RenderOutput = "data-url" | "blob" | "blob-with-metadata";
+
+export type StudioCharacterPngMetadata = {
+  width: number;
+  height: number;
+  bounds: { left: number; top: number; right: number; bottom: number };
+  encodeMs: number;
+  alphaScanMs: number;
+};
+
+export type StudioCharacterRenderedPng = { blob: Blob; metadata: StudioCharacterPngMetadata };
+
+function renderNowMs() {
+  return typeof performance !== "undefined" ? performance.now() : Date.now();
+}
 
 async function renderStudioCharacterOutput(
   character: Character,
@@ -533,11 +548,31 @@ async function renderStudioCharacterOutput(
   // evita que o Studio redimensione e reposicione o personagem ao aparar
   // apenas a caixa de pixels visíveis.
   captureRenderDebug("snapshot:before-export", final, { renderId, target: "studio-render", layer: "final-canvas" });
-  const outputValue = output === "blob"
+  let metadata: StudioCharacterPngMetadata | undefined;
+  if (output === "blob-with-metadata") {
+    const alphaStarted = renderNowMs();
+    const pixels = finalContext.getImageData(0, 0, final.width, final.height).data;
+    const bounds = alphaBoundsFromRgba(pixels, final.width, final.height)
+      ?? { left: 0, top: 0, right: final.width, bottom: final.height };
+    metadata = {
+      width: final.width,
+      height: final.height,
+      bounds,
+      encodeMs: 0,
+      alphaScanMs: renderNowMs() - alphaStarted,
+    };
+  }
+  const encodeStarted = renderNowMs();
+  const outputValue = output === "blob" || output === "blob-with-metadata"
     ? await new Promise<Blob>((resolve, reject) => {
       final.toBlob((blob) => blob ? resolve(blob) : reject(new Error("Não foi possível gerar o PNG do personagem.")), "image/png");
     })
     : final.toDataURL("image/png");
+  if (metadata) {
+    metadata.encodeMs = renderNowMs() - encodeStarted;
+    markRenderDebug("render:complete", { renderId, target: "studio-render" });
+    return { blob: outputValue as Blob, metadata } satisfies StudioCharacterRenderedPng;
+  }
   markRenderDebug("render:complete", { renderId, target: "studio-render" });
   return outputValue;
 }
@@ -563,4 +598,16 @@ export async function renderStudioCharacterBlob(
   session?: StudioCharacterRenderSession,
 ) {
   return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "blob", session) as Promise<Blob>;
+}
+
+/** Export path that returns alpha bounds from the final canvas without decoding the PNG again. */
+export async function renderStudioCharacterPng(
+  character: Character,
+  key: ExpressionKey,
+  catalog: PcCatalogItem[],
+  packs: PcExpressionPack[],
+  modelPacks: Record<string, DiscoveredModelPack[]> = {},
+  session?: StudioCharacterRenderSession,
+) {
+  return renderStudioCharacterOutput(character, key, catalog, packs, modelPacks, "blob-with-metadata", session) as Promise<StudioCharacterRenderedPng>;
 }
