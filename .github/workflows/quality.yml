@@ -1,0 +1,82 @@
+name: Quality
+
+on:
+  push:
+    branches:
+      - V12
+      - autonomous-overhaul
+  pull_request:
+    branches:
+      - V12
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Source quality gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.0"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Repository hygiene
+        run: npm run check:repo
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Build
+        run: npm run build
+
+  windows-smoke:
+    name: Windows application smoke
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 45
+
+    steps:
+      - name: Sync branch without deleting ignored work data
+        shell: pwsh
+        run: |
+          git fetch origin "${{ github.ref_name }}" --prune
+          git checkout -B "${{ github.ref_name }}" "origin/${{ github.ref_name }}"
+          git reset --hard "origin/${{ github.ref_name }}"
+          git clean -fd
+          Write-Host "Branch: $(git branch --show-current)"
+          Write-Host "HEAD: $(git rev-parse HEAD)"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Repository hygiene
+        run: npm run check:repo
+
+      - name: Focused desktop smoke
+        run: node --test tests/bat-smoke.test.mjs tests/local-security.test.mjs tests/storage-atomic.test.mjs tests/character-persistence.test.mjs
+
+      - name: Fabricador E2E smoke
+        run: npm run test:e2e:fabricador
