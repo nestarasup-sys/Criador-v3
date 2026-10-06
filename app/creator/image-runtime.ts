@@ -7,6 +7,10 @@ import { processChromaPixels, type ChromaProcessingOptions } from "./chroma-work
 const PAGE_IMAGE_CACHE_LIMIT = 24;
 const pageImageCache = new Map<string, Promise<HTMLImageElement>>();
 
+export function clearImageRuntimeCache() {
+  pageImageCache.clear();
+}
+
 export function loadImage(src: string) {
   const cacheable = !src.startsWith("blob:") && !src.startsWith("data:");
   if (!cacheable) {
@@ -84,7 +88,7 @@ export async function removeChroma(source: Blob | string) {
   }
 }
 
-type ChromaColor = { r: number; g: number; b: number };
+export type ChromaColor = { r: number; g: number; b: number };
 
 export function createChromaResult(
   source: HTMLCanvasElement,

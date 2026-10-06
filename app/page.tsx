@@ -25,11 +25,13 @@ import {
   prepareHairPairV2,
 } from "./creator/catalog-import";
 import {
+  clearImageRuntimeCache,
   createCharacterPhotoDataUrl,
   createChromaResultAsync,
   estimateImportChroma,
   loadImage,
   removeChroma,
+  type ChromaColor,
 } from "./creator/image-runtime";
 import {
   AUTOMATIC_HEAD_ERASE_SIDE_MARGIN,
@@ -107,7 +109,7 @@ import type {
   MaskStroke,
   Model,
 } from "./domain/character-primitives";
-import type { Emotion, ExpressionKey, ExpressionState } from "./domain/expression-contract";
+import { PACK_EXPRESSION_KEYS, type Emotion, type ExpressionKey, type ExpressionState } from "./domain/expression-contract";
 import type {
   Character,
   CharacterSnapshot,
@@ -441,7 +443,7 @@ export default function Home() {
     pendingLayerDragRef.current = null;
     retainedAssetUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     retainedAssetUrlsRef.current.clear();
-    pageImageCache.clear();
+    clearImageRuntimeCache();
     basePackThumbnailCache.clear();
     colorLayerCacheRef.current.clear();
     headWarpCacheRef.current.clear();

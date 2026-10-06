@@ -1,5 +1,5 @@
 import { contentBounds, detectSheetRegions } from "./image-processing";
-import type { ImageRegion } from "./image-processing";
+import type { DetectedOutfitRegion, ImageRegion } from "./image-processing";
 import { canvasBlob, cropCanvasToVisibleContent, normalizeCanvasSet } from "./canvas-processing";
 import { detectHairSheetGrid } from "./hair-sheet-grid";
 import { autoChromaImport, loadImage, removeChroma } from "./image-runtime";
