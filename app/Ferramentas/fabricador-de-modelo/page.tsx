@@ -9,9 +9,11 @@ import type { BasePackCollection } from "../../creator/base-packs";
 import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
+import { DEFAULT_TEMPLATE_SKIN_COLOR, TEMPLATE_SKIN_PALETTE, normalizeTemplateSkinColor, recolorTemplateSkinPixels } from "./core/skin-color.mjs";
 import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame, type LoadedPair } from "./core/compositor";
 import {
   CANVAS_SIZE,
+  DEFAULT_TEMPLATE_SCALE_X,
   DEFAULT_BROW_PLACEMENT,
   DEFAULT_EFFECT_PLACEMENTS,
   DEFAULT_EFFECT_SETTINGS,
@@ -145,6 +147,12 @@ function profileIdForName(name: string, profiles: PresetProfile[]) {
   return candidate;
 }
 
+function applyDefaultWidthToUnchangedPresetSheet(collection: FacePresetCollection): FacePresetCollection {
+  const presets = Object.values(collection);
+  if (presets.length === 0 || !presets.every((preset) => preset.templateScaleX === 1)) return collection;
+  return Object.fromEntries(Object.entries(collection).map(([key, preset]) => [key, { ...preset, templateScaleX: DEFAULT_TEMPLATE_SCALE_X }])) as FacePresetCollection;
+}
+
 export default function FabricadorDeModeloPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const expressionReferenceInputRef = useRef<HTMLInputElement>(null);
@@ -171,6 +179,8 @@ export default function FabricadorDeModeloPage() {
   const [status, setStatus] = useState("Comece enviando ou escolhendo uma folha de olhos.");
 
   const [template, setTemplate] = useState<HTMLImageElement | null>(null);
+  const [baseTemplate, setBaseTemplate] = useState<HTMLImageElement | null>(null);
+  const [templateSkinColor, setTemplateSkinColor] = useState(DEFAULT_TEMPLATE_SKIN_COLOR);
   const [pair, setPair] = useState<EyePair | null>(null);
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [eyebrowPair, setEyebrowPair] = useState<EyePiece | null>(null);
@@ -341,13 +351,33 @@ export default function FabricadorDeModeloPage() {
         const cleaned = cleanChromaImage(context.getImageData(0, 0, canvas.width, canvas.height), { ...DEFAULT_CHROMA_SETTINGS, strength: 100 });
         context.putImageData(cleaned, 0, 0);
         const output = new Image();
-        output.onload = () => setTemplate(output);
+        output.onload = () => setBaseTemplate(output);
         output.onerror = () => setStatus("Não foi possível preparar o molde fixo.");
         output.src = canvas.toDataURL("image/png");
       })
       .catch(() => setStatus("Não foi possível carregar o molde fixo."));
     return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, []);
+
+  useEffect(() => {
+    if (!baseTemplate) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = baseTemplate.naturalWidth;
+    canvas.height = baseTemplate.naturalHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+      setStatus("Não foi possível preparar a cor da pele do molde.");
+      return;
+    }
+    context.drawImage(baseTemplate, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    pixels.data.set(recolorTemplateSkinPixels(pixels.data, canvas.width, canvas.height, templateSkinColor));
+    context.putImageData(pixels, 0, 0);
+    const output = new Image();
+    output.onload = () => setTemplate(output);
+    output.onerror = () => setStatus("Não foi possível aplicar a cor da pele ao molde.");
+    output.src = canvas.toDataURL("image/png");
+  }, [baseTemplate, templateSkinColor]);
 
   useEffect(() => {
     Promise.all([loadFabricatorAssets(), loadFabricatorPresetProfiles()])
@@ -375,7 +405,8 @@ export default function FabricadorDeModeloPage() {
           presets: presetCollectionFromState(EYE_EXPRESSIONS.map((_, index) => defaultPresetForIndex(index))),
         } satisfies PresetProfile];
         const selectedProfile = profiles.find((profile) => profile.id === profileDocument.activeProfileId) ?? profiles[0];
-        const merged = repairPresets(selectedProfile.presets);
+        const migratedPresets = applyDefaultWidthToUnchangedPresetSheet(selectedProfile.presets);
+        const merged = repairPresets(migratedPresets);
         const repairedProfile: PresetProfile = {
           ...selectedProfile,
           presets: presetCollectionFromState(merged),
@@ -385,6 +416,7 @@ export default function FabricadorDeModeloPage() {
         setPresetProfiles(nextProfiles);
         activeProfileIdRef.current = selectedProfile.id;
         setActiveProfileId(selectedProfile.id);
+        setTemplateSkinColor(normalizeTemplateSkinColor(selectedProfile.skinColor));
         setPresets(merged);
         const savedEffectPlacements = merged[0]?.effectPlacements;
         if (savedEffectPlacements) setEffectPlacements(savedEffectPlacements);
@@ -1191,7 +1223,7 @@ export default function FabricadorDeModeloPage() {
   const addManualEyeSeed = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!loaded) return false;
     const point = pointerPosition(event);
-    const templateScaleX = Math.min(1.2, Math.max(.5, previewPreset.templateScaleX ?? 1));
+    const templateScaleX = Math.min(1.2, Math.max(.5, previewPreset.templateScaleX ?? DEFAULT_TEMPLATE_SCALE_X));
     const compressX = (value: number) => CANVAS_SIZE / 2 + (value - CANVAS_SIZE / 2) * templateScaleX;
     for (const side of ["left", "right"] as const) {
       const placement = eyePlacements[side];
@@ -1451,6 +1483,16 @@ export default function FabricadorDeModeloPage() {
     clearGenerated();
   };
 
+  const updateTemplateSkinColor = (value: string) => {
+    const color = normalizeTemplateSkinColor(value);
+    setTemplateSkinColor(color);
+    setPresetProfiles((current) => current.map((profile) => profile.id === activeProfileIdRef.current
+      ? { ...profile, skinColor: color, updatedAt: new Date().toISOString() }
+      : profile));
+    clearGenerated();
+    setStatus("Cor da pele atualizada no molde. Use “Salvar presets” para guardá-la neste perfil.");
+  };
+
   const updateMouthTalkLink = (expressionIndex: number, talkIndex: number) => {
     if (!Number.isInteger(talkIndex) || talkIndex < 0 || talkIndex >= EYE_EXPRESSIONS.length) return;
     pushEditorHistory();
@@ -1564,6 +1606,7 @@ export default function FabricadorDeModeloPage() {
       description: "Conjunto base finalizado do Fabricador.",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      skinColor: DEFAULT_TEMPLATE_SKIN_COLOR,
       presets: currentCollection,
     } satisfies PresetProfile];
     const activeExists = profiles.some((profile) => profile.id === sourceProfileId);
@@ -1573,6 +1616,7 @@ export default function FabricadorDeModeloPage() {
       activeProfileId: activeId,
       profiles: profiles.map((profile) => profile.id === activeId ? {
         ...profile,
+        skinColor: normalizeTemplateSkinColor(profile.id === activeId ? templateSkinColor : profile.skinColor),
         presets: currentCollection,
         updatedAt: new Date().toISOString(),
       } : profile),
@@ -1591,15 +1635,19 @@ export default function FabricadorDeModeloPage() {
     if (!target || target.id === activeProfileIdRef.current) return;
     const currentDocument = profileDocumentFromState(presetProfiles, presets);
     void saveFabricatorPresetProfiles(currentDocument);
-    const nextProfiles = currentDocument.profiles;
-    const nextPresets = mergeSavedPresets(target.presets);
+    const migratedPresets = applyDefaultWidthToUnchangedPresetSheet(target.presets);
+    const nextPresets = mergeSavedPresets(migratedPresets);
+    const nextProfile = { ...target, presets: presetCollectionFromState(nextPresets), updatedAt: new Date().toISOString() };
+    const profilesWithMigration = currentDocument.profiles.map((profile) => profile.id === target.id ? nextProfile : profile);
     activeProfileIdRef.current = target.id;
     setActiveProfileId(target.id);
-    setPresetProfiles(nextProfiles);
+    setTemplateSkinColor(normalizeTemplateSkinColor(target.skinColor));
+    setPresetProfiles(profilesWithMigration);
     setPresets(nextPresets);
     if (nextPresets[0]?.effectPlacements) setEffectPlacements(nextPresets[0].effectPlacements);
     selectPresetExpression(NORMAL_PRESET_INDEX);
     clearGenerated();
+    if (JSON.stringify(nextProfile.presets) !== JSON.stringify(target.presets)) void saveFabricatorPresetProfiles({ ...currentDocument, activeProfileId: target.id, profiles: profilesWithMigration });
     setStatus(`Perfil “${target.name}” ativado. Suas alterações ficam separadas dos outros perfis.`);
   };
 
@@ -1617,6 +1665,7 @@ export default function FabricadorDeModeloPage() {
       description: "Cópia independente do perfil anterior; edições futuras não misturam os conjuntos.",
       createdAt: now,
       updatedAt: now,
+      skinColor: templateSkinColor,
       presets: currentDocument.profiles.find((entry) => entry.id === currentDocument.activeProfileId)?.presets ?? presetCollectionFromState(presets),
     };
     const nextDocument: PresetProfilesDocument = {
@@ -1626,6 +1675,7 @@ export default function FabricadorDeModeloPage() {
     };
     activeProfileIdRef.current = profile.id;
     setActiveProfileId(profile.id);
+    setTemplateSkinColor(normalizeTemplateSkinColor(profile.skinColor));
     setPresetProfiles(nextDocument.profiles);
     setPresets(mergeSavedPresets(profile.presets));
     if (profile.presets.normal?.effectPlacements) setEffectPlacements(profile.presets.normal.effectPlacements);
@@ -1648,6 +1698,7 @@ export default function FabricadorDeModeloPage() {
     };
     activeProfileIdRef.current = fallback.id;
     setActiveProfileId(fallback.id);
+    setTemplateSkinColor(normalizeTemplateSkinColor(fallback.skinColor));
     setPresetProfiles(nextDocument.profiles);
     setPresets(mergeSavedPresets(fallback.presets));
     if (fallback.presets.normal?.effectPlacements) setEffectPlacements(fallback.presets.normal.effectPlacements);
@@ -2112,8 +2163,18 @@ export default function FabricadorDeModeloPage() {
           </>}
 
           {section === "adjust" && <>
-            <PanelBlock title="Molde" description="Esprema ou alargue o molde inteiro. A medida fica salva para todas as expressões e exportações.">
-              <RangeControl label="Largura do molde" value={activePreset.templateScaleX ?? 1} display={`${Math.round((activePreset.templateScaleX ?? 1) * 100)}%`} min={TEMPLATE_SCALE_X_LIMITS.min} max={TEMPLATE_SCALE_X_LIMITS.max} step=".01" onChange={updateTemplateScaleX} />
+            <PanelBlock title="Molde" description="Ajustes aplicados ao molde em todas as expressões e exportações.">
+              <RangeControl label="Largura do molde" value={activePreset.templateScaleX ?? DEFAULT_TEMPLATE_SCALE_X} display={`${Math.round((activePreset.templateScaleX ?? DEFAULT_TEMPLATE_SCALE_X) * 100)}%`} min={TEMPLATE_SCALE_X_LIMITS.min} max={TEMPLATE_SCALE_X_LIMITS.max} step=".01" onChange={updateTemplateScaleX} />
+              <div className={styles.skinColorPicker}>
+                <div className={styles.colorControl}>
+                  <span><b>Cor da pele</b><output>{templateSkinColor}</output></span>
+                  <input type="color" aria-label="Escolher cor da pele do molde" value={templateSkinColor} onChange={(event) => updateTemplateSkinColor(event.target.value)} />
+                </div>
+                <div className={styles.skinSwatches} role="group" aria-label="Cores de pele sugeridas">
+                  {TEMPLATE_SKIN_PALETTE.map((skin) => <button key={skin.color} type="button" title={skin.name} aria-label={skin.name} aria-pressed={templateSkinColor === skin.color} className={styles.skinSwatch} style={{ backgroundColor: skin.color }} onClick={() => updateTemplateSkinColor(skin.color)} />)}
+                </div>
+                <small>Contorno, transparência e detalhes do molde são preservados. A cor acompanha o perfil ativo.</small>
+              </div>
             </PanelBlock>
             <PanelBlock title="Camada" description="Escolha o que deseja calibrar. O preview continua fixo no centro.">
               <div className={styles.layerTabs}>

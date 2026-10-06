@@ -6,6 +6,7 @@ export const CATALOG_CANVAS_WIDTH = 1920;
 export const CATALOG_CANVAS_HEIGHT = 1080;
 export const CATALOG_MODEL_SIZE = 336;
 export const CATALOG_MODEL_TOP = 10;
+export const DEFAULT_TEMPLATE_SCALE_X = .95;
 
 export const LINKED_VARIATION: EyeExpressionVariation = {
   left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
@@ -51,7 +52,7 @@ const cloneVariation = (variation: EyeExpressionVariation): EyeExpressionVariati
 
 export function defaultPresetForIndex(index: number): FacePreset {
   return {
-    templateScaleX: 1,
+    templateScaleX: DEFAULT_TEMPLATE_SCALE_X,
     effectPlacements: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_PLACEMENTS[kind] }])) as Record<FaceEffectKind, EyePlacement>,
     eyes: cloneVariation(EXPRESSION_VARIATIONS[index]),
     eyebrows: cloneVariation(BROW_VARIATIONS[index]),
@@ -73,7 +74,7 @@ export function mergeSavedPresets(saved: FacePresetCollection): FacePreset[] {
     return {
       templateScaleX: Number.isFinite(preset.templateScaleX)
         ? Math.min(TEMPLATE_SCALE_X_LIMITS.max, Math.max(TEMPLATE_SCALE_X_LIMITS.min, preset.templateScaleX))
-        : 1,
+        : DEFAULT_TEMPLATE_SCALE_X,
       effectPlacements: Object.fromEntries(EFFECT_KINDS.map((kind) => [kind, { ...DEFAULT_EFFECT_PLACEMENTS[kind], ...(preset.effectPlacements?.[kind] ?? {}) }])) as Record<FaceEffectKind, EyePlacement>,
       eyes: cloneVariation(preset.eyes),
       eyebrows: cloneVariation(preset.eyebrows),
@@ -101,6 +102,7 @@ export type PresetProfile = {
   description: string;
   createdAt: string;
   updatedAt: string;
+  skinColor?: string;
   presets: FacePresetCollection;
   expressionReferences?: Record<string, { description: string; imageDataUrl: string | null }>;
   savedExpressionVersions?: FacePresetCollection;

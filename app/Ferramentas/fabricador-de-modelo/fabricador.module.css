@@ -736,6 +736,37 @@
   cursor: pointer;
 }
 
+.skinColorPicker {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.skinSwatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skinSwatch {
+  width: 27px;
+  height: 27px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px #d8cbdc;
+  cursor: pointer;
+}
+
+.skinSwatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px #80498b;
+}
+
+.skinColorPicker small {
+  color: #75647d;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
 .checkRow {
   display: flex;
   gap: 9px;

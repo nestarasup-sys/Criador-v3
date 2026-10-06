@@ -1,7 +1,7 @@
 import { loadImage, splitPair } from "./eye-processing";
 import type { FabricatorAsset } from "../fabricador-storage";
 import type { EyeExpressionVariation, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, MouthHaloSettings } from "../types/eye-model";
-import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
+import { CANVAS_SIZE, CATALOG_CANVAS_HEIGHT, CATALOG_CANVAS_WIDTH, CATALOG_MODEL_SIZE, CATALOG_MODEL_TOP, DEFAULT_BROW_PLACEMENT, DEFAULT_EFFECT_PLACEMENTS, DEFAULT_PRESET_MOUTH, DEFAULT_EFFECT_SETTINGS, DEFAULT_TEMPLATE_SCALE_X, EFFECT_KINDS, LINKED_VARIATION, defaultPresetForIndex } from "../fabricador-config";
 
 function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElement, templateScaleX: number) {
   const scaleX = normalizeTemplateScaleX(templateScaleX);
@@ -10,7 +10,7 @@ function drawTemplate(context: CanvasRenderingContext2D, template: HTMLImageElem
 }
 
 function normalizeTemplateScaleX(value: number) {
-  return Math.min(1.2, Math.max(.5, Number.isFinite(value) ? value : 1));
+  return Math.min(1.2, Math.max(.5, Number.isFinite(value) ? value : DEFAULT_TEMPLATE_SCALE_X));
 }
 
 function compressX(value: number, scaleX: number) {
@@ -62,7 +62,7 @@ export function drawComposition(
   effectAssets: Record<FaceEffectKind, string | null> = defaultPresetForIndex(13).effectAssets,
   effectSettings: Record<FaceEffectKind, FaceEffectSettings> = DEFAULT_EFFECT_SETTINGS,
   mouthHalo: MouthHaloSettings = defaultPresetForIndex(13).mouthHalo,
-  templateScaleX = 1,
+  templateScaleX = DEFAULT_TEMPLATE_SCALE_X,
 ) {
   const compositionScaleX = normalizeTemplateScaleX(templateScaleX);
   context.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);

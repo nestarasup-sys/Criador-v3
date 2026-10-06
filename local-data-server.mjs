@@ -616,7 +616,7 @@ function normalizeFabricatorPresets(value) {
       const candidate = preset.effectPieceIndexes?.[effect];
       return [effect, Number.isInteger(candidate) && candidate >= 0 && candidate < 21 ? candidate : effect === "manpu" ? Object.keys(value).indexOf(key) : null];
     }));
-    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : 1, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthHalo, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
+    if (eyes && eyebrows && mouth) result[key] = { templateScaleX: Number.isFinite(templateScaleX) ? Math.min(1.2, Math.max(.5, templateScaleX)) : .95, effectPlacements, eyes, eyebrows, mouth, effects, enabledEffects, effectAssets, effectSettings, mouthHalo, effectPieceIndexes, mouthTalkIndex: mouthTalkIndex >= 0 ? mouthTalkIndex : 0 };
   }
   return result;
 }
@@ -664,6 +664,7 @@ function normalizeFabricatorPresetProfiles(value, legacyPresets = {}) {
       description: String(source.description ?? "").trim().slice(0, 180),
       createdAt: typeof source.createdAt === "string" && source.createdAt ? source.createdAt : new Date().toISOString(),
       updatedAt: typeof source.updatedAt === "string" && source.updatedAt ? source.updatedAt : new Date().toISOString(),
+      skinColor: typeof source.skinColor === "string" && /^#[0-9a-f]{6}$/i.test(source.skinColor) ? source.skinColor.toLowerCase() : "#fff0e7",
       presets,
       expressionReferences,
       savedExpressionVersions,
@@ -677,6 +678,7 @@ function normalizeFabricatorPresetProfiles(value, legacyPresets = {}) {
       description: "Conjunto base finalizado do Fabricador.",
       createdAt: now,
       updatedAt: now,
+      skinColor: "#fff0e7",
       presets: normalizeFabricatorPresets(legacyPresets),
     });
   }
