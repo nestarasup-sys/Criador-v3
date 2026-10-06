@@ -1,11 +1,11 @@
 import { findVisibleBounds } from "../image-bounds.mjs";
 
 export function contentBoundsInside(
-  data: Uint8ClampedArray,
-  width: number,
-  height: number,
-  search: ImageRegion,
-  padding: number,
+  data,
+  width,
+  height,
+  search,
+  padding,
 ) {
   return findVisibleBounds(data, width, height, {
     alphaThreshold: 32,
@@ -14,14 +14,14 @@ export function contentBoundsInside(
   });
 }
 
-export function detectOutfitSheetRegions(data: Uint8ClampedArray, width: number, height: number) {
+export function detectOutfitSheetRegions(data, width, height) {
   const pixelCount = width * height;
   const visited = new Uint8Array(pixelCount);
   const labels = new Uint16Array(pixelCount);
   const queue = new Int32Array(pixelCount);
   const components = [];
   let nextLabel = 1;
-  const visible = (pixelIndex: number) => data[pixelIndex * 4 + 3] > 40;
+  const visible = (pixelIndex) => data[pixelIndex * 4 + 3] > 40;
 
   for (let start = 0; start < pixelCount; start += 1) {
     if (visited[start] || !visible(start)) continue;
@@ -92,7 +92,7 @@ export function detectOutfitSheetRegions(data: Uint8ClampedArray, width: number,
     }
   });
 
-  const ownerByLabel = new Map<number, number>();
+  const ownerByLabel = new Map();
   [...main, ...minor].forEach((component) => {
     if (component.owner) ownerByLabel.set(component.label, component.owner);
   });
@@ -110,7 +110,7 @@ export function detectOutfitSheetRegions(data: Uint8ClampedArray, width: number,
         y,
         width: Math.min(width, component.maxX + safetyPadding + 1) - x,
         height: Math.min(height, component.maxY + safetyPadding + 1) - y,
-        owner: component.owner!,
+        owner: component.owner,
       };
     })
     .sort((left, right) => left.x - right.x);
