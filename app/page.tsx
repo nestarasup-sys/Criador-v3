@@ -19,11 +19,36 @@ import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
+import {
+  AUTOMATIC_HEAD_ERASE_SIDE_MARGIN,
+  CATEGORY_LABELS,
+  DEFAULT_COLOR_ADJUSTMENT,
+  DEFAULT_EXPORT_FRAME,
+  DEFAULT_PREVIEW_PAN,
+  DEFAULT_TRANSFORM,
+  EMPTY_SELECTIONS,
+  MASK_TARGET_LABELS,
+  QUICK_COLOR_PRESETS,
+  SCENE_PADDING,
+  canvasHasVisibleAlpha,
+  cloneMaskStrokes,
+  emptyAdjustments,
+  emptyColorAdjustments,
+  emptyLayerMasks,
+  normalizeAdjustments,
+  normalizeColorAdjustments,
+  normalizeLayerMasks,
+  normalizeSelections,
+  outfitColorGroupKey,
+  suggestedFit,
+  type LayerMasks,
+  type MaskTarget,
+} from "./creator/editor-state";
 import { normalizeBasePackId } from "./domain/base-model.mjs";
 import { configureHighQualityContext } from "./studio/render-quality";
 import { compositeCharacterLayers } from "./studio/layer-compositor";
 import { captureRenderDebug, colorizeRenderDebugLayer, markRenderDebug } from "./studio/render-debug";
-import { colorAdjustmentIsActive, colorRenderCacheKey, DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
+import { colorAdjustmentIsActive, colorRenderCacheKey, normalizeColorAdjustment, renderColorLayer } from "./domain/color-rendering";
 import { createModelColorAdjustedCanvasForScopes, createModelColorMaskCanvas, emptyModelColorAdjustments, normalizeModelColorAdjustments, normalizeModelColorScope } from "./domain/model-color-rendering";
 import { MODEL_COLOR_CALIBRATIONS_STORAGE_KEY, emptyModelColorCalibration, modelColorCalibrationKey, parseModelColorCalibrations, type ModelColorCalibration, type ModelColorCalibrationSeed } from "./domain/model-color-calibration-storage";
 import { COLOR_PRESETS_STORAGE_KEY, MODEL_COLOR_DEFAULTS_STORAGE_KEY, modelColorDefaultKey, normalizeSavedColorPreset, parseModelColorDefaults, parseSavedColorPresets, type SavedColorPreset } from "./domain/color-presets";
@@ -68,7 +93,6 @@ import type {
   ItemTransform,
   MaskStroke,
   Model,
-  StoredLayerMasks,
 } from "./domain/character-primitives";
 import {
   PACK_EXPRESSION_KEYS,
@@ -96,8 +120,6 @@ import type {
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
 
 type BrushMode = "erase" | "restore";
-type MaskTarget = "body" | "hairFront" | "hairBack" | "outfit" | "accessory";
-type LayerMasks = Record<MaskTarget, MaskStroke[]>;
 type CharacterHistory = { past: string[]; future: string[]; current: string | null; changedAt: number };
 
 function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId) {
@@ -156,93 +178,6 @@ type HeadFitGuide = {
 };
 
 
-const EMPTY_SELECTIONS: Record<Category, string | null> = {
-  cabelos: null,
-  cabelosTras: null,
-  rostos: null,
-  roupas: null,
-  acessorios: null,
-};
-
-// Compensa a borda antialiasada da cabeça da roupa sem alcançar o pescoço.
-const AUTOMATIC_HEAD_ERASE_SIDE_MARGIN = 3;
-
-const DEFAULT_TRANSFORM: ItemTransform = {
-  x: 0,
-  y: 0,
-  scale: 1,
-  scaleX: 1,
-  scaleY: 1,
-  rotation: 0,
-  flipX: false,
-};
-
-const DEFAULT_COLOR_ADJUSTMENT: ColorAdjustment = { ...SHARED_DEFAULT_COLOR_ADJUSTMENT };
-
-const QUICK_COLOR_PRESETS = [
-  ["Violeta", "#8c70d8"], ["Lavanda", "#b59be8"], ["Lilás", "#c79bd6"], ["Roxo", "#6e3fc1"], ["Ameixa", "#7a315c"], ["Uva", "#59358c"], ["Magenta", "#c43f9e"], ["Fúcsia", "#e557b4"],
-  ["Coral", "#ef756d"], ["Salmão", "#f38f86"], ["Vermelho", "#d83a48"], ["Carmim", "#a91f3e"], ["Cereja", "#b92c58"], ["Rubi", "#8f193e"], ["Rosa", "#db65a6"], ["Rosa-choque", "#ee3f83"], ["Rosa antigo", "#bf708a"], ["Blush", "#e89aa8"],
-  ["Pêssego", "#f3ae86"], ["Laranja", "#e77837"], ["Tangerina", "#f2994a"], ["Terracota", "#c45a3f"], ["Âmbar", "#d7952d"], ["Dourado", "#e4bb58"], ["Mostarda", "#b7962f"], ["Canário", "#ebd34d"], ["Açafrão", "#dca72d"],
-  ["Menta", "#82d5b4"], ["Verde", "#55b988"], ["Esmeralda", "#199c74"], ["Jade", "#39bca5"], ["Turquesa", "#3bbfc2"], ["Oliva", "#8a9a43"], ["Pistache", "#a7c96b"], ["Musgo", "#5d7b42"], ["Floresta", "#2f684d"],
-  ["Ciano", "#50c4dc"], ["Azul céu", "#6ca8e5"], ["Azul", "#519ec9"], ["Azul royal", "#4661c9"], ["Índigo", "#5550c7"], ["Marinho", "#27366f"], ["Petróleo", "#2f7184"], ["Azul noite", "#38445c"], ["Pervinca", "#8294d9"],
-  ["Creme", "#f1ddc0"], ["Bege", "#dec4a1"], ["Areia", "#c9ad86"], ["Caramelo", "#bd8055"], ["Chocolate", "#80523b"], ["Café", "#55362e"], ["Malva", "#9b718f"], ["Cinza azulado", "#78869f"], ["Grafite", "#454857"],
-  ["Branco suave", "#f7f7f7"], ["Prata suave", "#c6cbd3"], ["Cinza médio", "#777b82"], ["Preto suave", "#111216"],
-] as const;
-
-const DEFAULT_PREVIEW_PAN: PreviewPan = { x: 0, y: 0 };
-const DEFAULT_EXPORT_FRAME: ExportFrame = { x: 0, y: 0, scale: 1 };
-const SCENE_PADDING = { x: 960, y: 540 };
-
-function normalizeTransform(transform?: Partial<ItemTransform>): ItemTransform {
-  return { ...DEFAULT_TRANSFORM, ...transform };
-}
-
-function emptyAdjustments(): Record<Category, ItemTransform> {
-  return {
-    cabelos: { ...DEFAULT_TRANSFORM },
-    cabelosTras: { ...DEFAULT_TRANSFORM },
-    rostos: { ...DEFAULT_TRANSFORM },
-    roupas: { ...DEFAULT_TRANSFORM },
-    acessorios: { ...DEFAULT_TRANSFORM },
-  };
-}
-
-function emptyColorAdjustments(): ColorAdjustments {
-  return {
-    cabelos: { ...DEFAULT_COLOR_ADJUSTMENT },
-    cabelosTras: { ...DEFAULT_COLOR_ADJUSTMENT },
-    rostos: { ...DEFAULT_COLOR_ADJUSTMENT },
-    roupas: { ...DEFAULT_COLOR_ADJUSTMENT },
-    acessorios: { ...DEFAULT_COLOR_ADJUSTMENT },
-  };
-}
-
-function normalizeColorAdjustments(adjustments?: Partial<ColorAdjustments>): ColorAdjustments {
-  const defaults = emptyColorAdjustments();
-  for (const category of Object.keys(defaults) as Category[]) {
-    defaults[category] = normalizeColorAdjustment(adjustments?.[category]);
-  }
-  return defaults;
-}
-
-function outfitColorGroupKey(item?: Partial<Pick<CatalogItem, "id" | "outfitGroupId">> | null) {
-  return item ? item.outfitGroupId ?? item.id ?? null : null;
-}
-
-function canvasHasVisibleAlpha(canvas: HTMLCanvasElement) {
-  const context = canvas.getContext("2d", { willReadFrequently: true });
-  if (!context) return false;
-  const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
-  for (let index = 3; index < data.length; index += 4) {
-    if (data[index] > 8) return true;
-  }
-  return false;
-}
-
-function emptyLayerMasks(): LayerMasks {
-  return { body: [], hairFront: [], hairBack: [], outfit: [], accessory: [] };
-}
-
 function saveCharactersToBrowser(characters: Character[]) {
   return checkpointCharacters(characters).catch((error) => {
     console.error("[creator] Não foi possível manter o checkpoint no navegador", error);
@@ -250,98 +185,7 @@ function saveCharactersToBrowser(characters: Character[]) {
   });
 }
 
-function cloneMaskStrokes(strokes: MaskStroke[]) {
-  return strokes.map((stroke) => ({
-    ...stroke,
-    points: stroke.points.map((point) => ({ ...point })),
-    ...(stroke.paths ? { paths: stroke.paths.map((path) => path.map((point) => ({ ...point }))) } : {}),
-  }));
-}
 
-function normalizeLayerMasks(layerMasks?: StoredLayerMasks, legacyBodyMask?: MaskStroke[]): LayerMasks {
-  const legacyHairMask = layerMasks?.hair ?? [];
-  return {
-    body: layerMasks?.body ?? legacyBodyMask ?? [],
-    hairFront: layerMasks?.hairFront ?? legacyHairMask,
-    hairBack: layerMasks?.hairBack ?? legacyHairMask,
-    outfit: layerMasks?.outfit ?? [],
-    accessory: layerMasks?.accessory ?? [],
-  };
-}
-
-const MASK_TARGET_LABELS: Record<MaskTarget, string> = {
-  body: "corpo",
-  hairFront: "cabelo frontal",
-  hairBack: "cabelo traseiro",
-  outfit: "roupa",
-  accessory: "acessório",
-};
-
-function normalizeSelections(selections?: Partial<Record<Category, string | null>>) {
-  return {
-    cabelos: selections?.cabelos ?? null,
-    cabelosTras: selections?.cabelosTras ?? null,
-    rostos: selections?.rostos ?? null,
-    roupas: selections?.roupas ?? null,
-    acessorios: selections?.acessorios ?? null,
-  } satisfies Record<Category, string | null>;
-}
-
-function normalizeAdjustments(adjustments?: Partial<Record<Category, Partial<ItemTransform>>>) {
-  return {
-    cabelos: normalizeTransform(adjustments?.cabelos),
-    cabelosTras: normalizeTransform(adjustments?.cabelosTras),
-    rostos: normalizeTransform(adjustments?.rostos),
-    roupas: normalizeTransform(adjustments?.roupas),
-    acessorios: normalizeTransform(adjustments?.acessorios),
-  } satisfies Record<Category, ItemTransform>;
-}
-
-function suggestedFit(
-  item: Pick<CatalogItem,
-    "width" | "height" | "defaultX" | "defaultY"
-    | "contentX" | "contentY" | "contentWidth" | "contentHeight"
-    | "fitReferenceWidth" | "fitReferenceHeight">,
-  itemModel: Model,
-): ItemTransform {
-  const target = itemModel === "feminino"
-    ? { x: 930, y: 675, width: 660, height: 730 }
-    : { x: 950, y: 665, width: 640, height: 720 };
-  const width = Math.max(1, item.width ?? target.width);
-  const height = Math.max(1, item.height ?? target.height);
-  const normalized = typeof item.contentWidth === "number"
-    && typeof item.contentHeight === "number"
-    && typeof item.contentX === "number"
-    && typeof item.contentY === "number";
-  if (normalized) {
-    const referenceWidth = Math.max(1, item.fitReferenceWidth ?? item.contentWidth!);
-    const referenceHeight = Math.max(1, item.fitReferenceHeight ?? item.contentHeight!);
-    const scale = Math.max(.2, Math.min(1.5, target.width / referenceWidth, target.height / referenceHeight));
-    const localCenterX = item.contentX! + item.contentWidth! / 2 - width / 2;
-    const localBottomY = item.contentY! + item.contentHeight! - height / 2;
-    return {
-      ...DEFAULT_TRANSFORM,
-      x: Math.round(target.x - (item.defaultX ?? width / 2) - localCenterX * scale),
-      y: Math.round(target.y + target.height / 2 - (item.defaultY ?? height / 2) - localBottomY * scale),
-      scale: +scale.toFixed(3),
-    };
-  }
-  const scale = Math.max(.2, Math.min(1.5, target.width / width, target.height / height));
-  return {
-    ...DEFAULT_TRANSFORM,
-    x: Math.round(target.x - (item.defaultX ?? width / 2)),
-    y: Math.round(target.y - (item.defaultY ?? height / 2)),
-    scale: +scale.toFixed(3),
-  };
-}
-
-const CATEGORY_LABELS: Record<Category, string> = {
-  cabelos: "Cabelo (frente)",
-  cabelosTras: "Cabelo (trás)",
-  rostos: "Rostos",
-  roupas: "Roupas",
-  acessorios: "Acessórios",
-};
 
 // A decoded 1920x1080 image costs roughly 8 MiB regardless of the compressed
 // PNG size. Keep this cache intentionally short; the browser/network cache can
