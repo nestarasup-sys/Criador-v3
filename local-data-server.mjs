@@ -7,9 +7,10 @@ import { extname, join, resolve, sep } from "node:path";
 import JSZip from "jszip";
 import sharp from "sharp";
 import { createRoteirosService } from "./services/roteiros/service.mjs";
+import { createRoteiroExportFilesystem, insideOrSame, ROTEIRO_VIDEO_EXTENSIONS } from "./services/roteiros/export-filesystem.mjs";
+import { runWithConcurrency } from "./services/runtime/concurrency.mjs";
 import { createBaseDadosService } from "./services/base-dados/service.mjs";
 import { probeVideoDuration } from "./services/media/video-metadata.mjs";
-import { normalizeVideoFile, probeVideoFile, videoMatchesExportProfile } from "./services/media/video-normalizer.mjs";
 import { createDraftsService } from "./services/base-dados/drafts-service.mjs";
 import { isBaseVideoReferencedByScripts } from "./services/base-dados/references.mjs";
 import { resolveByteRange } from "./services/storage/file-range.mjs";
@@ -72,159 +73,6 @@ const ROTEIRO_EXPORT_TARGETS = Object.freeze({
   }),
 });
 const ROTEIRO_V4_LOADING_ASSET = resolve(process.env.GACHA_EDITOR_V4_LOADING_ASSET ?? join(ROTEIRO_EXPORT_TARGETS.v4.root, "FYN — Visões do Retorno e Marek", "assets", "ui", "loading.gif"));
-const ROTEIRO_EXPORT_MANIFEST = ".nymi-script.json";
-function roteiroExportTarget(value) {
-  const target = String(value || "v4").trim().toLowerCase();
-  const config = ROTEIRO_EXPORT_TARGETS[target];
-  if (!config) throw Object.assign(new Error("Destino de exportação inválido."), { status: 400, code: "INVALID_EXPORT_TARGET" });
-  return config;
-}
-function roteiroProjectRoot(scriptTitle, target = "v4") {
-  return join(roteiroExportTarget(target).root, safeExportFolderName(scriptTitle, "Roteiro"));
-}
-function roteiroVideoExportRoot(scriptTitle, target = "v4") {
-  return join(roteiroProjectRoot(scriptTitle, target), "assets", "tiktoks");
-}
-function roteiroCharacterExportRoot(scriptTitle, target = "v4") {
-  return join(roteiroProjectRoot(scriptTitle, target), "assets", "characters");
-}
-function roteiroBackgroundExportRoot(scriptTitle, target = "v4") {
-  return join(roteiroProjectRoot(scriptTitle, target), "assets", "backgrounds");
-}
-function roteiroUiExportRoot(scriptTitle, target = "v4") {
-  return join(roteiroProjectRoot(scriptTitle, target), "assets", "ui");
-}
-function insideOrSame(parent, target) {
-  return resolve(parent) === resolve(target) || inside(parent, target);
-}
-async function writeRoteiroExportManifest(folder, scriptId, scriptTitle, kind, target = "v4") {
-  const manifestPath = join(folder, ROTEIRO_EXPORT_MANIFEST);
-  if (!inside(folder, manifestPath)) throw new Error("Manifesto de exportação inválido");
-  await writeJsonAtomic(manifestPath, { app: "NYMI_ROTEIRO_EXPORT_V1", scriptId, scriptTitle: String(scriptTitle || "Roteiro"), kind, editorTarget: roteiroExportTarget(target).id, updatedAt: new Date().toISOString() });
-}
-
-async function roteiroProjectHasScriptManifest(projectRoot, scriptId) {
-  const directManifest = await readOptionalJson(join(projectRoot, ROTEIRO_EXPORT_MANIFEST));
-  if (directManifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && directManifest.scriptId === scriptId) return true;
-  const nestedRoots = [
-    join(projectRoot, "assets", "tiktoks"),
-    join(projectRoot, "assets", "backgrounds"),
-    join(projectRoot, "assets", "characters"),
-  ];
-  for (const root of nestedRoots) {
-    const manifest = await readOptionalJson(join(root, ROTEIRO_EXPORT_MANIFEST));
-    if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && manifest.scriptId === scriptId) return true;
-  }
-  return false;
-}
-
-async function removeRoteiroExportFolders(script, allowLegacyTitle) {
-  const scriptId = safeId(script.id);
-  const exportRoot = roteiroExportTarget("v4").root;
-  const projectRoot = roteiroProjectRoot(script.title, "v4");
-  if (!inside(exportRoot, projectRoot) || resolve(exportRoot) === resolve(projectRoot)) return [];
-  let projectExists = true;
-  try { await stat(projectRoot); } catch (error) {
-    if (error?.code === "ENOENT") projectExists = false;
-    else throw error;
-  }
-  if (!projectExists) return [];
-  const hasManifest = await roteiroProjectHasScriptManifest(projectRoot, scriptId);
-  if (!hasManifest && !allowLegacyTitle) return [];
-  await rm(projectRoot, { recursive: true, force: true });
-  return [projectRoot];
-}
-
-async function listRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) {
-  const knownTitleFolders = new Set(knownScriptTitles.map((title) => safeExportFolderName(title, "Roteiro")));
-  const orphans = [];
-  const root = roteiroExportTarget("v4").root;
-  let entries;
-  try {
-    entries = await readdir(root, { withFileTypes: true });
-  } catch (error) {
-    if (error?.code === "ENOENT") return orphans;
-    throw error;
-  }
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue;
-    const folder = join(root, entry.name);
-    const manifest = await readOptionalJson(join(folder, ROTEIRO_EXPORT_MANIFEST));
-    if (manifest?.app === "NYMI_ROTEIRO_EXPORT_V1" && !knownScriptIds.has(manifest.scriptId)) {
-      orphans.push({ kind: "script", folder, scriptId: manifest.scriptId });
-    } else if (!manifest && !knownTitleFolders.has(entry.name)) {
-      orphans.push({ kind: "script", folder, scriptId: "", untracked: true });
-    }
-  }
-  return orphans;
-}
-
-async function removeRoteiroExportOrphans(knownScriptIds, knownScriptTitles = []) {
-  const orphans = await listRoteiroExportOrphans(knownScriptIds, knownScriptTitles);
-  for (const orphan of orphans) {
-    const root = roteiroExportTarget("v4").root;
-    if (!inside(root, orphan.folder) || resolve(root) === resolve(orphan.folder)) continue;
-    await rm(orphan.folder, { recursive: true, force: true });
-  }
-  return { orphans, removed: orphans.map((item) => item.folder) };
-}
-const ROTEIRO_VIDEO_EXTENSIONS = [".mp4", ".webm", ".mov", ".mkv", ".avi", ".m4v"];
-async function findRoteiroVideoFile(scriptId, tiktokId) {
-  const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
-  for (const extension of ROTEIRO_VIDEO_EXTENSIONS) {
-    const candidate = join(folder, `${tiktokId}${extension}`);
-    if (!inside(ROTEIROS_VIDEOS_ROOT, candidate)) throw new Error("Origem do vídeo inválida");
-    try { await stat(candidate); return candidate; } catch (error) { if (error?.code !== "ENOENT") throw error; }
-  }
-  throw Object.assign(new Error("Vídeo não encontrado"), { code: "ENOENT" });
-}
-async function findVideoReferenceFile(video, scriptId, tiktokId) {
-  const libraryId = video?.libraryVideoId;
-  if (libraryId) {
-    const libraryVideo = baseDadosService.getVideo(libraryId);
-    if (!libraryVideo) throw Object.assign(new Error("Vídeo compartilhado não encontrado na Base de dados."), { code: "ENOENT" });
-    const source = join(BASE_DADOS_ROOT, "videos", libraryVideo.fileName);
-    if (!inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo compartilhado inválida.");
-    await stat(source);
-    return source;
-  }
-  return findRoteiroVideoFile(scriptId, tiktokId);
-}
-
-async function exportRoteiroVideoAsset(source, destination) {
-  let probe;
-  try {
-    probe = await probeVideoFile(source);
-  } catch {
-    // Sem ffprobe, mantemos o comportamento anterior para não bloquear uma
-    // exportação em uma máquina que só tenha o vídeo e o explorador local.
-    await copyFile(source, destination);
-    return { mode: "copied", reason: "probe-unavailable" };
-  }
-  if (videoMatchesExportProfile(probe)) {
-    await copyFile(source, destination);
-    return { mode: "copied", reason: "already-compatible" };
-  }
-  const normalized = await normalizeVideoFile(source, destination, probe);
-  await rm(destination, { force: true });
-  await rename(normalized.outputPath, destination);
-  return { mode: "converted", encoder: normalized.encoder, audioRecovered: normalized.audioRecovered, audioCopied: normalized.audioCopied, relaxedVideoSettings: normalized.relaxedVideoSettings };
-}
-
-async function runWithConcurrency(items, limit, worker) {
-  const results = new Array(items.length);
-  let cursor = 0;
-  const consume = async () => {
-    while (true) {
-      const index = cursor;
-      cursor += 1;
-      if (index >= items.length) return;
-      results[index] = await worker(items[index], index);
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(limit, Math.max(1, items.length)) }, () => consume()));
-  return results;
-}
 const PRINTS_ROOT = resolve(process.env.GACHA_PRINTS_ROOT ?? "C:\\PRINTS GACHA NYMI");
 const MODELS_ROOT = resolve(process.cwd(), "public", "models", "modelos");
 const MODEL_EXPORT_STAGING_ROOT = resolve(MODELS_ROOT, "..", ".model-export-staging");
@@ -234,6 +82,25 @@ const STATE_PATH = join(ROOT, "state.json");
 const EMPTY_STATE = emptyAppState();
 const roteirosService = createRoteirosService(join(ROOT, "roteiros"));
 const baseDadosService = createBaseDadosService(BASE_DADOS_ROOT);
+const {
+  exportTarget: roteiroExportTarget,
+  projectRoot: roteiroProjectRoot,
+  videoExportRoot: roteiroVideoExportRoot,
+  characterExportRoot: roteiroCharacterExportRoot,
+  backgroundExportRoot: roteiroBackgroundExportRoot,
+  uiExportRoot: roteiroUiExportRoot,
+  writeExportManifest: writeRoteiroExportManifest,
+  removeExportFolders: removeRoteiroExportFolders,
+  listExportOrphans: listRoteiroExportOrphans,
+  removeExportOrphans: removeRoteiroExportOrphans,
+  findVideoReferenceFile,
+  exportVideoAsset: exportRoteiroVideoAsset,
+} = createRoteiroExportFilesystem({
+  targets: ROTEIRO_EXPORT_TARGETS,
+  roteirosVideosRoot: ROTEIROS_VIDEOS_ROOT,
+  baseDadosRoot: BASE_DADOS_ROOT,
+  baseDadosService,
+});
 const draftsService = createDraftsService(join(BASE_DADOS_ROOT, "rascunhos"), baseDadosService);
 const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
