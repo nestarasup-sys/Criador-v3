@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { spawn } from "node:child_process";
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { copyFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
@@ -18,6 +18,7 @@ import { createCharacterStore } from "./services/storage/character-store.mjs";
 import { createCharacterRoutes } from "./services/characters/routes.mjs";
 import { createStudioRoutes } from "./services/studio/routes.mjs";
 import { createFabricatorService } from "./services/fabricator/service.mjs";
+import { createVideoMakerService } from "./services/video-maker/service.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
@@ -220,6 +221,20 @@ const fabricatorService = createFabricatorService({
   legacyManifestPath: LEGACY_FABRICATOR_MANIFEST_PATH,
   host: HOST,
   port: PORT,
+  sendJson,
+  requestBody,
+  requestJson,
+  readMetadata,
+  serveFile,
+});
+
+const videoMakerService = createVideoMakerService({
+  host: HOST,
+  port: PORT,
+  charactersRoot: VIDEO_MAKER_CHARACTERS_ROOT,
+  tiktoksRoot: VIDEO_MAKER_TIKTOKS_ROOT,
+  projectsRoot: VIDEO_MAKER_PROJECTS_ROOT,
+  exportsRoot: VIDEO_MAKER_EXPORTS_ROOT,
   sendJson,
   requestBody,
   requestJson,
@@ -955,238 +970,7 @@ async function route(request, response) {
     return;
   }
 
-  const videoMakerManifestMatch = url.pathname.match(/^\/video-maker\/characters\/([a-zA-Z0-9_-]+)\/manifest$/);
-  if (videoMakerManifestMatch && request.method === "POST") {
-    const characterId = safeId(videoMakerManifestMatch[1]);
-    const manifest = await requestJson(request);
-    if (manifest?.format !== "gacha-premium.character-bundle") {
-      throw new Error("Manifesto de personagem do Video Maker inválido");
-    }
-    if (manifest?.assetMode !== "flattened-expression-frames") {
-      throw new Error("O Video Maker aceita somente pacotes achatados de expressões");
-    }
-    const characterFolder = join(VIDEO_MAKER_CHARACTERS_ROOT, characterId);
-    if (!inside(VIDEO_MAKER_CHARACTERS_ROOT, characterFolder)) throw new Error("Destino inválido");
-    await mkdir(characterFolder, { recursive: true });
-    await writeJsonAtomic(join(characterFolder, "manifest.json"), manifest);
-    sendJson(response, request, 200, { ok: true, characterId });
-    return;
-  }
-
-  const videoMakerFrameMatch = url.pathname.match(/^\/video-maker\/characters\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
-  if (videoMakerFrameMatch && request.method === "POST") {
-    const characterId = safeId(videoMakerFrameMatch[1]);
-    const frameKey = safeId(videoMakerFrameMatch[2]);
-    assertMimeType(contentTypeOf(request), new Set(["image/png"]), "A expressão enviada precisa ser PNG.");
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-    if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
-      throw new Error("A expressão enviada não é um PNG válido");
-    }
-    const characterFolder = join(VIDEO_MAKER_CHARACTERS_ROOT, characterId);
-    const filePath = join(characterFolder, `${frameKey}.png`);
-    if (!inside(VIDEO_MAKER_CHARACTERS_ROOT, filePath)) throw new Error("Destino inválido");
-    await mkdir(characterFolder, { recursive: true });
-    await writeFile(filePath, body);
-    sendJson(response, request, 200, { ok: true, characterId, frameKey });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/video-maker/characters") {
-    const entries = (await readdir(VIDEO_MAKER_CHARACTERS_ROOT, { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name));
-    const characters = [];
-    for (const entry of entries) {
-      const manifest = await readOptionalJson(join(VIDEO_MAKER_CHARACTERS_ROOT, entry.name, "manifest.json"));
-      if (!manifest) continue;
-      const frames = Object.fromEntries(Object.entries(manifest.frames ?? {}).map(([key]) => [
-        key,
-        `http://${HOST}:${PORT}/files/video-maker/characters/${entry.name}/${encodeURIComponent(key)}`,
-      ]));
-      characters.push({ ...manifest, characterId: entry.name, frameUrls: frames });
-    }
-    sendJson(response, request, 200, { characters });
-    return;
-  }
-
-  const videoMakerTiktokMatch = url.pathname.match(/^\/video-maker\/tiktoks\/([a-zA-Z0-9_-]+)$/);
-  if (videoMakerTiktokMatch && request.method === "POST") {
-    const tiktokId = safeId(videoMakerTiktokMatch[1]);
-    const metadata = readMetadata(request);
-    const body = await requestBody(request, BODY_LIMITS.video);
-    if (!body.length) throw new Error("TikTok vazio");
-    const contentType = contentTypeOf(request, metadata) || "video/mp4";
-    assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo do TikTok precisa ser MP4, WebM ou MOV.");
-    const hash = createHash("sha256").update(body).digest("hex");
-    const folder = join(VIDEO_MAKER_TIKTOKS_ROOT, tiktokId);
-    if (!inside(VIDEO_MAKER_TIKTOKS_ROOT, folder)) throw new Error("Destino inválido");
-    await mkdir(folder, { recursive: true });
-    await writeFile(join(folder, "video.mp4"), body);
-    await writeJsonAtomic(join(folder, "manifest.json"), {
-      tiktokId,
-      name: String(metadata.name || "TikTok"),
-      path: `video-maker/tiktoks/${tiktokId}/video.mp4`,
-      url: `http://${HOST}:${PORT}/files/video-maker/tiktoks/${tiktokId}`,
-      audio: metadata.audio !== false,
-      hash,
-      duration: Number(metadata.duration) > 0 ? Number(metadata.duration) : undefined,
-      contentType,
-      createdAt: metadata.createdAt || new Date().toISOString(),
-    });
-    sendJson(response, request, 200, { ok: true, tiktokId, hash });
-    return;
-  }
-
-  if (request.method === "GET" && url.pathname === "/video-maker/tiktoks") {
-    const entries = (await readdir(VIDEO_MAKER_TIKTOKS_ROOT, { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name));
-    const tiktoks = [];
-    for (const entry of entries) {
-      const manifest = await readOptionalJson(join(VIDEO_MAKER_TIKTOKS_ROOT, entry.name, "manifest.json"));
-      if (manifest) tiktoks.push(manifest);
-    }
-    tiktoks.sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || "")));
-    sendJson(response, request, 200, { tiktoks });
-    return;
-  }
-
-  const videoMakerProjectMatch = url.pathname.match(/^\/video-maker\/projects(?:\/([a-zA-Z0-9_-]+))?$/);
-  if (videoMakerProjectMatch && request.method === "POST") {
-    const projectId = safeId(videoMakerProjectMatch[1] || `project-${Date.now()}`);
-    const project = await requestJson(request);
-    if (project?.format !== "gacha-premium.video-project" || project?.version !== 1) {
-      throw new Error("Projeto do Video Maker inválido");
-    }
-    const folder = join(VIDEO_MAKER_PROJECTS_ROOT, projectId);
-    if (!inside(VIDEO_MAKER_PROJECTS_ROOT, folder)) throw new Error("Destino inválido");
-    await mkdir(folder, { recursive: true });
-    const currentPath = join(folder, "project.json");
-    try {
-      await stat(currentPath);
-      await copyFile(currentPath, join(folder, `project.backup-${printTimestamp()}.json`));
-      const history = (await readdir(folder)).filter((name) => name.startsWith("project.backup-") && name.endsWith(".json")).sort();
-      for (const oldName of history.slice(0, -12)) await rm(join(folder, oldName), { force: true });
-    } catch (error) { if (error?.code !== "ENOENT") throw error; }
-    await writeJsonAtomic(currentPath, project);
-    sendJson(response, request, 200, { ok: true, projectId, project });
-    return;
-  }
-
-  if (videoMakerProjectMatch && request.method === "GET") {
-    if (videoMakerProjectMatch[1]) {
-      const projectId = safeId(videoMakerProjectMatch[1]);
-      const project = await readOptionalJson(join(VIDEO_MAKER_PROJECTS_ROOT, projectId, "project.json"));
-      if (!project) throw Object.assign(new Error("Projeto não encontrado"), { code: "ENOENT" });
-      sendJson(response, request, 200, { projectId, project });
-      return;
-    }
-    const entries = (await readdir(VIDEO_MAKER_PROJECTS_ROOT, { withFileTypes: true }))
-      .filter((entry) => entry.isDirectory() && /^[a-zA-Z0-9_-]{1,120}$/.test(entry.name));
-    const projects = [];
-    for (const entry of entries) {
-      const project = await readOptionalJson(join(VIDEO_MAKER_PROJECTS_ROOT, entry.name, "project.json"));
-      if (project) projects.push({ projectId: entry.name, project });
-    }
-    projects.sort((left, right) => String(right.project?.source?.exportedAt || "").localeCompare(String(left.project?.source?.exportedAt || "")));
-    sendJson(response, request, 200, { projects });
-    return;
-  }
-
-  if (videoMakerProjectMatch && request.method === "DELETE") {
-    const projectId = safeId(videoMakerProjectMatch[1]);
-    const folder = join(VIDEO_MAKER_PROJECTS_ROOT, projectId);
-    if (inside(VIDEO_MAKER_PROJECTS_ROOT, folder)) await rm(folder, { recursive: true, force: true });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/video-maker/ai") {
-    const body = await requestJson(request);
-    const provider = body?.provider === "lmstudio" ? "lmstudio" : "ollama";
-    const baseUrl = String(body?.baseUrl || (provider === "ollama" ? "http://127.0.0.1:11434" : "http://127.0.0.1:1234/v1")).replace(/\/$/, "");
-    const model = String(body?.model || "gemma4:e4b").trim();
-    const instruction = String(body?.instruction || "Corrija o JSON mantendo o contrato e devolva apenas JSON válido.");
-    const currentProject = JSON.stringify(body?.project || {}, null, 2);
-    const prompt = `${instruction}\n\nProjeto atual:\n${currentProject}\n\nRetorne somente o projeto JSON completo, sem markdown.`;
-    let responseFromModel;
-    if (provider === "ollama") {
-      responseFromModel = await fetch(`${baseUrl}/api/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, stream: false, format: "json", messages: [{ role: "user", content: prompt }] }) });
-    } else {
-      responseFromModel = await fetch(`${baseUrl}/chat/completions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, temperature: 0.2, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] }) });
-    }
-    const result = await responseFromModel.json().catch(() => ({}));
-    if (!responseFromModel.ok) throw new Error(result?.error?.message || `A IA local respondeu ${responseFromModel.status}`);
-    const content = provider === "ollama" ? result?.message?.content : result?.choices?.[0]?.message?.content;
-    if (!content) throw new Error("A IA não retornou uma proposta");
-    const cleaned = String(content).replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-    const proposal = JSON.parse(cleaned);
-    if (proposal?.format !== "gacha-premium.video-project") throw new Error("A IA devolveu um JSON que não é um projeto do Video Maker");
-    sendJson(response, request, 200, { ok: true, proposal, model });
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/video-maker/exports") {
-    const metadata = readMetadata(request);
-    assertMimeType(contentTypeOf(request, metadata), new Set(["video/webm", "video/mp4", "application/octet-stream"]), "A exportação precisa ser um vídeo WebM ou MP4.");
-    const body = await requestBody(request, BODY_LIMITS.export);
-    if (!body.length) throw new Error("Exportação vazia");
-    const projectName = safePrintName(metadata.projectName || "video-maker");
-    const stamp = printTimestamp();
-    const inputPath = join(VIDEO_MAKER_EXPORTS_ROOT, `${projectName}_${stamp}.webm`);
-    const outputPath = join(VIDEO_MAKER_EXPORTS_ROOT, `${projectName}_${stamp}.mp4`);
-    const audioPath = join(VIDEO_MAKER_EXPORTS_ROOT, `${projectName}_${stamp}.wav`);
-    await writeFile(inputPath, body);
-    let hasAudio = false;
-    const timeline = Array.isArray(metadata.timeline) ? metadata.timeline : [];
-    const tiktokIds = new Set(Array.isArray(metadata.tiktoks) ? metadata.tiktoks.map((item) => String(item?.tiktokId || "")) : []);
-    const audioInputs = [];
-    const audioFilters = [];
-    for (const [index, event] of timeline.entries()) {
-      const duration = Math.max(0.05, Number(event?.duration) || 0);
-      const tiktokId = String(event?.tiktokId || "");
-      const source = tiktokId && tiktokIds.has(tiktokId) ? join(VIDEO_MAKER_TIKTOKS_ROOT, safeId(tiktokId), "video.mp4") : null;
-      if (event?.type === "video" && source) {
-        let exists = true;
-        try { await stat(source); } catch { exists = false; }
-        if (exists) {
-          audioInputs.push(source);
-          const inputIndex = audioInputs.length - 1;
-          audioFilters.push(`[${inputIndex}:a]atrim=0:${duration.toFixed(3)},asetpts=PTS-STARTPTS[a${index}]`);
-          hasAudio = true;
-        } else {
-          audioFilters.push(`anullsrc=r=48000:cl=stereo:d=${duration.toFixed(3)}[a${index}]`);
-        }
-      } else {
-        audioFilters.push(`anullsrc=r=48000:cl=stereo:d=${duration.toFixed(3)}[a${index}]`);
-      }
-    }
-    if (hasAudio && audioFilters.length) {
-      const concatInputs = timeline.map((_, index) => `[a${index}]`).join("");
-      const audioArgs = ["-y"];
-      for (const source of audioInputs) audioArgs.push("-i", source);
-      audioArgs.push("-filter_complex", `${audioFilters.join(";")};${concatInputs}concat=n=${timeline.length}:v=0:a=1[outa]`, "-map", "[outa]", "-c:a", "pcm_s16le", audioPath);
-      await new Promise((resolvePromise, reject) => {
-        const ffmpeg = spawn("ffmpeg", audioArgs, { windowsHide: true });
-        let stderr = ""; ffmpeg.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
-        ffmpeg.on("error", reject); ffmpeg.on("close", (code) => code === 0 ? resolvePromise() : reject(new Error(stderr.slice(-800) || "FFmpeg não criou o áudio")));
-      });
-    }
-    await new Promise((resolvePromise, reject) => {
-      const args = ["-y", "-i", inputPath];
-      if (hasAudio) args.push("-i", audioPath);
-      args.push("-map", "0:v:0"); if (hasAudio) args.push("-map", "1:a:0");
-      args.push("-c:v", "libx264", "-pix_fmt", "yuv420p", ...(hasAudio ? ["-c:a", "aac", "-shortest"] : []), "-movflags", "+faststart", outputPath);
-      const ffmpeg = spawn("ffmpeg", args, { windowsHide: true });
-      let stderr = "";
-      ffmpeg.stderr.on("data", (chunk) => { stderr += chunk.toString(); });
-      ffmpeg.on("error", reject);
-      ffmpeg.on("close", (code) => code === 0 ? resolvePromise() : reject(new Error(stderr.slice(-800) || "FFmpeg falhou")));
-    });
-    await rm(inputPath, { force: true });
-    if (hasAudio) await rm(audioPath, { force: true });
-    sendJson(response, request, 200, { ok: true, filePath: outputPath, fileName: `${projectName}_${stamp}.mp4` });
-    return;
-  }
+  if (await videoMakerService.handle(request, response, url)) return;
 
 
 
@@ -1304,20 +1088,7 @@ async function route(request, response) {
     await serveFile(response, request, filePath);
     return;
   }
-  const videoMakerFileMatch = url.pathname.match(/^\/files\/video-maker\/characters\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
-  if (videoMakerFileMatch && request.method === "GET") {
-    const characterId = safeId(videoMakerFileMatch[1]);
-    const frameKey = safeId(videoMakerFileMatch[2]);
-    await serveFile(response, request, join(VIDEO_MAKER_CHARACTERS_ROOT, characterId, `${frameKey}.png`));
-    return;
-  }
-  const videoMakerTiktokFileMatch = url.pathname.match(/^\/files\/video-maker\/tiktoks\/([a-zA-Z0-9_-]+)$/);
-  if (videoMakerTiktokFileMatch && request.method === "GET") {
-    const tiktokId = safeId(videoMakerTiktokFileMatch[1]);
-    const filePath = join(VIDEO_MAKER_TIKTOKS_ROOT, tiktokId, "video.mp4");
-    await serveFile(response, request, filePath);
-    return;
-  }
+
 
   sendJson(response, request, 404, { error: "Rota não encontrada" });
 }
@@ -1340,6 +1111,7 @@ async function loadLocalEnvironment() {
 await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
 await fabricatorService.initialize();
+await videoMakerService.initialize();
 await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({
