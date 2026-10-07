@@ -16,6 +16,7 @@ import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { createCharacterStore } from "./services/storage/character-store.mjs";
 import { createCharacterRoutes } from "./services/characters/routes.mjs";
+import { createStudioRoutes } from "./services/studio/routes.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
@@ -260,6 +261,22 @@ const characterRoutes = createCharacterRoutes({
   getCharacters: () => characters,
   setCharacters: (nextCharacters) => { characters = nextCharacters; },
   clearLegacyCharacters: () => { state.characters = []; },
+});
+
+const studioRoutes = createStudioRoutes({
+  host: HOST,
+  port: PORT,
+  assetsRoot: STUDIO_ASSETS_ROOT,
+  printsRoot: PRINTS_ROOT,
+  sendJson,
+  requestBody,
+  requestJson,
+  readMetadata,
+  corsHeaders,
+  mutateState: queueStateMutation,
+  persistState: queueStateWrite,
+  getState: () => state,
+  openFolder: openWindowsFolder,
 });
 
 async function loadState() {
@@ -825,51 +842,7 @@ async function route(request, response) {
   }
   if (await modelRoutes.handle(request, response, url)) return;
   if (await characterRoutes.handle(request, response, url)) return;
-  if (request.method === "POST" && url.pathname === "/studios") {
-    const studios = await requestJson(request);
-    if (!Array.isArray(studios)) throw new Error("Lista de Studios inválida");
-    await queueStateMutation(async () => {
-      state.studios = studios;
-      const referencedAssets = new Set();
-      for (const studio of studios) {
-        if (studio?.background?.assetId) referencedAssets.add(studio.background.assetId);
-        for (const object of Array.isArray(studio?.objects) ? studio.objects : []) {
-          if (object?.assetId) referencedAssets.add(object.assetId);
-        }
-      }
-      const orphanedAssets = state.studioAssets.filter((asset) => !referencedAssets.has(asset.id));
-      state.studioAssets = state.studioAssets.filter((asset) => referencedAssets.has(asset.id));
-      await queueStateWrite();
-      for (const asset of orphanedAssets) {
-        const filePath = join(STUDIO_ASSETS_ROOT, safeId(asset.id));
-        if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
-      }
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-  if (request.method === "POST" && url.pathname === "/prints") {
-    const metadata = readMetadata(request);
-    assertMimeType(contentTypeOf(request, metadata), new Set(["image/png"]), "O print precisa ser PNG.");
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-    if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
-      throw new Error("O print recebido não é um PNG válido");
-    }
-    const fileName = `${safePrintName(metadata.studioName)}_${printTimestamp()}.png`;
-    const filePath = join(PRINTS_ROOT, fileName);
-    if (!inside(PRINTS_ROOT, filePath)) throw new Error("Destino do print inválido");
-    await mkdir(PRINTS_ROOT, { recursive: true });
-    await writeFile(filePath, body);
-    sendJson(response, request, 200, { ok: true, fileName, filePath, bytes: body.length });
-    return;
-  }
-  if (request.method === "POST" && url.pathname === "/prints/open") {
-    await mkdir(PRINTS_ROOT, { recursive: true });
-    await openWindowsFolder(PRINTS_ROOT);
-    sendJson(response, request, 200, { ok: true, folder: PRINTS_ROOT });
-    return;
-  }
+  if (await studioRoutes.handle(request, response, url)) return;
 
 
   if (request.method === "POST" && url.pathname === "/roteiros/open-folder") {
@@ -1424,37 +1397,7 @@ async function route(request, response) {
     return;
   }
 
-  const studioAssetMatch = url.pathname.match(/^\/studio-assets\/([a-zA-Z0-9_-]+)$/);
-  if (studioAssetMatch && request.method === "POST") {
-    const id = safeId(studioAssetMatch[1]);
-    const metadata = readMetadata(request);
-    const contentType = contentTypeOf(request, metadata);
-    assertMimeType(contentType, IMAGE_MIME_TYPES, "O asset do Studio precisa ser PNG, JPEG ou WebP.");
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const filePath = join(STUDIO_ASSETS_ROOT, id);
-    if (!inside(STUDIO_ASSETS_ROOT, filePath)) throw new Error("Destino inválido");
-    await queueStateMutation(async () => {
-      await writeFile(filePath, body);
-      state.studioAssets = [
-        ...state.studioAssets.filter((asset) => asset.id !== id),
-        { id, name: metadata.name ?? "Imagem", contentType: metadata.contentType ?? "application/octet-stream", ...(metadata.kind === "background" || metadata.kind === "object" ? { kind: metadata.kind } : {}) },
-      ];
-      await queueStateWrite();
-    });
-    sendJson(response, request, 200, { ok: true, fileUrl: `http://${HOST}:${PORT}/files/studio/${id}` });
-    return;
-  }
-  if (studioAssetMatch && request.method === "DELETE") {
-    const id = safeId(studioAssetMatch[1]);
-    const filePath = join(STUDIO_ASSETS_ROOT, id);
-    await queueStateMutation(async () => {
-      state.studioAssets = state.studioAssets.filter((asset) => asset.id !== id);
-      await queueStateWrite();
-      if (inside(STUDIO_ASSETS_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
+
 
   const catalogMatch = url.pathname.match(/^\/catalog\/([a-zA-Z0-9_-]+)$/);
   if (catalogMatch && request.method === "POST") {
@@ -1568,22 +1511,7 @@ async function route(request, response) {
     await serveFile(response, request, join(PACKS_ROOT, packId, `${key}.png`));
     return;
   }
-  const studioFileMatch = url.pathname.match(/^\/files\/studio\/([a-zA-Z0-9_-]+)$/);
-  if (studioFileMatch && request.method === "GET") {
-    const id = safeId(studioFileMatch[1]);
-    const asset = state.studioAssets.find((entry) => entry.id === id);
-    if (!asset) throw Object.assign(new Error("Imagem do Studio não encontrada"), { code: "ENOENT" });
-    const filePath = join(STUDIO_ASSETS_ROOT, id);
-    const bytes = await readFile(filePath);
-    response.writeHead(200, {
-      ...corsHeaders(request),
-      "Content-Type": asset.contentType,
-      "Content-Length": bytes.length,
-      "Cache-Control": "no-store",
-    });
-    response.end(bytes);
-    return;
-  }
+
   const characterPhotoFileMatch = url.pathname.match(/^\/files\/characters\/([a-zA-Z0-9_-]+)\/photo\.png$/);
   if (characterPhotoFileMatch && request.method === "GET") {
     const characterId = safeId(characterPhotoFileMatch[1]);
