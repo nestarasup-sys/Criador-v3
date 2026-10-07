@@ -8,7 +8,7 @@ import { loadPcModels } from "../../creator/creator-storage";
 import type { BasePackCollection } from "../../creator/base-packs";
 import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
 import { DEFAULT_TEMPLATE_SKIN_COLOR, TEMPLATE_SKIN_PALETTE, normalizeTemplateSkinColor, recolorTemplateSkinPixels } from "./core/skin-color.mjs";
 import { assetToFile, drawComposition, imageFromPair, imageFromPiece, type LoadedPair } from "./core/compositor";
 import {
