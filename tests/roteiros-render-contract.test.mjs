@@ -30,8 +30,8 @@ test("preserva a preferência de contexto para todo o roteiro, inclusive novos T
 });
 
 test("exporta o fundo diretamente em assets/backgrounds", async () => {
-  const [server, exportFs] = await Promise.all([
-    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+  const [exportRoutes, exportFs] = await Promise.all([
+    readFile(new URL("../services/roteiros/export-routes.mjs", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/export-filesystem.mjs", import.meta.url), "utf8"),
   ]);
   assert.match(
@@ -39,8 +39,8 @@ test("exporta o fundo diretamente em assets/backgrounds", async () => {
     /function backgroundExportRoot\(scriptTitle, target = "v4"\)\s*\{\s*return join\(projectRoot\(scriptTitle, target\), "assets", "backgrounds"\);/s,
   );
 
-  const route = server.match(/if \(request\.method === "POST" && url\.pathname === "\/roteiros\/export-background"\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
-  assert.match(route, /const exportRoot = roteiroBackgroundExportRoot\(body\?\.scriptTitle, exportTarget\.id\);/);
+  const route = exportRoutes.match(/if \(request\.method === "POST" && url\.pathname === "\/roteiros\/export-background"\) \{([\s\S]*?)\n    \}/)?.[1] ?? "";
+  assert.match(route, /const exportRoot = backgroundExportRoot\(body\?\.scriptTitle, selectedTarget\.id\);/);
   assert.match(route, /const folder = exportRoot;/);
   assert.match(route, /const destination = join\(folder, `01\$\{extension\}`\);/);
   assert.doesNotMatch(route, /join\(folder, body\?\.scriptTitle/);
@@ -160,7 +160,7 @@ test("keeps every script control interactive inside the colored editor hierarchy
 });
 
 test("mantém o slice de Roteiros componentizado, cancelável e compatível com exportação", async () => {
-  const [editor, card, blocks, commands, contract, storage, service, aiGateway, aiOperations, exportFs, server, schemas, css, normalizer] = await Promise.all([
+  const [editor, card, blocks, commands, contract, storage, service, aiGateway, aiOperations, exportFs, exportRoutes, mediaRoutes, server, schemas, css, normalizer] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
@@ -171,6 +171,8 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
     readFile(new URL("../services/roteiros/ai-gateway.mjs", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/ai-operations.mjs", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/export-filesystem.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/export-routes.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/media-routes.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/document-schemas.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
@@ -211,25 +213,25 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(aiGateway, /AI_TIMEOUT_MS = 90_000/);
   assert.match(aiOperations, /FONTE ÚNICA/);
   assert.match(aiOperations, /validateMeaningfulContextRewrite/);
-  assert.match(server, /export-videos/);
+  assert.match(exportRoutes, /export-videos/);
   assert.match(exportFs, /probeVideoFile/);
   assert.match(exportFs, /videoMatchesExportProfile/);
-  assert.match(server, /runWithConcurrency\(tiktoks, 2/);
-  assert.match(server, /Duração total do vídeo/);
-  assert.match(server, /Primeira reação em grupo pode começar no segundo/);
-  assert.match(server, /export-text/);
-  assert.match(server, /export-characters/);
-  assert.match(server, /nymi-character-staging/);
-  assert.match(server, /nymi-character-previous/);
-  assert.match(server, /runWithConcurrency\(exportEntries, 2/);
-  assert.match(server, /timings\.zipParseMs = performance\.now\(\) - phaseStartedAt/);
-  assert.match(server, /timings\.extractWriteMs = performance\.now\(\) - phaseStartedAt/);
-  assert.match(server, /roundedTimings/);
-  assert.match(server, /target === "videos"/);
+  assert.match(exportRoutes, /runWithConcurrency\(tiktoks, 2/);
+  assert.match(exportRoutes, /Duração total do vídeo/);
+  assert.match(exportRoutes, /Primeira reação em grupo pode começar no segundo/);
+  assert.match(exportRoutes, /export-text/);
+  assert.match(exportRoutes, /export-characters/);
+  assert.match(exportRoutes, /nymi-character-staging/);
+  assert.match(exportRoutes, /nymi-character-previous/);
+  assert.match(exportRoutes, /runWithConcurrency\(exportEntries, 2/);
+  assert.match(exportRoutes, /timings\.zipParseMs = performance\.now\(\) - phaseStartedAt/);
+  assert.match(exportRoutes, /timings\.extractWriteMs = performance\.now\(\) - phaseStartedAt/);
+  assert.match(exportRoutes, /roundedTimings/);
+  assert.match(mediaRoutes, /target === "videos"/);
   assert.match(exportFs, /function insideOrSame\(parent, target\)/);
-  assert.match(server, /insideOrSame\(exportRoot, folder\)/);
-  assert.match(server, /insideOrSame\(allowedRoot, folder\)/);
-  assert.match(server, /roteiroVideoExportRoot\(body\?\.scriptTitle, exportTarget\.id\)/);
+  assert.match(exportRoutes, /insideOrSame\(exportRoot, folder\)/);
+  assert.match(mediaRoutes, /insideOrSame\(allowedRoot, folder\)/);
+  assert.match(exportRoutes, /videoExportRoot\(body\?\.scriptTitle, selectedTarget\.id\)/);
   assert.match(exportFs, /projectHasScriptManifest/);
   assert.match(exportFs, /await rm\(folder, \{ recursive: true, force: true \}\)/);
   assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
