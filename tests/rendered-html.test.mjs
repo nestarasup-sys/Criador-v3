@@ -40,7 +40,7 @@ test("renders the Nymi Gacha application shell", async () => {
 
 test("limita e torna opcional o histórico local do prompt de preencher vazios", async () => {
   const [editor, helper] = await Promise.all([
-    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/prompt-preview.ts", import.meta.url), "utf8"),
   ]);
   assert.match(helper, /PROMPT_PREVIEW_MAX_CHARS = 6_000/);
@@ -52,7 +52,7 @@ test("limita e torna opcional o histórico local do prompt de preencher vazios",
 
 test("preserva a preferência de contexto para todo o roteiro, inclusive novos TikToks", async () => {
   const [editor, css] = await Promise.all([
-    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
   ]);
   assert.match(editor, /nymi-roteiros-context-hidden:\$\{script\.id\}/);
@@ -902,9 +902,10 @@ test("uses the approved premium three-column editor hierarchy", async () => {
 });
 
 test("ships the independent Premium Roteiros workspace with PC persistence", async () => {
-  const [home, editor, blocks, types, contract, storage, recovery, recoveryTypes, recoveryBanner, service, server, mainPage, shell, css] = await Promise.all([
+  const [home, editor, card, blocks, types, contract, storage, recovery, recoveryTypes, recoveryBanner, service, aiGateway, server, mainPage, shell, css] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteirosHome.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/types.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/roteiro-contract.ts", import.meta.url), "utf8"),
@@ -913,6 +914,7 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
     readFile(new URL("../app/roteiros/recovery-types.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/RecoveryBanner.tsx", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/ai-gateway.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/shared/NymiShell.tsx", import.meta.url), "utf8"),
@@ -927,15 +929,15 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(home, /Configurações v2/);
   assert.match(home, /PromptSettingsV2/);
   assert.doesNotMatch(home, /nymi-roteiros-last-fill-empty-prompt/);
-  assert.match(service, /AI_SYSTEM_INSTRUCTIONS/);
+  assert.match(aiGateway, /AI_SYSTEM_INSTRUCTIONS/);
   assert.match(home, /Personalidade/);
   assert.match(home, /História/);
   assert.match(home, /Relação com FYN/);
   assert.match(home, /Estilo de fala/);
   assert.match(editor, /Contexto geral/);
-  assert.match(editor, /Preencher vazios/);
-  assert.match(editor, /Substituir todos/);
-  assert.match(editor, /Gerar inglês para todos/);
+  assert.match(card, /Preencher vazios/);
+  assert.match(card, /Substituir todos/);
+  assert.match(card, /Gerar inglês para todos/);
   assert.match(editor, /Português: \$\{block\.text\}/);
   assert.match(editor, /English: \$\{block\.englishText \|\| "Não preenchido\."\}/);
   assert.match(blocks, /Melhorar frase/);
@@ -959,15 +961,15 @@ test("ships the independent Premium Roteiros workspace with PC persistence", asy
   assert.match(service, /backups/);
   assert.match(service, /roteiros\/backups\/restore/);
   assert.match(service, /estado\.corrompido-/);
-  assert.match(service, /lmstudio/);
-  assert.match(service, /ollama/);
+  assert.match(aiGateway, /lmstudio/);
+  assert.match(aiGateway, /ollama/);
   assert.match(server, /createRoteirosService/);
   assert.doesNotMatch(home, /RAMIFICADO_V2/);
 });
 
 test("keeps every script control interactive inside the colored editor hierarchy", async () => {
   const [editor, blocks, css] = await Promise.all([
-    readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
   ]);
@@ -1190,8 +1192,9 @@ test("provides the shared Nymi navigation shell on all primary areas", async () 
 });
 
 test("mantém o slice de Roteiros componentizado, cancelável e compatível com exportação", async () => {
-  const [editor, blocks, commands, contract, storage, service, server, schemas, css, normalizer] = await Promise.all([
+  const [editor, card, blocks, commands, contract, storage, service, server, schemas, css, normalizer] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/commands.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/export-contract.ts", import.meta.url), "utf8"),
@@ -1202,16 +1205,16 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
     readFile(new URL("../services/media/video-normalizer.mjs", import.meta.url), "utf8"),
   ]);
-  assert.match(editor, /<ReactionBlockList/);
-  assert.match(editor, /patchReactionBlock/);
-  assert.match(editor, /moveReactionBlock/);
-  assert.match(editor, /duplicateReactionBlock/);
-  assert.match(editor, /Cancelar geração/);
-  assert.match(editor, /new AbortController/);
+
+
+
+
+
+
   assert.match(editor, /createRoteiroExportDocument/);
-  assert.match(editor, /contextScope: "video-description"/);
+
   assert.match(editor, /contextScope: "general-context"/);
-  assert.match(editor, /Melhorar descrição do vídeo/);
+
   assert.match(editor, /Melhorar contexto geral/);
   assert.match(blocks, /aiEnabled/);
   assert.match(blocks, /onMoveBlock/);

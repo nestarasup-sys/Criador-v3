@@ -162,7 +162,7 @@ test("o editor possui os controles separados da base externa", async () => {
 });
 
 test("o envio para a Base usa somente o TikTok aberto e todos os metadados dele", async () => {
-  const source = await readFile(resolve("app/roteiros/components/RoteiroEditor.tsx"), "utf8");
+  const source = await readFile(resolve("app/roteiros/components/TikTokCard.tsx"), "utf8");
   const handler = source.match(/const sendToDatabase = async \(\) => \{[\s\S]*?\n  \};/u)?.[0] ?? "";
   assert.match(handler, /copyRoteiroTikTokToBase\(script\.id, section\.id/);
   assert.match(handler, /description: section\.description/);
@@ -175,7 +175,7 @@ test("o envio para a Base usa somente o TikTok aberto e todos os metadados dele"
 });
 
 test("adiciona vídeo oficial da Base substituindo somente o mídia e metadados do TikTok selecionado", async () => {
-  const source = await readFile(resolve("app/roteiros/components/RoteiroEditor.tsx"), "utf8");
+  const source = await readFile(resolve("app/roteiros/components/TikTokCard.tsx"), "utf8");
   assert.match(source, /Adicionar da Base/);
   assert.match(source, /basePickerGrid/);
   assert.match(source, /baseDadosVideoUrl\(video\)/);
