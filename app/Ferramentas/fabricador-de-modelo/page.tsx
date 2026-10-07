@@ -64,6 +64,7 @@ import {
   type LibraryFilter,
   type WorkspaceSection,
 } from "./editor-state";
+import { buildPresetProfilesDocument } from "./profile-state";
 import styles from "./fabricador.module.css";
 
 async function encodeExpressionReference(file: File) {
@@ -1521,35 +1522,14 @@ export default function FabricadorDeModeloPage() {
     }));
   };
 
-  const presetsWithCurrentEffectPlacements = (source: FacePreset[]) => source.map((preset) => ({
-    ...preset,
-    effectPlacements: cloneEditorValue(effectPlacements),
-  }));
-
-  const profileDocumentFromState = (sourceProfiles: PresetProfile[], sourcePresets: FacePreset[], sourceProfileId = activeProfileIdRef.current): PresetProfilesDocument => {
-    const currentCollection = presetCollectionFromState(presetsWithCurrentEffectPlacements(sourcePresets));
-    const profiles = sourceProfiles.length > 0 ? sourceProfiles : [{
-      id: DEFAULT_PRESET_PROFILE_ID,
-      name: "Padrão",
-      description: "Conjunto base finalizado do Fabricador.",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      skinColor: DEFAULT_TEMPLATE_SKIN_COLOR,
-      presets: currentCollection,
-    } satisfies PresetProfile];
-    const activeExists = profiles.some((profile) => profile.id === sourceProfileId);
-    const activeId = activeExists ? sourceProfileId : profiles[0].id;
-    return {
-      version: 1,
-      activeProfileId: activeId,
-      profiles: profiles.map((profile) => profile.id === activeId ? {
-        ...profile,
-        skinColor: normalizeTemplateSkinColor(profile.id === activeId ? templateSkinColor : profile.skinColor),
-        presets: currentCollection,
-        updatedAt: new Date().toISOString(),
-      } : profile),
-    };
-  };
+  const profileDocumentFromState = (sourceProfiles: PresetProfile[], sourcePresets: FacePreset[], sourceProfileId = activeProfileIdRef.current): PresetProfilesDocument =>
+    buildPresetProfilesDocument({
+      sourceProfiles,
+      sourcePresets,
+      sourceProfileId,
+      effectPlacements,
+      templateSkinColor,
+    });
 
   const saveActivePresetProfile = async (sourcePresets = presets) => {
     const document = profileDocumentFromState(presetProfiles, sourcePresets);
