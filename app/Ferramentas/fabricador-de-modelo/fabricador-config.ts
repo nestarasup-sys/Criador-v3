@@ -1,4 +1,4 @@
-import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions";
+import { BROW_VARIATIONS, EYE_EXPRESSIONS, EXPRESSION_VARIATIONS } from "./constants/expressions.ts";
 import type { EyeExpressionVariation, EyePairPlacement, EyePlacement, EyeTransform, FaceEffectKind, FaceEffectSettings, FacePreset, FacePresetCollection, MouthHaloSettings } from "./types/eye-model";
 
 export const CANVAS_SIZE = 1000;
