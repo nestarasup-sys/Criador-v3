@@ -47,11 +47,11 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
-        run: npm run test:unit
-
       - name: Build
         run: npm run build
+
+      - name: Unit and contract tests
+        run: npm run test:unit
 
       - name: Production dependency audit
         continue-on-error: true
