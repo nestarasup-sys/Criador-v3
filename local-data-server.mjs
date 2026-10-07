@@ -17,11 +17,11 @@ import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { createCharacterStore } from "./services/storage/character-store.mjs";
 import { createCharacterRoutes } from "./services/characters/routes.mjs";
 import { createStudioRoutes } from "./services/studio/routes.mjs";
+import { createFabricatorService } from "./services/fabricator/service.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
 import { createModelRoutes } from "./services/models/routes.mjs";
-import { normalizeFabricatorChroma, normalizeFabricatorGrid, normalizeFabricatorPlacement, normalizeFabricatorPresetProfiles, normalizeFabricatorPresets } from "./services/fabricator/normalization.mjs";
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { printTimestamp, safeExportFolderName, safePrintName } from "./services/storage/naming.mjs";
 import { emptyAppState, normalizeAppState, normalizeCharacterDocument } from "./app/domain/document-schemas.mjs";
@@ -136,10 +136,6 @@ let state = structuredClone(EMPTY_STATE);
 let characters = [];
 let writeQueue = Promise.resolve();
 let stateMutationQueue = Promise.resolve();
-let fabricatorMutationQueue = Promise.resolve();
-let fabricatorAssets = [];
-let fabricatorPresets = {};
-let fabricatorPresetProfiles = { version: 1, activeProfileId: "padrao", profiles: [] };
 let lastBackupAt = 0;
 
 async function loadNormalizedCharacters() {
@@ -152,69 +148,6 @@ function queueStateMutation(task) {
   return operation;
 }
 
-function queueFabricatorMutation(task) {
-  const operation = fabricatorMutationQueue.catch(() => undefined).then(task);
-  fabricatorMutationQueue = operation.then(() => undefined, () => undefined);
-  return operation;
-}
-
-async function ensureFolders() {
-  await Promise.all([
-    mkdir(CATALOG_ROOT, { recursive: true }),
-    mkdir(PACKS_ROOT, { recursive: true }),
-    mkdir(STUDIO_ASSETS_ROOT, { recursive: true }),
-    mkdir(FABRICATOR_ROOT, { recursive: true }),
-    mkdir(BACKUPS_ROOT, { recursive: true }),
-    mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
-    mkdir(BASE_DADOS_ROOT, { recursive: true }),
-    mkdir(join(BASE_DADOS_ROOT, "rascunhos", "videos"), { recursive: true }),
-    mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
-    mkdir(PRINTS_ROOT, { recursive: true }),
-    mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
-    mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
-    mkdir(MODEL_EXPORT_STAGING_ROOT, { recursive: true }),
-  ]);
-}
-
-async function loadFabricatorAssets() {
-  const currentManifest = await readOptionalJson(FABRICATOR_MANIFEST_PATH);
-  const parsed = currentManifest ?? await readOptionalJson(LEGACY_FABRICATOR_MANIFEST_PATH);
-  const knownAssets = Array.isArray(parsed) ? parsed.filter((asset) => asset && typeof asset.id === "string" && typeof asset.fileName === "string") : [];
-  const knownFiles = new Set(knownAssets.map((asset) => asset.fileName));
-  const recoveredAssets = [];
-  for (const entry of await readdir(FABRICATOR_ROOT, { withFileTypes: true })) {
-    if (!entry.isFile() || !/\.(png|jpe?g|webp)$/i.test(entry.name) || knownFiles.has(entry.name)) continue;
-    const id = entry.name.replace(/\.[^.]+$/, "");
-    const info = await stat(join(FABRICATOR_ROOT, entry.name));
-    recoveredAssets.push({ id, name: `Arquivo recuperado ${id.slice(0, 8)}`, kind: "eyes", contentType: entry.name.endsWith(".webp") ? "image/webp" : entry.name.endsWith(".jpg") || entry.name.endsWith(".jpeg") ? "image/jpeg" : "image/png", fileName: entry.name, createdAt: new Date(info.mtimeMs).toISOString() });
-  }
-  fabricatorAssets = [...knownAssets, ...recoveredAssets];
-  if (recoveredAssets.length || currentManifest === null) await writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets);
-}
-
-function queueFabricatorWrite() {
-  return writeJsonAtomic(FABRICATOR_MANIFEST_PATH, fabricatorAssets);
-}
-
-async function loadFabricatorPresets() {
-  const parsed = await readOptionalJson(FABRICATOR_PRESETS_PATH);
-  fabricatorPresets = normalizeFabricatorPresets(parsed);
-  if (parsed === null) await writeJsonAtomic(FABRICATOR_PRESETS_PATH, fabricatorPresets);
-}
-
-function queueFabricatorPresetsWrite() {
-  return writeJsonAtomic(FABRICATOR_PRESETS_PATH, fabricatorPresets);
-}
-
-async function loadFabricatorPresetProfiles() {
-  const parsed = await readOptionalJson(FABRICATOR_PRESET_PROFILES_PATH);
-  fabricatorPresetProfiles = normalizeFabricatorPresetProfiles(parsed, fabricatorPresets);
-  if (parsed === null) await writeJsonAtomic(FABRICATOR_PRESET_PROFILES_PATH, fabricatorPresetProfiles);
-}
-
-function queueFabricatorPresetProfilesWrite() {
-  return writeJsonAtomic(FABRICATOR_PRESET_PROFILES_PATH, fabricatorPresetProfiles);
-}
 
 function openWindowsFolder(folder) {
   return new Promise((resolvePromise, reject) => {
@@ -277,6 +210,21 @@ const studioRoutes = createStudioRoutes({
   persistState: queueStateWrite,
   getState: () => state,
   openFolder: openWindowsFolder,
+});
+
+const fabricatorService = createFabricatorService({
+  root: FABRICATOR_ROOT,
+  manifestPath: FABRICATOR_MANIFEST_PATH,
+  presetsPath: FABRICATOR_PRESETS_PATH,
+  presetProfilesPath: FABRICATOR_PRESET_PROFILES_PATH,
+  legacyManifestPath: LEGACY_FABRICATOR_MANIFEST_PATH,
+  host: HOST,
+  port: PORT,
+  sendJson,
+  requestBody,
+  requestJson,
+  readMetadata,
+  serveFile,
 });
 
 async function loadState() {
@@ -659,164 +607,7 @@ async function route(request, response) {
     sendJson(response, request, 200, await discoverModels());
     return;
   }
-  if (request.method === "GET" && url.pathname === "/fabricador-modelos") {
-    sendJson(response, request, 200, fabricatorAssets.map((asset) => ({
-      ...asset,
-      fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${asset.id}`,
-    })).sort((left, right) => String(right.createdAt || "").localeCompare(String(left.createdAt || ""))));
-    return;
-  }
-  if (request.method === "GET" && url.pathname === "/fabricador-modelos/presets") {
-    sendJson(response, request, 200, fabricatorPresets);
-    return;
-  }
-  if (request.method === "GET" && url.pathname === "/fabricador-modelos/preset-profiles") {
-    sendJson(response, request, 200, fabricatorPresetProfiles);
-    return;
-  }
-  if (request.method === "PUT" && url.pathname === "/fabricador-modelos/preset-profiles") {
-    const body = await requestJson(request);
-    const normalized = normalizeFabricatorPresetProfiles(body, fabricatorPresets);
-    await queueFabricatorMutation(async () => {
-      const previousProfiles = fabricatorPresetProfiles;
-      const previousPresets = fabricatorPresets;
-      try {
-        fabricatorPresetProfiles = normalized;
-        const standardProfile = normalized.profiles.find((profile) => profile.id === "padrao");
-        if (standardProfile) fabricatorPresets = standardProfile.presets;
-        await Promise.all([queueFabricatorPresetProfilesWrite(), queueFabricatorPresetsWrite()]);
-      } catch (error) {
-        fabricatorPresetProfiles = previousProfiles;
-        fabricatorPresets = previousPresets;
-        throw error;
-      }
-    });
-    sendJson(response, request, 200, fabricatorPresetProfiles);
-    return;
-  }
-  if (request.method === "PUT" && url.pathname === "/fabricador-modelos/presets") {
-    const body = await requestJson(request);
-    const normalized = normalizeFabricatorPresets(body);
-    await queueFabricatorMutation(async () => {
-      const previous = fabricatorPresets;
-      try {
-        fabricatorPresets = normalized;
-        await queueFabricatorPresetsWrite();
-      } catch (error) {
-        fabricatorPresets = previous;
-        throw error;
-      }
-    });
-    sendJson(response, request, 200, fabricatorPresets);
-    return;
-  }
-  const fabricatorAssetMatch = url.pathname.match(/^\/fabricador-modelos\/([a-zA-Z0-9_-]{1,120})$/);
-  if (fabricatorAssetMatch && request.method === "POST") {
-    const id = safeId(fabricatorAssetMatch[1]);
-    const metadata = readMetadata(request);
-    const contentType = contentTypeOf(request, metadata);
-    assertMimeType(contentType, IMAGE_MIME_TYPES, "O arquivo do Fabricador precisa ser PNG, JPEG ou WebP.");
-    const kind = ["eyes", "eyebrows", "mouths", "mouths-talk", "blush", "shadow", "manpu"].includes(metadata.kind) ? metadata.kind : null;
-    if (!kind) throw Object.assign(new Error("O tipo do arquivo do Fabricador é inválido."), { status: 400, code: "INVALID_FABRICATOR_KIND" });
-    if (fabricatorAssets.some((asset) => asset.id === id)) {
-      throw Object.assign(new Error("Já existe um asset com este identificador."), { status: 409, code: "FABRICATOR_ASSET_EXISTS" });
-    }
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const extension = contentType === "image/jpeg" ? ".jpg" : contentType === "image/webp" ? ".webp" : ".png";
-    const fileName = `${id}${extension}`;
-    const filePath = join(FABRICATOR_ROOT, fileName);
-    if (!inside(FABRICATOR_ROOT, filePath)) throw new Error("Destino do Fabricador inválido");
-    await mkdir(FABRICATOR_ROOT, { recursive: true });
-    await queueFabricatorMutation(async () => {
-      if (fabricatorAssets.some((entry) => entry.id === id)) {
-        throw Object.assign(new Error("Já existe um asset com este identificador."), { status: 409, code: "FABRICATOR_ASSET_EXISTS" });
-      }
-      const previousAssets = fabricatorAssets;
-      try {
-        await writeFile(filePath, body);
-        fabricatorAssets = [
-          ...fabricatorAssets,
-          { id, name: String(metadata.name || "Folha sem nome").slice(0, 160), kind, contentType, fileName, createdAt: metadata.createdAt || new Date().toISOString(), chroma: normalizeFabricatorChroma(metadata.chroma), placement: normalizeFabricatorPlacement(metadata.placement), ...(kind === "manpu" && normalizeFabricatorGrid(metadata.grid) ? { grid: normalizeFabricatorGrid(metadata.grid) } : {}) },
-        ];
-        await queueFabricatorWrite();
-      } catch (error) {
-        fabricatorAssets = previousAssets;
-        await rm(filePath, { force: true }).catch(() => undefined);
-        throw error;
-      }
-    });
-    sendJson(response, request, 200, { ok: true, id, fileUrl: `http://${HOST}:${PORT}/files/fabricador-modelos/${id}` });
-    return;
-  }
-  if (fabricatorAssetMatch && request.method === "PATCH") {
-    const id = safeId(fabricatorAssetMatch[1]);
-    const asset = fabricatorAssets.find((entry) => entry.id === id);
-    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
-    const body = await requestJson(request);
-    const chroma = body?.chroma === undefined ? undefined : normalizeFabricatorChroma(body.chroma);
-    const placement = body?.placement === undefined ? undefined : normalizeFabricatorPlacement(body.placement);
-    const grid = body?.grid === undefined ? undefined : normalizeFabricatorGrid(body.grid);
-    if (body?.chroma !== undefined && !chroma) throw Object.assign(new Error("Configuração de chroma inválida."), { status: 400, code: "INVALID_FABRICATOR_CHROMA" });
-    if (body?.placement !== undefined && !placement) throw Object.assign(new Error("Posição do asset inválida."), { status: 400, code: "INVALID_FABRICATOR_PLACEMENT" });
-    if (body?.grid !== undefined && !grid) throw Object.assign(new Error("Grade do asset inválida."), { status: 400, code: "INVALID_FABRICATOR_GRID" });
-    if (!chroma && !placement && !grid) throw Object.assign(new Error("Nenhuma alteração válida para o asset."), { status: 400, code: "EMPTY_FABRICATOR_PATCH" });
-    await queueFabricatorMutation(async () => {
-      const previousAssets = fabricatorAssets;
-      try {
-        fabricatorAssets = fabricatorAssets.map((entry) => entry.id === id ? { ...entry, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}), ...(grid ? { grid } : {}) } : entry);
-        await queueFabricatorWrite();
-      } catch (error) {
-        fabricatorAssets = previousAssets;
-        throw error;
-      }
-    });
-    sendJson(response, request, 200, { ok: true, id, ...(chroma ? { chroma } : {}), ...(placement ? { placement } : {}), ...(grid ? { grid } : {}) });
-    return;
-  }
-  if (fabricatorAssetMatch && request.method === "DELETE") {
-    const id = safeId(fabricatorAssetMatch[1]);
-    const asset = fabricatorAssets.find((entry) => entry.id === id);
-    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
-    await queueFabricatorMutation(async () => {
-      const previousAssets = fabricatorAssets;
-      const previousPresets = fabricatorPresets;
-      const sourcePath = join(FABRICATOR_ROOT, asset.fileName);
-      const quarantinePath = join(FABRICATOR_ROOT, `.delete-${id}-${Date.now()}`);
-      let quarantined = false;
-      try {
-        try {
-          await rename(sourcePath, quarantinePath);
-          quarantined = true;
-        } catch (error) {
-          if (error?.code !== "ENOENT") throw error;
-        }
-
-        fabricatorAssets = fabricatorAssets.filter((entry) => entry.id !== id);
-        if (["blush", "shadow", "manpu"].includes(asset.kind)) {
-          fabricatorPresets = Object.fromEntries(Object.entries(fabricatorPresets).map(([key, preset]) => {
-            if (preset?.effectAssets?.[asset.kind] !== id) return [key, preset];
-            return [key, {
-              ...preset,
-              enabledEffects: { ...preset.enabledEffects, [asset.kind]: false },
-              effectAssets: { ...preset.effectAssets, [asset.kind]: null },
-            }];
-          }));
-        }
-
-        await queueFabricatorWrite();
-        await queueFabricatorPresetsWrite();
-        if (quarantined) await rm(quarantinePath, { force: true });
-      } catch (error) {
-        fabricatorAssets = previousAssets;
-        fabricatorPresets = previousPresets;
-        if (quarantined) await rename(quarantinePath, sourcePath).catch(() => undefined);
-        await Promise.all([queueFabricatorWrite(), queueFabricatorPresetsWrite()]).catch(() => undefined);
-        throw error;
-      }
-    });
-    sendJson(response, request, 200, { ok: true, id });
-    return;
-  }
+  if (await fabricatorService.handle(request, response, url)) return;
   if (request.method === "GET" && url.pathname === "/persistence/diagnostics") {
     const catalogIds = new Set(state.catalog.map((item) => String(item?.id || "")));
     const expressionPackIds = new Set(state.expressionPacks.map((pack) => String(pack?.id || "")));
@@ -1496,14 +1287,7 @@ async function route(request, response) {
     await serveFile(response, request, join(CATALOG_ROOT, `${id}.png`));
     return;
   }
-  const fabricatorFileMatch = url.pathname.match(/^\/files\/fabricador-modelos\/([a-zA-Z0-9_-]{1,120})$/);
-  if (fabricatorFileMatch && request.method === "GET") {
-    const id = safeId(fabricatorFileMatch[1]);
-    const asset = fabricatorAssets.find((entry) => entry.id === id);
-    if (!asset) throw Object.assign(new Error("Arquivo do Fabricador não encontrado."), { status: 404, code: "FABRICATOR_ASSET_NOT_FOUND" });
-    await serveFile(response, request, join(FABRICATOR_ROOT, asset.fileName));
-    return;
-  }
+
   const packFileMatch = url.pathname.match(/^\/files\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\.png$/);
   if (packFileMatch && request.method === "GET") {
     const packId = safeId(packFileMatch[1]);
