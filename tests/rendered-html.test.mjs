@@ -848,15 +848,18 @@ test("mantém cores do modelo no cache do Studio e oferece controle reversível"
 });
 
 test("oferece desfazer e refazer isolados para o personagem atual", async () => {
-  const [page, css] = await Promise.all([
+  const [page, session, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/character-session.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /aria-label="Desfazer alteração do personagem"/);
   assert.match(page, /aria-label="Refazer alteração do personagem"/);
-  assert.match(page, /history\.past = \[\.\.\.history\.past, history\.current\]\.slice\(-80\)/);
-  assert.match(page, /history\.future\.unshift\(history\.current\)/);
-  assert.match(page, /history\.future = \[\]/);
+  assert.match(session, /export function recordCharacterHistory/);
+  assert.match(session, /\.slice\(-80\)/);
+  assert.match(session, /next\.future = \[\]/);
+  assert.match(session, /export function undoCharacterHistory/);
+  assert.match(session, /export function redoCharacterHistory/);
   assert.match(page, /setSelections\(normalizeSelections\(snapshot\.selections\)\)/);
   assert.match(page, /setAdjustments\(normalizeAdjustments\(snapshot\.adjustments\)\)/);
   assert.match(page, /setLayerMasks\(normalizeLayerMasks\(snapshot\.layerMasks, snapshot\.maskStrokes\)\)/);
