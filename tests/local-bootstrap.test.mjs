@@ -8,6 +8,7 @@ import {
   dependencyState,
   isDirectInvocation,
   nodeVersionAtLeast,
+  npmInvocation,
   parseNodeVersion,
 } from "../scripts/local-bootstrap.mjs";
 
@@ -52,4 +53,21 @@ test("local bootstrap recognizes both relative and absolute script invocation pa
   assert.equal(isDirectInvocation(moduleUrl, absolute), true);
   assert.equal(isDirectInvocation(moduleUrl, join("scripts", "local-bootstrap.mjs")), true);
   assert.equal(isDirectInvocation(moduleUrl, join("scripts", "local-doctor.mjs")), false);
+});
+
+test("local bootstrap invokes npm through cmd.exe on Windows", () => {
+  assert.deepEqual(
+    npmInvocation(["--version"], "win32", "C:\\Windows\\System32\\cmd.exe"),
+    {
+      command: "C:\\Windows\\System32\\cmd.exe",
+      args: ["/d", "/s", "/c", "npm --version"],
+    },
+  );
+  assert.deepEqual(
+    npmInvocation(["ci", "--no-audit", "--no-fund"], "linux"),
+    {
+      command: "npm",
+      args: ["ci", "--no-audit", "--no-fund"],
+    },
+  );
 });

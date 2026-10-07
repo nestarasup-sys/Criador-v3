@@ -64,8 +64,24 @@ export async function dependencyState(root = process.cwd()) {
   };
 }
 
-function npmCommand() {
-  return process.platform === "win32" ? "npm.cmd" : "npm";
+export function npmInvocation(
+  args,
+  platform = process.platform,
+  comSpec = process.env.ComSpec ?? process.env.COMSPEC ?? "cmd.exe",
+) {
+  const normalizedArgs = Array.from(args ?? [], (value) => String(value));
+  if (platform === "win32") {
+    return {
+      command: comSpec,
+      args: ["/d", "/s", "/c", ["npm", ...normalizedArgs].join(" ")],
+    };
+  }
+  return { command: "npm", args: normalizedArgs };
+}
+
+function spawnNpm(args, options) {
+  const invocation = npmInvocation(args);
+  return spawnSync(invocation.command, invocation.args, options);
 }
 
 export async function ensureLocalDependencies({
@@ -92,8 +108,7 @@ export async function ensureLocalDependencies({
     );
   }
 
-  const command = npmCommand();
-  const npmVersion = spawnSync(command, ["--version"], {
+  const npmVersion = spawnNpm(["--version"], {
     cwd: root,
     encoding: "utf8",
     windowsHide: true,
@@ -106,7 +121,7 @@ export async function ensureLocalDependencies({
   }
 
   console.log(`Preparando dependências locais (${state.reason})...`);
-  const install = spawnSync(command, ["ci", "--no-audit", "--no-fund"], {
+  const install = spawnNpm(["ci", "--no-audit", "--no-fund"], {
     cwd: root,
     stdio,
     windowsHide: false,
