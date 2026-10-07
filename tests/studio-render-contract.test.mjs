@@ -107,11 +107,12 @@ test("mantém o inspetor de personagem compacto e isola os controles técnicos n
 });
 
 test("saves Studios and their uploaded assets durably on the local PC", async () => {
-  const [page, toolbar, storage, server, css, printRenderer] = await Promise.all([
+  const [page, toolbar, storage, server, studioRoutes, css, printRenderer] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/components/StudioToolbar.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/studio/routes.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/scene-print-renderer.ts", import.meta.url), "utf8"),
   ]);
@@ -123,15 +124,15 @@ test("saves Studios and their uploaded assets durably on the local PC", async ()
   assert.match(storage, /persistEmbeddedAssets/);
   assert.match(storage, /recordStudioDeletion/);
   assert.match(storage, /studioSaveQueue/);
-  assert.match(server, /\/studios/);
-  assert.match(server, /referencedAssets/);
+  assert.match(studioRoutes, /\/studios/);
+  assert.match(studioRoutes, /referencedAssets/);
   assert.match(server, /STUDIO_ASSETS_ROOT/);
   assert.match(server, /C:\\\\PRINTS GACHA NYMI/);
-  assert.match(server, /url\.pathname === "\/prints"/);
-  assert.match(server, /url\.pathname === "\/prints\/open"/);
-  assert.match(server, /await mkdir\(PRINTS_ROOT, \{ recursive: true \}\)/);
+  assert.match(studioRoutes, /url\.pathname === "\/prints"/);
+  assert.match(studioRoutes, /url\.pathname === "\/prints\/open"/);
+  assert.match(studioRoutes, /await mkdir\(printsRoot, \{ recursive: true \}\)/);
   assert.match(server, /const EXPLORER_PATH = join\(process\.env\.WINDIR \?\? process\.env\.SystemRoot/);
-  assert.match(server, /await openWindowsFolder\(PRINTS_ROOT\)/);
+  assert.match(studioRoutes, /await openFolder\(printsRoot\)/);
   assert.match(storage, /saveStudioPrint/);
   assert.match(storage, /openStudioPrintsFolder/);
   assert.match(page, /renderStudioSceneToCanvas/);
@@ -198,9 +199,12 @@ test("keeps Studio scene operations, history and print rendering in shared modul
 });
 
 test("posiciona o inspetor no lado oposto ao personagem selecionado", async () => {
-  const page = await readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /function inspectorSideForCharacter\(x: number\)/);
-  assert.match(page, /return x >= 0\.5 \? "left" : "right"/);
+  const [page, policy] = await Promise.all([
+    readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/editor-policy.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(policy, /function inspectorSideForCharacter\(x: number\)/);
+  assert.match(policy, /return x >= 0\.5 \? "left" : "right"/);
   assert.match(page, /setDockSide\(inspectorSideForCharacter\(existing\.x\)\)/);
   assert.match(page, /setDockSide\(inspectorSideForCharacter\(instance\.x\)\)/);
   assert.match(page, /if \(kind === "character"\) \{[\s\S]*?setDockSide\(inspectorSideForCharacter\(x\)\)/);
@@ -220,11 +224,12 @@ test("não exibe aviso vazio no inspetor do Studio", async () => {
 });
 
 test("desativa o dock invisível quando não há conteúdo no inspetor", async () => {
-  const [page, css] = await Promise.all([
+  const [page, policy, css] = await Promise.all([
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/studio/editor-policy.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/studio.module.css", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /const inspectorHasContent = Boolean\(/);
+  assert.match(policy, /const inspectorHasContent = Boolean\(/);
   assert.match(page, /styles\.inspectorDockEmpty/);
   assert.match(page, /aria-hidden=\{!inspectorHasContent\}/);
   assert.match(css, /\.inspectorDockEmpty \{[^}]*pointer-events: none/);
