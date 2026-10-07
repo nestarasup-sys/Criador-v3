@@ -1,4 +1,4 @@
-import { DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "../domain/color-rendering";
+import { DEFAULT_COLOR_ADJUSTMENT as SHARED_DEFAULT_COLOR_ADJUSTMENT, normalizeColorAdjustment } from "../domain/color-rendering.ts";
 import type { CatalogItem } from "../domain/catalog-contract";
 import type { ColorAdjustment, ColorAdjustments, ExportFrame, PreviewPan } from "../domain/character-contract";
 import type { Category, ItemTransform, MaskStroke, Model, StoredLayerMasks } from "../domain/character-primitives";

@@ -19,6 +19,16 @@ import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { BasePackThumbnail, clearBasePackThumbnailCache } from "./creator/components/BasePackThumbnail";
 import { CREATOR_DRAG_COMMIT_INTERVAL_MS, MAX_CREATOR_COLOR_CACHE, MAX_CREATOR_HEAD_WARP_CACHE, MAX_PROCESSED_BASE_EXPRESSIONS, trimProcessedBaseExpressions } from "./creator/cache-policy";
 import { downloadBlob, safeFileName } from "./creator/browser-download";
+import {
+  createCharacterHistory,
+  hasCreatorCustomization,
+  outfitStateKey,
+  recordCharacterHistory,
+  redoCharacterHistory,
+  serializeCreatorSnapshot,
+  undoCharacterHistory,
+  type CharacterHistory,
+} from "./creator/character-session";
 import { applyProtectionFill, createBodyMask, createMaskOverlay } from "./creator/mask-rendering";
 import {
   prepareCatalogImages,
@@ -134,12 +144,6 @@ import type {
 // O contrato histórico continua no módulo compartilhado: new JSZip(), root.file(`${key}.png`), root.file("personagem_sem_rosto.png"), final-character-frames e faces-and-complete-frames.
 
 type BrushMode = "erase" | "restore";
-type CharacterHistory = { past: string[]; future: string[]; current: string | null; changedAt: number };
-
-function outfitStateKey(outfitId: string | null | undefined, packId: BasePackId) {
-  return `${outfitId ?? "nenhuma"}:${packId}`;
-}
-
 type ColorEditorTool = "brush" | "bucket" | "eyedropper" | "erase";
 type ColorPreviewMode = "after" | "before" | "split" | "mask";
 type ColorPreviewBackground = "transparent" | "white" | "black";
@@ -643,48 +647,31 @@ export default function Home() {
   }, [model, basePackId, modelColorCalibrationRevision]);
   const editorSnapshot = useMemo(() => {
     if (isCanvasDragging && dragEditorSnapshot !== null) return dragEditorSnapshot;
-    const snapshot = JSON.stringify({
-    name: characterName.trim() || "Sem nome",
-    model,
-    basePackId,
-    selections,
-    adjustments,
-    colorAdjustments,
-    modelColorAdjustments,
-    modelColorScope,
-    outfitColorAdjustmentsByGroup,
-    protectionMasks,
-    faceMode,
-    compositionMode,
-    expressionPackId: activePackId,
-    expressionEmotion,
-    expressionState: animationMode ? "default" : expressionState,
-    layerMasks,
-    maskStrokes: layerMasks.body,
-    previewPan,
-    exportFrame,
-    templateScaleX,
-    hairAdjustmentsByBasePack: {
-      ...hairAdjustmentsByBasePack,
-      [basePackId]: {
-        cabelos: normalizeTransform(adjustments.cabelos),
-        cabelosTras: normalizeTransform(adjustments.cabelosTras),
-      },
-    },
-    outfitAdjustmentsByBasePack: {
-      ...outfitAdjustmentsByBasePack,
-      [activeOutfitStateKey]: normalizeTransform(adjustments.roupas),
-    },
-    outfitLayerMasksByBasePack: {
-      ...outfitLayerMasksByBasePack,
-      [activeOutfitStateKey]: layerMasks.outfit,
-    },
-    outfitProtectionMasksByBasePack: {
-      ...Object.fromEntries(Object.entries(outfitProtectionMasksByBasePack).filter(([key]) => key !== activeOutfitStateKey)),
-      ...(protectionMasks.roupas ? { [activeOutfitStateKey]: protectionMasks.roupas } : {}),
-    },
-    } satisfies CharacterSnapshot);
-    return snapshot;
+    return serializeCreatorSnapshot({
+      name: characterName,
+      model,
+      basePackId,
+      selections,
+      adjustments,
+      colorAdjustments,
+      modelColorAdjustments,
+      modelColorScope,
+      outfitColorAdjustmentsByGroup,
+      protectionMasks,
+      faceMode,
+      compositionMode,
+      expressionPackId: activePackId,
+      expressionEmotion,
+      expressionState: animationMode ? "default" : expressionState,
+      layerMasks,
+      previewPan,
+      exportFrame,
+      templateScaleX,
+      hairAdjustmentsByBasePack,
+      outfitAdjustmentsByBasePack,
+      outfitLayerMasksByBasePack,
+      outfitProtectionMasksByBasePack,
+    });
   }, [
     characterName,
     model,
@@ -710,18 +697,19 @@ export default function Home() {
     outfitAdjustmentsByBasePack,
     outfitLayerMasksByBasePack,
     outfitProtectionMasksByBasePack,
-    activeOutfitStateKey,
     isCanvasDragging,
     dragEditorSnapshot,
   ]);
-  const hasRealCustomization = Object.values(selections).some(Boolean)
-    || Boolean(activePackId)
-    || Object.values(layerMasks).some((strokes) => strokes.length > 0)
-    || Object.values(colorAdjustments).some((adjustment) => colorAdjustmentIsActive(adjustment))
-    || Object.values(modelColorAdjustments).some((adjustment) => colorAdjustmentIsActive(adjustment))
-    || Object.values(outfitColorAdjustmentsByGroup).some((adjustment) => colorAdjustmentIsActive(adjustment))
-    || Object.keys(protectionMasks).length > 0
-    || Object.keys(outfitProtectionMasksByBasePack).length > 0;
+  const hasRealCustomization = hasCreatorCustomization({
+    selections,
+    expressionPackId: activePackId,
+    layerMasks,
+    colorAdjustments,
+    modelColorAdjustments,
+    outfitColorAdjustmentsByGroup,
+    protectionMasks,
+    outfitProtectionMasksByBasePack,
+  });
 
   useLayoutEffect(() => {
     pendingEditorSnapshotRef.current = { snapshot: editorSnapshot, activeCharacter, hasRealCustomization };
@@ -762,41 +750,21 @@ export default function Home() {
 
   useEffect(() => {
     const key = activeCharacter ?? "draft";
-    const history = characterHistoryRef.current.get(key) ?? {
-      past: [],
-      future: [],
-      current: null,
-      changedAt: 0,
-    } satisfies CharacterHistory;
+    const history = characterHistoryRef.current.get(key) ?? createCharacterHistory();
     const keyChanged = historyActiveKeyRef.current !== key;
     historyActiveKeyRef.current = key;
-    if (keyChanged && history.current === null) {
-      history.current = editorSnapshot;
-      history.changedAt = Date.now();
-      characterHistoryRef.current.set(key, history);
-      setHistoryAvailability({ undo: false, redo: false });
-      return;
-    }
-    if (historyRestoreRef.current === editorSnapshot) {
-      history.current = editorSnapshot;
-      history.changedAt = Date.now();
-      historyRestoreRef.current = null;
-      characterHistoryRef.current.set(key, history);
-      setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
-      return;
-    }
-    if (history.current === null) {
-      history.current = editorSnapshot;
-    } else if (history.current !== editorSnapshot) {
-      const now = Date.now();
-      // Arraste e sliders formam um único passo, mesmo que produzam muitos renders.
-      if (now - history.changedAt >= 420) history.past = [...history.past, history.current].slice(-80);
-      history.current = editorSnapshot;
-      history.future = [];
-      history.changedAt = now;
-    }
-    characterHistoryRef.current.set(key, history);
-    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
+    const restored = historyRestoreRef.current === editorSnapshot;
+    const nextHistory = recordCharacterHistory(history, editorSnapshot, {
+      now: Date.now(),
+      initialize: keyChanged && history.current === null,
+      restored,
+    });
+    if (restored) historyRestoreRef.current = null;
+    characterHistoryRef.current.set(key, nextHistory);
+    setHistoryAvailability({
+      undo: nextHistory.past.length > 0,
+      redo: nextHistory.future.length > 0,
+    });
   }, [activeCharacter, editorSnapshot]);
 
   function applyHistorySnapshot(snapshotText: string) {
@@ -840,27 +808,29 @@ export default function Home() {
   function undoCharacterChange() {
     const key = activeCharacter ?? "draft";
     const history = characterHistoryRef.current.get(key);
-    if (!history?.past.length || !history.current) return;
-    const target = history.past.pop()!;
-    history.future.unshift(history.current);
-    history.current = target;
-    history.changedAt = Date.now();
-    characterHistoryRef.current.set(key, history);
-    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
-    applyHistorySnapshot(target);
+    if (!history) return;
+    const result = undoCharacterHistory(history, Date.now());
+    if (!result) return;
+    characterHistoryRef.current.set(key, result.history);
+    setHistoryAvailability({
+      undo: result.history.past.length > 0,
+      redo: result.history.future.length > 0,
+    });
+    applyHistorySnapshot(result.snapshot);
   }
 
   function redoCharacterChange() {
     const key = activeCharacter ?? "draft";
     const history = characterHistoryRef.current.get(key);
-    if (!history?.future.length || !history.current) return;
-    const target = history.future.shift()!;
-    history.past = [...history.past, history.current].slice(-80);
-    history.current = target;
-    history.changedAt = Date.now();
-    characterHistoryRef.current.set(key, history);
-    setHistoryAvailability({ undo: history.past.length > 0, redo: history.future.length > 0 });
-    applyHistorySnapshot(target);
+    if (!history) return;
+    const result = redoCharacterHistory(history, Date.now());
+    if (!result) return;
+    characterHistoryRef.current.set(key, result.history);
+    setHistoryAvailability({
+      undo: result.history.past.length > 0,
+      redo: result.history.future.length > 0,
+    });
+    applyHistorySnapshot(result.snapshot);
   }
 
   useEffect(() => {
