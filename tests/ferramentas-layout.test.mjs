@@ -135,7 +135,8 @@ test("Fabricador exibe as grades de manpu para seleção por expressão", async 
   assert.match(page, /effectPieceIndexes\.manpu/);
   assert.match(page, /const saveCurrentAssetState = async \(\) =>/);
   assert.match(page, /await saveCurrentAssetState\(\);/);
-  assert.match(profileState, /presetsWithEffectPlacements/);\n  assert.match(page, /buildPresetProfilesDocument/);
+  assert.match(profileState, /presetsWithEffectPlacements/);
+  assert.match(page, /buildPresetProfilesDocument/);
   assert.match(page, /setEffectPlacements\(savedEffectPlacements\)/);
   assert.match(page, /updateTemplateScaleX/);
   assert.match(page, /Largura do molde/);
