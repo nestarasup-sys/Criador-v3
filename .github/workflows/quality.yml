@@ -41,6 +41,9 @@ jobs:
       - name: Repository hygiene
         run: npm run check:repo
 
+      - name: Architecture budgets
+        run: npm run check:arch
+
       - name: Typecheck
         run: npm run typecheck
 

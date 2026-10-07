@@ -32,8 +32,9 @@
     "diagnose:base-expressions": "node scripts/repair-base-expression-neck.mjs --check",
     "test:e2e:fabricador": "node scripts/run-e2e.mjs --fabricador",
     "check:repo": "node scripts/check-repository-hygiene.mjs",
-    "check:quality": "npm run check:repo && npm run typecheck && npm run lint && npm run build && npm run test:unit",
-    "test:render-equivalence": "node --experimental-strip-types --test tests/character-variant-render-equivalence.test.mjs"
+    "check:quality": "npm run check:repo && npm run check:arch && npm run typecheck && npm run lint && npm run build && npm run test:unit",
+    "test:render-equivalence": "node --experimental-strip-types --test tests/character-variant-render-equivalence.test.mjs",
+    "check:arch": "node scripts/check-architecture-budgets.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
