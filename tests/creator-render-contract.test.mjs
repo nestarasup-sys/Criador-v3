@@ -28,11 +28,12 @@ test("trocar V0 e V1 não troca o modelo ativo automaticamente", async () => {
 });
 
 test("recria a pasta de fotos e evita uploads idênticos concorrentes", async () => {
-  const [server, storage] = await Promise.all([
-    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+  const [characterRoutes, storage] = await Promise.all([
+    readFile(new URL("../services/characters/routes.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
   ]);
-  assert.match(server, /await mkdir\(CHARACTER_PHOTOS_ROOT, \{ recursive: true \}\);/);
+  assert.match(characterRoutes, /await mkdir\(photosRoot, \{ recursive: true \}\);/);
+  assert.match(characterRoutes, /const photoQueues = new Map/);
   assert.match(storage, /const inFlightPhotoUploads = new Map/);
   assert.match(storage, /photoBlobFingerprint\(blob\)/);
   assert.match(storage, /existing\?\.fingerprint === fingerprint/);
