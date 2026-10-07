@@ -1,3 +1,5 @@
+import type { ExpressionKey } from "../domain/expression-contract";
+
 export const MAX_PROCESSED_BASE_EXPRESSIONS = 12;
 
 export function trimProcessedBaseExpressions(
