@@ -36,7 +36,8 @@
     "check:arch": "node scripts/check-architecture-budgets.mjs",
     "check:syntax": "node scripts/check-js-syntax.mjs",
     "bootstrap:local": "node scripts/local-bootstrap.mjs",
-    "doctor": "node scripts/local-doctor.mjs"
+    "doctor": "node scripts/local-doctor.mjs",
+    "migrate:local": "node scripts/migrate-local-workspace.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1",
