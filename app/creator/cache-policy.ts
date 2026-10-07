@@ -1,5 +1,8 @@
 import type { ExpressionKey } from "../domain/expression-contract";
 
+export const MAX_CREATOR_COLOR_CACHE = 16;
+export const MAX_CREATOR_HEAD_WARP_CACHE = 8;
+export const CREATOR_DRAG_COMMIT_INTERVAL_MS = 40;
 export const MAX_PROCESSED_BASE_EXPRESSIONS = 12;
 
 export function trimProcessedBaseExpressions(

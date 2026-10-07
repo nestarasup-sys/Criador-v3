@@ -17,7 +17,7 @@ import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar"
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
 import { BasePackThumbnail, clearBasePackThumbnailCache } from "./creator/components/BasePackThumbnail";
-import { MAX_PROCESSED_BASE_EXPRESSIONS, trimProcessedBaseExpressions } from "./creator/cache-policy";
+import { CREATOR_DRAG_COMMIT_INTERVAL_MS, MAX_CREATOR_COLOR_CACHE, MAX_CREATOR_HEAD_WARP_CACHE, MAX_PROCESSED_BASE_EXPRESSIONS, trimProcessedBaseExpressions } from "./creator/cache-policy";
 import { downloadBlob, safeFileName } from "./creator/browser-download";
 import { applyProtectionFill, createBodyMask, createMaskOverlay } from "./creator/mask-rendering";
 import {
