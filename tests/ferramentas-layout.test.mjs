@@ -153,11 +153,11 @@ test("Fabricador exibe as grades de manpu para seleção por expressão", async 
 });
 
 test("Fabricador mantém perfis de personagem separados do Padrão", async () => {
-  const [page, config, storage, server] = await Promise.all([
+  const [page, config, storage, fabricatorService] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
-    read("local-data-server.mjs"),
+    read("services/fabricator/service.mjs"),
   ]);
 
   assert.match(config, /DEFAULT_PRESET_PROFILE_ID = "padrao"/);
@@ -173,28 +173,30 @@ test("Fabricador mantém perfis de personagem separados do Padrão", async () =>
   assert.match(page, /const nextPresets = mergeSavedPresets\(migratedPresets\)/);
   assert.match(storage, /nymi-fabricador-preset-profiles/);
   assert.match(storage, /\/fabricador-modelos\/preset-profiles/);
-  assert.match(server, /FABRICATOR_PRESET_PROFILES_PATH/);
-  assert.match(server, /normalizeFabricatorPresetProfiles/);
-  assert.match(server, /\/fabricador-modelos\/preset-profiles/);
+  assert.match(fabricatorService, /presetProfilesPath/);
+  assert.match(fabricatorService, /normalizeFabricatorPresetProfiles/);
+  assert.match(fabricatorService, /\/fabricador-modelos\/preset-profiles/);
 });
 
 test("exportação do Fabricador usa staging e commit atômico", async () => {
-  const [page, server, exportSessionService] = await Promise.all([
+  const [page, client, routes, exportSessionService] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
-    read("local-data-server.mjs"),
+    read("app/Ferramentas/fabricador-de-modelo/model-export.ts"),
+    read("services/models/routes.mjs"),
     read("services/models/model-export-session.mjs"),
   ]);
 
-  assert.match(page, /\/models\/export-session\/\$\{gender\}\/\$\{modelId\}/);
-  assert.match(page, /\/commit/);
-  assert.match(page, /method: "DELETE"/);
+  assert.match(client, /\/models\/export-session\/\$\{gender\}\/\$\{modelId\}/);
+  assert.match(client, /"\/commit"/);
+  assert.match(client, /method: "DELETE"/);
+  assert.match(client, /publishFabricatorModel/);
+  assert.match(client, /toCatalogFrame/);
+  assert.match(page, /publishFabricatorModel/);
   assert.doesNotMatch(page, /createdModelByThisExport/);
-  assert.doesNotMatch(page, /\/models\/modelos\/\$\{createdModel/);
 
-  assert.match(server, /MODEL_EXPORT_STAGING_ROOT/);
-  assert.match(server, /modelExportSessionMatch/);
-  assert.match(server, /INCOMPLETE_MODEL_EXPORT/);
-  assert.match(server, /expectedFiles/);
+  assert.match(routes, /modelExportSessionMatch/);
+  assert.match(routes, /INCOMPLETE_MODEL_EXPORT/);
+  assert.match(routes, /expectedFiles/);
   assert.match(exportSessionService, /await rename\(paths\.stagingFolder, paths\.finalFolder\)/);
 });
 
