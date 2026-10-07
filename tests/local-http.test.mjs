@@ -70,12 +70,18 @@ test("public-route policy exposes only read-only media plus health/session", () 
   assert.equal(http.isPublicRoute(request({ method: "OPTIONS" }), new URL("http://local/state")), true);
 });
 
-test("public errors redact Windows paths and service URLs", () => {
+test("public errors never expose Windows paths", () => {
   const http = createHttp();
   const message = http.publicErrorMessage(new Error("Falhou em C:\\Users\\Someone\\secret.json ao chamar http://127.0.0.1:9999/private"));
   assert.equal(message.includes("Someone"), false);
   assert.equal(message.includes("127.0.0.1"), false);
   assert.match(message, /arquivo local/);
+});
+
+test("public errors redact service URLs when there is no filesystem path to redact", () => {
+  const http = createHttp();
+  const message = http.publicErrorMessage(new Error("Falhou ao chamar http://127.0.0.1:9999/private"));
+  assert.equal(message.includes("127.0.0.1"), false);
   assert.match(message, /serviço local/);
 });
 
