@@ -152,6 +152,24 @@ function queueStateMutation(task) {
   return operation;
 }
 
+async function ensureFolders() {
+  await Promise.all([
+    mkdir(CATALOG_ROOT, { recursive: true }),
+    mkdir(PACKS_ROOT, { recursive: true }),
+    mkdir(STUDIO_ASSETS_ROOT, { recursive: true }),
+    mkdir(FABRICATOR_ROOT, { recursive: true }),
+    mkdir(BACKUPS_ROOT, { recursive: true }),
+    mkdir(ROTEIROS_VIDEOS_ROOT, { recursive: true }),
+    mkdir(ROTEIROS_BACKGROUNDS_ROOT, { recursive: true }),
+    mkdir(BASE_DADOS_ROOT, { recursive: true }),
+    mkdir(join(BASE_DADOS_ROOT, "rascunhos", "videos"), { recursive: true }),
+    mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true }),
+    mkdir(PRINTS_ROOT, { recursive: true }),
+    mkdir(join(MODELS_ROOT, "feminino"), { recursive: true }),
+    mkdir(join(MODELS_ROOT, "masculino"), { recursive: true }),
+    mkdir(MODEL_EXPORT_STAGING_ROOT, { recursive: true }),
+  ]);
+}
 
 function openWindowsFolder(folder) {
   return new Promise((resolvePromise, reject) => {
