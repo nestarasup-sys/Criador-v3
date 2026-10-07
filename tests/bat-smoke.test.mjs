@@ -23,7 +23,7 @@ test("faz preflight seguro antes de iniciar o desenvolvimento", async () => {
 test("mantém o contrato de inicialização local do BAT", async () => {
   const launcher = await readFile(launcherPath, "utf8");
 
-  assert.match(launcher, /scripts\\local-bootstrap\.mjs/i);
+  assert.match(launcher, /scripts[\\/]local-bootstrap\.mjs/i);
   assert.match(launcher, /where node/i);
   assert.match(launcher, /local-data-server\.mjs/i);
   assert.match(launcher, /LocalPort 6800/i);
