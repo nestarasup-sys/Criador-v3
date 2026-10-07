@@ -3,7 +3,7 @@ import {
   presetCollectionFromState,
   type PresetProfile,
   type PresetProfilesDocument,
-} from "./fabricador-config";
+} from "./fabricador-config.ts";
 import { DEFAULT_TEMPLATE_SKIN_COLOR, normalizeTemplateSkinColor } from "./core/skin-color.mjs";
 import type { EyePlacement, FaceEffectKind, FacePreset } from "./types/eye-model";
 

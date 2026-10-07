@@ -1,10 +1,10 @@
-import { EYE_EXPRESSIONS } from "./constants/expressions";
+import { EYE_EXPRESSIONS } from "./constants/expressions.ts";
 import {
   DEFAULT_EYE_PLACEMENTS,
   DEFAULT_PLACEMENT,
   DEFAULT_TEMPLATE_SCALE_X,
   type PresetProfile,
-} from "./fabricador-config";
+} from "./fabricador-config.ts";
 import type { FabricatorAssetKind } from "./fabricador-storage";
 import type { ChromaSettings } from "./core/eye-processing";
 import type {
