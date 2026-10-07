@@ -1,12 +1,18 @@
 import { readFile } from "node:fs/promises";
 
 const budgets = {
-  "app/page.tsx": 6100,
+  "app/page.tsx": 5900,
   "app/Ferramentas/fabricador-de-modelo/page.tsx": 2350,
-  "local-data-server.mjs": 1930,
+  "local-data-server.mjs": 1160,
   "app/roteiros/components/RoteiroEditor.tsx": 575,
   "app/roteiros/components/TikTokCard.tsx": 540,
   "services/roteiros/service.mjs": 670,
+  "app/studio/page.tsx": 1120,
+  "services/models/routes.mjs": 400,
+  "services/characters/routes.mjs": 170,
+  "services/studio/routes.mjs": 190,
+  "services/fabricator/service.mjs": 390,
+  "services/video-maker/service.mjs": 320,
   "app/globals.css": 1180,
 };
 
