@@ -6,7 +6,7 @@ import {
   readdir,
   stat,
 } from "node:fs/promises";
-import { basename, join, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const COPY_ROOTS = [
@@ -70,6 +70,22 @@ export async function migrateLocalWorkspace({
   const destination = resolve(destinationRoot);
   if (source === destination) {
     throw Object.assign(new Error("A pasta antiga e a pasta nova são a mesma."), { code: "SAME_WORKSPACE" });
+  }
+  const destinationFromSource = relative(source, destination);
+  const sourceFromDestination = relative(destination, source);
+  const destinationInsideSource = destinationFromSource !== ""
+    && destinationFromSource !== ".."
+    && !destinationFromSource.startsWith(`..${sep}`)
+    && !isAbsolute(destinationFromSource);
+  const sourceInsideDestination = sourceFromDestination !== ""
+    && sourceFromDestination !== ".."
+    && !sourceFromDestination.startsWith(`..${sep}`)
+    && !isAbsolute(sourceFromDestination);
+  if (destinationInsideSource || sourceInsideDestination) {
+    throw Object.assign(
+      new Error("A pasta antiga e a pasta nova não podem ficar uma dentro da outra."),
+      { code: "NESTED_WORKSPACES" },
+    );
   }
   if (!await exists(source)) {
     throw Object.assign(new Error(`A pasta de origem não existe: ${source}`), { code: "SOURCE_NOT_FOUND" });

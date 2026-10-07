@@ -58,10 +58,10 @@ for (const path of [
   }
 }
 
-if (commandAvailable(process.env.FFMPEG_PATH || "ffmpeg")) ok("FFmpeg disponível para normalização de vídeo");
+if (commandAvailable(process.env.FFMPEG_PATH || "ffmpeg", ["-version"])) ok("FFmpeg disponível para normalização de vídeo");
 else warn("FFmpeg não encontrado; recursos que precisam converter vídeo podem cair para cópia direta ou falhar na conversão");
 
-if (commandAvailable(process.env.FFPROBE_PATH || "ffprobe")) ok("ffprobe disponível para metadados de vídeo");
+if (commandAvailable(process.env.FFPROBE_PATH || "ffprobe", ["-version"])) ok("ffprobe disponível para metadados de vídeo");
 else warn("ffprobe não encontrado; duração/metadados de alguns vídeos podem ficar indisponíveis");
 
 const editorRoot = resolve(

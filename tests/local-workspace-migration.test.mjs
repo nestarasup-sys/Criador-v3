@@ -70,3 +70,21 @@ test("local workspace migration refuses to target the source itself", async () =
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("local workspace migration rejects nested source/destination paths", async () => {
+  const root = await mkdtemp(join(tmpdir(), "nymi-migrate-nested-"));
+  try {
+    const child = join(root, "new");
+    await mkdir(child, { recursive: true });
+    await assert.rejects(
+      () => migrateLocalWorkspace({ sourceRoot: root, destinationRoot: child }),
+      (error) => error?.code === "NESTED_WORKSPACES",
+    );
+    await assert.rejects(
+      () => migrateLocalWorkspace({ sourceRoot: child, destinationRoot: root }),
+      (error) => error?.code === "NESTED_WORKSPACES",
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
