@@ -44,6 +44,9 @@ jobs:
       - name: Architecture budgets
         run: npm run check:arch
 
+      - name: JavaScript syntax
+        run: npm run check:syntax
+
       - name: Typecheck
         run: npm run typecheck
 
