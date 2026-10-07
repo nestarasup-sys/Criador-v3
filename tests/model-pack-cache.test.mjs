@@ -113,8 +113,9 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
 });
 
 test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {
-  const [page, imageRuntime, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
+  const [page, cachePolicy, imageRuntime, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/cache-policy.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/image-runtime.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/image-loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
@@ -125,7 +126,7 @@ test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studi
 
   assert.match(imageRuntime, /PAGE_IMAGE_CACHE_LIMIT = 24/);
   assert.match(imageRuntime, /!src\.startsWith\("blob:"\) && !src\.startsWith\("data:"\)/);
-  assert.match(page, /MAX_PROCESSED_BASE_EXPRESSIONS = 12/);
+  assert.match(cachePolicy, /MAX_PROCESSED_BASE_EXPRESSIONS = 12/);
   assert.match(imageRuntime, /pageImageCache\.clear\(\)/);
   assert.match(page, /clearImageRuntimeCache\(\)/);
   assert.match(page, /processedBaseExpressions\.current = \{\}/);

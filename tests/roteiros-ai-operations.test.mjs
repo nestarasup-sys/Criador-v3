@@ -19,20 +19,16 @@ test("roteiros AI operations order enabled rules by priority", () => {
   assert.equal(text.includes("ignorar"), false);
 });
 
-test("roteiros AI operations select only eligible target blocks", () => {
-  const blocks = [
-    { type: "speech", textPt: "" },
-    { type: "thought", textPt: "já preenchido" },
-    { type: "speech", textPt: "" },
-  ];
-  assert.deepEqual(targetIndicesFor(blocks, "fill-empty"), [0, 2]);
-  assert.deepEqual(targetIndicesFor(blocks, "replace-all"), [0, 1, 2]);
+test("roteiros AI operations validate and deduplicate explicit target blocks", () => {
+  const section = { reactionBlocks: [{}, {}, {}] };
+  assert.deepEqual(targetIndicesFor(section, [0, 2, 2]), [0, 2]);
+  assert.throws(() => targetIndicesFor(section, [0, 3]), /blocos-alvo inválidos/);
 });
 
 test("roteiros AI operations reject context rewrites that erase meaning", () => {
   assert.throws(
     () => validateMeaningfulContextRewrite("Uma descrição longa sobre o conflito entre os personagens.", "ok"),
-    /reescrita substancial|curta|contexto/i,
+    /superficial|mais completa/i,
   );
   assert.doesNotThrow(() => validateMeaningfulContextRewrite(
     "FYN encontra Marek na biblioteca durante uma discussão tensa.",
@@ -41,8 +37,8 @@ test("roteiros AI operations reject context rewrites that erase meaning", () => 
 });
 
 test("roteiros semantic similarity is bounded and recognizes repetition", () => {
-  const repeated = semanticSimilarity("eu não confio em você", "Eu não confio em você!");
-  const different = semanticSimilarity("eu não confio em você", "vamos sair daqui agora");
+  const repeated = semanticSimilarity("Eu realmente não confio nessa pessoa agora", "Eu realmente não confio nessa pessoa agora!");
+  const different = semanticSimilarity("Eu realmente não confio nessa pessoa agora", "Precisamos sair imediatamente deste lugar");
   assert.ok(repeated >= 0 && repeated <= 1);
   assert.ok(different >= 0 && different <= 1);
   assert.ok(repeated > different);

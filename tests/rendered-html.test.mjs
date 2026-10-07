@@ -89,10 +89,13 @@ test("trocar V0 e V1 não troca o modelo ativo automaticamente", async () => {
 });
 
 test("exporta o fundo diretamente em assets/backgrounds", async () => {
-  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
+  const [server, exportFs] = await Promise.all([
+    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/export-filesystem.mjs", import.meta.url), "utf8"),
+  ]);
   assert.match(
-    server,
-    /function roteiroBackgroundExportRoot\(scriptTitle, target = "v4"\)\s*\{\s*return join\(roteiroProjectRoot\(scriptTitle, target\), "assets", "backgrounds"\);/s,
+    exportFs,
+    /function backgroundExportRoot\(scriptTitle, target = "v4"\)\s*\{\s*return join\(projectRoot\(scriptTitle, target\), "assets", "backgrounds"\);/s,
   );
 
   const route = server.match(/if \(request\.method === "POST" && url\.pathname === "\/roteiros\/export-background"\) \{([\s\S]*?)\n  \}/)?.[1] ?? "";
@@ -270,8 +273,9 @@ test("creates speech and thought bubbles from the left Studio toolbar", async ()
 });
 
 test("mantém somente Base pronta no catálogo de rosto", async () => {
-  const [page, css] = await Promise.all([
+  const [page, thumbnail, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/components/BasePackThumbnail.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
   assert.match(page, /<b>Base pronta<\/b>/);
@@ -279,9 +283,9 @@ test("mantém somente Base pronta no catálogo de rosto", async () => {
   assert.doesNotMatch(page, /onClick=\{\(\) => changeFaceMode\("pack"\)\}/);
   assert.match(page, /if \(nextCategory === "rostos"\) \{[\s\S]*setFaceMode\("base"\)/);
   assert.match(page, /category === "rostos" \? "face-catalog"/);
-  assert.match(page, /function BasePackThumbnail/);
-  assert.match(page, /createBasePackThumbnail\(src\)/);
-  assert.match(page, /createCharacterPhotoDataUrl\(canvas\)/);
+  assert.match(thumbnail, /function BasePackThumbnail/);
+  assert.match(thumbnail, /createBasePackThumbnail\(src\)/);
+  assert.match(thumbnail, /createCharacterPhotoDataUrl\(canvas\)/);
   assert.match(page, /<BasePackThumbnail src=\{baseExpressionSource\(pack, "normal"\)\} name=\{pack\.name\} \/>/);
   assert.match(css, /\.base-pack-selector\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0,1fr\)\)/s);
   assert.match(css, /\.base-pack-thumbnail-loading/);
@@ -1200,6 +1204,9 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
     readFile(new URL("../app/roteiros/export-contract.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../services/roteiros/service.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/ai-gateway.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/ai-operations.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../services/roteiros/export-filesystem.mjs", import.meta.url), "utf8"),
     readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/domain/document-schemas.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/roteiros.module.css", import.meta.url), "utf8"),
@@ -1234,8 +1241,8 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /expressão \$\{progress\.expressionIndex \+ 1\}\/\$\{progress\.expressionCount\}/);
   assert.match(editor, /openExportFolder\("videos"\)/);
   assert.match(editor, /Abrir pasta de vídeos/);
-  assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
-  assert.match(editor, /key=\{`\$\{section\.video\.storedPath\}-\$\{section\.video\.updatedAt\}`\}/);
+  assert.match(card, /encodeURIComponent\(section\.video\?\.updatedAt/);
+  assert.match(card, /key=\{`\$\{section\.video\.storedPath\}-\$\{section\.video\.updatedAt\}`\}/);
   assert.match(storage, /signal\?: AbortSignal/);
   assert.match(aiGateway, /AI_TIMEOUT_MS = 90_000/);
   assert.match(aiOperations, /FONTE ÚNICA/);
@@ -1255,12 +1262,12 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /timings\.extractWriteMs = performance\.now\(\) - phaseStartedAt/);
   assert.match(server, /roundedTimings/);
   assert.match(server, /target === "videos"/);
-  assert.match(server, /function insideOrSame\(parent, target\)/);
+  assert.match(exportFs, /function insideOrSame\(parent, target\)/);
   assert.match(server, /insideOrSame\(exportRoot, folder\)/);
   assert.match(server, /insideOrSame\(allowedRoot, folder\)/);
   assert.match(server, /roteiroVideoExportRoot\(body\?\.scriptTitle, exportTarget\.id\)/);
   assert.match(exportFs, /projectHasScriptManifest/);
-  assert.match(server, /await rm\(projectRoot, \{ recursive: true, force: true \}\)/);
+  assert.match(exportFs, /await rm\(folder, \{ recursive: true, force: true \}\)/);
   assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
   assert.match(editor, /Exportar para V4/);
   assert.match(editor, /ROTEIRO_EXPORT_TARGETS/);

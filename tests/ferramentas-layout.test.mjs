@@ -22,7 +22,7 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing, server, controls, normalization] = await Promise.all([
+  const [page, config, compositor, storage, processing, server, controls, normalization, editorState] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
@@ -31,6 +31,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
     read("local-data-server.mjs"),
     read("app/Ferramentas/fabricador-de-modelo/components/ControlPrimitives.tsx"),
     read("services/fabricator/normalization.mjs"),
+    read("app/Ferramentas/fabricador-de-modelo/editor-state.ts"),
   ]);
 
   assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -121,10 +122,11 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
 });
 
 test("Fabricador exibe as grades de manpu para seleção por expressão", async () => {
-  const [page, config, compositor] = await Promise.all([
+  const [page, config, compositor, profileState] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/profile-state.ts"),
   ]);
 
   assert.match(page, /Escolha qualquer uma das \$\{manpuCellCount\} células recortadas/);
