@@ -10,7 +10,7 @@ import {
   type PcExpressionPack,
   type Selection,
   type Studio,
-} from "./types";
+} from "./types.ts";
 
 export const EMPTY_DATA: AppData = {
   characters: [],
