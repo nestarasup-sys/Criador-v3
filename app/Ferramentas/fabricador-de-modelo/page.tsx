@@ -9,9 +9,9 @@ import { loadPcModels } from "../../creator/creator-storage";
 import type { BasePackCollection } from "../../creator/base-packs";
 import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
-import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEffectImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
+import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
 import { DEFAULT_TEMPLATE_SKIN_COLOR, TEMPLATE_SKIN_PALETTE, normalizeTemplateSkinColor, recolorTemplateSkinPixels } from "./core/skin-color.mjs";
-import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame, type LoadedPair } from "./core/compositor";
+import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame } from "./core/compositor";
 import {
   CANVAS_SIZE,
   DEFAULT_TEMPLATE_SCALE_X,
@@ -46,6 +46,11 @@ import {
   type FabricatorAsset,
   type FabricatorAssetKind,
 } from "./fabricador-storage";
+import {
+  createFabricatorOutputRenderCaches,
+  generateFabricatorOutputSet,
+  renderFabricatorOutput,
+} from "./output-renderer";
 import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, FacePresetCollection, ManpuGrid, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import {
@@ -110,9 +115,7 @@ export default function FabricadorDeModeloPage() {
   const exportLockRef = useRef(false);
   const generatedOutputsRef = useRef<GeneratedOutputs>(EMPTY_GENERATED_OUTPUTS);
   const editorHistoryRef = useRef<EditorSnapshot[]>([]);
-  const effectProcessingCache = useRef(new Map<string, Promise<EyePiece | EyePiece[]>>());
-  const eyeImageCache = useRef<{ source: EyePair | null; open?: Promise<LoadedPair>; pt?: Promise<LoadedPair>; closed?: Promise<LoadedPair> }>({ source: null });
-  const browImageCache = useRef<{ source: EyePiece | null; value?: Promise<LoadedPair> }>({ source: null });
+  const outputRenderCaches = useRef(createFabricatorOutputRenderCaches());
 
   const [section, setSection] = useState<WorkspaceSection>("assets");
   const [activeLayer, setActiveLayer] = useState<FabricatorAssetKind>("eyes");
@@ -1593,92 +1596,40 @@ export default function FabricadorDeModeloPage() {
     }
   };
 
-  const processEffectAssetForRender = (asset: FabricatorAsset, chroma: ChromaSettings = asset.chroma ?? DEFAULT_CHROMA_SETTINGS) => {
-    const cacheKey = `${asset.id}:${asset.kind}:${asset.grid ?? "7x3"}:${chroma.strength}:${chroma.tolerance}:${chroma.softness}`;
-    const cached = effectProcessingCache.current.get(cacheKey);
-    if (cached) return cached;
-    const operation: Promise<EyePiece | EyePiece[]> = assetToFile(asset).then<EyePiece | EyePiece[]>((file) =>
-      asset.kind === "manpu"
-        ? processManpuSheet(file, chroma, asset.grid ?? "7x3")
-        : processEffectImage(file, chroma)
-    );
-    effectProcessingCache.current.set(cacheKey, operation);
-    operation.catch(() => effectProcessingCache.current.delete(cacheKey));
-    return operation;
-  };
-
-  const loadEffectImagesForExpression = async (expressionIndex: number, preset: FacePreset) => {
-    const images: Partial<Record<FaceEffectKind, HTMLImageElement>> = {};
-    for (const kind of EFFECT_KINDS) {
-      const assetId = preset.effectAssets[kind];
-      if (!assetId || !preset.enabledEffects[kind]) continue;
-      const asset = libraryAssets.find((entry) => entry.id === assetId && entry.kind === kind);
-      if (!asset) continue;
-      const effectiveChroma = activeEffectAssetIds[kind] === assetId ? effectChromaSettings[kind] : asset.chroma ?? DEFAULT_CHROMA_SETTINGS;
-      const processed = await processEffectAssetForRender(asset, effectiveChroma);
-      if (kind === "manpu") {
-        const pieces = processed as EyePiece[];
-        const pieceIndex = preset.effectPieceIndexes.manpu ?? expressionIndex;
-        if (pieces[pieceIndex]) images[kind] = await loadImage(pieces[pieceIndex].dataUrl);
-      } else {
-        images[kind] = await loadImage((processed as EyePiece).dataUrl);
-      }
-    }
-    return images;
-  };
-
-  const imagesForEyeState = (expressionState: EyeState) => {
-    if (!pair) return null;
-    if (eyeImageCache.current.source !== pair) eyeImageCache.current = { source: pair };
-    const existing = eyeImageCache.current[expressionState];
-    if (existing) return existing;
-    const operation = imageFromPair(pair, expressionState);
-    eyeImageCache.current[expressionState] = operation;
-    return operation;
-  };
-
-  const imagesForBrows = () => {
-    if (!eyebrowPair) return null;
-    if (browImageCache.current.source !== eyebrowPair) browImageCache.current = { source: eyebrowPair };
-    if (!browImageCache.current.value) browImageCache.current.value = imageFromPiece(eyebrowPair);
-    return browImageCache.current.value;
-  };
-
-  const renderOutput = async (expressionIndex: number, expressionState: EyeState = "open", mouthVariant: "base" | "talk" = "base", presetOverride?: FacePreset) => {
-    if (!template || !pair) return null;
-    const eyeImages = imagesForEyeState(expressionState);
-    if (!eyeImages) return null;
-    const images = await eyeImages;
-    const browPromise = imagesForBrows();
-    const browImages = browPromise ? await browPromise : null;
-    const preset = presetOverride ?? presets[expressionIndex] ?? defaultPresetForIndex(expressionIndex);
-    const talkIndex = Number.isInteger(preset.mouthTalkIndex) ? preset.mouthTalkIndex : expressionIndex;
-    const mouthSource = mouthVariant === "talk" && mouthTalkPieces.length === EYE_EXPRESSIONS.length
-      ? mouthTalkPieces[talkIndex] ?? mouthTalkPieces[expressionIndex]
-      : mouthPieces[expressionIndex];
-    const expressionMouth = mouthSource ? await loadImage(mouthSource.dataUrl) : null;
-    const expressionEffects = await loadEffectImagesForExpression(expressionIndex, preset);
-    const expressionEffectPlacements = Object.fromEntries(EFFECT_KINDS.map((kind) => {
-      const assetId = preset.effectAssets[kind];
-      const asset = assetId ? libraryAssets.find((entry) => entry.id === assetId && entry.kind === kind) : null;
-      // Efeitos procedurais não possuem assetId. Nesse caso, a posição editada
-      // no preview é a fonte de verdade e precisa acompanhar todas as 21 saídas.
-      // Para assets, continuamos usando a posição específica salva na biblioteca
-      // quando a expressão não está usando o asset atualmente carregado.
-      const isProcedural = preset.effectSettings[kind]?.source === "gradient";
-      const placementForExpression = isProcedural || (assetId && activeEffectAssetIds[kind] === assetId)
-        ? effectPlacements[kind]
-        : asset?.placement ?? DEFAULT_EFFECT_PLACEMENTS[kind];
-      return [kind, placementForExpression];
-    })) as Record<FaceEffectKind, EyePlacement>;
-    const canvas = document.createElement("canvas");
-    canvas.width = CANVAS_SIZE;
-    canvas.height = CANVAS_SIZE;
-    const context = canvas.getContext("2d");
-    if (!context) throw new Error("Canvas indisponível.");
-    drawComposition(context, template, images, eyePlacements, expressionState, preset.eyes, browImages, eyebrowPlacement, preset.eyebrows, expressionMouth, mouthPlacement, preset.mouth, expressionEffects, expressionEffectPlacements, preset.effects, preset.enabledEffects, preset.effectAssets, preset.effectSettings, preset.mouthHalo, preset.templateScaleX);
-    return canvas.toDataURL("image/png");
-  };
+  const renderOutput = useCallback((
+    expressionIndex: number,
+    expressionState: EyeState = "open",
+    mouthVariant: "base" | "talk" = "base",
+    presetOverride?: FacePreset,
+  ) => renderFabricatorOutput({
+    template,
+    pair,
+    eyebrowPair,
+    mouthPieces,
+    mouthTalkPieces,
+    presets,
+    libraryAssets,
+    activeEffectAssetIds,
+    effectChromaSettings,
+    effectPlacements,
+    eyePlacements,
+    eyebrowPlacement,
+    mouthPlacement,
+  }, outputRenderCaches.current, expressionIndex, expressionState, mouthVariant, presetOverride), [
+    template,
+    pair,
+    eyebrowPair,
+    mouthPieces,
+    mouthTalkPieces,
+    presets,
+    libraryAssets,
+    activeEffectAssetIds,
+    effectChromaSettings,
+    effectPlacements,
+    eyePlacements,
+    eyebrowPlacement,
+    mouthPlacement,
+  ]);
 
   const renderExpressionGrid = async () => {
     if (renderingExpressionGrid) return;
@@ -1739,32 +1690,17 @@ export default function FabricadorDeModeloPage() {
     generationLockRef.current = true;
     setGenerating(true);
     try {
-       setStatus("Gerando 21 expressões base, PT, talk, blink, PT talk e PT blink…");
-       const outputs: GeneratedOutputs = { base: [], pt: [], talk: [], blink: [], ptTalk: [], ptBlink: [] };
-      for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
-         const [base, pt, talk, blink, ptTalk, ptBlink] = await Promise.all([
-           renderOutput(index, "open", "base"),
-           renderOutput(index, "pt", "base"),
-           renderOutput(index, "open", "talk"),
-           renderOutput(index, "closed", "base"),
-           renderOutput(index, "pt", "talk"),
-           renderOutput(index, "closed", "base"),
-         ]);
-         if (!base || !pt || !talk || !blink || !ptTalk || !ptBlink) throw new Error(`Falha ao gerar a expressão ${index + 1}.`);
-         outputs.base.push(base);
-         outputs.pt.push(pt);
-         outputs.talk.push(talk);
-         outputs.blink.push(blink);
-         outputs.ptTalk.push(ptTalk);
-         outputs.ptBlink.push(ptBlink);
-         setStatus(`Gerando variações: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
-      }
-       setGenerated(outputs.base);
-       generatedOutputsRef.current = outputs;
-       setGeneratedOutputs(outputs);
-       setGeneratedVariant("base");
-       setStatus("21 expressões + PT, talk, blink, PT talk e PT blink gerados. Revise a grade antes de exportar.");
-       return outputs.base;
+      setStatus("Gerando 21 expressões base, PT, talk, blink, PT talk e PT blink…");
+      const outputs = await generateFabricatorOutputSet(
+        renderOutput,
+        (completed, total) => setStatus(`Gerando variações: ${completed}/${total}…`),
+      );
+      setGenerated(outputs.base);
+      generatedOutputsRef.current = outputs;
+      setGeneratedOutputs(outputs);
+      setGeneratedVariant("base");
+      setStatus("21 expressões + PT, talk, blink, PT talk e PT blink gerados. Revise a grade antes de exportar.");
+      return outputs.base;
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Falha ao gerar expressões.");
       return null;
