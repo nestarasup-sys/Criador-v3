@@ -223,7 +223,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(exportRoutes, /export-characters/);
   assert.match(exportRoutes, /nymi-character-staging/);
   assert.match(exportRoutes, /nymi-character-previous/);
-  assert.match(exportRoutes, /runWithConcurrency\(exportEntries, 2/);
+  assert.match(exportRoutes, /runWithConcurrency\([\s\S]*?exportEntries,[\s\S]*?2,/);
   assert.match(exportRoutes, /timings\.zipParseMs = performance\.now\(\) - phaseStartedAt/);
   assert.match(exportRoutes, /timings\.extractWriteMs = performance\.now\(\) - phaseStartedAt/);
   assert.match(exportRoutes, /roundedTimings/);
