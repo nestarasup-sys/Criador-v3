@@ -1,26 +1,75 @@
 # Nymi Gacha
 
-Editor local de personagens com modelos feminino e masculino, catálogo de roupas e cabelos, ajuste visual, máscara de corpo e exportação em PNG/ZIP.
+Aplicação local para criação de personagens, Fabricador de modelos, Studio, Roteiros, Base de dados e fluxos de vídeo.
 
-## Como abrir
+A arquitetura atual é **local-first**: o código fica no Git; seus dados reais de trabalho ficam somente no PC.
 
-Execute `INICIAR-NYMI-GACHA.bat`. O arquivo inicia:
+## Requisitos
 
-- o aplicativo em `http://localhost:6700`;
-- o serviço de dados locais em `http://127.0.0.1:6800`.
+- Windows;
+- Node.js **22.13.0 ou superior** (inclui npm);
+- Git, para clonar/atualizar;
+- FFmpeg + ffprobe são recomendados para normalização e leitura de vídeos, mas não são necessários para abrir o editor.
 
-Os dados compartilhados entre navegadores ficam em `dados-locais-premium/`. Essa pasta contém os personagens, metadados, imagens importadas, packs e backups automáticos.
+## Abrir o aplicativo
 
-## Primeira migração
+Na pasta do projeto, execute:
 
-Abra uma vez o navegador que contém os personagens antigos. No painel esquerdo, clique em **Migrar dados deste navegador**. Depois da migração, Chrome, Edge ou outro navegador carregará os mesmos dados do PC.
+`INICIAR-NYMI-GACHA.bat`
 
-## Comandos úteis
+No primeiro uso ou quando `package-lock.json`/Node mudarem, o launcher executa `npm ci` automaticamente. Depois ele cria o build e sobe:
 
-- `npm run dev`: inicia apenas a interface web em `localhost:6700`.
-- `npm run data-server`: inicia apenas o armazenamento do PC.
-- `npm run build`: valida a aplicação.
-- `npm run typecheck`: valida TypeScript sem gerar arquivos.
-- `npm run lint`: executa o lint (avisos de `<img>` são conhecidos e não bloqueiam o build).
-- `npm run test:unit`: executa os testes sem repetir o build.
-- `npm test`: executa o build e os testes completos.
+- interface: `http://localhost:6700`;
+- dados locais: `http://127.0.0.1:6800`.
+
+## Criando uma pasta nova
+
+O procedimento completo está em [docs/FRESH_CLONE.md](docs/FRESH_CLONE.md).
+
+Resumo:
+
+```bat
+git clone -b autonomous-overhaul https://github.com/nestarasup-sys/Criador-v3.git "C:\TRABALHO 2\NYMI-GACHA-NOVO"
+cd /d "C:\TRABALHO 2\NYMI-GACHA-NOVO"
+npm run migrate:local -- "C:\CAMINHO\DA\PASTA-ANTIGA"
+```
+
+A migração **copia**, não move, os dados ignorados pelo Git. Se quiser começar vazio, simplesmente pule o comando de migração.
+
+## Onde ficam os dados
+
+Por padrão:
+
+- dados do app: `dados-locais-premium/`;
+- modelos fabricados: `public/models/modelos/`;
+- prints: `C:\PRINTS GACHA NYMI`;
+- exportação Editor V4: configurável por `GACHA_EDITOR_V4_PROJECTS_ROOT`.
+
+`dados-locais-premium/` e modelos gerados são deliberadamente ignorados pelo Git. Isso evita repositório gigantesco, exposição de dados e clones frágeis.
+
+Veja `.env.example` para sobrescrever caminhos/portas com `.env.local`.
+
+## Diagnóstico
+
+```bat
+npm run doctor
+```
+
+O diagnóstico verifica Node/npm, dependências, permissões de gravação, FFmpeg/ffprobe e o caminho do Editor V4.
+
+## Desenvolvimento e qualidade
+
+- `npm run bootstrap:local`: sincroniza `node_modules` com o lockfile.
+- `npm run dev`: interface em modo desenvolvimento.
+- `npm run data-server`: serviço de dados local.
+- `npm run build`: build de produção.
+- `npm run typecheck`: TypeScript.
+- `npm run lint`: ESLint.
+- `npm run test:unit`: testes unitários e de contrato.
+- `npm run check:quality`: higiene + budgets + sintaxe + typecheck + lint + build + testes.
+- `npm run test:e2e:fabricador`: smoke E2E do Fabricador.
+- `npm run migrate:local -- "PASTA-ANTIGA"`: copia dados locais para um checkout novo.
+
+## Regra do repositório
+
+O Git representa uma instalação reproduzível do produto, não uma cópia do computador do autor. O CI falha se dados locais, modelos gerados, caches ou arquivos grandes proibidos voltarem a ser rastreados.

@@ -14,6 +14,10 @@ function trackedFiles() {
 }
 
 function isForbidden(path) {
+  if (path === ".env" || path === ".env.local") return "arquivo de ambiente local/secreto";
+  if (path === ".nymi-local-deps.json") return "estado local do bootstrap";
+  if (path.startsWith("node_modules/")) return "dependência instalada";
+  if (path.startsWith("dist/") || path.startsWith(".next/") || path.startsWith(".wrangler/")) return "saída de build";
   if (path.startsWith("dados-locais-premium/")) return "dados locais premium";
   if (path.startsWith("dados-locais/")) return "dados locais";
   if (path.startsWith("backups/")) return "backup local";
