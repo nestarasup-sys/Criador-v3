@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element -- editor previews use dynamic Blob/data URLs and local assets. */
 
-import JSZip from "jszip";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ToolsTopbar } from "../components/ToolsTopbar";
 import { loadPcModels } from "../../creator/creator-storage";
@@ -11,7 +10,7 @@ import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
 import { DEFAULT_TEMPLATE_SKIN_COLOR, TEMPLATE_SKIN_PALETTE, normalizeTemplateSkinColor, recolorTemplateSkinPixels } from "./core/skin-color.mjs";
-import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame, type LoadedPair } from "./core/compositor";
+import { assetToFile, drawComposition, imageFromPair, imageFromPiece, type LoadedPair } from "./core/compositor";
 import {
   CANVAS_SIZE,
   DEFAULT_TEMPLATE_SCALE_X,
@@ -28,7 +27,6 @@ import {
   defaultPresetForIndex,
   mergeSavedPresets,
   presetCollectionFromState,
-  presetTagForProfile,
   type ModelGender,
   type NextModel,
   type PresetProfile,
@@ -51,6 +49,12 @@ import {
   generateFabricatorOutputSet,
   renderFabricatorOutput,
 } from "./output-renderer";
+import {
+  buildFabricatorModelManifest,
+  downloadFabricatorPackage,
+  fetchNextFabricatorModel,
+  publishFabricatorModel,
+} from "./model-export";
 import type { AssetPlacement, EyePair, EyePairPlacement, EyePiece, EyePlacement, EyeState, EyeTransform, FaceEffectKind, FaceEffectSettings, FaceEffectSource, FacePreset, FacePresetCollection, ManpuGrid, MouthPiece } from "./types/eye-model";
 import { localDataFetch } from "../../lib/local-data-client";
 import {
@@ -1710,23 +1714,6 @@ export default function FabricadorDeModeloPage() {
     }
   };
 
-  const exportSessionRequest = async (gender: ModelGender, modelId: string, suffix = "", init: RequestInit = {}) => {
-    const response = await localDataFetch(`/models/export-session/${gender}/${modelId}${suffix}`, init);
-    if (!response.ok) {
-      const detail = await response.json().catch(() => ({})) as { error?: string; requestId?: string };
-      throw new Error(`${detail.error || "Falha na sessão de exportação."}${detail.requestId ? ` (código ${detail.requestId})` : ""}`);
-    }
-    return response;
-  };
-
-  const uploadCatalogFile = async (gender: ModelGender, modelId: string, fileName: string, body: BodyInit, contentType: string) => {
-    await exportSessionRequest(gender, modelId, `/file/${encodeURIComponent(fileName)}`, {
-      method: "POST",
-      headers: { "Content-Type": contentType },
-      body,
-    });
-  };
-
   const exportModel = async () => {
     if (!pair || exportLockRef.current || generationLockRef.current || processingBusy) return;
     const replaceableModels = catalogModels[exportGender].filter((model) => /^modelo-\d+$/i.test(model.id));
@@ -1735,94 +1722,69 @@ export default function FabricadorDeModeloPage() {
       setStatus("Não há um modelo compatível selecionado para substituir.");
       return;
     }
-    if (replaceExistingModel && !window.confirm(`Substituir as 126 imagens faciais de ${selectedReplacement.name}? Roupas, cabelos, arquivos adicionais e configurações existentes serão preservados; só a tag do preset será atualizada nos metadados.`)) {
+    if (
+      replaceExistingModel
+      && !window.confirm(
+        `Substituir as 126 imagens faciais de ${selectedReplacement.name}? Roupas, cabelos, arquivos adicionais e configurações existentes serão preservados; só a tag do preset será atualizada nos metadados.`,
+      )
+    ) {
       setExportFeedback({ kind: "cancelled", message: "Operação cancelada. Nenhum arquivo foi alterado." });
       return;
     }
+
     exportLockRef.current = true;
     setExporting(true);
     setExportFeedback({ kind: "progress", message: "Preparando a exportação…" });
-    let exportSession: NextModel | null = null;
     try {
       let variants = generatedOutputsRef.current;
       const outputs = variants.base.length === EYE_EXPRESSIONS.length
         ? variants.base
         : await generateExpressionOutputs();
       variants = generatedOutputsRef.current;
-      if (!outputs || outputs.length !== EYE_EXPRESSIONS.length) throw new Error("As 21 expressões precisam estar prontas.");
+      if (!outputs || outputs.length !== EYE_EXPRESSIONS.length) {
+        throw new Error("As 21 expressões precisam estar prontas.");
+      }
+
       let targetModel: NextModel;
       if (replaceExistingModel && selectedReplacement) {
         const number = Number(selectedReplacement.id.match(/^modelo-(\d+)$/i)?.[1]);
-        if (!Number.isInteger(number) || number < 1) throw new Error("O modelo selecionado não tem uma numeração válida.");
+        if (!Number.isInteger(number) || number < 1) {
+          throw new Error("O modelo selecionado não tem uma numeração válida.");
+        }
         targetModel = { gender: exportGender, number, id: selectedReplacement.id };
       } else {
-        const numberResponse = await localDataFetch(`/models/next/${exportGender}`, { cache: "no-store" });
-        if (!numberResponse.ok) throw new Error("Não consegui calcular o próximo número.");
-        const numberData = await numberResponse.json() as Partial<NextModel>;
-        if (typeof numberData.number !== "number" || !Number.isInteger(numberData.number) || numberData.number < 1) throw new Error("Numeração inválida.");
-        targetModel = { gender: exportGender, number: numberData.number, id: `modelo-${numberData.number}` };
+        targetModel = await fetchNextFabricatorModel(exportGender);
       }
-      const presetTag = presetTagForProfile(activeProfile);
-      const manifest = {
-        name: `Modelo ${targetModel.number}`,
-        gender: targetModel.gender,
-        type: "head-only",
-        anchor: "neck-base",
-        anchorX: 960,
-        anchorY: 346,
-        baseScale: 1,
-        width: 1920,
-        height: 1080,
-        source: "fabricador-de-modelo-v2",
-        presetTag,
-        expressionKeys: EYE_EXPRESSIONS.map(([key]) => key),
-        generator: {
-          version: 3,
-          includes: [
-            "eyes",
-            "eyes-pt",
-            ...(eyebrowPair ? ["eyebrows"] : []),
-            ...(mouthPieces.length ? ["mouths"] : []),
-            ...(mouthTalkPieces.length ? ["mouths-talk"] : []),
-            ...(presets.some((preset) => preset.mouthHalo.enabled) ? ["mouth-halo"] : []),
-            ...EFFECT_KINDS.filter((kind) => presets.some((preset) => preset.enabledEffects[kind] && preset.effectAssets[kind])),
-          ],
-        },
-      };
-      setStatus(`${replaceExistingModel ? "Preparando substituição" : "Preparando"} ${targetModel.gender}/${targetModel.id}…`);
-      setExportFeedback({ kind: "progress", message: `Preparando ${targetModel.id}: gerando e enviando 126 imagens. Não feche esta página.` });
-      await exportSessionRequest(targetModel.gender, targetModel.id, "", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ replaceExisting: replaceExistingModel }),
+
+      const manifest = buildFabricatorModelManifest({
+        targetModel,
+        profile: activeProfile,
+        presets,
+        hasEyebrows: Boolean(eyebrowPair),
+        mouthPieces,
+        mouthTalkPieces,
       });
-      exportSession = targetModel;
-      await uploadCatalogFile(targetModel.gender, targetModel.id, `${targetModel.id}.json`, JSON.stringify(manifest, null, 2), "application/json");
-      for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
-        const [key] = EYE_EXPRESSIONS[index];
-        const base = await toCatalogFrame(outputs[index]);
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}.png`, base, "image/png");
-        const talk = variants.talk[index];
-        const pt = variants.pt[index];
-        const blink = variants.blink[index];
-        const ptTalk = variants.ptTalk[index];
-        const ptBlink = variants.ptBlink[index];
-        if (!pt) throw new Error(`Falha no PT de ${key}.`);
-        if (!talk) throw new Error(`Falha no talk de ${key}.`);
-        if (!blink) throw new Error(`Falha no blink de ${key}.`);
-        if (!ptTalk) throw new Error(`Falha no PT talk de ${key}.`);
-        if (!ptBlink) throw new Error(`Falha no PT blink de ${key}.`);
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_talk.png`, await toCatalogFrame(talk), "image/png");
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `${key}_blink.png`, await toCatalogFrame(blink), "image/png");
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}.png`, await toCatalogFrame(pt), "image/png");
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_talk.png`, await toCatalogFrame(ptTalk), "image/png");
-        await uploadCatalogFile(targetModel.gender, targetModel.id, `pt_${key}_blink.png`, await toCatalogFrame(ptBlink), "image/png");
-        setStatus(`Exportando ${targetModel.id}: ${index + 1}/${EYE_EXPRESSIONS.length}…`);
-        setExportFeedback({ kind: "progress", message: `Enviando ${targetModel.id}: expressão ${index + 1} de 21 (${Math.round(((index + 1) / EYE_EXPRESSIONS.length) * 100)}%).` });
-      }
-      setStatus(`Finalizando ${targetModel.id}…`);
-      await exportSessionRequest(targetModel.gender, targetModel.id, "/commit", { method: "POST" });
-      exportSession = null;
+      const presetTag = manifest.presetTag;
+
+      setStatus(`${replaceExistingModel ? "Preparando substituição" : "Preparando"} ${targetModel.gender}/${targetModel.id}…`);
+      setExportFeedback({
+        kind: "progress",
+        message: `Preparando ${targetModel.id}: gerando e enviando 126 imagens. Não feche esta página.`,
+      });
+
+      await publishFabricatorModel({
+        targetModel,
+        replaceExisting: replaceExistingModel,
+        manifest,
+        outputs: variants,
+        onProgress: (completed, total) => {
+          setStatus(`Exportando ${targetModel.id}: ${completed}/${total}…`);
+          setExportFeedback({
+            kind: "progress",
+            message: `Enviando ${targetModel.id}: expressão ${completed} de ${total} (${Math.round((completed / total) * 100)}%).`,
+          });
+        },
+      });
 
       setExportFeedback({ kind: "progress", message: "Arquivos gravados. Atualizando catálogo…" });
       const refreshedCatalog = await loadPcModels().catch(() => null);
@@ -1832,17 +1794,7 @@ export default function FabricadorDeModeloPage() {
       }
 
       if (!replaceExistingModel) {
-        const nextResponse = await localDataFetch(`/models/next/${targetModel.gender}`, { cache: "no-store" }).catch(() => null);
-        if (nextResponse?.ok) {
-          const nextData = await nextResponse.json().catch(() => null) as Partial<NextModel> | null;
-          if (nextData && typeof nextData.number === "number" && Number.isInteger(nextData.number) && nextData.number > 0 && nextData.id === `modelo-${nextData.number}`) {
-            setNextModel({ gender: targetModel.gender, number: nextData.number, id: nextData.id });
-          } else {
-            setNextModel(null);
-          }
-        } else {
-          setNextModel(null);
-        }
+        setNextModel(await fetchNextFabricatorModel(targetModel.gender).catch(() => null));
       }
 
       setStatus(replaceExistingModel
@@ -1856,12 +1808,12 @@ export default function FabricadorDeModeloPage() {
       });
       window.dispatchEvent(new CustomEvent("nymi:models-updated"));
     } catch (error) {
-      if (exportSession) {
-        await exportSessionRequest(exportSession.gender, exportSession.id, "", { method: "DELETE" }).catch(() => undefined);
-      }
       const message = error instanceof Error ? error.message : "erro desconhecido";
       setStatus(`Exportação não concluída: ${message}`);
-      setExportFeedback({ kind: "error", message: `Falha na exportação: ${message}. O modelo existente não foi alterado; corrija o problema e tente novamente.` });
+      setExportFeedback({
+        kind: "error",
+        message: `Falha na exportação: ${message}. O modelo existente não foi alterado; corrija o problema e tente novamente.`,
+      });
     } finally {
       exportLockRef.current = false;
       setExporting(false);
@@ -1875,24 +1827,11 @@ export default function FabricadorDeModeloPage() {
       : await generateExpressionOutputs();
     variants = generatedOutputsRef.current;
     if (!outputs) return;
-    const zip = new JSZip();
-    for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
-      const [key] = EYE_EXPRESSIONS[index];
-      zip.file(`${key}.png`, outputs[index].split(",")[1], { base64: true });
-      zip.file(`pt_${key}.png`, variants.pt[index].split(",")[1], { base64: true });
-      zip.file(`${key}_talk.png`, variants.talk[index].split(",")[1], { base64: true });
-      zip.file(`${key}_blink.png`, variants.blink[index].split(",")[1], { base64: true });
-      zip.file(`pt_${key}_talk.png`, variants.ptTalk[index].split(",")[1], { base64: true });
-      zip.file(`pt_${key}_blink.png`, variants.ptBlink[index].split(",")[1], { base64: true });
+    try {
+      await downloadFabricatorPackage(variants);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Não foi possível criar o pacote.");
     }
-    zip.file("README.txt", "Fabricador de Modelo V2\n21 expressões + PT, talk, blink, PT talk e PT blink.\n");
-    const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "fabricador-modelo-v2.zip";
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   const effectsForCatalog = libraryAssets.filter((asset) => asset.kind === effectCatalogKind);
