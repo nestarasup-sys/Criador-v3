@@ -24,13 +24,13 @@ test("identifica quadros removidos ao atualizar um pacote de expressões", async
 });
 
 test("a persistência de pacotes serializa operações e expõe exclusão de quadros", async () => {
-  const [storage, server] = await Promise.all([
+  const [storage, libraryRoutes] = await Promise.all([
     import("node:fs/promises").then(({ readFile }) => readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8")),
-    import("node:fs/promises").then(({ readFile }) => readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8")),
+    import("node:fs/promises").then(({ readFile }) => readFile(new URL("../services/creator/library-routes.mjs", import.meta.url), "utf8")),
   ]);
   assert.match(storage, /let expressionPackPcQueue: Promise<void> = Promise\.resolve\(\)/);
   assert.match(storage, /enqueueExpressionPackPc/);
   assert.match(storage, /method: "DELETE"/);
-  assert.match(server, /packFrameDeleteMatch/);
-  assert.match(server, /state\.expressionPacks = frames\.length > 0/);
+  assert.match(libraryRoutes, /packFrameMatch/);
+  assert.match(libraryRoutes, /state\.expressionPacks = frames\.length > 0/);
 });
