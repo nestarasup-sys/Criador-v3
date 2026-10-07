@@ -70,5 +70,8 @@ desktop.ini
 .vscode/
 .idea/
 
+# Local bootstrap state
+/.nymi-local-deps.json
+
 # Local desktop artifacts
 /Gacha-Nymi.ico

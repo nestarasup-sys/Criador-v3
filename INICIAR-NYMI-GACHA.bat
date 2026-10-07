@@ -2,6 +2,21 @@
 setlocal
 cd /d "%~dp0"
 title NYMI GACHA 2.0
+where node >nul 2>&1
+if errorlevel 1 (
+  echo.
+  echo Node.js nao foi encontrado. Instale o Node.js 22.13 ou superior.
+  pause
+  exit /b 1
+)
+echo Verificando dependencias locais...
+node scripts/local-bootstrap.mjs
+if errorlevel 1 (
+  echo.
+  echo Falha ao preparar as dependencias locais do Nymi Gacha.
+  pause
+  exit /b 1
+)
 set "GACHA_PRINTS_ROOT=C:\PRINTS GACHA NYMI"
 rem O supervisor inicia local-data-server.mjs e substitui o antigo npm run start.
 rem Contratos: LocalPort 6800, localhost:6700 e WindowStyle Hidden para processos auxiliares.
