@@ -80,6 +80,15 @@ test("fabricator service clears deleted effect assets from presets", async () =>
       method: "PUT",
       jsonBody: {
         normal: {
+          eyes: {
+            left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+            right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+          },
+          eyebrows: {
+            left: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+            right: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
+          },
+          mouth: { scaleX: 1, scaleY: 1, rotation: 0, x: 0, y: 0 },
           enabledEffects: { blush: true, shadow: false, manpu: false },
           effectAssets: { blush: "blush-1", shadow: null, manpu: null },
         },
