@@ -4,13 +4,11 @@ import {
   EMOTIONS,
   NEW_BASE_EMOTIONS,
   STANDARD_EMOTIONS,
-  type AppData,
-  type Character,
   type Emotion,
-  type PcExpressionPack,
-  type Selection,
-  type Studio,
-} from "./types.ts";
+} from "../domain/expression-contract.ts";
+import type { Character } from "../domain/character-contract.ts";
+import type { PcExpressionPack } from "../domain/catalog-contract.ts";
+import type { AppData, Selection, Studio } from "../domain/studio-contract.ts";
 
 export const EMPTY_DATA: AppData = {
   characters: [],
