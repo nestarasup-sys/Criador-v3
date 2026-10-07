@@ -20,6 +20,7 @@ export function createCharacterRoutes({
   getCharacters,
   setCharacters,
   clearLegacyCharacters,
+  serveFile,
 }) {
   const photoQueues = new Map();
 
@@ -50,6 +51,15 @@ export function createCharacterRoutes({
         photoUrl: `http://${host}:${port}/files/characters/${characterId}/photo.png`,
         bytes: body.length,
       });
+      return true;
+    }
+
+    const photoFileMatch = url.pathname.match(/^\/files\/characters\/([a-zA-Z0-9_-]+)\/photo\.png$/);
+    if (photoFileMatch && request.method === "GET") {
+      const characterId = safeId(photoFileMatch[1]);
+      const filePath = join(photosRoot, `${characterId}.png`);
+      if (!inside(photosRoot, filePath)) throw new Error("Origem da foto inválida");
+      await serveFile(response, request, filePath);
       return true;
     }
 

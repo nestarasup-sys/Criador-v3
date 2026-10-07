@@ -196,6 +196,7 @@ const characterRoutes = createCharacterRoutes({
   getCharacters: () => characters,
   setCharacters: (nextCharacters) => { characters = nextCharacters; },
   clearLegacyCharacters: () => { state.characters = []; },
+  serveFile,
 });
 
 const studioRoutes = createStudioRoutes({
@@ -988,15 +989,6 @@ async function route(request, response) {
 
 
   if (await creatorLibraryRoutes.handle(request, response, url)) return;
-
-  const characterPhotoFileMatch = url.pathname.match(/^\/files\/characters\/([a-zA-Z0-9_-]+)\/photo\.png$/);
-  if (characterPhotoFileMatch && request.method === "GET") {
-    const characterId = safeId(characterPhotoFileMatch[1]);
-    const filePath = join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`);
-    if (!inside(CHARACTER_PHOTOS_ROOT, filePath)) throw new Error("Origem da foto inválida");
-    await serveFile(response, request, filePath);
-    return;
-  }
 
 
   sendJson(response, request, 404, { error: "Rota não encontrada" });
