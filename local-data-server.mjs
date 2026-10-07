@@ -1339,9 +1339,7 @@ async function loadLocalEnvironment() {
 
 await loadLocalEnvironment();
 await Promise.all([loadState(), roteirosService.init(), baseDadosService.init(), draftsService.init()]);
-await loadFabricatorAssets();
-await loadFabricatorPresets();
-await loadFabricatorPresetProfiles();
+await fabricatorService.initialize();
 await roteirosService.syncLibraryVideoDurations(baseDadosService.getVideos());
 
 const server = createServer({
