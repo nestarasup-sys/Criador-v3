@@ -19,6 +19,7 @@ import { createCharacterRoutes } from "./services/characters/routes.mjs";
 import { createStudioRoutes } from "./services/studio/routes.mjs";
 import { createFabricatorService } from "./services/fabricator/service.mjs";
 import { createVideoMakerService } from "./services/video-maker/service.mjs";
+import { createCreatorLibraryRoutes } from "./services/creator/library-routes.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
@@ -239,6 +240,18 @@ const videoMakerService = createVideoMakerService({
   requestBody,
   requestJson,
   readMetadata,
+  serveFile,
+});
+
+const creatorLibraryRoutes = createCreatorLibraryRoutes({
+  catalogRoot: CATALOG_ROOT,
+  packsRoot: PACKS_ROOT,
+  sendJson,
+  requestBody,
+  readMetadata,
+  mutateState: queueStateMutation,
+  persistState: queueStateWrite,
+  getState: () => state,
   serveFile,
 });
 
@@ -974,111 +987,7 @@ async function route(request, response) {
 
 
 
-  const catalogMatch = url.pathname.match(/^\/catalog\/([a-zA-Z0-9_-]+)$/);
-  if (catalogMatch && request.method === "POST") {
-    const id = safeId(catalogMatch[1]);
-    const metadata = { ...readMetadata(request), id };
-    assertMimeType(contentTypeOf(request, metadata), IMAGE_MIME_TYPES, "O item do catálogo precisa ser PNG, JPEG ou WebP.");
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const filePath = join(CATALOG_ROOT, `${id}.png`);
-    if (!inside(CATALOG_ROOT, filePath)) throw new Error("Destino inválido");
-    await queueStateMutation(async () => {
-      await writeFile(filePath, body);
-      state.catalog = [...state.catalog.filter((item) => item.id !== id), metadata];
-      await queueStateWrite();
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-  if (catalogMatch && request.method === "DELETE") {
-    const id = safeId(catalogMatch[1]);
-    const filePath = join(CATALOG_ROOT, `${id}.png`);
-    await queueStateMutation(async () => {
-      state.catalog = state.catalog.filter((item) => item.id !== id);
-      await queueStateWrite();
-      if (inside(CATALOG_ROOT, filePath)) await rm(filePath, { force: true }).catch(() => undefined);
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-
-  const packMatch = url.pathname.match(/^\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
-  if (packMatch && request.method === "POST") {
-    const packId = safeId(packMatch[1]);
-    const key = safeId(packMatch[2]);
-    const metadata = readMetadata(request);
-    assertMimeType(contentTypeOf(request, metadata), IMAGE_MIME_TYPES, "A expressão do pack precisa ser PNG, JPEG ou WebP.");
-    const body = await requestBody(request, BODY_LIMITS.image);
-    const packFolder = join(PACKS_ROOT, packId);
-    const filePath = join(packFolder, `${key}.png`);
-    if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
-    await mkdir(packFolder, { recursive: true });
-    await queueStateMutation(async () => {
-      await writeFile(filePath, body);
-      const existing = state.expressionPacks.find((pack) => pack.id === packId);
-      const frame = { key, width: metadata.width, height: metadata.height };
-      const pack = {
-        id: packId,
-        name: metadata.name,
-        model: metadata.model,
-        basePackId: metadata.basePackId ?? "padrao",
-        createdAt: metadata.createdAt,
-        frames: [...(existing?.frames ?? []).filter((item) => item.key !== key), frame],
-      };
-      state.expressionPacks = [...state.expressionPacks.filter((item) => item.id !== packId), pack];
-      await queueStateWrite();
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-
-  const packFrameDeleteMatch = url.pathname.match(/^\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
-  if (packFrameDeleteMatch && request.method === "DELETE") {
-    const packId = safeId(packFrameDeleteMatch[1]);
-    const key = safeId(packFrameDeleteMatch[2]);
-    const filePath = join(PACKS_ROOT, packId, `${key}.png`);
-    if (!inside(PACKS_ROOT, filePath)) throw new Error("Destino inválido");
-    await queueStateMutation(async () => {
-      const existing = state.expressionPacks.find((pack) => pack.id === packId);
-      if (!existing) return;
-      const frames = existing.frames.filter((item) => item.key !== key);
-      state.expressionPacks = frames.length > 0
-        ? [...state.expressionPacks.filter((pack) => pack.id !== packId), { ...existing, frames }]
-        : state.expressionPacks.filter((pack) => pack.id !== packId);
-      await queueStateWrite();
-      await rm(filePath, { force: true }).catch(() => undefined);
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-
-  const packDeleteMatch = url.pathname.match(/^\/packs\/([a-zA-Z0-9_-]+)$/);
-  if (packDeleteMatch && request.method === "DELETE") {
-    const packId = safeId(packDeleteMatch[1]);
-    const packFolder = join(PACKS_ROOT, packId);
-    await queueStateMutation(async () => {
-      state.expressionPacks = state.expressionPacks.filter((pack) => pack.id !== packId);
-      await queueStateWrite();
-      if (inside(PACKS_ROOT, packFolder)) await rm(packFolder, { recursive: true, force: true }).catch(() => undefined);
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
-
-  const catalogFileMatch = url.pathname.match(/^\/files\/catalog\/([a-zA-Z0-9_-]+)\.png$/);
-  if (catalogFileMatch && request.method === "GET") {
-    const id = safeId(catalogFileMatch[1]);
-    await serveFile(response, request, join(CATALOG_ROOT, `${id}.png`));
-    return;
-  }
-
-  const packFileMatch = url.pathname.match(/^\/files\/packs\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\.png$/);
-  if (packFileMatch && request.method === "GET") {
-    const packId = safeId(packFileMatch[1]);
-    const key = safeId(packFileMatch[2]);
-    await serveFile(response, request, join(PACKS_ROOT, packId, `${key}.png`));
-    return;
-  }
+  if (await creatorLibraryRoutes.handle(request, response, url)) return;
 
   const characterPhotoFileMatch = url.pathname.match(/^\/files\/characters\/([a-zA-Z0-9_-]+)\/photo\.png$/);
   if (characterPhotoFileMatch && request.method === "GET") {
