@@ -19,9 +19,10 @@ test("roteiros AI operations order enabled rules by priority", () => {
   assert.equal(text.includes("ignorar"), false);
 });
 
-test("roteiros AI operations validate and deduplicate explicit target blocks", () => {
+test("roteiros AI operations validate explicit target blocks and reject duplicates or out-of-range indexes", () => {
   const section = { reactionBlocks: [{}, {}, {}] };
-  assert.deepEqual(targetIndicesFor(section, [0, 2, 2]), [0, 2]);
+  assert.deepEqual(targetIndicesFor(section, [0, 2]), [0, 2]);
+  assert.throws(() => targetIndicesFor(section, [0, 2, 2]), /blocos-alvo inválidos/);
   assert.throws(() => targetIndicesFor(section, [0, 3]), /blocos-alvo inválidos/);
 });
 
@@ -32,7 +33,7 @@ test("roteiros AI operations reject context rewrites that erase meaning", () => 
   );
   assert.doesNotThrow(() => validateMeaningfulContextRewrite(
     "FYN encontra Marek na biblioteca durante uma discussão tensa.",
-    "Na biblioteca, FYN encontra Marek durante uma discussão carregada de tensão.",
+    "FYN encontra Marek na biblioteca durante uma discussão tensa entre os dois. A descrição mantém o encontro na biblioteca e o conflito entre FYN e Marek.",
   ));
 });
 

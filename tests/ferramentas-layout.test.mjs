@@ -34,7 +34,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
     read("app/Ferramentas/fabricador-de-modelo/editor-state.ts"),
   ]);
 
-  assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
+  assert.match(editorState, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
   assert.match(page, /Assets/);
   assert.match(page, /Encaixe/);
   assert.match(page, /Expressões/);
@@ -63,9 +63,9 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Configurar vínculos de fala/);
   assert.match(page, /mouthTalkIndex/);
   assert.match(page, /mouths-talk/);
-  assert.match(page, /type GeneratedOutputs = \{/);
-  assert.match(page, /ptTalk: string\[\]/);
-  assert.match(page, /ptBlink: string\[\]/);
+  assert.match(editorState, /type GeneratedOutputs = \{/);
+  assert.match(editorState, /ptTalk: string\[\]/);
+  assert.match(editorState, /ptBlink: string\[\]/);
   assert.match(page, /renderOutput\(index, "pt", "base"\)/);
   assert.match(page, /renderOutput\(index, "pt", "talk"\)/);
   assert.match(page, /renderOutput\(index, "open", "talk"\)/);
