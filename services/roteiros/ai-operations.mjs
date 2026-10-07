@@ -197,7 +197,7 @@ export function validateMeaningfulContextRewrite(source, improved) {
   }
 }
 
-async export function improveContext(body, signal) {
+export async function improveContext(body, signal) {
   const schema = { type: "object", properties: { improvedContext: { type: "string" } }, required: ["improvedContext"], additionalProperties: false };
   const scope = body.contextScope;
   if (scope !== "video-description" && scope !== "general-context") throw new Error("Informe se a melhoria é da descrição do vídeo ou do contexto geral.");
@@ -228,7 +228,7 @@ async export function improveContext(body, signal) {
   return { improvedContext, model: result.model, usage: result.usage || null, durationMs: result.durationMs || null, promptPreview: result.promptPreview || null };
 }
 
-async export function organizeProfile(body, signal) {
+export async function organizeProfile(body, signal) {
   const rawText = promptText(body.rawText, 24_000);
   if (!rawText) throw new Error("Cole um texto bruto antes de organizar a ficha.");
   const mode = body.profileMode === "relations" ? "relations" : "traits";
@@ -291,7 +291,7 @@ async export function organizeProfile(body, signal) {
   };
 }
 
-async export function generateReactions(body, signal) {
+export async function generateReactions(body, signal) {
   const opening = body.opening === true;
   const section = opening
     ? { ...(body.section || {}), description: `ABERTURA ANTES DO CONTEÚDO EXIBIDO (não reaja a uma cena ainda não iniciada):\n${body.section?.description || ""}` }
@@ -377,7 +377,7 @@ async export function generateReactions(body, signal) {
   throw new Error("Não foi possível gerar as reações.");
 }
 
-async export function blockAction(body, signal) {
+export async function blockAction(body, signal) {
   const opening = body.opening === true;
   const section = opening
     ? { ...(body.section || {}), description: `ABERTURA ANTES DO CONTEÚDO EXIBIDO (não reaja a uma cena ainda não iniciada):\n${body.section?.description || ""}` }
@@ -433,7 +433,7 @@ async export function blockAction(body, signal) {
     : { reaction: normalized[0], model: result.model, usage: result.usage || null, durationMs: result.durationMs || null, promptPreview: result.promptPreview || null };
 }
 
-async export function translate(body, signal) {
+export async function translate(body, signal) {
   const items = Array.isArray(body.items) ? body.items : [];
   if (!items.length) throw new Error("Não há falas ou pensamentos para traduzir.");
   if (items.length > AI_MAX_TARGET_BLOCKS) throw new Error(`Traduza no máximo ${AI_MAX_TARGET_BLOCKS} falas ou pensamentos por vez.`);

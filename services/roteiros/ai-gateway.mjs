@@ -48,7 +48,7 @@ export function throwIfCancelled(signal) {
   if (signal?.aborted) throw cancelledAiError();
 }
 
-async export function fetchWithTimeout(url, init = {}, timeoutMs = AI_TIMEOUT_MS, externalSignal) {
+export async function fetchWithTimeout(url, init = {}, timeoutMs = AI_TIMEOUT_MS, externalSignal) {
   const controller = new AbortController();
   let cancelledByCaller = false;
   const abortFromCaller = () => {
@@ -82,7 +82,7 @@ export function providerConfig(settings) {
   };
 }
 
-async export function listModels(settings, signal) {
+export async function listModels(settings, signal) {
   const provider = settings?.aiProvider;
   if (provider === "openai") return openAiModels(settings);
   if (provider !== "lmstudio" && provider !== "ollama") throw new Error("Selecione LM Studio ou Ollama nas configurações.");
@@ -97,7 +97,7 @@ async export function listModels(settings, signal) {
   return (data.data || []).map((item) => item.id).filter(Boolean);
 }
 
-async export function testSelectedModel(settings, signal) {
+export async function testSelectedModel(settings, signal) {
   const config = providerConfig(settings);
   if (config.provider === "openai") return testOpenAi(settings, signal);
   if (config.provider === "ollama") {
@@ -130,7 +130,7 @@ async export function testSelectedModel(settings, signal) {
   return { ok: true, model: data.model || config.model, provider: config.provider, response: String(data.choices[0].message.content).trim() };
 }
 
-async export function callAi(settings, prompt, schema, system = DEFAULT_AI_SYSTEM, signal, options = {}) {
+export async function callAi(settings, prompt, schema, system = DEFAULT_AI_SYSTEM, signal, options = {}) {
   const config = providerConfig(settings);
   const operation = options.operation || "generate";
   const promptPreview = createAiPromptSnapshot({ operation, provider: config.provider, model: config.model, instructions: system, input: prompt, variables: options.variables || {} });
@@ -216,7 +216,7 @@ export function cleanTranslation(value) {
     .trim();
 }
 
-async export function translateStudioText(settings, text, signal) {
+export async function translateStudioText(settings, text, signal) {
   const config = providerConfig(studioSettings(settings));
   const system = "You are a professional native English dialogue translator. Translate the supplied Portuguese speech or thought into natural, idiomatic English. Preserve meaning, emotion, tone, subtext, names and character voice. Return only the translated text, with no quotes, notes or explanation.";
   const user = `Translate this ${String(settings?.bubbleType || "dialogue")} from Portuguese to natural English.\n\n${text}`;
@@ -263,7 +263,7 @@ async export function translateStudioText(settings, text, signal) {
   return { translatedText, model: result.model || config.model, config };
 }
 
-async export function warmStudioModel(settings, signal, contextSize = 2048) {
+export async function warmStudioModel(settings, signal, contextSize = 2048) {
   const config = providerConfig(studioSettings(settings));
   if (config.provider === "ollama") {
     const base = config.baseUrl.replace(/\/api(?:\/.*)?$/, "");
@@ -301,7 +301,7 @@ async export function warmStudioModel(settings, signal, contextSize = 2048) {
   return { model: result.model || config.model, config };
 }
 
-async export function unloadStudioModel(loaded, signal) {
+export async function unloadStudioModel(loaded, signal) {
   if (!loaded) return;
   try {
     if (loaded.provider === "ollama") {
