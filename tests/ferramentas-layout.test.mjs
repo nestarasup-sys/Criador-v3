@@ -22,16 +22,17 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing, server, controls, normalization, editorState] = await Promise.all([
+  const [page, config, compositor, storage, processing, fabricatorService, controls, normalization, editorState, outputRenderer] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-storage.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
-    read("local-data-server.mjs"),
+    read("services/fabricator/service.mjs"),
     read("app/Ferramentas/fabricador-de-modelo/components/ControlPrimitives.tsx"),
     read("services/fabricator/normalization.mjs"),
     read("app/Ferramentas/fabricador-de-modelo/editor-state.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/output-renderer.ts"),
   ]);
 
   assert.match(editorState, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -66,10 +67,10 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(editorState, /type GeneratedOutputs = \{/);
   assert.match(editorState, /ptTalk: string\[\]/);
   assert.match(editorState, /ptBlink: string\[\]/);
-  assert.match(page, /renderOutput\(index, "pt", "base"\)/);
-  assert.match(page, /renderOutput\(index, "pt", "talk"\)/);
-  assert.match(page, /renderOutput\(index, "open", "talk"\)/);
-  assert.match(page, /renderOutput\(index, "closed", "base"\)/);
+  assert.match(outputRenderer, /renderOutput\(index, "pt", "base"\)/);
+  assert.match(outputRenderer, /renderOutput\(index, "pt", "talk"\)/);
+  assert.match(outputRenderer, /renderOutput\(index, "open", "talk"\)/);
+  assert.match(outputRenderer, /renderOutput\(index, "closed", "base"\)/);
   assert.match(page, /21 base \+ 21 PT \+ 21 talk \+ 21 blink \+ 21 PT talk \+ 21 PT blink/);
   assert.match(page, /pt_\$\{key\}\.png/);
   assert.match(page, /pt_\$\{key\}_talk\.png/);
@@ -115,7 +116,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(storage, /localSaved/);
   assert.match(normalization, /effectSettings/);
   assert.match(normalization, /effectPlacements/);
-  assert.match(server, /mouths-talk/);
+  assert.match(fabricatorService, /mouths-talk/);
 
   assert.match(processing, /1 - mask \* strength/);
   assert.doesNotMatch(processing, /appliedStrength = greenBackground \? 1 : strength/);
@@ -303,10 +304,10 @@ test("layout do Fabricador mantém preview central, painel de controle e bibliot
 });
 
 test("geração usa a posição atual dos efeitos automáticos", async () => {
-  const page = await read("app/Ferramentas/fabricador-de-modelo/page.tsx");
+  const outputRenderer = await read("app/Ferramentas/fabricador-de-modelo/output-renderer.ts");
 
-  assert.match(page, /const isProcedural = preset\.effectSettings\[kind\]\?\.source === "gradient"/);
-  assert.match(page, /isProcedural \|\| \(assetId && activeEffectAssetIds\[kind\] === assetId\)/);
+  assert.match(outputRenderer, /const isProcedural = preset\.effectSettings\[kind\]\?\.source === "gradient"/);
+  assert.match(outputRenderer, /isProcedural \|\| \(assetId && state\.activeEffectAssetIds\[kind\] === assetId\)/);
 });
 
 test("PROCESSADOR V2 é registrado como ferramenta legada independente", async () => {
