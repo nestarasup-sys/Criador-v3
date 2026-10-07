@@ -64,29 +64,39 @@ jobs:
         run: npm audit --omit=dev --audit-level=high
 
   windows-smoke:
-    name: Windows application smoke
-    runs-on: [self-hosted, Windows, X64]
+    name: Windows clean-clone smoke
+    runs-on: windows-latest
     timeout-minutes: 45
 
     steps:
-      - name: Sync branch without deleting ignored work data
+      - name: Checkout clean workspace
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22.13.0"
+          cache: npm
+
+      - name: Bootstrap fresh clone
+        run: node scripts/local-bootstrap.mjs
+
+      - name: Verify bootstrap state
         shell: pwsh
         run: |
-          git fetch origin "${{ github.ref_name }}" --prune
-          git checkout -B "${{ github.ref_name }}" "origin/${{ github.ref_name }}"
-          git reset --hard "origin/${{ github.ref_name }}"
-          git clean -fd
-          Write-Host "Branch: $(git branch --show-current)"
-          Write-Host "HEAD: $(git rev-parse HEAD)"
-
-      - name: Install dependencies
-        run: npm ci
+          if (-not (Test-Path node_modules)) { throw "Bootstrap não criou node_modules." }
+          node scripts/local-bootstrap.mjs --check
 
       - name: Repository hygiene
         run: npm run check:repo
 
       - name: Focused desktop smoke
         run: node --test tests/bat-smoke.test.mjs tests/local-security.test.mjs tests/storage-atomic.test.mjs tests/character-persistence.test.mjs
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium
 
       - name: Fabricador E2E smoke
         run: npm run test:e2e:fabricador
