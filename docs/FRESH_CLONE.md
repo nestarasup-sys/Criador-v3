@@ -52,6 +52,15 @@ O launcher:
 
 O primeiro boot pode demorar mais porque instala dependências e compila a aplicação.
 
+Se o bootstrap automático for interrompido pelo Windows, antivírus ou terminal, execute manualmente na raiz da pasta nova:
+
+```bat
+npm ci --no-audit --no-fund
+npm run doctor
+```
+
+Depois abra novamente `INICIAR-NYMI-GACHA.bat`. O BAT de desenvolvimento também usa o mesmo bootstrap automático.
+
 ## 4. Diagnóstico local
 
 Se algo não abrir:

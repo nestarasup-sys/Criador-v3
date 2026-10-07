@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import {
   dependencyFingerprint,
   dependencyState,
+  isDirectInvocation,
   nodeVersionAtLeast,
   parseNodeVersion,
 } from "../scripts/local-bootstrap.mjs";
@@ -43,4 +44,12 @@ test("local bootstrap only reports ready when node_modules and marker match", as
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("local bootstrap recognizes both relative and absolute script invocation paths", () => {
+  const moduleUrl = new URL("../scripts/local-bootstrap.mjs", import.meta.url).href;
+  const absolute = join(process.cwd(), "scripts", "local-bootstrap.mjs");
+  assert.equal(isDirectInvocation(moduleUrl, absolute), true);
+  assert.equal(isDirectInvocation(moduleUrl, join("scripts", "local-bootstrap.mjs")), true);
+  assert.equal(isDirectInvocation(moduleUrl, join("scripts", "local-doctor.mjs")), false);
 });

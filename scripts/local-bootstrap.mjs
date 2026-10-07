@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
@@ -138,8 +138,11 @@ async function main() {
   );
 }
 
-const invokedPath = process.argv[1] ? fileURLToPath(import.meta.url) === process.argv[1] : false;
-if (invokedPath) {
+export function isDirectInvocation(moduleUrl = import.meta.url, argvPath = process.argv[1]) {
+  return Boolean(argvPath) && resolve(fileURLToPath(moduleUrl)) === resolve(argvPath);
+}
+
+if (isDirectInvocation()) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;

@@ -9,7 +9,9 @@ test("faz preflight seguro antes de iniciar o desenvolvimento", async () => {
   const launcher = await readFile(devLauncherPath, "utf8");
 
   assert.match(launcher, /scripts\\live-runner\.mjs/i);
+  assert.match(launcher, /scripts\\local-bootstrap\.mjs/i);
   assert.match(launcher, /node_modules\\vinext\\dist\\cli\.js/i);
+  assert.match(launcher, /npm ci --no-audit --no-fund/i);
   assert.match(launcher, /Get-NetTCPConnection/i);
   assert.match(launcher, /\(production-server\|local-data-server\)\\\.mjs/i);
   assert.match(launcher, /Invoke-RestMethod.*6800\/health/i);

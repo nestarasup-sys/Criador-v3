@@ -15,8 +15,12 @@ echo.
 
 if not exist "package.json" goto :project_error
 if not exist "scripts\live-runner.mjs" goto :project_error
-if not exist "node_modules\vinext\dist\cli.js" goto :dependencies_error
 where node >nul 2>&1 || goto :node_error
+
+echo Verificando dependencias locais...
+node "scripts\local-bootstrap.mjs"
+if errorlevel 1 goto :dependencies_error
+if not exist "node_modules\vinext\dist\cli.js" goto :dependencies_error
 
 for /f "delims=" %%V in ('node --version 2^>nul') do set "NODE_VERSION=%%V"
 if not defined NODE_VERSION goto :node_error
@@ -58,8 +62,8 @@ pause
 exit /b 1
 
 :dependencies_error
-echo Dependencias incompletas: node_modules\vinext\dist\cli.js nao existe.
-echo Execute npm install na raiz do projeto e tente novamente.
+echo Nao foi possivel instalar ou validar as dependencias do projeto.
+echo Como alternativa, execute: npm ci --no-audit --no-fund
 pause
 exit /b 1
 
