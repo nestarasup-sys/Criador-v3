@@ -11,7 +11,7 @@ import { EYE_EXPRESSIONS } from "./constants/expressions";
 import { ChromaControls, PanelBlock, PlacementControls, RangeControl, UploadTile } from "./components/ControlPrimitives";
 import { cleanChromaImage, DEFAULT_CHROMA_SETTINGS, loadImage, processEyebrowSheet, processEyeSheet, processManpuSheet, processMouthSheet, type ChromaSeed, type ChromaSettings } from "./core/eye-processing";
 import { DEFAULT_TEMPLATE_SKIN_COLOR, TEMPLATE_SKIN_PALETTE, normalizeTemplateSkinColor, recolorTemplateSkinPixels } from "./core/skin-color.mjs";
-import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame } from "./core/compositor";
+import { assetToFile, drawComposition, imageFromPair, imageFromPiece, toCatalogFrame, type LoadedPair } from "./core/compositor";
 import {
   CANVAS_SIZE,
   DEFAULT_TEMPLATE_SCALE_X,
