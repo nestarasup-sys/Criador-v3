@@ -444,7 +444,7 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /async function adjustSelectedHairByHead/);
   assert.match(page, /Ajustar cabelo/);
   assert.match(page, /preservando o volume externo/);
-  assert.match(page, /async function prepareHairPairSheet/);
+  assert.match(catalogImport, /function prepareHairPairSheet/);
   assert.match(page, /async function importFrontHairItem/);
   assert.match(page, /async function importHairPairSheet/);
   assert.match(catalog, /Folha · 3 pares/);
@@ -1035,7 +1035,7 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, /Proteger cores internas semelhantes/);
   assert.match(page, /async function toggleChromaTool/);
   assert.match(page, /Chroma detectado automaticamente · limpeza avançada ativa/);
-  assert.match(page, /canvasSize = 1024/);
+  assert.match(catalogImport, /canvasSize = 1024/);
   assert.match(page, /fitReferenceHeight/);
   assert.match(page, /Refazer recorte/);
   assert.match(page, /moveSelectedOutfitsToV0/);
@@ -1192,7 +1192,7 @@ test("provides the shared Nymi navigation shell on all primary areas", async () 
 });
 
 test("mantém o slice de Roteiros componentizado, cancelável e compatível com exportação", async () => {
-  const [editor, card, blocks, commands, contract, storage, service, server, schemas, css, normalizer] = await Promise.all([
+  const [editor, card, blocks, commands, contract, storage, service, aiGateway, aiOperations, exportFs, server, schemas, css, normalizer] = await Promise.all([
     readFile(new URL("../app/roteiros/components/RoteiroEditor.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/TikTokCard.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/roteiros/components/ReactionBlockList.tsx", import.meta.url), "utf8"),
@@ -1228,7 +1228,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(storage, /removeRoteiroVideo/);
   assert.match(storage, /removeRoteiro\(/);
   assert.match(storage, /listRoteiroOrphans/);
-  assert.match(editor, /videoBaseSrc/);
+  assert.match(card, /videoBaseSrc/);
   assert.match(editor, /Duração total do vídeo: \$\{formatTikTokDuration\(section\.video\?\.durationSeconds\)\}/);
   assert.match(editor, /Contexto adicional para IA: \$\{section\.video\?\.additionalAiContext/);
   assert.match(editor, /expressão \$\{progress\.expressionIndex \+ 1\}\/\$\{progress\.expressionCount\}/);
@@ -1237,12 +1237,12 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(editor, /encodeURIComponent\(section\.video\?\.updatedAt/);
   assert.match(editor, /key=\{`\$\{section\.video\.storedPath\}-\$\{section\.video\.updatedAt\}`\}/);
   assert.match(storage, /signal\?: AbortSignal/);
-  assert.match(service, /AI_TIMEOUT_MS = 90_000/);
-  assert.match(service, /FONTE ÚNICA/);
-  assert.match(service, /validateMeaningfulContextRewrite/);
+  assert.match(aiGateway, /AI_TIMEOUT_MS = 90_000/);
+  assert.match(aiOperations, /FONTE ÚNICA/);
+  assert.match(aiOperations, /validateMeaningfulContextRewrite/);
   assert.match(server, /export-videos/);
-  assert.match(server, /probeVideoFile/);
-  assert.match(server, /videoMatchesExportProfile/);
+  assert.match(exportFs, /probeVideoFile/);
+  assert.match(exportFs, /videoMatchesExportProfile/);
   assert.match(server, /runWithConcurrency\(tiktoks, 2/);
   assert.match(server, /Duração total do vídeo/);
   assert.match(server, /Primeira reação em grupo pode começar no segundo/);
@@ -1259,7 +1259,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.match(server, /insideOrSame\(exportRoot, folder\)/);
   assert.match(server, /insideOrSame\(allowedRoot, folder\)/);
   assert.match(server, /roteiroVideoExportRoot\(body\?\.scriptTitle, exportTarget\.id\)/);
-  assert.match(server, /roteiroProjectHasScriptManifest/);
+  assert.match(exportFs, /projectHasScriptManifest/);
   assert.match(server, /await rm\(projectRoot, \{ recursive: true, force: true \}\)/);
   assert.match(server, /GACHA_EDITOR_V4_PROJECTS_ROOT/);
   assert.match(editor, /Exportar para V4/);
@@ -1273,7 +1273,7 @@ test("mantém o slice de Roteiros componentizado, cancelável e compatível com 
   assert.ok(server.includes(String.raw`EDITOR V4\\EDITOR V4\\projects`));
   assert.match(server, /GACHA_EDITOR_V4_LOADING_ASSET/);
   assert.doesNotMatch(server, /GACHA_EDITOR_TESTE_V3_ASSETS_ROOT/);
-  assert.match(server, /INVALID_EXPORT_TARGET/);
+  assert.match(exportFs, /INVALID_EXPORT_TARGET/);
   assert.match(server, /Accept-Ranges/);
   assert.match(server, /DELETE/);
   assert.match(schemas, /validateRoteiroExportDocument/);
