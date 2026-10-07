@@ -16,6 +16,9 @@ import { CreatorLibraryPanel } from "./creator/components/CreatorLibraryPanel";
 import { CreatorCanvasToolbar } from "./creator/components/CreatorCanvasToolbar";
 import { CreatorCatalogHeader } from "./creator/components/CreatorCatalogHeader";
 import { CreatorTopbar } from "./creator/components/CreatorTopbar";
+import { BasePackThumbnail, clearBasePackThumbnailCache } from "./creator/components/BasePackThumbnail";
+import { MAX_PROCESSED_BASE_EXPRESSIONS, trimProcessedBaseExpressions } from "./creator/cache-policy";
+import { downloadBlob, safeFileName } from "./creator/browser-download";
 import { applyProtectionFill, createBodyMask, createMaskOverlay } from "./creator/mask-rendering";
 import {
   prepareCatalogImages,
@@ -198,91 +201,6 @@ function saveCharactersToBrowser(characters: Character[]) {
 
 
 
-const BASE_PACK_THUMBNAIL_CACHE_LIMIT = 24;
-const basePackThumbnailCache = new Map<string, Promise<string>>();
-const MAX_CREATOR_COLOR_CACHE = 16;
-const MAX_CREATOR_HEAD_WARP_CACHE = 8;
-const CREATOR_DRAG_COMMIT_INTERVAL_MS = 40;
-const MAX_PROCESSED_BASE_EXPRESSIONS = 12;
-
-function trimProcessedBaseExpressions(
-  cache: Record<string, Partial<Record<ExpressionKey, HTMLImageElement>>>,
-  preservePackKey: string,
-  preserveExpressionKey: ExpressionKey,
-) {
-  let total = Object.values(cache).reduce((count, expressions) => count + Object.keys(expressions).length, 0);
-  if (total <= MAX_PROCESSED_BASE_EXPRESSIONS) return;
-  for (const packKey of Object.keys(cache)) {
-    const expressions = cache[packKey];
-    for (const expressionKey of Object.keys(expressions) as ExpressionKey[]) {
-      if (total <= MAX_PROCESSED_BASE_EXPRESSIONS) return;
-      if (packKey === preservePackKey && expressionKey === preserveExpressionKey) continue;
-      delete expressions[expressionKey];
-      total -= 1;
-    }
-    if (Object.keys(expressions).length === 0) delete cache[packKey];
-  }
-}
-
-async function createBasePackThumbnail(src: string) {
-  const cached = basePackThumbnailCache.get(src);
-  if (cached) return cached;
-  const pending = (async () => {
-    const transparentBlob = await removeChroma(src);
-    const temporaryUrl = URL.createObjectURL(transparentBlob);
-    try {
-      const image = await loadImage(temporaryUrl);
-      const canvas = document.createElement("canvas");
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = canvas.getContext("2d");
-      if (!context) throw new Error("Canvas da miniatura indisponível");
-      context.drawImage(image, 0, 0);
-      return createCharacterPhotoDataUrl(canvas);
-    } finally {
-      URL.revokeObjectURL(temporaryUrl);
-    }
-  })().catch((error) => {
-    basePackThumbnailCache.delete(src);
-    throw error;
-  });
-  basePackThumbnailCache.set(src, pending);
-  while (basePackThumbnailCache.size > BASE_PACK_THUMBNAIL_CACHE_LIMIT) {
-    const oldest = basePackThumbnailCache.keys().next().value as string | undefined;
-    if (!oldest || oldest === src) break;
-    basePackThumbnailCache.delete(oldest);
-  }
-  return pending;
-}
-
-function BasePackThumbnail({ src, name }: { src: string; name: string }) {
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    void createBasePackThumbnail(src)
-      .then((result) => { if (active) setThumbnail(result); })
-      .catch(() => { if (active) setThumbnail(src); });
-    return () => { active = false; };
-  }, [src]);
-  if (!thumbnail) return <span className="base-pack-thumbnail-loading" aria-label={`Carregando prévia de ${name}`} />;
-  // The generated data URL is a local, dynamically cropped preview.
-  return <img className="base-pack-thumbnail" src={thumbnail} alt={`Prévia de ${name}`} />;
-}
-
-function safeFileName(value: string) {
-  return value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "") || "personagem";
-}
-
-function downloadBlob(blob: Blob, name: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const chromaCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -444,7 +362,7 @@ export default function Home() {
     retainedAssetUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     retainedAssetUrlsRef.current.clear();
     clearImageRuntimeCache();
-    basePackThumbnailCache.clear();
+    clearBasePackThumbnailCache();
     colorLayerCacheRef.current.clear();
     headWarpCacheRef.current.clear();
     processedBases.current = {};
