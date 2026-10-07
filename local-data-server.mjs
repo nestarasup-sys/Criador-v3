@@ -15,6 +15,7 @@ import { isBaseVideoReferencedByScripts } from "./services/base-dados/references
 import { resolveByteRange } from "./services/storage/file-range.mjs";
 import { writeJsonAtomic } from "./services/storage/atomic-json.mjs";
 import { createCharacterStore } from "./services/storage/character-store.mjs";
+import { createCharacterRoutes } from "./services/characters/routes.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
@@ -62,7 +63,6 @@ const ROTEIROS_VIDEOS_ROOT = join(ROOT, "roteiros", "videos");
 const ROTEIROS_BACKGROUNDS_ROOT = join(ROOT, "roteiros", "backgrounds");
 const BASE_DADOS_ROOT = join(ROOT, "base-de-dados");
 const CHARACTER_PHOTOS_ROOT = join(ROOT, "personagens", "fotos");
-const characterPhotoQueues = new Map();
 const ROTEIRO_EXPORT_TARGETS = Object.freeze({
   v4: Object.freeze({
     id: "v4",
@@ -245,6 +245,21 @@ const modelRoutes = createModelRoutes({
   requestJson,
   readOptionalJson,
   getCharacters: () => characters,
+});
+
+const characterRoutes = createCharacterRoutes({
+  host: HOST,
+  port: PORT,
+  photosRoot: CHARACTER_PHOTOS_ROOT,
+  characterStore,
+  sendJson,
+  requestBody,
+  requestJson,
+  mutateState: queueStateMutation,
+  loadCharacters: loadNormalizedCharacters,
+  getCharacters: () => characters,
+  setCharacters: (nextCharacters) => { characters = nextCharacters; },
+  clearLegacyCharacters: () => { state.characters = []; },
 });
 
 async function loadState() {
@@ -809,93 +824,7 @@ async function route(request, response) {
     return;
   }
   if (await modelRoutes.handle(request, response, url)) return;
-  const characterPhotoMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})\/photo$/);
-  if (characterPhotoMatch && request.method === "POST") {
-    const characterId = safeId(characterPhotoMatch[1]);
-    assertMimeType(contentTypeOf(request), new Set(["image/png"]), "A foto do personagem precisa ser PNG.");
-    const body = await requestBody(request, BODY_LIMITS.photo);
-    const pngSignature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-    if (body.length < pngSignature.length || !body.subarray(0, pngSignature.length).equals(pngSignature)) {
-      throw new Error("A foto do personagem precisa ser um PNG válido");
-    }
-    const filePath = join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`);
-    if (!inside(CHARACTER_PHOTOS_ROOT, filePath)) throw new Error("Destino da foto inválido");
-    // A pasta pode ter sido removida por uma limpeza externa enquanto o
-    // servidor continuava aberto. Recrie somente o diretório, nunca os dados.
-    await mkdir(CHARACTER_PHOTOS_ROOT, { recursive: true });
-    const previous = characterPhotoQueues.get(characterId) ?? Promise.resolve();
-    const writeOperation = previous.catch(() => undefined).then(() => writeFile(filePath, body));
-    characterPhotoQueues.set(characterId, writeOperation);
-    try {
-      await writeOperation;
-    } finally {
-      if (characterPhotoQueues.get(characterId) === writeOperation) characterPhotoQueues.delete(characterId);
-    }
-    sendJson(response, request, 200, {
-      ok: true,
-      photoUrl: `http://${HOST}:${PORT}/files/characters/${characterId}/photo.png`,
-      bytes: body.length,
-    });
-    return;
-  }
-  const characterItemMatch = url.pathname.match(/^\/characters\/([a-zA-Z0-9_-]{1,120})$/);
-  if (request.method === "GET" && url.pathname === "/characters") {
-    sendJson(response, request, 200, { characters: characterStore.listSummaries() });
-    return;
-  }
-  if (characterItemMatch && request.method === "GET") {
-    const characterId = safeId(characterItemMatch[1]);
-    const storedCharacter = await characterStore.get(characterId);
-    const character = storedCharacter ? normalizeCharacterDocument(storedCharacter) : null;
-    if (!character) throw Object.assign(new Error("Personagem não encontrado."), { status: 404, code: "CHARACTER_NOT_FOUND" });
-    sendJson(response, request, 200, { character });
-    return;
-  }
-  if (characterItemMatch && request.method === "PUT") {
-    const characterId = safeId(characterItemMatch[1]);
-    const character = await requestJson(request);
-    if (!character || typeof character !== "object" || String(character.id || "") !== characterId) {
-      throw Object.assign(new Error("Personagem inválido."), { status: 400, code: "INVALID_CHARACTER" });
-    }
-    await queueStateMutation(async () => {
-      const expectedRevision = Number.isInteger(character.persistenceRevision) ? character.persistenceRevision : null;
-      await characterStore.save(character, expectedRevision);
-      characters = await loadNormalizedCharacters();
-    });
-    const savedCharacter = characters.find((entry) => entry.id === characterId);
-    sendJson(response, request, 200, { ok: true, id: characterId, revision: savedCharacter?.persistenceRevision ?? null, savedAt: new Date().toISOString() });
-    return;
-  }
-  if (characterItemMatch && request.method === "DELETE") {
-    const characterId = safeId(characterItemMatch[1]);
-    await queueStateMutation(async () => {
-      await characterStore.remove(characterId);
-      characters = await loadNormalizedCharacters();
-    });
-    await rm(join(CHARACTER_PHOTOS_ROOT, `${characterId}.png`), { force: true }).catch(() => undefined);
-    sendJson(response, request, 200, { ok: true, id: characterId });
-    return;
-  }
-  if (request.method === "POST" && url.pathname === "/characters") {
-    const nextCharacters = await requestJson(request, BODY_LIMITS.characters);
-    if (!Array.isArray(nextCharacters)) throw new Error("Lista de personagens inválida");
-    await queueStateMutation(async () => {
-      // Keep the full-list endpoint for migration/import compatibility. The
-      // regular editor path uses PUT /characters/:id and never sends this
-      // potentially huge list.
-      await characterStore.replaceAll(nextCharacters);
-      characters = await loadNormalizedCharacters();
-      const knownCharacterIds = new Set(nextCharacters.map((character) => String(character?.id || "")));
-      for (const entry of await readdir(CHARACTER_PHOTOS_ROOT, { withFileTypes: true })) {
-        if (entry.isFile() && entry.name.endsWith(".png") && !knownCharacterIds.has(entry.name.slice(0, -4))) {
-          await rm(join(CHARACTER_PHOTOS_ROOT, entry.name), { force: true });
-        }
-      }
-      state.characters = [];
-    });
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
+  if (await characterRoutes.handle(request, response, url)) return;
   if (request.method === "POST" && url.pathname === "/studios") {
     const studios = await requestJson(request);
     if (!Array.isArray(studios)) throw new Error("Lista de Studios inválida");
