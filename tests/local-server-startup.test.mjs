@@ -43,8 +43,10 @@ test("local data server boots from an empty data root", async () => {
     }
     assert.equal(healthy, true, `servidor não ficou saudável\n${stderr}`);
   } finally {
-    child.kill();
-    await new Promise((resolve) => child.once("exit", resolve)).catch(() => undefined);
+    if (child.exitCode === null) {
+      child.kill();
+      await new Promise((resolve) => child.once("exit", resolve));
+    }
     await rm(root, { recursive: true, force: true });
   }
 });
