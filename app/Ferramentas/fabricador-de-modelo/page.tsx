@@ -65,6 +65,13 @@ import {
   type WorkspaceSection,
 } from "./editor-state";
 import { buildPresetProfilesDocument } from "./profile-state";
+import {
+  isPointInsideLegacyPair,
+  isPointInsidePair,
+  isPointInsideProceduralEffect,
+  isPointInsideSingle,
+  pointerToCanvas,
+} from "./interaction-geometry";
 import styles from "./fabricador.module.css";
 
 async function encodeExpressionReference(file: File) {
@@ -1141,13 +1148,8 @@ export default function FabricadorDeModeloPage() {
     });
   };
 
-  const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    return {
-      x: ((event.clientX - rect.left) / rect.width) * CANVAS_SIZE,
-      y: ((event.clientY - rect.top) / rect.height) * CANVAS_SIZE,
-    };
-  };
+  const pointerPosition = (event: React.PointerEvent<HTMLCanvasElement>) =>
+    pointerToCanvas(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect(), CANVAS_SIZE);
 
   const addManualEyeSeed = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (!loaded) return false;
@@ -1188,47 +1190,6 @@ export default function FabricadorDeModeloPage() {
     setStatus("Cliques manuais dos olhos removidos.");
   };
 
-  const insideSingle = (point: { x: number; y: number }, image: HTMLImageElement, itemPlacement: EyePlacement) => {
-    const width = image.naturalWidth * itemPlacement.scale * itemPlacement.scaleX;
-    const height = image.naturalHeight * itemPlacement.scale * itemPlacement.scaleY;
-    return point.x >= itemPlacement.x - width / 2 - 20 && point.x <= itemPlacement.x + width / 2 + 20
-      && point.y >= itemPlacement.y - height / 2 - 20 && point.y <= itemPlacement.y + height / 2 + 20;
-  };
-
-  const insideProceduralEffect = (point: { x: number; y: number }, kind: FaceEffectKind) => {
-    const settings = previewPreset.effectSettings[kind];
-    if (!settings || settings.source !== "gradient") return false;
-    const itemPlacement = effectPlacements[kind];
-    const width = settings.gradientWidth * itemPlacement.scale * itemPlacement.scaleX;
-    const height = settings.gradientHeight * itemPlacement.scale * itemPlacement.scaleY;
-    return point.x >= itemPlacement.x - width / 2 && point.x <= itemPlacement.x + width / 2
-      && point.y >= itemPlacement.y - height / 2 && point.y <= itemPlacement.y + height / 2;
-  };
-
-  const insidePair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePairPlacement): "left" | "right" | null => {
-    for (const side of ["left", "right"] as const) {
-      const image = images[side];
-      const placement = itemPlacement[side];
-      const width = image.naturalWidth * placement.scale * placement.scaleX;
-      const height = image.naturalHeight * placement.scale * placement.scaleY;
-      if (point.x >= placement.x - width / 2 - 20 && point.x <= placement.x + width / 2 + 20
-        && point.y >= placement.y - height / 2 - 20 && point.y <= placement.y + height / 2 + 20) return side;
-    }
-    return null;
-  };
-
-  const insideLegacyPair = (point: { x: number; y: number }, images: LoadedPair, itemPlacement: EyePlacement) => {
-    const halfGap = itemPlacement.gap * itemPlacement.scale / 2;
-    return ([-1, 1] as const).some((side) => {
-      const image = side === -1 ? images.left : images.right;
-      const width = image.naturalWidth * itemPlacement.scale * itemPlacement.scaleX;
-      const height = image.naturalHeight * itemPlacement.scale * itemPlacement.scaleY;
-      const centerX = itemPlacement.x + side * halfGap;
-      return point.x >= centerX - width / 2 - 20 && point.x <= centerX + width / 2 + 20
-        && point.y >= itemPlacement.y - height / 2 - 20 && point.y <= itemPlacement.y + height / 2 + 20;
-    });
-  };
-
   const startDrag = (event: React.PointerEvent<HTMLCanvasElement>) => {
     if (manualChromaMode && activeLayer === "eyes") {
       event.preventDefault();
@@ -1240,17 +1201,17 @@ export default function FabricadorDeModeloPage() {
     // Hit-test na ordem inversa do desenho: olhos ficam por cima da boca,
     // boca por cima das sobrancelhas e efeitos ficam ao fundo.
     if (loaded) {
-      const eyeSide = insidePair(point, loaded, eyePlacements);
+      const eyeSide = isPointInsidePair(point, loaded, eyePlacements);
       if (eyeSide) target = eyeSide === "left" ? "eyes-left" : "eyes-right";
     }
-    if (!target && mouthLoaded && insideSingle(point, mouthLoaded, mouthPlacement)) target = "mouths";
-    if (!target && eyebrowsLoaded && insideLegacyPair(point, eyebrowsLoaded, eyebrowPlacement)) target = "eyebrows";
+    if (!target && mouthLoaded && isPointInsideSingle(point, mouthLoaded, mouthPlacement)) target = "mouths";
+    if (!target && eyebrowsLoaded && isPointInsideLegacyPair(point, eyebrowsLoaded, eyebrowPlacement)) target = "eyebrows";
     if (!target) {
       for (const kind of [...EFFECT_KINDS].reverse()) {
         const image = effectLoaded[kind];
         const hit = image
-          ? previewPreset.enabledEffects[kind] && previewPreset.effectAssets[kind] && insideSingle(point, image, effectPlacements[kind])
-          : previewPreset.enabledEffects[kind] && insideProceduralEffect(point, kind);
+          ? previewPreset.enabledEffects[kind] && previewPreset.effectAssets[kind] && isPointInsideSingle(point, image, effectPlacements[kind])
+          : previewPreset.enabledEffects[kind] && isPointInsideProceduralEffect(point, previewPreset.effectSettings[kind], effectPlacements[kind]);
         if (hit) {
           target = kind;
           break;
