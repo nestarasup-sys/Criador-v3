@@ -20,6 +20,7 @@ import { createStudioRoutes } from "./services/studio/routes.mjs";
 import { createFabricatorService } from "./services/fabricator/service.mjs";
 import { createVideoMakerService } from "./services/video-maker/service.mjs";
 import { createCreatorLibraryRoutes } from "./services/creator/library-routes.mjs";
+import { createRoteiroMediaRoutes } from "./services/roteiros/media-routes.mjs";
 import { migrateStateMetadata } from "./services/storage/state-migration.mjs";
 import { createLocalHttp } from "./services/http/local-http.mjs";
 import { createModelDiscovery } from "./services/models/model-discovery.mjs";
@@ -253,6 +254,27 @@ const creatorLibraryRoutes = createCreatorLibraryRoutes({
   mutateState: queueStateMutation,
   persistState: queueStateWrite,
   getState: () => state,
+  serveFile,
+});
+
+const roteiroMediaRoutes = createRoteiroMediaRoutes({
+  host: HOST,
+  port: PORT,
+  backgroundsRoot: ROTEIROS_BACKGROUNDS_ROOT,
+  videosRoot: ROTEIROS_VIDEOS_ROOT,
+  baseDadosRoot: BASE_DADOS_ROOT,
+  baseDadosService,
+  roteirosService,
+  exportTarget: roteiroExportTarget,
+  projectRoot: roteiroProjectRoot,
+  characterExportRoot: roteiroCharacterExportRoot,
+  backgroundExportRoot: roteiroBackgroundExportRoot,
+  videoExportRoot: roteiroVideoExportRoot,
+  findVideoReferenceFile,
+  sendJson,
+  requestBody,
+  requestJson,
+  readMetadata,
   serveFile,
 });
 
@@ -665,146 +687,7 @@ async function route(request, response) {
   if (await studioRoutes.handle(request, response, url)) return;
 
 
-  if (request.method === "POST" && url.pathname === "/roteiros/open-folder") {
-    const body = await requestJson(request);
-    const target = String(body?.target || "script");
-    const exportTarget = roteiroExportTarget(body?.exportTarget);
-    const projectRoot = roteiroProjectRoot(body?.scriptTitle, exportTarget.id);
-    const characterRoot = roteiroCharacterExportRoot(body?.scriptTitle, exportTarget.id);
-    const backgroundRoot = roteiroBackgroundExportRoot(body?.scriptTitle, exportTarget.id);
-    const videoRoot = roteiroVideoExportRoot(body?.scriptTitle, exportTarget.id);
-    const folder = target === "characters"
-      ? characterRoot
-      : target === "videos"
-        ? videoRoot
-      : target === "background"
-        ? backgroundRoot
-      : projectRoot;
-    const allowedRoot = target === "characters" ? characterRoot : target === "videos" ? videoRoot : target === "background" ? backgroundRoot : projectRoot;
-    if (target !== "characters" && target !== "videos" && target !== "script" && target !== "background") throw new Error("Tipo de pasta inválido");
-    if (!insideOrSame(allowedRoot, folder)) throw new Error("Destino da pasta inválido");
-    await mkdir(folder, { recursive: true });
-    // /root forces Explorer to open the requested directory instead of merely
-    // handing the path to an existing, possibly minimized Explorer process.
-    const explorer = spawn("explorer.exe", ["/root,", folder], { detached: true, stdio: "ignore", windowsHide: false });
-    explorer.on("error", () => undefined);
-    explorer.unref();
-    sendJson(response, request, 200, { ok: true, folder, exportTarget: exportTarget.id });
-    return;
-  }
-
-  const roteiroBackgroundMatch = url.pathname.match(/^\/roteiros\/backgrounds\/([a-zA-Z0-9_-]+)$/);
-  if (roteiroBackgroundMatch && request.method === "POST") {
-    const scriptId = safeId(roteiroBackgroundMatch[1]);
-    const metadata = readMetadata(request);
-    const contentType = contentTypeOf(request, metadata);
-    assertMimeType(contentType, IMAGE_MIME_TYPES, "O fundo precisa ser PNG, JPEG ou WebP.");
-    const fileName = String(metadata.name || "background.png");
-    const extension = extname(fileName).toLowerCase();
-    const body = await requestBody(request, BODY_LIMITS.image);
-    if (!body.length) throw new Error("Imagem de fundo vazia");
-    const folder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
-    const filePath = join(folder, `background${extension === ".jpg" || extension === ".jpeg" || extension === ".webp" ? extension : ".png"}`);
-    if (!inside(ROTEIROS_BACKGROUNDS_ROOT, filePath)) throw new Error("Destino do fundo inválido");
-    await mkdir(folder, { recursive: true });
-    await writeFile(filePath, body);
-    sendJson(response, request, 200, { ok: true, background: { name: fileName, storedPath: `roteiros/backgrounds/${scriptId}/${filePath.split(sep).pop()}`, url: `http://${HOST}:${PORT}/roteiros/backgrounds/${scriptId}`, contentType, size: body.length, updatedAt: new Date().toISOString() } });
-    return;
-  }
-
-  if (roteiroBackgroundMatch && request.method === "GET") {
-    const scriptId = safeId(roteiroBackgroundMatch[1]);
-    const folder = join(ROTEIROS_BACKGROUNDS_ROOT, scriptId);
-    const files = await readdir(folder);
-    const fileName = files.find((file) => /\.(png|jpg|jpeg|webp)$/i.test(file));
-    if (!fileName) throw Object.assign(new Error("Fundo não encontrado"), { code: "ENOENT" });
-    await serveFile(response, request, join(folder, fileName));
-    return;
-  }
-
-  if (request.method === "POST" && url.pathname === "/roteiros/import-base-video") {
-    const body = await requestJson(request);
-    safeId(body?.scriptId);
-    safeId(body?.tiktokId);
-    const videoId = safeId(body?.videoId);
-    const sourceVideo = baseDadosService.getVideo(videoId);
-    if (!sourceVideo) throw Object.assign(new Error("Vídeo da Base de dados não encontrado."), { status: 404 });
-    const extension = extname(sourceVideo.fileName).toLowerCase() || ".mp4";
-    if (!VIDEO_MIME_TYPES.has(sourceVideo.contentType) || ![".mp4", ".webm", ".mov"].includes(extension)) throw new Error("Formato de vídeo não suportado para importação.");
-    const source = join(BASE_DADOS_ROOT, "videos", sourceVideo.fileName);
-    if (!inside(BASE_DADOS_ROOT, source)) throw new Error("Origem do vídeo inválida.");
-    await stat(source);
-    sendJson(response, request, 200, {
-      ok: true,
-      video: {
-        name: sourceVideo.originalName,
-        storedPath: sourceVideo.storedPath,
-        url: `http://${HOST}:${PORT}/base-dados/videos/${sourceVideo.id}`,
-        contentType: sourceVideo.contentType,
-        size: sourceVideo.size,
-        durationSeconds: sourceVideo.durationSeconds,
-        additionalAiContext: sourceVideo.additionalAiContext,
-        libraryVideoId: sourceVideo.id,
-        contentHash: sourceVideo.contentHash,
-        updatedAt: new Date().toISOString(),
-      },
-    });
-    return;
-  }
-
-  const roteiroVideoMatch = url.pathname.match(/^\/roteiros\/videos\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)$/);
-  if (roteiroVideoMatch && request.method === "POST") {
-    const scriptId = safeId(roteiroVideoMatch[1]);
-    const tiktokId = safeId(roteiroVideoMatch[2]);
-    const metadata = readMetadata(request);
-    const contentType = contentTypeOf(request, metadata) || "video/mp4";
-    assertMimeType(contentType, VIDEO_MIME_TYPES, "O arquivo do TikTok precisa ser MP4, WebM ou MOV.");
-    const fileName = String(metadata.name || "video.mp4");
-    if (!/\.(?:mp4|webm|mov)$/i.test(fileName)) throw new Error("O nome do vídeo precisa terminar em .mp4, .webm ou .mov.");
-    const extension = extname(fileName).toLowerCase();
-    const body = await requestBody(request, BODY_LIMITS.video);
-    if (!body.length) throw new Error("Vídeo vazio");
-    const folder = join(ROTEIROS_VIDEOS_ROOT, scriptId);
-    const filePath = join(folder, `${tiktokId}${extension}`);
-    if (!inside(ROTEIROS_VIDEOS_ROOT, filePath)) throw new Error("Destino do vídeo inválido");
-    await mkdir(folder, { recursive: true });
-    await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.filter((item) => item !== extension).map((item) => rm(join(folder, `${tiktokId}${item}`), { force: true })));
-    await writeFile(filePath, body);
-    const durationSeconds = await probeVideoDuration(filePath);
-    sendJson(response, request, 200, {
-      ok: true,
-      video: {
-        name: fileName,
-        storedPath: `roteiros/videos/${scriptId}/${tiktokId}${extension}`,
-        url: `http://${HOST}:${PORT}/roteiros/videos/${scriptId}/${tiktokId}`,
-        contentType,
-        size: body.length,
-        ...(durationSeconds === null ? {} : { durationSeconds }),
-        updatedAt: new Date().toISOString(),
-      },
-    });
-    return;
-  }
-
-  if (roteiroVideoMatch && request.method === "GET") {
-    const scriptId = safeId(roteiroVideoMatch[1]);
-    const tiktokId = safeId(roteiroVideoMatch[2]);
-    const script = roteirosService.getScript(scriptId);
-    const section = script?.tiktoks?.find((item) => item.id === tiktokId);
-    const filePath = await findVideoReferenceFile(section?.video, scriptId, tiktokId);
-    await serveFile(response, request, filePath);
-    return;
-  }
-
-  if (roteiroVideoMatch && request.method === "DELETE") {
-    const scriptId = safeId(roteiroVideoMatch[1]);
-    const tiktokId = safeId(roteiroVideoMatch[2]);
-    const script = roteirosService.getScript(scriptId);
-    const section = script?.tiktoks?.find((item) => item.id === tiktokId);
-    if (!section?.video?.libraryVideoId) await Promise.all(ROTEIRO_VIDEO_EXTENSIONS.map((extension) => rm(join(ROTEIROS_VIDEOS_ROOT, scriptId, `${tiktokId}${extension}`), { force: true })));
-    sendJson(response, request, 200, { ok: true });
-    return;
-  }
+  if (await roteiroMediaRoutes.handle(request, response, url)) return;
 
   if (request.method === "POST" && url.pathname === "/roteiros/export-videos") {
     const body = await requestJson(request);
