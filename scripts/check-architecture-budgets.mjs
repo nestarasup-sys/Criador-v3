@@ -3,9 +3,10 @@ import { readFile } from "node:fs/promises";
 const budgets = {
   "app/page.tsx": 6100,
   "app/Ferramentas/fabricador-de-modelo/page.tsx": 2350,
-  "local-data-server.mjs": 2060,
-  "app/roteiros/components/RoteiroEditor.tsx": 1100,
-  "services/roteiros/service.mjs": 1520,
+  "local-data-server.mjs": 1930,
+  "app/roteiros/components/RoteiroEditor.tsx": 575,
+  "app/roteiros/components/TikTokCard.tsx": 540,
+  "services/roteiros/service.mjs": 670,
   "app/globals.css": 1180,
 };
 
