@@ -174,19 +174,10 @@ async function runFabricadorSmoke(currentPage, rootUrl) {
   const generate = currentPage.getByRole("button", { name: "Gerar 21 expressões" });
   await assertVisible(generate);
   await generate.click();
-  try {
-    await currentPage.waitForFunction(
-      () => document.body.innerText.includes("21 expressões prontas"),
-      undefined,
-      { timeout: 120_000 },
-    );
-  } catch (error) {
-    const bodyText = await currentPage.locator("body").innerText().catch(() => "");
-    const progress = bodyText.match(/Gerando variações:\s*\d+\/\d+…?/i)?.[0]
-      ?? bodyText.match(/Gerando[^\n]*/i)?.[0]
-      ?? "progresso indisponível";
-    throw new Error(`Fabricador não concluiu a geração no Windows. Último estado: ${progress}`, { cause: error });
-  }
+  await currentPage.getByText("21 expressões · base", { exact: true }).waitFor({
+    state: "visible",
+    timeout: 60_000,
+  });
 
   const previewCanvas = currentPage.locator("canvas").first();
   await assertVisible(previewCanvas);
