@@ -14,8 +14,8 @@ test("cacheia expressões pelo pacote realmente resolvido", async () => {
 });
 
 test("invalida o cache quando um modelo ou expressão é substituído", async () => {
-  const [server, basePacks, creatorStorage, renderer, compositor, studioPage, characterExport, outfitVariants, creatorPage] = await Promise.all([
-    readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8"),
+  const [modelDiscovery, basePacks, creatorStorage, renderer, compositor, studioPage, characterExport, outfitVariants, creatorPage] = await Promise.all([
+    readFile(new URL("../services/models/model-discovery.mjs", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/base-packs.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/creator-storage.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
@@ -26,13 +26,13 @@ test("invalida o cache quando um modelo ou expressão é substituído", async ()
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(server, /versionParts = await Promise\.all/);
-  assert.match(server, /collectModelExpressionKeys\(pngFiles\)/);
-  assert.match(server, /expressionAliases/);
-  assert.match(server, /defaultExpressionKey/);
-  assert.match(server, /version = createHash\("sha1"\)/);
+  assert.match(modelDiscovery, /versionParts = await Promise\.all/);
+  assert.match(modelDiscovery, /collectModelExpressionKeys\(pngFiles\)/);
+  assert.match(modelDiscovery, /expressionAliases/);
+  assert.match(modelDiscovery, /defaultExpressionKey/);
+  assert.match(modelDiscovery, /version = createHash\("sha1"\)/);
   assert.match(basePacks, /pack\.version \? .*encodeURIComponent\(pack\.version\)/s);
-  assert.match(server, /config:\$\{metadata\.size\}:\$\{metadata\.mtimeMs\}/);
+  assert.match(modelDiscovery, /config:\$\{metadata\.size\}:\$\{metadata\.mtimeMs\}/);
   assert.doesNotMatch(creatorStorage, /validModels\.length > 0 \? validModels : DEFAULT_BASE_PACKS/);
   assert.match(creatorStorage, /pcRequest\("\/models", \{ cache: "no-store" \}\)/);
   assert.match(renderer, /discovered\.version/);
@@ -113,8 +113,9 @@ test("exporta personagens com molde comum e PNG otimizado sem alterar o canvas d
 });
 
 test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studio", async () => {
-  const [page, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
+  const [page, imageRuntime, studioLoader, studioRenderer, studioPage, modelColors, renderDebug] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/image-runtime.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/image-loader.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/character-renderer.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/studio/page.tsx", import.meta.url), "utf8"),
@@ -122,10 +123,11 @@ test("limita bitmaps decodificados e libera caches ao sair do Criador e do Studi
     readFile(new URL("../app/studio/render-debug.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /PAGE_IMAGE_CACHE_LIMIT = 24/);
-  assert.match(page, /!src\.startsWith\("blob:"\) && !src\.startsWith\("data:"\)/);
+  assert.match(imageRuntime, /PAGE_IMAGE_CACHE_LIMIT = 24/);
+  assert.match(imageRuntime, /!src\.startsWith\("blob:"\) && !src\.startsWith\("data:"\)/);
   assert.match(page, /MAX_PROCESSED_BASE_EXPRESSIONS = 12/);
-  assert.match(page, /pageImageCache\.clear\(\)/);
+  assert.match(imageRuntime, /pageImageCache\.clear\(\)/);
+  assert.match(page, /clearImageRuntimeCache\(\)/);
   assert.match(page, /processedBaseExpressions\.current = \{\}/);
   assert.match(studioLoader, /MAX_CACHED_IMAGES = 24/);
   assert.match(studioLoader, /export function clearStudioImageCache/);

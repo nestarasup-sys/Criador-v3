@@ -158,13 +158,13 @@ test("rejeita IDs duplicados antes de criar o índice por personagem", async () 
 
 test("trocar a seleção não salva personagem sem alteração pendente", async () => {
   const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
+  const httpBoundary = await readFile(new URL("../services/http/local-http.mjs", import.meta.url), "utf8");
   assert.match(source, /function persistEditorSnapshot\([^)]*\): Character \| null/);
   assert.match(source, /const character = persistEditorSnapshot\("Salvando automaticamente", false,/);
   assert.match(source, /if \(!character\) return true;/);
   assert.doesNotMatch(source, /persistEditorSnapshot\("Salvando automaticamente"\) \?\? charactersRef\.current/);
   assert.doesNotMatch(source, /\}, \[activeCharacter, characters\]\);/);
-  assert.match(server, /Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);
+  assert.match(httpBoundary, /Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS"/);
 });
 
 test("reconstrói índice corrompido usando documentos individuais intactos", async () => {

@@ -37,6 +37,6 @@ test("mantém o contrato de inicialização local do BAT", async () => {
 });
 
 test("deixa o preflight CORS chegar ao handler antes da sessão", async () => {
-  const server = await readFile(new URL("../local-data-server.mjs", import.meta.url), "utf8");
-  assert.match(server, /if \(request\.method === "OPTIONS"\) return true;/);
+  const httpBoundary = await readFile(new URL("../services/http/local-http.mjs", import.meta.url), "utf8");
+  assert.match(httpBoundary, /if \(request\.method === "OPTIONS"\) return true;/);
 });

@@ -22,7 +22,7 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing, server, controls] = await Promise.all([
+  const [page, config, compositor, storage, processing, server, controls, normalization] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
@@ -30,6 +30,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
     read("app/Ferramentas/fabricador-de-modelo/core/eye-processing.ts"),
     read("local-data-server.mjs"),
     read("app/Ferramentas/fabricador-de-modelo/components/ControlPrimitives.tsx"),
+    read("services/fabricator/normalization.mjs"),
   ]);
 
   assert.match(page, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -103,7 +104,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(page, /Distância entre olhos/);
   assert.match(compositor, /featurePlacement\.left/);
   assert.match(compositor, /featurePlacement\.right/);
-  assert.match(server, /value\.left && typeof value\.left === "object"/);
+  assert.match(normalization, /value\.left && typeof value\.left === "object"/);
   assert.match(compositor, /placement\.rotation \+ transform\.rotation/);
   assert.match(compositor, /export async function toCatalogFrame/);
 
@@ -111,8 +112,8 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(storage, /syncLocalAsset/);
   assert.match(storage, /localAssets\.filter\(\(asset\) => asset\.localOnly\)/);
   assert.match(storage, /localSaved/);
-  assert.match(server, /effectSettings/);
-  assert.match(server, /effectPlacements/);
+  assert.match(normalization, /effectSettings/);
+  assert.match(normalization, /effectPlacements/);
   assert.match(server, /mouths-talk/);
 
   assert.match(processing, /1 - mask \* strength/);
@@ -165,7 +166,8 @@ test("Fabricador mantém perfis de personagem separados do Padrão", async () =>
   assert.match(page, /Malvado, Bonzinho/);
   assert.match(page, /Suas alterações ficam separadas/);
   assert.match(page, /profileDocumentFromState/);
-  assert.match(page, /const nextPresets = mergeSavedPresets\(target\.presets\)/);
+  assert.match(page, /const migratedPresets = applyDefaultWidthToUnchangedPresetSheet\(target\.presets\)/);
+  assert.match(page, /const nextPresets = mergeSavedPresets\(migratedPresets\)/);
   assert.match(storage, /nymi-fabricador-preset-profiles/);
   assert.match(storage, /\/fabricador-modelos\/preset-profiles/);
   assert.match(server, /FABRICATOR_PRESET_PROFILES_PATH/);
@@ -221,7 +223,7 @@ test("Fabricador não invalida resultado só por navegar e bloqueia geração co
 
   assert.match(page, /generationLockRef/);
   assert.match(page, /exportLockRef/);
-  assert.match(page, /setPlacementForKind\(kind, asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\], false, false\)/);
+  assert.match(page, /setEffectPlacements\(\(current\) => \(\{[\s\S]*\[kind\]: \(asset\.placement \?\? DEFAULT_EFFECT_PLACEMENTS\[kind\]\) as EyePlacement/);
   assert.match(page, /onChange=\{\(event\) => selectPresetExpression\(Number\(event\.target\.value\)\)\}/);
   assert.doesNotMatch(page, /setPresetIndex\(Number\(event\.target\.value\)\); setGenerated\(\[\]\)/);
   assert.match(page, /if \(generationLockRef\.current\).*já está em andamento/s);

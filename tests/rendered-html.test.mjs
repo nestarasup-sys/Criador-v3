@@ -410,9 +410,10 @@ test("keeps the precision fitting tools in the local editor", async () => {
 });
 
 test("pairs front and back hair and renders the back layer behind the model", async () => {
-  const [page, catalog, css] = await Promise.all([
+  const [page, catalog, catalogImport, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/components/CreatorCatalogHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/catalog-import.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
   const creatorMarkup = `${page}\n${catalog}`;
@@ -436,8 +437,8 @@ test("pairs front and back hair and renders the back layer behind the model", as
   assert.match(page, /cabelosTras: normalizeTransform\(linkedBackHair\?\.fitByBasePack\?\.\[basePackId\] \?\? linkedBackHair\?\.fit\)/);
   assert.match(page, /category === "cabelosTras" \? "cabelos" : category/);
   assert.match(page, /prepareHairPair/);
-  assert.match(page, /detectHairSheetGrid/);
-  assert.match(page, /const \[back, front\] = await Promise\.all/);
+  assert.match(catalogImport, /detectHairSheetGrid/);
+  assert.match(catalogImport, /const \[back, front\] = await Promise\.all/);
   assert.match(page, /async function swapSelectedHairPair/);
   assert.match(page, /Inverter lados do par/);
   assert.match(page, /async function adjustSelectedHairByHead/);
@@ -872,11 +873,11 @@ test("shares outfit color while keeping protection individual per variant", asyn
 });
 
 test("tightens every sheet item to visible pixels before normalizing the set", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
-  assert.match(page, /cropCanvasToVisibleContent/);
-  assert.match(page, /normalizeCanvasSet/);
-  assert.match(page, /const normalizedCrops = splitSheet \? normalizeCanvasSet/);
-  assert.match(page, /const normalized = normalizeCanvasSet\(crops/);
+  const catalogImport = await readFile(new URL("../app/creator/catalog-import.ts", import.meta.url), "utf8");
+  assert.match(catalogImport, /cropCanvasToVisibleContent/);
+  assert.match(catalogImport, /normalizeCanvasSet/);
+  assert.match(catalogImport, /const normalizedCrops = splitSheet \? normalizeCanvasSet/);
+  assert.match(catalogImport, /const normalized = normalizeCanvasSet\(crops/);
 });
 
 test("uses the approved premium three-column editor hierarchy", async () => {
@@ -991,8 +992,9 @@ test("keeps every script control interactive inside the colored editor hierarchy
 });
 
 test("imports one outfit as standard plus three or five additional variants shared across models", async () => {
-  const [page, catalogHeader, workerClient, worker, catalogContract, css] = await Promise.all([
+  const [page, catalogImport, catalogHeader, workerClient, worker, catalogContract, css] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/creator/catalog-import.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/components/CreatorCatalogHeader.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/chroma-worker-client.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/creator/chroma.worker.ts", import.meta.url), "utf8"),
@@ -1017,9 +1019,9 @@ test("imports one outfit as standard plus three or five additional variants shar
   assert.match(page, />Variantes<\/button>/);
   assert.match(page, /!\[3, 4, 6\]\.includes\(pendingOutfitPack\.variants\.length\)/);
   assert.match(page, /variantIndex: index/);
-  assert.match(page, /detectOutfitSheetRegions/);
-  assert.match(page, /prepareOutfitCatalogImages/);
-  assert.match(page, /createChromaResult\(source, estimate\.color, estimate\.tolerance, estimate\.softness, Boolean\(estimate\.neutral\)/);
+  assert.match(catalogImport, /detectOutfitSheetRegions/);
+  assert.match(catalogImport, /prepareOutfitCatalogImages/);
+  assert.match(catalogImport, /autoChromaImport\(original/);
   assert.match(workerClient, /processChromaPixels/);
   assert.match(workerClient, /applyChromaPixels/);
   assert.match(worker, /applyChromaPixels/);
