@@ -1814,7 +1814,7 @@ export default function FabricadorDeModeloPage() {
     setRenderingExpressionGrid(true);
     setExpressionGrid(Array(EYE_EXPRESSIONS.length).fill(null));
     try {
-      for (let index = 0; index < EYE_EXPRESSIONS.length; index += 1) {
+      for (const index of Array.from({ length: EYE_EXPRESSIONS.length }, (_, entryIndex) => entryIndex)) {
         const output = await renderOutput(index, "open", "base");
         if (!output) continue;
         const image = await loadImage(output);

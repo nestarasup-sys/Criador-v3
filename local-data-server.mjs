@@ -23,7 +23,6 @@ import { normalizeFabricatorChroma, normalizeFabricatorGrid, normalizeFabricator
 import { inside, safeId } from "./services/storage/path-safety.mjs";
 import { printTimestamp, safeExportFolderName, safePrintName } from "./services/storage/naming.mjs";
 import { emptyAppState, normalizeAppState, normalizeCharacterDocument } from "./app/domain/document-schemas.mjs";
-import { baseExpressionKeys, collectModelExpressionKeys } from "./app/domain/model-expression-keys.mjs";
 import { normalizeModelColorMapMetadata } from "./app/domain/model-color-map.mjs";
 import {
   BODY_LIMITS,
