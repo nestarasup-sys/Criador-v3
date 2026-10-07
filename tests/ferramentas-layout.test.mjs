@@ -22,7 +22,7 @@ test("catálogo de Ferramentas aponta para o Fabricador atual", async () => {
 });
 
 test("Fabricador V2 separa configuração, composição e persistência", async () => {
-  const [page, config, compositor, storage, processing, fabricatorService, controls, normalization, editorState, outputRenderer] = await Promise.all([
+  const [page, config, compositor, storage, processing, fabricatorService, controls, normalization, editorState, outputRenderer, modelExport] = await Promise.all([
     read("app/Ferramentas/fabricador-de-modelo/page.tsx"),
     read("app/Ferramentas/fabricador-de-modelo/fabricador-config.ts"),
     read("app/Ferramentas/fabricador-de-modelo/core/compositor.ts"),
@@ -33,6 +33,7 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
     read("services/fabricator/normalization.mjs"),
     read("app/Ferramentas/fabricador-de-modelo/editor-state.ts"),
     read("app/Ferramentas/fabricador-de-modelo/output-renderer.ts"),
+    read("app/Ferramentas/fabricador-de-modelo/model-export.ts"),
   ]);
 
   assert.match(editorState, /type WorkspaceSection = "assets" \| "adjust" \| "expressions" \| "export"/);
@@ -72,9 +73,9 @@ test("Fabricador V2 separa configuração, composição e persistência", async 
   assert.match(outputRenderer, /renderOutput\(index, "open", "talk"\)/);
   assert.match(outputRenderer, /renderOutput\(index, "closed", "base"\)/);
   assert.match(page, /21 base \+ 21 PT \+ 21 talk \+ 21 blink \+ 21 PT talk \+ 21 PT blink/);
-  assert.match(page, /pt_\$\{key\}\.png/);
-  assert.match(page, /pt_\$\{key\}_talk\.png/);
-  assert.match(page, /pt_\$\{key\}_blink\.png/);
+  assert.match(modelExport, /pt_\$\{key\}\.png/);
+  assert.match(modelExport, /pt_\$\{key\}_talk\.png/);
+  assert.match(modelExport, /pt_\$\{key\}_blink\.png/);
   assert.match(page, /Olhos PT/);
   assert.match(processing, /const third = Math\.floor\(structural\.height \/ 3\)/);
   assert.match(processing, /return \{ open: mergePair\(openLeft, openRight\), pt: mergePair\(ptLeft, ptRight\), closed:/);
